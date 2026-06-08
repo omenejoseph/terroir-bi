@@ -13,9 +13,15 @@ info:
     never send a tenant id. The public order endpoints resolve the tenant from
     the customer order token in the path.
 
-    This spec is a representative contract derived from the legacy Next.js +
-    Prisma implementation; see ../06-api-reference.md for the full endpoint
-    narrative and ../flows for resource-creation pathways.
+    This spec is the **target** contract for the full rebuild, derived from the
+    legacy Next.js + Prisma implementation; see ../06-api-reference.md for the
+    full endpoint narrative and ../flows for resource-creation pathways.
+
+
+    NOTE: For the endpoints that are **actually implemented today**, see
+    `live.yaml` in this folder — it is kept in lock-step with the code (currently
+    Identity & Access + Localization). This file describes endpoints that are not
+    all built yet.
 servers:
   - url: https://api.example.com/api/v1
     description: Production

@@ -1,0 +1,516 @@
+openapi: 3.1.0
+info:
+  title: Terroir BI API (live)
+  version: 0.2.0
+  description: >
+    The **currently implemented** API surface, kept in lock-step with the code.
+    For the full target contract (all planned modules) see `openapi.yaml`.
+
+
+    Implemented modules: Identity & Access (auth, tenant switching, members,
+    invitations) and Localization (translation overrides).
+
+
+    ## Tenancy & auth
+
+    Authentication is Laravel Sanctum bearer tokens. A user is a global identity
+    that can belong to many tenants via memberships and switch the active one.
+
+
+    The **active tenant** for a request is resolved, in order, from:
+
+    1. the bearer token's bound `tenant_id` (set at login / switch-tenant), then
+
+    2. the `X-Tenant` header (membership is still verified server-side), then
+
+    3. the request subdomain.
+
+
+    Endpoints under the `tenant` group require an authenticated user **with an
+    active membership** of the resolved tenant (otherwise `403`). Endpoints that
+    only require authentication (no active tenant) are marked accordingly.
+    Clients never send a tenant id in a body.
+
+servers:
+  - url: https://api.example.com/api/v1
+    description: Production
+  - url: http://localhost:8000/api/v1
+    description: Local
+
+tags:
+  - name: Auth
+  - name: Tenant Session
+  - name: Members
+  - name: Invitations
+  - name: Localization
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate; returns a token bound to an active tenant
+      description: >
+        Verifies credentials and issues a Sanctum token bound to an active
+        tenant. If `tenant_id` is omitted, the user's first active membership is
+        used; a user with no memberships receives a token with no active tenant.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+                tenant_id:
+                  type: string
+                  description: Optional active tenant to bind (must be a membership).
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/AuthSession' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current access token
+      responses:
+        '204': { description: No Content }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Current user, active tenant and roles
+      description: Requires an active tenant (token-bound or via `X-Tenant`).
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/AuthSession' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /auth/tenants:
+    get:
+      tags: [Tenant Session]
+      summary: List the authenticated user's tenant memberships
+      description: Authentication only — no active tenant required.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/TenantMembership' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/switch-tenant:
+    post:
+      tags: [Tenant Session]
+      summary: Switch the active tenant
+      description: >
+        Verifies membership of the target tenant, revokes the current token and
+        issues a new token bound to that tenant. The client replaces its stored
+        token with `data.token`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenant_id]
+              properties:
+                tenant_id: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/AuthSession' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /auth/invitations/accept:
+    post:
+      tags: [Invitations]
+      summary: Accept an invitation (public)
+      description: >
+        Accepts an invitation by its plaintext token. For an email with no
+        account, `first_name`, `last_name` and `password` are required to create
+        one; an existing account simply gains the membership. Returns an
+        authenticated session bound to the tenant.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+                first_name: { type: string }
+                middle_name: { type: string, nullable: true }
+                last_name: { type: string }
+                password: { type: string, format: password, minLength: 8 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/AuthSession' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /members:
+    get:
+      tags: [Members]
+      summary: List members of the active tenant (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Member' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /members/{user}:
+    patch:
+      tags: [Members]
+      summary: Update a member's roles or status (ADMIN)
+      description: Cannot demote/suspend the last active admin.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: user, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                roles:
+                  type: array
+                  minItems: 1
+                  items: { $ref: '#/components/schemas/TenantRole' }
+                status: { $ref: '#/components/schemas/MembershipStatus' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Member' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Members]
+      summary: Remove a member (ADMIN)
+      description: Cannot remove yourself or the last active admin.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: user, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: No Content }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /invitations:
+    get:
+      tags: [Invitations]
+      summary: List pending invitations (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Invitation' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Invitations]
+      summary: Invite a member (ADMIN)
+      description: >
+        Creates (or refreshes) a pending invitation. The one-time plaintext
+        accept token is returned as `data.accept_token` and never again.
+        Rejected if the email already belongs to a member of this tenant.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, roles]
+              properties:
+                email: { type: string, format: email }
+                roles:
+                  type: array
+                  minItems: 1
+                  items: { $ref: '#/components/schemas/TenantRole' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    allOf:
+                      - { $ref: '#/components/schemas/Invitation' }
+                      - type: object
+                        properties:
+                          accept_token: { type: string }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /invitations/{invitation}:
+    delete:
+      tags: [Invitations]
+      summary: Revoke a pending invitation (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: invitation, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: No Content }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /translations:
+    get:
+      tags: [Localization]
+      summary: Tenant translation override map for a locale
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: locale, in: query, schema: { type: string, default: hr } }
+      responses:
+        '200':
+          description: OK — object of key → value overrides
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: { type: string }
+    put:
+      tags: [Localization]
+      summary: Upsert a translation override (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [locale, key, value]
+              properties:
+                locale: { type: string, enum: [hr, en] }
+                key: { type: string }
+                value: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/TranslationOverride' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Localization]
+      summary: Delete a translation override (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [locale, key]
+              properties:
+                locale: { type: string }
+                key: { type: string }
+      responses:
+        '204': { description: No Content }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Sanctum personal access token.
+
+  parameters:
+    TenantHeader:
+      name: X-Tenant
+      in: header
+      required: false
+      description: >
+        Selects the active tenant when the token is not already bound to one.
+        Membership is verified server-side.
+      schema: { type: string }
+
+  schemas:
+    TenantRole:
+      type: string
+      enum: [ADMIN, TEAM, CELLAR, ORDERS]
+
+    MembershipStatus:
+      type: string
+      enum: [active, suspended]
+
+    User:
+      type: object
+      properties:
+        id: { type: string, description: ULID }
+        first_name: { type: string }
+        middle_name: { type: string, nullable: true }
+        last_name: { type: string }
+        name: { type: string, description: Composed full name }
+        email: { type: string, format: email }
+
+    TenantMembership:
+      type: object
+      description: One of a user's tenant memberships (for a tenant switcher).
+      properties:
+        tenant_id: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        roles:
+          type: array
+          items: { $ref: '#/components/schemas/TenantRole' }
+        status: { $ref: '#/components/schemas/MembershipStatus' }
+
+    AuthSession:
+      type: object
+      properties:
+        token:
+          type: string
+          nullable: true
+          description: Plaintext bearer token (null on `/auth/me`).
+        user: { $ref: '#/components/schemas/User' }
+        active_tenant_id: { type: string, nullable: true }
+        roles:
+          type: array
+          description: The user's roles in the active tenant.
+          items: { $ref: '#/components/schemas/TenantRole' }
+        tenants:
+          type: array
+          items: { $ref: '#/components/schemas/TenantMembership' }
+
+    Member:
+      type: object
+      description: A member of the active tenant.
+      properties:
+        id: { type: string, description: Membership id (ULID) }
+        user_id: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        roles:
+          type: array
+          items: { $ref: '#/components/schemas/TenantRole' }
+        status: { $ref: '#/components/schemas/MembershipStatus' }
+
+    Invitation:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        roles:
+          type: array
+          items: { $ref: '#/components/schemas/TenantRole' }
+        expires_at: { type: string, format: date-time }
+        pending: { type: boolean }
+
+    TranslationOverride:
+      type: object
+      properties:
+        id: { type: string }
+        locale: { type: string }
+        key: { type: string }
+        value: { type: string }
+
+    Error:
+      type: object
+      properties:
+        message: { type: string }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid token
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Authenticated but not permitted (not a member, or lacks role)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Not found (also returned for cross-tenant access)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ValidationError:
+      description: Unprocessable entity (Laravel validation bag)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }

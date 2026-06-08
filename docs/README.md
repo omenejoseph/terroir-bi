@@ -25,7 +25,8 @@ rules.
 | 05 | [`06-api-reference.md`](06-api-reference.md) | REST endpoint catalogue grouped by module, auth, request/response shapes |
 | 06 | [`07-integrations.md`](07-integrations.md) | Moj-eRačun e-invoice, Anthropic AI parsing, object storage |
 | 07 | [`flows/`](flows/) | **Resource-creation flow diagrams** (one file per pathway, Mermaid sequence + state) |
-| 08 | [`openapi/openapi.yaml`](openapi/openapi.yaml) | Machine-readable OpenAPI 3.1 spec (import into Postman/Swagger/codegen) |
+| 08 | [`openapi/openapi.yaml`](openapi/openapi.yaml) | Machine-readable OpenAPI 3.1 spec — the **target** contract (import into Postman/Swagger/codegen) |
+| 08a | [`openapi/live.yaml`](openapi/live.yaml) | OpenAPI 3.1 spec of the **currently implemented** API (kept in lock-step with the code) |
 
 ## Flow diagrams index
 
