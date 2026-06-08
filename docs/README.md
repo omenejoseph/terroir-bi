@@ -25,7 +25,23 @@ rules.
 | 05 | [`06-api-reference.md`](06-api-reference.md) | REST endpoint catalogue grouped by module, auth, request/response shapes |
 | 06 | [`07-integrations.md`](07-integrations.md) | Moj-eRačun e-invoice, Anthropic AI parsing, object storage |
 | 07 | [`flows/`](flows/) | **Resource-creation flow diagrams** (one file per pathway, Mermaid sequence + state) |
-| 08 | [`openapi/openapi.yaml`](openapi/openapi.yaml) | Machine-readable OpenAPI 3.1 spec (import into Postman/Swagger/codegen) |
+| 08 | [`openapi/openapi.yaml`](openapi/openapi.yaml) | Machine-readable OpenAPI 3.1 spec — the **target** contract (import into Postman/Swagger/codegen) |
+| 08a | [`openapi/live.yaml`](openapi/live.yaml) | OpenAPI 3.1 spec of the **currently implemented** API (kept in lock-step with the code) |
+
+## Running locally
+
+```bash
+composer install
+cp .env.example .env && php artisan key:generate
+php artisan migrate --seed         # creates schema + default plans + a demo tenant
+php artisan tenant:create          # interactively create a tenant + admin; prints an API token
+php artisan serve                  # http://localhost:8000
+```
+
+`php artisan tenant:create` is interactive (or pass `--name --slug --currency --locale
+--admin-email --admin-password …` to script it). It prints a Sanctum bearer token; call the
+API with `Authorization: Bearer <token>`. The seeded demo login is `test@example.com` /
+`password`. Quality gates: `composer check` (Pint + PHPStan level 8 + parallel tests).
 
 ## Flow diagrams index
 

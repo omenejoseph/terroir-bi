@@ -78,11 +78,17 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => env('APP_LOCALE', 'hr'),
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+
+    /*
+    | Locales an organisation / request may select. Used by the LocaleResolver
+    | and SetLocale middleware to validate requested locales. Croatian-first.
+    */
+    'supported_locales' => ['hr', 'en'],
 
     /*
     |--------------------------------------------------------------------------

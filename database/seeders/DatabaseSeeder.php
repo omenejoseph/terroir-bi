@@ -2,24 +2,35 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Actions\Tenancy\CreateTenantAction;
+use App\Models\Tenant;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
-     * Seed the application's database.
+     * Seed application defaults plus a demo tenant + admin for local dev.
+     * Idempotent: safe to re-run.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // App-wide defaults required for the app to function.
+        $this->call(PlanSeeder::class);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Demo tenant for local development (skipped if it already exists).
+        if (! Tenant::query()->where('slug', 'demo')->exists()) {
+            app(CreateTenantAction::class)->execute([
+                'name' => 'Demo Winery',
+                'slug' => 'demo',
+                'currency' => 'EUR',
+                'locale' => 'hr',
+                'admin' => [
+                    'first_name' => 'Test',
+                    'last_name' => 'User',
+                    'email' => 'test@example.com',
+                    'password' => 'password',
+                ],
+            ]);
+        }
     }
 }

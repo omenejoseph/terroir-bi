@@ -1,0 +1,948 @@
+openapi: 3.1.0
+info:
+  title: Terroir BI API (live)
+  version: 0.3.0
+  description: >
+    The **currently implemented** API surface, kept in lock-step with the code.
+    For the full target contract (all planned modules) see `openapi.yaml`.
+
+
+    Implemented modules: Identity & Access (auth, tenant switching, members,
+    invitations), Localization (translation overrides), Inventory & Recipes
+    (items, stock ledger, recipes), and Customers & Pricing (customers, pricing
+    tiers, per-item price books, and the rebate/price-resolution engine).
+
+
+    Money is represented as integer minor units; write endpoints accept an
+    integer `price`/`default_price` and reads return a Money object
+    `{ minor, currency, formatted }`.
+
+
+    ## Tenancy & auth
+
+    Authentication is Laravel Sanctum bearer tokens. A user is a global identity
+    that can belong to many tenants via memberships and switch the active one.
+
+
+    The **active tenant** for a request is resolved, in order, from:
+
+    1. the bearer token's bound `tenant_id` (set at login / switch-tenant), then
+
+    2. the `X-Tenant` header (membership is still verified server-side), then
+
+    3. the request subdomain.
+
+
+    Endpoints under the `tenant` group require an authenticated user **with an
+    active membership** of the resolved tenant (otherwise `403`). Endpoints that
+    only require authentication (no active tenant) are marked accordingly.
+    Clients never send a tenant id in a body.
+
+servers:
+  - url: https://api.example.com/api/v1
+    description: Production
+  - url: http://localhost:8000/api/v1
+    description: Local
+
+tags:
+  - name: Auth
+  - name: Tenant Session
+  - name: Members
+  - name: Invitations
+  - name: Localization
+  - name: Inventory
+  - name: Customers
+  - name: Pricing
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate; returns a token bound to an active tenant
+      description: >
+        Verifies credentials and issues a Sanctum token bound to an active
+        tenant. If `tenant_id` is omitted, the user's first active membership is
+        used; a user with no memberships receives a token with no active tenant.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+                tenant_id:
+                  type: string
+                  description: Optional active tenant to bind (must be a membership).
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/AuthSession' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current access token
+      responses:
+        '204': { description: No Content }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Current user, active tenant and roles
+      description: Requires an active tenant (token-bound or via `X-Tenant`).
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/AuthSession' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /auth/tenants:
+    get:
+      tags: [Tenant Session]
+      summary: List the authenticated user's tenant memberships
+      description: Authentication only — no active tenant required.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/TenantMembership' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/switch-tenant:
+    post:
+      tags: [Tenant Session]
+      summary: Switch the active tenant
+      description: >
+        Verifies membership of the target tenant, revokes the current token and
+        issues a new token bound to that tenant. The client replaces its stored
+        token with `data.token`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenant_id]
+              properties:
+                tenant_id: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/AuthSession' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /auth/invitations/accept:
+    post:
+      tags: [Invitations]
+      summary: Accept an invitation (public)
+      description: >
+        Accepts an invitation by its plaintext token. For an email with no
+        account, `first_name`, `last_name` and `password` are required to create
+        one; an existing account simply gains the membership. Returns an
+        authenticated session bound to the tenant.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+                first_name: { type: string }
+                middle_name: { type: string, nullable: true }
+                last_name: { type: string }
+                password: { type: string, format: password, minLength: 8 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/AuthSession' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /members:
+    get:
+      tags: [Members]
+      summary: List members of the active tenant (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Member' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /members/{user}:
+    patch:
+      tags: [Members]
+      summary: Update a member's roles or status (ADMIN)
+      description: Cannot demote/suspend the last active admin.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: user, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                roles:
+                  type: array
+                  minItems: 1
+                  items: { $ref: '#/components/schemas/TenantRole' }
+                status: { $ref: '#/components/schemas/MembershipStatus' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Member' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Members]
+      summary: Remove a member (ADMIN)
+      description: Cannot remove yourself or the last active admin.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: user, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: No Content }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /invitations:
+    get:
+      tags: [Invitations]
+      summary: List pending invitations (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Invitation' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Invitations]
+      summary: Invite a member (ADMIN)
+      description: >
+        Creates (or refreshes) a pending invitation. The one-time plaintext
+        accept token is returned as `data.accept_token` and never again.
+        Rejected if the email already belongs to a member of this tenant.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, roles]
+              properties:
+                email: { type: string, format: email }
+                roles:
+                  type: array
+                  minItems: 1
+                  items: { $ref: '#/components/schemas/TenantRole' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    allOf:
+                      - { $ref: '#/components/schemas/Invitation' }
+                      - type: object
+                        properties:
+                          accept_token: { type: string }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /invitations/{invitation}:
+    delete:
+      tags: [Invitations]
+      summary: Revoke a pending invitation (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: invitation, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: No Content }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /translations:
+    get:
+      tags: [Localization]
+      summary: Tenant translation override map for a locale
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: locale, in: query, schema: { type: string, default: hr } }
+      responses:
+        '200':
+          description: OK — object of key → value overrides
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: { type: string }
+    put:
+      tags: [Localization]
+      summary: Upsert a translation override (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [locale, key, value]
+              properties:
+                locale: { type: string, enum: [hr, en] }
+                key: { type: string }
+                value: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/TranslationOverride' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Localization]
+      summary: Delete a translation override (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [locale, key]
+              properties:
+                locale: { type: string }
+                key: { type: string }
+      responses:
+        '204': { description: No Content }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /inventory-items:
+    get:
+      tags: [Inventory]
+      summary: List inventory items (paginated, filterable)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: search, in: query, schema: { type: string } }
+        - { name: category, in: query, schema: { $ref: '#/components/schemas/InventoryCategory' } }
+        - { name: is_active, in: query, schema: { type: boolean } }
+        - { name: is_for_sale, in: query, schema: { type: boolean } }
+        - { name: sellable, in: query, description: FINISHED + for sale + active + priced, schema: { type: boolean } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/InventoryItem' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+    post:
+      tags: [Inventory]
+      summary: Create an item (ADMIN/TEAM). SKU unique per tenant.
+      parameters: [ { $ref: '#/components/parameters/TenantHeader' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InventoryItemInput' }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/InventoryItem' } } } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /inventory-items/{item}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - { name: item, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Inventory]
+      summary: Item detail
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/InventoryItem' } } } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Inventory]
+      summary: Update an item (ADMIN/TEAM)
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InventoryItemInput' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/InventoryItem' } } } } } }
+    delete:
+      tags: [Inventory]
+      summary: Delete an item (ADMIN)
+      responses:
+        '204': { description: No Content }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /inventory-items/{item}/stock:
+    post:
+      tags: [Inventory]
+      summary: Record a stock movement (ADMIN/TEAM)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: item, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, quantity]
+              properties:
+                type: { $ref: '#/components/schemas/StockMovementType' }
+                quantity: { type: string, description: Signed decimal delta }
+                reference: { type: string, nullable: true }
+                note: { type: string, nullable: true }
+      responses:
+        '200': { description: OK — item with new running stock, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/InventoryItem' } } } } } }
+
+  /inventory-items/{item}/recipe:
+    put:
+      tags: [Inventory]
+      summary: Replace an item's recipe / bill of materials (ADMIN/TEAM)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: item, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [input_id, quantity]
+                    properties:
+                      input_id: { type: string }
+                      quantity: { type: string }
+      responses:
+        '200': { description: OK }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /inventory-items/{item}/tier-price/{tier}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - { name: item, in: path, required: true, schema: { type: string } }
+      - { name: tier, in: path, required: true, schema: { type: string } }
+    put:
+      tags: [Pricing]
+      summary: Upsert a tier price for an item
+      requestBody: { $ref: '#/components/requestBodies/Price' }
+      responses:
+        '200': { description: OK — the Money value, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Money' } } } } } }
+    delete:
+      tags: [Pricing]
+      summary: Remove a tier price
+      responses:
+        '204': { description: No Content }
+
+  /inventory-items/{item}/customer-price/{customer}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - { name: item, in: path, required: true, schema: { type: string } }
+      - { name: customer, in: path, required: true, schema: { type: string } }
+    put:
+      tags: [Pricing]
+      summary: Upsert an absolute customer price for an item (rebate not applied)
+      requestBody: { $ref: '#/components/requestBodies/Price' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Money' } } } } } }
+    delete:
+      tags: [Pricing]
+      summary: Remove a customer price
+      responses:
+        '204': { description: No Content }
+
+  /customers:
+    get:
+      tags: [Customers]
+      summary: List customers (paginated, filterable)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: search, in: query, schema: { type: string } }
+        - { name: is_active, in: query, schema: { type: boolean } }
+        - { name: pricing_tier_id, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Customer' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+    post:
+      tags: [Customers]
+      summary: Create a customer (ADMIN/TEAM)
+      parameters: [ { $ref: '#/components/parameters/TenantHeader' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [company_name, email]
+              properties:
+                company_name: { type: string }
+                contact_name: { type: string, nullable: true }
+                email: { type: string, format: email }
+                rebate_percent: { type: number }
+                pricing_tier_id: { type: string, nullable: true }
+                hide_prices: { type: boolean }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Customer' } } } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /customers/quick:
+    post:
+      tags: [Customers]
+      summary: Quick-create a customer (ADMIN/TEAM)
+      parameters: [ { $ref: '#/components/parameters/TenantHeader' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [company_name, email]
+              properties:
+                company_name: { type: string }
+                email: { type: string, format: email }
+      responses:
+        '201': { description: Created }
+
+  /customers/{customer}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - { name: customer, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Customers]
+      summary: Customer detail
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Customer' } } } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Customers]
+      summary: Update a customer (ADMIN/TEAM)
+      responses:
+        '200': { description: OK }
+    delete:
+      tags: [Customers]
+      summary: Delete a customer (ADMIN)
+      responses:
+        '204': { description: No Content }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /customers/{customer}/order-token:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - { name: customer, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Customers]
+      summary: Generate a self-service order token (ADMIN)
+      responses:
+        '200':
+          description: OK — includes the one-time order_token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    allOf:
+                      - { $ref: '#/components/schemas/Customer' }
+                      - type: object
+                        properties: { order_token: { type: string } }
+    delete:
+      tags: [Customers]
+      summary: Revoke the order token (ADMIN)
+      responses:
+        '200': { description: OK }
+
+  /customers/{customer}/resolved-prices:
+    get:
+      tags: [Pricing]
+      summary: Batch price resolution for a customer (pricing engine)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: customer, in: path, required: true, schema: { type: string } }
+        - { name: item_ids, in: query, description: Comma-separated item ids, schema: { type: string } }
+      responses:
+        '200':
+          description: OK — map of item id → resolved Money
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: { $ref: '#/components/schemas/Money' }
+
+  /pricing-tiers:
+    get:
+      tags: [Pricing]
+      summary: List pricing tiers (+ customer count)
+      parameters: [ { $ref: '#/components/parameters/TenantHeader' } ]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/PricingTier' } }
+    post:
+      tags: [Pricing]
+      summary: Create a pricing tier (ADMIN/TEAM)
+      parameters: [ { $ref: '#/components/parameters/TenantHeader' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string, nullable: true }
+                rebate_percent: { type: number }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/PricingTier' } } } } } }
+
+  /pricing-tiers/{pricingTier}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - { name: pricingTier, in: path, required: true, schema: { type: string } }
+    patch:
+      tags: [Pricing]
+      summary: Update a pricing tier (ADMIN/TEAM)
+      responses:
+        '200': { description: OK }
+    delete:
+      tags: [Pricing]
+      summary: Delete a pricing tier (ADMIN/TEAM)
+      responses:
+        '204': { description: No Content }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Sanctum personal access token.
+
+  requestBodies:
+    Price:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [price]
+            properties:
+              price: { type: integer, description: Money in integer minor units }
+
+  parameters:
+    TenantHeader:
+      name: X-Tenant
+      in: header
+      required: false
+      description: >
+        Selects the active tenant when the token is not already bound to one.
+        Membership is verified server-side.
+      schema: { type: string }
+
+  schemas:
+    TenantRole:
+      type: string
+      enum: [ADMIN, TEAM, CELLAR, ORDERS]
+
+    MembershipStatus:
+      type: string
+      enum: [active, suspended]
+
+    InventoryCategory:
+      type: string
+      enum: [FINISHED, SEMI_FINISHED, RAW_MATERIAL]
+
+    StockMovementType:
+      type: string
+      enum: [MANUAL_IN, MANUAL_OUT, ORDER_DEDUCT, PRODUCTION_IN, PRODUCTION_OUT, ADJUSTMENT]
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page: { type: integer }
+        last_page: { type: integer }
+        per_page: { type: integer }
+        total: { type: integer }
+
+    Money:
+      type: object
+      description: A monetary value in integer minor units.
+      properties:
+        minor: { type: integer }
+        currency: { type: string }
+        formatted: { type: string, description: Canonical decimal string, e.g. "19.99" }
+
+    InventoryItemInput:
+      type: object
+      required: [name, sku, category, unit]
+      properties:
+        name: { type: string }
+        sku: { type: string }
+        description: { type: string, nullable: true }
+        category: { $ref: '#/components/schemas/InventoryCategory' }
+        group: { type: string, nullable: true }
+        subcategory: { type: string, nullable: true }
+        vintage: { type: string, nullable: true }
+        unit: { type: string }
+        min_stock: { type: string, nullable: true }
+        is_active: { type: boolean }
+        sort_order: { type: integer }
+        default_price: { type: integer, nullable: true, description: Money minor units }
+        bottles_per_case: { type: integer }
+        is_for_sale: { type: boolean }
+        cost_per_unit: { type: integer, nullable: true, description: Money minor units }
+
+    InventoryItem:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        sku: { type: string }
+        category: { $ref: '#/components/schemas/InventoryCategory' }
+        group: { type: string, nullable: true }
+        subcategory: { type: string, nullable: true }
+        vintage: { type: string, nullable: true }
+        unit: { type: string }
+        current_stock: { type: string }
+        min_stock: { type: string, nullable: true }
+        is_active: { type: boolean }
+        is_for_sale: { type: boolean }
+        sort_order: { type: integer }
+        bottles_per_case: { type: integer }
+        default_price: { oneOf: [ { $ref: '#/components/schemas/Money' }, { type: 'null' } ] }
+        cost_per_unit: { oneOf: [ { $ref: '#/components/schemas/Money' }, { type: 'null' } ] }
+
+    PricingTier:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        rebate_percent: { type: string }
+        customers_count: { type: integer }
+
+    Customer:
+      type: object
+      properties:
+        id: { type: string }
+        company_name: { type: string }
+        contact_name: { type: string, nullable: true }
+        email: { type: string, format: email }
+        phone: { type: string, nullable: true }
+        is_active: { type: boolean }
+        rebate_percent: { type: string }
+        effective_rebate_percent: { type: string, description: Customer rebate, else tier rebate }
+        hide_prices: { type: boolean }
+        has_order_token: { type: boolean }
+        pricing_tier:
+          type: object
+          nullable: true
+          properties:
+            id: { type: string }
+            name: { type: string }
+            rebate_percent: { type: string }
+
+    User:
+      type: object
+      properties:
+        id: { type: string, description: ULID }
+        first_name: { type: string }
+        middle_name: { type: string, nullable: true }
+        last_name: { type: string }
+        name: { type: string, description: Composed full name }
+        email: { type: string, format: email }
+
+    TenantMembership:
+      type: object
+      description: One of a user's tenant memberships (for a tenant switcher).
+      properties:
+        tenant_id: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        roles:
+          type: array
+          items: { $ref: '#/components/schemas/TenantRole' }
+        status: { $ref: '#/components/schemas/MembershipStatus' }
+
+    AuthSession:
+      type: object
+      properties:
+        token:
+          type: string
+          nullable: true
+          description: Plaintext bearer token (null on `/auth/me`).
+        user: { $ref: '#/components/schemas/User' }
+        active_tenant_id: { type: string, nullable: true }
+        roles:
+          type: array
+          description: The user's roles in the active tenant.
+          items: { $ref: '#/components/schemas/TenantRole' }
+        tenants:
+          type: array
+          items: { $ref: '#/components/schemas/TenantMembership' }
+
+    Member:
+      type: object
+      description: A member of the active tenant.
+      properties:
+        id: { type: string, description: Membership id (ULID) }
+        user_id: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        roles:
+          type: array
+          items: { $ref: '#/components/schemas/TenantRole' }
+        status: { $ref: '#/components/schemas/MembershipStatus' }
+
+    Invitation:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        roles:
+          type: array
+          items: { $ref: '#/components/schemas/TenantRole' }
+        expires_at: { type: string, format: date-time }
+        pending: { type: boolean }
+
+    TranslationOverride:
+      type: object
+      properties:
+        id: { type: string }
+        locale: { type: string }
+        key: { type: string }
+        value: { type: string }
+
+    Error:
+      type: object
+      properties:
+        message: { type: string }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid token
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Authenticated but not permitted (not a member, or lacks role)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Not found (also returned for cross-tenant access)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ValidationError:
+      description: Unprocessable entity (Laravel validation bag)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
