@@ -2,8 +2,13 @@
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\TenantSessionController;
+use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\InventoryItemController;
 use App\Http\Controllers\Api\InvitationController;
 use App\Http\Controllers\Api\MemberController;
+use App\Http\Controllers\Api\PriceController;
+use App\Http\Controllers\Api\PricingTierController;
+use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\TranslationController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +53,54 @@ Route::prefix('v1')->group(function () {
             Route::get('invitations', [InvitationController::class, 'index']);
             Route::post('invitations', [InvitationController::class, 'store']);
             Route::delete('invitations/{invitation}', [InvitationController::class, 'destroy']);
+        });
+
+        // Inventory & recipes.
+        Route::middleware('can:inventory.view')->group(function () {
+            Route::get('inventory-items', [InventoryItemController::class, 'index']);
+            Route::get('inventory-items/{item}', [InventoryItemController::class, 'show']);
+        });
+        Route::middleware('can:inventory.manage')->group(function () {
+            Route::post('inventory-items', [InventoryItemController::class, 'store']);
+            Route::patch('inventory-items/{item}', [InventoryItemController::class, 'update']);
+            Route::post('inventory-items/{item}/stock', [StockController::class, 'adjust']);
+            Route::put('inventory-items/{item}/recipe', [StockController::class, 'setRecipe']);
+        });
+        Route::delete('inventory-items/{item}', [InventoryItemController::class, 'destroy'])
+            ->middleware('can:inventory.delete');
+
+        // Customers.
+        Route::middleware('can:customers.view')->group(function () {
+            Route::get('customers', [CustomerController::class, 'index']);
+            Route::get('customers/{customer}', [CustomerController::class, 'show']);
+            Route::get('customers/{customer}/resolved-prices', [PriceController::class, 'resolvedPrices']);
+        });
+        Route::middleware('can:customers.manage')->group(function () {
+            Route::post('customers', [CustomerController::class, 'store']);
+            Route::post('customers/quick', [CustomerController::class, 'quickStore']);
+            Route::patch('customers/{customer}', [CustomerController::class, 'update']);
+        });
+        Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])
+            ->middleware('can:customers.delete');
+        Route::middleware('can:customers.tokens')->group(function () {
+            Route::post('customers/{customer}/order-token', [CustomerController::class, 'generateToken']);
+            Route::delete('customers/{customer}/order-token', [CustomerController::class, 'revokeToken']);
+        });
+
+        // Pricing tiers.
+        Route::middleware('can:pricing.view')->group(function () {
+            Route::get('pricing-tiers', [PricingTierController::class, 'index']);
+        });
+        Route::middleware('can:pricing.manage')->group(function () {
+            Route::post('pricing-tiers', [PricingTierController::class, 'store']);
+            Route::patch('pricing-tiers/{pricingTier}', [PricingTierController::class, 'update']);
+            Route::delete('pricing-tiers/{pricingTier}', [PricingTierController::class, 'destroy']);
+
+            // Per-item price books.
+            Route::put('inventory-items/{item}/tier-price/{tier}', [PriceController::class, 'upsertTierPrice']);
+            Route::delete('inventory-items/{item}/tier-price/{tier}', [PriceController::class, 'destroyTierPrice']);
+            Route::put('inventory-items/{item}/customer-price/{customer}', [PriceController::class, 'upsertCustomerPrice']);
+            Route::delete('inventory-items/{item}/customer-price/{customer}', [PriceController::class, 'destroyCustomerPrice']);
         });
     });
 });

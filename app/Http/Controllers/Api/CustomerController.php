@@ -1,0 +1,86 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Api;
+
+use App\Actions\Customers\CreateCustomerAction;
+use App\Actions\Customers\OrderTokenAction;
+use App\Actions\Customers\UpdateCustomerAction;
+use App\DataTransferObjects\CustomerData;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Customers\QuickCustomerRequest;
+use App\Http\Requests\Customers\StoreCustomerRequest;
+use App\Http\Requests\Customers\UpdateCustomerRequest;
+use App\Models\Customer;
+use App\Queries\ListCustomersQuery;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class CustomerController extends Controller
+{
+    public function index(Request $request, ListCustomersQuery $query): JsonResponse
+    {
+        $paginator = $query->paginate([
+            'search' => $request->query('search'),
+            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : null,
+            'pricing_tier_id' => $request->query('pricing_tier_id'),
+        ]);
+
+        return response()->json([
+            'data' => array_map(
+                fn (Customer $c) => CustomerData::fromModel($c)->toArray(),
+                $paginator->items(),
+            ),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
+    }
+
+    public function show(Customer $customer): JsonResponse
+    {
+        return response()->json(['data' => CustomerData::fromModel($customer->load('pricingTier'))->toArray()]);
+    }
+
+    public function store(StoreCustomerRequest $request, CreateCustomerAction $action): JsonResponse
+    {
+        return response()->json(['data' => $action->execute($request->validated())->toArray()], 201);
+    }
+
+    public function quickStore(QuickCustomerRequest $request, CreateCustomerAction $action): JsonResponse
+    {
+        return response()->json(['data' => $action->execute($request->validated())->toArray()], 201);
+    }
+
+    public function update(UpdateCustomerRequest $request, Customer $customer, UpdateCustomerAction $action): JsonResponse
+    {
+        return response()->json(['data' => $action->execute($customer, $request->validated())->toArray()]);
+    }
+
+    public function destroy(Customer $customer): JsonResponse
+    {
+        // No orders yet; hard delete. The soft-delete-when-referenced rule
+        // lands with the Orders module.
+        $customer->delete();
+
+        return response()->json(status: 204);
+    }
+
+    public function generateToken(Customer $customer, OrderTokenAction $action): JsonResponse
+    {
+        $result = $action->generate($customer);
+
+        return response()->json([
+            'data' => $result['customer']->toArray() + ['order_token' => $result['token']],
+        ]);
+    }
+
+    public function revokeToken(Customer $customer, OrderTokenAction $action): JsonResponse
+    {
+        return response()->json(['data' => $action->revoke($customer)->toArray()]);
+    }
+}

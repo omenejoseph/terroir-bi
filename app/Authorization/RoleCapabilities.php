@@ -29,7 +29,13 @@ final class RoleCapabilities
         return [
             TenantRole::Admin->value => [self::WILDCARD],
             TenantRole::Team->value => [
-                // Filled in as the Customers/Orders/Inventory modules land.
+                'customers.view',
+                'customers.manage',
+                'pricing.view',
+                'pricing.manage',
+                'inventory.view',
+                'inventory.manage',
+                // customers.delete, customers.tokens and inventory.delete are ADMIN-only.
             ],
             TenantRole::Cellar->value => [
                 // Filled in as the Cellar module lands.
