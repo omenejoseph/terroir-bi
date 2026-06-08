@@ -17,11 +17,19 @@ use Illuminate\Database\Eloquent\Scope;
  * Fail-closed: if no tenant is bound, this throws rather than returning rows
  * for all tenants. The only sanctioned bypass is the ->withoutTenant() macro,
  * which must be reserved for audited platform / back-office operations.
+ *
+ * @template TModel of Model
+ *
+ * @implements Scope<TModel>
  */
 class TenantScope implements Scope
 {
     public const TENANT_COLUMN = 'tenant_id';
 
+    /**
+     * @param  Builder<covariant TModel>  $builder
+     * @param  TModel  $model
+     */
     public function apply(Builder $builder, Model $model): void
     {
         $context = app(TenantContext::class);
@@ -36,6 +44,9 @@ class TenantScope implements Scope
         );
     }
 
+    /**
+     * @param  Builder<TModel>  $builder
+     */
     public function extend(Builder $builder): void
     {
         // Audited escape hatch for platform/back-office code that must read

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support\Money;
 
 use NumberFormatter;
+use RuntimeException;
 
 /**
  * Locale-aware money formatting via ext-intl.
@@ -32,10 +33,16 @@ class MoneyFormatter
         $formatter = new NumberFormatter($locale, NumberFormatter::CURRENCY);
         $formatter->setAttribute(NumberFormatter::FRACTION_DIGITS, $money->getCurrency()->minorUnit);
 
-        return $formatter->formatCurrency(
+        $formatted = $formatter->formatCurrency(
             (float) $money->toMajor(),
             $money->getCurrencyCode(),
         );
+
+        if ($formatted === false) {
+            throw new RuntimeException("Failed to format money for locale [{$locale}].");
+        }
+
+        return $formatted;
     }
 
     /** Format just the number (no currency symbol) for the given locale. */
@@ -47,6 +54,12 @@ class MoneyFormatter
         $formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, $money->getCurrency()->minorUnit);
         $formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $money->getCurrency()->minorUnit);
 
-        return $formatter->format((float) $money->toMajor());
+        $formatted = $formatter->format((float) $money->toMajor());
+
+        if ($formatted === false) {
+            throw new RuntimeException("Failed to format money for locale [{$locale}].");
+        }
+
+        return $formatted;
     }
 }

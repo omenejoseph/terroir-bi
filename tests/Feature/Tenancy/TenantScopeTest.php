@@ -28,7 +28,9 @@ class TenantScopeTest extends TestCase
         User::factory()->create(['email' => 'b@example.com']);
 
         $this->assertSame(1, User::count());
-        $this->assertSame('b@example.com', User::first()->email);
+        $first = User::first();
+        $this->assertNotNull($first);
+        $this->assertSame('b@example.com', $first->email);
     }
 
     public function test_cross_tenant_find_returns_null(): void

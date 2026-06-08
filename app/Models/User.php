@@ -21,10 +21,11 @@ use Illuminate\Notifications\Notifiable;
  */
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use BelongsToTenant;
 
+    /** @use HasFactory<UserFactory> */
     use HasFactory;
+
     use HasUlids;
     use Notifiable;
 

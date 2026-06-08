@@ -38,6 +38,9 @@ class Plan extends Model
         ];
     }
 
+    /**
+     * @return HasMany<Tenant, $this>
+     */
     public function tenants(): HasMany
     {
         return $this->hasMany(Tenant::class);

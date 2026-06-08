@@ -19,6 +19,9 @@ class MoneyTest extends TestCase
         $this->assertSame($expectedMinor, Money::fromMajor($major, 'EUR')->getMinorAmount());
     }
 
+    /**
+     * @return array<string, array{string, int}>
+     */
     public static function majorToMinorProvider(): array
     {
         return [

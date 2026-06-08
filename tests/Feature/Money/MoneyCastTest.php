@@ -22,6 +22,7 @@ class MoneyCastTest extends TestCase
         ]);
 
         $fresh = $plan->fresh();
+        $this->assertNotNull($fresh);
 
         $this->assertInstanceOf(Money::class, $fresh->price_minor);
         $this->assertSame(1999, $fresh->price_minor->getMinorAmount());
@@ -47,6 +48,8 @@ class MoneyCastTest extends TestCase
     {
         $plan = Plan::create(['name' => 'Free', 'slug' => 'free']);
 
-        $this->assertNull($plan->fresh()->price_minor);
+        $fresh = $plan->fresh();
+        $this->assertNotNull($fresh);
+        $this->assertNull($fresh->price_minor);
     }
 }

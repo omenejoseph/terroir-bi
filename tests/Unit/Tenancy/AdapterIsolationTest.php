@@ -32,7 +32,7 @@ class AdapterIsolationTest extends TestCase
     public function test_stancl_is_only_referenced_from_allowed_paths(string $relativePath, string $contents): void
     {
         if ($this->isAllowed($relativePath)) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
 
             return;
         }
@@ -47,6 +47,9 @@ class AdapterIsolationTest extends TestCase
         );
     }
 
+    /**
+     * @return iterable<string, array{string, string}>
+     */
     public static function phpFilesProvider(): iterable
     {
         $appPath = dirname(__DIR__, 3).'/app';

@@ -25,19 +25,19 @@ trait StanclTenantModelTrait
     }
 
     /** The tenant's identifying value. */
-    public function getTenantKey()
+    public function getTenantKey(): mixed
     {
         return $this->getKey();
     }
 
     /** Read an internal/virtual key from the `data` JSON column. */
-    public function getInternal(string $key)
+    public function getInternal(string $key): mixed
     {
         return data_get($this->data ?? [], $key);
     }
 
     /** Write an internal/virtual key into the `data` JSON column. */
-    public function setInternal(string $key, $value)
+    public function setInternal(string $key, mixed $value): static
     {
         $data = $this->data ?? [];
         $data[$key] = $value;
@@ -51,7 +51,7 @@ trait StanclTenantModelTrait
      * afterwards. Delegates to our own TenantContext so behaviour is identical
      * regardless of the underlying driver.
      */
-    public function run(callable $callback)
+    public function run(callable $callback): mixed
     {
         return app(TenantContext::class)->runFor($this, fn () => $callback($this));
     }

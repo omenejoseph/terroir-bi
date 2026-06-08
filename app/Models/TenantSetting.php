@@ -36,6 +36,9 @@ class TenantSetting extends Model
         'default_locale' => 'hr',
     ];
 
+    /**
+     * @return BelongsTo<Tenant, $this>
+     */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

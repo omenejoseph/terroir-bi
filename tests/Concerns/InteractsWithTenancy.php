@@ -11,6 +11,10 @@ use App\Tenancy\Contracts\TenantContext;
 
 trait InteractsWithTenancy
 {
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @param  array<string, mixed>  $settings
+     */
     protected function createTenant(array $attributes = [], array $settings = []): Tenant
     {
         $tenant = Tenant::create(array_merge([
@@ -25,7 +29,9 @@ trait InteractsWithTenancy
             'default_locale' => 'hr',
         ], $settings));
 
-        return $tenant->fresh();
+        $tenant->refresh();
+
+        return $tenant;
     }
 
     protected function actingAsTenant(Tenant $tenant): Tenant

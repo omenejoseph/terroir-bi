@@ -7,6 +7,7 @@ namespace App\Tenancy;
 use App\Models\Tenant;
 use App\Tenancy\Contracts\TenantContext;
 use App\Tenancy\Exceptions\CrossTenantException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -21,6 +22,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * not use this trait.
  *
  * @mixin Model
+ *
+ * @method static Builder<static> withoutTenant() Audited escape hatch that removes the tenant scope (TenantScope macro).
  */
 trait BelongsToTenant
 {
@@ -48,6 +51,9 @@ trait BelongsToTenant
         });
     }
 
+    /**
+     * @return BelongsTo<Tenant, $this>
+     */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

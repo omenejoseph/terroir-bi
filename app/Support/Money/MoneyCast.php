@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Model;
  * model's tenant default_currency, then the platform default. This lets early
  * tables store just an amount while still producing a currency-aware Money.
  *
- * @implements CastsAttributes<Money, Money>
+ * @implements CastsAttributes<Money, Money|int>
  */
 class MoneyCast implements CastsAttributes
 {

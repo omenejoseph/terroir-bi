@@ -29,9 +29,9 @@ class LocaleResolver
             return $requested;
         }
 
-        $tenantLocale = $tenant?->settings?->default_locale ?? $tenant?->default_locale;
-        if (is_string($tenantLocale) && in_array($tenantLocale, $supported, true)) {
-            return $tenantLocale;
+        // Tenant's default locale (the tenants.default_locale mirror of settings).
+        if ($tenant !== null && in_array($tenant->default_locale, $supported, true)) {
+            return $tenant->default_locale;
         }
 
         return (string) config('app.locale');

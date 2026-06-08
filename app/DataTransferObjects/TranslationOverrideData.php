@@ -49,6 +49,9 @@ final class TranslationOverrideData implements Arrayable, JsonSerializable
         ];
     }
 
+    /**
+     * @return array{id:string, locale:string, key:string, value:string}
+     */
     public function jsonSerialize(): array
     {
         return $this->toArray();

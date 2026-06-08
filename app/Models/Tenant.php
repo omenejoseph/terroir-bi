@@ -25,7 +25,7 @@ use Stancl\Tenancy\Contracts\Tenant as StanclTenantContract;
  * @property string $isolation_mode
  * @property string|null $plan_id
  * @property string $default_locale
- * @property array|null $data
+ * @property array<string, mixed>|null $data
  */
 class Tenant extends Model implements StanclTenantContract
 {
@@ -62,21 +62,33 @@ class Tenant extends Model implements StanclTenantContract
         'default_locale' => 'hr',
     ];
 
+    /**
+     * @return HasOne<TenantSetting, $this>
+     */
     public function settings(): HasOne
     {
         return $this->hasOne(TenantSetting::class);
     }
 
+    /**
+     * @return HasMany<User, $this>
+     */
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
     }
 
+    /**
+     * @return HasMany<TranslationOverride, $this>
+     */
     public function translationOverrides(): HasMany
     {
         return $this->hasMany(TranslationOverride::class);
     }
 
+    /**
+     * @return BelongsTo<Plan, $this>
+     */
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);

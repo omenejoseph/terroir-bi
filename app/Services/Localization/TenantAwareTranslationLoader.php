@@ -25,6 +25,9 @@ class TenantAwareTranslationLoader implements Loader
         private readonly Cache $cache,
     ) {}
 
+    /**
+     * @return array<string, mixed>
+     */
     public function load($locale, $group, $namespace = null)
     {
         $base = $this->inner->load($locale, $group, $namespace);
