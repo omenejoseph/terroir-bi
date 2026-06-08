@@ -14,9 +14,9 @@ class PlanSeeder extends Seeder
     public function run(): void
     {
         $plans = [
-            ['slug' => 'trial', 'name' => 'Trial', 'price_minor' => 0, 'currency' => 'EUR'],
-            ['slug' => 'standard', 'name' => 'Standard', 'price_minor' => 4900, 'currency' => 'EUR'],
-            ['slug' => 'pro', 'name' => 'Pro', 'price_minor' => 9900, 'currency' => 'EUR'],
+            ['slug' => 'basic', 'name' => 'Basic', 'price_minor' => 100, 'currency' => 'EUR'],
+            ['slug' => 'enterprise', 'name' => 'Enterprise', 'price_minor' => 400, 'currency' => 'EUR'],
+            ['slug' => 'estate', 'name' => 'Estate', 'price_minor' => 799, 'currency' => 'EUR'],
         ];
 
         foreach ($plans as $plan) {
