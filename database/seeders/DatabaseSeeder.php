@@ -2,46 +2,35 @@
 
 namespace Database\Seeders;
 
-use App\Enums\MembershipStatus;
-use App\Enums\TenantRole;
-use App\Enums\TenantStatus;
-use App\Models\Membership;
+use App\Actions\Tenancy\CreateTenantAction;
 use App\Models\Tenant;
-use App\Models\TenantSetting;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed a demo tenant with an admin user (global identity + membership).
+     * Seed application defaults plus a demo tenant + admin for local dev.
+     * Idempotent: safe to re-run.
      */
     public function run(): void
     {
-        $tenant = Tenant::create([
-            'name' => 'Demo Winery',
-            'slug' => 'demo',
-            'status' => TenantStatus::Active,
-        ]);
+        // App-wide defaults required for the app to function.
+        $this->call(PlanSeeder::class);
 
-        TenantSetting::create([
-            'tenant_id' => $tenant->getKey(),
-            'default_currency' => 'EUR',
-            'default_locale' => 'hr',
-        ]);
-
-        $user = User::factory()->create([
-            'first_name' => 'Test',
-            'last_name' => 'User',
-            'email' => 'test@example.com',
-        ]);
-
-        Membership::create([
-            'tenant_id' => $tenant->getKey(),
-            'user_id' => $user->getKey(),
-            'roles' => collect([TenantRole::Admin]),
-            'status' => MembershipStatus::Active,
-            'joined_at' => now(),
-        ]);
+        // Demo tenant for local development (skipped if it already exists).
+        if (! Tenant::query()->where('slug', 'demo')->exists()) {
+            app(CreateTenantAction::class)->execute([
+                'name' => 'Demo Winery',
+                'slug' => 'demo',
+                'currency' => 'EUR',
+                'locale' => 'hr',
+                'admin' => [
+                    'first_name' => 'Test',
+                    'last_name' => 'User',
+                    'email' => 'test@example.com',
+                    'password' => 'password',
+                ],
+            ]);
+        }
     }
 }
