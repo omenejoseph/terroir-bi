@@ -1,0 +1,982 @@
+openapi: 3.1.0
+info:
+  title: Winery Order Management SaaS API
+  version: 1.0.0
+  description: >
+    Multi-tenant B2B SaaS API for winery operations: cellar/production,
+    inventory & recipes, B2B customers & pricing, orders (internal + public
+    self-service), suppliers, costs & banking, and Croatian e-invoice
+    (Moj-eRačun) integration.
+
+    Tenancy: every authenticated request resolves a tenant from the bearer
+    token's `tenant_id` claim. All data is tenant-scoped server-side; clients
+    never send a tenant id. The public order endpoints resolve the tenant from
+    the customer order token in the path.
+
+    This spec is a representative contract derived from the legacy Next.js +
+    Prisma implementation; see ../06-api-reference.md for the full endpoint
+    narrative and ../flows for resource-creation pathways.
+servers:
+  - url: https://api.example.com/api/v1
+    description: Production
+  - url: http://localhost:8000/api/v1
+    description: Local
+
+tags:
+  - name: Auth
+  - name: Tenancy
+  - name: Users
+  - name: Customers
+  - name: Pricing
+  - name: Inventory
+  - name: Recipes
+  - name: Orders
+  - name: Public Orders
+  - name: Cellar
+  - name: Suppliers
+  - name: Costs
+  - name: Banking
+  - name: E-Invoice
+  - name: AI
+  - name: Localization
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate, returns a bearer token with tenant + roles
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  user: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Current user, roles and tenant
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+
+  /signup:
+    post:
+      tags: [Tenancy]
+      summary: Create a tenant and its first ADMIN user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [company_name, slug, admin_name, admin_email, password]
+              properties:
+                company_name: { type: string }
+                slug: { type: string }
+                admin_name: { type: string }
+                admin_email: { type: string, format: email }
+                password: { type: string }
+                default_locale: { type: string, default: hr }
+                plan: { type: string }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  tenant: { $ref: '#/components/schemas/Tenant' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /users:
+    get:
+      tags: [Users]
+      summary: List users (ADMIN)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/User' } }
+    post:
+      tags: [Users]
+      summary: Create user (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string }
+                role: { type: string, description: "Comma-separated: ADMIN,TEAM,CELLAR,ORDERS", default: TEAM }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /customers:
+    get:
+      tags: [Customers]
+      summary: List customers
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Customer' } } } } }
+    post:
+      tags: [Customers]
+      summary: Create customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomerInput' }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Customer' } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /customers/{id}:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [Customers]
+      summary: Customer detail
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Customer' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Customers]
+      summary: Update customer
+      requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/CustomerInput' } } } }
+      responses: { '200': { description: OK } }
+    delete:
+      tags: [Customers]
+      summary: Delete (soft if it has orders) — ADMIN
+      responses: { '200': { description: OK }, '403': { $ref: '#/components/responses/Forbidden' } }
+
+  /customers/{id}/order-token:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    post:
+      tags: [Customers]
+      summary: Generate self-service order token (ADMIN)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: object, properties: { order_token: { type: string } } }
+    delete:
+      tags: [Customers]
+      summary: Revoke order token (ADMIN)
+      responses: { '200': { description: OK } }
+
+  /customers/{id}/resolved-prices:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [Pricing]
+      summary: Batch resolve prices for a customer (see pricing engine)
+      parameters:
+        - { name: item_ids, in: query, required: true, schema: { type: array, items: { type: string } }, style: form, explode: false }
+      responses:
+        '200':
+          description: Map of itemId → resolved price
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: { type: string, description: decimal } }
+
+  /pricing-tiers:
+    get:
+      tags: [Pricing]
+      summary: List pricing tiers
+      responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/PricingTier' } } } } } }
+    post:
+      tags: [Pricing]
+      summary: Create tier
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                rebate_percent: { type: number, default: 0 }
+      responses: { '201': { description: Created } }
+
+  /inventory-items:
+    get:
+      tags: [Inventory]
+      summary: List active inventory items
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: category, in: query, schema: { $ref: '#/components/schemas/InventoryCategory' } }
+      responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/InventoryItem' } } } } } }
+    post:
+      tags: [Inventory]
+      summary: Create inventory item
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/InventoryItemInput' } } } }
+      responses:
+        '201': { description: Created }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /inventory-items/{id}/movements:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    post:
+      tags: [Inventory]
+      summary: Record a manual stock movement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, quantity]
+              properties:
+                type: { type: string, enum: [MANUAL_IN, MANUAL_OUT] }
+                quantity: { type: number, minimum: 0 }
+                note: { type: string }
+      responses: { '200': { description: OK } }
+
+  /inventory-items/{id}/produce:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    post:
+      tags: [Inventory]
+      summary: Produce output from its recipe (consumes inputs)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [display_quantity]
+              properties: { display_quantity: { type: number, minimum: 0 } }
+      responses: { '200': { description: OK }, '422': { $ref: '#/components/responses/ValidationError' } }
+
+  /inventory-items/{id}/recipe:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [Recipes]
+      summary: Get recipe
+      responses: { '200': { description: OK } }
+    put:
+      tags: [Recipes]
+      summary: Replace recipe (auto-updates cost_per_unit; auto-creates wine-lot inputs)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [input_id, quantity]
+                    properties:
+                      input_id: { type: string }
+                      quantity: { type: number, minimum: 0 }
+      responses: { '200': { description: OK } }
+
+  /orders:
+    get:
+      tags: [Orders]
+      summary: List orders
+      parameters:
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/OrderStatus' } }
+        - { name: search, in: query, schema: { type: string } }
+      responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Order' } } } } } }
+    post:
+      tags: [Orders]
+      summary: Create order (deducts stock, snapshots COGS)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OrderInput' } } } }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { type: object, properties: { order_id: { type: string }, order_number: { type: string } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /orders/{id}:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [Orders]
+      summary: Order detail (items, status history, notes)
+      responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } } } }
+    delete:
+      tags: [Orders]
+      summary: Delete order and restock (ADMIN)
+      responses: { '200': { description: OK }, '403': { $ref: '#/components/responses/Forbidden' } }
+
+  /orders/{id}/status:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    patch:
+      tags: [Orders]
+      summary: Transition order status (appends history)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { $ref: '#/components/schemas/OrderStatus' }
+                note: { type: string }
+      responses: { '200': { description: OK } }
+
+  /public/{token}/catalog:
+    parameters: [ { name: token, in: path, required: true, schema: { type: string } } ]
+    get:
+      tags: [Public Orders]
+      summary: Tokenized self-service catalog (no auth; resolves tenant from token)
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customer:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      company_name: { type: string }
+                      hide_prices: { type: boolean }
+                  products:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        sku: { type: string }
+                        price: { type: string, description: decimal, nullable: true }
+                        image_url: { type: string, nullable: true }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /public/{token}/orders:
+    parameters: [ { name: token, in: path, required: true, schema: { type: string } } ]
+    post:
+      tags: [Public Orders]
+      summary: Place a self-service order (server re-verifies all prices)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                notes: { type: string }
+                items:
+                  type: array
+                  minItems: 1
+                  items: { $ref: '#/components/schemas/OrderLineInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { type: object, properties: { order_number: { type: string } } }
+        '422':
+          description: Price verification failed or invalid items
+
+  /wine-lots:
+    get:
+      tags: [Cellar]
+      summary: List wine lots (ADMIN/CELLAR)
+      responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/WineLot' } } } } } }
+    post:
+      tags: [Cellar]
+      summary: Create wine lot (auto lot_number, optional vessel, grape cost)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/WineLotInput' } } } }
+      responses: { '201': { description: Created } }
+
+  /wine-lots/{id}/assign-vessel:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    post:
+      tags: [Cellar]
+      summary: Allocate lot volume to a vessel (capacity-checked; auto-rebalances)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vessel_id, volume]
+              properties:
+                vessel_id: { type: string }
+                volume: { type: number, minimum: 0 }
+      responses: { '200': { description: OK }, '422': { $ref: '#/components/responses/ValidationError' } }
+
+  /cellar-transfers:
+    post:
+      tags: [Cellar]
+      summary: Rack / Blend / Split between lots & vessels
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, from_lot_id, to_lot_id, volume_liters]
+              properties:
+                type: { type: string, enum: [RACK, BLEND, SPLIT] }
+                from_lot_id: { type: string }
+                to_lot_id: { type: string }
+                volume_liters: { type: number, minimum: 0 }
+                from_vessel_id: { type: string, nullable: true }
+                to_vessel_id: { type: string, nullable: true }
+                note: { type: string }
+      responses: { '200': { description: OK } }
+
+  /wine-lots/{id}/bottlings:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    post:
+      tags: [Cellar]
+      summary: Bottle a lot → finished inventory + COGS roll-up
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bottle_count]
+              properties:
+                bottle_count: { type: integer, minimum: 1 }
+                bottle_volume_ml: { type: integer, default: 750 }
+                inventory_item_id: { type: string, nullable: true }
+                note: { type: string }
+      responses: { '200': { description: OK }, '422': { $ref: '#/components/responses/ValidationError' } }
+
+  /suppliers:
+    get:
+      tags: [Suppliers]
+      summary: List suppliers
+      parameters: [ { name: search, in: query, schema: { type: string } } ]
+      responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Supplier' } } } } } }
+    post:
+      tags: [Suppliers]
+      summary: Create supplier (ADMIN)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SupplierInput' } } } }
+      responses: { '201': { description: Created } }
+
+  /costs:
+    get:
+      tags: [Costs]
+      summary: List costs
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: category, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/CostStatus' } }
+        - { name: supplier_id, in: query, schema: { type: string } }
+      responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Cost' } } } } } }
+    post:
+      tags: [Costs]
+      summary: Create cost (+nested items) — ADMIN
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CostInput' } } } }
+      responses: { '201': { description: Created } }
+
+  /costs/{id}/status:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    patch:
+      tags: [Costs]
+      summary: Update cost status (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties: { status: { $ref: '#/components/schemas/CostStatus' } }
+      responses: { '200': { description: OK } }
+
+  /bank-transactions/check-duplicates:
+    post:
+      tags: [Banking]
+      summary: Annotate transactions with dedup/supplier/category hints (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transactions: { type: array, items: { $ref: '#/components/schemas/BankTransactionInput' } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactions:
+                    type: array
+                    items:
+                      allOf:
+                        - { $ref: '#/components/schemas/BankTransactionInput' }
+                        - type: object
+                          properties:
+                            is_duplicate: { type: boolean }
+                            matched_cost_id: { type: string, nullable: true }
+                            match_reason: { type: string, nullable: true }
+                            suggested_category: { type: string }
+                            matched_supplier_id: { type: string, nullable: true }
+                  stats:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      duplicates: { type: integer }
+                      new: { type: integer }
+
+  /bank-transactions/import-as-costs:
+    post:
+      tags: [Banking]
+      summary: Import transactions as costs (matches invoices, learns prices) — ADMIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transactions:
+                  type: array
+                  items:
+                    allOf:
+                      - { $ref: '#/components/schemas/BankTransactionInput' }
+                      - type: object
+                        properties:
+                          items: { type: array, items: { $ref: '#/components/schemas/CostItemInput' } }
+                          invoice_url: { type: string }
+                          invoice_filename: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+                  matched: { type: integer }
+                  with_items: { type: integer }
+
+  /e-invoices:
+    get:
+      tags: [E-Invoice]
+      summary: List e-invoices
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: integer } }
+        - { name: direction, in: query, schema: { type: string, enum: [INCOMING, OUTGOING] } }
+      responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/EInvoice' } } } } } }
+
+  /e-invoices/sync:
+    post:
+      tags: [E-Invoice]
+      summary: Manual Moj-eRačun inbox sync (ADMIN)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from: { type: string, format: date }
+                to: { type: string, format: date }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total: { type: integer }
+                  created: { type: integer }
+                  updated: { type: integer }
+
+  /ai/parse-receipt:
+    post:
+      tags: [AI]
+      summary: Parse a supplier receipt/invoice (image/PDF) into structured data
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vendor: { type: string, nullable: true }
+                  vendor_oib: { type: string, nullable: true }
+                  date: { type: string, format: date, nullable: true }
+                  total_amount: { type: number }
+                  currency: { type: string }
+                  reference: { type: string, nullable: true }
+                  category: { type: string }
+                  items: { type: array, items: { $ref: '#/components/schemas/CostItemInput' } }
+
+  /translations:
+    get:
+      tags: [Localization]
+      summary: Translation override map for a locale
+      security: []
+      parameters: [ { name: locale, in: query, schema: { type: string, default: hr } } ]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: { type: string } }
+    put:
+      tags: [Localization]
+      summary: Upsert a translation override (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [locale, key, value]
+              properties:
+                locale: { type: string }
+                key: { type: string }
+                value: { type: string }
+      responses: { '200': { description: OK } }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token carries tenant_id + roles. All data is tenant-scoped.
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+
+  responses:
+    Unauthorized:
+      description: Missing/invalid credentials
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Forbidden:
+      description: Authenticated but role not permitted
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    NotFound:
+      description: Not found (also returned for cross-tenant access attempts)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Conflict:
+      description: Unique constraint conflict (e.g. duplicate SKU/email/slug within tenant)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              errors: { type: object, additionalProperties: { type: array, items: { type: string } } }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message: { type: string }
+
+    InventoryCategory: { type: string, enum: [FINISHED, SEMI_FINISHED, RAW_MATERIAL] }
+    OrderStatus: { type: string, enum: [RECEIVED, IN_PROCESS, READY_TO_SHIP, SHIPPED] }
+    CostStatus: { type: string, enum: [PENDING, APPROVED, PAID] }
+
+    Tenant:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        status: { type: string, enum: [ACTIVE, SUSPENDED, TRIAL, CANCELED] }
+        default_locale: { type: string }
+
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, description: "Comma-separated roles: ADMIN,TEAM,CELLAR,ORDERS" }
+        tenant_id: { type: string }
+
+    CustomerInput:
+      type: object
+      required: [company_name, contact_name, email]
+      properties:
+        company_name: { type: string }
+        contact_name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        state: { type: string, nullable: true }
+        zip: { type: string, nullable: true }
+        country: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+        pricing_tier_id: { type: string, nullable: true }
+        rebate_percent: { type: number, default: 0 }
+        exclude_from_stats: { type: boolean, default: false }
+        hide_prices: { type: boolean, default: false }
+
+    Customer:
+      allOf:
+        - { $ref: '#/components/schemas/CustomerInput' }
+        - type: object
+          properties:
+            id: { type: string }
+            is_active: { type: boolean }
+            order_token: { type: string, nullable: true }
+            created_at: { type: string, format: date-time }
+
+    PricingTier:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        rebate_percent: { type: number }
+
+    InventoryItemInput:
+      type: object
+      required: [name, sku, category, unit]
+      properties:
+        name: { type: string }
+        sku: { type: string }
+        description: { type: string, nullable: true }
+        category: { $ref: '#/components/schemas/InventoryCategory' }
+        group: { type: string, nullable: true }
+        subcategory: { type: string, nullable: true }
+        vintage: { type: string, nullable: true }
+        unit: { type: string }
+        min_stock: { type: number, nullable: true }
+        default_price: { type: string, nullable: true, description: decimal }
+        bottles_per_case: { type: integer, default: 12 }
+        is_for_sale: { type: boolean, default: false }
+        cost_per_unit: { type: string, nullable: true, description: decimal }
+
+    InventoryItem:
+      allOf:
+        - { $ref: '#/components/schemas/InventoryItemInput' }
+        - type: object
+          properties:
+            id: { type: string }
+            current_stock: { type: number }
+            is_active: { type: boolean }
+            sort_order: { type: integer }
+
+    OrderLineInput:
+      type: object
+      required: [inventory_item_id, quantity, unit_price]
+      properties:
+        inventory_item_id: { type: string }
+        quantity: { type: integer, minimum: 1 }
+        unit_type: { type: string, enum: [bottles, cases], default: bottles }
+        unit_price: { type: string, description: decimal }
+
+    OrderInput:
+      type: object
+      required: [customer_id, items]
+      properties:
+        customer_id: { type: string }
+        notes: { type: string, nullable: true }
+        items:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/OrderLineInput' }
+
+    Order:
+      type: object
+      properties:
+        id: { type: string }
+        order_number: { type: string }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        total_amount: { type: string, description: decimal }
+        notes: { type: string, nullable: true }
+        customer_id: { type: string }
+        created_by_id: { type: string }
+        created_at: { type: string, format: date-time }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              inventory_item_id: { type: string }
+              quantity: { type: integer }
+              unit_type: { type: string }
+              unit_price: { type: string }
+              total: { type: string }
+              cost_per_unit: { type: string, nullable: true, description: "COGS snapshot" }
+
+    WineLotInput:
+      type: object
+      required: [name, grape_variety, vintage, initial_volume]
+      properties:
+        name: { type: string }
+        grape_variety: { type: string }
+        vintage: { type: string }
+        vineyard: { type: string, nullable: true }
+        initial_volume: { type: number }
+        grape_price_per_kg: { type: number, nullable: true }
+        harvest_weight_kg: { type: number, nullable: true }
+        vessel_id: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+
+    WineLot:
+      allOf:
+        - { $ref: '#/components/schemas/WineLotInput' }
+        - type: object
+          properties:
+            id: { type: string }
+            lot_number: { type: string }
+            current_volume: { type: number }
+            status: { type: string, enum: [FERMENTING, AGING, READY, BOTTLED, BLENDED] }
+            grape_cost: { type: string, nullable: true, description: decimal }
+
+    SupplierInput:
+      type: object
+      required: [company_name]
+      properties:
+        company_name: { type: string }
+        contact_name: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        country: { type: string, nullable: true }
+        tax_id: { type: string, nullable: true, description: "OIB" }
+        bank_account: { type: string, nullable: true, description: "IBAN" }
+        payment_terms: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+
+    Supplier:
+      allOf:
+        - { $ref: '#/components/schemas/SupplierInput' }
+        - type: object
+          properties:
+            id: { type: string }
+            is_active: { type: boolean }
+
+    CostItemInput:
+      type: object
+      required: [description, unit_price, total]
+      properties:
+        description: { type: string }
+        quantity: { type: number, default: 1 }
+        unit_price: { type: string, description: decimal }
+        total: { type: string, description: decimal }
+        category: { type: string, nullable: true }
+        inventory_item_id: { type: string, nullable: true }
+        wine_lot_id: { type: string, nullable: true }
+
+    CostInput:
+      type: object
+      required: [date, total_amount, category]
+      properties:
+        date: { type: string, format: date }
+        total_amount: { type: string, description: decimal }
+        currency: { type: string, default: EUR }
+        category: { type: string }
+        description: { type: string, nullable: true }
+        reference: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/CostStatus' }
+        payment_method: { type: string, nullable: true }
+        supplier_id: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/CostItemInput' }
+
+    Cost:
+      allOf:
+        - { $ref: '#/components/schemas/CostInput' }
+        - type: object
+          properties:
+            id: { type: string }
+            created_by_id: { type: string }
+            bank_transaction_id: { type: string, nullable: true }
+
+    BankTransactionInput:
+      type: object
+      required: [date, description, amount, type]
+      properties:
+        date: { type: string, format: date }
+        description: { type: string }
+        amount: { type: string, description: decimal }
+        type: { type: string, enum: [DEBIT, CREDIT] }
+        counterparty: { type: string, nullable: true }
+        reference: { type: string, nullable: true }
+        category: { type: string, nullable: true }
+
+    EInvoice:
+      type: object
+      properties:
+        id: { type: string }
+        electronic_id: { type: integer }
+        direction: { type: string, enum: [INCOMING, OUTGOING] }
+        document_nr: { type: string, nullable: true }
+        status: { type: integer, description: "10/20/30/40/45/50" }
+        process_status: { type: integer, nullable: true, description: "0/1/2/3/4/99" }
+        sender_oib: { type: string, nullable: true }
+        sender_name: { type: string, nullable: true }
+        invoice_date: { type: string, format: date, nullable: true }
+        total_amount: { type: string, nullable: true, description: decimal }
+        currency: { type: string, nullable: true }
+        cost_id: { type: string, nullable: true }
+        supplier_id: { type: string, nullable: true }
