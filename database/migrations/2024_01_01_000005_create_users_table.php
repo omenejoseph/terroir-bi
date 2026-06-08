@@ -8,19 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Users are GLOBAL identities: one account can belong to many tenants
+        // (via the memberships pivot) and switch context between them. Roles are
+        // held per-membership, not on the user.
         Schema::create('users', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->string('name');
-            $table->string('email');
+            $table->string('first_name');
+            $table->string('middle_name')->nullable();
+            $table->string('last_name');
+            $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('role')->default('ADMIN'); // comma-separated roles
             $table->rememberToken();
             $table->timestamps();
-
-            // Email is unique per tenant, not globally (one account = one tenant).
-            $table->unique(['tenant_id', 'email']);
         });
 
         // Password reset is pre-tenant (keyed by email globally), left unscoped.

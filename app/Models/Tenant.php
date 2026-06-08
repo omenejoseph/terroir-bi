@@ -9,6 +9,7 @@ use App\Tenancy\Adapters\Stancl\StanclTenantModelTrait;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Stancl\Tenancy\Contracts\Tenant as StanclTenantContract;
@@ -71,11 +72,21 @@ class Tenant extends Model implements StanclTenantContract
     }
 
     /**
-     * @return HasMany<User, $this>
+     * @return HasMany<Membership, $this>
      */
-    public function users(): HasMany
+    public function memberships(): HasMany
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(Membership::class);
+    }
+
+    /**
+     * @return BelongsToMany<User, $this>
+     */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'memberships')
+            ->withPivot(['roles', 'status'])
+            ->withTimestamps();
     }
 
     /**

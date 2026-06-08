@@ -5,23 +5,31 @@ declare(strict_types=1);
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Tenancy\BelongsToTenant;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\Contracts\HasAbilities;
+use Laravel\Sanctum\HasApiTokens;
 
 /**
+ * A global identity. A user is NOT tenant-scoped: they may belong to many
+ * tenants via memberships and switch the active one. Roles live on the
+ * membership, not here.
+ *
  * @property string $id
- * @property string $tenant_id
- * @property string $name
+ * @property string $first_name
+ * @property string|null $middle_name
+ * @property string $last_name
  * @property string $email
- * @property string $role Comma-separated roles, e.g. "ADMIN" or "TEAM,CELLAR".
  */
 class User extends Authenticatable
 {
-    use BelongsToTenant;
+    /** @use HasApiTokens<HasAbilities> */
+    use HasApiTokens;
 
     /** @use HasFactory<UserFactory> */
     use HasFactory;
@@ -30,11 +38,11 @@ class User extends Authenticatable
     use Notifiable;
 
     protected $fillable = [
-        'tenant_id',
-        'name',
+        'first_name',
+        'middle_name',
+        'last_name',
         'email',
         'password',
-        'role',
     ];
 
     protected $hidden = [
@@ -50,18 +58,43 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * The roles held by this user (the comma-separated `role` string, split).
-     *
-     * @return list<string>
-     */
-    public function roles(): array
+    /** The user's full name (first [middle] last). */
+    public function fullName(): string
     {
-        return array_values(array_filter(array_map('trim', explode(',', (string) $this->role))));
+        return implode(' ', array_filter([
+            $this->first_name,
+            $this->middle_name,
+            $this->last_name,
+        ]));
     }
 
-    public function hasRole(string $role): bool
+    /**
+     * @return HasMany<Membership, $this>
+     */
+    public function memberships(): HasMany
     {
-        return in_array($role, $this->roles(), true);
+        return $this->hasMany(Membership::class);
+    }
+
+    /**
+     * @return BelongsToMany<Tenant, $this>
+     */
+    public function tenants(): BelongsToMany
+    {
+        return $this->belongsToMany(Tenant::class, 'memberships')
+            ->withPivot(['roles', 'status'])
+            ->withTimestamps();
+    }
+
+    public function membershipFor(Tenant|string $tenant): ?Membership
+    {
+        $tenantId = $tenant instanceof Tenant ? $tenant->getKey() : $tenant;
+
+        return $this->memberships()->where('tenant_id', $tenantId)->first();
+    }
+
+    public function isMemberOf(Tenant|string $tenant): bool
+    {
+        return $this->membershipFor($tenant) !== null;
     }
 }

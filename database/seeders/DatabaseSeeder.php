@@ -2,7 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Enums\MembershipStatus;
+use App\Enums\TenantRole;
 use App\Enums\TenantStatus;
+use App\Models\Membership;
 use App\Models\Tenant;
 use App\Models\TenantSetting;
 use App\Models\User;
@@ -11,7 +14,7 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database with one demo tenant and an admin user.
+     * Seed a demo tenant with an admin user (global identity + membership).
      */
     public function run(): void
     {
@@ -27,9 +30,18 @@ class DatabaseSeeder extends Seeder
             'default_locale' => 'hr',
         ]);
 
-        User::factory()->forTenant($tenant)->create([
-            'name' => 'Test User',
+        $user = User::factory()->create([
+            'first_name' => 'Test',
+            'last_name' => 'User',
             'email' => 'test@example.com',
+        ]);
+
+        Membership::create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $user->getKey(),
+            'roles' => collect([TenantRole::Admin]),
+            'status' => MembershipStatus::Active,
+            'joined_at' => now(),
         ]);
     }
 }

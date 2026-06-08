@@ -21,9 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'locale' => SetLocale::class,
         ]);
 
-        // Applied to tenant-facing API routes. ResolveTenant must run before
-        // SetLocale so the tenant's default locale can participate.
+        // Applied to authenticated tenant-facing API routes. Order matters:
+        // authenticate, then resolve+authorize the tenant, then set the locale.
         $middleware->group('tenant', [
+            'auth:sanctum',
             ResolveTenant::class,
             SetLocale::class,
         ]);

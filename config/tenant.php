@@ -34,10 +34,11 @@ return [
     | Order in which ResolveTenant middleware attempts to identify the tenant.
     | Earlier entries win. See app/Http/Middleware/ResolveTenant.php.
     */
-    'resolution_order' => ['token', 'subdomain', 'header'],
+    'resolution_order' => ['token', 'header', 'subdomain'],
 
-    // Dev/test header used to bind a tenant before auth exists. Disabled in production.
+    // X-Tenant header lets a client pick its active tenant; membership is still
+    // verified server-side, so it is safe. Toggle off to force token/subdomain only.
     'dev_header' => env('TENANT_DEV_HEADER', 'X-Tenant'),
-    'dev_header_enabled' => env('TENANT_DEV_HEADER_ENABLED', env('APP_ENV') !== 'production'),
+    'dev_header_enabled' => env('TENANT_DEV_HEADER_ENABLED', true),
 
 ];

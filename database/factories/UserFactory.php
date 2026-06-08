@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -26,25 +25,14 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'first_name' => fake()->firstName(),
+            'middle_name' => null,
+            'last_name' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
-            'role' => 'ADMIN',
             'remember_token' => Str::random(10),
-            // tenant_id is set by BelongsToTenant from the bound tenant context.
-            // Use ->forTenant() (below) when no tenant is bound.
         ];
-    }
-
-    /**
-     * Associate the user with a specific tenant explicitly.
-     */
-    public function forTenant(Tenant $tenant): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'tenant_id' => $tenant->getKey(),
-        ]);
     }
 
     /**

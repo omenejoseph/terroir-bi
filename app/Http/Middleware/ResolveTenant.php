@@ -4,71 +4,99 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Authorization\MembershipContext;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Tenancy\Contracts\TenantContext;
 use App\Tenancy\Contracts\TenantResolver;
 use Closure;
 use Illuminate\Http\Request;
+use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Identifies the tenant for a request and binds it into the TenantContext,
- * before any tenant-scoped query runs.
+ * Establishes the active tenant for an authenticated request and verifies the
+ * user is an active member of it, before any tenant-scoped query runs.
  *
- * Precedence (config('tenant.resolution_order')):
- *   1. token     — authenticated user's tenant_id (once auth is wired up)
- *   2. subdomain — acme.localhost -> tenant by slug
- *   3. header    — X-Tenant dev/test header (non-production only)
+ * Active-tenant precedence (config('tenant.resolution_order')):
+ *   1. token     — the Sanctum token's bound tenant_id (set at login / switch)
+ *   2. header    — X-Tenant (membership is still verified, so it is safe)
+ *   3. subdomain — acme.localhost -> tenant by slug
  *
- * If a subdomain and an authenticated tenant disagree, the request is rejected.
+ * Security: the client never selects a tenant it cannot prove membership of.
+ * No active membership ⇒ 403. Must run after auth:sanctum.
  */
 class ResolveTenant
 {
     public function __construct(
         private readonly TenantContext $context,
         private readonly TenantResolver $resolver,
+        private readonly MembershipContext $membership,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
-        $tenant = null;
+        $user = $request->user();
 
-        foreach ((array) config('tenant.resolution_order', []) as $strategy) {
-            $tenant = match ($strategy) {
-                'token' => $this->fromAuth($request),
-                'subdomain' => $this->resolver->resolveFromSubdomain($request->getHost()),
-                'header' => $this->fromDevHeader($request),
-                default => null,
-            };
-
-            if ($tenant !== null) {
-                break;
-            }
+        if (! $user instanceof User) {
+            abort(Response::HTTP_UNAUTHORIZED);
         }
+
+        $tenant = $this->resolveTenant($request, $user);
 
         if ($tenant === null) {
-            abort(Response::HTTP_NOT_FOUND, 'Tenant could not be identified.');
+            abort(Response::HTTP_BAD_REQUEST, 'No active tenant for this request.');
         }
 
-        // Guard: an authenticated tenant must match a subdomain tenant if both exist.
-        $authTenant = $this->fromAuth($request);
-        if ($authTenant !== null && $authTenant->getKey() !== $tenant->getKey()) {
-            abort(Response::HTTP_FORBIDDEN, 'Tenant mismatch.');
+        $membership = $user->membershipFor($tenant);
+
+        if ($membership === null || ! $membership->isActive()) {
+            abort(Response::HTTP_FORBIDDEN, 'You are not an active member of this tenant.');
         }
 
         $this->context->makeCurrent($tenant);
 
+        $membership->setRelation('user', $user);
+        $membership->setRelation('tenant', $tenant);
+        $this->membership->set($membership);
+
         return $next($request);
     }
 
-    private function fromAuth(Request $request): ?Tenant
+    private function resolveTenant(Request $request, User $user): ?Tenant
     {
-        $user = $request->user();
+        foreach ((array) config('tenant.resolution_order', []) as $strategy) {
+            $tenant = match ($strategy) {
+                'token' => $this->fromToken($user),
+                'header' => $this->fromHeader($request),
+                'subdomain' => $this->resolver->resolveFromSubdomain($request->getHost()),
+                default => null,
+            };
 
-        return $user?->tenant_id ? $this->resolver->resolveById($user->tenant_id) : null;
+            if ($tenant !== null) {
+                return $tenant;
+            }
+        }
+
+        return null;
     }
 
-    private function fromDevHeader(Request $request): ?Tenant
+    private function fromToken(User $user): ?Tenant
+    {
+        $token = $user->currentAccessToken();
+
+        // Only real stored tokens carry a bound tenant; TransientToken (used by
+        // Sanctum::actingAs / cookie auth) does not.
+        if (! $token instanceof PersonalAccessToken) {
+            return null;
+        }
+
+        $tenantId = $token->getAttribute('tenant_id');
+
+        return is_string($tenantId) ? $this->resolver->resolveById($tenantId) : null;
+    }
+
+    private function fromHeader(Request $request): ?Tenant
     {
         if (! config('tenant.dev_header_enabled')) {
             return null;
@@ -76,6 +104,6 @@ class ResolveTenant
 
         $id = $request->header((string) config('tenant.dev_header', 'X-Tenant'));
 
-        return $id ? $this->resolver->resolveById($id) : null;
+        return is_string($id) && $id !== '' ? $this->resolver->resolveById($id) : null;
     }
 }
