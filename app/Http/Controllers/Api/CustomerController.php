@@ -15,6 +15,7 @@ use App\Http\Requests\Customers\StoreCustomerRequest;
 use App\Http\Requests\Customers\UpdateCustomerRequest;
 use App\Models\Customer;
 use App\Queries\CustomerInsightsQuery;
+use App\Queries\CustomerOrderAnalyticsQuery;
 use App\Queries\ListCustomersQuery;
 use App\Queries\ReorderRadarQuery;
 use App\Services\Customers\CustomerMergeService;
@@ -25,6 +26,12 @@ use Illuminate\Http\Request;
 class CustomerController extends Controller
 {
     public function insights(Customer $customer, CustomerInsightsQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->get($customer)]);
+    }
+
+    /** Forward-looking order analytics (period revenue, YoY, projections, expected next order). */
+    public function orderAnalytics(Customer $customer, CustomerOrderAnalyticsQuery $query): JsonResponse
     {
         return response()->json(['data' => $query->get($customer)]);
     }
@@ -139,6 +146,12 @@ class CustomerController extends Controller
         $customer->delete();
 
         return response()->json(status: 204);
+    }
+
+    /** The customer's current self-service order token (admins with customers.tokens). */
+    public function showToken(Customer $customer): JsonResponse
+    {
+        return response()->json(['data' => ['order_token' => $customer->order_token]]);
     }
 
     public function generateToken(Customer $customer, OrderTokenAction $action): JsonResponse

@@ -771,6 +771,56 @@ paths:
       responses:
         '200': { description: OK }
 
+  /customers/{customer}/order-analytics:
+    get:
+      tags: [Customers]
+      summary: Forward-looking order analytics (revenue, YoY, projections, expected next order). Requires financials.view.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: customer, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      total_revenue: { $ref: '#/components/schemas/Money' }
+                      this_year: { $ref: '#/components/schemas/Money' }
+                      last_year: { $ref: '#/components/schemas/Money' }
+                      last_order_date: { type: string, nullable: true }
+                      yoy_growth_percent: { type: string }
+                      annual_projection: { $ref: '#/components/schemas/Money' }
+                      expected_next_order_date: { type: string, nullable: true }
+                      next_quarter_projection: { $ref: '#/components/schemas/Money' }
+  /customers/{customer}/custom-prices:
+    get:
+      tags: [Pricing]
+      summary: The customer's negotiated per-product prices (override rebate)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - { name: customer, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        inventory_item_id: { type: string }
+                        name: { type: string, nullable: true }
+                        sku: { type: string, nullable: true }
+                        price: { $ref: '#/components/schemas/Money' }
   /customers/{customer}/resolved-prices:
     get:
       tags: [Pricing]

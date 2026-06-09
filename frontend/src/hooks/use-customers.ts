@@ -78,3 +78,69 @@ export function useDeleteCustomer() {
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["customers"] }),
   });
 }
+
+export function useCustomerOrderAnalytics(id: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: ["customers", "order-analytics", id],
+    queryFn: () => customersApi.orderAnalytics(id!),
+    enabled: !!id && enabled,
+  });
+}
+
+export function useCustomerCustomPrices(id: string | undefined) {
+  return useQuery({
+    queryKey: ["customers", "custom-prices", id],
+    queryFn: () => customersApi.customPrices(id!),
+    enabled: !!id,
+  });
+}
+
+export function useSetCustomPrice(customerId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { itemId: string; minor: number }) =>
+      customersApi.setCustomPrice(vars.itemId, customerId, vars.minor),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["customers", "custom-prices", customerId] }),
+  });
+}
+
+export function useRemoveCustomPrice(customerId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId: string) => customersApi.removeCustomPrice(itemId, customerId),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["customers", "custom-prices", customerId] }),
+  });
+}
+
+/** The customer's current order token (admins with customers.tokens). */
+export function useCustomerToken(id: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: ["customers", "order-token", id],
+    queryFn: () => customersApi.orderToken(id!),
+    enabled: !!id && enabled,
+  });
+}
+
+export function useGenerateOrderToken(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => customersApi.generateToken(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["customers", "item", id] });
+      void queryClient.invalidateQueries({ queryKey: ["customers", "order-token", id] });
+    },
+  });
+}
+
+export function useRevokeOrderToken(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => customersApi.revokeToken(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["customers", "item", id] });
+      void queryClient.invalidateQueries({ queryKey: ["customers", "order-token", id] });
+    },
+  });
+}

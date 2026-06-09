@@ -6,6 +6,8 @@ import type {
   Cost,
   CostAnalytics,
   Customer,
+  CustomerOrderAnalytics,
+  PublicCatalog,
   DashboardSummary,
   Inflow,
   InventoryAnalytics,
@@ -205,6 +207,40 @@ export function makeCustomer(overrides: Partial<Customer> = {}): Customer {
     reorder_contacted_at: null,
     has_order_token: false,
     pricing_tier: { id: "tier_1", name: "Wholesale", rebate_percent: "10.00" },
+    ...overrides,
+  };
+}
+
+export function makeCustomerOrderAnalytics(
+  overrides: Partial<CustomerOrderAnalytics> = {},
+): CustomerOrderAnalytics {
+  return {
+    total_revenue: money(120000),
+    this_year: money(50000),
+    last_year: money(40000),
+    last_order_date: "2026-05-01T10:00:00+00:00",
+    yoy_growth_percent: "25.00",
+    annual_projection: money(110000),
+    expected_next_order_date: "2026-07-01T10:00:00+00:00",
+    next_quarter_projection: money(30000),
+    ...overrides,
+  };
+}
+
+export function makePublicCatalog(overrides: Partial<PublicCatalog> = {}): PublicCatalog {
+  return {
+    customer: { company_name: "Acme Corporation", hide_prices: false, allow_single_bottle: false },
+    products: [
+      {
+        id: "itm_1",
+        name: "Plavac Mali 2021",
+        sku: "PM-2021",
+        vintage: "2021",
+        unit: "cases",
+        bottles_per_case: 12,
+        price: money(15000),
+      },
+    ],
     ...overrides,
   };
 }

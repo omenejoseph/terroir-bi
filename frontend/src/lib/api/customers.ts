@@ -1,8 +1,11 @@
 import { api } from "@/lib/api/client";
 import type {
   Customer,
+  CustomerCustomPrice,
   CustomerInput,
+  CustomerOrderAnalytics,
   CustomerQuery,
+  Money,
   PaginationMeta,
   PricingTier,
   PricingTierInput,
@@ -36,4 +39,26 @@ export const customersApi = {
 
   /** POST /pricing-tiers — requires pricing.manage. */
   createPricingTier: (input: PricingTierInput) => api.post<PricingTier>("/pricing-tiers", input),
+
+  /** GET /customers/{id}/order-analytics — requires financials.view. */
+  orderAnalytics: (id: string) =>
+    api.get<CustomerOrderAnalytics>(`/customers/${id}/order-analytics`),
+
+  /** GET /customers/{id}/custom-prices — the customer's negotiated prices. */
+  customPrices: (id: string) => api.get<CustomerCustomPrice[]>(`/customers/${id}/custom-prices`),
+
+  /** PUT /inventory-items/{item}/customer-price/{customer} — requires pricing.manage. */
+  setCustomPrice: (itemId: string, customerId: string, minor: number) =>
+    api.put<Money>(`/inventory-items/${itemId}/customer-price/${customerId}`, { price: minor }),
+
+  /** DELETE /inventory-items/{item}/customer-price/{customer}. */
+  removeCustomPrice: (itemId: string, customerId: string) =>
+    api.delete<void>(`/inventory-items/${itemId}/customer-price/${customerId}`),
+
+  /** Self-service order token (requires customers.tokens). */
+  orderToken: (id: string) =>
+    api.get<{ order_token: string | null }>(`/customers/${id}/order-token`),
+  generateToken: (id: string) =>
+    api.post<Customer & { order_token: string }>(`/customers/${id}/order-token`),
+  revokeToken: (id: string) => api.delete<Customer>(`/customers/${id}/order-token`),
 };

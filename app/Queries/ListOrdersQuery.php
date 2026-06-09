@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ListOrdersQuery
 {
     /**
-     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool}  $filters
+     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string}  $filters
      * @return LengthAwarePaginator<int, Order>
      */
     public function paginate(array $filters = [], int $perPage = 25): LengthAwarePaginator
@@ -28,12 +28,16 @@ class ListOrdersQuery
     }
 
     /**
-     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool}  $filters
+     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string}  $filters
      * @return Builder<Order>
      */
     public function build(array $filters): Builder
     {
         $query = Order::query();
+
+        if (! empty($filters['customer_id'])) {
+            $query->where('customer_id', $filters['customer_id']);
+        }
 
         if (! empty($filters['status'])) {
             $query->where('status', OrderStatus::from($filters['status']));

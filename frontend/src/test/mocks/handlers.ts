@@ -9,6 +9,8 @@ import {
   makeCost,
   makeCostAnalytics,
   makeCustomer,
+  makeCustomerOrderAnalytics,
+  makePublicCatalog,
   makeDashboard,
   makeImage,
   makeInflow,
@@ -233,6 +235,33 @@ export const handlers = [
   ),
   http.post(url("/customers/:id/consignment/sale"), () => new HttpResponse(null, { status: 204 })),
   http.post(url("/customers/:id/consignment/return"), () => new HttpResponse(null, { status: 204 })),
+
+  // Customer order analytics + custom pricing + order token.
+  http.get(url("/customers/:id/order-analytics"), () =>
+    HttpResponse.json({ data: makeCustomerOrderAnalytics() }),
+  ),
+  http.get(url("/customers/:id/custom-prices"), () => HttpResponse.json({ data: [] })),
+  http.get(url("/customers/:id/order-token"), () =>
+    HttpResponse.json({ data: { order_token: "tok_demo" } }),
+  ),
+  http.post(url("/customers/:id/order-token"), ({ params }) =>
+    HttpResponse.json({ data: { ...makeCustomer({ id: String(params.id), has_order_token: true }), order_token: "tok_demo" } }),
+  ),
+  http.delete(url("/customers/:id/order-token"), ({ params }) =>
+    HttpResponse.json({ data: makeCustomer({ id: String(params.id), has_order_token: false }) }),
+  ),
+  http.put(url("/inventory-items/:item/customer-price/:customer"), () =>
+    HttpResponse.json({ data: { minor: 1200, currency: "EUR", formatted: "€12.00" } }),
+  ),
+  http.delete(url("/inventory-items/:item/customer-price/:customer"), () =>
+    new HttpResponse(null, { status: 204 }),
+  ),
+
+  // Public self-service order flow (token in URL, no auth).
+  http.get(url("/public/:token/catalog"), () => HttpResponse.json({ data: makePublicCatalog() })),
+  http.post(url("/public/:token/orders"), () =>
+    HttpResponse.json({ data: { order_number: "ORD-2001" } }, { status: 201 }),
+  ),
 
   // Notifications.
   http.get(url("/notifications"), () => HttpResponse.json({ data: [makeNotification()] })),

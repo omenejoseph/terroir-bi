@@ -40,7 +40,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/",
   useSearchParams: () => mockSearchParams,
   // Detail pages read a route param; fixtures use these ids.
-  useParams: () => ({ id: "itm_1", userId: "usr_1", invitationId: "inv_1" }),
+  useParams: () => ({ id: "itm_1", userId: "usr_1", invitationId: "inv_1", token: "tok_1" }),
   redirect: vi.fn(),
 }));
 

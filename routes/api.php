@@ -119,7 +119,9 @@ Route::prefix('v1')->group(function () {
             Route::get('customers', [CustomerController::class, 'index']);
             Route::get('customers/{customer}', [CustomerController::class, 'show']);
             Route::get('customers/{customer}/insights', [CustomerController::class, 'insights'])->middleware('can:financials.view');
+            Route::get('customers/{customer}/order-analytics', [CustomerController::class, 'orderAnalytics'])->middleware('can:financials.view');
             Route::get('customers/{customer}/resolved-prices', [PriceController::class, 'resolvedPrices']);
+            Route::get('customers/{customer}/custom-prices', [PriceController::class, 'customerPrices']);
             Route::get('customers/{customer}/product-overrides', [CustomerProductOverrideController::class, 'index']);
         });
         Route::middleware('can:customers.manage')->group(function () {
@@ -136,6 +138,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])
             ->middleware('can:customers.delete');
         Route::middleware('can:customers.tokens')->group(function () {
+            Route::get('customers/{customer}/order-token', [CustomerController::class, 'showToken']);
             Route::post('customers/{customer}/order-token', [CustomerController::class, 'generateToken']);
             Route::delete('customers/{customer}/order-token', [CustomerController::class, 'revokeToken']);
         });

@@ -62,6 +62,26 @@ class PriceController extends Controller
     }
 
     /**
+     * The customer's negotiated per-product prices (absolute; override rebate).
+     */
+    public function customerPrices(Customer $customer): JsonResponse
+    {
+        $rows = CustomerPrice::query()
+            ->where('customer_id', $customer->getKey())
+            ->with('inventoryItem')
+            ->get()
+            ->map(fn (CustomerPrice $cp) => [
+                'inventory_item_id' => $cp->inventory_item_id,
+                'name' => $cp->inventoryItem?->name,
+                'sku' => $cp->inventoryItem?->sku,
+                'price' => $cp->price->jsonSerialize(),
+            ])
+            ->all();
+
+        return response()->json(['data' => $rows]);
+    }
+
+    /**
      * Batch price resolution for a customer (pricing engine).
      */
     public function resolvedPrices(Request $request, Customer $customer, PricingService $pricing): JsonResponse

@@ -22,6 +22,7 @@ export const ordersApi = {
       status: query.status,
       search: query.search,
       hide_shipped: query.hide_shipped,
+      customer_id: query.customer_id,
       page: query.page,
     }),
 

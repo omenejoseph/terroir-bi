@@ -224,6 +224,48 @@ export interface Customer {
   pricing_tier: { id: string; name: string; rebate_percent: string } | null;
 }
 
+/** GET /customers/{id}/order-analytics — forward-looking revenue metrics. */
+export interface CustomerOrderAnalytics {
+  total_revenue: Money;
+  this_year: Money;
+  last_year: Money;
+  last_order_date: string | null;
+  yoy_growth_percent: string;
+  annual_projection: Money;
+  expected_next_order_date: string | null;
+  next_quarter_projection: Money;
+}
+
+/** A customer's negotiated per-product price (overrides rebate). */
+export interface CustomerCustomPrice {
+  inventory_item_id: string;
+  name: string | null;
+  sku: string | null;
+  price: Money;
+}
+
+/** GET /public/{token}/catalog — the customer-facing self-service catalog. */
+export interface PublicCatalog {
+  customer: { company_name: string; hide_prices: boolean; allow_single_bottle: boolean };
+  products: PublicCatalogProduct[];
+}
+
+export interface PublicCatalogProduct {
+  id: string;
+  name: string;
+  sku: string;
+  vintage: string | null;
+  unit: SalesUnit;
+  bottles_per_case: number;
+  price?: Money;
+}
+
+/** POST /public/{token}/orders — a self-service order. */
+export interface PublicOrderInput {
+  items: { inventory_item_id: string; quantity: number; unit_type?: SalesUnit }[];
+  notes?: string | null;
+}
+
 /** Payload for POST/PATCH /customers. */
 export interface CustomerInput {
   company_name: string;
@@ -504,6 +546,7 @@ export interface OrderQuery {
   status?: OrderStatus;
   search?: string;
   hide_shipped?: boolean;
+  customer_id?: string;
   page?: number;
 }
 

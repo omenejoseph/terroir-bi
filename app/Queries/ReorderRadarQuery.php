@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Support\Money\CurrencyRegistry;
 use App\Support\Money\Money;
+use App\Support\OrderCadence;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -57,7 +58,7 @@ class ReorderRadarQuery
 
             /** @var list<Carbon> $dates */
             $dates = $list->map(fn (Order $o) => $this->effectiveDate($o))->sort()->values()->all();
-            $median = $this->medianGapDays($dates);
+            $median = OrderCadence::medianGapDays($dates);
             $last = end($dates);
             if ($median <= 0 || ! $last instanceof Carbon) {
                 continue;
@@ -108,32 +109,6 @@ class ReorderRadarQuery
     private function effectiveDate(Order $order): Carbon
     {
         return $order->backorder_date ?? $order->created_at ?? Carbon::now();
-    }
-
-    /**
-     * @param  list<Carbon>  $dates  sorted ascending
-     */
-    private function medianGapDays(array $dates): float
-    {
-        $gaps = [];
-        $prev = null;
-        foreach ($dates as $date) {
-            if ($prev !== null) {
-                $gaps[] = (float) $prev->diffInDays($date);
-            }
-            $prev = $date;
-        }
-
-        if ($gaps === []) {
-            return 0.0;
-        }
-
-        sort($gaps);
-        $mid = intdiv(count($gaps), 2);
-
-        return count($gaps) % 2 === 0
-            ? ($gaps[$mid - 1] + $gaps[$mid]) / 2
-            : $gaps[$mid];
     }
 
     private function status(float $ratio): ?string

@@ -60,6 +60,7 @@ class OrderController extends Controller
         $paginator = $query->paginate([
             'status' => $request->query('status'),
             'search' => $request->query('search'),
+            'customer_id' => $request->query('customer_id'),
             'hide_shipped' => ! $this->membership->canSeeShippedOrders(),
         ]);
 
