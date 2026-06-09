@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CustomerConsignmentController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CustomerProductOverrideController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\InflowController;
 use App\Http\Controllers\Api\InventoryItemController;
 use App\Http\Controllers\Api\InventoryMediaController;
 use App\Http\Controllers\Api\InvitationController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderCommentController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\OrderPaymentController;
 use App\Http\Controllers\Api\PriceController;
 use App\Http\Controllers\Api\PricingTierController;
 use App\Http\Controllers\Api\PublicOrderController;
@@ -132,6 +134,22 @@ Route::prefix('v1')->group(function () {
             Route::post('customers/{customer}/order-token', [CustomerController::class, 'generateToken']);
             Route::delete('customers/{customer}/order-token', [CustomerController::class, 'revokeToken']);
         });
+
+        // Finance — money-in / accounts-receivable.
+        Route::middleware('can:finance.view')->group(function () {
+            Route::get('inflows/aging', [InflowController::class, 'aging']); // static before {inflow}
+            Route::get('inflows', [InflowController::class, 'index']);
+            Route::get('inflows/{inflow}', [InflowController::class, 'show']);
+            Route::get('orders/{order}/payments', [OrderPaymentController::class, 'index']);
+        });
+        Route::middleware('can:finance.manage')->group(function () {
+            Route::post('inflows', [InflowController::class, 'store']);
+            Route::patch('inflows/{inflow}/status', [InflowController::class, 'updateStatus']);
+            Route::patch('inflows/{inflow}', [InflowController::class, 'update']);
+            Route::post('orders/{order}/payments', [OrderPaymentController::class, 'store']);
+        });
+        Route::delete('inflows/{inflow}', [InflowController::class, 'destroy'])
+            ->middleware('can:finance.delete');
 
         // Customer-level consignment (rollup + FIFO sale/return across placements).
         Route::get('customers/{customer}/consignment', [CustomerConsignmentController::class, 'summary'])

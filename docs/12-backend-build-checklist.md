@@ -148,6 +148,38 @@ Direct-to-bucket uploads to a **private S3-compatible** bucket. **Default store:
 
 ---
 
+## Phase 6 — Essentials plan (off-spreadsheets) 🆕
+The Essentials plan = Dashboard, Orders, Warehouse+cost-per-product, **Cash flow**,
+Customers+analytics, **Team task planning**. Orders/Customers/Inventory/analytics are
+done (Phases 0–5 + 1b/2b). What the old app has and we don't, scoped for Essentials
+(see the gap analysis chat / `10-migration-deltas.md`):
+
+### 6.1 Order payments / Accounts-Receivable ✅
+- [x] `inflows` table + `Inflow` model + `InflowStatus` enum; `Order::inflows`; `finance.view/manage` capabilities.
+- [x] Inflow CRUD + mark-received (`/inflows`, `/inflows/{id}/status`, `/inflows/aging`); list query.
+- [x] Order payments: `GET/POST /orders/{id}/payments`; **order detail carries a payment summary** (`amount_paid` / `balance_due` / `UNPAID|PARTIAL|PAID`, credit notes negative), gated by `finance.view`.
+- [x] **AR aging** over outstanding order balances (current / 31–60 / 61–90 / 90+), per customer.
+- **Accept:** ✅ unpaid→partial→paid, credit-note reduction, pending-vs-received, aging buckets — `tests/Feature/Finance/OrderPaymentTest.php` (4 tests). `composer check` green (407 tests).
+
+### 6.2 Costs / Expenses + Suppliers + Purchasing  *(next)*
+- [ ] `costs`, `cost_items`, `cost_attachments`; status PENDING→APPROVED→PAID; categories; CSV import; analytics (burn rate, by-category/supplier, P&L).
+- [ ] `suppliers`, `supplier_price_items` (CRUD, merge, price-list learning).
+- [ ] `supplier_orders` + items; PO lifecycle DRAFT→SENT→CONFIRMED→**RECEIVED** → writes a **`PURCHASE_IN`** movement (new `StockMovementType`) and updates `cost_per_unit` (landed cost → real cost-per-product).
+
+### 6.3 Cash-flow forecast + banking  *(after 6.2)*
+- [ ] Cash-flow forecast (historical 12-mo + projected 6-mo; pending costs/inflows) over the 6.1/6.2 data.
+- [ ] `bank_transactions` + statement import, dedup, DEBIT→cost / CREDIT→inflow matching. (AI parse deferred to Laravel AI.)
+- [ ] *(Croatia)* Moj-eRačun e-invoice sync — likely beyond Essentials.
+
+### 6.4 Team task planning  *(parallelizable)*
+- [ ] `work_orders` (tasks): title/category/priority/status TODO/IN_PROGRESS/DONE, start/due/completed, `sort_order` (intra-day reorder), `assignee_id`. Kanban + calendar endpoints; quick-create; stats. (HR scheduling/hours = follow-on.)
+
+### 6.5 Real Dashboard + import/export  *(after 6.1–6.2)*
+- [ ] Replace `DashboardSummary` placeholders with real Orders/AR/cash/low-stock/overdue-reorder/tasks KPIs.
+- [ ] CSV import (customers, inventory, opening balances) + exports (orders, inventory valuation, AR, cash flow).
+
+---
+
 ## Cross-cutting done-criteria
 - [ ] `php artisan migrate:fresh --seed` green; migrations reversible.
 - [ ] Every new field validated; cross-tenant access → `404`.
