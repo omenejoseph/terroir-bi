@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\TenantSessionController;
+use App\Http\Controllers\Api\CashFlowController;
 use App\Http\Controllers\Api\ConsignmentController;
 use App\Http\Controllers\Api\CostController;
 use App\Http\Controllers\Api\CustomerConsignmentController;
@@ -168,6 +169,7 @@ Route::prefix('v1')->group(function () {
             Route::get('costs/analytics', [CostController::class, 'analytics']);
             Route::get('costs', [CostController::class, 'index']);
             Route::get('costs/{cost}', [CostController::class, 'show']);
+            Route::get('cash-flow', [CashFlowController::class, 'index']);
         });
         Route::middleware('can:finance.manage')->group(function () {
             Route::post('inflows', [InflowController::class, 'store']);

@@ -167,10 +167,10 @@ done (Phases 0–5 + 1b/2b). What the old app has and we don't, scoped for Essen
 - [x] **Purchasing** (`supplier_orders` + items): PO lifecycle DRAFT→SENT→CONFIRMED→**RECEIVED** → writes a **`PURCHASE_IN`** movement (new enum case) and refreshes `cost_per_unit` (landed cost → real cost-per-product), applied once; delete blocked once received. `SupplierOrderTest`.
 - **Accept:** ✅ `composer check` green (450 tests). *(Deferred: supplier merge, CSV cost import, price-list "learning" from invoices.)*
 
-### 6.3 Cash-flow forecast + banking  *(after 6.2)*
-- [ ] Cash-flow forecast (historical 12-mo + projected 6-mo; pending costs/inflows) over the 6.1/6.2 data.
-- [ ] `bank_transactions` + statement import, dedup, DEBIT→cost / CREDIT→inflow matching. (AI parse deferred to Laravel AI.)
-- [ ] *(Croatia)* Moj-eRačun e-invoice sync — likely beyond Essentials.
+### 6.3 Cash-flow forecast ✅
+- [x] `CashFlowForecastQuery` + `GET /cash-flow` (finance.view): 12-mo historical cash-in (received inflows, credit notes negative) vs cash-out (costs), 6-mo projection (3-mo moving average + revenue trend, inflation nudge), pending pipeline (receivables/payables), and summary KPIs. `CashFlowTest`.
+- **Accept:** ✅ `composer check` green (454 tests).
+- [—] Deferred: `bank_transactions` + statement import / dedup / DEBIT→cost·CREDIT→inflow matching (AI parse → Laravel AI); Moj-eRačun e-invoice sync (Croatia; beyond Essentials).
 
 ### 6.4 Team task planning  *(parallelizable)*
 - [ ] `work_orders` (tasks): title/category/priority/status TODO/IN_PROGRESS/DONE, start/due/completed, `sort_order` (intra-day reorder), `assignee_id`. Kanban + calendar endpoints; quick-create; stats. (HR scheduling/hours = follow-on.)
