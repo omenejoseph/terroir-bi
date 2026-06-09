@@ -1,10 +1,7 @@
-import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import DashboardPage from "./page";
-import { API_URL } from "@/lib/config";
-import { server } from "@/test/mocks/server";
-import { renderWithProviders, screen, seedAuth, seedLocale } from "@/test/utils";
+import { renderWithProviders, screen, seedAuth, seedLocale, userEvent } from "@/test/utils";
 
 describe("DashboardPage", () => {
   beforeEach(() => {
@@ -12,28 +9,32 @@ describe("DashboardPage", () => {
     seedLocale("en");
   });
 
-  it("greets the authenticated user and shows session info", async () => {
+  it("greets the user and renders the summary cards from the API", async () => {
     renderWithProviders(<DashboardPage />);
 
     expect(await screen.findByText("Welcome back, Ada")).toBeInTheDocument();
-    expect(screen.getByText("ada@example.com")).toBeInTheDocument();
-    // "owner" appears in both the roles stat and the session badge.
-    expect(screen.getAllByText("owner").length).toBeGreaterThan(0);
+    expect(await screen.findByText("Total Orders")).toBeInTheDocument();
+    expect(screen.getByText("Customers")).toBeInTheDocument();
+    expect(screen.getByText("Low Stock")).toBeInTheDocument();
+    expect(screen.getAllByText("Revenue").length).toBeGreaterThan(0);
   });
 
-  it("shows the inventory item count from the API", async () => {
-    server.use(
-      http.get(`${API_URL}/inventory-items`, () =>
-        HttpResponse.json({
-          data: [],
-          meta: { current_page: 1, last_page: 1, per_page: 15, total: 5 },
-        }),
-      ),
-    );
-
+  it("renders the chart sections and recent orders", async () => {
     renderWithProviders(<DashboardPage />);
 
-    expect(await screen.findByText("Inventory items")).toBeInTheDocument();
-    expect(await screen.findByText("5")).toBeInTheDocument();
+    expect(await screen.findByText("Order Status")).toBeInTheDocument();
+    expect(screen.getByText("Top Selling Products")).toBeInTheDocument();
+    expect(screen.getByText("Stock Watch")).toBeInTheDocument();
+    expect(screen.getByText("Recent Orders")).toBeInTheDocument();
+    expect(screen.getByText("Acme Corporation")).toBeInTheDocument();
+  });
+
+  it("switches the time range", async () => {
+    renderWithProviders(<DashboardPage />);
+    const user = userEvent.setup();
+
+    await screen.findByText("Welcome back, Ada");
+    await user.click(screen.getByRole("tab", { name: "7D" }));
+    expect(screen.getByRole("tab", { name: "7D" })).toHaveAttribute("aria-selected", "true");
   });
 });

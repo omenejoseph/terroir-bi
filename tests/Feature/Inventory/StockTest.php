@@ -98,4 +98,54 @@ class StockTest extends TestCase
             'items' => [['input_id' => $item->getKey(), 'quantity' => '1']],
         ], $this->tenantHeader($tenant))->assertStatus(422);
     }
+
+    public function test_movements_are_listed_newest_first(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $item = $this->item();
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+
+        $this->postJson("/api/v1/inventory-items/{$item->getKey()}/stock", [
+            'type' => 'MANUAL_IN', 'quantity' => '10', 'reference' => 'FIRST',
+        ], $this->tenantHeader($tenant))->assertOk();
+        $this->postJson("/api/v1/inventory-items/{$item->getKey()}/stock", [
+            'type' => 'MANUAL_OUT', 'quantity' => '-4', 'reference' => 'SECOND',
+        ], $this->tenantHeader($tenant))->assertOk();
+
+        $this->getJson("/api/v1/inventory-items/{$item->getKey()}/movements", $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.reference', 'SECOND')
+            ->assertJsonPath('data.0.type', 'MANUAL_OUT')
+            ->assertJsonPath('data.1.reference', 'FIRST');
+    }
+
+    public function test_recipe_is_returned_with_input_details(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $bottle = InventoryItem::create(['name' => 'Wine', 'sku' => 'WINE', 'category' => 'FINISHED', 'unit' => 'bottles']);
+        $cork = InventoryItem::create(['name' => 'Cork', 'sku' => 'CORK', 'category' => 'RAW_MATERIAL', 'unit' => 'units']);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+
+        $this->putJson("/api/v1/inventory-items/{$bottle->getKey()}/recipe", [
+            'items' => [['input_id' => $cork->getKey(), 'quantity' => '2']],
+        ], $this->tenantHeader($tenant))->assertOk();
+
+        $this->getJson("/api/v1/inventory-items/{$bottle->getKey()}/recipe", $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.input_id', $cork->getKey())
+            ->assertJsonPath('data.0.input_name', 'Cork')
+            ->assertJsonPath('data.0.input_sku', 'CORK')
+            ->assertJsonPath('data.0.input_unit', 'units')
+            ->assertJsonPath('data.0.quantity', '2.000');
+    }
 }

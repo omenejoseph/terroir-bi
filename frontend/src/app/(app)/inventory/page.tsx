@@ -1,15 +1,28 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
+
+import { Plus } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
+import { useAuth } from "@/lib/auth/context";
 import { useInventory } from "@/hooks/use-inventory";
 import { useTranslation } from "@/i18n/context";
-import type { InventoryItem, Money } from "@/lib/types";
+import {
+  INVENTORY_CATEGORIES,
+  type InventoryCategory,
+  type InventoryItem,
+  type Money,
+} from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
+import { AddInventoryItemDialog } from "@/components/inventory/add-inventory-item-dialog";
+import { InventoryCharts } from "@/components/inventory/inventory-charts";
 
 function formatMoney(money: Money | null): string {
   if (!money) return "—";
@@ -17,10 +30,58 @@ function formatMoney(money: Money | null): string {
   return `${money.currency} ${money.amount}`;
 }
 
+type CategoryTab = InventoryCategory | "ALL";
+
+interface SubBucket {
+  subcategory: string | null;
+  items: InventoryItem[];
+}
+interface GroupBucket {
+  group: string | null;
+  buckets: SubBucket[];
+}
+
+/** Group items by group, then subcategory. Nulls sort last (groups) / first (subs). */
+function groupItems(items: InventoryItem[]): GroupBucket[] {
+  const groups = new Map<string | null, Map<string | null, InventoryItem[]>>();
+  for (const item of items) {
+    const g = item.group ?? null;
+    const s = item.subcategory ?? null;
+    if (!groups.has(g)) groups.set(g, new Map());
+    const subs = groups.get(g)!;
+    if (!subs.has(s)) subs.set(s, []);
+    subs.get(s)!.push(item);
+  }
+
+  const sortKeys = (keys: (string | null)[], nullsLast: boolean) =>
+    [...keys].sort((a, b) => {
+      if (a === null) return nullsLast ? 1 : -1;
+      if (b === null) return nullsLast ? -1 : 1;
+      return a.localeCompare(b);
+    });
+
+  return sortKeys([...groups.keys()], true).map((group) => {
+    const subs = groups.get(group)!;
+    return {
+      group,
+      buckets: sortKeys([...subs.keys()], false).map((subcategory) => ({
+        subcategory,
+        items: subs.get(subcategory)!,
+      })),
+    };
+  });
+}
+
 export default function InventoryPage() {
   const { t } = useTranslation();
+  const { can } = useAuth();
+  const router = useRouter();
+  const [addOpen, setAddOpen] = React.useState(false);
+  const [tab, setTab] = React.useState<CategoryTab>("ALL");
   const [search, setSearch] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
+
+  const openItem = (item: InventoryItem) => router.push(`/inventory/${item.id}`);
 
   // Debounce the search input so we don't hit the API on every keystroke.
   React.useEffect(() => {
@@ -28,11 +89,18 @@ export default function InventoryPage() {
     return () => clearTimeout(id);
   }, [search]);
 
-  const { data, isLoading, isError, error } = useInventory(
-    debounced ? { search: debounced } : {},
-  );
+  const { data, isLoading, isError, error } = useInventory({
+    ...(debounced ? { search: debounced } : {}),
+    ...(tab !== "ALL" ? { category: tab } : {}),
+  });
 
   const items = data?.data ?? [];
+  const grouped = React.useMemo(() => groupItems(items), [items]);
+
+  const tabs: { value: CategoryTab; label: string }[] = [
+    { value: "ALL", label: t("inventory.tabs.all") },
+    ...INVENTORY_CATEGORIES.map((c) => ({ value: c, label: t(`inventory.category.${c}`) })),
+  ];
 
   return (
     <div className="space-y-6">
@@ -45,13 +113,53 @@ export default function InventoryPage() {
               : t("inventory.subtitleDefault")}
           </p>
         </div>
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t("inventory.searchPlaceholder")}
-          className="sm:max-w-xs"
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("inventory.searchPlaceholder")}
+            className="sm:max-w-xs"
+          />
+          {can("inventory.manage") && (
+            <Button onClick={() => setAddOpen(true)} className="shrink-0">
+              <Plus className="size-4" />
+              {t("inventory.add.trigger")}
+            </Button>
+          )}
+        </div>
       </header>
+
+      {/* Analytics charts */}
+      <InventoryCharts />
+
+      {/* Category tabs */}
+      <div className="flex flex-wrap gap-1 border-b border-border">
+        {tabs.map((tabItem) => {
+          const active = tab === tabItem.value;
+          return (
+            <button
+              key={tabItem.value}
+              type="button"
+              onClick={() => setTab(tabItem.value)}
+              aria-pressed={active}
+              className={cn(
+                "relative px-3 py-2 text-sm font-medium transition-colors",
+                active ? "text-primary" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {tabItem.label}
+              <span
+                className={cn(
+                  "absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary transition-opacity duration-200",
+                  active ? "opacity-100" : "opacity-0",
+                )}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      <AddInventoryItemDialog open={addOpen} onOpenChange={setAddOpen} />
 
       {isLoading && (
         <div className="flex items-center justify-center py-16">
@@ -78,72 +186,57 @@ export default function InventoryPage() {
       )}
 
       {!isLoading && !isError && items.length > 0 && (
-        <>
-          {/* Mobile: stacked cards. */}
-          <div className="space-y-3 md:hidden">
-            {items.map((item) => (
-              <MobileRow key={item.id} item={item} />
-            ))}
-          </div>
-
-          {/* Desktop: table. */}
-          <Card className="hidden overflow-hidden md:block">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b border-border bg-muted/50 text-left text-muted-foreground">
-                  <tr>
-                    <Th>{t("inventory.colName")}</Th>
-                    <Th>{t("inventory.colSku")}</Th>
-                    <Th>{t("inventory.colCategory")}</Th>
-                    <Th className="text-right">{t("inventory.colStock")}</Th>
-                    <Th className="text-right">{t("inventory.colPrice")}</Th>
-                    <Th>{t("inventory.colStatus")}</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item) => (
-                    <tr key={item.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                      <Td className="font-medium">{item.name}</Td>
-                      <Td className="text-muted-foreground">{item.sku}</Td>
-                      <Td>{item.category}</Td>
-                      <Td className="text-right tabular-nums">
-                        {item.current_stock} {item.unit}
-                      </Td>
-                      <Td className="text-right tabular-nums">{formatMoney(item.default_price)}</Td>
-                      <Td>
-                        <StatusBadges item={item} />
-                      </Td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </>
+        <div className="space-y-8">
+          {grouped.map((group) => (
+            <section key={group.group ?? "__ungrouped__"} className="space-y-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                {group.group ?? t("inventory.grouping.ungrouped")}
+              </h2>
+              {group.buckets.map((bucket) => (
+                <div key={bucket.subcategory ?? "__none__"} className="space-y-2">
+                  {bucket.subcategory && (
+                    <h3 className="px-1 text-xs font-medium text-muted-foreground">
+                      {bucket.subcategory}
+                    </h3>
+                  )}
+                  <Card className="overflow-hidden">
+                    <div className="divide-y divide-border">
+                      {bucket.items.map((item) => (
+                        <ItemRow key={item.id} item={item} onSelect={() => openItem(item)} />
+                      ))}
+                    </div>
+                  </Card>
+                </div>
+              ))}
+            </section>
+          ))}
+        </div>
       )}
     </div>
   );
 }
 
-function MobileRow({ item }: { item: InventoryItem }) {
+function ItemRow({ item, onSelect }: { item: InventoryItem; onSelect: () => void }) {
   return (
-    <Card>
-      <CardContent className="space-y-2 p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="font-medium">{item.name}</p>
-            <p className="text-xs text-muted-foreground">{item.sku}</p>
-          </div>
-          <StatusBadges item={item} />
-        </div>
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{item.category}</span>
-          <span className="tabular-nums">
-            {item.current_stock} {item.unit} · {formatMoney(item.default_price)}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+    <button
+      type="button"
+      onClick={onSelect}
+      className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+    >
+      <div className="min-w-0">
+        <p className="truncate font-medium">{item.name}</p>
+        <p className="truncate text-xs text-muted-foreground">{item.sku}</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-3 text-sm">
+        <span className="tabular-nums">
+          {item.current_stock} {item.unit}
+        </span>
+        <span className="hidden tabular-nums text-muted-foreground sm:inline">
+          {formatMoney(item.default_price)}
+        </span>
+        <StatusBadges item={item} />
+      </div>
+    </button>
   );
 }
 
@@ -157,12 +250,4 @@ function StatusBadges({ item }: { item: InventoryItem }) {
       {item.is_for_sale && <Badge variant="outline">{t("common.forSale")}</Badge>}
     </div>
   );
-}
-
-function Th({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <th className={`px-4 py-3 font-medium ${className ?? ""}`}>{children}</th>;
-}
-
-function Td({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <td className={`px-4 py-3 ${className ?? ""}`}>{children}</td>;
 }

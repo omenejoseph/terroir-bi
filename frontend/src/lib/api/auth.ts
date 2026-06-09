@@ -17,6 +17,19 @@ export const authApi = {
   /** GET /auth/me — current user + active tenant + roles. */
   me: () => api.get<AuthSession>("/auth/me"),
 
+  /**
+   * POST /auth/invitations/accept — public. Accepts an invitation by token and
+   * returns a tenant-bound session. An existing account needs only the token; a
+   * new account also requires first_name, last_name and password.
+   */
+  acceptInvitation: (payload: {
+    token: string;
+    first_name?: string;
+    middle_name?: string | null;
+    last_name?: string;
+    password?: string;
+  }) => api.post<AuthSession>("/auth/invitations/accept", payload),
+
   /** GET /auth/tenants — memberships for the tenant switcher. */
   tenants: () => api.get<TenantMembership[]>("/auth/tenants"),
 

@@ -13,7 +13,8 @@
 :root {
   --radius: 0.625rem;
 
-  --background: oklch(1 0 0);
+  /* Off-white canvas so white cards/sidebar lift off the page. */
+  --background: oklch(0.984 0.004 264);
   --foreground: oklch(0.141 0.005 285.823);
 
   --card: oklch(1 0 0);
@@ -119,7 +120,76 @@
   }
   body {
     background-color: var(--color-background);
+    /* Soft brand glow at the top — adds depth without distracting. */
+    background-image: radial-gradient(
+      72% 42% at 50% -8%,
+      color-mix(in oklch, var(--color-primary) 9%, transparent),
+      transparent 70%
+    );
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     color: var(--color-foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/*
+  Motion tokens — register animations here so they're available as `animate-*`
+  utilities (e.g. animate-fade-up). Keeping them centralized means timing/easing
+  is tuned in one place, like the colour tokens above.
+*/
+@theme {
+  --animate-fade-up: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fade-in 0.5s ease-out both;
+  --animate-scale-in: scale-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-gradient: gradient-shift 8s ease infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes gradient-shift {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+}
+
+/* Respect users who prefer less motion: keep the layout, drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }

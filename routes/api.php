@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\TenantSessionController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InventoryItemController;
 use App\Http\Controllers\Api\InvitationController;
 use App\Http\Controllers\Api\MemberController;
@@ -34,6 +35,9 @@ Route::prefix('v1')->group(function () {
     Route::middleware('tenant')->group(function () {
         Route::get('auth/me', [AuthController::class, 'me']);
 
+        // Dashboard summary (any member of the active tenant).
+        Route::get('dashboard', [DashboardController::class, 'summary']);
+
         // Localization — read for any member; writes require admin.
         Route::get('translations', [TranslationController::class, 'index']);
         Route::middleware('can:translations.manage')->group(function () {
@@ -57,8 +61,13 @@ Route::prefix('v1')->group(function () {
 
         // Inventory & recipes.
         Route::middleware('can:inventory.view')->group(function () {
+            // Static segments must precede the {item} wildcard so they aren't treated as ids.
+            Route::get('inventory-items/taxonomy', [InventoryItemController::class, 'taxonomy']);
+            Route::get('inventory-items/analytics', [InventoryItemController::class, 'analytics']);
             Route::get('inventory-items', [InventoryItemController::class, 'index']);
             Route::get('inventory-items/{item}', [InventoryItemController::class, 'show']);
+            Route::get('inventory-items/{item}/movements', [StockController::class, 'movements']);
+            Route::get('inventory-items/{item}/recipe', [StockController::class, 'recipe']);
         });
         Route::middleware('can:inventory.manage')->group(function () {
             Route::post('inventory-items', [InventoryItemController::class, 'store']);

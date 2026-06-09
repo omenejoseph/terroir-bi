@@ -1,29 +1,190 @@
 "use client";
 
-import { useTranslation } from "@/i18n/context";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { ChevronDown, Pencil, Plus } from "lucide-react";
 
-/**
- * Placeholder for the Customers module. The API already exposes /customers,
- * /pricing-tiers, and resolved prices — wire them up the same way as Inventory
- * (lib/api/customers.ts → hooks/use-customers.ts → this page).
- */
+import { ApiError } from "@/lib/api/client";
+import { useAuth } from "@/lib/auth/context";
+import { useCustomers } from "@/hooks/use-customers";
+import { useTranslation } from "@/i18n/context";
+import type { Customer, CustomerQuery } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { Tabs } from "@/components/ui/tabs";
+import { CustomerDetails } from "@/components/customers/customer-details";
+import { CustomerForm } from "@/components/customers/customer-form";
+
+type StatusTab = "all" | "active" | "inactive";
+
 export default function CustomersPage() {
   const { t } = useTranslation();
+  const { can } = useAuth();
+  const router = useRouter();
+  const [tab, setTab] = React.useState<StatusTab>("all");
+  const [search, setSearch] = React.useState("");
+  const [debounced, setDebounced] = React.useState("");
+
+  React.useEffect(() => {
+    const id = setTimeout(() => setDebounced(search), 300);
+    return () => clearTimeout(id);
+  }, [search]);
+
+  const query: CustomerQuery = {
+    ...(debounced ? { search: debounced } : {}),
+    ...(tab === "all" ? {} : { is_active: tab === "active" }),
+  };
+  const { data, isLoading, isError, error } = useCustomers(query);
+  const customers = data?.data ?? [];
+
+  const tabs = [
+    { value: "all", label: t("customers.tabs.all") },
+    { value: "active", label: t("customers.tabs.active") },
+    { value: "inactive", label: t("customers.tabs.inactive") },
+  ];
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("customers.title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("customers.subtitle")}</p>
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">{t("customers.title")}</h1>
+          <p className="text-sm text-muted-foreground">
+            {data?.meta
+              ? t("customers.subtitleCount", { count: data.meta.total })
+              : t("customers.subtitleDefault")}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("customers.search")}
+            className="sm:max-w-xs"
+          />
+          {can("customers.manage") && (
+            <Button onClick={() => router.push("/customers/new")} className="shrink-0">
+              <Plus className="size-4" />
+              {t("customers.add")}
+            </Button>
+          )}
+        </div>
       </header>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("customers.comingSoonTitle")}</CardTitle>
-          <CardDescription>{t("customers.comingSoonDesc")}</CardDescription>
-        </CardHeader>
-        <CardContent />
-      </Card>
+
+      <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as StatusTab)} />
+
+      {isLoading && (
+        <div className="flex items-center justify-center py-16">
+          <Spinner className="size-6 text-muted-foreground" />
+        </div>
+      )}
+
+      {isError && (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-destructive">
+            {error instanceof ApiError && error.status === 403
+              ? t("customers.errorForbidden")
+              : t("customers.errorGeneric")}
+          </CardContent>
+        </Card>
+      )}
+
+      {!isLoading && !isError && customers.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            {t("customers.empty")}
+          </CardContent>
+        </Card>
+      )}
+
+      {!isLoading && !isError && customers.length > 0 && (
+        <div className="space-y-2">
+          {customers.map((customer) => (
+            <CustomerCard key={customer.id} customer={customer} />
+          ))}
+        </div>
+      )}
     </div>
+  );
+}
+
+function CustomerCard({ customer }: { customer: Customer }) {
+  const { t } = useTranslation();
+  const { can } = useAuth();
+  const [open, setOpen] = React.useState(false);
+  const [editing, setEditing] = React.useState(false);
+  const canManage = can("customers.manage");
+
+  function toggle() {
+    setOpen((prev) => {
+      if (prev) setEditing(false); // reset to read-only when collapsing
+      return !prev;
+    });
+  }
+
+  return (
+    <Card className="overflow-hidden">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+      >
+        <div className="min-w-0">
+          <p className="truncate font-medium">{customer.company_name}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {customer.contact_name ? `${customer.contact_name} · ` : ""}
+            {customer.email}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 text-sm">
+          <Badge variant="outline">{customer.pricing_tier?.name ?? t("customers.noTier")}</Badge>
+          <span className="hidden tabular-nums text-muted-foreground sm:inline">
+            {t("customers.rebateOff", { percent: customer.effective_rebate_percent })}
+          </span>
+          <Badge variant={customer.is_active ? "success" : "secondary"}>
+            {customer.is_active ? t("common.status.active") : t("common.status.inactive")}
+          </Badge>
+          <ChevronDown
+            className={`size-4 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          />
+        </div>
+      </button>
+
+      {/* Expandable dropdown panel */}
+      <div
+        className={`grid transition-all duration-300 ease-out ${
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="border-t border-border px-4 py-4">
+            {!open ? null : editing ? (
+              <CustomerForm
+                customer={customer}
+                onSaved={() => setEditing(false)}
+                onCancel={() => setEditing(false)}
+                onDeleted={() => setOpen(false)}
+                bare
+              />
+            ) : (
+              <div className="space-y-4">
+                {canManage && (
+                  <div className="flex justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                      <Pencil className="size-3.5" />
+                      {t("customers.edit")}
+                    </Button>
+                  </div>
+                )}
+                <CustomerDetails customer={customer} />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }

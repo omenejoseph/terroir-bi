@@ -6,15 +6,43 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Inventory\AdjustStockAction;
 use App\Actions\Inventory\SetRecipeAction;
+use App\DataTransferObjects\RecipeLineData;
+use App\DataTransferObjects\StockMovementData;
 use App\Enums\StockMovementType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\AdjustStockRequest;
 use App\Http\Requests\Inventory\SetRecipeRequest;
 use App\Models\InventoryItem;
+use App\Models\RecipeItem;
+use App\Models\StockMovement;
 use Illuminate\Http\JsonResponse;
 
 class StockController extends Controller
 {
+    /** Recent ledger entries for an item, newest first. ULIDs sort by creation. */
+    public function movements(InventoryItem $item): JsonResponse
+    {
+        $movements = $item->stockMovements()->orderByDesc('id')->limit(100)->get();
+
+        return response()->json([
+            'data' => $movements
+                ->map(fn (StockMovement $movement) => StockMovementData::fromModel($movement)->toArray())
+                ->all(),
+        ]);
+    }
+
+    /** The item's recipe (bill of materials), with input display fields resolved. */
+    public function recipe(InventoryItem $item): JsonResponse
+    {
+        $lines = $item->recipe()->with('input')->get();
+
+        return response()->json([
+            'data' => $lines
+                ->map(fn (RecipeItem $line) => RecipeLineData::fromModel($line)->toArray())
+                ->all(),
+        ]);
+    }
+
     public function adjust(
         AdjustStockRequest $request,
         InventoryItem $item,

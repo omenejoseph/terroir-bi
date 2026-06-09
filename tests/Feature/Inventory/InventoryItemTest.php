@@ -130,4 +130,26 @@ class InventoryItemTest extends TestCase
 
         $this->assertDatabaseMissing('inventory_items', ['id' => $item->getKey()]);
     }
+
+    public function test_taxonomy_returns_distinct_category_group_subcategory_combos(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        InventoryItem::create($this->payload(['sku' => 'A', 'group' => 'Wine', 'subcategory' => 'Red']));
+        InventoryItem::create($this->payload(['sku' => 'B', 'group' => 'Wine', 'subcategory' => 'Packaging']));
+        // Duplicate combo of the first — must be collapsed.
+        InventoryItem::create($this->payload(['sku' => 'C', 'group' => 'Wine', 'subcategory' => 'Red']));
+        // No group — excluded from the taxonomy.
+        InventoryItem::create($this->payload(['sku' => 'D']));
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+
+        $this->getJson('/api/v1/inventory-items/taxonomy', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonFragment(['category' => 'FINISHED', 'group' => 'Wine', 'subcategory' => 'Red'])
+            ->assertJsonFragment(['category' => 'FINISHED', 'group' => 'Wine', 'subcategory' => 'Packaging']);
+    }
 }

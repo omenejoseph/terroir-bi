@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { authApi } from "@/lib/api/auth";
 import { tokenStorage } from "@/lib/auth/storage";
+import { rolesGrant } from "@/lib/auth/capabilities";
 import type { AuthSession, TenantMembership, User } from "@/lib/types";
 
 interface AuthState {
@@ -18,10 +19,20 @@ interface AuthState {
 
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string, tenantId?: string) => Promise<void>;
+  /** Accept an invitation by token and sign in. New accounts also pass name + password. */
+  acceptInvitation: (payload: {
+    token: string;
+    first_name?: string;
+    middle_name?: string | null;
+    last_name?: string;
+    password?: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   switchTenant: (tenantId: string) => Promise<void>;
-  /** Convenience permission helper based on the active tenant's roles. */
+  /** True if the user holds the given role in the active tenant. */
   hasRole: (role: string) => boolean;
+  /** True if the active tenant's roles grant the given capability (e.g. "inventory.manage"). */
+  can: (capability: string) => boolean;
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null);
@@ -75,6 +86,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [applySession],
   );
 
+  const acceptInvitation = React.useCallback(
+    async (payload: {
+      token: string;
+      first_name?: string;
+      middle_name?: string | null;
+      last_name?: string;
+      password?: string;
+    }) => {
+      const session = await authApi.acceptInvitation(payload);
+      applySession(session);
+    },
+    [applySession],
+  );
+
   const logout = React.useCallback(async () => {
     try {
       await authApi.logout();
@@ -95,9 +120,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const hasRole = React.useCallback((role: string) => state.roles.includes(role), [state.roles]);
 
+  const can = React.useCallback(
+    (capability: string) => rolesGrant(state.roles, capability),
+    [state.roles],
+  );
+
   const value = React.useMemo<AuthContextValue>(
-    () => ({ ...state, login, logout, switchTenant, hasRole }),
-    [state, login, logout, switchTenant, hasRole],
+    () => ({ ...state, login, acceptInvitation, logout, switchTenant, hasRole, can }),
+    [state, login, acceptInvitation, logout, switchTenant, hasRole, can],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

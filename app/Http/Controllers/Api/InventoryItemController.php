@@ -11,12 +11,26 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreInventoryItemRequest;
 use App\Http\Requests\Inventory\UpdateInventoryItemRequest;
 use App\Models\InventoryItem;
+use App\Queries\InventoryAnalyticsQuery;
+use App\Queries\InventoryTaxonomyQuery;
 use App\Queries\ListInventoryItemsQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class InventoryItemController extends Controller
 {
+    /** Distinct category/group/subcategory combinations for autocomplete + grouping. */
+    public function taxonomy(InventoryTaxonomyQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->get()]);
+    }
+
+    /** Read-optimised analytics for the inventory charts (stock levels, value, low stock). */
+    public function analytics(InventoryAnalyticsQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->get()]);
+    }
+
     public function index(Request $request, ListInventoryItemsQuery $query): JsonResponse
     {
         $paginator = $query->paginate([

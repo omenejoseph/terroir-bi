@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { Logo } from "@/components/logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
 export default function LoginPage() {
@@ -51,8 +52,9 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-muted/30 px-4 py-12">
       <Card className="w-full max-w-sm">
-        <CardHeader>
-u          <CardTitle className="text-xl">{t("login.title", { app: APP_NAME })}</CardTitle>
+        <CardHeader className="items-center text-center">
+          <Logo className="mb-1 size-20" />
+          <CardTitle className="text-xl">{t("login.heading")}</CardTitle>
           <CardDescription>{t("login.subtitle")}</CardDescription>
         </CardHeader>
         <CardContent>

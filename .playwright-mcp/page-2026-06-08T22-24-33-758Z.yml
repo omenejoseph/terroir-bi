@@ -1,0 +1,24 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - text: u
+      - generic [ref=e5]: Prijava u Terroir BI
+      - generic [ref=e6]: Koristite e-poštu i lozinku svog računa.
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - text: E-pošta
+          - textbox "E-pošta" [ref=e10]:
+            - /placeholder: vi@primjer.com
+        - generic [ref=e11]:
+          - text: Lozinka
+          - textbox "Lozinka" [ref=e12]:
+            - /placeholder: ••••••••
+        - button "Prijava" [ref=e13]
+      - generic [ref=e15]:
+        - img [ref=e16]
+        - generic [ref=e20]: Jezik
+        - generic [ref=e21]:
+          - button "Hrvatski" [pressed] [ref=e22]
+          - button "English" [ref=e23]
+  - alert [ref=e24]

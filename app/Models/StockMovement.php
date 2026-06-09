@@ -9,6 +9,7 @@ use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property string $id
@@ -16,7 +17,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $inventory_item_id
  * @property StockMovementType $type
  * @property string $quantity
+ * @property string|null $unit
+ * @property string|null $note
  * @property string|null $reference
+ * @property Carbon|null $created_at
  */
 class StockMovement extends Model
 {

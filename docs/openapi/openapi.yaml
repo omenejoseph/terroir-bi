@@ -254,8 +254,18 @@ paths:
         '201': { description: Created }
         '409': { $ref: '#/components/responses/Conflict' }
 
+  /inventory-items/taxonomy:
+    get:
+      tags: [Inventory]
+      summary: Distinct category/group/subcategory combinations in use
+      responses: { '200': { description: OK } }
+
   /inventory-items/{id}/movements:
     parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [Inventory]
+      summary: List stock movements (ledger, newest first)
+      responses: { '200': { description: OK } }
     post:
       tags: [Inventory]
       summary: Record a manual stock movement

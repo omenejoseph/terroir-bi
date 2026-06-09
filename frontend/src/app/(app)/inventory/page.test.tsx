@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import InventoryPage from "./page";
 import { API_URL } from "@/lib/config";
+import { makeItem } from "@/test/fixtures";
 import { server } from "@/test/mocks/server";
 import {
   renderWithProviders,
@@ -74,5 +75,51 @@ describe("InventoryPage", () => {
 
     renderWithProviders(<InventoryPage />);
     expect(await screen.findByText("Failed to load inventory.")).toBeInTheDocument();
+  });
+
+  it("groups items by group and subcategory", async () => {
+    server.use(
+      http.get(url, () =>
+        HttpResponse.json({
+          data: [
+            makeItem({ id: "a", name: "Plavac", sku: "A", group: "Wine", subcategory: "Red" }),
+            makeItem({ id: "b", name: "Cork", sku: "B", group: "Wine", subcategory: "Packaging" }),
+            makeItem({ id: "c", name: "Misc", sku: "C", group: null, subcategory: null }),
+          ],
+          meta: { current_page: 1, last_page: 1, per_page: 15, total: 3 },
+        }),
+      ),
+    );
+
+    renderWithProviders(<InventoryPage />);
+
+    expect(await screen.findByText("Wine")).toBeInTheDocument();
+    expect(screen.getByText("Red")).toBeInTheDocument();
+    expect(screen.getByText("Packaging")).toBeInTheDocument();
+    expect(screen.getByText("Ungrouped")).toBeInTheDocument();
+  });
+
+  it("filters by category when a tab is selected", async () => {
+    let lastCategory: string | null = "unset";
+    server.use(
+      http.get(url, ({ request }) => {
+        lastCategory = new URL(request.url).searchParams.get("category");
+        return HttpResponse.json({
+          data: [makeItem({ name: lastCategory ?? "ALL" })],
+          meta: { current_page: 1, last_page: 1, per_page: 15, total: 1 },
+        });
+      }),
+    );
+
+    renderWithProviders(<InventoryPage />);
+    const user = userEvent.setup();
+
+    // Initial load has no category filter.
+    expect(await screen.findByText("ALL")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Raw material" }));
+
+    expect(await screen.findByText("RAW_MATERIAL")).toBeInTheDocument();
+    expect(lastCategory).toBe("RAW_MATERIAL");
   });
 });

@@ -1,0 +1,86 @@
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e10] [cursor=pointer]:
+    - img [ref=e11]
+  - alert [ref=e14]
+  - generic [ref=e15]:
+    - complementary [ref=e16]:
+      - link "Terroir BI" [ref=e18] [cursor=pointer]:
+        - /url: /dashboard
+      - button "Demo Winery" [ref=e21]:
+        - generic [ref=e22]: Demo Winery
+        - img [ref=e23]
+      - navigation [ref=e26]:
+        - link "Nadzorna ploča" [ref=e27] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e29]
+          - text: Nadzorna ploča
+        - link "Zaliha" [ref=e34] [cursor=pointer]:
+          - /url: /inventory
+          - img [ref=e36]
+          - text: Zaliha
+        - link "Kupci" [ref=e46] [cursor=pointer]:
+          - /url: /customers
+          - img [ref=e48]
+          - text: Kupci
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - img [ref=e55]
+          - generic [ref=e59]: Jezik
+          - generic [ref=e60]:
+            - button "Hrvatski" [pressed] [ref=e61]
+            - button "English" [ref=e62]
+        - generic [ref=e63]:
+          - paragraph [ref=e64]: Test User
+          - paragraph [ref=e65]: test@example.com
+        - button "Odjava" [ref=e66]:
+          - img [ref=e67]
+          - text: Odjava
+    - main [ref=e70]:
+      - generic [ref=e72]:
+        - link "Natrag na zalihu" [ref=e73] [cursor=pointer]:
+          - /url: /inventory
+          - img [ref=e74]
+          - text: Natrag na zalihu
+        - generic [ref=e76]:
+          - heading "Diag Wine" [level=1] [ref=e77]
+          - paragraph [ref=e78]: DIAG-OUT
+        - tablist [ref=e79]:
+          - tab "Pregled" [ref=e80]: Pregled
+          - tab "Promjene zalihe" [ref=e82]: Promjene zalihe
+          - tab "Receptura" [selected] [ref=e84]: Receptura
+        - generic [ref=e121]:
+          - paragraph [ref=e122]: Ulazi utrošeni za proizvodnju jedne jedinice.
+          - generic [ref=e124]:
+            - generic [ref=e125]:
+              - text: Ulazna stavka
+              - generic [ref=e126]:
+                - button "Ulazna stavka" [ref=e127]:
+                  - generic [ref=e128]: Diag Cork
+                  - img [ref=e129]
+                - generic [ref=e144]:
+                  - textbox "Pretraži stavke…" [active] [ref=e145]
+                  - list [ref=e146]:
+                    - listitem [ref=e147]:
+                      - button "Diag Cork (DIAG-IN)" [ref=e148]:
+                        - img [ref=e149]
+                        - generic [ref=e151]:
+                          - text: Diag Cork
+                          - generic [ref=e152]: (DIAG-IN)
+                    - listitem [ref=e153]:
+                      - button "djdjd (jfjff)" [ref=e154]:
+                        - img [ref=e155]
+                        - generic [ref=e157]:
+                          - text: djdjd
+                          - generic [ref=e158]: (jfjff)
+            - generic [ref=e132]:
+              - text: Količina po jedinici
+              - generic [ref=e133]:
+                - spinbutton "Količina po jedinici" [ref=e134]: "3.000"
+                - generic [ref=e135]: units
+            - button "Ukloni" [ref=e136]:
+              - img [ref=e137]
+          - generic [ref=e140]:
+            - button "Dodaj ulaz" [ref=e141]:
+              - img [ref=e142]
+              - text: Dodaj ulaz
+            - button "Spremi recepturu" [ref=e143]
