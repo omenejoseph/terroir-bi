@@ -105,5 +105,6 @@ export const api = {
     request<T>(path, { method: "PATCH", body }).then((r) => r.data),
   put: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "PUT", body }).then((r) => r.data),
-  delete: <T>(path: string) => request<T>(path, { method: "DELETE" }).then((r) => r.data),
+  delete: <T>(path: string, body?: unknown) =>
+    request<T>(path, { method: "DELETE", body }).then((r) => r.data),
 };

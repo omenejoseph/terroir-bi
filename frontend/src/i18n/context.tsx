@@ -14,6 +14,10 @@ interface I18nContextValue {
   setLocale: (locale: Locale) => void;
   /** Translate a dot-path key, e.g. t("inventory.title"), with {var} interpolation. */
   t: (key: string, vars?: Vars) => string;
+  /** Tenant overrides currently applied for the active locale (key → value). */
+  overrides: Record<string, string>;
+  /** Re-fetch overrides for the active locale (e.g. after editing them). */
+  refreshOverrides: () => Promise<void>;
 }
 
 const I18nContext = React.createContext<I18nContextValue | null>(null);
@@ -77,6 +81,14 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     };
   }, [locale]);
 
+  const refreshOverrides = React.useCallback(async () => {
+    try {
+      setOverrides(await translationsApi.overrides(locale));
+    } catch {
+      setOverrides({});
+    }
+  }, [locale]);
+
   const setLocale = React.useCallback((next: Locale) => {
     if (SUPPORTED_LOCALES.includes(next)) setLocaleState(next);
   }, []);
@@ -90,8 +102,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = React.useMemo<I18nContextValue>(
-    () => ({ locale, locales: SUPPORTED_LOCALES, setLocale, t }),
-    [locale, setLocale, t],
+    () => ({ locale, locales: SUPPORTED_LOCALES, setLocale, t, overrides, refreshOverrides }),
+    [locale, setLocale, t, overrides, refreshOverrides],
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

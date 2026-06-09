@@ -5,6 +5,7 @@ import { AlertTriangle, Euro, ShoppingCart, Users } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/context";
 import { useDashboard } from "@/hooks/use-dashboard";
+import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,28 +39,15 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "success" | "outl
 
 export default function DashboardPage() {
   const { user, tenants, activeTenantId } = useAuth();
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
   const [range, setRange] = React.useState("30D");
 
   const { data, isLoading } = useDashboard(range);
   const activeTenant = tenants.find((x) => x.tenant_id === activeTenantId);
 
-  const fmtNumber = React.useMemo(() => new Intl.NumberFormat(locale), [locale]);
-  const fmtCurrency = React.useMemo(
-    () => new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }),
-    [locale],
-  );
-  const fmtCurrency2 = React.useMemo(
-    () => new Intl.NumberFormat(locale, { style: "currency", currency: "EUR" }),
-    [locale],
-  );
-  // Money fields are integer minor units.
-  const money = (minor: number) => fmtCurrency.format(minor / 100);
-  const money2 = (minor: number) => fmtCurrency2.format(minor / 100);
-  const moneyAxis = (minor: number) => {
-    const euros = minor / 100;
-    return euros >= 1000 ? `€${Math.round(euros / 1000)}k` : `€${Math.round(euros)}`;
-  };
+  // Locale + org currency aware; money fields are integer minor units.
+  const { number: fmtNum, money, money2, moneyAxis } = useFormatters();
+  const fmtNumber = { format: fmtNum };
 
   const rangeTabs = RANGES.map((r) => ({ value: r, label: r === "ALL" ? t("dashboard.range.all") : r }));
 

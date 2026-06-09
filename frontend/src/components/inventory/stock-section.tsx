@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { useAdjustStock, useStockMovements } from "@/hooks/use-inventory";
+import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
 import { MANUAL_STOCK_MOVEMENTS, type InventoryItem, type StockMovementType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,8 @@ import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 
 export function StockSection({ item, canManage }: { item: InventoryItem; canManage: boolean }) {
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
+  const { dateTime } = useFormatters();
   const adjust = useAdjustStock();
   const movementsQ = useStockMovements(item.id);
 
@@ -34,7 +36,6 @@ export function StockSection({ item, canManage }: { item: InventoryItem; canMana
     }
   }
 
-  const dateFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
   const movements = movementsQ.data ?? [];
 
   return (
@@ -120,7 +121,7 @@ export function StockSection({ item, canManage }: { item: InventoryItem; canMana
                       </td>
                       <td className="py-2 pr-3 text-muted-foreground">{m.reference ?? "—"}</td>
                       <td className="py-2 text-muted-foreground">
-                        {m.created_at ? dateFmt.format(new Date(m.created_at)) : "—"}
+                        {m.created_at ? dateTime(m.created_at) : "—"}
                       </td>
                     </tr>
                   );

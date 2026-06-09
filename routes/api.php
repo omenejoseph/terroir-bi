@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\InvitationController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\PriceController;
 use App\Http\Controllers\Api\PricingTierController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\TranslationController;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +38,10 @@ Route::prefix('v1')->group(function () {
 
         // Dashboard summary (any member of the active tenant).
         Route::get('dashboard', [DashboardController::class, 'summary']);
+
+        // Organisation settings — read for any member; writes require admin.
+        Route::get('settings', [SettingsController::class, 'show']);
+        Route::patch('settings', [SettingsController::class, 'update'])->middleware('can:settings.manage');
 
         // Localization — read for any member; writes require admin.
         Route::get('translations', [TranslationController::class, 'index']);

@@ -38,8 +38,9 @@ export default function LoginPage() {
       await login(email, password);
       router.replace("/dashboard");
     } catch (err) {
-      if (err instanceof ApiError) {
-        // Server messages arrive already localized (X-Locale); fall back to a key.
+      if (err instanceof ApiError && err.status < 500) {
+        // 4xx messages arrive already localized (X-Locale). Never surface a 5xx
+        // body — those are raw server errors, not user-facing copy.
         setError(err.fieldError("email") ?? err.message);
       } else {
         setError(t("login.errorGeneric"));

@@ -171,15 +171,15 @@ function CustomerCard({ customer }: { customer: Customer }) {
               />
             ) : (
               <div className="space-y-4">
+                <CustomerDetails customer={customer} />
                 {canManage && (
-                  <div className="flex justify-end">
+                  <div className="flex justify-end border-t border-border pt-3">
                     <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
                       <Pencil className="size-3.5" />
                       {t("customers.edit")}
                     </Button>
                   </div>
                 )}
-                <CustomerDetails customer={customer} />
               </div>
             )}
           </div>

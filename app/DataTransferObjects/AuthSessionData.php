@@ -26,6 +26,7 @@ final class AuthSessionData implements Arrayable, JsonSerializable
         public readonly ?string $activeTenantId,
         public readonly array $roles,
         public readonly array $tenants,
+        public readonly ?OrganizationSettingsData $settings = null,
     ) {}
 
     /**
@@ -39,6 +40,7 @@ final class AuthSessionData implements Arrayable, JsonSerializable
             'active_tenant_id' => $this->activeTenantId,
             'roles' => $this->roles,
             'tenants' => array_map(fn (TenantMembershipData $t) => $t->toArray(), $this->tenants),
+            'settings' => $this->settings?->toArray(),
         ];
     }
 

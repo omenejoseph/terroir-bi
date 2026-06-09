@@ -99,6 +99,19 @@ describe("InventoryPage", () => {
     expect(screen.getByText("Ungrouped")).toBeInTheDocument();
   });
 
+  it("expands an item inline to reveal its detail tabs", async () => {
+    renderWithProviders(<InventoryPage />);
+    const user = userEvent.setup();
+
+    const row = (await screen.findAllByText("Plavac Mali 2021"))[0];
+    await user.click(row);
+
+    // The dropdown panel shows the tabbed detail (overview / stock / recipe).
+    expect(await screen.findByRole("tab", { name: "Recipe" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Stock movements" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Overview" })).toBeInTheDocument();
+  });
+
   it("filters by category when a tab is selected", async () => {
     let lastCategory: string | null = "unset";
     server.use(

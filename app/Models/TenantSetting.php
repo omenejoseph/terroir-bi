@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $tenant_id
  * @property string $default_currency
  * @property string $default_locale
+ * @property string $timezone
  * @property string|null $company_oib
  * @property string|null $storage_prefix
  */
@@ -27,6 +28,7 @@ class TenantSetting extends Model
         'tenant_id',
         'default_currency',
         'default_locale',
+        'timezone',
         'company_oib',
         'storage_prefix',
     ];
@@ -34,6 +36,7 @@ class TenantSetting extends Model
     protected $attributes = [
         'default_currency' => 'EUR',
         'default_locale' => 'hr',
+        'timezone' => 'Europe/Zagreb',
     ];
 
     /**

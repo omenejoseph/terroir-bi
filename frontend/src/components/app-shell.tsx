@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Settings,
   Users,
   UsersRound,
   X,
@@ -37,6 +38,7 @@ const NAV: NavItem[] = [
   { href: "/inventory", labelKey: "nav.inventory", icon: Boxes },
   { href: "/customers", labelKey: "nav.customers", icon: Users },
   { href: "/team", labelKey: "nav.team", icon: UsersRound, cap: "members.view" },
+  { href: "/settings", labelKey: "nav.settings", icon: Settings, cap: "settings.manage" },
 ];
 
 // Desktop rail sizing (px).

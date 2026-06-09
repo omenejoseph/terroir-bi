@@ -332,6 +332,48 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /settings:
+    get:
+      tags: [Settings]
+      summary: Organisation settings (any member)
+      parameters: [ { $ref: '#/components/parameters/TenantHeader' } ]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrganizationSettings' }
+    patch:
+      tags: [Settings]
+      summary: Update organisation settings (ADMIN). Currency is read-only.
+      parameters: [ { $ref: '#/components/parameters/TenantHeader' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, default_locale, timezone]
+              properties:
+                name: { type: string }
+                default_locale: { type: string, enum: [hr, en] }
+                timezone: { type: string, description: IANA timezone id }
+                company_oib: { type: string, nullable: true }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrganizationSettings' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
   /translations:
     get:
       tags: [Localization]
@@ -1071,6 +1113,20 @@ components:
         tenants:
           type: array
           items: { $ref: '#/components/schemas/TenantMembership' }
+        settings:
+          allOf: [ { $ref: '#/components/schemas/OrganizationSettings' } ]
+          nullable: true
+          description: Active tenant's org settings (null when no active tenant).
+
+    OrganizationSettings:
+      type: object
+      description: Organisation-wide settings for the active tenant.
+      properties:
+        name: { type: string, description: Organisation name }
+        default_locale: { type: string, enum: [hr, en] }
+        default_currency: { type: string, description: ISO-4217 code; read-only for now }
+        timezone: { type: string, description: IANA timezone id (e.g. Europe/Zagreb) }
+        company_oib: { type: string, nullable: true, description: Croatian tax id }
 
     Member:
       type: object

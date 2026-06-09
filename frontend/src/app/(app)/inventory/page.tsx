@@ -1,9 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 
-import { Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
@@ -13,24 +12,23 @@ import {
   INVENTORY_CATEGORIES,
   type InventoryCategory,
   type InventoryItem,
-  type Money,
 } from "@/lib/types";
+import { useFormatters } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { Tabs } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { AddInventoryItemDialog } from "@/components/inventory/add-inventory-item-dialog";
 import { InventoryCharts } from "@/components/inventory/inventory-charts";
-
-function formatMoney(money: Money | null): string {
-  if (!money) return "—";
-  if (money.formatted) return money.formatted;
-  return `${money.currency} ${money.amount}`;
-}
+import { ItemOverviewSection } from "@/components/inventory/item-overview-section";
+import { StockSection } from "@/components/inventory/stock-section";
+import { RecipeSection } from "@/components/inventory/recipe-section";
 
 type CategoryTab = InventoryCategory | "ALL";
+type DetailTab = "overview" | "stock" | "recipe";
 
 interface SubBucket {
   subcategory: string | null;
@@ -75,13 +73,11 @@ function groupItems(items: InventoryItem[]): GroupBucket[] {
 export default function InventoryPage() {
   const { t } = useTranslation();
   const { can } = useAuth();
-  const router = useRouter();
+  const canManage = can("inventory.manage");
   const [addOpen, setAddOpen] = React.useState(false);
   const [tab, setTab] = React.useState<CategoryTab>("ALL");
   const [search, setSearch] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
-
-  const openItem = (item: InventoryItem) => router.push(`/inventory/${item.id}`);
 
   // Debounce the search input so we don't hit the API on every keystroke.
   React.useEffect(() => {
@@ -199,13 +195,9 @@ export default function InventoryPage() {
                       {bucket.subcategory}
                     </h3>
                   )}
-                  <Card className="overflow-hidden">
-                    <div className="divide-y divide-border">
-                      {bucket.items.map((item) => (
-                        <ItemRow key={item.id} item={item} onSelect={() => openItem(item)} />
-                      ))}
-                    </div>
-                  </Card>
+                  {bucket.items.map((item) => (
+                    <InventoryItemCard key={item.id} item={item} canManage={canManage} />
+                  ))}
                 </div>
               ))}
             </section>
@@ -216,27 +208,70 @@ export default function InventoryPage() {
   );
 }
 
-function ItemRow({ item, onSelect }: { item: InventoryItem; onSelect: () => void }) {
+function InventoryItemCard({ item, canManage }: { item: InventoryItem; canManage: boolean }) {
+  const { t } = useTranslation();
+  const { moneyObject } = useFormatters();
+  const [open, setOpen] = React.useState(false);
+  const [detailTab, setDetailTab] = React.useState<DetailTab>("overview");
+
+  const tabs = [
+    { value: "overview", label: t("inventory.page.overview") },
+    { value: "stock", label: t("inventory.movements.title") },
+    { value: "recipe", label: t("inventory.recipe.title") },
+  ];
+
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
-    >
-      <div className="min-w-0">
-        <p className="truncate font-medium">{item.name}</p>
-        <p className="truncate text-xs text-muted-foreground">{item.sku}</p>
+    <Card className="overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+      >
+        <div className="min-w-0">
+          <p className="truncate font-medium">{item.name}</p>
+          <p className="truncate text-xs text-muted-foreground">{item.sku}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3 text-sm">
+          <span className="tabular-nums">
+            {item.current_stock} {item.unit}
+          </span>
+          <span className="hidden tabular-nums text-muted-foreground sm:inline">
+            {moneyObject(item.default_price)}
+          </span>
+          <StatusBadges item={item} />
+          <ChevronDown
+            className={cn(
+              "size-4 text-muted-foreground transition-transform duration-300",
+              open && "rotate-180",
+            )}
+          />
+        </div>
+      </button>
+
+      {/* Expandable dropdown panel with the tabbed detail */}
+      <div
+        className={cn(
+          "grid transition-all duration-300 ease-out",
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="space-y-4 border-t border-border px-4 py-4">
+            {open && (
+              <>
+                <Tabs tabs={tabs} value={detailTab} onChange={(v) => setDetailTab(v as DetailTab)} />
+                {detailTab === "overview" && (
+                  <ItemOverviewSection item={item} canManage={canManage} />
+                )}
+                {detailTab === "stock" && <StockSection item={item} canManage={canManage} />}
+                {detailTab === "recipe" && <RecipeSection item={item} canManage={canManage} />}
+              </>
+            )}
+          </div>
+        </div>
       </div>
-      <div className="flex shrink-0 items-center gap-3 text-sm">
-        <span className="tabular-nums">
-          {item.current_stock} {item.unit}
-        </span>
-        <span className="hidden tabular-nums text-muted-foreground sm:inline">
-          {formatMoney(item.default_price)}
-        </span>
-        <StatusBadges item={item} />
-      </div>
-    </button>
+    </Card>
   );
 }
 

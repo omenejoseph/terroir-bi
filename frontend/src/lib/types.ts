@@ -48,6 +48,24 @@ export interface AuthSession {
   active_tenant_id: string | null;
   roles: string[];
   tenants: TenantMembership[];
+  settings: OrganizationSettings | null;
+}
+
+/** Organisation-wide settings for the active tenant (GET/PATCH /settings). */
+export interface OrganizationSettings {
+  name: string;
+  default_locale: string;
+  default_currency: string;
+  timezone: string;
+  company_oib: string | null;
+}
+
+/** Payload for PATCH /settings. Currency is read-only and not sent. */
+export interface OrganizationSettingsInput {
+  name: string;
+  default_locale: string;
+  timezone: string;
+  company_oib?: string | null;
 }
 
 // ── Inventory ─────────────────────────────────────────────────────────────────

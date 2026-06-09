@@ -6,6 +6,7 @@ import type {
   InventoryItem,
   Invitation,
   Member,
+  OrganizationSettings,
   PricingTier,
   RecipeLine,
   StockMovement,
@@ -30,6 +31,17 @@ export const tenantB: TenantMembership = {
   status: "active",
 };
 
+export function makeSettings(overrides: Partial<OrganizationSettings> = {}): OrganizationSettings {
+  return {
+    name: "Vinarija Alpha",
+    default_locale: "hr",
+    default_currency: "EUR",
+    timezone: "Europe/Zagreb",
+    company_oib: null,
+    ...overrides,
+  };
+}
+
 export function makeSession(overrides: Partial<AuthSession> = {}): AuthSession {
   return {
     token: "tok_test",
@@ -44,6 +56,7 @@ export function makeSession(overrides: Partial<AuthSession> = {}): AuthSession {
     active_tenant_id: tenantA.tenant_id,
     roles: ["ADMIN"],
     tenants: [tenantA, tenantB],
+    settings: makeSettings(),
     ...overrides,
   };
 }

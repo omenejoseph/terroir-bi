@@ -1,8 +1,7 @@
 "use client";
 
-import * as React from "react";
-
 import { useInventoryAnalytics } from "@/hooks/use-dashboard";
+import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -16,14 +15,9 @@ const CATEGORY_COLORS = ["var(--color-primary)", "#d6a417", "#3b82f6", "#10b981"
 
 /** Analytics charts shown at the top of the inventory page. Server-optimised data. */
 export function InventoryCharts() {
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
   const { data, isLoading } = useInventoryAnalytics();
-
-  const fmtNumber = React.useMemo(() => new Intl.NumberFormat(locale), [locale]);
-  const fmtMoney = React.useMemo(
-    () => new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }),
-    [locale],
-  );
+  const { number: fmtNum, money } = useFormatters();
 
   if (isLoading || !data) {
     return (
@@ -44,13 +38,13 @@ export function InventoryCharts() {
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <ChartCard title={t("inventory.analytics.stockLevels")} delayMs={60}>
-        <TopProductsChart data={stockLevels} formatValue={(n) => fmtNumber.format(n)} />
+        <TopProductsChart data={stockLevels} formatValue={(n) => fmtNum(n)} />
       </ChartCard>
 
       <ChartCard title={t("inventory.analytics.valueByCategory")} delayMs={120}>
         <DonutChart
           data={categoryData}
-          centerValue={fmtMoney.format(data.value.total / 100)}
+          centerValue={money(data.value.total)}
           centerLabel={t("inventory.analytics.total")}
         />
         <ul className="mt-2 space-y-1.5">
@@ -60,7 +54,7 @@ export function InventoryCharts() {
                 <span className="size-2.5 rounded-full" style={{ backgroundColor: c.color }} />
                 {c.key}
               </span>
-              <span className="font-medium tabular-nums">{fmtMoney.format(c.value / 100)}</span>
+              <span className="font-medium tabular-nums">{money(c.value)}</span>
             </li>
           ))}
         </ul>

@@ -11,6 +11,7 @@ import {
   makeMovement,
   makePricingTier,
   makeSession,
+  makeSettings,
   tenantA,
   tenantB,
 } from "@/test/fixtures";
@@ -47,8 +48,20 @@ export const handlers = [
 
   http.post(url("/auth/logout"), () => new HttpResponse(null, { status: 204 })),
 
+  // Organisation settings.
+  http.get(url("/settings"), () => HttpResponse.json({ data: makeSettings() })),
+  http.patch(url("/settings"), async ({ request }) => {
+    const body = (await request.json()) as Partial<ReturnType<typeof makeSettings>>;
+    return HttpResponse.json({ data: makeSettings(body) });
+  }),
+
   // Translations (i18n overrides) — empty by default.
   http.get(url("/translations"), () => HttpResponse.json({ data: {} })),
+  http.put(url("/translations"), async ({ request }) => {
+    const body = (await request.json()) as { locale: string; key: string; value: string };
+    return HttpResponse.json({ data: { id: "ovr_1", ...body } });
+  }),
+  http.delete(url("/translations"), () => new HttpResponse(null, { status: 204 })),
 
   // Inventory — create (echoes a new item; tests override to assert the payload).
   http.post(url("/inventory-items"), () =>

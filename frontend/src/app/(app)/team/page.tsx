@@ -13,6 +13,7 @@ import {
   useRemoveMember,
   useRevokeInvitation,
 } from "@/hooks/use-team";
+import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
 import type { Invitation, Member } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -24,8 +25,9 @@ import { InvitationForm } from "@/components/team/invitation-form";
 import { MemberForm } from "@/components/team/member-form";
 
 export default function TeamPage() {
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
   const { can } = useAuth();
+  const { date } = useFormatters();
   const router = useRouter();
   const membersQ = useMembers();
   const invitationsQ = useInvitations();
@@ -35,8 +37,6 @@ export default function TeamPage() {
 
   const members = membersQ.data ?? [];
   const invitations = invitationsQ.data ?? [];
-
-  const dateFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
 
   return (
     <div className="space-y-6">
@@ -108,7 +108,7 @@ export default function TeamPage() {
                 <InvitationCard
                   key={invitation.id}
                   invitation={invitation}
-                  expires={dateFmt.format(new Date(invitation.expires_at))}
+                  expires={date(invitation.expires_at)}
                 />
               ))}
             </div>

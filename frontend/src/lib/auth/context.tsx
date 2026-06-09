@@ -5,13 +5,15 @@ import * as React from "react";
 import { authApi } from "@/lib/api/auth";
 import { tokenStorage } from "@/lib/auth/storage";
 import { rolesGrant } from "@/lib/auth/capabilities";
-import type { AuthSession, TenantMembership, User } from "@/lib/types";
+import type { AuthSession, OrganizationSettings, TenantMembership, User } from "@/lib/types";
 
 interface AuthState {
   user: User | null;
   activeTenantId: string | null;
   roles: string[];
   tenants: TenantMembership[];
+  /** Active tenant's org settings (currency/timezone/locale), or null. */
+  settings: OrganizationSettings | null;
   /** True until the initial session restore completes. */
   loading: boolean;
   isAuthenticated: boolean;
@@ -29,6 +31,8 @@ interface AuthContextValue extends AuthState {
   }) => Promise<void>;
   logout: () => Promise<void>;
   switchTenant: (tenantId: string) => Promise<void>;
+  /** Re-fetch the session (e.g. after org settings change) so settings/roles propagate. */
+  refreshSession: () => Promise<void>;
   /** True if the user holds the given role in the active tenant. */
   hasRole: (role: string) => boolean;
   /** True if the active tenant's roles grant the given capability (e.g. "inventory.manage"). */
@@ -42,6 +46,7 @@ const EMPTY: AuthState = {
   activeTenantId: null,
   roles: [],
   tenants: [],
+  settings: null,
   loading: true,
   isAuthenticated: false,
 };
@@ -56,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       activeTenantId: session.active_tenant_id,
       roles: session.roles,
       tenants: session.tenants,
+      settings: session.settings ?? null,
       loading: false,
       isAuthenticated: true,
     });
@@ -100,6 +106,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [applySession],
   );
 
+  const refreshSession = React.useCallback(async () => {
+    if (!tokenStorage.get()) return;
+    const session = await authApi.me();
+    applySession(session);
+  }, [applySession]);
+
   const logout = React.useCallback(async () => {
     try {
       await authApi.logout();
@@ -126,8 +138,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = React.useMemo<AuthContextValue>(
-    () => ({ ...state, login, acceptInvitation, logout, switchTenant, hasRole, can }),
-    [state, login, acceptInvitation, logout, switchTenant, hasRole, can],
+    () => ({ ...state, login, acceptInvitation, logout, switchTenant, refreshSession, hasRole, can }),
+    [state, login, acceptInvitation, logout, switchTenant, refreshSession, hasRole, can],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

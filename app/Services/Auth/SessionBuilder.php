@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Auth;
 
 use App\DataTransferObjects\AuthSessionData;
+use App\DataTransferObjects\OrganizationSettingsData;
 use App\DataTransferObjects\TenantMembershipData;
 use App\DataTransferObjects\UserData;
 use App\Enums\MembershipStatus;
@@ -41,6 +42,9 @@ class SessionBuilder
             tenants: array_values($memberships
                 ->map(fn (Membership $membership) => TenantMembershipData::fromModel($membership))
                 ->all()),
+            settings: $activeTenant !== null
+                ? OrganizationSettingsData::fromTenant($activeTenant)
+                : null,
         );
     }
 }

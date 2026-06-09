@@ -5,8 +5,9 @@ import { Pencil } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useUpdateInventoryItem } from "@/hooks/use-inventory";
+import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
-import type { InventoryItem, Money } from "@/lib/types";
+import type { InventoryItem } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,11 +19,6 @@ import {
   type ItemFormState,
 } from "@/components/inventory/inventory-item-fields";
 
-function formatMoney(money: Money | null): string {
-  if (!money) return "—";
-  return money.formatted ?? `${money.currency} ${money.amount}`;
-}
-
 export function ItemOverviewSection({
   item,
   canManage,
@@ -31,6 +27,7 @@ export function ItemOverviewSection({
   canManage: boolean;
 }) {
   const { t } = useTranslation();
+  const { moneyObject } = useFormatters();
   const update = useUpdateInventoryItem();
 
   const [editing, setEditing] = React.useState(false);
@@ -73,14 +70,6 @@ export function ItemOverviewSection({
   return (
     <Card>
       <CardContent className="pt-6">
-        {canManage && !editing && (
-          <div className="mb-4 flex justify-end">
-            <Button variant="outline" size="sm" onClick={startEdit}>
-              <Pencil className="size-4" />
-              {t("inventory.details.edit")}
-            </Button>
-          </div>
-        )}
         {editing ? (
           <form onSubmit={save} className="space-y-4">
             <InventoryItemFields form={form} set={set} errors={errors} />
@@ -100,27 +89,37 @@ export function ItemOverviewSection({
             </div>
           </form>
         ) : (
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-3">
-            <Detail label={t("inventory.details.category")}>
-              {t(`inventory.category.${item.category}`)}
-            </Detail>
-            <Detail label={t("inventory.add.groupLabel")}>{item.group ?? "—"}</Detail>
-            <Detail label={t("inventory.add.subcategoryLabel")}>{item.subcategory ?? "—"}</Detail>
-            <Detail label={t("inventory.details.unit")}>
-              {t(`inventory.add.unit.${item.unit}`)}
-            </Detail>
-            <Detail label={t("inventory.details.vintage")}>{item.vintage ?? "—"}</Detail>
-            <Detail label={t("inventory.details.minStock")}>{item.min_stock ?? "—"}</Detail>
-            <Detail label={t("inventory.details.price")}>{formatMoney(item.default_price)}</Detail>
-            <Detail label={t("inventory.details.status")}>
-              <span className="flex flex-wrap gap-1">
-                <Badge variant={item.is_active ? "success" : "secondary"}>
-                  {item.is_active ? t("common.status.active") : t("common.status.inactive")}
-                </Badge>
-                {item.is_for_sale && <Badge variant="outline">{t("common.forSale")}</Badge>}
-              </span>
-            </Detail>
-          </dl>
+          <div className="space-y-4">
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-3">
+              <Detail label={t("inventory.details.category")}>
+                {t(`inventory.category.${item.category}`)}
+              </Detail>
+              <Detail label={t("inventory.add.groupLabel")}>{item.group ?? "—"}</Detail>
+              <Detail label={t("inventory.add.subcategoryLabel")}>{item.subcategory ?? "—"}</Detail>
+              <Detail label={t("inventory.details.unit")}>
+                {t(`inventory.add.unit.${item.unit}`)}
+              </Detail>
+              <Detail label={t("inventory.details.vintage")}>{item.vintage ?? "—"}</Detail>
+              <Detail label={t("inventory.details.minStock")}>{item.min_stock ?? "—"}</Detail>
+              <Detail label={t("inventory.details.price")}>{moneyObject(item.default_price)}</Detail>
+              <Detail label={t("inventory.details.status")}>
+                <span className="flex flex-wrap gap-1">
+                  <Badge variant={item.is_active ? "success" : "secondary"}>
+                    {item.is_active ? t("common.status.active") : t("common.status.inactive")}
+                  </Badge>
+                  {item.is_for_sale && <Badge variant="outline">{t("common.forSale")}</Badge>}
+                </span>
+              </Detail>
+            </dl>
+            {canManage && (
+              <div className="flex justify-end border-t border-border pt-3">
+                <Button variant="outline" size="sm" onClick={startEdit}>
+                  <Pencil className="size-4" />
+                  {t("inventory.details.edit")}
+                </Button>
+              </div>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

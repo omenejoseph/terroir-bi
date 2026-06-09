@@ -56,7 +56,8 @@ export default function AcceptInvitationPage() {
         setErrors(flat);
         return true; // needs profile
       }
-      setError(err.message);
+      // 4xx messages are user-facing (localized); never surface a raw 5xx body.
+      setError(err.status < 500 ? err.message : t("accept.errorGeneric"));
       return false;
     }
     setError(t("accept.errorGeneric"));
