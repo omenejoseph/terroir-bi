@@ -56,7 +56,21 @@ sequenceDiagram
 - See [`../04-multi-tenancy-and-security.md`](../04-multi-tenancy-and-security.md)
   §4.6 for token entropy, rate limiting, and rotation.
 
+## 🆕 Catalog gating (post-snapshot)
+The catalog is filtered by, in order:
+- `is_active = true`, `category = FINISHED`, `is_for_sale = true`, **not** `hide_from_portal`;
+- **plus** any item explicitly set `visible = true` in `customer_product_overrides` for this customer (and minus any set `visible = false`);
+- sorted by group → subcategory → `sort_order`.
+
+Orderable **units** respect `customers.allow_single_bottle` — when false, only
+case quantities are offered even if the bottle price resolves.
+
+## 🆕 Abuse controls
+- **Rate limit:** ~10 orders per token per hour.
+- **Quantity bounds:** 1–99,999 per line.
+- Longer transaction timeout (cold starts) — keep the deduction logic identical to flow 01.
+
 ## Side effects
 Identical to internal order creation (status RECEIVED, history, per-item
-ORDER_DEDUCT + stock decrement, COGS snapshot) — only the actor and the history
-note differ.
+ORDER_DEDUCT + stock decrement, COGS snapshot, NEW_ORDER notifications) — only
+the actor (system/admin user) and the history note differ.

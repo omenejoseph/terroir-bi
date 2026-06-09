@@ -6,7 +6,15 @@ import { API_URL } from "@/lib/config";
 import { makeCustomer } from "@/test/fixtures";
 import { mockRouter } from "@/test/setup";
 import { server } from "@/test/mocks/server";
-import { renderWithProviders, screen, seedAuth, seedLocale, userEvent, waitFor } from "@/test/utils";
+import {
+  renderWithProviders,
+  screen,
+  seedAuth,
+  seedLocale,
+  userEvent,
+  waitFor,
+  within,
+} from "@/test/utils";
 
 describe("CustomersPage (list)", () => {
   beforeEach(() => {
@@ -58,6 +66,28 @@ describe("CustomersPage (list)", () => {
 
     await waitFor(() => expect(patched).not.toBeNull());
     expect(patched).toMatchObject({ company_name: "Acme Renamed" });
+  });
+
+  it("deactivates a customer after confirming", async () => {
+    let patched: Record<string, unknown> | null = null;
+    server.use(
+      http.patch(`${API_URL}/customers/:id`, async ({ request, params }) => {
+        patched = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ data: makeCustomer({ id: String(params.id), is_active: false }) });
+      }),
+    );
+
+    renderWithProviders(<CustomersPage />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByText("Acme Corporation"));
+    await user.click(await screen.findByRole("button", { name: "Deactivate" }));
+
+    // Confirm in the dialog.
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Deactivate" }));
+
+    await waitFor(() => expect(patched).not.toBeNull());
+    expect(patched).toMatchObject({ is_active: false });
   });
 
   it("filters by status tab (sends is_active)", async () => {

@@ -10,6 +10,7 @@ use App\Support\Money\MoneyCast;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -26,6 +27,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property Money|null $cost_per_unit
  * @property bool $is_active
  * @property bool $is_for_sale
+ * @property bool $hide_from_portal
+ * @property string|null $sales_unit
+ * @property string|null $unit_size
+ * @property int $pack_size
+ * @property bool $is_auto_created
+ * @property string|null $base_product_id
  */
 class InventoryItem extends Model
 {
@@ -40,14 +47,21 @@ class InventoryItem extends Model
         'group',
         'subcategory',
         'vintage',
+        'unit_size',
         'unit',
+        'sales_unit',
         'current_stock',
         'min_stock',
         'is_active',
         'sort_order',
         'default_price',
         'bottles_per_case',
+        'pack_size',
         'is_for_sale',
+        'hide_from_portal',
+        'is_auto_created',
+        'auto_created_at',
+        'base_product_id',
         'cost_per_unit',
     ];
 
@@ -55,8 +69,11 @@ class InventoryItem extends Model
         'current_stock' => 0,
         'is_active' => true,
         'is_for_sale' => false,
+        'hide_from_portal' => false,
+        'is_auto_created' => false,
         'sort_order' => 0,
         'bottles_per_case' => 12,
+        'pack_size' => 1,
     ];
 
     protected function casts(): array
@@ -67,11 +84,25 @@ class InventoryItem extends Model
             'min_stock' => 'decimal:3',
             'is_active' => 'boolean',
             'is_for_sale' => 'boolean',
+            'hide_from_portal' => 'boolean',
+            'is_auto_created' => 'boolean',
+            'auto_created_at' => 'datetime',
             'sort_order' => 'integer',
             'bottles_per_case' => 'integer',
+            'pack_size' => 'integer',
             'default_price' => MoneyCast::class,
             'cost_per_unit' => MoneyCast::class,
         ];
+    }
+
+    /**
+     * The base product this is a vintage/variant of (self-reference).
+     *
+     * @return BelongsTo<InventoryItem, $this>
+     */
+    public function baseProduct(): BelongsTo
+    {
+        return $this->belongsTo(InventoryItem::class, 'base_product_id');
     }
 
     /**
@@ -90,5 +121,13 @@ class InventoryItem extends Model
     public function recipe(): HasMany
     {
         return $this->hasMany(RecipeItem::class, 'output_id');
+    }
+
+    /**
+     * @return HasMany<OrderItem, $this>
+     */
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
     }
 }

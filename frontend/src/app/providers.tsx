@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/lib/auth/context";
 import { I18nProvider } from "@/i18n/context";
 import { makeQueryClient } from "@/lib/query";
+import { ConfirmProvider } from "@/components/ui/confirm";
 import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar";
 
 /**
@@ -19,7 +20,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <I18nProvider>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ConfirmProvider>{children}</ConfirmProvider>
+        </AuthProvider>
         <ServiceWorkerRegistrar />
       </QueryClientProvider>
     </I18nProvider>

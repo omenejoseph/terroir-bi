@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth/context";
 import {
   useCreateCustomer,
   useCreatePricingTier,
+  useCustomerTypes,
   useDeleteCustomer,
   usePricingTiers,
   useUpdateCustomer,
@@ -20,6 +21,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
+import { useConfirm } from "@/components/ui/confirm";
 import { Spinner } from "@/components/ui/spinner";
 
 interface FormState {
@@ -31,9 +34,13 @@ interface FormState {
   city: string;
   zip: string;
   country: string;
+  oib: string;
+  customer_type: string;
   pricing_tier_id: string;
   rebate_percent: string;
   hide_prices: boolean;
+  is_agency: boolean;
+  allow_single_bottle: boolean;
   exclude_from_stats: boolean;
   is_active: boolean;
 }
@@ -47,9 +54,13 @@ const EMPTY: FormState = {
   city: "",
   zip: "",
   country: "",
+  oib: "",
+  customer_type: "",
   pricing_tier_id: "",
   rebate_percent: "",
   hide_prices: false,
+  is_agency: false,
+  allow_single_bottle: false,
   exclude_from_stats: false,
   is_active: true,
 };
@@ -64,9 +75,13 @@ function toForm(customer: Customer): FormState {
     city: customer.city ?? "",
     zip: customer.zip ?? "",
     country: customer.country ?? "",
+    oib: customer.oib ?? "",
+    customer_type: customer.customer_type ?? "",
     pricing_tier_id: customer.pricing_tier?.id ?? "",
     rebate_percent: customer.rebate_percent ?? "",
     hide_prices: customer.hide_prices,
+    is_agency: customer.is_agency ?? false,
+    allow_single_bottle: customer.allow_single_bottle ?? false,
     exclude_from_stats: customer.exclude_from_stats ?? false,
     is_active: customer.is_active,
   };
@@ -88,11 +103,13 @@ export function CustomerForm({
 }) {
   const { t } = useTranslation();
   const { can } = useAuth();
+  const confirm = useConfirm();
   const create = useCreateCustomer();
   const update = useUpdateCustomer();
   const remove = useDeleteCustomer();
   const createTier = useCreatePricingTier();
   const tiersQ = usePricingTiers();
+  const customerTypes = useCustomerTypes();
 
   const isEdit = customer !== null;
   const [form, setForm] = React.useState<FormState>(customer ? toForm(customer) : EMPTY);
@@ -126,8 +143,12 @@ export function CustomerForm({
       city: trimmed(form.city),
       zip: trimmed(form.zip),
       country: trimmed(form.country),
+      oib: trimmed(form.oib),
+      customer_type: trimmed(form.customer_type),
       pricing_tier_id: form.pricing_tier_id || null,
       hide_prices: form.hide_prices,
+      is_agency: form.is_agency,
+      allow_single_bottle: form.allow_single_bottle,
       exclude_from_stats: form.exclude_from_stats,
       is_active: form.is_active,
       ...(rebate === "" ? {} : { rebate_percent: Number(rebate) }),
@@ -165,6 +186,13 @@ export function CustomerForm({
 
   async function handleDelete() {
     if (!customer) return;
+    const ok = await confirm({
+      title: t("customers.form.deleteConfirmTitle"),
+      description: t("customers.form.deleteConfirmBody", { name: customer.company_name }),
+      confirmLabel: t("customers.form.delete"),
+      tone: "danger",
+    });
+    if (!ok) return;
     setFormError(null);
     try {
       await remove.mutateAsync(customer.id);
@@ -231,6 +259,20 @@ export function CustomerForm({
             </Field>
             <Field id="phone" label={t("customers.form.phone")} error={errors.phone}>
               <Input id="phone" value={form.phone} onChange={(e) => set("phone", e.target.value)} />
+            </Field>
+            <Field id="oib" label={t("customers.form.oib")} error={errors.oib}>
+              <Input id="oib" value={form.oib} onChange={(e) => set("oib", e.target.value)} />
+            </Field>
+            <Field id="customer_type" label={t("customers.form.customerType")} error={errors.customer_type}>
+              <Combobox
+                id="customer_type"
+                value={form.customer_type}
+                onChange={(v) => set("customer_type", v)}
+                options={customerTypes}
+                placeholder={t("customers.form.customerTypePlaceholder")}
+                createLabel={(value) => t("customers.form.typeCreate", { value })}
+                emptyLabel={t("customers.form.typeEmpty")}
+              />
             </Field>
           </div>
 
@@ -350,10 +392,6 @@ export function CustomerForm({
 
           <div className="flex flex-wrap gap-6">
             <label className="flex items-center gap-2 text-sm">
-              <Checkbox checked={form.is_active} onChange={(e) => set("is_active", e.target.checked)} />
-              {t("customers.form.isActive")}
-            </label>
-            <label className="flex items-center gap-2 text-sm">
               <Checkbox checked={form.hide_prices} onChange={(e) => set("hide_prices", e.target.checked)} />
               {t("customers.form.hidePrices")}
             </label>
@@ -363,6 +401,17 @@ export function CustomerForm({
                 onChange={(e) => set("exclude_from_stats", e.target.checked)}
               />
               {t("customers.form.excludeFromStats")}
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox checked={form.is_agency} onChange={(e) => set("is_agency", e.target.checked)} />
+              {t("customers.form.isAgency")}
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={form.allow_single_bottle}
+                onChange={(e) => set("allow_single_bottle", e.target.checked)}
+              />
+              {t("customers.form.allowSingleBottle")}
             </label>
           </div>
 

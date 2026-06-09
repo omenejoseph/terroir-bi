@@ -25,11 +25,15 @@ export interface ItemFormState {
   group: string;
   subcategory: string;
   unit: string;
+  unit_size: string;
+  sales_unit: string;
   vintage: string;
   min_stock: string;
   default_price: string;
+  pack_size: string;
   is_active: boolean;
   is_for_sale: boolean;
+  hide_from_portal: boolean;
 }
 
 export const EMPTY_ITEM_FORM: ItemFormState = {
@@ -39,11 +43,15 @@ export const EMPTY_ITEM_FORM: ItemFormState = {
   group: "",
   subcategory: "",
   unit: "bottle",
+  unit_size: "",
+  sales_unit: "",
   vintage: "",
   min_stock: "",
   default_price: "",
+  pack_size: "",
   is_active: true,
   is_for_sale: false,
+  hide_from_portal: false,
 };
 
 /** Map an existing item into the editable form state. */
@@ -55,11 +63,15 @@ export function itemToForm(item: InventoryItem): ItemFormState {
     group: item.group ?? "",
     subcategory: item.subcategory ?? "",
     unit: item.unit,
+    unit_size: item.unit_size ?? "",
+    sales_unit: item.sales_unit ?? "",
     vintage: item.vintage != null ? String(item.vintage) : "",
     min_stock: item.min_stock != null ? String(item.min_stock) : "",
     default_price: item.default_price ? String(item.default_price.amount) : "",
+    pack_size: item.pack_size != null ? String(item.pack_size) : "",
     is_active: item.is_active,
     is_for_sale: item.is_for_sale,
+    hide_from_portal: item.hide_from_portal ?? false,
   };
 }
 
@@ -72,6 +84,7 @@ function toNumber(value: string): number | undefined {
 
 /** Build the API payload from form state (trims, coerces, nulls empties). */
 export function formToInput(form: ItemFormState): InventoryItemInput {
+  const pack = toNumber(form.pack_size);
   return {
     name: form.name.trim(),
     sku: form.sku.trim(),
@@ -79,11 +92,15 @@ export function formToInput(form: ItemFormState): InventoryItemInput {
     group: form.group.trim() || null,
     subcategory: form.subcategory.trim() || null,
     unit: form.unit.trim(),
+    unit_size: form.unit_size.trim() || null,
+    sales_unit: form.sales_unit.trim() || null,
     vintage: form.vintage.trim() || null,
     min_stock: toNumber(form.min_stock) ?? null,
     default_price: toNumber(form.default_price) ?? null,
     is_active: form.is_active,
     is_for_sale: form.is_for_sale,
+    hide_from_portal: form.hide_from_portal,
+    ...(pack !== undefined ? { pack_size: pack } : {}),
   };
 }
 
@@ -227,6 +244,33 @@ export function InventoryItemFields({
             onChange={(e) => set("min_stock", e.target.value)}
           />
         </Field>
+
+        <Field id="unit_size" label={t("inventory.add.unitSizeLabel")} error={errors.unit_size}>
+          <Input
+            id="unit_size"
+            value={form.unit_size}
+            onChange={(e) => set("unit_size", e.target.value)}
+            placeholder={t("inventory.add.unitSizePlaceholder")}
+          />
+        </Field>
+
+        <Field id="sales_unit" label={t("inventory.add.salesUnitLabel")} error={errors.sales_unit}>
+          <Input
+            id="sales_unit"
+            value={form.sales_unit}
+            onChange={(e) => set("sales_unit", e.target.value)}
+          />
+        </Field>
+
+        <Field id="pack_size" label={t("inventory.add.packSizeLabel")} error={errors.pack_size}>
+          <Input
+            id="pack_size"
+            type="number"
+            min={1}
+            value={form.pack_size}
+            onChange={(e) => set("pack_size", e.target.value)}
+          />
+        </Field>
       </div>
 
       <Field id="default_price" label={t("inventory.add.priceLabel")} error={errors.default_price}>
@@ -250,6 +294,13 @@ export function InventoryItemFields({
             onChange={(e) => set("is_for_sale", e.target.checked)}
           />
           {t("inventory.add.isForSale")}
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox
+            checked={form.hide_from_portal}
+            onChange={(e) => set("hide_from_portal", e.target.checked)}
+          />
+          {t("inventory.add.hideFromPortal")}
         </label>
       </div>
     </>

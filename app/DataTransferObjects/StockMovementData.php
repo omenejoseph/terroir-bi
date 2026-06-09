@@ -22,6 +22,7 @@ final class StockMovementData implements Arrayable, JsonSerializable
         public readonly ?string $unit,
         public readonly ?string $reference,
         public readonly ?string $note,
+        public readonly bool $isReconciliation,
         public readonly ?string $createdAt,
     ) {}
 
@@ -34,6 +35,7 @@ final class StockMovementData implements Arrayable, JsonSerializable
             unit: $movement->unit,
             reference: $movement->reference,
             note: $movement->note,
+            isReconciliation: $movement->is_reconciliation,
             createdAt: $movement->created_at?->toIso8601String(),
         );
     }
@@ -50,6 +52,7 @@ final class StockMovementData implements Arrayable, JsonSerializable
             'unit' => $this->unit,
             'reference' => $this->reference,
             'note' => $this->note,
+            'is_reconciliation' => $this->isReconciliation,
             'created_at' => $this->createdAt,
         ];
     }

@@ -24,6 +24,8 @@ use Illuminate\Support\Collection;
  * @property string $tenant_id
  * @property Collection<int, TenantRole> $roles
  * @property MembershipStatus $status
+ * @property bool $can_edit_orders
+ * @property bool $can_see_shipped_orders
  */
 class Membership extends Model
 {
@@ -34,6 +36,8 @@ class Membership extends Model
         'tenant_id',
         'roles',
         'status',
+        'can_edit_orders',
+        'can_see_shipped_orders',
         'invited_by',
         'joined_at',
     ];
@@ -43,12 +47,16 @@ class Membership extends Model
         return [
             'roles' => AsEnumCollection::of(TenantRole::class),
             'status' => MembershipStatus::class,
+            'can_edit_orders' => 'boolean',
+            'can_see_shipped_orders' => 'boolean',
             'joined_at' => 'datetime',
         ];
     }
 
     protected $attributes = [
         'status' => 'active',
+        'can_edit_orders' => false,
+        'can_see_shipped_orders' => false,
     ];
 
     /**
@@ -75,5 +83,22 @@ class Membership extends Model
     public function isActive(): bool
     {
         return $this->status === MembershipStatus::Active;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasRole(TenantRole::Admin);
+    }
+
+    /** ADMIN may always edit; otherwise the per-membership flag applies. */
+    public function canEditOrders(): bool
+    {
+        return $this->isAdmin() || $this->can_edit_orders;
+    }
+
+    /** ADMIN always sees shipped orders; otherwise the per-membership flag applies. */
+    public function canSeeShippedOrders(): bool
+    {
+        return $this->isAdmin() || $this->can_see_shipped_orders;
     }
 }

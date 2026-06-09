@@ -126,4 +126,29 @@ class PricingService
 
 > Use bcmath / decimal handling rather than float arithmetic for production
 > money math; the example uses float only for parity with the current code's
-> `Math.round(x*100)/100` behavior.
+> `Math.round(x*100)/100` behavior. In the implemented backend, prices are stored
+> as **integer minor units** and resolved via `app/Services/Pricing/PricingService.php`
+> (`round(base × (10000 − rebate_bp) / 10000)`).
+
+## 5.8 Unit scaling & catalog gates 🆕
+
+The resolver returns a **per-bottle** price. Order/catalog code derives the line
+price from the chosen unit:
+
+```
+case price   = bottle_price × inventory_item.bottles_per_case
+bottle price = bottle_price
+```
+
+Catalog visibility and orderable units layer on top of pricing (they don't change
+the resolved number):
+
+- `inventory_items.hide_from_portal` and `is_for_sale` gate which items appear.
+- `customer_product_overrides.visible` overrides visibility per customer.
+- `customers.hide_prices` masks prices in the self-service catalog.
+- `customers.allow_single_bottle` exposes the per-bottle option (else case-only).
+
+**Agency pricing** (`customers.is_agency`) is a *separate* hospitality price book
+(`hospitality_agency_prices`, price-per-pax) and does **not** flow through this
+resolver. It belongs to the out-of-scope Hospitality module; keep the `is_agency`
+flag but defer the price book.

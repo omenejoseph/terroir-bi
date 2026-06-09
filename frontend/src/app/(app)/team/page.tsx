@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { useConfirm } from "@/components/ui/confirm";
 import { InviteLink } from "@/components/team/invite-link";
 import { InvitationForm } from "@/components/team/invitation-form";
 import { MemberForm } from "@/components/team/member-form";
@@ -266,9 +267,17 @@ function MemberActions({
 }) {
   const { t } = useTranslation();
   const { can } = useAuth();
+  const confirm = useConfirm();
   const remove = useRemoveMember();
 
   async function handleRemove() {
+    const ok = await confirm({
+      title: t("team.member.removeConfirmTitle"),
+      description: t("team.member.removeConfirmBody", { name: member.name || member.email }),
+      confirmLabel: t("team.member.remove"),
+      tone: "danger",
+    });
+    if (!ok) return;
     try {
       await remove.mutateAsync(member.user_id);
       onRemoved();
@@ -362,6 +371,7 @@ function InvitationActions({
 }) {
   const { t } = useTranslation();
   const { can } = useAuth();
+  const confirm = useConfirm();
   const invite = useInvite();
   const revoke = useRevokeInvitation();
   const [token, setToken] = React.useState<string | null>(null);
@@ -378,6 +388,13 @@ function InvitationActions({
   }
 
   async function handleRevoke() {
+    const ok = await confirm({
+      title: t("team.invitation.revokeConfirmTitle"),
+      description: t("team.invitation.revokeConfirmBody", { email: invitation.email }),
+      confirmLabel: t("team.revoke"),
+      tone: "danger",
+    });
+    if (!ok) return;
     try {
       await revoke.mutateAsync(invitation.id);
       onRevoked();

@@ -13,6 +13,7 @@ import {
   seedLocale,
   userEvent,
   waitFor,
+  within,
 } from "@/test/utils";
 
 // useParams is mocked in setup to return { invitationId: "inv_1" }.
@@ -93,6 +94,8 @@ describe("InvitationEditPage", () => {
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("button", { name: /Revoke invitation/ }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: /Revoke invitation/ }));
     await waitFor(() => expect(deleted).toBe(true));
     expect(mockRouter.push).toHaveBeenCalledWith("/team");
   });

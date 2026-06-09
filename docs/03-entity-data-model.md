@@ -95,6 +95,12 @@ erDiagram
 | Order | OrderItem | 1→N | CASCADE | |
 | Order | OrderStatusHistory | 1→N | CASCADE | |
 | Order | OrderNote | 1→N | CASCADE | |
+| Order | ConsignmentReport 🆕 | 1→N | CASCADE | only for `is_consignment` orders |
+| ConsignmentReport | ConsignmentReportItem 🆕 | 1→N | CASCADE | |
+| OrderItem | ConsignmentReportItem 🆕 | 1→N | RESTRICT | sell-through references the placement line |
+| Customer | CustomerProductOverride 🆕 | 1→N | CASCADE | `(customer_id, inventory_item_id)` unique |
+| InventoryItem | CustomerProductOverride 🆕 | 1→N | CASCADE | |
+| User | Notification 🆕 | 1→N | CASCADE | recipient feed |
 | Vessel | VesselLot | 1→N | CASCADE | |
 | WineLot | VesselLot | 1→N | CASCADE | one lot can be in many vessels |
 | WineLot | CellarAddition/Analysis/TastingNote | 1→N | CASCADE | |
@@ -123,6 +129,10 @@ erDiagram
 | OrderItem | `order_items` |
 | OrderStatusHistory | `order_status_histories` |
 | OrderNote | `order_notes` |
+| CustomerProductOverride 🆕 | `customer_product_overrides` |
+| ConsignmentReport 🆕 | `consignment_reports` |
+| ConsignmentReportItem 🆕 | `consignment_report_items` |
+| Notification 🆕 | `notifications` |
 | InventoryItem | `inventory_items` |
 | InventoryImage | `inventory_images` |
 | InventoryTechSheet | `inventory_tech_sheets` |
@@ -153,6 +163,12 @@ erDiagram
 > Columns marked **🔑tenant-scoped unique** were globally unique in the source
 > and must become composite-unique with `tenant_id`. All tables get
 > `tenant_id` (except `tenants`, `plans`).
+>
+> **Money storage note:** these tables show money as `decimal(14,2)` for
+> readability, but the **implemented** schema stores money as `bigInteger`
+> minor units (cents) cast through the `Money` value object (`app/Support/Money`).
+> New money columns (`shipping_cost`, consignment prices, `custom_cost`) must
+> follow the same `bigInteger` + `MoneyCast` convention, **not** `decimal`.
 
 ### tenants *(new)*
 | Column | Type | Notes |
@@ -179,8 +195,15 @@ Holds per-tenant config (`default_currency`, `company_oib`, storage prefix) and
 | name | string | |
 | email | string | **🔑tenant-scoped unique** (consider global-unique if login is email-only across tenants — see security doc) |
 | hashed_password | string | bcrypt cost 12 |
-| role | string | comma-separated: `ADMIN,TEAM,CELLAR,ORDERS` |
+| role | string | comma-separated. 🆕 source `main` now carries 11 values: `ADMIN, TEAM, CELLAR, ORDERS, MANAGER, SALES, HOSPITALITY, KITCHEN, EMPLOYEE, WINE_CLUB, INVENTORY`. In the rebuild these live on `memberships.roles` (per-tenant) — extend the `TenantRole` enum accordingly. |
+| can_edit_orders | bool default false | 🆕 lets a non-admin edit orders past the 1-hour window |
+| can_see_shipped_orders | bool default false | 🆕 non-admin visibility of SHIPPED orders |
+| sidebar_config | json nullable | 🆕 per-user UI state (frontend concern; backend just stores it) |
 | created_at / updated_at | | |
+
+> In the SaaS model the order-permission flags and role set belong on the
+> **membership** (user×tenant), not the global user. See
+> [`11-backend-implementation-plan.md`](11-backend-implementation-plan.md) §IAM parity.
 
 ### customers
 | Column | Type | Notes |
@@ -198,6 +221,26 @@ Holds per-tenant config (`default_currency`, `company_oib`, storage prefix) and
 | hide_prices | bool default false | hide prices in self-service catalog |
 | order_token | string nullable | **globally unique** secret (32 hex). For SaaS, prefix with tenant or store tenant lookup — see flow 02 |
 | pricing_tier_id | fk pricing_tiers nullable | SET NULL |
+| customer_type | string nullable | 🆕 free-form class (RESTAURANT, DISTRIBUTOR, RETAILER, HOTEL, PRIVATE, …) |
+| oib | string nullable | 🆕 Croatian OIB / EU VAT number; VIES auto-fill on entry |
+| is_agency | bool default false | 🆕 hospitality booking agency → unlocks agency price book (hospitality module) |
+| allow_single_bottle | bool default false | 🆕 permit per-bottle ordering on the self-service portal (otherwise case-only) |
+| reorder_contacted_at | timestamp nullable | 🆕 last time flagged "contacted" in the reorder radar; cleared on next order |
+
+> 🆕 = added to the source app's `main` **after** this blueprint's first snapshot. See
+> [`10-migration-deltas.md`](10-migration-deltas.md) for the full change log and
+> [`11-backend-implementation-plan.md`](11-backend-implementation-plan.md) for the build order.
+
+### customer_product_overrides *(🆕 new table)*
+Per-customer catalog visibility override (show/hide a specific item in that customer's portal).
+| Column | Type | Notes |
+|---|---|---|
+| id | ulid PK | |
+| tenant_id | fk | |
+| customer_id | fk | CASCADE |
+| inventory_item_id | fk | CASCADE |
+| visible | bool default true | |
+| | | **unique** `(customer_id, inventory_item_id)` |
 
 ### pricing_tiers
 | Column | Type | Notes |
@@ -235,10 +278,19 @@ Holds per-tenant config (`default_currency`, `company_oib`, storage prefix) and
 | tenant_id | fk | |
 | order_number | string | **🔑tenant-scoped unique** |
 | status | enum | `RECEIVED, IN_PROCESS, READY_TO_SHIP, SHIPPED` (default `RECEIVED`) |
-| total_amount | decimal(14,2) | |
-| notes | text nullable | |
+| total_amount | decimal(14,2) | sum of line totals; recomputed on add/edit/delete |
+| notes | text nullable | free-form order note (distinct from the threaded `order_notes`) |
 | customer_id | fk | RESTRICT |
 | created_by_id | fk users | |
+| is_backorder | bool default false | 🆕 when true, **stock is NOT deducted** at creation; `backorder_date` set |
+| backorder_date | timestamp nullable | 🆕 expected fulfilment date; also the "effective date" for revenue bucketing |
+| shipping_cost | decimal(14,2) nullable | 🆕 freight; when not null `shipping_paid_by_us` is implied true |
+| shipping_paid_by_us | bool default false | 🆕 when true, shipping is added to COGS / deducted from gross profit |
+| is_consignment | bool default false | 🆕 komisija placement — goods leave stock but it is **not a sale**; revenue comes from `consignment_reports` |
+| consignment_closed_at | timestamp nullable | 🆕 set when the placement is reconciled & closed |
+| last_stale_notified_at | timestamp nullable | 🆕 de-dup marker for the stale-order reminder job |
+
+> Indexes (added in source): `(status, created_at)`, `(customer_id, created_at)`, `(is_consignment)`.
 
 ### order_items
 | Column | Type | Notes |
@@ -246,12 +298,40 @@ Holds per-tenant config (`default_currency`, `company_oib`, storage prefix) and
 | id | ulid PK | |
 | tenant_id | fk | |
 | order_id | fk | CASCADE |
-| inventory_item_id | fk | |
-| quantity | int | |
+| inventory_item_id | fk **nullable** | 🆕 null for custom / manual lines (freight, services) |
+| quantity | int | in `unit_type` units |
 | unit_type | string | `bottles` (default) / `cases` |
-| unit_price | decimal(14,2) | |
+| unit_price | decimal(14,2) | per `unit_type` (case price = bottle price × bottles_per_case) |
 | total | decimal(14,2) | |
-| cost_per_unit | decimal(14,2) nullable | **COGS snapshot** at order time (per display unit) |
+| cost_per_unit | decimal(14,2) nullable | **COGS snapshot** at order time (per display unit); editable retroactively |
+| custom_description | string nullable | 🆕 label for non-product lines |
+
+### consignment_reports *(🆕 new table)*
+A sell-through or return event reported against a consignment (komisija) order.
+| Column | Type | Notes |
+|---|---|---|
+| id | ulid PK | |
+| tenant_id | fk | |
+| order_id | fk orders | CASCADE |
+| kind | enum | `SALE` (realized) / `RETURN` (stock restored, zero revenue) |
+| date | timestamp default now | |
+| note | string nullable | |
+| created_by_id | fk users | |
+| | | index `(order_id, kind)` |
+
+### consignment_report_items *(🆕 new table)*
+Line detail of a consignment report; quantities are always **normalized to bottles**.
+| Column | Type | Notes |
+|---|---|---|
+| id | ulid PK | |
+| tenant_id | fk | |
+| report_id | fk consignment_reports | CASCADE |
+| order_item_id | fk order_items | the original placement line |
+| inventory_item_id | fk nullable | cached for RETURN restock |
+| quantity | int | bottles sold/returned |
+| unit_price | decimal(14,2) | per-bottle (0 for RETURN) |
+| total | decimal(14,2) | `quantity × unit_price` (0 for RETURN) |
+| | | indexes `(report_id)`, `(order_item_id)` |
 
 ### order_status_histories
 | Column | Type | Notes |
@@ -267,7 +347,23 @@ Holds per-tenant config (`default_currency`, `company_oib`, storage prefix) and
 ### order_notes
 | Column | Type | Notes |
 |---|---|---|
-| id, tenant_id, order_id (CASCADE), content (text), author_id (fk users), created_at | | free-text thread |
+| id, tenant_id, order_id (CASCADE), content (text), author_id (fk users), created_at | | threaded comment; `@mentions` parsed → MENTION notifications. Author/ADMIN may edit/delete. |
+
+### notifications *(🆕 new table — cross-cutting)*
+In-app notification feed (the header "bell"). Browser-push and WhatsApp are
+transports layered on top; only the in-app feed is persisted.
+| Column | Type | Notes |
+|---|---|---|
+| id | ulid PK | |
+| tenant_id | fk | |
+| user_id | fk users | recipient |
+| type | enum | `MENTION, NEW_ORDER, ORDER_STATUS, REPLY` |
+| title | string | |
+| body | string nullable | |
+| link | string nullable | deep-link to the order |
+| actor_id | fk users nullable | who triggered it |
+| is_read | bool default false | |
+| created_at | | index `(user_id, is_read, created_at)` |
 
 ### inventory_items
 | Column | Type | Notes |
@@ -290,6 +386,13 @@ Holds per-tenant config (`default_currency`, `company_oib`, storage prefix) and
 | bottles_per_case | int default 12 | |
 | is_for_sale | bool default false | catalog visibility |
 | cost_per_unit | decimal(14,2) nullable | COGS per display unit |
+| unit_size | string nullable | 🆕 physical size label, e.g. `750ml` |
+| sales_unit | string nullable | 🆕 default unit shown on order forms (`bottle`/`case`) |
+| pack_size | int default 1 | 🆕 units per pack |
+| hide_from_portal | bool default false | 🆕 hide from the self-service catalog (independent of `is_for_sale`) |
+| is_auto_created | bool default false | 🆕 placeholder created automatically (e.g. RAW_MATERIAL mirror of a wine lot) |
+| auto_created_at | timestamp nullable | 🆕 |
+| base_product_id | fk inventory_items nullable | 🆕 self-link grouping vintage variants under a base product |
 
 ### inventory_images / inventory_tech_sheets
 `inventory_images`: id, tenant_id, inventory_item_id (CASCADE), url, alt nullable, sort_order.
@@ -301,8 +404,11 @@ Holds per-tenant config (`default_currency`, `company_oib`, storage prefix) and
 | id | ulid PK | |
 | tenant_id | fk | |
 | output_id | fk inventory_items | CASCADE |
-| input_id | fk inventory_items | CASCADE |
+| input_id | fk inventory_items **nullable** | 🆕 null when the line is a custom (non-catalog) ingredient |
 | quantity | decimal(12,3) | input qty per 1 output (per bottle) |
+| custom_cost | decimal(14,4) nullable | 🆕 cost override for this line (used when `input_id` is null) |
+| custom_name | string nullable | 🆕 custom ingredient label |
+| custom_unit | string nullable | 🆕 custom ingredient unit |
 | | | **unique** `(output_id, input_id)`; `output_id != input_id` |
 
 ### stock_movements
@@ -316,6 +422,7 @@ Holds per-tenant config (`default_currency`, `company_oib`, storage prefix) and
 | unit | string nullable | unit at time of recording |
 | note | string nullable | |
 | reference | string nullable | e.g. order number, `PROD-{sku}`, `INVCHECK-{date}` |
+| is_reconciliation | bool default false | 🆕 stocktake **correction**, not a real physical exit/entry — **excluded** from spend/COGS/exit metrics |
 | created_by_id | fk users | |
 | created_at | | |
 
@@ -546,10 +653,12 @@ Holds per-tenant config (`default_currency`, `company_oib`, storage prefix) and
 
 | Enum | Values |
 |---|---|
-| User roles | `ADMIN, TEAM, CELLAR, ORDERS` (multi-valued, comma-joined) |
+| User/membership roles | `ADMIN, TEAM, CELLAR, ORDERS, MANAGER, SALES, HOSPITALITY, KITCHEN, EMPLOYEE, WINE_CLUB, INVENTORY` (multi-valued) 🆕 *(the Laravel `TenantRole` enum currently has only the first 4 — extend it)* |
 | Order status | `RECEIVED → IN_PROCESS → READY_TO_SHIP → SHIPPED` |
+| Consignment report kind 🆕 | `SALE, RETURN` |
+| Notification type 🆕 | `MENTION, NEW_ORDER, ORDER_STATUS, REPLY` |
 | Inventory category | `FINISHED, SEMI_FINISHED, RAW_MATERIAL` |
-| Stock movement type | `MANUAL_IN, MANUAL_OUT, ORDER_DEDUCT, PRODUCTION_IN, PRODUCTION_OUT, ADJUSTMENT` |
+| Stock movement type | `MANUAL_IN, MANUAL_OUT, ORDER_DEDUCT, PRODUCTION_IN, PRODUCTION_OUT, ADJUSTMENT` (+ `is_reconciliation` flag on the row) 🆕 |
 | Vessel type | `BARREL, TANK, VAT, AMPHORA` |
 | Vessel status | `AVAILABLE, IN_USE, MAINTENANCE, RETIRED` |
 | Wine lot status | `FERMENTING, AGING, READY, BOTTLED, BLENDED` |

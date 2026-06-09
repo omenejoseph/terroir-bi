@@ -16,6 +16,13 @@ enum TenantRole: string
     case Team = 'TEAM';
     case Cellar = 'CELLAR';
     case Orders = 'ORDERS';
+    case Manager = 'MANAGER';
+    case Sales = 'SALES';
+    case Hospitality = 'HOSPITALITY';
+    case Kitchen = 'KITCHEN';
+    case Employee = 'EMPLOYEE';
+    case WineClub = 'WINE_CLUB';
+    case Inventory = 'INVENTORY';
 
     public function isAdmin(): bool
     {

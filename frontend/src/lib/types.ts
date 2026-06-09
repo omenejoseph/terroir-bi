@@ -85,13 +85,19 @@ export interface InventoryItem {
   group: string | null;
   subcategory: string | null;
   vintage: number | null;
+  unit_size: string | null;
   unit: string;
+  sales_unit: string | null;
   current_stock: string;
   min_stock: string | number | null;
   is_active: boolean;
   is_for_sale: boolean;
+  hide_from_portal: boolean | null;
   sort_order: number | null;
   bottles_per_case: number | null;
+  pack_size: number | null;
+  base_product_id: string | null;
+  is_auto_created: boolean | null;
   default_price: Money | null;
   cost_per_unit: Money | null;
 }
@@ -124,10 +130,15 @@ export interface InventoryItemInput {
   group?: string | null;
   subcategory?: string | null;
   vintage?: string | null;
+  unit_size?: string | null;
+  sales_unit?: string | null;
   min_stock?: number | null;
   default_price?: number | null;
+  pack_size?: number;
   is_active?: boolean;
   is_for_sale?: boolean;
+  hide_from_portal?: boolean;
+  base_product_id?: string | null;
 }
 
 /** A distinct category → group → subcategory combination in use (GET .../taxonomy). */
@@ -182,12 +193,17 @@ export interface Customer {
   state: string | null;
   zip: string | null;
   country: string | null;
+  oib: string | null;
+  customer_type: string | null;
   notes: string | null;
   is_active: boolean;
   rebate_percent: string;
   effective_rebate_percent: string;
   hide_prices: boolean;
+  is_agency: boolean | null;
+  allow_single_bottle: boolean | null;
   exclude_from_stats: boolean | null;
+  reorder_contacted_at: string | null;
   has_order_token: boolean;
   pricing_tier: { id: string; name: string; rebate_percent: string } | null;
 }
@@ -202,9 +218,13 @@ export interface CustomerInput {
   city?: string | null;
   zip?: string | null;
   country?: string | null;
+  oib?: string | null;
+  customer_type?: string | null;
   pricing_tier_id?: string | null;
   rebate_percent?: number;
   hide_prices?: boolean;
+  is_agency?: boolean;
+  allow_single_bottle?: boolean;
   exclude_from_stats?: boolean;
   is_active?: boolean;
 }
@@ -218,7 +238,19 @@ export interface CustomerQuery {
 // ── Team (members & invitations) ──────────────────────────────────────────────
 
 /** Roles a user can hold in a tenant — mirrors App\Enums\TenantRole. */
-export const TENANT_ROLES = ["ADMIN", "TEAM", "CELLAR", "ORDERS"] as const;
+export const TENANT_ROLES = [
+  "ADMIN",
+  "TEAM",
+  "CELLAR",
+  "ORDERS",
+  "MANAGER",
+  "SALES",
+  "HOSPITALITY",
+  "KITCHEN",
+  "EMPLOYEE",
+  "WINE_CLUB",
+  "INVENTORY",
+] as const;
 export type TenantRole = (typeof TENANT_ROLES)[number];
 
 export type MembershipStatus = "active" | "suspended";
@@ -296,6 +328,7 @@ export interface StockAdjustmentInput {
   quantity: number;
   reference?: string | null;
   note?: string | null;
+  is_reconciliation?: boolean;
 }
 
 /** A stock ledger entry (GET /inventory-items/{id}/movements). */
@@ -306,12 +339,17 @@ export interface StockMovement {
   unit: string | null;
   reference: string | null;
   note: string | null;
+  is_reconciliation: boolean;
   created_at: string | null;
 }
 
-/** One recipe line with the input item resolved (GET /inventory-items/{id}/recipe). */
+/**
+ * One recipe line with the input resolved (GET /inventory-items/{id}/recipe).
+ * `input_id` is null for custom (non-catalog) lines — those carry their own
+ * name/unit, surfaced here as input_name/input_unit.
+ */
 export interface RecipeLine {
-  input_id: string;
+  input_id: string | null;
   input_name: string;
   input_sku: string;
   input_unit: string;

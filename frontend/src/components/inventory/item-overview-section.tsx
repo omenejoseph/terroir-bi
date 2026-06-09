@@ -99,6 +99,9 @@ export function ItemOverviewSection({
               <Detail label={t("inventory.details.unit")}>
                 {t(`inventory.add.unit.${item.unit}`)}
               </Detail>
+              <Detail label={t("inventory.add.unitSizeLabel")}>{item.unit_size ?? "—"}</Detail>
+              <Detail label={t("inventory.add.salesUnitLabel")}>{item.sales_unit ?? "—"}</Detail>
+              <Detail label={t("inventory.add.packSizeLabel")}>{item.pack_size ?? "—"}</Detail>
               <Detail label={t("inventory.details.vintage")}>{item.vintage ?? "—"}</Detail>
               <Detail label={t("inventory.details.minStock")}>{item.min_stock ?? "—"}</Detail>
               <Detail label={t("inventory.details.price")}>{moneyObject(item.default_price)}</Detail>
@@ -108,6 +111,12 @@ export function ItemOverviewSection({
                     {item.is_active ? t("common.status.active") : t("common.status.inactive")}
                   </Badge>
                   {item.is_for_sale && <Badge variant="outline">{t("common.forSale")}</Badge>}
+                  {item.hide_from_portal && (
+                    <Badge variant="outline">{t("inventory.add.hideFromPortal")}</Badge>
+                  )}
+                  {item.is_auto_created && (
+                    <Badge variant="secondary">{t("inventory.details.autoCreated")}</Badge>
+                  )}
                 </span>
               </Detail>
             </dl>

@@ -17,6 +17,53 @@ final class Quantity
         return self::format(self::toUnits($a, $scale) + self::toUnits($b, $scale), $scale);
     }
 
+    public static function sub(string $a, string $b, int $scale = self::SCALE): string
+    {
+        return self::format(self::toUnits($a, $scale) - self::toUnits($b, $scale), $scale);
+    }
+
+    /** Re-express any numeric string at the fixed scale (e.g. "10" → "10.000"). */
+    public static function normalize(string $value, int $scale = self::SCALE): string
+    {
+        return self::format(self::toUnits($value, $scale), $scale);
+    }
+
+    /** Flip the sign of a quantity ("3.500" → "-3.500"). */
+    public static function negate(string $value, int $scale = self::SCALE): string
+    {
+        return self::format(-self::toUnits($value, $scale), $scale);
+    }
+
+    /** -1 / 0 / 1 — like the spaceship operator, at fixed scale. */
+    public static function compare(string $a, string $b, int $scale = self::SCALE): int
+    {
+        return self::toUnits($a, $scale) <=> self::toUnits($b, $scale);
+    }
+
+    /** Multiply a quantity by a whole number (e.g. cases → bottles). */
+    public static function mulInt(string $value, int $factor, int $scale = self::SCALE): string
+    {
+        return self::format(self::toUnits($value, $scale) * $factor, $scale);
+    }
+
+    /** Multiply two quantities (e.g. recipe-line qty × produced output qty). */
+    public static function mul(string $a, string $b, int $scale = self::SCALE): string
+    {
+        $product = self::toUnits($a, $scale) * self::toUnits($b, $scale);
+
+        return self::format((int) round($product / (10 ** $scale)), $scale);
+    }
+
+    /** Divide a quantity by a whole number (e.g. bottles → cases), rounded to scale. */
+    public static function divInt(string $value, int $divisor, int $scale = self::SCALE): string
+    {
+        if ($divisor === 0) {
+            return self::format(0, $scale);
+        }
+
+        return self::format((int) round(self::toUnits($value, $scale) / $divisor), $scale);
+    }
+
     public static function isNegative(string $value, int $scale = self::SCALE): bool
     {
         return self::toUnits($value, $scale) < 0;

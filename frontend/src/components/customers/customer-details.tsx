@@ -23,6 +23,8 @@ export function CustomerDetails({ customer }: { customer: Customer }) {
           label={t("customers.form.rebate")}
           value={t("customers.rebateOff", { percent: customer.effective_rebate_percent })}
         />
+        <Detail label={t("customers.form.oib")} value={customer.oib} />
+        <Detail label={t("customers.form.customerType")} value={customer.customer_type} />
         <Detail label={t("customers.detail.location")} value={location || null} />
       </dl>
 
@@ -30,6 +32,10 @@ export function CustomerDetails({ customer }: { customer: Customer }) {
         <Badge variant={customer.is_active ? "success" : "secondary"}>
           {customer.is_active ? t("common.status.active") : t("common.status.inactive")}
         </Badge>
+        {customer.is_agency && <Badge variant="outline">{t("customers.form.isAgency")}</Badge>}
+        {customer.allow_single_bottle && (
+          <Badge variant="outline">{t("customers.form.allowSingleBottle")}</Badge>
+        )}
         {customer.hide_prices && <Badge variant="outline">{t("customers.form.hidePrices")}</Badge>}
         {customer.exclude_from_stats && (
           <Badge variant="outline">{t("customers.form.excludeFromStats")}</Badge>

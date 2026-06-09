@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { AuthProvider } from "@/lib/auth/context";
 import { I18nProvider } from "@/i18n/context";
+import { ConfirmProvider } from "@/components/ui/confirm";
 import { STORAGE_KEYS, type Locale } from "@/lib/config";
 
 /** Seed a logged-in session before render (AuthProvider restores it via /auth/me). */
@@ -28,7 +29,9 @@ export function renderWithProviders(ui: React.ReactElement) {
   return render(
     <I18nProvider>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>{ui}</AuthProvider>
+        <AuthProvider>
+          <ConfirmProvider>{ui}</ConfirmProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </I18nProvider>,
   );

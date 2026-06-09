@@ -17,9 +17,19 @@ const ROLE_CAPABILITIES: Record<string, string[]> = {
     "pricing.manage",
     "inventory.view",
     "inventory.manage",
+    "orders.view",
+    "orders.manage",
+    "financials.view",
   ],
   CELLAR: [],
-  ORDERS: [],
+  ORDERS: ["orders.view", "orders.manage", "financials.view"],
+  MANAGER: ["financials.view"],
+  SALES: ["financials.view"],
+  HOSPITALITY: [],
+  KITCHEN: [],
+  EMPLOYEE: [],
+  WINE_CLUB: [],
+  INVENTORY: ["inventory.view", "inventory.manage"],
 };
 
 /** Does any of the held roles grant the given capability? */

@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { useConfirm } from "@/components/ui/confirm";
 import { InviteLink } from "@/components/team/invite-link";
 import { RoleCheckboxes } from "@/components/team/role-checkboxes";
 
@@ -28,6 +29,7 @@ export function InvitationForm({
   bare?: boolean;
 }) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const invite = useInvite();
   const revoke = useRevokeInvitation();
 
@@ -70,6 +72,13 @@ export function InvitationForm({
   }
 
   async function handleRevoke() {
+    const ok = await confirm({
+      title: t("team.invitation.revokeConfirmTitle"),
+      description: t("team.invitation.revokeConfirmBody", { email: invitation.email }),
+      confirmLabel: t("team.invitation.revoke"),
+      tone: "danger",
+    });
+    if (!ok) return;
     setError(null);
     try {
       await revoke.mutateAsync(invitation.id);

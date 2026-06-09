@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { useConfirm } from "@/components/ui/confirm";
 import { RoleCheckboxes } from "@/components/team/role-checkboxes";
 
 export function MemberForm({
@@ -29,6 +30,7 @@ export function MemberForm({
   bare?: boolean;
 }) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const update = useUpdateMember();
   const remove = useRemoveMember();
 
@@ -56,6 +58,13 @@ export function MemberForm({
   }
 
   async function handleRemove() {
+    const ok = await confirm({
+      title: t("team.member.removeConfirmTitle"),
+      description: t("team.member.removeConfirmBody", { name: member.name || member.email }),
+      confirmLabel: t("team.member.remove"),
+      tone: "danger",
+    });
+    if (!ok) return;
     setError(null);
     try {
       await remove.mutateAsync(member.user_id);

@@ -13,6 +13,7 @@ import {
   seedLocale,
   userEvent,
   waitFor,
+  within,
 } from "@/test/utils";
 
 describe("TeamPage", () => {
@@ -100,6 +101,9 @@ describe("TeamPage", () => {
     const user = userEvent.setup();
     await user.click(await screen.findByText("newhire@example.com"));
     await user.click(await screen.findByRole("button", { name: "Revoke" }));
+    // Confirm in the dialog.
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Revoke" }));
     await waitFor(() => expect(revoked).toBe(true));
   });
 

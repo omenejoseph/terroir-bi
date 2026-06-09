@@ -34,7 +34,7 @@ export function RecipeSection({ item, canManage }: { item: InventoryItem; canMan
   React.useEffect(() => {
     if (!recipeQ.data) return;
     const mapped = recipeQ.data.map((l) => ({
-      input_id: l.input_id,
+      input_id: l.input_id ?? "",
       input_name: l.input_name,
       input_unit: l.input_unit,
       quantity: String(l.quantity),
@@ -84,8 +84,8 @@ export function RecipeSection({ item, canManage }: { item: InventoryItem; canMan
           // Read-only view for non-managers.
           recipeQ.data && recipeQ.data.length > 0 ? (
             <ul className="space-y-2 text-sm">
-              {recipeQ.data.map((l) => (
-                <li key={l.input_id} className="flex justify-between border-b border-border pb-2">
+              {recipeQ.data.map((l, i) => (
+                <li key={l.input_id ?? `custom-${i}`} className="flex justify-between border-b border-border pb-2">
                   <span>
                     {l.input_name} <span className="text-muted-foreground">({l.input_sku})</span>
                   </span>

@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Pencil, Plus } from "lucide-react";
+import { ChevronDown, Pencil, Plus, Power } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
-import { useCustomers } from "@/hooks/use-customers";
+import { useCustomers, useUpdateCustomer } from "@/hooks/use-customers";
 import { useTranslation } from "@/i18n/context";
 import type { Customer, CustomerQuery } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
+import { useConfirm } from "@/components/ui/confirm";
 import { CustomerDetails } from "@/components/customers/customer-details";
 import { CustomerForm } from "@/components/customers/customer-form";
 
@@ -113,6 +114,8 @@ export default function CustomersPage() {
 function CustomerCard({ customer }: { customer: Customer }) {
   const { t } = useTranslation();
   const { can } = useAuth();
+  const confirm = useConfirm();
+  const update = useUpdateCustomer();
   const [open, setOpen] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
   const canManage = can("customers.manage");
@@ -122,6 +125,20 @@ function CustomerCard({ customer }: { customer: Customer }) {
       if (prev) setEditing(false); // reset to read-only when collapsing
       return !prev;
     });
+  }
+
+  async function toggleActive() {
+    const deactivating = customer.is_active;
+    const ok = await confirm({
+      title: deactivating ? t("customers.deactivate.title") : t("customers.activate.title"),
+      description: deactivating
+        ? t("customers.deactivate.body", { name: customer.company_name })
+        : t("customers.activate.body", { name: customer.company_name }),
+      confirmLabel: deactivating ? t("customers.deactivate.action") : t("customers.activate.action"),
+      tone: "danger",
+    });
+    if (!ok) return;
+    await update.mutateAsync({ id: customer.id, input: { is_active: !customer.is_active } });
   }
 
   return (
@@ -173,10 +190,26 @@ function CustomerCard({ customer }: { customer: Customer }) {
               <div className="space-y-4">
                 <CustomerDetails customer={customer} />
                 {canManage && (
-                  <div className="flex justify-end border-t border-border pt-3">
+                  <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
                     <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
                       <Pencil className="size-3.5" />
                       {t("customers.edit")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={
+                        customer.is_active
+                          ? "text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          : undefined
+                      }
+                      onClick={toggleActive}
+                      disabled={update.isPending}
+                    >
+                      {update.isPending ? <Spinner /> : <Power className="size-3.5" />}
+                      {customer.is_active
+                        ? t("customers.deactivate.action")
+                        : t("customers.activate.action")}
                     </Button>
                   </div>
                 )}

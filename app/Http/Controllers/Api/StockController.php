@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Actions\Inventory\AdjustStockAction;
+use App\Actions\Inventory\ApplyInventoryCheckAction;
+use App\Actions\Inventory\ProduceItemAction;
 use App\Actions\Inventory\SetRecipeAction;
 use App\DataTransferObjects\RecipeLineData;
 use App\DataTransferObjects\StockMovementData;
 use App\Enums\StockMovementType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\AdjustStockRequest;
+use App\Http\Requests\Inventory\InventoryCheckRequest;
+use App\Http\Requests\Inventory\ProduceItemRequest;
 use App\Http\Requests\Inventory\SetRecipeRequest;
+use App\Http\Requests\Inventory\SetReconciliationRequest;
 use App\Models\InventoryItem;
 use App\Models\RecipeItem;
 use App\Models\StockMovement;
@@ -54,9 +59,46 @@ class StockController extends Controller
             (string) $request->validated('quantity'),
             $request->has('reference') ? $request->string('reference')->value() : null,
             $request->has('note') ? $request->string('note')->value() : null,
+            $request->boolean('is_reconciliation'),
         );
 
         return response()->json(['data' => $data->toArray()]);
+    }
+
+    /** Produce finished goods from the item's recipe (consumes inputs). */
+    public function produce(
+        ProduceItemRequest $request,
+        InventoryItem $item,
+        ProduceItemAction $action,
+    ): JsonResponse {
+        $data = $action->execute($item, (string) $request->validated('display_quantity'));
+
+        return response()->json(['data' => $data->toArray()]);
+    }
+
+    /** Apply a physical stocktake → reconciliation ADJUSTMENT movements. */
+    public function check(InventoryCheckRequest $request, ApplyInventoryCheckAction $action): JsonResponse
+    {
+        /** @var list<array{item_id: string, physical_count: string}> $counts */
+        $counts = array_values(array_map(
+            fn (array $line) => [
+                'item_id' => (string) $line['item_id'],
+                'physical_count' => (string) $line['physical_count'],
+            ],
+            (array) $request->validated('items', []),
+        ));
+
+        return response()->json(['data' => $action->execute($counts)]);
+    }
+
+    /** Flip a movement's reconciliation tag (no stock change). */
+    public function setReconciliation(
+        SetReconciliationRequest $request,
+        StockMovement $stockMovement,
+    ): JsonResponse {
+        $stockMovement->update(['is_reconciliation' => $request->boolean('is_reconciliation')]);
+
+        return response()->json(['data' => StockMovementData::fromModel($stockMovement->refresh())->toArray()]);
     }
 
     public function setRecipe(

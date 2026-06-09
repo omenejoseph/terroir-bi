@@ -13,6 +13,7 @@ import {
   seedLocale,
   userEvent,
   waitFor,
+  within,
 } from "@/test/utils";
 
 // useParams is mocked in setup to return { userId: "usr_1" }.
@@ -63,6 +64,8 @@ describe("MemberEditPage", () => {
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("button", { name: /Remove from team/ }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: /Remove from team/ }));
     await waitFor(() => expect(deleted).toBe(true));
     expect(mockRouter.push).toHaveBeenCalledWith("/team");
   });

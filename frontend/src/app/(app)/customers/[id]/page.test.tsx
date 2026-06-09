@@ -13,6 +13,7 @@ import {
   seedLocale,
   userEvent,
   waitFor,
+  within,
 } from "@/test/utils";
 
 // useParams is mocked in setup to return { id: "itm_1" }.
@@ -59,8 +60,31 @@ describe("CustomerDetailPage", () => {
     renderWithProviders(<CustomerDetailPage />);
     const user = userEvent.setup();
 
+    // Click the form's Delete, then confirm in the dialog.
     await user.click(await screen.findByRole("button", { name: /Delete/ }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: /Delete/ }));
+
     await waitFor(() => expect(deleted).toBe(true));
     expect(mockRouter.push).toHaveBeenCalledWith("/customers");
+  });
+
+  it("aborts deletion when the confirmation is cancelled", async () => {
+    let deleted = false;
+    server.use(
+      http.delete(`${API_URL}/customers/:id`, () => {
+        deleted = true;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+
+    renderWithProviders(<CustomerDetailPage />);
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: /Delete/ }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+    expect(deleted).toBe(false);
   });
 });

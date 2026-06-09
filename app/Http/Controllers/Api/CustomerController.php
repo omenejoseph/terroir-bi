@@ -13,12 +13,37 @@ use App\Http\Requests\Customers\QuickCustomerRequest;
 use App\Http\Requests\Customers\StoreCustomerRequest;
 use App\Http\Requests\Customers\UpdateCustomerRequest;
 use App\Models\Customer;
+use App\Queries\CustomerInsightsQuery;
 use App\Queries\ListCustomersQuery;
+use App\Services\Customers\LookupCompanyByVatService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
+    public function insights(Customer $customer, CustomerInsightsQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->get($customer)]);
+    }
+
+    /** VIES/OIB lookup to auto-fill name + address on the customer form. */
+    public function lookupVat(Request $request, LookupCompanyByVatService $service): JsonResponse
+    {
+        $vat = trim((string) $request->query('vat', ''));
+
+        if ($vat === '') {
+            return response()->json(['message' => 'A vat query parameter is required.'], 422);
+        }
+
+        $result = $service->lookup($vat);
+
+        if (isset($result['error'])) {
+            return response()->json(['message' => $result['error']], 422);
+        }
+
+        return response()->json(['data' => $result]);
+    }
+
     public function index(Request $request, ListCustomersQuery $query): JsonResponse
     {
         $paginator = $query->paginate([
@@ -63,8 +88,17 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer): JsonResponse
     {
-        // No orders yet; hard delete. The soft-delete-when-referenced rule
-        // lands with the Orders module.
+        // Soft-delete (deactivate) when the customer has orders; otherwise hard delete.
+        if ($customer->orders()->exists()) {
+            $customer->is_active = false;
+            $customer->save();
+
+            return response()->json([
+                'data' => CustomerData::fromModel($customer)->toArray(),
+                'message' => 'Customer has orders and was deactivated instead of deleted.',
+            ]);
+        }
+
         $customer->delete();
 
         return response()->json(status: 204);

@@ -6,8 +6,10 @@ import { useAdjustStock, useStockMovements } from "@/hooks/use-inventory";
 import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
 import { MANUAL_STOCK_MOVEMENTS, type InventoryItem, type StockMovementType } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -21,6 +23,7 @@ export function StockSection({ item, canManage }: { item: InventoryItem; canMana
 
   const [moveType, setMoveType] = React.useState<StockMovementType>("MANUAL_IN");
   const [qty, setQty] = React.useState("");
+  const [reconcile, setReconcile] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   async function apply() {
@@ -29,8 +32,12 @@ export function StockSection({ item, canManage }: { item: InventoryItem; canMana
     if (!Number.isFinite(n) || n === 0) return;
     const signed = moveType === "MANUAL_OUT" ? -Math.abs(n) : moveType === "MANUAL_IN" ? Math.abs(n) : n;
     try {
-      await adjust.mutateAsync({ id: item.id, input: { type: moveType, quantity: signed } });
+      await adjust.mutateAsync({
+        id: item.id,
+        input: { type: moveType, quantity: signed, is_reconciliation: reconcile },
+      });
       setQty("");
+      setReconcile(false);
     } catch {
       setError(t("inventory.stock.errorGeneric"));
     }
@@ -81,6 +88,12 @@ export function StockSection({ item, canManage }: { item: InventoryItem; canMana
             </Button>
           </div>
         )}
+        {canManage && (
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={reconcile} onChange={(e) => setReconcile(e.target.checked)} />
+            {t("inventory.stock.reconciliation")}
+          </label>
+        )}
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         {/* Ledger */}
@@ -110,7 +123,14 @@ export function StockSection({ item, canManage }: { item: InventoryItem; canMana
                   const positive = !String(m.quantity).startsWith("-");
                   return (
                     <tr key={m.id} className="border-b border-border last:border-0">
-                      <td className="py-2 pr-3">{t(`inventory.movements.label.${m.type}`)}</td>
+                      <td className="py-2 pr-3">
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          {t(`inventory.movements.label.${m.type}`)}
+                          {m.is_reconciliation && (
+                            <Badge variant="outline">{t("inventory.stock.reconciliationShort")}</Badge>
+                          )}
+                        </span>
+                      </td>
                       <td
                         className={`py-2 pr-3 text-right tabular-nums ${
                           positive ? "text-success" : "text-destructive"
