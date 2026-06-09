@@ -100,10 +100,10 @@ These read or reassign **orders**, so they land **after Phase 3 (Orders core)**:
 
 ## Phase 4 — Public, consignment, comments, notifications
 
-### 4.1 Public token (flow 02)
-- [ ] `GET /public/{token}/catalog` (resolve tenant+customer; gate by `hide_from_portal`/overrides/`allow_single_bottle`).
-- [ ] `POST /public/{token}/orders` (re-resolve prices, reject mismatch, rate-limit, system-user attribution; reuse `CreateOrderAction`).
-- **Accept:** tampered price → rejected; cross-tenant impossible; rate limit enforced.
+### 4.1 Public token (flow 02) ✅
+- [x] `GET /public/{token}/catalog` (`PublicTokenResolver` binds tenant from token; `PublicCatalogQuery` gates by `hide_from_portal`/overrides; `hide_prices` + `allow_single_bottle` honored).
+- [x] `POST /public/{token}/orders` (re-resolve prices + reject mismatch, rate-limit 10/h, system-user attribution; reuses `CreateOrderAction`).
+- **Accept:** ✅ tampered price → 422; unknown token → 404; stock deducts; attributed to a tenant admin — `tests/Feature/Orders/PublicOrderTest.php` (5 tests).
 
 ### 4.2 Consignment (flow 10)
 - [ ] Migrations: `consignment_reports`, `consignment_report_items` (qty in bottles).

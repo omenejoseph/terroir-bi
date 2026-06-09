@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PriceController;
 use App\Http\Controllers\Api\PricingTierController;
+use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\TranslationController;
 use Illuminate\Support\Facades\Route;
@@ -22,9 +23,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->group(function () {
-    // Public — no authentication.
+    // Public — no authentication. The order token authenticates and selects the tenant.
     Route::post('auth/login', [AuthController::class, 'login']);
     Route::post('auth/invitations/accept', [InvitationController::class, 'accept']);
+    Route::get('public/{token}/catalog', [PublicOrderController::class, 'catalog']);
+    Route::post('public/{token}/orders', [PublicOrderController::class, 'store']);
 
     // Authenticated, but no active tenant required (e.g. to switch tenants).
     Route::middleware('auth:sanctum')->group(function () {
