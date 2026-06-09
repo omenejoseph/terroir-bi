@@ -35,9 +35,13 @@ class StoreCustomerRequest extends FormRequest
             'state' => ['sometimes', 'nullable', 'string'],
             'zip' => ['sometimes', 'nullable', 'string'],
             'country' => ['sometimes', 'nullable', 'string'],
+            'oib' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'customer_type' => ['sometimes', 'nullable', 'string', 'max:50'],
             'notes' => ['sometimes', 'nullable', 'string'],
             'rebate_percent' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'hide_prices' => ['sometimes', 'boolean'],
+            'is_agency' => ['sometimes', 'boolean'],
+            'allow_single_bottle' => ['sometimes', 'boolean'],
             'exclude_from_stats' => ['sometimes', 'boolean'],
             'pricing_tier_id' => [
                 'sometimes', 'nullable',

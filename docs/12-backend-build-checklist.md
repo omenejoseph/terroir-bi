@@ -52,17 +52,20 @@ Progress key: `[ ]` todo · `[~]` in progress · `[x]` done.
 ## Phase 2 — Customers & Pricing parity
 
 ### 2.1 Schema
-- [ ] Migration `customers`: `customer_type`, `oib`, `is_agency` (bool), `allow_single_bottle` (bool), `reorder_contacted_at` (ts null).
-- [ ] Migration `customer_product_overrides` (`customer_id`, `inventory_item_id`, `visible`, unique pair).
-- [ ] Update `Customer` model + `Store/UpdateCustomerRequest`.
+- [x] Migration `customers`: `customer_type`, `oib`, `is_agency` (bool), `allow_single_bottle` (bool), `reorder_contacted_at` (ts null).
+- [x] Migration `customer_product_overrides` (`customer_id`, `inventory_item_id`, `visible`, unique pair).
+- [x] Update `Customer` model (+`productOverrides`) + `Store/UpdateCustomerRequest` + `CustomerData`.
 
 ### 2.2 Behavior
-- [ ] `LookupCompanyByVatService` (injectable HTTP) + `GET /customers/lookup-vat?vat=`.
-- [ ] `ReorderRadarQuery` + `GET /customers/reorder-radar`; `POST /customers/{id}/contacted`.
-- [ ] `PreviewCustomerMergeAction` / `MergeCustomersAction` + `POST /customers/merge[/preview]`.
-- [ ] Product-override upsert/list/delete endpoints.
-- [ ] *(deferred to after Phase 4)* `CustomerInsightsQuery` + `GET /customers/{id}/insights`.
-- **Accept:** VIES mock returns parsed address; radar buckets match median-gap rules; merge reassigns children + drops collisions in one transaction.
+- [x] `LookupCompanyByVatService` (injectable HTTP, VIES) + `GET /customers/lookup-vat?vat=`.
+- [x] Product-override upsert/list/delete endpoints (`CustomerProductOverrideController`).
+- **Accept:** ✅ VIES fake returns parsed name/zip/city; new fields round-trip; overrides upsert/list/delete — `tests/Feature/Customers/CustomerParityTest.php`. `composer check` green (252 tests).
+
+### 2b — Order-dependent customer features *(moved out of Phase 2; need order history)*
+These read or reassign **orders**, so they land **after Phase 3 (Orders core)**:
+- [ ] `ReorderRadarQuery` + `GET /customers/reorder-radar`; `POST /customers/{id}/contacted` (median order-gap → overdue buckets; `reorder_contacted_at` column is already in place).
+- [ ] `PreviewCustomerMergeAction` / `MergeCustomersAction` + `POST /customers/merge[/preview]` (reassign orders/consignment/prices/overrides; drop unique collisions).
+- [ ] `CustomerInsightsQuery` + `GET /customers/{id}/insights` (revenue trend, product performance incl. realized consignment, YoY).
 
 ---
 

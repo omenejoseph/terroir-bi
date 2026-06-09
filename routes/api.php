@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\TenantSessionController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\CustomerProductOverrideController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InventoryItemController;
 use App\Http\Controllers\Api\InvitationController;
@@ -84,14 +85,19 @@ Route::prefix('v1')->group(function () {
 
         // Customers.
         Route::middleware('can:customers.view')->group(function () {
+            // Static segments before the {customer} wildcard so they aren't treated as ids.
+            Route::get('customers/lookup-vat', [CustomerController::class, 'lookupVat']);
             Route::get('customers', [CustomerController::class, 'index']);
             Route::get('customers/{customer}', [CustomerController::class, 'show']);
             Route::get('customers/{customer}/resolved-prices', [PriceController::class, 'resolvedPrices']);
+            Route::get('customers/{customer}/product-overrides', [CustomerProductOverrideController::class, 'index']);
         });
         Route::middleware('can:customers.manage')->group(function () {
             Route::post('customers', [CustomerController::class, 'store']);
             Route::post('customers/quick', [CustomerController::class, 'quickStore']);
             Route::patch('customers/{customer}', [CustomerController::class, 'update']);
+            Route::put('customers/{customer}/product-overrides/{item}', [CustomerProductOverrideController::class, 'upsert']);
+            Route::delete('customers/{customer}/product-overrides/{item}', [CustomerProductOverrideController::class, 'destroy']);
         });
         Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])
             ->middleware('can:customers.delete');

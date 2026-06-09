@@ -14,11 +14,30 @@ use App\Http\Requests\Customers\StoreCustomerRequest;
 use App\Http\Requests\Customers\UpdateCustomerRequest;
 use App\Models\Customer;
 use App\Queries\ListCustomersQuery;
+use App\Services\Customers\LookupCompanyByVatService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
+    /** VIES/OIB lookup to auto-fill name + address on the customer form. */
+    public function lookupVat(Request $request, LookupCompanyByVatService $service): JsonResponse
+    {
+        $vat = trim((string) $request->query('vat', ''));
+
+        if ($vat === '') {
+            return response()->json(['message' => 'A vat query parameter is required.'], 422);
+        }
+
+        $result = $service->lookup($vat);
+
+        if (isset($result['error'])) {
+            return response()->json(['message' => $result['error']], 422);
+        }
+
+        return response()->json(['data' => $result]);
+    }
+
     public function index(Request $request, ListCustomersQuery $query): JsonResponse
     {
         $paginator = $query->paginate([
