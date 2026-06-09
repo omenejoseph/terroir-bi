@@ -11,6 +11,7 @@ export function CustomerDetails({ customer }: { customer: Customer }) {
   const location = [customer.address, customer.city, customer.zip, customer.country]
     .filter(Boolean)
     .join(", ");
+  const yesNo = (v: boolean) => (v ? t("common.yes") : t("common.no"));
 
   return (
     <div className="space-y-4">
@@ -26,20 +27,22 @@ export function CustomerDetails({ customer }: { customer: Customer }) {
         <Detail label={t("customers.form.oib")} value={customer.oib} />
         <Detail label={t("customers.form.customerType")} value={customer.customer_type} />
         <Detail label={t("customers.detail.location")} value={location || null} />
+        <Detail label={t("customers.form.hidePrices")} value={yesNo(customer.hide_prices)} />
+        <Detail label={t("customers.form.isAgency")} value={yesNo(customer.is_agency ?? false)} />
+        <Detail
+          label={t("customers.form.allowSingleBottle")}
+          value={yesNo(customer.allow_single_bottle ?? false)}
+        />
+        <Detail
+          label={t("customers.form.excludeFromStats")}
+          value={yesNo(customer.exclude_from_stats ?? false)}
+        />
       </dl>
 
       <div className="flex flex-wrap gap-2">
         <Badge variant={customer.is_active ? "success" : "secondary"}>
           {customer.is_active ? t("common.status.active") : t("common.status.inactive")}
         </Badge>
-        {customer.is_agency && <Badge variant="outline">{t("customers.form.isAgency")}</Badge>}
-        {customer.allow_single_bottle && (
-          <Badge variant="outline">{t("customers.form.allowSingleBottle")}</Badge>
-        )}
-        {customer.hide_prices && <Badge variant="outline">{t("customers.form.hidePrices")}</Badge>}
-        {customer.exclude_from_stats && (
-          <Badge variant="outline">{t("customers.form.excludeFromStats")}</Badge>
-        )}
       </div>
     </div>
   );

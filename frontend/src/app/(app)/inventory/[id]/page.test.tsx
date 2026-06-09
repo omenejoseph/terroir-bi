@@ -12,6 +12,7 @@ import {
   seedLocale,
   userEvent,
   waitFor,
+  within,
 } from "@/test/utils";
 
 // useParams is mocked in setup to return { id: "itm_1" }.
@@ -85,6 +86,27 @@ describe("Inventory item page", () => {
 
     await waitFor(() => expect(patched).not.toBeNull());
     expect(patched).toMatchObject({ name: "Renamed" });
+  });
+
+  it("deactivates the item from the overview after confirming", async () => {
+    let patched: Record<string, unknown> | null = null;
+    server.use(
+      http.patch(`${API_URL}/inventory-items/:id`, async ({ request, params }) => {
+        patched = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ data: makeItem({ id: String(params.id), is_active: false }) });
+      }),
+    );
+
+    renderWithProviders(<ItemPage />);
+    const user = userEvent.setup();
+
+    // Overview shows the item's flags as Yes/No, plus a Deactivate action.
+    expect(await screen.findByText("Available for sale")).toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: "Deactivate" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Deactivate" }));
+
+    await waitFor(() => expect(patched).toMatchObject({ is_active: false }));
   });
 
   it("hides edit and recipe controls for a viewer", async () => {

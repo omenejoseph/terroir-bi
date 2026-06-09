@@ -17,7 +17,7 @@ import { useTranslation } from "@/i18n/context";
 import type { Customer } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import { YesNoToggle } from "@/components/ui/yes-no-toggle";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -390,29 +390,43 @@ export function CustomerForm({
             </Field>
           </div>
 
-          <div className="flex flex-wrap gap-6">
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox checked={form.hide_prices} onChange={(e) => set("hide_prices", e.target.checked)} />
-              {t("customers.form.hidePrices")}
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={form.exclude_from_stats}
-                onChange={(e) => set("exclude_from_stats", e.target.checked)}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2">
+              <span className="text-sm">{t("customers.form.hidePrices")}</span>
+              <YesNoToggle
+                value={form.hide_prices}
+                onChange={(v) => set("hide_prices", v)}
+                yesLabel={t("common.yes")}
+                noLabel={t("common.no")}
               />
-              {t("customers.form.excludeFromStats")}
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox checked={form.is_agency} onChange={(e) => set("is_agency", e.target.checked)} />
-              {t("customers.form.isAgency")}
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={form.allow_single_bottle}
-                onChange={(e) => set("allow_single_bottle", e.target.checked)}
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2">
+              <span className="text-sm">{t("customers.form.excludeFromStats")}</span>
+              <YesNoToggle
+                value={form.exclude_from_stats}
+                onChange={(v) => set("exclude_from_stats", v)}
+                yesLabel={t("common.yes")}
+                noLabel={t("common.no")}
               />
-              {t("customers.form.allowSingleBottle")}
-            </label>
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2">
+              <span className="text-sm">{t("customers.form.isAgency")}</span>
+              <YesNoToggle
+                value={form.is_agency}
+                onChange={(v) => set("is_agency", v)}
+                yesLabel={t("common.yes")}
+                noLabel={t("common.no")}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2">
+              <span className="text-sm">{t("customers.form.allowSingleBottle")}</span>
+              <YesNoToggle
+                value={form.allow_single_bottle}
+                onChange={(v) => set("allow_single_bottle", v)}
+                yesLabel={t("common.yes")}
+                noLabel={t("common.no")}
+              />
+            </div>
           </div>
 
           {formError && (

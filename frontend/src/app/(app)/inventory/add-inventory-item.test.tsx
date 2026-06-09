@@ -66,7 +66,8 @@ describe("Inventory — add item", () => {
     await user.type(screen.getByLabelText("SKU"), "TW-1");
     await user.selectOptions(screen.getByLabelText("Unit"), "case");
     await user.selectOptions(screen.getByLabelText("Sales unit"), "cases");
-    await user.type(screen.getByLabelText("Cost per unit (minor units)"), "700");
+    await user.type(screen.getByLabelText("Default price (per sales unit)"), "150");
+    await user.type(screen.getByLabelText("Cost per sales unit"), "7");
     await user.click(screen.getByRole("button", { name: "Create item" }));
 
     await waitFor(() => expect(captured).not.toBeNull());
@@ -75,9 +76,10 @@ describe("Inventory — add item", () => {
       sku: "TW-1",
       unit: "case",
       category: "FINISHED",
-      is_active: true,
       sales_unit: "cases",
       bottles_per_case: 12,
+      // Entered in major units → sent as integer minor units.
+      default_price: 15000,
       cost_per_unit: 700,
     });
 
@@ -106,7 +108,7 @@ describe("Inventory — add item", () => {
     await user.type(screen.getByLabelText("Name"), "Opening Wine");
     await user.type(screen.getByLabelText("SKU"), "OW-1");
     await user.type(screen.getByLabelText("Opening stock (optional)"), "25");
-    await user.type(screen.getByLabelText("Cost per unit (minor units)"), "700");
+    await user.type(screen.getByLabelText("Cost per sales unit"), "7");
     await user.click(screen.getByRole("button", { name: "Create item" }));
 
     await waitFor(() => expect(stockBody).not.toBeNull());
@@ -136,7 +138,7 @@ describe("Inventory — add item", () => {
     await user.type(screen.getByPlaceholderText("e.g. Wine"), "Wine");
     await user.click(screen.getByRole("button", { name: /Create "Wine"/ }));
 
-    await user.type(screen.getByLabelText("Cost per unit (minor units)"), "700");
+    await user.type(screen.getByLabelText("Cost per sales unit"), "7");
 
     await user.click(screen.getByRole("button", { name: "Create item" }));
 
@@ -161,7 +163,7 @@ describe("Inventory — add item", () => {
     await user.type(screen.getByLabelText("Name"), "Dup");
     await user.type(screen.getByLabelText("SKU"), "PM-2021");
     // Unit defaults to "bottle" from the dropdown — no interaction needed.
-    await user.type(screen.getByLabelText("Cost per unit (minor units)"), "700");
+    await user.type(screen.getByLabelText("Cost per sales unit"), "7");
     await user.click(screen.getByRole("button", { name: "Create item" }));
 
     expect(await screen.findByText("The sku has already been taken.")).toBeInTheDocument();

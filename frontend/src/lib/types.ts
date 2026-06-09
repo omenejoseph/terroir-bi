@@ -118,8 +118,12 @@ export type InventoryCategory = (typeof INVENTORY_CATEGORIES)[number];
  * Common units of measure. The backend stores `unit` as a free string (max 50),
  * so this is a curated convenience list, not a hard enum — extend freely.
  */
-export const INVENTORY_UNITS = ["bottle", "case", "liter", "kg", "unit"] as const;
+export const INVENTORY_UNITS = ["bottle", "case", "liter", "kg", "gram", "unit"] as const;
 export type InventoryUnit = (typeof INVENTORY_UNITS)[number];
+
+/** Measure units for an item's unit size (e.g. 750 ml). Universal abbreviations. */
+export const UNIT_SIZE_UNITS = ["ml", "cl", "l", "gr", "kg"] as const;
+export type UnitSizeUnit = (typeof UNIT_SIZE_UNITS)[number];
 
 /**
  * How an item is sold — mirrors App\Enums\SalesUnit. Determines the unit an

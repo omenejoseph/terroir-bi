@@ -39,7 +39,7 @@ class ConsignmentTest extends TestCase
             'name' => 'Plavac', 'sku' => 'PLV', 'category' => 'FINISHED', 'unit' => 'bottles',
             'sales_unit' => 'cases',
             'current_stock' => '100.000', 'bottles_per_case' => 12, 'is_for_sale' => true,
-            'default_price' => 1000, 'cost_per_unit' => 400,
+            'default_price' => 12000, 'cost_per_unit' => 4800, // per case (sales_unit=cases)
         ]);
         $this->forgetTenant();
     }

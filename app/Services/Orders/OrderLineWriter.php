@@ -55,8 +55,10 @@ class OrderLineWriter
         $override = isset($line['unit_price']) ? (int) $line['unit_price'] : null;
 
         if ($item !== null) {
-            $unitPriceMinor = $override ?? $this->resolvedUnitPrice($customer, $item, $unitType);
-            $cost = $this->cogs->forLine($item, $unitType);
+            // Price and cost are stored per sales unit, and a catalog line is
+            // always in that unit, so they apply directly — no case scaling.
+            $unitPriceMinor = $override ?? $this->pricing->resolve($customer, $item)->getMinorAmount();
+            $cost = $this->cogs->forLine($item);
             $costMinor = $cost?->getMinorAmount();
         } else {
             $unitPriceMinor = $override ?? 0;
@@ -78,13 +80,5 @@ class OrderLineWriter
         }
 
         return $orderItem;
-    }
-
-    /** Per-bottle resolved price, scaled to a case line by bottles_per_case. */
-    private function resolvedUnitPrice(Customer $customer, InventoryItem $item, string $unitType): int
-    {
-        $base = $this->pricing->resolve($customer, $item)->getMinorAmount();
-
-        return $unitType === SalesUnit::Cases->value ? $base * max(1, (int) $item->bottles_per_case) : $base;
     }
 }

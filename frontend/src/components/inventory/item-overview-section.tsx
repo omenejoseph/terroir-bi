@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, Power } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useUpdateInventoryItem } from "@/hooks/use-inventory";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { useConfirm } from "@/components/ui/confirm";
 import {
   formToInput,
   InventoryItemFields,
@@ -29,6 +30,9 @@ export function ItemOverviewSection({
   const { t } = useTranslation();
   const { moneyObject } = useFormatters();
   const update = useUpdateInventoryItem();
+  const confirm = useConfirm();
+
+  const yesNo = (v: boolean) => (v ? t("common.yes") : t("common.no"));
 
   const [editing, setEditing] = React.useState(false);
   const [form, setForm] = React.useState<ItemFormState>(() => itemToForm(item));
@@ -44,6 +48,20 @@ export function ItemOverviewSection({
 
   function set<K extends keyof ItemFormState>(key: K, value: ItemFormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  async function toggleActive() {
+    const deactivating = item.is_active;
+    const ok = await confirm({
+      title: deactivating ? t("inventory.deactivate.title") : t("inventory.activate.title"),
+      description: deactivating
+        ? t("inventory.deactivate.body", { name: item.name })
+        : t("inventory.activate.body", { name: item.name }),
+      confirmLabel: deactivating ? t("inventory.deactivate.action") : t("inventory.activate.action"),
+      tone: "danger",
+    });
+    if (!ok) return;
+    await update.mutateAsync({ id: item.id, input: { is_active: !item.is_active } });
   }
 
   async function save(event: React.SyntheticEvent) {
@@ -108,15 +126,13 @@ export function ItemOverviewSection({
               <Detail label={t("inventory.details.minStock")}>{item.min_stock ?? "—"}</Detail>
               <Detail label={t("inventory.details.price")}>{moneyObject(item.default_price)}</Detail>
               <Detail label={t("inventory.details.cost")}>{moneyObject(item.cost_per_unit)}</Detail>
+              <Detail label={t("inventory.add.isForSale")}>{yesNo(item.is_for_sale)}</Detail>
+              <Detail label={t("inventory.add.hideFromPortal")}>{yesNo(item.hide_from_portal ?? false)}</Detail>
               <Detail label={t("inventory.details.status")}>
                 <span className="flex flex-wrap gap-1">
                   <Badge variant={item.is_active ? "success" : "secondary"}>
                     {item.is_active ? t("common.status.active") : t("common.status.inactive")}
                   </Badge>
-                  {item.is_for_sale && <Badge variant="outline">{t("common.forSale")}</Badge>}
-                  {item.hide_from_portal && (
-                    <Badge variant="outline">{t("inventory.add.hideFromPortal")}</Badge>
-                  )}
                   {item.is_auto_created && (
                     <Badge variant="secondary">{t("inventory.details.autoCreated")}</Badge>
                   )}
@@ -124,7 +140,21 @@ export function ItemOverviewSection({
               </Detail>
             </dl>
             {canManage && (
-              <div className="flex justify-end border-t border-border pt-3">
+              <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleActive}
+                  disabled={update.isPending}
+                  className={
+                    item.is_active ? "text-destructive hover:text-destructive" : undefined
+                  }
+                >
+                  <Power className="size-4" />
+                  {item.is_active
+                    ? t("inventory.deactivate.action")
+                    : t("inventory.activate.action")}
+                </Button>
                 <Button variant="outline" size="sm" onClick={startEdit}>
                   <Pencil className="size-4" />
                   {t("inventory.details.edit")}

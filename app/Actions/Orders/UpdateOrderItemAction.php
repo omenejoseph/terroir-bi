@@ -66,7 +66,7 @@ class UpdateOrderItemAction
             }
 
             $cost = $product instanceof InventoryItem && $newUnit !== $oldUnit
-                ? $this->cogs->forLine($product, $newUnit)
+                ? $this->cogs->forLine($product)
                 : $item->cost_per_unit;
 
             $item->quantity = $newQty;
