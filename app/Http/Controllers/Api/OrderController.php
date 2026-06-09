@@ -31,12 +31,25 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
 use App\Queries\ListOrdersQuery;
+use App\Queries\OrderAnalyticsQuery;
+use App\Support\Period;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
     public function __construct(private readonly MembershipContext $membership) {}
+
+    public function analytics(Request $request, OrderAnalyticsQuery $query): JsonResponse
+    {
+        [$from, $to] = Period::resolve(
+            $request->query('period') !== null ? (string) $request->query('period') : null,
+            $request->query('from') !== null ? (string) $request->query('from') : null,
+            $request->query('to') !== null ? (string) $request->query('to') : null,
+        );
+
+        return response()->json(['data' => $query->get($from, $to)]);
+    }
 
     public function index(Request $request, ListOrdersQuery $query): JsonResponse
     {

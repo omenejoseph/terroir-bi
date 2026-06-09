@@ -123,12 +123,12 @@ These read or reassign **orders**, so they land **after Phase 3 (Orders core)**:
 
 ---
 
-## Phase 5 — Analytics (backend)
+## Phase 5 — Analytics (backend) ✅
 
-- [ ] `OrderAnalyticsQuery` + `GET /orders/analytics?period=` (revenue/COGS/margin, top customers/products, low-margin), gated by `canSeeFinancials()`.
-- [ ] Spend reconciliation: scale `ORDER_DEDUCT` to live line qty; exclude `is_reconciliation`.
-- [ ] `CustomerInsightsQuery` + `GET /customers/{id}/insights` (now computable).
-- **Accept:** analytics exclude reconciliations.
+- [x] `OrderAnalyticsQuery` + `GET /orders/analytics?period=` (revenue/COGS/margin, order count, avg, top customers/products, low-margin orders, separate `consignment_revenue`), gated by `can:financials.view`. `Support\Period` resolves presets/from-to.
+- [x] Spend reconciliation — **satisfied by design**: analytics derive COGS from the *current* `order_items` snapshot (not stock movements), so the ORDER_DEDUCT double-count never arises and `is_reconciliation` adjustments are irrelevant. (A movement-based inventory-spend report remains future work.)
+- [x] `CustomerInsightsQuery` + `GET /customers/{id}/insights` (total spend, order count, avg, last order, consignment revenue, top products), gated by `can:financials.view`.
+- **Accept:** ✅ revenue/COGS/margin correct; consignment excluded from core P&L but reported separately; insights aggregate per customer — `tests/Feature/Orders/OrderAnalyticsTest.php` (3 tests). `composer check` green (341 tests).
 
 > **AI integrations are skipped this pass.** When they land they'll be built on
 > **Laravel AI** (not a hand-rolled Anthropic client). The order-from-screenshot

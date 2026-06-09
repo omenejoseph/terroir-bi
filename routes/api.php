@@ -96,6 +96,7 @@ Route::prefix('v1')->group(function () {
             Route::get('customers/lookup-vat', [CustomerController::class, 'lookupVat']);
             Route::get('customers', [CustomerController::class, 'index']);
             Route::get('customers/{customer}', [CustomerController::class, 'show']);
+            Route::get('customers/{customer}/insights', [CustomerController::class, 'insights'])->middleware('can:financials.view');
             Route::get('customers/{customer}/resolved-prices', [PriceController::class, 'resolvedPrices']);
             Route::get('customers/{customer}/product-overrides', [CustomerProductOverrideController::class, 'index']);
         });
@@ -119,6 +120,8 @@ Route::prefix('v1')->group(function () {
 
         // Orders.
         Route::middleware('can:orders.view')->group(function () {
+            // Static segment before the {order} wildcard; analytics needs financial visibility.
+            Route::get('orders/analytics', [OrderController::class, 'analytics'])->middleware('can:financials.view');
             Route::get('orders', [OrderController::class, 'index']);
             Route::get('orders/{order}', [OrderController::class, 'show']);
             Route::get('orders/{order}/consignment', [ConsignmentController::class, 'summary']);

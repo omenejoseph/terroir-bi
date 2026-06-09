@@ -13,6 +13,7 @@ use App\Http\Requests\Customers\QuickCustomerRequest;
 use App\Http\Requests\Customers\StoreCustomerRequest;
 use App\Http\Requests\Customers\UpdateCustomerRequest;
 use App\Models\Customer;
+use App\Queries\CustomerInsightsQuery;
 use App\Queries\ListCustomersQuery;
 use App\Services\Customers\LookupCompanyByVatService;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +21,11 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
+    public function insights(Customer $customer, CustomerInsightsQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->get($customer)]);
+    }
+
     /** VIES/OIB lookup to auto-fill name + address on the customer form. */
     public function lookupVat(Request $request, LookupCompanyByVatService $service): JsonResponse
     {
