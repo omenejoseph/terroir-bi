@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\PricingTierController;
 use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StockController;
+use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\TranslationController;
 use App\Http\Controllers\Api\UploadController;
 use Illuminate\Support\Facades\Route;
@@ -134,6 +135,20 @@ Route::prefix('v1')->group(function () {
             Route::post('customers/{customer}/order-token', [CustomerController::class, 'generateToken']);
             Route::delete('customers/{customer}/order-token', [CustomerController::class, 'revokeToken']);
         });
+
+        // Suppliers + price lists.
+        Route::middleware('can:suppliers.view')->group(function () {
+            Route::get('suppliers', [SupplierController::class, 'index']);
+            Route::get('suppliers/{supplier}', [SupplierController::class, 'show']);
+        });
+        Route::middleware('can:suppliers.manage')->group(function () {
+            Route::post('suppliers', [SupplierController::class, 'store']);
+            Route::patch('suppliers/{supplier}', [SupplierController::class, 'update']);
+            Route::post('suppliers/{supplier}/price-items', [SupplierController::class, 'addPriceItem']);
+            Route::delete('suppliers/{supplier}/price-items/{priceItem}', [SupplierController::class, 'deletePriceItem']);
+        });
+        Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])
+            ->middleware('can:suppliers.delete');
 
         // Finance — money-in / accounts-receivable.
         Route::middleware('can:finance.view')->group(function () {

@@ -39,9 +39,11 @@ final class RoleCapabilities
                 'orders.manage',
                 'finance.view',
                 'finance.manage',
+                'suppliers.view',
+                'suppliers.manage',
                 'financials.view',
-                // customers.delete, customers.tokens, inventory.delete,
-                // orders.delete, orders.backorder and finance.delete are ADMIN-only.
+                // customers.delete, customers.tokens, inventory.delete, orders.delete,
+                // orders.backorder, finance.delete and suppliers.delete are ADMIN-only.
             ],
             TenantRole::Cellar->value => [
                 // Filled in as the Cellar module lands.
@@ -56,6 +58,8 @@ final class RoleCapabilities
             TenantRole::Manager->value => [
                 'finance.view',
                 'finance.manage',
+                'suppliers.view',
+                'suppliers.manage',
                 'financials.view',
             ],
             TenantRole::Sales->value => [
