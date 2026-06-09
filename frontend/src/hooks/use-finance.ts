@@ -31,8 +31,10 @@ export function useRecordPayment(orderId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: RecordPaymentInput) => financeApi.recordOrderPayment(orderId, input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["orders", orderId, "payments"] });
+    onSuccess: (payments) => {
+      // The POST returns the fresh summary + list; seed the cache directly so the
+      // panel reflects it without waiting for a refetch, then refresh the rollups.
+      queryClient.setQueryData(["orders", orderId, "payments"], payments);
       void queryClient.invalidateQueries({ queryKey: ["ar-aging"] });
       void queryClient.invalidateQueries({ queryKey: ["cash-flow"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard"] });

@@ -23,8 +23,9 @@ import { OrderHistorySection } from "@/components/orders/order-history-section";
 import { OrderCommentsSection } from "@/components/orders/order-comments-section";
 import { OrderDetailsCard } from "@/components/orders/order-details-card";
 import { OrderConsignmentSection } from "@/components/orders/order-consignment-section";
+import { OrderPaymentsSection } from "@/components/orders/order-payments-section";
 
-type DetailTab = "items" | "history" | "comments" | "consignment";
+type DetailTab = "items" | "history" | "comments" | "consignment" | "payments";
 
 const STATUS_VARIANT: Record<OrderStatus, "secondary" | "outline" | "success"> = {
   RECEIVED: "secondary",
@@ -70,6 +71,7 @@ export default function OrderDetailPage() {
     { value: "history", label: t("orders.tabs.history") },
     { value: "comments", label: t("orders.tabs.comments") },
     ...(order?.is_consignment ? [{ value: "consignment", label: t("orders.tabs.consignment") }] : []),
+    ...(can("finance.view") ? [{ value: "payments", label: t("orders.tabs.payments") }] : []),
   ];
 
   return (
@@ -157,6 +159,7 @@ export default function OrderDetailPage() {
           {tab === "consignment" && order.is_consignment && (
             <OrderConsignmentSection order={order} canManage={canManage} />
           )}
+          {tab === "payments" && can("finance.view") && <OrderPaymentsSection orderId={order.id} />}
         </>
       )}
     </div>
