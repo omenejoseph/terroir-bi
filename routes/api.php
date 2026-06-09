@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InventoryItemController;
 use App\Http\Controllers\Api\InvitationController;
 use App\Http\Controllers\Api\MemberController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PriceController;
 use App\Http\Controllers\Api\PricingTierController;
 use App\Http\Controllers\Api\StockController;
@@ -105,6 +106,26 @@ Route::prefix('v1')->group(function () {
             Route::post('customers/{customer}/order-token', [CustomerController::class, 'generateToken']);
             Route::delete('customers/{customer}/order-token', [CustomerController::class, 'revokeToken']);
         });
+
+        // Orders.
+        Route::middleware('can:orders.view')->group(function () {
+            Route::get('orders', [OrderController::class, 'index']);
+            Route::get('orders/{order}', [OrderController::class, 'show']);
+        });
+        Route::middleware('can:orders.manage')->group(function () {
+            Route::post('orders', [OrderController::class, 'store']);
+            Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus']);
+            Route::post('orders/{order}/items', [OrderController::class, 'addItems']);
+            Route::patch('orders/{order}/shipping', [OrderController::class, 'updateShipping']);
+            Route::patch('orders/{order}/notes', [OrderController::class, 'updateNotes']);
+            Route::patch('order-items/{orderItem}/cost', [OrderController::class, 'updateItemCost']);
+            Route::patch('order-items/{orderItem}', [OrderController::class, 'updateItem']);
+            Route::delete('order-items/{orderItem}', [OrderController::class, 'deleteItem']);
+        });
+        Route::patch('orders/{order}/backorder', [OrderController::class, 'updateBackorder'])
+            ->middleware('can:orders.backorder');
+        Route::delete('orders/{order}', [OrderController::class, 'destroy'])
+            ->middleware('can:orders.delete');
 
         // Pricing tiers.
         Route::middleware('can:pricing.view')->group(function () {

@@ -72,29 +72,29 @@ These read or reassign **orders**, so they land **after Phase 3 (Orders core)**:
 ## Phase 3 — Orders core (internal)
 
 ### 3.1 Schema & enums
-- [ ] Migrations: `orders`, `order_items`, `order_status_histories`, `order_notes` (all columns per data-model §3.4, incl. backorder/shipping/consignment/`last_stale_notified_at`; nullable `order_items.inventory_item_id` + `custom_description`).
-- [ ] Indexes: `(status,created_at)`, `(customer_id,created_at)`, `(is_consignment)`.
-- [ ] `app/Enums/OrderStatus.php`.
-- [ ] Models + relations + Money/enum casts.
+- [x] Migrations: `orders`, `order_items`, `order_status_histories`, `order_notes` (all columns incl. backorder/shipping/consignment/`last_stale_notified_at`; nullable `order_items.inventory_item_id` + `custom_description`).
+- [x] Indexes: `(status,created_at)`, `(customer_id,created_at)`, `(is_consignment)`.
+- [x] `app/Enums/OrderStatus.php`.
+- [x] Models + relations + Money/enum casts.
 
 ### 3.2 Services
-- [ ] `OrderNumberGenerator` (tenant-scoped, collision-safe).
-- [ ] `CogsSnapshot` (item `cost_per_unit` or recipe roll-up → display unit).
-- [ ] Edit-window guard/policy (1h; admins + `can_edit_orders` exempt; cost/shipping exempt).
+- [x] `OrderNumberGenerator` (tenant-scoped `ORD-NNNNN`, unique-index backstop).
+- [x] `CogsSnapshot` (recipe roll-up incl. custom lines, else `cost_per_unit` → display unit).
+- [x] `OrderEditGuard` (1h; admins + `can_edit_orders` exempt; cost/shipping callers don't invoke it). Plus shared `OrderLineWriter` + `OrderTotals`.
 
 ### 3.3 Actions & endpoints (each transactional, deduction via StockLedger)
-- [ ] `CreateOrderAction` → `POST /orders` (price verify, COGS snapshot, deduct unless backorder, status history, `NEW_ORDER`).
-- [ ] `UpdateOrderStatusAction` → `PATCH /orders/{id}/status`.
-- [ ] `AddOrderItemsAction` → `POST /orders/{id}/items`.
-- [ ] `UpdateOrderItemAction` (qty/unit) → `PATCH /order-items/{id}`; `UpdateOrderItemCostAction` → `PATCH /order-items/{id}/cost`.
-- [ ] `DeleteOrderItemAction` → `DELETE /order-items/{id}` (restock; block last line).
-- [ ] `UpdateOrderShippingAction`, `UpdateOrderBackorderAction`, `UpdateOrderNotesAction`.
-- [ ] `DeleteOrderAction` → `DELETE /orders/{id}` (restock, null inflow/deal links, cascade).
-- [ ] `ListOrdersQuery` + `GET /orders`, `GET /orders/{id}`.
+- [x] `CreateOrderAction` → `POST /orders` (resolve price/case-scale + optional override, COGS snapshot, deduct unless backorder, status history). *(NEW_ORDER notify → Phase 4.)*
+- [x] `UpdateOrderStatusAction` → `PATCH /orders/{id}/status`.
+- [x] `AddOrderItemsAction` → `POST /orders/{id}/items`.
+- [x] `UpdateOrderItemAction` (qty/unit, rescales price + re-snapshots COGS) → `PATCH /order-items/{id}`; `UpdateOrderItemCostAction` → `PATCH /order-items/{id}/cost`.
+- [x] `DeleteOrderItemAction` → `DELETE /order-items/{id}` (restock; last line protected).
+- [x] `UpdateOrderShippingAction`, `UpdateOrderBackorderAction` (ADMIN), `UpdateOrderNotesAction`.
+- [x] `DeleteOrderAction` → `DELETE /orders/{id}` (restock + cascade). *(inflow/deal nulling is a no-op until those tables exist.)*
+- [x] `ListOrdersQuery` + `GET /orders`, `GET /orders/{id}` (hides SHIPPED per `can_see_shipped_orders`; COGS gated by `canSeeFinancials()`).
 
 ### 3.4 Deferred soft-deletes now wired
-- [ ] Customer & InventoryItem hard-delete → **soft-delete when referenced by an order**.
-- **Accept:** create deducts + snapshots COGS; COGS immune to later cost edits; edit window enforced; delete restocks exactly.
+- [x] Customer & InventoryItem hard-delete → **deactivate when referenced by an order**.
+- **Accept:** ✅ create deducts + snapshots COGS (immune to later cost edits); overdraw guard on create/add/edit; edit window enforced; delete restocks; shipped hidden; COGS gated — `tests/Feature/Orders/OrderTest.php` (13 tests). `composer check` green (296 tests).
 
 ---
 

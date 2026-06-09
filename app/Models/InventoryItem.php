@@ -122,4 +122,12 @@ class InventoryItem extends Model
     {
         return $this->hasMany(RecipeItem::class, 'output_id');
     }
+
+    /**
+     * @return HasMany<OrderItem, $this>
+     */
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
+    }
 }

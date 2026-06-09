@@ -82,8 +82,17 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer): JsonResponse
     {
-        // No orders yet; hard delete. The soft-delete-when-referenced rule
-        // lands with the Orders module.
+        // Soft-delete (deactivate) when the customer has orders; otherwise hard delete.
+        if ($customer->orders()->exists()) {
+            $customer->is_active = false;
+            $customer->save();
+
+            return response()->json([
+                'data' => CustomerData::fromModel($customer)->toArray(),
+                'message' => 'Customer has orders and was deactivated instead of deleted.',
+            ]);
+        }
+
         $customer->delete();
 
         return response()->json(status: 204);

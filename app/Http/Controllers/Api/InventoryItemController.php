@@ -79,8 +79,18 @@ class InventoryItemController extends Controller
 
     public function destroy(InventoryItem $item): JsonResponse
     {
-        // No orders yet; hard delete (cascades recipe lines, movements). The
-        // soft-delete-when-referenced rule lands with the Orders module.
+        // Soft-delete (deactivate) when referenced by an order line; otherwise
+        // hard delete (cascades recipe lines, movements).
+        if ($item->orderItems()->exists()) {
+            $item->is_active = false;
+            $item->save();
+
+            return response()->json([
+                'data' => InventoryItemData::fromModel($item)->toArray(),
+                'message' => 'Item is referenced by orders and was deactivated instead of deleted.',
+            ]);
+        }
+
         $item->delete();
 
         return response()->json(status: 204);
