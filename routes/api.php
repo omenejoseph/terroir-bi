@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\TenantSessionController;
 use App\Http\Controllers\Api\ConsignmentController;
+use App\Http\Controllers\Api\CustomerConsignmentController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CustomerProductOverrideController;
 use App\Http\Controllers\Api\DashboardController;
@@ -125,6 +126,15 @@ Route::prefix('v1')->group(function () {
         Route::middleware('can:customers.tokens')->group(function () {
             Route::post('customers/{customer}/order-token', [CustomerController::class, 'generateToken']);
             Route::delete('customers/{customer}/order-token', [CustomerController::class, 'revokeToken']);
+        });
+
+        // Customer-level consignment (rollup + FIFO sale/return across placements).
+        Route::get('customers/{customer}/consignment', [CustomerConsignmentController::class, 'summary'])
+            ->middleware('can:orders.view');
+        Route::middleware('can:orders.manage')->group(function () {
+            Route::post('customers/{customer}/consignment/place', [CustomerConsignmentController::class, 'place']);
+            Route::post('customers/{customer}/consignment/sale', [CustomerConsignmentController::class, 'sale']);
+            Route::post('customers/{customer}/consignment/return', [CustomerConsignmentController::class, 'recordReturn']);
         });
 
         // General presigned upload URL (any member; the attach step is gated).

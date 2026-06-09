@@ -69,11 +69,12 @@ Direct-to-bucket uploads to a **private S3-compatible** bucket (`uploads` disk; 
 - [x] Product-override upsert/list/delete endpoints (`CustomerProductOverrideController`).
 - **Accept:** ✅ VIES fake returns parsed name/zip/city; new fields round-trip; overrides upsert/list/delete — `tests/Feature/Customers/CustomerParityTest.php`. `composer check` green (252 tests).
 
-### 2b — Order-dependent customer features *(moved out of Phase 2; need order history)*
-These read or reassign **orders**, so they land **after Phase 3 (Orders core)**:
-- [ ] `ReorderRadarQuery` + `GET /customers/reorder-radar`; `POST /customers/{id}/contacted` (median order-gap → overdue buckets; `reorder_contacted_at` column is already in place).
-- [ ] `PreviewCustomerMergeAction` / `MergeCustomersAction` + `POST /customers/merge[/preview]` (reassign orders/consignment/prices/overrides; drop unique collisions).
-- [ ] `CustomerInsightsQuery` + `GET /customers/{id}/insights` (revenue trend, product performance incl. realized consignment, YoY).
+### 2b — Order-dependent customer features ✅ *(landed after Phase 3)*
+- [x] `ReorderRadarQuery` + `GET /customers/reorder-radar`; `POST /customers/{id}/contacted` (median order-gap → due/overdue/at_risk, value-weighted urgency, muted once contacted) — `ReorderRadarTest`.
+- [x] `CustomerMergeService` + `POST /customers/merge[/preview]` (reassign orders + per-item prices/overrides, drop unique collisions, delete losers) — `CustomerMergeTest`.
+- [x] `CustomerInsightsQuery` + `GET /customers/{id}/insights` (landed in Phase 5).
+- [x] **Customer-level FIFO consignment** — `CustomerConsignmentService` + `GET /customers/{id}/consignment` (rollup) and `POST …/consignment/place|sale|return`: sale/return allocate oldest-placement-first and delegate to the order-level actions — `CustomerConsignmentTest`.
+- **Accept:** ✅ `composer check` green (372 tests).
 
 ---
 
