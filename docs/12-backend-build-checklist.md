@@ -177,9 +177,10 @@ done (Phases 0–5 + 1b/2b). What the old app has and we don't, scoped for Essen
 - [x] CRUD + status (DONE stamps `completed_at`), drag-reorder (`POST /work-orders/reorder` by id sequence), board/calendar list (filters: status/assignee/due range), and `GET /work-orders/stats` (todo/in_progress/done/overdue). Any tenant member. `WorkOrderTest`.
 - **Accept:** ✅ assign + complete, reorder persists, overdue stats — `composer check` green (471 tests). *(HR scheduling/hours = follow-on, out of Essentials.)*
 
-### 6.5 Real Dashboard + import/export  *(after 6.1–6.2)*
-- [ ] Replace `DashboardSummary` placeholders with real Orders/AR/cash/low-stock/overdue-reorder/tasks KPIs.
-- [ ] CSV import (customers, inventory, opening balances) + exports (orders, inventory valuation, AR, cash flow).
+### 6.5 Real Dashboard ✅ (import/export deferred)
+- [x] `DashboardSummary` rewired to **real** data: order count/revenue series (bucketed), real `order_status` breakdown, top products (order revenue), recent orders (customer + item count + status), low-stock, **outstanding A/R** (billed − received), and **overdue tasks** — same response shape, so the FE/contract is unchanged. `DashboardTest`.
+- [—] CSV import (customers, inventory, opening balances) + exports (orders, inventory valuation, AR, cash flow) → **deferred** (additive; not blocking the instrument).
+- **Accept:** ✅ `composer check` green (472 tests).
 
 ---
 

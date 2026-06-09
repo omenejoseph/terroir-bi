@@ -4,25 +4,38 @@ declare(strict_types=1);
 
 namespace App\Services\Dashboard;
 
+use App\Enums\InflowStatus;
+use App\Enums\OrderStatus;
+use App\Enums\TaskStatus;
 use App\Models\Customer;
+use App\Models\Inflow;
 use App\Models\InventoryItem;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\WorkOrder;
 use App\Queries\InventoryAnalyticsQuery;
 use App\Support\Money\CurrencyRegistry;
 use App\Tenancy\Contracts\TenantContext;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
- * Builds the aggregated dashboard payload, transport-agnostic so the same call
- * can back the API, a Livewire component, or an Inertia page.
- *
- * Metrics we already have (customers, low stock, stock watch, product names) are
- * real and read-optimised; metrics from modules not yet built (orders, revenue)
- * are deterministic placeholders generated here — swap each builder for a real
- * query as the module lands, and every transport updates at once.
+ * The aggregated dashboard payload, computed from real module data (orders,
+ * revenue, A/R, inventory, tasks). Transport-agnostic: the same call backs the
+ * API and any future server-rendered page. Money values are integer minor units.
  */
 class DashboardSummary
 {
     private const RANGE_DAYS = ['7D' => 7, '30D' => 30, '90D' => 90, '1Y' => 365, 'ALL' => 540];
+
+    /** @var array<string, string> OrderStatus value → frontend key. */
+    private const STATUS_KEY = [
+        'RECEIVED' => 'received',
+        'IN_PROCESS' => 'inProcess',
+        'READY_TO_SHIP' => 'readyToShip',
+        'SHIPPED' => 'shipped',
+    ];
 
     public function __construct(
         private readonly InventoryAnalyticsQuery $analytics,
@@ -36,104 +49,96 @@ class DashboardSummary
     {
         $range = is_string($range) && isset(self::RANGE_DAYS[$range]) ? $range : '30D';
         $days = self::RANGE_DAYS[$range];
+        $from = Carbon::now()->subDays($days);
 
-        $orders = $this->ordersSeries($days);
-        $revenue = $this->revenueSeries($days);
-        $totalOrders = array_sum(array_column($orders, 'value'));
-        $revenueTotal = array_sum(array_column($revenue, 'value'));
+        /** @var Collection<int, Order> $orders */
+        $orders = Order::query()
+            ->where('is_consignment', false)
+            ->where('created_at', '>=', $from)
+            ->get(['id', 'order_number', 'created_at', 'total_amount', 'status']);
+
+        $points = min($days, 30);
+        $step = max(1, intdiv($days, $points));
+        $orderCounts = array_fill(0, $points, 0);
+        $revenueBuckets = array_fill(0, $points, 0);
+
+        foreach ($orders as $order) {
+            $bucket = intdiv((int) ($order->created_at?->diffInDays(Carbon::now()) ?? 0), $step);
+            if ($bucket >= 0 && $bucket < $points) {
+                $orderCounts[$bucket]++;
+                $revenueBuckets[$bucket] += $order->total_amount->getMinorAmount();
+            }
+        }
 
         return [
             'range' => $range,
             'currency' => $this->currency(),
             'stats' => [
-                'total_orders' => $totalOrders,
-                'customers' => Customer::query()->count(),
-                'revenue' => $revenueTotal,
+                'total_orders' => $orders->count(),
+                'customers' => Customer::query()->where('is_active', true)->count(),
+                'revenue' => (int) $orders->sum(fn (Order $o) => $o->total_amount->getMinorAmount()),
                 'low_stock' => $this->analytics->lowStockCount(),
+                'outstanding_ar' => $this->outstandingAr(),
+                'tasks_overdue' => $this->overdueTasks(),
             ],
-            'orders' => $orders,
-            'revenue' => $revenue,
-            'order_status' => $this->orderStatus($totalOrders),
-            'top_products' => $this->topProducts(),
+            'orders' => $this->series(array_values($orderCounts), $step),
+            'revenue' => $this->series(array_values($revenueBuckets), $step),
+            'order_status' => $this->orderStatus($orders),
+            'top_products' => $this->topProducts($from),
             'stock_watch' => $this->analytics->stockWatch(6),
             'recent_orders' => $this->recentOrders(),
         ];
     }
 
     /**
+     * @param  list<int>  $buckets  newest-first by bucket index
      * @return list<array{label: string, value: int}>
      */
-    private function ordersSeries(int $days): array
+    private function series(array $buckets, int $step): array
     {
-        $points = min($days, 30);
-        $step = max(1, intdiv($days, $points));
         $out = [];
-        for ($i = $points - 1; $i >= 0; $i--) {
-            $out[] = ['label' => $this->label($i * $step), 'value' => $this->wave($points - $i, 6, 4, 3)];
+        for ($i = count($buckets) - 1; $i >= 0; $i--) {
+            $out[] = ['label' => $this->label($i * $step), 'value' => $buckets[$i]];
         }
 
         return $out;
     }
 
     /**
-     * @return list<array{label: string, value: int}>
-     */
-    private function revenueSeries(int $days): array
-    {
-        $points = min($days, 30);
-        $step = max(1, intdiv($days, $points));
-        $out = [];
-        for ($i = $points - 1; $i >= 0; $i--) {
-            // Minor units (cents).
-            $out[] = ['label' => $this->label($i * $step), 'value' => ($this->wave($points - $i, 1800, 1400, 4) + 600) * 100];
-        }
-
-        return $out;
-    }
-
-    /**
+     * @param  Collection<int, Order>  $orders
      * @return list<array{key: string, value: int}>
      */
-    private function orderStatus(int $total): array
+    private function orderStatus($orders): array
     {
-        $received = (int) round($total * 0.28);
-        $inProcess = (int) round($total * 0.18);
-        $ready = (int) round($total * 0.12);
-        $shipped = max(0, $total - $received - $inProcess - $ready);
+        $counts = $orders->countBy(fn (Order $o) => $o->status->value);
 
-        return [
-            ['key' => 'received', 'value' => $received],
-            ['key' => 'inProcess', 'value' => $inProcess],
-            ['key' => 'readyToShip', 'value' => $ready],
-            ['key' => 'shipped', 'value' => $shipped],
-        ];
+        return array_map(fn (OrderStatus $status) => [
+            'key' => self::STATUS_KEY[$status->value],
+            'value' => (int) $counts->get($status->value, 0),
+        ], OrderStatus::cases());
     }
 
     /**
-     * Real product names (so it feels live) with placeholder sales figures.
-     *
      * @return list<array{name: string, value: int}>
      */
-    private function topProducts(): array
+    private function topProducts(Carbon $from): array
     {
-        $names = InventoryItem::query()
-            ->where('is_for_sale', true)
-            ->orderByDesc('current_stock')
+        $rows = OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.is_consignment', false)
+            ->where('orders.created_at', '>=', $from)
+            ->whereNotNull('order_items.inventory_item_id')
+            ->groupBy('order_items.inventory_item_id')
+            ->orderByDesc('rev')
             ->limit(5)
-            ->pluck('name')
-            ->all();
+            ->get([DB::raw('order_items.inventory_item_id as item_id'), DB::raw('SUM(order_items.total) as rev')]);
 
-        if ($names === []) {
-            $names = ['Premium Red Blend 2024', 'Plavac Mali 2021', 'Graševina 2022'];
-        }
+        $names = InventoryItem::query()->whereIn('id', $rows->pluck('item_id'))->pluck('name', 'id');
 
-        $out = [];
-        foreach (array_values($names) as $i => $name) {
-            $out[] = ['name' => (string) $name, 'value' => $this->wave($i + 2, 7, 5, 1.4)];
-        }
-        usort($out, fn (array $a, array $b): int => $b['value'] <=> $a['value']);
-
-        return $out;
+        return array_values($rows->map(fn (OrderItem $r) => [
+            'name' => (string) ($names[$r->getAttribute('item_id')] ?? ''),
+            'value' => (int) $r->getAttribute('rev'),
+        ])->all());
     }
 
     /**
@@ -141,19 +146,48 @@ class DashboardSummary
      */
     private function recentOrders(): array
     {
-        return [
-            ['id' => 'ORD-20260042', 'customer' => 'Acme Corporation', 'items' => 5, 'total' => 9995, 'status' => 'received', 'date' => $this->label(0)],
-            ['id' => 'ORD-20260041', 'customer' => 'Vinoteka Zagreb', 'items' => 12, 'total' => 24800, 'status' => 'shipped', 'date' => $this->label(1)],
-            ['id' => 'ORD-20260040', 'customer' => 'Bistro Dalmatino', 'items' => 3, 'total' => 5400, 'status' => 'readyToShip', 'date' => $this->label(2)],
-            ['id' => 'ORD-20260039', 'customer' => 'Hotel Adriatic', 'items' => 24, 'total' => 51200, 'status' => 'inProcess', 'date' => $this->label(3)],
-        ];
+        $rows = Order::query()
+            ->with('customer')
+            ->withCount('items')
+            ->where('is_consignment', false)
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get()
+            ->map(function (Order $o): array {
+                $customer = $o->customer;
+
+                return [
+                    'id' => $o->order_number,
+                    'customer' => $customer instanceof Customer ? $customer->company_name : '',
+                    'items' => (int) $o->getAttribute('items_count'),
+                    'total' => $o->total_amount->getMinorAmount(),
+                    'status' => self::STATUS_KEY[$o->status->value],
+                    'date' => $o->created_at?->format('M j') ?? '',
+                ];
+            })->all();
+
+        return array_values($rows);
     }
 
-    private function wave(int $i, float $base, float $amp, float $period): int
+    /** Total unpaid order balances (order revenue minus received inflows). */
+    private function outstandingAr(): int
     {
-        $v = $base + $amp * sin($i / $period) + $amp * 0.45 * sin($i / 1.7 + 1);
+        $billed = (int) Order::query()->where('is_consignment', false)->sum('total_amount');
+        $received = (int) Inflow::query()
+            ->whereNotNull('order_id')
+            ->where('status', InflowStatus::Received->value)
+            ->sum(DB::raw('CASE WHEN is_credit_note THEN -amount ELSE amount END'));
 
-        return (int) max(0, round($v));
+        return max(0, $billed - $received);
+    }
+
+    private function overdueTasks(): int
+    {
+        return WorkOrder::query()
+            ->where('status', '!=', TaskStatus::Done)
+            ->whereNotNull('due_date')
+            ->where('due_date', '<', Carbon::now())
+            ->count();
     }
 
     private function label(int $daysAgo): string
