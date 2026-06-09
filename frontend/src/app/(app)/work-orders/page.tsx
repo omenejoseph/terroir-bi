@@ -1,40 +1,40 @@
 "use client";
 
 import * as React from "react";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
 import { useMembers } from "@/hooks/use-team";
 import {
   useCreateWorkOrder,
-  useDeleteWorkOrder,
-  useReorderWorkOrders,
-  useUpdateWorkOrderStatus,
   useWorkOrders,
   useWorkOrderStats,
 } from "@/hooks/use-work-orders";
 import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
-import type { TaskPriority, TaskStatus, WorkOrder } from "@/lib/types";
-import { TASK_PRIORITIES, TASK_STATUSES } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
+import type { TaskPriority, WorkOrder } from "@/lib/types";
+import { TASK_PRIORITIES } from "@/lib/types";
+import { addDays, addMonths, endOfWeek, startOfDay, startOfWeek } from "@/lib/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { useConfirm } from "@/components/ui/confirm";
+import { Tabs } from "@/components/ui/tabs";
+import { WorkOrderBoard } from "@/components/work-orders/work-order-board";
+import { WorkOrderCalendar, type Granularity } from "@/components/work-orders/work-order-calendar";
+import { WorkOrderDetailDialog } from "@/components/work-orders/work-order-detail-dialog";
 
-const PRIORITY_VARIANT: Record<TaskPriority, "secondary" | "default" | "outline"> = {
-  LOW: "secondary",
-  MEDIUM: "outline",
-  HIGH: "default",
-};
+type View = "board" | Granularity;
 
-export default function TasksPage() {
+export default function WorkOrdersPage() {
   const { t } = useTranslation();
+  const { date, monthYear } = useFormatters();
+  const [view, setView] = React.useState<View>("board");
+  const [anchor, setAnchor] = React.useState<Date>(() => startOfDay(new Date()));
+  const [selected, setSelected] = React.useState<WorkOrder | null>(null);
   const [search, setSearch] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
 
@@ -45,24 +45,55 @@ export default function TasksPage() {
 
   const { data, isLoading, isError, error } = useWorkOrders(debounced ? { search: debounced } : {});
   const statsQ = useWorkOrderStats();
-  const reorder = useReorderWorkOrders();
 
-  const tasks = React.useMemo(
+  const workOrders = React.useMemo(
     () => [...(data ?? [])].sort((a, b) => a.sort_order - b.sort_order),
     [data],
   );
 
-  function moveWithinColumn(task: WorkOrder, direction: -1 | 1) {
-    const column = tasks.filter((t) => t.status === task.status);
-    const index = column.findIndex((t) => t.id === task.id);
-    const swapWith = column[index + direction];
-    if (!swapWith) return;
-    // Build the full id list with the two tasks swapped in global order.
-    const ids = tasks.map((t) => t.id);
-    const a = ids.indexOf(task.id);
-    const b = ids.indexOf(swapWith.id);
-    [ids[a], ids[b]] = [ids[b], ids[a]];
-    reorder.mutate(ids);
+  // Keep the open dialog's work order in sync with refreshed list data.
+  const selectedLive = selected ? workOrders.find((w) => w.id === selected.id) ?? null : null;
+
+  const viewTabs = [
+    { value: "board", label: t("tasks.views.board") },
+    { value: "day", label: t("tasks.views.day") },
+    { value: "week", label: t("tasks.views.week") },
+    { value: "month", label: t("tasks.views.month") },
+    { value: "quarter", label: t("tasks.views.quarter") },
+  ];
+
+  function shift(direction: -1 | 1) {
+    setAnchor((current) => {
+      switch (view) {
+        case "day":
+          return addDays(current, direction);
+        case "week":
+          return addDays(current, direction * 7);
+        case "month":
+          return addMonths(current, direction);
+        case "quarter":
+          return addMonths(current, direction * 3);
+        default:
+          return current;
+      }
+    });
+  }
+
+  function periodLabel(): string {
+    switch (view) {
+      case "day":
+        return date(anchor);
+      case "week":
+        return `${date(startOfWeek(anchor))} – ${date(endOfWeek(anchor))}`;
+      case "month":
+        return monthYear(anchor);
+      case "quarter": {
+        const q = Math.floor(anchor.getMonth() / 3) + 1;
+        return `Q${q} ${anchor.getFullYear()}`;
+      }
+      default:
+        return "";
+    }
   }
 
   return (
@@ -80,7 +111,6 @@ export default function TasksPage() {
         />
       </header>
 
-      {/* Stats strip */}
       {statsQ.data && (
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           <StatTile label={t("tasks.stats.todo")} value={statsQ.data.todo} />
@@ -91,6 +121,37 @@ export default function TasksPage() {
       )}
 
       <QuickCreateRow />
+
+      {/* View switcher + date navigator */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Tabs tabs={viewTabs} value={view} onChange={(v) => setView(v as View)} />
+        {view !== "board" && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setAnchor(startOfDay(new Date()))}>
+              {t("tasks.nav.today")}
+            </Button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                aria-label={t("tasks.nav.prev")}
+                onClick={() => shift(-1)}
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <ChevronLeft className="size-4" />
+              </button>
+              <button
+                type="button"
+                aria-label={t("tasks.nav.next")}
+                onClick={() => shift(1)}
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <ChevronRight className="size-4" />
+              </button>
+            </div>
+            <span className="text-sm font-medium tabular-nums">{periodLabel()}</span>
+          </div>
+        )}
+      </div>
 
       {isLoading && (
         <div className="flex items-center justify-center py-16">
@@ -108,34 +169,22 @@ export default function TasksPage() {
         </Card>
       )}
 
-      {!isLoading && !isError && (
-        <div className="grid gap-4 lg:grid-cols-3">
-          {TASK_STATUSES.map((status) => {
-            const column = tasks.filter((t) => t.status === status);
-            return (
-              <div key={status} role="group" aria-label={t(`tasks.columns.${status}`)} className="space-y-2">
-                <div className="flex items-center justify-between px-1">
-                  <h2 className="text-sm font-semibold">{t(`tasks.columns.${status}`)}</h2>
-                  <span className="text-xs text-muted-foreground tabular-nums">{column.length}</span>
-                </div>
-                {column.length === 0 ? (
-                  <p className="px-1 text-xs text-muted-foreground">{t("tasks.empty")}</p>
-                ) : (
-                  column.map((task, index) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      isFirst={index === 0}
-                      isLast={index === column.length - 1}
-                      onMove={moveWithinColumn}
-                    />
-                  ))
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {!isLoading && !isError && view === "board" && <WorkOrderBoard workOrders={workOrders} />}
+
+      {!isLoading && !isError && view !== "board" && (
+        <WorkOrderCalendar
+          workOrders={workOrders}
+          granularity={view}
+          anchor={anchor}
+          onSelect={setSelected}
+          onPickDate={(d) => {
+            setAnchor(d);
+            setView("day");
+          }}
+        />
       )}
+
+      <WorkOrderDetailDialog workOrder={selectedLive} onClose={() => setSelected(null)} />
     </div>
   );
 }
@@ -240,99 +289,5 @@ function AssigneeField({ value, onChange }: { value: string; onChange: (v: strin
         ))}
       </Select>
     </div>
-  );
-}
-
-function TaskCard({
-  task,
-  isFirst,
-  isLast,
-  onMove,
-}: {
-  task: WorkOrder;
-  isFirst: boolean;
-  isLast: boolean;
-  onMove: (task: WorkOrder, direction: -1 | 1) => void;
-}) {
-  const { t } = useTranslation();
-  const { date } = useFormatters();
-  const confirm = useConfirm();
-  const updateStatus = useUpdateWorkOrderStatus();
-  const remove = useDeleteWorkOrder();
-
-  const overdue =
-    task.status !== "DONE" && task.due_date != null && new Date(task.due_date) < new Date();
-
-  async function handleDelete() {
-    const ok = await confirm({
-      title: t("tasks.deleteTitle"),
-      description: t("tasks.deleteBody", { title: task.title }),
-      confirmLabel: t("tasks.delete"),
-      tone: "danger",
-    });
-    if (!ok) return;
-    await remove.mutateAsync(task.id);
-  }
-
-  return (
-    <Card>
-      <CardContent className="space-y-2 p-3">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-sm font-medium">{task.title}</p>
-          <Badge variant={PRIORITY_VARIANT[task.priority]}>{t(`tasks.priority.${task.priority}`)}</Badge>
-        </div>
-
-        {task.due_date && (
-          <p className={`text-xs ${overdue ? "font-medium text-destructive" : "text-muted-foreground"}`}>
-            {overdue ? t("tasks.overdueBadge") : t("tasks.dueOn", { date: date(task.due_date) })}
-          </p>
-        )}
-
-        {task.assignee && <p className="text-xs text-muted-foreground">{task.assignee.name}</p>}
-
-        <div className="flex items-center justify-between gap-2 pt-1">
-          <Select
-            aria-label={t("tasks.setStatus")}
-            value={task.status}
-            onChange={(e) => updateStatus.mutate({ id: task.id, status: e.target.value as TaskStatus })}
-            className="h-8 w-32 text-xs"
-          >
-            {TASK_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {t(`tasks.status.${s}`)}
-              </option>
-            ))}
-          </Select>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              aria-label={t("tasks.moveUp")}
-              disabled={isFirst}
-              onClick={() => onMove(task, -1)}
-              className="text-muted-foreground hover:text-foreground disabled:opacity-30"
-            >
-              <ArrowUp className="size-4" />
-            </button>
-            <button
-              type="button"
-              aria-label={t("tasks.moveDown")}
-              disabled={isLast}
-              onClick={() => onMove(task, 1)}
-              className="text-muted-foreground hover:text-foreground disabled:opacity-30"
-            >
-              <ArrowDown className="size-4" />
-            </button>
-            <button
-              type="button"
-              aria-label={t("tasks.delete")}
-              onClick={handleDelete}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <Trash2 className="size-4" />
-            </button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }

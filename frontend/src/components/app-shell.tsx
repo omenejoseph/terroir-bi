@@ -47,7 +47,7 @@ const NAV: NavItem[] = [
   { href: "/suppliers", labelKey: "nav.suppliers", icon: Truck, cap: "suppliers.view" },
   { href: "/costs", labelKey: "nav.costs", icon: Receipt, cap: "finance.view" },
   { href: "/cash-flow", labelKey: "nav.cashFlow", icon: TrendingUp, cap: "finance.view" },
-  { href: "/tasks", labelKey: "nav.tasks", icon: ListTodo },
+  { href: "/work-orders", labelKey: "nav.tasks", icon: ListTodo },
   { href: "/team", labelKey: "nav.team", icon: UsersRound, cap: "members.view" },
   { href: "/settings", labelKey: "nav.settings", icon: Settings, cap: "settings.manage" },
 ];
