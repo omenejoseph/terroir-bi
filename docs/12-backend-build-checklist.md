@@ -161,10 +161,11 @@ done (Phases 0–5 + 1b/2b). What the old app has and we don't, scoped for Essen
 - [x] **AR aging** over outstanding order balances (current / 31–60 / 61–90 / 90+), per customer.
 - **Accept:** ✅ unpaid→partial→paid, credit-note reduction, pending-vs-received, aging buckets — `tests/Feature/Finance/OrderPaymentTest.php` (4 tests). `composer check` green (407 tests).
 
-### 6.2 Costs / Expenses + Suppliers + Purchasing  *(next)*
-- [ ] `costs`, `cost_items`, `cost_attachments`; status PENDING→APPROVED→PAID; categories; CSV import; analytics (burn rate, by-category/supplier, P&L).
-- [ ] `suppliers`, `supplier_price_items` (CRUD, merge, price-list learning).
-- [ ] `supplier_orders` + items; PO lifecycle DRAFT→SENT→CONFIRMED→**RECEIVED** → writes a **`PURCHASE_IN`** movement (new `StockMovementType`) and updates `cost_per_unit` (landed cost → real cost-per-product).
+### 6.2 Costs / Expenses + Suppliers + Purchasing ✅
+- [x] **Suppliers** (`suppliers`, `supplier_price_items`): CRUD, OIB-unique, price-list upsert keyed on (supplier, description). `SupplierTest`.
+- [x] **Costs** (`costs`, `cost_items`, `cost_attachments`): CRUD + nested items, status PENDING→APPROVED→PAID (stamps `paid_at`), categories, analytics (total/unpaid, by status/category/supplier, monthly, order-revenue-vs-costs P&L), R2 attachments. `CostTest`.
+- [x] **Purchasing** (`supplier_orders` + items): PO lifecycle DRAFT→SENT→CONFIRMED→**RECEIVED** → writes a **`PURCHASE_IN`** movement (new enum case) and refreshes `cost_per_unit` (landed cost → real cost-per-product), applied once; delete blocked once received. `SupplierOrderTest`.
+- **Accept:** ✅ `composer check` green (450 tests). *(Deferred: supplier merge, CSV cost import, price-list "learning" from invoices.)*
 
 ### 6.3 Cash-flow forecast + banking  *(after 6.2)*
 - [ ] Cash-flow forecast (historical 12-mo + projected 6-mo; pending costs/inflows) over the 6.1/6.2 data.

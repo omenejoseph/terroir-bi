@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\SupplierController;
+use App\Http\Controllers\Api\SupplierOrderController;
 use App\Http\Controllers\Api\TranslationController;
 use App\Http\Controllers\Api\UploadController;
 use Illuminate\Support\Facades\Route;
@@ -139,6 +140,8 @@ Route::prefix('v1')->group(function () {
 
         // Suppliers + price lists.
         Route::middleware('can:suppliers.view')->group(function () {
+            Route::get('supplier-orders', [SupplierOrderController::class, 'index']);
+            Route::get('supplier-orders/{supplierOrder}', [SupplierOrderController::class, 'show']);
             Route::get('suppliers', [SupplierController::class, 'index']);
             Route::get('suppliers/{supplier}', [SupplierController::class, 'show']);
         });
@@ -147,6 +150,9 @@ Route::prefix('v1')->group(function () {
             Route::patch('suppliers/{supplier}', [SupplierController::class, 'update']);
             Route::post('suppliers/{supplier}/price-items', [SupplierController::class, 'addPriceItem']);
             Route::delete('suppliers/{supplier}/price-items/{priceItem}', [SupplierController::class, 'deletePriceItem']);
+            Route::post('supplier-orders', [SupplierOrderController::class, 'store']);
+            Route::patch('supplier-orders/{supplierOrder}/status', [SupplierOrderController::class, 'updateStatus']);
+            Route::delete('supplier-orders/{supplierOrder}', [SupplierOrderController::class, 'destroy']);
         });
         Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])
             ->middleware('can:suppliers.delete');
