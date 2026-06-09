@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\TenantSessionController;
+use App\Http\Controllers\Api\ConsignmentController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CustomerProductOverrideController;
 use App\Http\Controllers\Api\DashboardController;
@@ -114,11 +115,15 @@ Route::prefix('v1')->group(function () {
         Route::middleware('can:orders.view')->group(function () {
             Route::get('orders', [OrderController::class, 'index']);
             Route::get('orders/{order}', [OrderController::class, 'show']);
+            Route::get('orders/{order}/consignment', [ConsignmentController::class, 'summary']);
         });
         Route::middleware('can:orders.manage')->group(function () {
             Route::post('orders', [OrderController::class, 'store']);
             Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus']);
             Route::post('orders/{order}/items', [OrderController::class, 'addItems']);
+            Route::post('orders/{order}/consignment/sale', [ConsignmentController::class, 'sale']);
+            Route::post('orders/{order}/consignment/return', [ConsignmentController::class, 'recordReturn']);
+            Route::post('orders/{order}/consignment/close', [ConsignmentController::class, 'close']);
             Route::patch('orders/{order}/shipping', [OrderController::class, 'updateShipping']);
             Route::patch('orders/{order}/notes', [OrderController::class, 'updateNotes']);
             Route::patch('order-items/{orderItem}/cost', [OrderController::class, 'updateItemCost']);

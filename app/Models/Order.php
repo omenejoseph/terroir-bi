@@ -116,4 +116,12 @@ class Order extends Model
     {
         return $this->hasMany(OrderNote::class);
     }
+
+    /**
+     * @return HasMany<ConsignmentReport, $this>
+     */
+    public function consignmentReports(): HasMany
+    {
+        return $this->hasMany(ConsignmentReport::class);
+    }
 }

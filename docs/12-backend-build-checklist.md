@@ -106,10 +106,12 @@ These read or reassign **orders**, so they land **after Phase 3 (Orders core)**:
 - **Accept:** ✅ tampered price → 422; unknown token → 404; stock deducts; attributed to a tenant admin — `tests/Feature/Orders/PublicOrderTest.php` (5 tests).
 
 ### 4.2 Consignment (flow 10)
-- [ ] Migrations: `consignment_reports`, `consignment_report_items` (qty in bottles).
-- [ ] Order-level `GET/POST /orders/{id}/consignment*` (summary, sale, return, close).
-- [ ] Customer-level FIFO `/customers/{id}/consignment*` (place/sale/return).
-- **Accept:** SALE = revenue+COGS no stock change; RETURN restocks; close auto-returns remainder; delete restocks remainder only.
+- [x] Migrations: `consignment_reports`, `consignment_report_items` (qty in bottles); `ConsignmentReportKind` enum; models + `Order::consignmentReports`.
+- [x] `ConsignmentService` (per-line tally + summary, per-bottle price/cost) and order-level `GET/POST /orders/{id}/consignment` (summary, sale, return, close).
+- [—] Customer-level FIFO `/customers/{id}/consignment*` (place/sale/return) → **deferred to Phase 2b** (aggregation/FIFO layer over the order-level mechanics; pairs naturally with customer insights).
+- **Accept:** ✅ SALE = revenue+COGS, no stock change; RETURN restocks; close auto-returns remainder + stamps closed; over-sale rejected; non-consignment guarded — `tests/Feature/Orders/ConsignmentTest.php` (6 tests). `composer check` green (320 tests).
+
+> Note: deleting a consignment order currently restocks **all** catalog lines (Phase 3 `DeleteOrderAction`). The "remainder-only on delete" refinement moves with the customer-level FIFO work in Phase 2b.
 
 ### 4.3 Comments & notifications (module 10)
 - [ ] `POST /orders/{id}/comments`, `PATCH/DELETE /order-comments/{id}` (author/ADMIN; parse `@mentions`).
