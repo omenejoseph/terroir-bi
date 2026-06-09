@@ -22,7 +22,7 @@ describe("PublicOrderPage", () => {
     renderWithProviders(<PublicOrderPage />);
     expect(await screen.findByText("Acme Corporation")).toBeInTheDocument();
     expect(screen.getByText("Plavac Mali 2021")).toBeInTheDocument();
-    expect(screen.getByText(/€150\.00/)).toBeInTheDocument(); // the product's price
+    expect(screen.getByText(/150,00\s*€/)).toBeInTheDocument(); // the product's price
   });
 
   it("submits an order and shows the confirmation", async () => {
@@ -72,7 +72,7 @@ describe("PublicOrderPage", () => {
 
     renderWithProviders(<PublicOrderPage />);
     expect(await screen.findByText("Plavac Mali 2021")).toBeInTheDocument();
-    expect(screen.queryByText(/€150\.00/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/150,00\s*€/)).not.toBeInTheDocument();
   });
 
   it("shows an error for an invalid link", async () => {

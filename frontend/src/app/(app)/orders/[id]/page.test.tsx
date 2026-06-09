@@ -149,7 +149,7 @@ describe("OrderDetailPage", () => {
     const user = userEvent.setup();
     const row = (await screen.findByText(/Plavac Mali 2021/)).closest("tr")!;
 
-    await user.click(within(row).getByText("€7.00")); // cost cell
+    await user.click(within(row).getByText("7,00 €")); // cost cell
     const costInput = within(row).getByLabelText("Cost/unit");
     await user.clear(costInput);
     await user.type(costInput, "800");
@@ -268,9 +268,9 @@ describe("OrderDetailPage", () => {
     await screen.findByText("ORD-1001");
 
     await user.click(screen.getByRole("tab", { name: "Payments" }));
-    // Default order-payments handler: paid €500.00, balance €400.00, PARTIAL.
+    // Default order-payments handler: paid 500,00 €, balance 400,00 €, PARTIAL.
     expect(await screen.findByText("Balance due")).toBeInTheDocument();
-    expect(screen.getByText("€400.00")).toBeInTheDocument();
+    expect(screen.getByText("400,00 €")).toBeInTheDocument();
     expect(screen.getByText("Partial")).toBeInTheDocument();
   });
 

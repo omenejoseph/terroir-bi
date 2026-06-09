@@ -24,15 +24,15 @@ describe("CostsPage", () => {
   it("lists costs with formatted amounts", async () => {
     renderWithProviders(<CostsPage />);
     expect(await screen.findByText("June electricity")).toBeInTheDocument();
-    // total_amount fixture is €120.00 (both default rows share it).
-    expect(screen.getAllByText("€120.00").length).toBeGreaterThan(0);
+    // total_amount fixture is 120,00 € (both default rows share it).
+    expect(screen.getAllByText("120,00 €").length).toBeGreaterThan(0);
   });
 
   it("renders the analytics strip totals", async () => {
     renderWithProviders(<CostsPage />);
-    // total_spend €700.00, unpaid €500.00 from makeCostAnalytics.
-    expect(await screen.findByText("€700.00")).toBeInTheDocument();
-    expect(screen.getByText("€500.00")).toBeInTheDocument();
+    // total_spend 700,00 €, unpaid 500,00 € from makeCostAnalytics.
+    expect(await screen.findByText("700,00 €")).toBeInTheDocument();
+    expect(screen.getByText("500,00 €")).toBeInTheDocument();
   });
 
   it("filters by status tab (sends status param)", async () => {

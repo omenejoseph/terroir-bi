@@ -25,9 +25,9 @@ describe("OrderPaymentsSection", () => {
 
   it("renders the summary and the payment list", async () => {
     renderWithProviders(<OrderPaymentsSection orderId="ord_1" />);
-    // amount_paid €500.00 (also the single list row), balance_due €400.00, status PARTIAL.
-    expect((await screen.findAllByText("€500.00")).length).toBeGreaterThan(0);
-    expect(screen.getByText("€400.00")).toBeInTheDocument();
+    // amount_paid 500,00 € (also the single list row), balance_due 400,00 €, status PARTIAL.
+    expect((await screen.findAllByText("500,00 €")).length).toBeGreaterThan(0);
+    expect(screen.getByText("400,00 €")).toBeInTheDocument();
     expect(screen.getByText("Partial")).toBeInTheDocument();
   });
 
@@ -60,7 +60,7 @@ describe("OrderPaymentsSection", () => {
     expect(posted).toMatchObject({ amount: 40000 });
     // The PARTIAL badge gives way to PAID once the returned summary seeds the cache.
     await waitFor(() => expect(screen.queryByText("Partial")).not.toBeInTheDocument());
-    expect(screen.getByText("€900.00")).toBeInTheDocument();
+    expect(screen.getByText("900,00 €")).toBeInTheDocument();
   });
 
   it("hides the record button for users without finance.manage", async () => {
@@ -70,7 +70,7 @@ describe("OrderPaymentsSection", () => {
 
     renderWithProviders(<OrderPaymentsSection orderId="ord_1" />);
     // SALES has finance.view but not finance.manage.
-    await screen.findAllByText("€500.00");
+    await screen.findAllByText("500,00 €");
     expect(screen.queryByRole("button", { name: "Record payment" })).not.toBeInTheDocument();
   });
 });

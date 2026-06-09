@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { ChevronsUpDown } from "lucide-react";
 
 import { useInventory } from "@/hooks/use-inventory";
@@ -13,6 +14,9 @@ import { cn } from "@/lib/utils";
  * type (server-side search), so it finds any item — not just the first page.
  * Selecting commits the chosen item; the label shown when collapsed is driven by
  * `valueLabel` so existing selections render even before a search runs.
+ *
+ * The dropdown is rendered in a portal (fixed-positioned under the trigger) so
+ * it isn't clipped by `overflow-hidden` ancestors such as expandable cards.
  */
 export function InventoryItemPicker({
   id,
@@ -34,7 +38,9 @@ export function InventoryItemPicker({
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [pos, setPos] = React.useState<{ top: number; left: number; width: number } | null>(null);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Debounce the search so we don't hit the API on every keystroke.
   React.useEffect(() => {
@@ -42,12 +48,32 @@ export function InventoryItemPicker({
     return () => clearTimeout(t);
   }, [query]);
 
+  // Keep the portal aligned under the trigger while open (incl. on scroll).
+  const updatePosition = React.useCallback(() => {
+    const el = triggerRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setPos({ top: r.bottom + 4, left: r.left, width: r.width });
+  }, []);
+
+  React.useLayoutEffect(() => {
+    if (!open) return;
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true); // capture: any scrolling ancestor
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, updatePosition]);
+
   React.useEffect(() => {
     if (!open) return;
     const onDocClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target)) return;
+      if (dropdownRef.current?.contains(target)) return;
+      setOpen(false);
     };
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
@@ -69,10 +95,11 @@ export function InventoryItemPicker({
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <>
       <button
         type="button"
         id={id}
+        ref={triggerRef}
         onClick={() => setOpen((o) => !o)}
         className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
@@ -82,40 +109,48 @@ export function InventoryItemPicker({
         <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
       </button>
 
-      {open && (
-        <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-md border border-border bg-popover shadow-md">
-          <input
-            autoFocus
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={searchPlaceholder}
-            className="w-full border-b border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none"
-          />
-          <ul className="max-h-56 overflow-auto p-1">
-            {listQ.isLoading ? (
-              <li className="flex justify-center py-3">
-                <Spinner className="size-4 text-muted-foreground" />
-              </li>
-            ) : items.length === 0 ? (
-              <li className="px-2 py-1.5 text-sm text-muted-foreground">{emptyLabel}</li>
-            ) : (
-              items.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => commit(item)}
-                    className="flex w-full items-center rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
-                  >
-                    <span className="truncate">
-                      {item.name} <span className="text-muted-foreground">({item.sku})</span>
-                    </span>
-                  </button>
+      {open &&
+        pos &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}
+            className="z-50 overflow-hidden rounded-md border border-border bg-popover shadow-md"
+          >
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={searchPlaceholder}
+              className="w-full border-b border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none"
+            />
+            <ul className="max-h-56 overflow-auto p-1">
+              {listQ.isLoading ? (
+                <li className="flex justify-center py-3">
+                  <Spinner className="size-4 text-muted-foreground" />
                 </li>
-              ))
-            )}
-          </ul>
-        </div>
-      )}
-    </div>
+              ) : items.length === 0 ? (
+                <li className="px-2 py-1.5 text-sm text-muted-foreground">{emptyLabel}</li>
+              ) : (
+                items.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => commit(item)}
+                      className="flex w-full items-center rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+                    >
+                      <span className="truncate">
+                        {item.name} <span className="text-muted-foreground">({item.sku})</span>
+                      </span>
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }

@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Pencil, Plus, Power } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
-import { useCustomers, useUpdateCustomer } from "@/hooks/use-customers";
+import { useCustomers } from "@/hooks/use-customers";
 import { useTranslation } from "@/i18n/context";
 import type { Customer, CustomerQuery } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -15,9 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
-import { useConfirm } from "@/components/ui/confirm";
-import { CustomerDetails } from "@/components/customers/customer-details";
-import { CustomerForm } from "@/components/customers/customer-form";
+import { CustomerDetailPanel } from "@/components/customers/customer-detail-panel";
 
 type StatusTab = "all" | "active" | "inactive";
 
@@ -113,39 +111,13 @@ export default function CustomersPage() {
 
 function CustomerCard({ customer }: { customer: Customer }) {
   const { t } = useTranslation();
-  const { can } = useAuth();
-  const confirm = useConfirm();
-  const update = useUpdateCustomer();
   const [open, setOpen] = React.useState(false);
-  const [editing, setEditing] = React.useState(false);
-  const canManage = can("customers.manage");
-
-  function toggle() {
-    setOpen((prev) => {
-      if (prev) setEditing(false); // reset to read-only when collapsing
-      return !prev;
-    });
-  }
-
-  async function toggleActive() {
-    const deactivating = customer.is_active;
-    const ok = await confirm({
-      title: deactivating ? t("customers.deactivate.title") : t("customers.activate.title"),
-      description: deactivating
-        ? t("customers.deactivate.body", { name: customer.company_name })
-        : t("customers.activate.body", { name: customer.company_name }),
-      confirmLabel: deactivating ? t("customers.deactivate.action") : t("customers.activate.action"),
-      tone: "danger",
-    });
-    if (!ok) return;
-    await update.mutateAsync({ id: customer.id, input: { is_active: !customer.is_active } });
-  }
 
   return (
     <Card className="overflow-hidden">
       <button
         type="button"
-        onClick={toggle}
+        onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
       >
@@ -178,43 +150,7 @@ function CustomerCard({ customer }: { customer: Customer }) {
       >
         <div className="overflow-hidden">
           <div className="border-t border-border px-4 py-4">
-            {!open ? null : editing ? (
-              <CustomerForm
-                customer={customer}
-                onSaved={() => setEditing(false)}
-                onCancel={() => setEditing(false)}
-                onDeleted={() => setOpen(false)}
-                bare
-              />
-            ) : (
-              <div className="space-y-4">
-                <CustomerDetails customer={customer} />
-                {canManage && (
-                  <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
-                    <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                      <Pencil className="size-3.5" />
-                      {t("customers.edit")}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={
-                        customer.is_active
-                          ? "text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          : undefined
-                      }
-                      onClick={toggleActive}
-                      disabled={update.isPending}
-                    >
-                      {update.isPending ? <Spinner /> : <Power className="size-3.5" />}
-                      {customer.is_active
-                        ? t("customers.deactivate.action")
-                        : t("customers.activate.action")}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
+            {open && <CustomerDetailPanel customer={customer} onDeleted={() => setOpen(false)} />}
           </div>
         </div>
       </div>

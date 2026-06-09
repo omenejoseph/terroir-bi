@@ -10,6 +10,20 @@ const DEFAULT_CURRENCY = "EUR";
 const DEFAULT_TIMEZONE = "Europe/Zagreb";
 
 /**
+ * Money is formatted in its currency's own regional convention, independent of
+ * the UI language, so a price always reads correctly. The euro, for example,
+ * is written with the symbol after the amount and a comma decimal — "1.234,56 €"
+ * — across the Eurozone (incl. Croatia), not "€1,234.56".
+ */
+const CURRENCY_LOCALE: Record<string, string> = {
+  EUR: "hr-HR",
+};
+
+function moneyLocale(currencyCode: string, uiLocale: string): string {
+  return CURRENCY_LOCALE[currencyCode] ?? uiLocale;
+}
+
+/**
  * Locale/currency/timezone-aware formatters derived from the active locale and
  * the organisation settings. Money values are integer minor units (cents).
  *
@@ -25,13 +39,14 @@ export function useFormatters() {
 
   return React.useMemo(() => {
     const num = new Intl.NumberFormat(locale);
-    const cur0 = new Intl.NumberFormat(locale, {
+    const curLocale = moneyLocale(currency, locale);
+    const cur0 = new Intl.NumberFormat(curLocale, {
       style: "currency",
       currency,
       maximumFractionDigits: 0,
     });
-    const cur2 = new Intl.NumberFormat(locale, { style: "currency", currency });
-    const curCompact = new Intl.NumberFormat(locale, {
+    const cur2 = new Intl.NumberFormat(curLocale, { style: "currency", currency });
+    const curCompact = new Intl.NumberFormat(curLocale, {
       style: "currency",
       currency,
       notation: "compact",
@@ -55,13 +70,16 @@ export function useFormatters() {
       money2: (minor: number) => cur2.format(minor / 100),
       /** Minor units → compact currency for chart axes (e.g. €15K). */
       moneyAxis: (minor: number) => curCompact.format(minor / 100),
-      /** Format a Money object using its own currency (falls back to the API string). */
+      /**
+       * Format a Money object in its own currency's regional convention (e.g.
+       * "12,34 €") so it always reads as money. Uses the value's own currency.
+       */
       moneyObject: (m: Money | null): string => {
         if (!m) return "—";
-        if (m.formatted) return m.formatted;
-        return new Intl.NumberFormat(locale, { style: "currency", currency: m.currency }).format(
-          m.minor / 100,
-        );
+        return new Intl.NumberFormat(moneyLocale(m.currency, locale), {
+          style: "currency",
+          currency: m.currency,
+        }).format(m.minor / 100);
       },
       /** ISO/date → medium date in the org timezone. */
       date: (value: string | number | Date) => dateFmt.format(new Date(value)),

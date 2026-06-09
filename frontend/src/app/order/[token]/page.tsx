@@ -7,6 +7,7 @@ import { CheckCircle2, Wine } from "lucide-react";
 import { ApiError } from "@/lib/api/client";
 import { usePublicCatalog, usePlacePublicOrder } from "@/hooks/use-public-order";
 import { useTranslation } from "@/i18n/context";
+import { useFormatters } from "@/lib/format";
 import { APP_NAME } from "@/lib/config";
 import type { PublicCatalogProduct } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ export default function PublicOrderPage() {
   const params = useParams<{ token: string }>();
   const token = params?.token;
   const { t, locale } = useTranslation();
+  const { moneyObject } = useFormatters();
 
   const catalogQ = usePublicCatalog(token);
   const place = usePlacePublicOrder(token ?? "");
@@ -112,7 +114,7 @@ export default function PublicOrderPage() {
                         <p className="truncate text-sm font-medium">{product.name}</p>
                         <p className="truncate text-xs text-muted-foreground">
                           {t(`inventory.add.salesUnit.${product.unit}`)}
-                          {showPrices && product.price ? ` · ${product.price.formatted}` : ""}
+                          {showPrices && product.price ? ` · ${moneyObject(product.price)}` : ""}
                         </p>
                       </div>
                       <Input

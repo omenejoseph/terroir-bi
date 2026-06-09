@@ -28,8 +28,8 @@ describe("CashFlowPage", () => {
 
   it("shows pending receivable/payable amounts and counts", async () => {
     renderWithProviders(<CashFlowPage />);
-    // receivable money(20000) = €200.00, count 4.
-    expect(await screen.findByText("€200.00")).toBeInTheDocument();
+    // receivable money(20000) = 200,00 €, count 4.
+    expect(await screen.findByText("200,00 €")).toBeInTheDocument();
     expect(screen.getByText("4 items")).toBeInTheDocument();
     expect(screen.getByText("2 items")).toBeInTheDocument();
   });
@@ -40,12 +40,12 @@ describe("CashFlowPage", () => {
     await user.click(await screen.findByRole("tab", { name: "Receivables" }));
 
     expect(await screen.findByText("Total outstanding")).toBeInTheDocument();
-    // moneyObject renders the DTO's own `formatted` string (fixture helper omits separators).
+    // moneyObject formats with the € symbol + locale grouping.
     // Total + the single by-customer row both show this amount.
-    expect(screen.getAllByText("€7300.00").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("7.300,00 €").length).toBeGreaterThan(0);
     expect(screen.getByText("31–60 days")).toBeInTheDocument();
     // current bucket money(400000).
-    expect(screen.getByText("€4000.00")).toBeInTheDocument();
+    expect(screen.getByText("4.000,00 €")).toBeInTheDocument();
   });
 
   it("links each by-customer row to the customer detail page", async () => {

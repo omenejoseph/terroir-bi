@@ -11,7 +11,7 @@ import {
 } from "@/hooks/use-customers";
 import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
-import { majorToMinor } from "@/lib/money";
+import { majorToMinor, minorToMajorInput } from "@/lib/money";
 import type { InventoryItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +38,13 @@ export function CustomPricingSection({
   const [item, setItem] = React.useState<InventoryItem | null>(null);
   const [price, setPriceInput] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
+
+  // Prefill with the existing custom price, else the product's current list price.
+  function selectItem(it: InventoryItem) {
+    setItem(it);
+    const existing = (listQ.data ?? []).find((r) => r.inventory_item_id === it.id);
+    setPriceInput(minorToMajorInput(existing?.price.minor ?? it.default_price?.minor));
+  }
 
   async function add(event: React.FormEvent) {
     event.preventDefault();
@@ -113,7 +120,7 @@ export function CustomPricingSection({
                 <InventoryItemPicker
                   id="cp-item"
                   valueLabel={item?.name}
-                  onChange={setItem}
+                  onChange={selectItem}
                   placeholder={t("customers.pricing.pickProduct")}
                   searchPlaceholder={t("customers.pricing.searchProduct")}
                   emptyLabel={t("customers.pricing.noProducts")}

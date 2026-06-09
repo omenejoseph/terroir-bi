@@ -23,7 +23,7 @@ describe("DashboardPage", () => {
     renderWithProviders(<DashboardPage />);
 
     expect(await screen.findByText("Outstanding A/R")).toBeInTheDocument();
-    expect(screen.getByText("€2,500")).toBeInTheDocument();
+    expect(screen.getByText("2.500 €")).toBeInTheDocument();
     expect(screen.getByText("Overdue tasks")).toBeInTheDocument();
     // tasks_overdue fixture value is 3 (low_stock is also 3, so expect both).
     expect(screen.getAllByText("3").length).toBeGreaterThanOrEqual(2);

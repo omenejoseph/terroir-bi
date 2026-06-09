@@ -36,6 +36,8 @@ describe("CustomerDetailPage", () => {
     renderWithProviders(<CustomerDetailPage />);
     const user = userEvent.setup();
 
+    // Overview is read-only first; reveal the form.
+    await user.click(await screen.findByRole("button", { name: "Edit" }));
     const name = await screen.findByLabelText("Company name");
     expect((name as HTMLInputElement).value).toBe("Acme Corporation");
 
@@ -45,7 +47,8 @@ describe("CustomerDetailPage", () => {
 
     await waitFor(() => expect(patched).not.toBeNull());
     expect(patched).toMatchObject({ company_name: "Acme Renamed" });
-    expect(mockRouter.push).toHaveBeenCalledWith("/customers");
+    // Saving returns to the read-only overview in place (no navigation).
+    expect(await screen.findByRole("button", { name: "Edit" })).toBeInTheDocument();
   });
 
   it("deletes the customer (admin) and returns to the list", async () => {
@@ -60,7 +63,8 @@ describe("CustomerDetailPage", () => {
     renderWithProviders(<CustomerDetailPage />);
     const user = userEvent.setup();
 
-    // Click the form's Delete, then confirm in the dialog.
+    // Reveal the form, then click its Delete and confirm in the dialog.
+    await user.click(await screen.findByRole("button", { name: "Edit" }));
     await user.click(await screen.findByRole("button", { name: /Delete/ }));
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: /Delete/ }));
@@ -81,6 +85,7 @@ describe("CustomerDetailPage", () => {
     renderWithProviders(<CustomerDetailPage />);
     const user = userEvent.setup();
 
+    await user.click(await screen.findByRole("button", { name: "Edit" }));
     await user.click(await screen.findByRole("button", { name: /Delete/ }));
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
@@ -91,7 +96,7 @@ describe("CustomerDetailPage", () => {
   it("shows revenue summary cards", async () => {
     renderWithProviders(<CustomerDetailPage />);
     expect(await screen.findByText("Total revenue")).toBeInTheDocument();
-    expect(await screen.findByText("€1200.00")).toBeInTheDocument(); // total_revenue
+    expect(await screen.findByText("1.200,00 €")).toBeInTheDocument(); // total_revenue, with € + grouping
     expect(screen.getByText("This year")).toBeInTheDocument();
   });
 
@@ -99,7 +104,7 @@ describe("CustomerDetailPage", () => {
     server.use(
       http.get(`${API_URL}/customers/:id/order-analytics`, () =>
         HttpResponse.json({
-          data: makeCustomerOrderAnalytics({ last_order_date: null, total_revenue: { minor: 0, currency: "EUR", formatted: "€0.00" } }),
+          data: makeCustomerOrderAnalytics({ last_order_date: null, total_revenue: { minor: 0, currency: "EUR", formatted: "0,00 €" } }),
         }),
       ),
     );
@@ -124,7 +129,7 @@ describe("CustomerDetailPage", () => {
       http.put(`${API_URL}/inventory-items/:item/customer-price/:customer`, async ({ request }) => {
         putUrl = request.url;
         putBody = (await request.json()) as { price?: number };
-        return HttpResponse.json({ data: { minor: 1200, currency: "EUR", formatted: "€12.00" } });
+        return HttpResponse.json({ data: { minor: 1200, currency: "EUR", formatted: "12,00 €" } });
       }),
     );
 
@@ -137,7 +142,11 @@ describe("CustomerDetailPage", () => {
     await user.click(await screen.findByLabelText("Product"));
     await user.type(screen.getByPlaceholderText("Search products…"), "Plavac");
     await user.click(await screen.findByRole("button", { name: /Plavac Mali 2021/ }));
-    await user.type(screen.getByLabelText("Price"), "12");
+    // Selecting prepopulates with the product's current price (15,00 €).
+    const priceInput = screen.getByLabelText("Price") as HTMLInputElement;
+    expect(priceInput.value).toBe("15");
+    await user.clear(priceInput);
+    await user.type(priceInput, "12");
     await user.click(screen.getByRole("button", { name: "Set price" }));
 
     await waitFor(() => expect(putBody).not.toBeNull());
