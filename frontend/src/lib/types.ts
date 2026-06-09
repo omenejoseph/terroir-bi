@@ -304,7 +304,14 @@ export interface SeriesPoint {
 export interface DashboardSummary {
   range: string;
   currency: string;
-  stats: { total_orders: number; customers: number; revenue: number; low_stock: number };
+  stats: {
+    total_orders: number;
+    customers: number;
+    revenue: number;
+    low_stock: number;
+    outstanding_ar: number;
+    tasks_overdue: number;
+  };
   orders: SeriesPoint[];
   revenue: SeriesPoint[];
   order_status: { key: string; value: number }[];
@@ -607,4 +614,328 @@ export interface Notification {
 /** Payload for POST /inventory-items/{id}/produce. */
 export interface ProduceInput {
   display_quantity: number;
+}
+
+// ── Finance: inflows / accounts-receivable (Phase 6) ──────────────────────────
+
+export const INFLOW_STATUSES = ["PENDING", "RECEIVED"] as const;
+export type InflowStatus = (typeof INFLOW_STATUSES)[number];
+
+/** A money-in record (payment / A/R). Mirrors InflowData. */
+export interface Inflow {
+  id: string;
+  customer_id: string | null;
+  order_id: string | null;
+  date: string;
+  amount: Money;
+  status: InflowStatus;
+  is_credit_note: boolean;
+  category: string | null;
+  reference: string | null;
+  payment_method: string | null;
+  notes: string | null;
+  due_date: string | null;
+  received_at: string | null;
+  created_at: string | null;
+}
+
+export interface OrderPaymentSummary {
+  amount_paid: Money;
+  balance_due: Money;
+  status: "UNPAID" | "PARTIAL" | "PAID";
+}
+
+/** GET /orders/{id}/payments response. */
+export interface OrderPayments {
+  summary: OrderPaymentSummary;
+  payments: Inflow[];
+}
+
+/** POST /orders/{id}/payments — amount is integer minor units. */
+export interface RecordPaymentInput {
+  amount: number;
+  date?: string;
+  status?: InflowStatus;
+  is_credit_note?: boolean;
+  payment_method?: string | null;
+  reference?: string | null;
+  notes?: string | null;
+}
+
+/** GET /inflows/aging. Bucket keys start with digits → quoted. */
+export interface ArAging {
+  total_outstanding: Money;
+  buckets: { current: Money; "31_60": Money; "61_90": Money; "90_plus": Money };
+  by_customer: {
+    customer_id: string;
+    company_name: string | null;
+    orders: number;
+    outstanding: Money;
+  }[];
+}
+
+// ── Costs / expenses (Phase 6) ────────────────────────────────────────────────
+
+export const COST_STATUSES = ["PENDING", "APPROVED", "PAID"] as const;
+export type CostStatus = (typeof COST_STATUSES)[number];
+
+export interface CostItem {
+  id: string;
+  inventory_item_id: string | null;
+  description: string;
+  quantity: string | number;
+  unit_price: Money;
+  total: Money;
+  category: string | null;
+}
+
+/** Mirrors CostData. */
+export interface Cost {
+  id: string;
+  date: string;
+  total_amount: Money;
+  vat_amount: Money | null;
+  category: string;
+  description: string | null;
+  reference: string | null;
+  status: CostStatus;
+  payment_method: string | null;
+  notes: string | null;
+  paid_at: string | null;
+  due_date: string | null;
+  supplier: { id: string; company_name: string } | null;
+  items?: CostItem[];
+  attachments?: { id: string; filename: string; content_type: string; size_bytes: number }[];
+}
+
+/** POST /costs — money fields are integer minor units. */
+export interface CostInput {
+  total_amount: number;
+  category: string;
+  date?: string;
+  vat_amount?: number | null;
+  description?: string | null;
+  reference?: string | null;
+  status?: CostStatus;
+  payment_method?: string | null;
+  notes?: string | null;
+  due_date?: string | null;
+  supplier_id?: string | null;
+  items?: {
+    description: string;
+    unit_price: number;
+    quantity?: number;
+    category?: string | null;
+    inventory_item_id?: string | null;
+  }[];
+}
+
+export interface CostQuery {
+  search?: string;
+  category?: string;
+  status?: CostStatus;
+  supplier_id?: string;
+  page?: number;
+}
+
+/** GET /costs/analytics. */
+export interface CostAnalytics {
+  period: { from: string; to: string };
+  total_spend: Money;
+  unpaid: Money;
+  by_status: { status: string; count: number; total: Money }[];
+  by_category: { name: string; total: Money }[];
+  by_supplier: { supplier_id: string; company_name: string | null; total: Money }[];
+  over_time: { month: string; total: Money }[];
+  profit_loss: { month: string; revenue: Money; costs: Money; profit: Money }[];
+}
+
+// ── Suppliers + price lists (Phase 6) ─────────────────────────────────────────
+
+export interface SupplierPriceItem {
+  id: string;
+  inventory_item_id: string | null;
+  description: string;
+  unit_price: Money;
+  unit: string | null;
+  notes: string | null;
+  last_updated: string | null;
+}
+
+/** Mirrors SupplierData. */
+export interface Supplier {
+  id: string;
+  company_name: string;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  country: string | null;
+  tax_id: string | null;
+  bank_account: string | null;
+  payment_terms: string | null;
+  notes: string | null;
+  is_active: boolean;
+  exclude_from_stats: boolean;
+  price_items_count: number | null;
+  price_items?: SupplierPriceItem[];
+}
+
+export interface SupplierInput {
+  company_name: string;
+  contact_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  tax_id?: string | null;
+  bank_account?: string | null;
+  payment_terms?: string | null;
+  notes?: string | null;
+  is_active?: boolean;
+  exclude_from_stats?: boolean;
+}
+
+export interface SupplierQuery {
+  search?: string;
+  is_active?: boolean;
+  page?: number;
+}
+
+/** POST /suppliers/{id}/price-items — unit_price is integer minor units. */
+export interface PriceItemInput {
+  description: string;
+  unit_price: number;
+  unit?: string | null;
+  notes?: string | null;
+  inventory_item_id?: string | null;
+}
+
+// ── Purchase orders (Phase 6) ─────────────────────────────────────────────────
+
+export const SUPPLIER_ORDER_STATUSES = ["DRAFT", "SENT", "CONFIRMED", "RECEIVED", "CANCELLED"] as const;
+export type SupplierOrderStatus = (typeof SUPPLIER_ORDER_STATUSES)[number];
+
+export interface SupplierOrderItem {
+  id: string;
+  inventory_item_id: string | null;
+  description: string;
+  quantity: string | number;
+  unit: string | null;
+  unit_price: Money;
+  total: Money;
+}
+
+/** Mirrors SupplierOrderData. */
+export interface SupplierOrder {
+  id: string;
+  order_number: string;
+  status: SupplierOrderStatus;
+  total_amount: Money;
+  notes: string | null;
+  sent_at: string | null;
+  expected_at: string | null;
+  received_at: string | null;
+  supplier: { id: string; company_name: string } | null;
+  items?: SupplierOrderItem[];
+}
+
+/** POST /supplier-orders — quantity/unit_price are numbers (minor units for price). */
+export interface SupplierOrderInput {
+  supplier_id: string;
+  expected_at?: string | null;
+  notes?: string | null;
+  items: {
+    description: string;
+    quantity: number;
+    unit?: string | null;
+    unit_price: number;
+    inventory_item_id?: string | null;
+  }[];
+}
+
+export interface SupplierOrderQuery {
+  status?: SupplierOrderStatus;
+  supplier_id?: string;
+}
+
+// ── Cash flow (Phase 6) ───────────────────────────────────────────────────────
+
+export interface CashFlowMonth {
+  month: string;
+  revenue: Money;
+  costs: Money;
+  net: Money;
+  is_projection: boolean;
+}
+
+/** GET /cash-flow. */
+export interface CashFlow {
+  currency: string;
+  historical: CashFlowMonth[];
+  forecast: CashFlowMonth[];
+  pending: {
+    receivable: Money;
+    receivable_count: number;
+    payable: Money;
+    payable_count: number;
+    net: Money;
+  };
+  summary: {
+    avg_monthly_revenue: Money;
+    avg_monthly_costs: Money;
+    avg_monthly_net: Money;
+    revenue_growth_percent: string;
+  };
+}
+
+// ── Tasks / work orders (Phase 6) ─────────────────────────────────────────────
+
+export const TASK_STATUSES = ["TODO", "IN_PROGRESS", "DONE"] as const;
+export type TaskStatus = (typeof TASK_STATUSES)[number];
+export const TASK_PRIORITIES = ["LOW", "MEDIUM", "HIGH"] as const;
+export type TaskPriority = (typeof TASK_PRIORITIES)[number];
+
+/** Mirrors WorkOrderData. */
+export interface WorkOrder {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  priority: TaskPriority;
+  status: TaskStatus;
+  start_date: string | null;
+  due_date: string | null;
+  completed_at: string | null;
+  sort_order: number;
+  assignee: { id: string; name: string } | null;
+}
+
+export interface WorkOrderInput {
+  title: string;
+  description?: string | null;
+  category?: string | null;
+  priority?: TaskPriority;
+  status?: TaskStatus;
+  start_date?: string | null;
+  due_date?: string | null;
+  sort_order?: number;
+  assignee_id?: string | null;
+}
+
+export interface WorkOrderQuery {
+  status?: TaskStatus;
+  assignee_id?: string;
+  search?: string;
+  due_from?: string;
+  due_to?: string;
+}
+
+export interface WorkOrderStats {
+  todo: number;
+  in_progress: number;
+  done: number;
+  overdue: number;
 }
