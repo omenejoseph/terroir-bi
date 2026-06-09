@@ -172,8 +172,10 @@ done (Phases 0–5 + 1b/2b). What the old app has and we don't, scoped for Essen
 - **Accept:** ✅ `composer check` green (454 tests).
 - [—] Deferred: `bank_transactions` + statement import / dedup / DEBIT→cost·CREDIT→inflow matching (AI parse → Laravel AI); Moj-eRačun e-invoice sync (Croatia; beyond Essentials).
 
-### 6.4 Team task planning  *(parallelizable)*
-- [ ] `work_orders` (tasks): title/category/priority/status TODO/IN_PROGRESS/DONE, start/due/completed, `sort_order` (intra-day reorder), `assignee_id`. Kanban + calendar endpoints; quick-create; stats. (HR scheduling/hours = follow-on.)
+### 6.4 Team task planning ✅
+- [x] `work_orders` (tasks) + `TaskStatus`/`TaskPriority` enums; title/category/priority/status TODO/IN_PROGRESS/DONE, start/due/`completed_at`, `sort_order`, `assignee_id`.
+- [x] CRUD + status (DONE stamps `completed_at`), drag-reorder (`POST /work-orders/reorder` by id sequence), board/calendar list (filters: status/assignee/due range), and `GET /work-orders/stats` (todo/in_progress/done/overdue). Any tenant member. `WorkOrderTest`.
+- **Accept:** ✅ assign + complete, reorder persists, overdue stats — `composer check` green (471 tests). *(HR scheduling/hours = follow-on, out of Essentials.)*
 
 ### 6.5 Real Dashboard + import/export  *(after 6.1–6.2)*
 - [ ] Replace `DashboardSummary` placeholders with real Orders/AR/cash/low-stock/overdue-reorder/tasks KPIs.

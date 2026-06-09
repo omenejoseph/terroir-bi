@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\SupplierOrderController;
 use App\Http\Controllers\Api\TranslationController;
 use App\Http\Controllers\Api\UploadController;
+use App\Http\Controllers\Api\WorkOrderController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -204,6 +205,16 @@ Route::prefix('v1')->group(function () {
         // In-app notification feed (any member).
         Route::get('notifications', [NotificationController::class, 'index']);
         Route::post('notifications/read', [NotificationController::class, 'read']);
+
+        // Team task planning (any member). Static segments precede the {workOrder} wildcard.
+        Route::get('work-orders/stats', [WorkOrderController::class, 'stats']);
+        Route::post('work-orders/reorder', [WorkOrderController::class, 'reorder']);
+        Route::get('work-orders', [WorkOrderController::class, 'index']);
+        Route::post('work-orders', [WorkOrderController::class, 'store']);
+        Route::get('work-orders/{workOrder}', [WorkOrderController::class, 'show']);
+        Route::patch('work-orders/{workOrder}/status', [WorkOrderController::class, 'updateStatus']);
+        Route::patch('work-orders/{workOrder}', [WorkOrderController::class, 'update']);
+        Route::delete('work-orders/{workOrder}', [WorkOrderController::class, 'destroy']);
 
         // Orders.
         Route::middleware('can:orders.view')->group(function () {
