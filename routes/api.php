@@ -70,10 +70,14 @@ Route::prefix('v1')->group(function () {
             Route::get('inventory-items/{item}/recipe', [StockController::class, 'recipe']);
         });
         Route::middleware('can:inventory.manage')->group(function () {
+            // Static segment before the {item} wildcard so it isn't treated as an id.
+            Route::post('inventory-items/check', [StockController::class, 'check']);
             Route::post('inventory-items', [InventoryItemController::class, 'store']);
             Route::patch('inventory-items/{item}', [InventoryItemController::class, 'update']);
             Route::post('inventory-items/{item}/stock', [StockController::class, 'adjust']);
+            Route::post('inventory-items/{item}/produce', [StockController::class, 'produce']);
             Route::put('inventory-items/{item}/recipe', [StockController::class, 'setRecipe']);
+            Route::patch('stock-movements/{stockMovement}/reconciliation', [StockController::class, 'setReconciliation']);
         });
         Route::delete('inventory-items/{item}', [InventoryItemController::class, 'destroy'])
             ->middleware('can:inventory.delete');

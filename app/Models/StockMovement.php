@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $unit
  * @property string|null $note
  * @property string|null $reference
+ * @property bool $is_reconciliation
  * @property Carbon|null $created_at
  */
 class StockMovement extends Model
@@ -34,6 +35,11 @@ class StockMovement extends Model
         'unit',
         'note',
         'reference',
+        'is_reconciliation',
+    ];
+
+    protected $attributes = [
+        'is_reconciliation' => false,
     ];
 
     protected function casts(): array
@@ -41,6 +47,7 @@ class StockMovement extends Model
         return [
             'type' => StockMovementType::class,
             'quantity' => 'decimal:3',
+            'is_reconciliation' => 'boolean',
         ];
     }
 

@@ -17,6 +17,11 @@ final class Quantity
         return self::format(self::toUnits($a, $scale) + self::toUnits($b, $scale), $scale);
     }
 
+    public static function sub(string $a, string $b, int $scale = self::SCALE): string
+    {
+        return self::format(self::toUnits($a, $scale) - self::toUnits($b, $scale), $scale);
+    }
+
     /** Re-express any numeric string at the fixed scale (e.g. "10" → "10.000"). */
     public static function normalize(string $value, int $scale = self::SCALE): string
     {
@@ -39,6 +44,14 @@ final class Quantity
     public static function mulInt(string $value, int $factor, int $scale = self::SCALE): string
     {
         return self::format(self::toUnits($value, $scale) * $factor, $scale);
+    }
+
+    /** Multiply two quantities (e.g. recipe-line qty × produced output qty). */
+    public static function mul(string $a, string $b, int $scale = self::SCALE): string
+    {
+        $product = self::toUnits($a, $scale) * self::toUnits($b, $scale);
+
+        return self::format((int) round($product / (10 ** $scale)), $scale);
     }
 
     /** Divide a quantity by a whole number (e.g. bottles → cases), rounded to scale. */

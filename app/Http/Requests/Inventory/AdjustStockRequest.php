@@ -25,6 +25,7 @@ class AdjustStockRequest extends FormRequest
             'quantity' => ['required', 'numeric'], // signed delta
             'reference' => ['sometimes', 'nullable', 'string', 'max:255'],
             'note' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'is_reconciliation' => ['sometimes', 'boolean'],
         ];
     }
 }

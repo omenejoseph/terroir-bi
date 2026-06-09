@@ -30,7 +30,7 @@ class SetRecipeAction
             }
 
             return array_values($output->recipe()->get()
-                ->map(fn (RecipeItem $r) => ['input_id' => $r->input_id, 'quantity' => (string) $r->quantity])
+                ->map(fn (RecipeItem $r) => ['input_id' => (string) $r->input_id, 'quantity' => (string) $r->quantity])
                 ->all());
         });
     }

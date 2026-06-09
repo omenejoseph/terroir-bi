@@ -18,7 +18,7 @@ use JsonSerializable;
 final class RecipeLineData implements Arrayable, JsonSerializable
 {
     public function __construct(
-        public readonly string $inputId,
+        public readonly ?string $inputId,
         public readonly string $inputName,
         public readonly string $inputSku,
         public readonly string $inputUnit,
@@ -29,11 +29,12 @@ final class RecipeLineData implements Arrayable, JsonSerializable
     {
         $input = $line->input;
 
+        // Custom (non-catalog) lines fall back to their own name/unit.
         return new self(
             inputId: $line->input_id,
-            inputName: $input instanceof InventoryItem ? $input->name : '',
+            inputName: $input instanceof InventoryItem ? $input->name : ($line->custom_name ?? ''),
             inputSku: $input instanceof InventoryItem ? $input->sku : '',
-            inputUnit: $input instanceof InventoryItem ? $input->unit : '',
+            inputUnit: $input instanceof InventoryItem ? $input->unit : ($line->custom_unit ?? ''),
             quantity: (string) $line->quantity,
         );
     }

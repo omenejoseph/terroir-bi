@@ -24,14 +24,16 @@ class StockLedger
         string $signedQuantity,
         ?string $reference = null,
         ?string $note = null,
+        bool $isReconciliation = false,
     ): StockMovement {
-        return DB::transaction(function () use ($item, $type, $signedQuantity, $reference, $note): StockMovement {
+        return DB::transaction(function () use ($item, $type, $signedQuantity, $reference, $note, $isReconciliation): StockMovement {
             $movement = $item->stockMovements()->create([
                 'type' => $type,
                 'quantity' => $signedQuantity,
                 'unit' => $item->unit,
                 'reference' => $reference,
                 'note' => $note,
+                'is_reconciliation' => $isReconciliation,
             ]);
 
             $item->current_stock = Quantity::add((string) $item->current_stock, $signedQuantity);
@@ -60,18 +62,44 @@ class StockLedger
             $locked = $this->lock($item);
             $storageQty = $this->toStorageQuantity($locked, $quantity, $unitType);
 
-            if (Quantity::compare((string) $locked->current_stock, $storageQty) < 0) {
-                throw InsufficientStockException::for($locked, $storageQty);
-            }
-
-            return $this->record(
-                $locked,
-                StockMovementType::OrderDeduct,
-                Quantity::negate($storageQty),
-                $reference,
-                $note,
-            );
+            return $this->withdrawLocked($locked, $storageQty, StockMovementType::OrderDeduct, $reference, $note);
         });
+    }
+
+    /**
+     * Guarded outflow already expressed in the item's storage unit (no
+     * bottles/cases conversion) — e.g. consuming a recipe input in production.
+     * Locks the row and refuses to drive stock negative.
+     *
+     * @throws InsufficientStockException
+     */
+    public function withdraw(
+        InventoryItem $item,
+        string $storageQuantity,
+        StockMovementType $type = StockMovementType::ProductionOut,
+        ?string $reference = null,
+        ?string $note = null,
+    ): StockMovement {
+        return DB::transaction(function () use ($item, $storageQuantity, $type, $reference, $note): StockMovement {
+            $locked = $this->lock($item);
+
+            return $this->withdrawLocked($locked, Quantity::normalize($storageQuantity), $type, $reference, $note);
+        });
+    }
+
+    /** Shared guard+record for a positive storage quantity being removed. */
+    private function withdrawLocked(
+        InventoryItem $locked,
+        string $storageQty,
+        StockMovementType $type,
+        ?string $reference,
+        ?string $note,
+    ): StockMovement {
+        if (Quantity::compare((string) $locked->current_stock, $storageQty) < 0) {
+            throw InsufficientStockException::for($locked, $storageQty);
+        }
+
+        return $this->record($locked, $type, Quantity::negate($storageQty), $reference, $note);
     }
 
     /**

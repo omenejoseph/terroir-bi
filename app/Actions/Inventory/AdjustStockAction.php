@@ -23,8 +23,9 @@ class AdjustStockAction
         string $signedQuantity,
         ?string $reference = null,
         ?string $note = null,
+        bool $isReconciliation = false,
     ): InventoryItemData {
-        $this->ledger->record($item, $type, $signedQuantity, $reference, $note);
+        $this->ledger->record($item, $type, $signedQuantity, $reference, $note, $isReconciliation);
 
         return InventoryItemData::fromModel($item->refresh());
     }

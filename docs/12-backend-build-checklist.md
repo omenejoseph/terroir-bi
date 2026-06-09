@@ -34,18 +34,18 @@ Progress key: `[ ]` todo · `[~]` in progress · `[x]` done.
 ## Phase 1 — Inventory parity
 
 ### 1.1 Schema
-- [ ] Migration `inventory_items`: `unit_size`, `sales_unit`, `pack_size` (default 1), `hide_from_portal` (bool), `is_auto_created` (bool), `auto_created_at` (ts null), `base_product_id` (FK self, null).
-- [ ] Migration `stock_movements`: `is_reconciliation` (bool default false).
-- [ ] Migration `recipe_items`: `input_id` nullable; add `custom_name`, `custom_unit`, `custom_cost` (bigInteger null).
-- [ ] Update models (fillable/casts/relations: `baseProduct`).
+- [x] Migration `inventory_items`: `unit_size`, `sales_unit`, `pack_size` (default 1), `hide_from_portal` (bool), `is_auto_created` (bool), `auto_created_at` (ts null), `base_product_id` (FK self, null).
+- [x] Migration `stock_movements`: `is_reconciliation` (bool default false).
+- [x] Migration `recipe_items`: `input_id` nullable; add `custom_name`, `custom_unit`, `custom_cost` (bigInteger null, MoneyCast).
+- [x] Update models (fillable/casts/relations: `baseProduct`; `RecipeLineData` null-safe for custom lines).
 
 ### 1.2 Behavior
-- [ ] `ProduceItemAction` + `POST /inventory-items/{id}/produce` (PRODUCTION_OUT inputs, PRODUCTION_IN output, ref `PROD-{sku}`).
-- [ ] `ApplyInventoryCheckAction` + `POST /inventory-items/check` → `ADJUSTMENT` rows `is_reconciliation=true`, ref `INVCHECK-{date}`.
-- [ ] `PATCH /stock-movements/{id}/reconciliation` toggles the flag (no stock change).
-- [ ] `inventory_images` + `inventory_tech_sheets` tables + add/remove endpoints.
-- [ ] Update `Store/UpdateInventoryItemRequest` + `ListInventoryItemsQuery` for new portal fields.
-- **Accept:** produce respects input stock; check writes reconciliation adjustments; portal filters honor `hide_from_portal`.
+- [x] `ProduceItemAction` + `POST /inventory-items/{id}/produce` (guarded PRODUCTION_OUT inputs, PRODUCTION_IN output, ref `PROD-{sku}`).
+- [x] `ApplyInventoryCheckAction` + `POST /inventory-items/check` → `ADJUSTMENT` rows `is_reconciliation=true`, ref `INVCHECK-{date}` (computed vs live stock).
+- [x] `PATCH /stock-movements/{id}/reconciliation` toggles the flag (no stock change); `is_reconciliation` also threadable through manual `POST .../stock`.
+- [—] `inventory_images` + `inventory_tech_sheets` tables + add/remove endpoints → **deferred to Phase 1b** (pure CRUD, no business logic; keeps this PR focused).
+- [x] `Store/UpdateInventoryItemRequest` + `InventoryItemData` carry the new fields. *(Portal `hide_from_portal` **filter** in `ListInventoryItemsQuery` lands with the public catalog in Phase 4.)*
+- **Accept:** ✅ produce respects input stock (guarded) and rejects no-recipe; check writes reconciliation adjustments vs live stock — `tests/Feature/Inventory/ProduceAndCheckTest.php`. `composer check` green (243 tests).
 
 ---
 

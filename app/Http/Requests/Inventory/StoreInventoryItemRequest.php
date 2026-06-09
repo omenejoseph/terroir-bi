@@ -34,13 +34,21 @@ class StoreInventoryItemRequest extends FormRequest
             'group' => ['sometimes', 'nullable', 'string'],
             'subcategory' => ['sometimes', 'nullable', 'string'],
             'vintage' => ['sometimes', 'nullable', 'string'],
+            'unit_size' => ['sometimes', 'nullable', 'string', 'max:50'],
             'unit' => ['required', 'string', 'max:50'],
+            'sales_unit' => ['sometimes', 'nullable', 'string', 'max:50'],
             'min_stock' => ['sometimes', 'nullable', 'numeric'],
             'is_active' => ['sometimes', 'boolean'],
             'sort_order' => ['sometimes', 'integer'],
             'default_price' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'bottles_per_case' => ['sometimes', 'integer', 'min:1'],
+            'pack_size' => ['sometimes', 'integer', 'min:1'],
             'is_for_sale' => ['sometimes', 'boolean'],
+            'hide_from_portal' => ['sometimes', 'boolean'],
+            'base_product_id' => [
+                'sometimes', 'nullable', 'string',
+                Rule::exists('inventory_items', 'id')->where('tenant_id', $tenantId),
+            ],
             'cost_per_unit' => ['sometimes', 'nullable', 'integer', 'min:0'],
         ];
     }
