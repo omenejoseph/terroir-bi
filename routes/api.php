@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\TenantSessionController;
 use App\Http\Controllers\Api\ConsignmentController;
+use App\Http\Controllers\Api\CostController;
 use App\Http\Controllers\Api\CustomerConsignmentController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CustomerProductOverrideController;
@@ -150,21 +151,33 @@ Route::prefix('v1')->group(function () {
         Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])
             ->middleware('can:suppliers.delete');
 
-        // Finance — money-in / accounts-receivable.
+        // Finance — money-in (A/R) and money-out (costs).
         Route::middleware('can:finance.view')->group(function () {
             Route::get('inflows/aging', [InflowController::class, 'aging']); // static before {inflow}
             Route::get('inflows', [InflowController::class, 'index']);
             Route::get('inflows/{inflow}', [InflowController::class, 'show']);
             Route::get('orders/{order}/payments', [OrderPaymentController::class, 'index']);
+            // Static segments before the {cost} wildcard.
+            Route::get('costs/categories', [CostController::class, 'categories']);
+            Route::get('costs/analytics', [CostController::class, 'analytics']);
+            Route::get('costs', [CostController::class, 'index']);
+            Route::get('costs/{cost}', [CostController::class, 'show']);
         });
         Route::middleware('can:finance.manage')->group(function () {
             Route::post('inflows', [InflowController::class, 'store']);
             Route::patch('inflows/{inflow}/status', [InflowController::class, 'updateStatus']);
             Route::patch('inflows/{inflow}', [InflowController::class, 'update']);
             Route::post('orders/{order}/payments', [OrderPaymentController::class, 'store']);
+            Route::post('costs', [CostController::class, 'store']);
+            Route::patch('costs/{cost}/status', [CostController::class, 'updateStatus']);
+            Route::patch('costs/{cost}', [CostController::class, 'update']);
+            Route::post('costs/{cost}/attachments', [CostController::class, 'addAttachment']);
+            Route::delete('costs/{cost}/attachments/{attachment}', [CostController::class, 'deleteAttachment']);
         });
-        Route::delete('inflows/{inflow}', [InflowController::class, 'destroy'])
-            ->middleware('can:finance.delete');
+        Route::middleware('can:finance.delete')->group(function () {
+            Route::delete('inflows/{inflow}', [InflowController::class, 'destroy']);
+            Route::delete('costs/{cost}', [CostController::class, 'destroy']);
+        });
 
         // Customer-level consignment (rollup + FIFO sale/return across placements).
         Route::get('customers/{customer}/consignment', [CustomerConsignmentController::class, 'summary'])
