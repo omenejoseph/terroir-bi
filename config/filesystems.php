@@ -60,6 +60,36 @@ return [
             'report' => false,
         ],
 
+        // Cloudflare R2 — the default uploads store (private, presigned access).
+        'r2' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => env('R2_DEFAULT_REGION', 'auto'),
+            'bucket' => env('R2_BUCKET'),
+            'url' => env('R2_URL'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'use_path_style_endpoint' => env('R2_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
+        // Generic private S3 uploads bucket (MinIO / AWS / B2 / Spaces). Kept as
+        // an alternative to R2; select via UPLOADS_DISK.
+        'uploads' => [
+            'driver' => 's3',
+            'key' => env('UPLOADS_S3_KEY', env('AWS_ACCESS_KEY_ID')),
+            'secret' => env('UPLOADS_S3_SECRET', env('AWS_SECRET_ACCESS_KEY')),
+            'region' => env('UPLOADS_S3_REGION', env('AWS_DEFAULT_REGION', 'us-east-1')),
+            'bucket' => env('UPLOADS_S3_BUCKET', env('AWS_BUCKET')),
+            'endpoint' => env('UPLOADS_S3_ENDPOINT', env('AWS_ENDPOINT')),
+            'use_path_style_endpoint' => env('UPLOADS_S3_PATH_STYLE', true),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
     ],
 
     /*

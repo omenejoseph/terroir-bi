@@ -130,4 +130,20 @@ class InventoryItem extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    /**
+     * @return HasMany<InventoryImage, $this>
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(InventoryImage::class);
+    }
+
+    /**
+     * @return HasMany<InventoryTechSheet, $this>
+     */
+    public function techSheets(): HasMany
+    {
+        return $this->hasMany(InventoryTechSheet::class);
+    }
 }

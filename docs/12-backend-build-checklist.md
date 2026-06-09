@@ -43,9 +43,17 @@ Progress key: `[ ]` todo · `[~]` in progress · `[x]` done.
 - [x] `ProduceItemAction` + `POST /inventory-items/{id}/produce` (guarded PRODUCTION_OUT inputs, PRODUCTION_IN output, ref `PROD-{sku}`).
 - [x] `ApplyInventoryCheckAction` + `POST /inventory-items/check` → `ADJUSTMENT` rows `is_reconciliation=true`, ref `INVCHECK-{date}` (computed vs live stock).
 - [x] `PATCH /stock-movements/{id}/reconciliation` toggles the flag (no stock change); `is_reconciliation` also threadable through manual `POST .../stock`.
-- [—] `inventory_images` + `inventory_tech_sheets` tables + add/remove endpoints → **deferred to Phase 1b** (pure CRUD, no business logic; keeps this PR focused).
+- [x] `inventory_images` + `inventory_tech_sheets` tables + add/remove endpoints → **done in Phase 1b** (S3 presigned direct-to-bucket uploads).
 - [x] `Store/UpdateInventoryItemRequest` + `InventoryItemData` carry the new fields. *(Portal `hide_from_portal` **filter** in `ListInventoryItemsQuery` lands with the public catalog in Phase 4.)*
 - **Accept:** ✅ produce respects input stock (guarded) and rejects no-recipe; check writes reconciliation adjustments vs live stock — `tests/Feature/Inventory/ProduceAndCheckTest.php`. `composer check` green (243 tests).
+
+### 1b — S3 presigned uploads (images + tech sheets) ✅
+Direct-to-bucket uploads to a **private S3-compatible** bucket. **Default store: Cloudflare R2** (`r2` disk; `R2_*` env). Swap via `UPLOADS_DISK` (e.g. `uploads` for MinIO/AWS/B2/Spaces).
+- [x] **General presign API** — `POST /uploads/presign` `{purpose, filename, content_type, size}` → presigned **PUT** url + headers (`PresignedUploadService` + `ObjectStore` contract / `S3ObjectStore`).
+- [x] **Security:** per-purpose MIME allowlist + hard size cap; the **Content-Type is baked into the signature** so the bucket rejects a mismatched header; the object **key is generated server-side**, namespaced `tenants/{tenant}/…`, extension derived from the MIME (never the client filename).
+- [x] **Attach with verification** — `inventory_images` / `inventory_tech_sheets` tables + `POST/GET/DELETE /inventory-items/{id}/images|tech-sheets`. Attach re-checks the object **exists**, is **within size**, and the **key is owned by the tenant** (cross-tenant keys → 422). Reads are short-lived presigned **GET** URLs (private bucket); delete removes the object.
+- **Accept:** ✅ presign returns tenant-scoped key + signed Content-Type; disallowed type / oversize / unknown purpose → 422; attach rejects foreign or missing keys; read URL minted; delete clears the object — `tests/Feature/Uploads/PresignedUploadTest.php` (7 tests).
+- [—] Hardening to revisit: bucket-side `content-length-range` via a presigned **POST policy** (PUT can't hard-cap size at the edge; we cap at presign + verify on attach), background sweep of orphaned (never-attached) objects.
 
 ---
 
@@ -61,11 +69,12 @@ Progress key: `[ ]` todo · `[~]` in progress · `[x]` done.
 - [x] Product-override upsert/list/delete endpoints (`CustomerProductOverrideController`).
 - **Accept:** ✅ VIES fake returns parsed name/zip/city; new fields round-trip; overrides upsert/list/delete — `tests/Feature/Customers/CustomerParityTest.php`. `composer check` green (252 tests).
 
-### 2b — Order-dependent customer features *(moved out of Phase 2; need order history)*
-These read or reassign **orders**, so they land **after Phase 3 (Orders core)**:
-- [ ] `ReorderRadarQuery` + `GET /customers/reorder-radar`; `POST /customers/{id}/contacted` (median order-gap → overdue buckets; `reorder_contacted_at` column is already in place).
-- [ ] `PreviewCustomerMergeAction` / `MergeCustomersAction` + `POST /customers/merge[/preview]` (reassign orders/consignment/prices/overrides; drop unique collisions).
-- [ ] `CustomerInsightsQuery` + `GET /customers/{id}/insights` (revenue trend, product performance incl. realized consignment, YoY).
+### 2b — Order-dependent customer features ✅ *(landed after Phase 3)*
+- [x] `ReorderRadarQuery` + `GET /customers/reorder-radar`; `POST /customers/{id}/contacted` (median order-gap → due/overdue/at_risk, value-weighted urgency, muted once contacted) — `ReorderRadarTest`.
+- [x] `CustomerMergeService` + `POST /customers/merge[/preview]` (reassign orders + per-item prices/overrides, drop unique collisions, delete losers) — `CustomerMergeTest`.
+- [x] `CustomerInsightsQuery` + `GET /customers/{id}/insights` (landed in Phase 5).
+- [x] **Customer-level FIFO consignment** — `CustomerConsignmentService` + `GET /customers/{id}/consignment` (rollup) and `POST …/consignment/place|sale|return`: sale/return allocate oldest-placement-first and delegate to the order-level actions — `CustomerConsignmentTest`.
+- **Accept:** ✅ `composer check` green (372 tests).
 
 ---
 
