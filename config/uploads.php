@@ -12,6 +12,19 @@ return [
     'read_ttl' => (int) env('UPLOADS_READ_TTL', 900),
 
     /*
+    | Background removal — an external image API proxied server-side so the key
+    | never reaches the browser. Defaults to remove.bg's shape (multipart
+    | image_file + X-Api-Key). Leave the key unset to disable the feature.
+    */
+    'background_removal' => [
+        'endpoint' => env('UPLOADS_BG_REMOVAL_ENDPOINT', 'https://api.remove.bg/v1.0/removebg'),
+        'key' => env('UPLOADS_BG_REMOVAL_KEY'),
+        'size' => env('UPLOADS_BG_REMOVAL_SIZE', 'auto'),
+        'max_bytes' => 5 * 1024 * 1024,
+        'types' => ['image/jpeg', 'image/png', 'image/webp'],
+    ],
+
+    /*
     | Per-purpose upload policy. Each purpose pins an allowlist of MIME types, a
     | hard max size, and the key prefix under the tenant's namespace. The MIME
     | type is baked into the presigned PUT signature, so the bucket rejects an

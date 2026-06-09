@@ -361,3 +361,39 @@ export interface RecipeLineInput {
   input_id: string;
   quantity: number;
 }
+
+/** An inventory image (GET /inventory-items/{id}/images). `url` is a short-lived presigned GET. */
+export interface InventoryImage {
+  id: string;
+  alt: string | null;
+  content_type: string;
+  size_bytes: number;
+  sort_order: number;
+  url: string;
+}
+
+/** Payload for POST /inventory-items/{id}/images (after the object is uploaded). */
+export interface AttachImageInput {
+  key: string;
+  content_type: string;
+  alt?: string | null;
+}
+
+/** Response of POST /uploads/presign — a direct-to-bucket PUT target. */
+export interface PresignResult {
+  key: string;
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  content_type: string;
+  max_bytes: number;
+  expires_in: number;
+}
+
+/** Input for POST /uploads/presign. */
+export interface PresignInput {
+  purpose: string;
+  filename: string;
+  content_type: string;
+  size: number;
+}

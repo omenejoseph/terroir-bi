@@ -12,6 +12,10 @@ globalThis.ResizeObserver ??= class {
   disconnect() {}
 };
 
+// jsdom lacks object-URL helpers used by the image uploader preview.
+globalThis.URL.createObjectURL ??= () => "blob:mock";
+globalThis.URL.revokeObjectURL ??= () => {};
+
 /**
  * Shared Next router mock. Tests import this to assert navigation, e.g.
  * `expect(mockRouter.replace).toHaveBeenCalledWith("/dashboard")`.

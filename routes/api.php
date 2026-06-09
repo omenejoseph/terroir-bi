@@ -144,6 +144,8 @@ Route::prefix('v1')->group(function () {
 
         // General presigned upload URL (any member; the attach step is gated).
         Route::post('uploads/presign', [UploadController::class, 'presign']);
+        // Background-removal proxy (key stays server-side).
+        Route::post('uploads/remove-background', [UploadController::class, 'removeBackground']);
 
         // In-app notification feed (any member).
         Route::get('notifications', [NotificationController::class, 'index']);

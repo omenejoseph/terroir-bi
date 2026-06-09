@@ -26,9 +26,10 @@ import { InventoryCharts } from "@/components/inventory/inventory-charts";
 import { ItemOverviewSection } from "@/components/inventory/item-overview-section";
 import { StockSection } from "@/components/inventory/stock-section";
 import { RecipeSection } from "@/components/inventory/recipe-section";
+import { ImagesSection } from "@/components/inventory/images-section";
 
 type CategoryTab = InventoryCategory | "ALL";
-type DetailTab = "overview" | "stock" | "recipe";
+type DetailTab = "overview" | "stock" | "recipe" | "images";
 
 interface SubBucket {
   subcategory: string | null;
@@ -218,6 +219,7 @@ function InventoryItemCard({ item, canManage }: { item: InventoryItem; canManage
     { value: "overview", label: t("inventory.page.overview") },
     { value: "stock", label: t("inventory.movements.title") },
     { value: "recipe", label: t("inventory.recipe.title") },
+    { value: "images", label: t("inventory.images.title") },
   ];
 
   return (
@@ -266,6 +268,7 @@ function InventoryItemCard({ item, canManage }: { item: InventoryItem; canManage
                 )}
                 {detailTab === "stock" && <StockSection item={item} canManage={canManage} />}
                 {detailTab === "recipe" && <RecipeSection item={item} canManage={canManage} />}
+                {detailTab === "images" && <ImagesSection item={item} canManage={canManage} />}
               </>
             )}
           </div>

@@ -1,5 +1,7 @@
 import { api } from "@/lib/api/client";
 import type {
+  AttachImageInput,
+  InventoryImage,
   InventoryItem,
   InventoryItemInput,
   InventoryItemUpdate,
@@ -54,4 +56,15 @@ export const inventoryApi = {
   /** PUT /inventory-items/{id}/recipe — replaces the whole recipe. */
   setRecipe: (id: string, items: RecipeLineInput[]) =>
     api.put<RecipeLine[]>(`/inventory-items/${id}/recipe`, { items }),
+
+  /** GET /inventory-items/{id}/images — attached images (presigned read URLs). */
+  images: (id: string) => api.get<InventoryImage[]>(`/inventory-items/${id}/images`),
+
+  /** POST /inventory-items/{id}/images — record an uploaded object as an image. */
+  attachImage: (id: string, input: AttachImageInput) =>
+    api.post<InventoryImage>(`/inventory-items/${id}/images`, input),
+
+  /** DELETE /inventory-items/{id}/images/{imageId}. */
+  deleteImage: (id: string, imageId: string) =>
+    api.delete<void>(`/inventory-items/${id}/images/${imageId}`),
 };

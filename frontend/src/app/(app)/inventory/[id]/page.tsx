@@ -14,8 +14,9 @@ import { Tabs } from "@/components/ui/tabs";
 import { ItemOverviewSection } from "@/components/inventory/item-overview-section";
 import { StockSection } from "@/components/inventory/stock-section";
 import { RecipeSection } from "@/components/inventory/recipe-section";
+import { ImagesSection } from "@/components/inventory/images-section";
 
-type DetailTab = "overview" | "stock" | "recipe";
+type DetailTab = "overview" | "stock" | "recipe" | "images";
 
 export default function InventoryItemPage() {
   const params = useParams<{ id: string }>();
@@ -32,6 +33,7 @@ export default function InventoryItemPage() {
     { value: "overview", label: t("inventory.page.overview") },
     { value: "stock", label: t("inventory.movements.title") },
     { value: "recipe", label: t("inventory.recipe.title") },
+    { value: "images", label: t("inventory.images.title") },
   ];
 
   return (
@@ -66,6 +68,7 @@ export default function InventoryItemPage() {
           {tab === "overview" && <ItemOverviewSection item={item} canManage={canManage} />}
           {tab === "stock" && <StockSection item={item} canManage={canManage} />}
           {tab === "recipe" && <RecipeSection item={item} canManage={canManage} />}
+          {tab === "images" && <ImagesSection item={item} canManage={canManage} />}
         </>
       )}
     </div>

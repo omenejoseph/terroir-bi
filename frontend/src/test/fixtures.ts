@@ -3,6 +3,7 @@ import type {
   Customer,
   DashboardSummary,
   InventoryAnalytics,
+  InventoryImage,
   InventoryItem,
   Invitation,
   Member,
@@ -85,6 +86,18 @@ export function makeItem(overrides: Partial<InventoryItem> = {}): InventoryItem 
     is_auto_created: false,
     default_price: { amount: 1500, currency: "EUR", formatted: "€15.00" },
     cost_per_unit: { amount: 700, currency: "EUR", formatted: "€7.00" },
+    ...overrides,
+  };
+}
+
+export function makeImage(overrides: Partial<InventoryImage> = {}): InventoryImage {
+  return {
+    id: "img_1",
+    alt: null,
+    content_type: "image/webp",
+    size_bytes: 12345,
+    sort_order: 1,
+    url: "https://bucket.test/read/img_1.webp",
     ...overrides,
   };
 }

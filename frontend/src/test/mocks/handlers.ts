@@ -5,6 +5,7 @@ import {
   makeAnalytics,
   makeCustomer,
   makeDashboard,
+  makeImage,
   makeInvitation,
   makeItem,
   makeMember,
@@ -62,6 +63,37 @@ export const handlers = [
     return HttpResponse.json({ data: { id: "ovr_1", ...body } });
   }),
   http.delete(url("/translations"), () => new HttpResponse(null, { status: 204 })),
+
+  // Uploads — presign + background-removal proxy.
+  http.post(url("/uploads/presign"), async ({ request }) => {
+    const body = (await request.json()) as { content_type?: string };
+    return HttpResponse.json({
+      data: {
+        key: "tenants/ten_a/inventory/images/obj.webp",
+        url: "https://bucket.test/put/obj.webp",
+        method: "PUT",
+        headers: { "Content-Type": body.content_type ?? "image/webp" },
+        content_type: body.content_type ?? "image/webp",
+        max_bytes: 5 * 1024 * 1024,
+        expires_in: 300,
+      },
+    });
+  }),
+  http.put("https://bucket.test/*", () => new HttpResponse(null, { status: 200 })),
+  http.post(url("/uploads/remove-background"), () =>
+    HttpResponse.arrayBuffer(new ArrayBuffer(8), { headers: { "Content-Type": "image/png" } }),
+  ),
+
+  // Inventory images.
+  http.get(url("/inventory-items/:id/images"), () => HttpResponse.json({ data: [] })),
+  http.post(url("/inventory-items/:id/images"), async ({ request }) => {
+    const body = (await request.json()) as { content_type?: string; alt?: string | null };
+    return HttpResponse.json(
+      { data: makeImage({ id: "img_new", content_type: body.content_type, alt: body.alt ?? null }) },
+      { status: 201 },
+    );
+  }),
+  http.delete(url("/inventory-items/:id/images/:imageId"), () => new HttpResponse(null, { status: 204 })),
 
   // Inventory — create (echoes a new item; tests override to assert the payload).
   http.post(url("/inventory-items"), () =>
