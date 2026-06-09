@@ -125,4 +125,12 @@ class Order extends Model
     {
         return $this->hasMany(ConsignmentReport::class);
     }
+
+    /**
+     * @return HasMany<Inflow, $this>
+     */
+    public function inflows(): HasMany
+    {
+        return $this->hasMany(Inflow::class);
+    }
 }

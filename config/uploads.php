@@ -41,6 +41,11 @@ return [
             'max_bytes' => 20 * 1024 * 1024,
             'prefix' => 'inventory/tech-sheets',
         ],
+        'cost_attachment' => [
+            'types' => ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
+            'max_bytes' => 20 * 1024 * 1024,
+            'prefix' => 'costs/attachments',
+        ],
     ],
 
     // MIME type → file extension (the only source of the stored object's extension).

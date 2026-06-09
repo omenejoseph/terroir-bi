@@ -21,14 +21,21 @@ use JsonSerializable;
  */
 final class OrderData implements Arrayable, JsonSerializable
 {
+    /**
+     * @param  array<string, mixed>|null  $payment
+     */
     public function __construct(
         public readonly Order $order,
         public readonly bool $showFinancials,
+        public readonly ?array $payment = null,
     ) {}
 
-    public static function fromModel(Order $order, bool $showFinancials): self
+    /**
+     * @param  array<string, mixed>|null  $payment
+     */
+    public static function fromModel(Order $order, bool $showFinancials, ?array $payment = null): self
     {
-        return new self($order, $showFinancials);
+        return new self($order, $showFinancials, $payment);
     }
 
     /**
@@ -55,6 +62,7 @@ final class OrderData implements Arrayable, JsonSerializable
             'shipping_paid_by_us' => $order->shipping_paid_by_us,
             'is_consignment' => $order->is_consignment,
             'consignment_closed_at' => $order->consignment_closed_at?->toIso8601String(),
+            'payment' => $this->payment,
             'created_at' => $order->created_at?->toIso8601String(),
             'items' => $order->items->map(fn (OrderItem $item) => $this->item($item))->all(),
             'status_history' => $order->statusHistories

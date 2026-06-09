@@ -2,11 +2,14 @@
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\TenantSessionController;
+use App\Http\Controllers\Api\CashFlowController;
 use App\Http\Controllers\Api\ConsignmentController;
+use App\Http\Controllers\Api\CostController;
 use App\Http\Controllers\Api\CustomerConsignmentController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CustomerProductOverrideController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\InflowController;
 use App\Http\Controllers\Api\InventoryItemController;
 use App\Http\Controllers\Api\InventoryMediaController;
 use App\Http\Controllers\Api\InvitationController;
@@ -14,13 +17,17 @@ use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderCommentController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\OrderPaymentController;
 use App\Http\Controllers\Api\PriceController;
 use App\Http\Controllers\Api\PricingTierController;
 use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StockController;
+use App\Http\Controllers\Api\SupplierController;
+use App\Http\Controllers\Api\SupplierOrderController;
 use App\Http\Controllers\Api\TranslationController;
 use App\Http\Controllers\Api\UploadController;
+use App\Http\Controllers\Api\WorkOrderController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -133,6 +140,54 @@ Route::prefix('v1')->group(function () {
             Route::delete('customers/{customer}/order-token', [CustomerController::class, 'revokeToken']);
         });
 
+        // Suppliers + price lists.
+        Route::middleware('can:suppliers.view')->group(function () {
+            Route::get('supplier-orders', [SupplierOrderController::class, 'index']);
+            Route::get('supplier-orders/{supplierOrder}', [SupplierOrderController::class, 'show']);
+            Route::get('suppliers', [SupplierController::class, 'index']);
+            Route::get('suppliers/{supplier}', [SupplierController::class, 'show']);
+        });
+        Route::middleware('can:suppliers.manage')->group(function () {
+            Route::post('suppliers', [SupplierController::class, 'store']);
+            Route::patch('suppliers/{supplier}', [SupplierController::class, 'update']);
+            Route::post('suppliers/{supplier}/price-items', [SupplierController::class, 'addPriceItem']);
+            Route::delete('suppliers/{supplier}/price-items/{priceItem}', [SupplierController::class, 'deletePriceItem']);
+            Route::post('supplier-orders', [SupplierOrderController::class, 'store']);
+            Route::patch('supplier-orders/{supplierOrder}/status', [SupplierOrderController::class, 'updateStatus']);
+            Route::delete('supplier-orders/{supplierOrder}', [SupplierOrderController::class, 'destroy']);
+        });
+        Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])
+            ->middleware('can:suppliers.delete');
+
+        // Finance — money-in (A/R) and money-out (costs).
+        Route::middleware('can:finance.view')->group(function () {
+            Route::get('inflows/aging', [InflowController::class, 'aging']); // static before {inflow}
+            Route::get('inflows', [InflowController::class, 'index']);
+            Route::get('inflows/{inflow}', [InflowController::class, 'show']);
+            Route::get('orders/{order}/payments', [OrderPaymentController::class, 'index']);
+            // Static segments before the {cost} wildcard.
+            Route::get('costs/categories', [CostController::class, 'categories']);
+            Route::get('costs/analytics', [CostController::class, 'analytics']);
+            Route::get('costs', [CostController::class, 'index']);
+            Route::get('costs/{cost}', [CostController::class, 'show']);
+            Route::get('cash-flow', [CashFlowController::class, 'index']);
+        });
+        Route::middleware('can:finance.manage')->group(function () {
+            Route::post('inflows', [InflowController::class, 'store']);
+            Route::patch('inflows/{inflow}/status', [InflowController::class, 'updateStatus']);
+            Route::patch('inflows/{inflow}', [InflowController::class, 'update']);
+            Route::post('orders/{order}/payments', [OrderPaymentController::class, 'store']);
+            Route::post('costs', [CostController::class, 'store']);
+            Route::patch('costs/{cost}/status', [CostController::class, 'updateStatus']);
+            Route::patch('costs/{cost}', [CostController::class, 'update']);
+            Route::post('costs/{cost}/attachments', [CostController::class, 'addAttachment']);
+            Route::delete('costs/{cost}/attachments/{attachment}', [CostController::class, 'deleteAttachment']);
+        });
+        Route::middleware('can:finance.delete')->group(function () {
+            Route::delete('inflows/{inflow}', [InflowController::class, 'destroy']);
+            Route::delete('costs/{cost}', [CostController::class, 'destroy']);
+        });
+
         // Customer-level consignment (rollup + FIFO sale/return across placements).
         Route::get('customers/{customer}/consignment', [CustomerConsignmentController::class, 'summary'])
             ->middleware('can:orders.view');
@@ -150,6 +205,16 @@ Route::prefix('v1')->group(function () {
         // In-app notification feed (any member).
         Route::get('notifications', [NotificationController::class, 'index']);
         Route::post('notifications/read', [NotificationController::class, 'read']);
+
+        // Team task planning (any member). Static segments precede the {workOrder} wildcard.
+        Route::get('work-orders/stats', [WorkOrderController::class, 'stats']);
+        Route::post('work-orders/reorder', [WorkOrderController::class, 'reorder']);
+        Route::get('work-orders', [WorkOrderController::class, 'index']);
+        Route::post('work-orders', [WorkOrderController::class, 'store']);
+        Route::get('work-orders/{workOrder}', [WorkOrderController::class, 'show']);
+        Route::patch('work-orders/{workOrder}/status', [WorkOrderController::class, 'updateStatus']);
+        Route::patch('work-orders/{workOrder}', [WorkOrderController::class, 'update']);
+        Route::delete('work-orders/{workOrder}', [WorkOrderController::class, 'destroy']);
 
         // Orders.
         Route::middleware('can:orders.view')->group(function () {

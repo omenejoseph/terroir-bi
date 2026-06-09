@@ -148,6 +148,42 @@ Direct-to-bucket uploads to a **private S3-compatible** bucket. **Default store:
 
 ---
 
+## Phase 6 — Essentials plan (off-spreadsheets) 🆕
+The Essentials plan = Dashboard, Orders, Warehouse+cost-per-product, **Cash flow**,
+Customers+analytics, **Team task planning**. Orders/Customers/Inventory/analytics are
+done (Phases 0–5 + 1b/2b). What the old app has and we don't, scoped for Essentials
+(see the gap analysis chat / `10-migration-deltas.md`):
+
+### 6.1 Order payments / Accounts-Receivable ✅
+- [x] `inflows` table + `Inflow` model + `InflowStatus` enum; `Order::inflows`; `finance.view/manage` capabilities.
+- [x] Inflow CRUD + mark-received (`/inflows`, `/inflows/{id}/status`, `/inflows/aging`); list query.
+- [x] Order payments: `GET/POST /orders/{id}/payments`; **order detail carries a payment summary** (`amount_paid` / `balance_due` / `UNPAID|PARTIAL|PAID`, credit notes negative), gated by `finance.view`.
+- [x] **AR aging** over outstanding order balances (current / 31–60 / 61–90 / 90+), per customer.
+- **Accept:** ✅ unpaid→partial→paid, credit-note reduction, pending-vs-received, aging buckets — `tests/Feature/Finance/OrderPaymentTest.php` (4 tests). `composer check` green (407 tests).
+
+### 6.2 Costs / Expenses + Suppliers + Purchasing ✅
+- [x] **Suppliers** (`suppliers`, `supplier_price_items`): CRUD, OIB-unique, price-list upsert keyed on (supplier, description). `SupplierTest`.
+- [x] **Costs** (`costs`, `cost_items`, `cost_attachments`): CRUD + nested items, status PENDING→APPROVED→PAID (stamps `paid_at`), categories, analytics (total/unpaid, by status/category/supplier, monthly, order-revenue-vs-costs P&L), R2 attachments. `CostTest`.
+- [x] **Purchasing** (`supplier_orders` + items): PO lifecycle DRAFT→SENT→CONFIRMED→**RECEIVED** → writes a **`PURCHASE_IN`** movement (new enum case) and refreshes `cost_per_unit` (landed cost → real cost-per-product), applied once; delete blocked once received. `SupplierOrderTest`.
+- **Accept:** ✅ `composer check` green (450 tests). *(Deferred: supplier merge, CSV cost import, price-list "learning" from invoices.)*
+
+### 6.3 Cash-flow forecast ✅
+- [x] `CashFlowForecastQuery` + `GET /cash-flow` (finance.view): 12-mo historical cash-in (received inflows, credit notes negative) vs cash-out (costs), 6-mo projection (3-mo moving average + revenue trend, inflation nudge), pending pipeline (receivables/payables), and summary KPIs. `CashFlowTest`.
+- **Accept:** ✅ `composer check` green (454 tests).
+- [—] Deferred: `bank_transactions` + statement import / dedup / DEBIT→cost·CREDIT→inflow matching (AI parse → Laravel AI); Moj-eRačun e-invoice sync (Croatia; beyond Essentials).
+
+### 6.4 Team task planning ✅
+- [x] `work_orders` (tasks) + `TaskStatus`/`TaskPriority` enums; title/category/priority/status TODO/IN_PROGRESS/DONE, start/due/`completed_at`, `sort_order`, `assignee_id`.
+- [x] CRUD + status (DONE stamps `completed_at`), drag-reorder (`POST /work-orders/reorder` by id sequence), board/calendar list (filters: status/assignee/due range), and `GET /work-orders/stats` (todo/in_progress/done/overdue). Any tenant member. `WorkOrderTest`.
+- **Accept:** ✅ assign + complete, reorder persists, overdue stats — `composer check` green (471 tests). *(HR scheduling/hours = follow-on, out of Essentials.)*
+
+### 6.5 Real Dashboard ✅ (import/export deferred)
+- [x] `DashboardSummary` rewired to **real** data: order count/revenue series (bucketed), real `order_status` breakdown, top products (order revenue), recent orders (customer + item count + status), low-stock, **outstanding A/R** (billed − received), and **overdue tasks** — same response shape, so the FE/contract is unchanged. `DashboardTest`.
+- [—] CSV import (customers, inventory, opening balances) + exports (orders, inventory valuation, AR, cash flow) → **deferred** (additive; not blocking the instrument).
+- **Accept:** ✅ `composer check` green (472 tests).
+
+---
+
 ## Cross-cutting done-criteria
 - [ ] `php artisan migrate:fresh --seed` green; migrations reversible.
 - [ ] Every new field validated; cross-tenant access → `404`.

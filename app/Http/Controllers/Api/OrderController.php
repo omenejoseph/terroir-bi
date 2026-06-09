@@ -32,13 +32,17 @@ use App\Models\OrderItem;
 use App\Models\User;
 use App\Queries\ListOrdersQuery;
 use App\Queries\OrderAnalyticsQuery;
+use App\Services\Finance\OrderPaymentSummary;
 use App\Support\Period;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    public function __construct(private readonly MembershipContext $membership) {}
+    public function __construct(
+        private readonly MembershipContext $membership,
+        private readonly OrderPaymentSummary $payments,
+    ) {}
 
     public function analytics(Request $request, OrderAnalyticsQuery $query): JsonResponse
     {
@@ -61,7 +65,7 @@ class OrderController extends Controller
 
         return response()->json([
             'data' => array_map(
-                fn (Order $order) => $this->present($order),
+                fn (Order $order) => $this->present($order, withPayments: false),
                 $paginator->items(),
             ),
             'meta' => [
@@ -169,11 +173,15 @@ class OrderController extends Controller
         return response()->json(status: 204);
     }
 
-    private function present(Order $order): mixed
+    private function present(Order $order, bool $withPayments = true): mixed
     {
         $order->loadMissing(['customer', 'createdBy', 'items.inventoryItem', 'statusHistories.changedBy', 'orderNotes.author']);
 
-        return OrderData::fromModel($order, $this->membership->canSeeFinancials())->toArray();
+        $payment = $withPayments && $this->membership->can('finance.view')
+            ? $this->payments->for($order)
+            : null;
+
+        return OrderData::fromModel($order, $this->membership->canSeeFinancials(), $payment)->toArray();
     }
 
     private function userId(Request $request): string
