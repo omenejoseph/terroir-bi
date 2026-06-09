@@ -261,4 +261,33 @@ describe("OrderDetailPage", () => {
     await user.click(within(dialog).getByRole("button", { name: "Delete" }));
     await waitFor(() => expect(deleted).toBe(true));
   });
+
+  it("shows a Payments tab with the summary for finance users", async () => {
+    renderWithProviders(<OrderDetailPage />);
+    const user = userEvent.setup();
+    await screen.findByText("ORD-1001");
+
+    await user.click(screen.getByRole("tab", { name: "Payments" }));
+    // Default order-payments handler: paid €500.00, balance €400.00, PARTIAL.
+    expect(await screen.findByText("Balance due")).toBeInTheDocument();
+    expect(screen.getByText("€400.00")).toBeInTheDocument();
+    expect(screen.getByText("Partial")).toBeInTheDocument();
+  });
+
+  it("renders the payments 403 state when the endpoint is forbidden", async () => {
+    server.use(
+      http.get(`${API_URL}/orders/:id/payments`, () =>
+        HttpResponse.json({ message: "Forbidden." }, { status: 403 }),
+      ),
+    );
+
+    renderWithProviders(<OrderDetailPage />);
+    const user = userEvent.setup();
+    await screen.findByText("ORD-1001");
+
+    await user.click(screen.getByRole("tab", { name: "Payments" }));
+    expect(
+      await screen.findByText("You don't have permission to view payments."),
+    ).toBeInTheDocument();
+  });
 });

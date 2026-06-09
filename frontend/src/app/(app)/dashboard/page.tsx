@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, Euro, ShoppingCart, Users } from "lucide-react";
+import { AlarmClock, AlertTriangle, Euro, ShoppingCart, Users, Wallet } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/context";
 import { useDashboard } from "@/hooks/use-dashboard";
@@ -72,7 +72,7 @@ export default function DashboardPage() {
       ) : (
         <>
           {/* Summary stats */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <StatCard
               label={t("dashboard.stats.totalOrders")}
               value={fmtNumber.format(data.stats.total_orders)}
@@ -100,6 +100,20 @@ export default function DashboardPage() {
               icon={AlertTriangle}
               accent="bg-amber-500/10 text-amber-500"
               delayMs={320}
+            />
+            <StatCard
+              label={t("dashboard.stats.outstandingAr")}
+              value={money(data.stats.outstanding_ar)}
+              icon={Wallet}
+              accent="bg-sky-500/10 text-sky-500"
+              delayMs={400}
+            />
+            <StatCard
+              label={t("dashboard.stats.tasksOverdue")}
+              value={fmtNumber.format(data.stats.tasks_overdue)}
+              icon={AlarmClock}
+              accent="bg-orange-500/10 text-orange-500"
+              delayMs={480}
             />
           </div>
 
