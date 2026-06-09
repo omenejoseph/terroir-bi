@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Inventory;
 
 use App\Enums\InventoryCategory;
+use App\Enums\SalesUnit;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -36,12 +37,12 @@ class StoreInventoryItemRequest extends FormRequest
             'vintage' => ['sometimes', 'nullable', 'string'],
             'unit_size' => ['sometimes', 'nullable', 'string', 'max:50'],
             'unit' => ['required', 'string', 'max:50'],
-            'sales_unit' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'sales_unit' => ['required', Rule::enum(SalesUnit::class)],
             'min_stock' => ['sometimes', 'nullable', 'numeric'],
             'is_active' => ['sometimes', 'boolean'],
             'sort_order' => ['sometimes', 'integer'],
             'default_price' => ['sometimes', 'nullable', 'integer', 'min:0'],
-            'bottles_per_case' => ['sometimes', 'integer', 'min:1'],
+            'bottles_per_case' => ['required', 'integer', 'min:1'],
             'pack_size' => ['sometimes', 'integer', 'min:1'],
             'is_for_sale' => ['sometimes', 'boolean'],
             'hide_from_portal' => ['sometimes', 'boolean'],
@@ -49,7 +50,8 @@ class StoreInventoryItemRequest extends FormRequest
                 'sometimes', 'nullable', 'string',
                 Rule::exists('inventory_items', 'id')->where('tenant_id', $tenantId),
             ],
-            'cost_per_unit' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            // COGS is required when creating an item.
+            'cost_per_unit' => ['required', 'integer', 'min:0'],
         ];
     }
 }

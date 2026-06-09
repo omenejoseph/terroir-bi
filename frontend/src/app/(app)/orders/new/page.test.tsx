@@ -54,4 +54,27 @@ describe("NewOrderPage", () => {
     await user.click(await screen.findByRole("button", { name: "Create order" }));
     expect(await screen.findByText("Pick a customer.")).toBeInTheDocument();
   });
+
+  it("surfaces a server 422 validation error", async () => {
+    server.use(
+      http.post(`${API_URL}/orders`, () =>
+        HttpResponse.json(
+          { message: "The items field is required.", errors: { items: ["At least one item is required."] } },
+          { status: 422 },
+        ),
+      ),
+    );
+
+    renderWithProviders(<NewOrderPage />);
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByText("Select a customer…"));
+    await user.click(await screen.findByText(/Acme Corporation/));
+    await user.click(screen.getByText("Select an item…"));
+    const matches = await screen.findAllByText(/Plavac Mali 2021/);
+    await user.click(matches[matches.length - 1]);
+    await user.click(screen.getByRole("button", { name: "Create order" }));
+
+    expect(await screen.findByText("At least one item is required.")).toBeInTheDocument();
+  });
 });

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Actions\Orders\CreateOrderAction;
+use App\Enums\SalesUnit;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\InventoryItem;
@@ -73,7 +74,7 @@ class PublicOrderController extends Controller
         RateLimiter::hit($key, 3600);
 
         $validated = $this->validatePayload($request, $customer);
-        $defaultUnit = $customer->allow_single_bottle ? 'bottles' : 'cases';
+        $defaultUnit = $customer->allow_single_bottle ? SalesUnit::Bottles->value : SalesUnit::Cases->value;
 
         // Server is the source of truth on price: reject any client mismatch and
         // strip client prices so the order is created at resolved values.
@@ -112,7 +113,7 @@ class PublicOrderController extends Controller
      */
     private function validatePayload(Request $request, Customer $customer): array
     {
-        $units = $customer->allow_single_bottle ? ['bottles', 'cases'] : ['cases'];
+        $units = $customer->allow_single_bottle ? [SalesUnit::Bottles->value, SalesUnit::Cases->value] : [SalesUnit::Cases->value];
 
         /** @var array{items: array<int, array<string, mixed>>, notes?: ?string} $validated */
         $validated = $request->validate([
@@ -134,6 +135,6 @@ class PublicOrderController extends Controller
     {
         $base = $pricing->resolve($customer, $item)->getMinorAmount();
 
-        return $unitType === 'cases' ? $base * max(1, (int) $item->bottles_per_case) : $base;
+        return $unitType === SalesUnit::Cases->value ? $base * max(1, (int) $item->bottles_per_case) : $base;
     }
 }

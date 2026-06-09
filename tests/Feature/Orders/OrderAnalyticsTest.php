@@ -37,6 +37,7 @@ class OrderAnalyticsTest extends TestCase
         $this->customer = Customer::create(['company_name' => 'Konoba', 'email' => 'k@example.com']);
         $this->wine = InventoryItem::create([
             'name' => 'Plavac', 'sku' => 'PLV', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'sales_unit' => 'cases',
             'current_stock' => '500.000', 'bottles_per_case' => 12, 'is_for_sale' => true,
             'default_price' => 1000, 'cost_per_unit' => 400,
         ]);
@@ -95,14 +96,14 @@ class OrderAnalyticsTest extends TestCase
     public function test_customer_insights(): void
     {
         $this->createOrder(2, 'cases'); // 24000
-        $this->createOrder(1, 'bottles'); // 1000 → total 25000 across 2 orders
+        $this->createOrder(1, 'cases'); // 12000 → total 36000 across 2 orders
 
         Sanctum::actingAs($this->admin);
         $this->getJson("/api/v1/customers/{$this->customer->getKey()}/insights", $this->headers())
             ->assertOk()
-            ->assertJsonPath('data.total_spend.minor', 25000)
+            ->assertJsonPath('data.total_spend.minor', 36000)
             ->assertJsonPath('data.order_count', 2)
-            ->assertJsonPath('data.avg_order_value.minor', 12500)
+            ->assertJsonPath('data.avg_order_value.minor', 18000)
             ->assertJsonPath('data.top_products.0.inventory_item_id', $this->wine->getKey());
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Inventory;
 
+use App\Enums\SalesUnit;
 use App\Enums\StockMovementType;
 use App\Exceptions\InsufficientStockException;
 use App\Models\InventoryItem;
@@ -147,11 +148,11 @@ class StockLedger
 
         $bottlesPerCase = max(1, (int) $item->bottles_per_case);
 
-        $bottles = $unitType === 'cases'
+        $bottles = $unitType === SalesUnit::Cases->value
             ? Quantity::mulInt($quantity, $bottlesPerCase)
             : Quantity::normalize($quantity);
 
-        return $storageUnit === 'cases'
+        return $storageUnit === SalesUnit::Cases->value
             ? Quantity::divInt($bottles, $bottlesPerCase)
             : $bottles;
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Orders;
 
+use App\Enums\SalesUnit;
 use App\Models\InventoryItem;
 use App\Models\RecipeItem;
 use App\Support\Money\Money;
@@ -26,7 +27,7 @@ class CogsSnapshot
             return null;
         }
 
-        if ($unitType === 'cases') {
+        if ($unitType === SalesUnit::Cases->value) {
             $factor = max(1, (int) $item->bottles_per_case);
 
             return Money::fromMinor($perUnit->getMinorAmount() * $factor, $perUnit->getCurrencyCode());

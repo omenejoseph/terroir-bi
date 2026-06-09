@@ -5,9 +5,11 @@ import * as React from "react";
 import {
   INVENTORY_CATEGORIES,
   INVENTORY_UNITS,
+  SALES_UNITS,
   type InventoryCategory,
   type InventoryItem,
   type InventoryItemInput,
+  type SalesUnit,
 } from "@/lib/types";
 import { useInventoryTaxonomy } from "@/hooks/use-inventory";
 import { useTranslation } from "@/i18n/context";
@@ -26,11 +28,12 @@ export interface ItemFormState {
   subcategory: string;
   unit: string;
   unit_size: string;
-  sales_unit: string;
+  sales_unit: SalesUnit;
+  bottles_per_case: string;
+  cost_per_unit: string;
   vintage: string;
   min_stock: string;
   default_price: string;
-  pack_size: string;
   is_active: boolean;
   is_for_sale: boolean;
   hide_from_portal: boolean;
@@ -44,11 +47,12 @@ export const EMPTY_ITEM_FORM: ItemFormState = {
   subcategory: "",
   unit: "bottle",
   unit_size: "",
-  sales_unit: "",
+  sales_unit: "bottles",
+  bottles_per_case: "12",
+  cost_per_unit: "",
   vintage: "",
   min_stock: "",
   default_price: "",
-  pack_size: "",
   is_active: true,
   is_for_sale: false,
   hide_from_portal: false,
@@ -64,11 +68,12 @@ export function itemToForm(item: InventoryItem): ItemFormState {
     subcategory: item.subcategory ?? "",
     unit: item.unit,
     unit_size: item.unit_size ?? "",
-    sales_unit: item.sales_unit ?? "",
+    sales_unit: (item.sales_unit as SalesUnit) ?? "bottles",
+    bottles_per_case: item.bottles_per_case != null ? String(item.bottles_per_case) : "12",
+    cost_per_unit: item.cost_per_unit ? String(item.cost_per_unit.minor) : "",
     vintage: item.vintage != null ? String(item.vintage) : "",
     min_stock: item.min_stock != null ? String(item.min_stock) : "",
     default_price: item.default_price ? String(item.default_price.minor) : "",
-    pack_size: item.pack_size != null ? String(item.pack_size) : "",
     is_active: item.is_active,
     is_for_sale: item.is_for_sale,
     hide_from_portal: item.hide_from_portal ?? false,
@@ -84,23 +89,23 @@ function toNumber(value: string): number | undefined {
 
 /** Build the API payload from form state (trims, coerces, nulls empties). */
 export function formToInput(form: ItemFormState): InventoryItemInput {
-  const pack = toNumber(form.pack_size);
   return {
     name: form.name.trim(),
     sku: form.sku.trim(),
     category: form.category,
+    unit: form.unit.trim(),
+    sales_unit: form.sales_unit,
+    bottles_per_case: toNumber(form.bottles_per_case) ?? 1,
+    cost_per_unit: toNumber(form.cost_per_unit) ?? 0,
     group: form.group.trim() || null,
     subcategory: form.subcategory.trim() || null,
-    unit: form.unit.trim(),
     unit_size: form.unit_size.trim() || null,
-    sales_unit: form.sales_unit.trim() || null,
     vintage: form.vintage.trim() || null,
     min_stock: toNumber(form.min_stock) ?? null,
     default_price: toNumber(form.default_price) ?? null,
     is_active: form.is_active,
     is_for_sale: form.is_for_sale,
     hide_from_portal: form.hide_from_portal,
-    ...(pack !== undefined ? { pack_size: pack } : {}),
   };
 }
 
@@ -255,33 +260,57 @@ export function InventoryItemFields({
         </Field>
 
         <Field id="sales_unit" label={t("inventory.add.salesUnitLabel")} error={errors.sales_unit}>
-          <Input
+          <Select
             id="sales_unit"
             value={form.sales_unit}
-            onChange={(e) => set("sales_unit", e.target.value)}
-          />
+            onChange={(e) => set("sales_unit", e.target.value as SalesUnit)}
+          >
+            {SALES_UNITS.map((u) => (
+              <option key={u} value={u}>
+                {t(`inventory.add.salesUnit.${u}`)}
+              </option>
+            ))}
+          </Select>
         </Field>
 
-        <Field id="pack_size" label={t("inventory.add.packSizeLabel")} error={errors.pack_size}>
+        <Field
+          id="bottles_per_case"
+          label={t("inventory.add.bottlesPerCaseLabel")}
+          error={errors.bottles_per_case}
+        >
           <Input
-            id="pack_size"
+            id="bottles_per_case"
             type="number"
             min={1}
-            value={form.pack_size}
-            onChange={(e) => set("pack_size", e.target.value)}
+            value={form.bottles_per_case}
+            onChange={(e) => set("bottles_per_case", e.target.value)}
+            required
           />
         </Field>
       </div>
 
-      <Field id="default_price" label={t("inventory.add.priceLabel")} error={errors.default_price}>
-        <Input
-          id="default_price"
-          type="number"
-          min={0}
-          value={form.default_price}
-          onChange={(e) => set("default_price", e.target.value)}
-        />
-      </Field>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field id="default_price" label={t("inventory.add.priceLabel")} error={errors.default_price}>
+          <Input
+            id="default_price"
+            type="number"
+            min={0}
+            value={form.default_price}
+            onChange={(e) => set("default_price", e.target.value)}
+          />
+        </Field>
+
+        <Field id="cost_per_unit" label={t("inventory.add.costLabel")} error={errors.cost_per_unit}>
+          <Input
+            id="cost_per_unit"
+            type="number"
+            min={0}
+            value={form.cost_per_unit}
+            onChange={(e) => set("cost_per_unit", e.target.value)}
+            required
+          />
+        </Field>
+      </div>
 
       <div className="flex flex-wrap gap-6">
         <label className="flex items-center gap-2 text-sm">

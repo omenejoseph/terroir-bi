@@ -6,7 +6,7 @@ import { API_URL } from "@/lib/config";
 import { makeOrder } from "@/test/fixtures";
 import { mockRouter } from "@/test/setup";
 import { server } from "@/test/mocks/server";
-import { renderWithProviders, screen, seedAuth, seedLocale, userEvent } from "@/test/utils";
+import { renderWithProviders, screen, seedAuth, seedLocale, userEvent, waitFor } from "@/test/utils";
 
 describe("OrdersPage", () => {
   beforeEach(() => {
@@ -60,5 +60,44 @@ describe("OrdersPage", () => {
     );
     renderWithProviders(<OrdersPage />);
     expect(await screen.findByText("You don't have permission to view orders.")).toBeInTheDocument();
+  });
+
+  it("sends hide_shipped when toggled", async () => {
+    let lastHide: string | null = "unset";
+    server.use(
+      http.get(`${API_URL}/orders`, ({ request }) => {
+        lastHide = new URL(request.url).searchParams.get("hide_shipped");
+        return HttpResponse.json({
+          data: [makeOrder()],
+          meta: { current_page: 1, last_page: 1, per_page: 25, total: 1 },
+        });
+      }),
+    );
+
+    renderWithProviders(<OrdersPage />);
+    const user = userEvent.setup();
+    await screen.findByText("ORD-1001");
+    await user.click(screen.getByLabelText("Hide shipped"));
+    await waitFor(() => expect(lastHide).toBe("true"));
+  });
+
+  it("paginates to the next page", async () => {
+    let lastPage: string | null = null;
+    server.use(
+      http.get(`${API_URL}/orders`, ({ request }) => {
+        lastPage = new URL(request.url).searchParams.get("page");
+        return HttpResponse.json({
+          data: [makeOrder({ order_number: `PAGE-${lastPage ?? "1"}` })],
+          meta: { current_page: Number(lastPage ?? "1"), last_page: 3, per_page: 25, total: 60 },
+        });
+      }),
+    );
+
+    renderWithProviders(<OrdersPage />);
+    const user = userEvent.setup();
+    await screen.findByText("PAGE-1");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(await screen.findByText("PAGE-2")).toBeInTheDocument();
+    expect(lastPage).toBe("2");
   });
 });

@@ -37,6 +37,7 @@ class ConsignmentTest extends TestCase
         $this->customer = Customer::create(['company_name' => 'Bar', 'email' => 'b@example.com']);
         $this->wine = InventoryItem::create([
             'name' => 'Plavac', 'sku' => 'PLV', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'sales_unit' => 'cases',
             'current_stock' => '100.000', 'bottles_per_case' => 12, 'is_for_sale' => true,
             'default_price' => 1000, 'cost_per_unit' => 400,
         ]);
@@ -133,7 +134,7 @@ class ConsignmentTest extends TestCase
         Sanctum::actingAs($this->admin);
         $id = $this->postJson('/api/v1/orders', [
             'customer_id' => $this->customer->getKey(),
-            'items' => [['inventory_item_id' => $this->wine->getKey(), 'quantity' => 1, 'unit_type' => 'bottles']],
+            'items' => [['inventory_item_id' => $this->wine->getKey(), 'quantity' => 1, 'unit_type' => 'cases']],
         ], $this->tenantHeader($this->tenant))->assertCreated()->json('data.id');
         $itemId = Order::query()->whereKey((string) $id)->firstOrFail()->items()->firstOrFail()->getKey();
 

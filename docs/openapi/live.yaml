@@ -901,7 +901,8 @@ components:
 
     InventoryItemInput:
       type: object
-      required: [name, sku, category, unit]
+      # On create, sales_unit, bottles_per_case and cost_per_unit are required.
+      required: [name, sku, category, unit, sales_unit, bottles_per_case, cost_per_unit]
       properties:
         name: { type: string }
         sku: { type: string }
@@ -910,14 +911,16 @@ components:
         group: { type: string, nullable: true }
         subcategory: { type: string, nullable: true }
         vintage: { type: string, nullable: true }
-        unit: { type: string }
+        unit: { type: string, description: Base/stocking unit (free text). }
+        unit_size: { type: string, nullable: true, description: e.g. 750ml }
+        sales_unit: { type: string, enum: [bottles, cases], description: How the item is sold; constrains order line units. }
         min_stock: { type: string, nullable: true }
         is_active: { type: boolean }
         sort_order: { type: integer }
         default_price: { type: integer, nullable: true, description: Money minor units }
-        bottles_per_case: { type: integer }
+        bottles_per_case: { type: integer, description: Bottles in one case. }
         is_for_sale: { type: boolean }
-        cost_per_unit: { type: integer, nullable: true, description: Money minor units }
+        cost_per_unit: { type: integer, description: COGS, money minor units (required on create; cannot be unset on update). }
 
     InventoryItem:
       type: object
@@ -930,7 +933,9 @@ components:
         subcategory: { type: string, nullable: true }
         vintage: { type: string, nullable: true }
         unit: { type: string }
-        current_stock: { type: string }
+        unit_size: { type: string, nullable: true }
+        sales_unit: { type: string, enum: [bottles, cases] }
+        current_stock: { type: string, description: Derived from stock movements; read-only. }
         min_stock: { type: string, nullable: true }
         is_active: { type: boolean }
         is_for_sale: { type: boolean }

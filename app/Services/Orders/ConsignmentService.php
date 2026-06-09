@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Orders;
 
 use App\Enums\ConsignmentReportKind;
+use App\Enums\SalesUnit;
 use App\Models\ConsignmentReport;
 use App\Models\InventoryItem;
 use App\Models\Order;
@@ -144,11 +145,11 @@ class ConsignmentService
 
     private function toBottles(int $quantity, string $unitType, int $bottlesPerCase): int
     {
-        return $unitType === 'cases' ? $quantity * $bottlesPerCase : $quantity;
+        return $unitType === SalesUnit::Cases->value ? $quantity * $bottlesPerCase : $quantity;
     }
 
     private function perBottle(int $minor, string $unitType, int $bottlesPerCase): int
     {
-        return $unitType === 'cases' ? intdiv($minor, $bottlesPerCase) : $minor;
+        return $unitType === SalesUnit::Cases->value ? intdiv($minor, $bottlesPerCase) : $minor;
     }
 }

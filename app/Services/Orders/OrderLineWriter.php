@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Orders;
 
+use App\Enums\SalesUnit;
 use App\Models\Customer;
 use App\Models\InventoryItem;
 use App\Models\Order;
@@ -11,6 +12,7 @@ use App\Models\OrderItem;
 use App\Services\Inventory\StockLedger;
 use App\Services\Pricing\PricingService;
 use App\Support\Money\Money;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Writes a single order line: resolves the unit price (server truth unless an
@@ -32,9 +34,23 @@ class OrderLineWriter
     public function write(Order $order, Customer $customer, string $currency, array $line): OrderItem
     {
         $quantity = (int) $line['quantity'];
-        $unitType = (string) ($line['unit_type'] ?? 'bottles');
+        $requestedUnit = isset($line['unit_type']) ? (string) $line['unit_type'] : null;
         $itemId = $line['inventory_item_id'] ?? null;
         $item = $itemId !== null ? InventoryItem::query()->find((string) $itemId) : null;
+
+        // A catalog item can only be ordered in its sales unit (strict). If the
+        // line omits the unit, it defaults to the item's sales unit.
+        if ($item !== null) {
+            $salesUnit = (string) $item->sales_unit;
+            if ($requestedUnit !== null && $requestedUnit !== $salesUnit) {
+                throw ValidationException::withMessages([
+                    'items' => "{$item->name} is sold in {$salesUnit}; it can't be ordered in {$requestedUnit}.",
+                ]);
+            }
+            $unitType = $salesUnit;
+        } else {
+            $unitType = $requestedUnit ?? SalesUnit::Bottles->value;
+        }
 
         $override = isset($line['unit_price']) ? (int) $line['unit_price'] : null;
 
@@ -69,6 +85,6 @@ class OrderLineWriter
     {
         $base = $this->pricing->resolve($customer, $item)->getMinorAmount();
 
-        return $unitType === 'cases' ? $base * max(1, (int) $item->bottles_per_case) : $base;
+        return $unitType === SalesUnit::Cases->value ? $base * max(1, (int) $item->bottles_per_case) : $base;
     }
 }

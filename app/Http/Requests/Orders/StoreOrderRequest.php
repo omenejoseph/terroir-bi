@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Orders;
 
 use App\Enums\OrderStatus;
+use App\Enums\SalesUnit;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -42,7 +43,7 @@ class StoreOrderRequest extends FormRequest
                 Rule::exists('inventory_items', 'id')->where('tenant_id', $tenantId),
             ],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.unit_type' => ['sometimes', Rule::in(['bottles', 'cases'])],
+            'items.*.unit_type' => ['sometimes', Rule::enum(SalesUnit::class)],
             'items.*.unit_price' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'items.*.custom_description' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];

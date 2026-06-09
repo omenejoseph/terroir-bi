@@ -121,20 +121,32 @@ export type InventoryCategory = (typeof INVENTORY_CATEGORIES)[number];
 export const INVENTORY_UNITS = ["bottle", "case", "liter", "kg", "unit"] as const;
 export type InventoryUnit = (typeof INVENTORY_UNITS)[number];
 
-/** Payload for POST /inventory-items. Prices are integer minor units (e.g. cents). */
+/**
+ * How an item is sold — mirrors App\Enums\SalesUnit. Determines the unit an
+ * order line must use for the item (strict: bottles→bottles, cases→cases).
+ */
+export const SALES_UNITS = ["bottles", "cases"] as const;
+export type SalesUnit = (typeof SALES_UNITS)[number];
+
+/**
+ * Payload for POST /inventory-items. Prices/costs are integer minor units.
+ * On create, sales_unit, bottles_per_case and cost_per_unit are required by the
+ * backend. (`pack_size` is a separate legacy column and is not edited here.)
+ */
 export interface InventoryItemInput {
   name: string;
   sku: string;
   category: InventoryCategory;
   unit: string;
+  sales_unit: SalesUnit;
+  bottles_per_case: number;
+  cost_per_unit: number;
   group?: string | null;
   subcategory?: string | null;
   vintage?: string | null;
   unit_size?: string | null;
-  sales_unit?: string | null;
   min_stock?: number | null;
   default_price?: number | null;
-  pack_size?: number;
   is_active?: boolean;
   is_for_sale?: boolean;
   hide_from_portal?: boolean;
@@ -404,7 +416,8 @@ export interface PresignInput {
 export const ORDER_STATUSES = ["RECEIVED", "IN_PROCESS", "READY_TO_SHIP", "SHIPPED"] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
-export type OrderItemUnit = "bottles" | "cases";
+/** An order line's unit is the same bottles/cases domain as SalesUnit. */
+export type OrderItemUnit = SalesUnit;
 
 export interface OrderItem {
   id: string;

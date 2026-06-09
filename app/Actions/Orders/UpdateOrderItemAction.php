@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Orders;
 
+use App\Enums\SalesUnit;
 use App\Models\InventoryItem;
 use App\Models\OrderItem;
 use App\Services\Inventory\StockLedger;
@@ -12,6 +13,7 @@ use App\Services\Orders\OrderEditGuard;
 use App\Services\Orders\OrderTotals;
 use App\Support\Money\Money;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Edit a line's quantity and/or unit type within the edit window. Reverses the
@@ -39,6 +41,14 @@ class UpdateOrderItemAction
             $newUnit = $unitType ?? $oldUnit;
 
             $product = $item->inventoryItem;
+
+            // A catalog line can only use the item's sales unit (strict).
+            if ($product instanceof InventoryItem && $newUnit !== (string) $product->sales_unit) {
+                throw ValidationException::withMessages([
+                    'unit_type' => "{$product->name} is sold in {$product->sales_unit}; it can't be ordered in {$newUnit}.",
+                ]);
+            }
+
             $currency = $this->totals->currency($order);
 
             // Re-apply stock: put the old line back, then deduct the new line.
@@ -51,8 +61,8 @@ class UpdateOrderItemAction
             $unitPriceMinor = $item->unit_price->getMinorAmount();
             if ($newUnit !== $oldUnit) {
                 $bpc = $product instanceof InventoryItem ? max(1, (int) $product->bottles_per_case) : 1;
-                $perBottle = $oldUnit === 'cases' ? intdiv($unitPriceMinor, $bpc) : $unitPriceMinor;
-                $unitPriceMinor = $newUnit === 'cases' ? $perBottle * $bpc : $perBottle;
+                $perBottle = $oldUnit === SalesUnit::Cases->value ? intdiv($unitPriceMinor, $bpc) : $unitPriceMinor;
+                $unitPriceMinor = $newUnit === SalesUnit::Cases->value ? $perBottle * $bpc : $perBottle;
             }
 
             $cost = $product instanceof InventoryItem && $newUnit !== $oldUnit

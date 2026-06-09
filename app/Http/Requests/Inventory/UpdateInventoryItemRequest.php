@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Inventory;
 
 use App\Enums\InventoryCategory;
+use App\Enums\SalesUnit;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -40,7 +41,7 @@ class UpdateInventoryItemRequest extends FormRequest
             'vintage' => ['sometimes', 'nullable', 'string'],
             'unit_size' => ['sometimes', 'nullable', 'string', 'max:50'],
             'unit' => ['sometimes', 'string', 'max:50'],
-            'sales_unit' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'sales_unit' => ['sometimes', Rule::enum(SalesUnit::class)],
             'min_stock' => ['sometimes', 'nullable', 'numeric'],
             'is_active' => ['sometimes', 'boolean'],
             'sort_order' => ['sometimes', 'integer'],
@@ -54,7 +55,8 @@ class UpdateInventoryItemRequest extends FormRequest
                 Rule::exists('inventory_items', 'id')->where('tenant_id', $tenantId),
                 'not_in:'.$itemId,
             ],
-            'cost_per_unit' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            // Cost can be changed but not unset (no nullable) — every item keeps a COGS.
+            'cost_per_unit' => ['sometimes', 'integer', 'min:0'],
         ];
     }
 }

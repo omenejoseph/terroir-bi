@@ -4,7 +4,7 @@ import * as React from "react";
 import { Package, Pencil, Plus, X } from "lucide-react";
 
 import { useTranslation } from "@/i18n/context";
-import type { InventoryItem, OrderItemInput, OrderItemUnit } from "@/lib/types";
+import { SALES_UNITS, type InventoryItem, type OrderItemInput, type OrderItemUnit } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -73,8 +73,6 @@ export function linesToItems(lines: DraftLine[]): OrderItemInput[] {
   return out;
 }
 
-const UNIT_TYPES: OrderItemUnit[] = ["bottles", "cases"];
-
 export function OrderLineItemsEditor({
   lines,
   onChange,
@@ -91,7 +89,13 @@ export function OrderLineItemsEditor({
     onChange(lines.filter((l) => l.key !== key));
   }
   function selectItem(key: string, item: InventoryItem) {
-    update(key, { inventory_item_id: item.id, name: item.name, sku: item.sku });
+    // A catalog item can only be ordered in its sales unit (strict).
+    update(key, {
+      inventory_item_id: item.id,
+      name: item.name,
+      sku: item.sku,
+      unit_type: (item.sales_unit as OrderItemUnit | null) ?? "bottles",
+    });
   }
 
   return (
@@ -132,9 +136,15 @@ export function OrderLineItemsEditor({
               <label className="text-xs text-muted-foreground">{t("orders.items.unitType")}</label>
               <Select
                 value={line.unit_type}
+                aria-label={t("orders.items.unitType")}
+                // Catalog items are locked to their sales unit; custom lines are free.
+                disabled={line.kind === "catalog" && line.inventory_item_id !== ""}
                 onChange={(e) => update(line.key, { unit_type: e.target.value as OrderItemUnit })}
               >
-                {UNIT_TYPES.map((u) => (
+                {(line.kind === "catalog" && line.inventory_item_id !== ""
+                  ? [line.unit_type]
+                  : SALES_UNITS
+                ).map((u) => (
                   <option key={u} value={u}>
                     {t(`orders.items.unitTypes.${u}`)}
                   </option>

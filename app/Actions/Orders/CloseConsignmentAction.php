@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Orders;
 
 use App\Enums\ConsignmentReportKind;
+use App\Enums\SalesUnit;
 use App\Models\InventoryItem;
 use App\Models\Order;
 use App\Services\Inventory\StockLedger;
@@ -55,7 +56,7 @@ class CloseConsignmentAction
 
                     $product = $t['order_item']->inventoryItem;
                     if ($product instanceof InventoryItem) {
-                        $this->ledger->restore($product, (string) $t['remaining'], 'bottles', reference: $order->order_number.':consignment-close');
+                        $this->ledger->restore($product, (string) $t['remaining'], SalesUnit::Bottles->value, reference: $order->order_number.':consignment-close');
                     }
                 }
             }

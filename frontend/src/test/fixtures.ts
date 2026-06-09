@@ -81,7 +81,7 @@ export function makeItem(overrides: Partial<InventoryItem> = {}): InventoryItem 
     vintage: 2021,
     unit_size: null,
     unit: "bottle",
-    sales_unit: null,
+    sales_unit: "bottles",
     current_stock: "120",
     min_stock: 10,
     is_active: true,

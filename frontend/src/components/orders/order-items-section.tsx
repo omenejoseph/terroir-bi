@@ -181,9 +181,17 @@ function ItemRow({
               onChange={(e) => setUnit(e.target.value as OrderItemUnit)}
               className="h-8 w-24"
               aria-label={t("orders.items.unitType")}
+              // Catalog lines are locked to the item's sales unit.
+              disabled={item.inventory_item_id !== null}
             >
-              <option value="bottles">{t("orders.items.unitTypes.bottles")}</option>
-              <option value="cases">{t("orders.items.unitTypes.cases")}</option>
+              {item.inventory_item_id !== null ? (
+                <option value={unit}>{t(`orders.items.unitTypes.${unit}`)}</option>
+              ) : (
+                <>
+                  <option value="bottles">{t("orders.items.unitTypes.bottles")}</option>
+                  <option value="cases">{t("orders.items.unitTypes.cases")}</option>
+                </>
+              )}
             </Select>
           </div>
         ) : (

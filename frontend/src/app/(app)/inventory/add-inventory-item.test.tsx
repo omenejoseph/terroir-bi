@@ -65,6 +65,8 @@ describe("Inventory — add item", () => {
     await user.type(screen.getByLabelText("Name"), "Test Wine");
     await user.type(screen.getByLabelText("SKU"), "TW-1");
     await user.selectOptions(screen.getByLabelText("Unit"), "case");
+    await user.selectOptions(screen.getByLabelText("Sales unit"), "cases");
+    await user.type(screen.getByLabelText("Cost per unit (minor units)"), "700");
     await user.click(screen.getByRole("button", { name: "Create item" }));
 
     await waitFor(() => expect(captured).not.toBeNull());
@@ -74,6 +76,9 @@ describe("Inventory — add item", () => {
       unit: "case",
       category: "FINISHED",
       is_active: true,
+      sales_unit: "cases",
+      bottles_per_case: 12,
+      cost_per_unit: 700,
     });
 
     // Dialog closes on success.
@@ -101,6 +106,7 @@ describe("Inventory — add item", () => {
     await user.type(screen.getByLabelText("Name"), "Opening Wine");
     await user.type(screen.getByLabelText("SKU"), "OW-1");
     await user.type(screen.getByLabelText("Opening stock (optional)"), "25");
+    await user.type(screen.getByLabelText("Cost per unit (minor units)"), "700");
     await user.click(screen.getByRole("button", { name: "Create item" }));
 
     await waitFor(() => expect(stockBody).not.toBeNull());
@@ -130,6 +136,8 @@ describe("Inventory — add item", () => {
     await user.type(screen.getByPlaceholderText("e.g. Wine"), "Wine");
     await user.click(screen.getByRole("button", { name: /Create "Wine"/ }));
 
+    await user.type(screen.getByLabelText("Cost per unit (minor units)"), "700");
+
     await user.click(screen.getByRole("button", { name: "Create item" }));
 
     await waitFor(() => expect(captured).not.toBeNull());
@@ -153,6 +161,7 @@ describe("Inventory — add item", () => {
     await user.type(screen.getByLabelText("Name"), "Dup");
     await user.type(screen.getByLabelText("SKU"), "PM-2021");
     // Unit defaults to "bottle" from the dropdown — no interaction needed.
+    await user.type(screen.getByLabelText("Cost per unit (minor units)"), "700");
     await user.click(screen.getByRole("button", { name: "Create item" }));
 
     expect(await screen.findByText("The sku has already been taken.")).toBeInTheDocument();

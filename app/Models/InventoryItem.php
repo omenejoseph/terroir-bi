@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\InventoryCategory;
+use App\Enums\SalesUnit;
 use App\Support\Money\Money;
 use App\Support\Money\MoneyCast;
 use App\Tenancy\BelongsToTenant;
@@ -21,16 +22,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property string $sku
  * @property InventoryCategory $category
- * @property string $unit
- * @property string $current_stock
+ * @property string $unit Base/stocking unit (bottles, cases, kg, liters, units).
+ * @property string $current_stock Derived from stock movements — NOT mass-assignable via the API.
  * @property Money|null $default_price
- * @property Money|null $cost_per_unit
+ * @property Money|null $cost_per_unit COGS per unit; required when creating an item.
  * @property bool $is_active
  * @property bool $is_for_sale
  * @property bool $hide_from_portal
- * @property string|null $sales_unit
- * @property string|null $unit_size
- * @property int $pack_size
+ * @property string $sales_unit How the item is sold (App\Enums\SalesUnit: bottles|cases); constrains order lines.
+ * @property string|null $unit_size Volume of one bottle, e.g. "750ml".
+ * @property int $bottles_per_case How many bottles make up one case (used to scale case prices/COGS).
+ * @property int $pack_size Generic packaging multiplier (legacy); distinct from bottles_per_case.
  * @property bool $is_auto_created
  * @property string|null $base_product_id
  */
@@ -74,6 +76,7 @@ class InventoryItem extends Model
         'sort_order' => 0,
         'bottles_per_case' => 12,
         'pack_size' => 1,
+        'sales_unit' => SalesUnit::Bottles->value,
     ];
 
     protected function casts(): array

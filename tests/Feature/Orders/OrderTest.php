@@ -38,6 +38,7 @@ class OrderTest extends TestCase
         $this->customer = Customer::create(['company_name' => 'Konoba', 'email' => 'k@example.com']);
         $this->wine = InventoryItem::create([
             'name' => 'Plavac', 'sku' => 'PLV', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'sales_unit' => 'cases',
             'current_stock' => '100.000', 'bottles_per_case' => 12, 'is_for_sale' => true,
             'default_price' => 1000, 'cost_per_unit' => 400,
         ]);
@@ -77,6 +78,19 @@ class OrderTest extends TestCase
             ->assertJsonCount(1, 'data.status_history');
 
         $this->assertSame('76.000', (string) $this->wine->refresh()->current_stock);
+    }
+
+    public function test_catalog_item_can_only_be_ordered_in_its_sales_unit(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        // wine.sales_unit = cases — ordering it in bottles is rejected.
+        $this->postJson('/api/v1/orders', [
+            'customer_id' => $this->customer->getKey(),
+            'items' => [['inventory_item_id' => $this->wine->getKey(), 'quantity' => 1, 'unit_type' => 'bottles']],
+        ], $this->headers())
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['items']);
     }
 
     public function test_create_order_is_blocked_when_stock_is_short(): void
@@ -153,9 +167,9 @@ class OrderTest extends TestCase
 
         // Add a second line, then delete it → restock.
         $this->postJson("/api/v1/orders/{$id}/items", [
-            'items' => [['inventory_item_id' => $this->wine->getKey(), 'quantity' => 1, 'unit_type' => 'bottles']],
+            'items' => [['inventory_item_id' => $this->wine->getKey(), 'quantity' => 1, 'unit_type' => 'cases']],
         ], $this->headers())->assertOk();
-        $this->assertSame('75.000', (string) $this->wine->refresh()->current_stock); // 76 - 1
+        $this->assertSame('64.000', (string) $this->wine->refresh()->current_stock); // 76 - 12 (1 case)
 
         $secondItem = $order->items()->latest('id')->firstOrFail()->getKey();
         $this->deleteJson("/api/v1/order-items/{$secondItem}", [], $this->headers())->assertOk();
@@ -202,7 +216,7 @@ class OrderTest extends TestCase
     public function test_shipped_orders_are_hidden_from_members_without_visibility(): void
     {
         $open = $this->createOrderViaApi();
-        $shipped = $this->createOrderViaApi(1, 'bottles');
+        $shipped = $this->createOrderViaApi(1, 'cases');
         $this->patchJson("/api/v1/orders/{$shipped}/status", ['status' => 'SHIPPED'], $this->headers())->assertOk();
 
         $teamMember = $this->createMember($this->tenant, [TenantRole::Team]); // can_see_shipped_orders=false

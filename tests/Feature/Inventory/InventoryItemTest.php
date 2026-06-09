@@ -27,6 +27,9 @@ class InventoryItemTest extends TestCase
             'sku' => 'PM-2021',
             'category' => 'FINISHED',
             'unit' => 'bottles',
+            'sales_unit' => 'bottles',
+            'bottles_per_case' => 12,
+            'cost_per_unit' => 800,
             'default_price' => 1999, // €19.99 in minor units
             'is_for_sale' => true,
         ], $overrides);
@@ -151,5 +154,45 @@ class InventoryItemTest extends TestCase
             ->assertJsonCount(2, 'data')
             ->assertJsonFragment(['category' => 'FINISHED', 'group' => 'Wine', 'subcategory' => 'Red'])
             ->assertJsonFragment(['category' => 'FINISHED', 'group' => 'Wine', 'subcategory' => 'Packaging']);
+    }
+
+    public function test_create_requires_sales_unit_cost_and_bottles_per_case(): void
+    {
+        $tenant = $this->createTenant();
+        Sanctum::actingAs($this->createMember($tenant, [TenantRole::Team]));
+
+        $payload = $this->payload();
+        unset($payload['sales_unit'], $payload['cost_per_unit'], $payload['bottles_per_case']);
+
+        $this->postJson('/api/v1/inventory-items', $payload, $this->tenantHeader($tenant))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['sales_unit', 'cost_per_unit', 'bottles_per_case']);
+    }
+
+    public function test_stock_is_not_editable_via_update(): void
+    {
+        $tenant = $this->createTenant();
+        Sanctum::actingAs($this->createMember($tenant, [TenantRole::Admin]));
+
+        $id = $this->postJson('/api/v1/inventory-items', $this->payload(), $this->tenantHeader($tenant))
+            ->assertCreated()->json('data.id');
+
+        // current_stock is derived from movements — the update endpoint ignores it.
+        $this->patchJson("/api/v1/inventory-items/{$id}", ['current_stock' => '999'], $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonPath('data.current_stock', '0.000');
+    }
+
+    public function test_cost_cannot_be_unset_on_update(): void
+    {
+        $tenant = $this->createTenant();
+        Sanctum::actingAs($this->createMember($tenant, [TenantRole::Admin]));
+
+        $id = $this->postJson('/api/v1/inventory-items', $this->payload(), $this->tenantHeader($tenant))
+            ->assertCreated()->json('data.id');
+
+        $this->patchJson("/api/v1/inventory-items/{$id}", ['cost_per_unit' => null], $this->tenantHeader($tenant))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['cost_per_unit']);
     }
 }

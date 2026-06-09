@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Orders;
 
+use App\Enums\SalesUnit;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,7 +22,7 @@ class UpdateOrderItemRequest extends FormRequest
     {
         return [
             'quantity' => ['sometimes', 'integer', 'min:1'],
-            'unit_type' => ['sometimes', Rule::in(['bottles', 'cases'])],
+            'unit_type' => ['sometimes', Rule::enum(SalesUnit::class)],
         ];
     }
 }

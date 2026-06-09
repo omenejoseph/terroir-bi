@@ -100,11 +100,14 @@ export function ItemOverviewSection({
                 {t(`inventory.add.unit.${item.unit}`)}
               </Detail>
               <Detail label={t("inventory.add.unitSizeLabel")}>{item.unit_size ?? "—"}</Detail>
-              <Detail label={t("inventory.add.salesUnitLabel")}>{item.sales_unit ?? "—"}</Detail>
-              <Detail label={t("inventory.add.packSizeLabel")}>{item.pack_size ?? "—"}</Detail>
+              <Detail label={t("inventory.add.salesUnitLabel")}>
+                {item.sales_unit ? t(`inventory.add.salesUnit.${item.sales_unit}`) : "—"}
+              </Detail>
+              <Detail label={t("inventory.add.bottlesPerCaseLabel")}>{item.bottles_per_case ?? "—"}</Detail>
               <Detail label={t("inventory.details.vintage")}>{item.vintage ?? "—"}</Detail>
               <Detail label={t("inventory.details.minStock")}>{item.min_stock ?? "—"}</Detail>
               <Detail label={t("inventory.details.price")}>{moneyObject(item.default_price)}</Detail>
+              <Detail label={t("inventory.details.cost")}>{moneyObject(item.cost_per_unit)}</Detail>
               <Detail label={t("inventory.details.status")}>
                 <span className="flex flex-wrap gap-1">
                   <Badge variant={item.is_active ? "success" : "secondary"}>
