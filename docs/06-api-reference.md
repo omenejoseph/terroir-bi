@@ -46,6 +46,18 @@ Registration of the first user happens during tenant onboarding (flow 09).
 | DELETE | `/customers/{id}` | ADMIN | Soft-delete if it has orders, else hard delete |
 | POST | `/customers/{id}/order-token` | ADMIN | Generate self-service token |
 | DELETE | `/customers/{id}/order-token` | ADMIN | Revoke token |
+| GET | `/customers/lookup-vat?vat=` 🆕 | — | VIES/OIB lookup → `{vat,name,address,city,zip,country}` (auto-fill) |
+| GET | `/customers/reorder-radar` 🆕 | — | Churn radar: silent customers by median-gap overdue ratio + value rank |
+| POST | `/customers/{id}/contacted` 🆕 | — | Set/clear `reorder_contacted_at` (`{contacted:bool}`) |
+| POST | `/customers/merge/preview` 🆕 | ADMIN | Preview merge conflicts (`{winner_id, loser_ids[]}`) |
+| POST | `/customers/merge` 🆕 | ADMIN | Merge duplicates: reassign children, drop unique collisions, delete losers |
+| GET | `/customers/{id}/product-overrides` 🆕 | — | List per-customer catalog visibility overrides |
+| PUT | `/customers/{id}/product-overrides/{item}` 🆕 | — | Upsert `{visible:bool}` |
+| DELETE | `/customers/{id}/product-overrides/{item}` 🆕 | — | Remove override |
+| GET | `/customers/{id}/consignment` 🆕 | — | Customer-level komisija: per-product placed/sold/returned/remaining + history |
+| POST | `/customers/{id}/consignment/place` 🆕 | — | Create a consignment order for this customer (resolves prices) |
+| POST | `/customers/{id}/consignment/sale` 🆕 | — | Record sell-through (FIFO across open placements) |
+| POST | `/customers/{id}/consignment/return` 🆕 | — | Record return (FIFO) + restock |
 | GET | `/pricing-tiers` | — | List tiers (+customer count) |
 | POST | `/pricing-tiers` | — | Create (`name,description,rebate_percent`) |
 | PATCH | `/pricing-tiers/{id}` | — | Update |
@@ -68,7 +80,8 @@ Registration of the first user happens during tenant onboarding (flow 09).
 | POST | `/inventory-items` | — | Create. SKU unique per tenant → `409` on dup |
 | PATCH | `/inventory-items/{id}` | — | Update. Triggers bottles↔cases stock conversion if unit changes |
 | DELETE | `/inventory-items/{id}` | ADMIN | Soft-delete if in orders, else hard delete (+recipe cleanup) |
-| POST | `/inventory-items/{id}/movements` | — | Manual stock movement (`type: MANUAL_IN\|MANUAL_OUT, quantity, note`) |
+| POST | `/inventory-items/{id}/movements` | — | Manual stock movement (`type: MANUAL_IN\|MANUAL_OUT, quantity, note, is_reconciliation?`) 🆕 |
+| PATCH | `/stock-movements/{id}/reconciliation` 🆕 | — | Flip the `is_reconciliation` tag on a movement (no stock change) |
 | POST | `/inventory-items/{id}/produce` | — | Produce from recipe (`display_quantity`) — consumes inputs, adds output |
 | POST | `/inventory-items/{id}/images` | — | Add image (`url, alt`) |
 | DELETE | `/inventory-items/{id}/images/{imageId}` | — | Remove image |
@@ -78,7 +91,7 @@ Registration of the first user happens during tenant onboarding (flow 09).
 | GET | `/inventory-items/{id}/recipe/available-inputs` | — | Eligible inputs (+ ready/aging wine lots as virtual inputs) |
 | PUT | `/inventory-items/{id}/recipe` | — | Replace recipe (`items:[{input_id,quantity}]`); auto-updates output `cost_per_unit`; auto-creates RAW_MATERIAL for wine-lot inputs |
 | GET | `/inventory-items/{id}/recipe/cost` | — | Computed recipe cost |
-| POST | `/inventory-items/check` | ADMIN | Apply physical count (`[{item_id,system_stock,physical_count}]`) → ADJUSTMENT movements |
+| POST | `/inventory-items/check` | ADMIN | Apply physical count (`[{item_id,system_stock,physical_count}]`) → `ADJUSTMENT` movements flagged `is_reconciliation=true` 🆕 |
 | PUT | `/inventory-items/reorder` | ADMIN | Bulk `sort_order` update |
 | GET | `/inventory/analytics/value-by-category` | — | Stock value grouped by category |
 | GET | `/inventory/analytics/stock-levels` | — | Top products stock |
@@ -90,15 +103,40 @@ Registration of the first user happens during tenant onboarding (flow 09).
 
 | Method | Path | Role | Purpose |
 |---|---|---|---|
-| GET | `/orders?status=&search=` | — | List with customer/creator/items/history |
-| GET | `/orders/{id}` | — | Full detail incl. status history + notes |
-| POST | `/orders` | — | Create order (see flow 01). Deducts stock, snapshots COGS, status `RECEIVED` |
-| PATCH | `/orders/{id}/status` | — | Transition status (`status, note`) → appends history |
-| POST | `/orders/{id}/items` | — | Append items (deduct stock, update total) |
-| POST | `/orders/{id}/notes` | — | Add note |
-| DELETE | `/orders/{id}` | ADMIN | Delete + restock via ADJUSTMENT movements |
-| GET | `/public/{token}/catalog` | public | Tokenized catalog (resp. respects `hide_prices`) |
-| POST | `/public/{token}/orders` | public | Customer self-service order; **server re-verifies prices** (flow 02) |
+| GET | `/orders?status=&search=` | — | List with customer/creator/items/history. Non-admins without `can_see_shipped_orders` don't see `SHIPPED` 🆕 |
+| GET | `/orders/{id}` | — | Full detail incl. status history + notes (+ consignment summary if applicable) |
+| POST | `/orders` | — | Create order (flow 01). Deducts stock (overdraw-guarded), snapshots COGS, status `RECEIVED`. Body now also: `is_backorder?, backorder_date?, is_consignment?, shipping_cost?, items[].custom_description?` 🆕 |
+| PATCH | `/orders/{id}/status` | — | Transition status (`status, note`) → appends history + notifies |
+| POST | `/orders/{id}/items` | — | Append items (deduct stock, update total; 1-hour window for non-admins) |
+| PATCH | `/order-items/{id}` 🆕 | — | Edit a line: `quantity` / `unit_type` (adjusts stock) within edit window |
+| PATCH | `/order-items/{id}/cost` 🆕 | — | Override COGS snapshot (no time window) |
+| DELETE | `/order-items/{id}` 🆕 | — | Remove a line (restock; cannot remove the last line) |
+| PATCH | `/orders/{id}/shipping` 🆕 | — | Set `shipping_cost` / `shipping_paid_by_us` (no time window) |
+| PATCH | `/orders/{id}/backorder` 🆕 | ADMIN | Set/clear `backorder_date` |
+| PATCH | `/orders/{id}/notes` 🆕 | — | Edit the order-level free-text note |
+| POST | `/orders/{id}/comments` 🆕 | — | Add a threaded comment (`content, mentions[]`) → MENTION/REPLY notifications |
+| PATCH | `/order-comments/{id}` 🆕 | — | Edit a comment (author/ADMIN) |
+| DELETE | `/order-comments/{id}` 🆕 | — | Delete a comment (author/ADMIN) |
+| DELETE | `/orders/{id}` | ADMIN | Delete + restock (consignment: restock unsold remainder only); nulls `inflow.order_id`/`deal.order_id` 🆕 |
+| GET | `/orders/{id}/consignment` 🆕 | — | Placed/sold/returned/remaining summary + report history |
+| POST | `/orders/{id}/consignment/sale` 🆕 | — | Record sell-through (`items:[{order_item_id,quantity,unit_price?}], note?`) |
+| POST | `/orders/{id}/consignment/return` 🆕 | — | Record return + restock |
+| POST | `/orders/{id}/consignment/close` 🆕 | — | Auto-return remainder, set `consignment_closed_at` |
+| GET | `/orders/analytics?period=` 🆕 | ADMIN | Profitability: revenue/COGS/margin, top customers/products, low-margin alerts |
+| POST | `/ai/parse-order-screenshot` 🆕 | — | Image → `{customer, items[], notes}` + fuzzy matches (draft only; see flow 03) |
+| GET | `/public/{token}/catalog` | public | Tokenized catalog; respects `hide_prices`, `hide_from_portal`, `customer_product_overrides`, `allow_single_bottle` 🆕 |
+| POST | `/public/{token}/orders` | public | Customer self-service order; **server re-verifies prices**; rate-limited (flow 02) |
+
+### Notifications  (`/notifications`) 🆕
+
+| Method | Path | Role | Purpose |
+|---|---|---|---|
+| GET | `/notifications?unread=` | — | Current user's feed (bell) |
+| POST | `/notifications/read` | — | Mark read (`ids[]` or all) |
+| POST | `/push-subscriptions` | — | Register a Web Push subscription (delivery may be deferred) |
+
+> A scheduled **stale-orders** job flags unshipped orders idle > 24h (deduped via
+> `last_stale_notified_at`) — the cron equivalent of `api/cron/stale-orders`.
 
 ---
 
