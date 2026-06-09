@@ -707,6 +707,7 @@ export const hr: Messages = {
       submit: "Spremi cijenu",
       deleteTitle: "Ukloniti cijenu?",
       deleteBody: "Ukloniti „{description}” iz cjenika?",
+      remove: "Ukloni cijenu",
       empty: "Još nema stavki cjenika.",
     },
   },

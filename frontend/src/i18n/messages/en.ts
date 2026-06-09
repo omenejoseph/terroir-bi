@@ -711,6 +711,7 @@ export const en = {
       submit: "Save price",
       deleteTitle: "Remove price?",
       deleteBody: "Remove “{description}” from the price list?",
+      remove: "Remove price",
       empty: "No price-list items yet.",
     },
   },
