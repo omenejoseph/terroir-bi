@@ -48,7 +48,7 @@ Progress key: `[ ]` todo · `[~]` in progress · `[x]` done.
 - **Accept:** ✅ produce respects input stock (guarded) and rejects no-recipe; check writes reconciliation adjustments vs live stock — `tests/Feature/Inventory/ProduceAndCheckTest.php`. `composer check` green (243 tests).
 
 ### 1b — S3 presigned uploads (images + tech sheets) ✅
-Direct-to-bucket uploads to a **private S3-compatible** bucket (`uploads` disk; MinIO/R2/B2/Spaces via endpoint + path-style).
+Direct-to-bucket uploads to a **private S3-compatible** bucket. **Default store: Cloudflare R2** (`r2` disk; `R2_*` env). Swap via `UPLOADS_DISK` (e.g. `uploads` for MinIO/AWS/B2/Spaces).
 - [x] **General presign API** — `POST /uploads/presign` `{purpose, filename, content_type, size}` → presigned **PUT** url + headers (`PresignedUploadService` + `ObjectStore` contract / `S3ObjectStore`).
 - [x] **Security:** per-purpose MIME allowlist + hard size cap; the **Content-Type is baked into the signature** so the bucket rejects a mismatched header; the object **key is generated server-side**, namespaced `tenants/{tenant}/…`, extension derived from the MIME (never the client filename).
 - [x] **Attach with verification** — `inventory_images` / `inventory_tech_sheets` tables + `POST/GET/DELETE /inventory-items/{id}/images|tech-sheets`. Attach re-checks the object **exists**, is **within size**, and the **key is owned by the tenant** (cross-tenant keys → 422). Reads are short-lived presigned **GET** URLs (private bucket); delete removes the object.

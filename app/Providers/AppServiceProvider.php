@@ -13,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(ObjectStore::class, fn () => new S3ObjectStore(
-            (string) config('uploads.disk', 'uploads'),
+            (string) config('uploads.disk', 'r2'),
         ));
     }
 

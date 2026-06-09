@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 return [
     // Filesystem disk used for direct-to-bucket uploads (see config/filesystems.php).
-    'disk' => env('UPLOADS_DISK', 'uploads'),
+    // Defaults to Cloudflare R2; override with UPLOADS_DISK.
+    'disk' => env('UPLOADS_DISK', 'r2'),
 
     // Lifetimes (seconds) for the presigned PUT (upload) and GET (read) URLs.
     'upload_ttl' => (int) env('UPLOADS_UPLOAD_TTL', 300),
