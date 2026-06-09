@@ -58,6 +58,8 @@ export function useFormatters() {
       timeStyle: "short",
       timeZone,
     });
+    const monthYearFmt = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric", timeZone });
+    const monthShortFmt = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric", timeZone });
 
     return {
       currency,
@@ -85,6 +87,10 @@ export function useFormatters() {
       date: (value: string | number | Date) => dateFmt.format(new Date(value)),
       /** ISO/date → medium date + short time in the org timezone. */
       dateTime: (value: string | number | Date) => dateTimeFmt.format(new Date(value)),
+      /** ISO/date → "September 2026". */
+      monthYear: (value: string | number | Date) => monthYearFmt.format(new Date(value)),
+      /** ISO/date → "Sep 2026". */
+      monthShort: (value: string | number | Date) => monthShortFmt.format(new Date(value)),
     };
   }, [locale, currency, timeZone]);
 }
