@@ -3,10 +3,15 @@ import { http, HttpResponse } from "msw";
 import { API_URL } from "@/lib/config";
 import {
   makeAnalytics,
+  makeArAging,
+  makeCashFlow,
   makeConsignmentSummary,
+  makeCost,
+  makeCostAnalytics,
   makeCustomer,
   makeDashboard,
   makeImage,
+  makeInflow,
   makeInvitation,
   makeItem,
   makeMember,
@@ -14,9 +19,15 @@ import {
   makeNotification,
   makeOrder,
   makeOrderComment,
+  makeOrderPayments,
+  makePriceItem,
   makePricingTier,
   makeSession,
   makeSettings,
+  makeSupplier,
+  makeSupplierOrder,
+  makeWorkOrder,
+  makeWorkOrderStats,
   tenantA,
   tenantB,
 } from "@/test/fixtures";
@@ -24,6 +35,8 @@ import {
 const url = (path: string) => `${API_URL}${path}`;
 
 const pageMeta = (total: number) => ({ current_page: 1, last_page: 1, per_page: 25, total });
+
+const money = (minor: number) => ({ minor, currency: "EUR", formatted: `€${(minor / 100).toFixed(2)}` });
 
 /**
  * Default happy-path handlers. Individual tests override these with
@@ -175,6 +188,20 @@ export const handlers = [
   http.patch(url("/orders/:id/backorder"), ({ params }) =>
     HttpResponse.json({ data: makeOrder({ id: String(params.id) }) }),
   ),
+  // Order payments (finance) — static sub-route before /orders/:id.
+  http.get(url("/orders/:id/payments"), () => HttpResponse.json({ data: makeOrderPayments() })),
+  http.post(url("/orders/:id/payments"), async ({ request }) => {
+    const body = (await request.json()) as { amount: number };
+    return HttpResponse.json(
+      {
+        data: makeOrderPayments({
+          summary: { amount_paid: money(90000), balance_due: money(0), status: "PAID" },
+          payments: [makeInflow(), makeInflow({ id: "inf_2", amount: money(body.amount) })],
+        }),
+      },
+      { status: 201 },
+    );
+  }),
   http.get(url("/orders/:id"), ({ params }) =>
     HttpResponse.json({ data: makeOrder({ id: String(params.id) }) }),
   ),
@@ -288,5 +315,128 @@ export const handlers = [
       data: items,
       meta: { current_page: 1, last_page: 1, per_page: 15, total: items.length },
     });
+  }),
+
+  // ── Finance: A/R aging + cash flow ──────────────────────────────────────────
+  http.get(url("/inflows/aging"), () => HttpResponse.json({ data: makeArAging() })),
+  http.get(url("/cash-flow"), () => HttpResponse.json({ data: makeCashFlow() })),
+
+  // ── Suppliers ───────────────────────────────────────────────────────────────
+  http.post(url("/suppliers/:id/price-items"), async ({ request }) => {
+    const body = (await request.json()) as { description: string; unit_price: number };
+    return HttpResponse.json(
+      { data: makePriceItem({ id: "pli_new", description: body.description, unit_price: money(body.unit_price) }) },
+      { status: 201 },
+    );
+  }),
+  http.delete(url("/suppliers/:id/price-items/:priceItem"), () => new HttpResponse(null, { status: 204 })),
+  http.post(url("/suppliers"), () =>
+    HttpResponse.json({ data: makeSupplier({ id: "sup_new" }) }, { status: 201 }),
+  ),
+  http.patch(url("/suppliers/:id"), ({ params }) =>
+    HttpResponse.json({ data: makeSupplier({ id: String(params.id) }) }),
+  ),
+  http.delete(url("/suppliers/:id"), () => new HttpResponse(null, { status: 204 })),
+  http.get(url("/suppliers/:id"), ({ params }) =>
+    HttpResponse.json({
+      data: makeSupplier({ id: String(params.id), price_items: [makePriceItem()] }),
+    }),
+  ),
+  http.get(url("/suppliers"), ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const search = params.get("search")?.toLowerCase();
+    const isActive = params.has("is_active") ? params.get("is_active") === "true" : null;
+    let all = [
+      makeSupplier(),
+      makeSupplier({ id: "sup_2", company_name: "Staklo Split", is_active: false }),
+    ];
+    if (search) all = all.filter((s) => s.company_name.toLowerCase().includes(search));
+    if (isActive !== null) all = all.filter((s) => s.is_active === isActive);
+    return HttpResponse.json({ data: all, meta: pageMeta(all.length) });
+  }),
+
+  // ── Purchase orders (supplier orders) ───────────────────────────────────────
+  http.post(url("/supplier-orders"), () =>
+    HttpResponse.json({ data: makeSupplierOrder({ id: "po_new", order_number: "PO-00002" }) }, { status: 201 }),
+  ),
+  http.patch(url("/supplier-orders/:id/status"), async ({ params, request }) => {
+    const body = (await request.json()) as { status: string };
+    return HttpResponse.json({
+      data: makeSupplierOrder({ id: String(params.id), status: body.status as never }),
+    });
+  }),
+  http.delete(url("/supplier-orders/:id"), () => new HttpResponse(null, { status: 204 })),
+  http.get(url("/supplier-orders/:id"), ({ params }) =>
+    HttpResponse.json({ data: makeSupplierOrder({ id: String(params.id) }) }),
+  ),
+  http.get(url("/supplier-orders"), ({ request }) => {
+    const status = new URL(request.url).searchParams.get("status");
+    let all = [
+      makeSupplierOrder(),
+      makeSupplierOrder({ id: "po_2", order_number: "PO-00002", status: "SENT", sent_at: "2026-06-02T00:00:00+00:00" }),
+    ];
+    if (status) all = all.filter((o) => o.status === status);
+    return HttpResponse.json({ data: all, meta: pageMeta(all.length) });
+  }),
+
+  // ── Costs ───────────────────────────────────────────────────────────────────
+  http.get(url("/costs/categories"), () =>
+    HttpResponse.json({ data: ["Utilities", "Glass", "Corks", "Labour"] }),
+  ),
+  http.get(url("/costs/analytics"), () => HttpResponse.json({ data: makeCostAnalytics() })),
+  http.post(url("/costs"), () => HttpResponse.json({ data: makeCost({ id: "cost_new" }) }, { status: 201 })),
+  http.patch(url("/costs/:id/status"), async ({ params, request }) => {
+    const body = (await request.json()) as { status: string };
+    return HttpResponse.json({ data: makeCost({ id: String(params.id), status: body.status as never }) });
+  }),
+  http.patch(url("/costs/:id"), ({ params }) =>
+    HttpResponse.json({ data: makeCost({ id: String(params.id) }) }),
+  ),
+  http.delete(url("/costs/:id"), () => new HttpResponse(null, { status: 204 })),
+  http.get(url("/costs/:id"), ({ params }) =>
+    HttpResponse.json({ data: makeCost({ id: String(params.id) }) }),
+  ),
+  http.get(url("/costs"), ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const search = params.get("search")?.toLowerCase();
+    const status = params.get("status");
+    const category = params.get("category");
+    let all = [
+      makeCost(),
+      makeCost({ id: "cost_2", category: "Glass", description: "Bottles", status: "PAID" }),
+    ];
+    if (search) all = all.filter((c) => (c.description ?? "").toLowerCase().includes(search));
+    if (status) all = all.filter((c) => c.status === status);
+    if (category) all = all.filter((c) => c.category === category);
+    return HttpResponse.json({ data: all, meta: pageMeta(all.length) });
+  }),
+
+  // ── Tasks / work orders ─────────────────────────────────────────────────────
+  http.get(url("/work-orders/stats"), () => HttpResponse.json({ data: makeWorkOrderStats() })),
+  http.post(url("/work-orders/reorder"), () => new HttpResponse(null, { status: 204 })),
+  http.post(url("/work-orders"), async ({ request }) => {
+    const body = (await request.json()) as { title: string };
+    return HttpResponse.json({ data: makeWorkOrder({ id: "task_new", title: body.title }) }, { status: 201 });
+  }),
+  http.patch(url("/work-orders/:id/status"), async ({ params, request }) => {
+    const body = (await request.json()) as { status: string };
+    return HttpResponse.json({ data: makeWorkOrder({ id: String(params.id), status: body.status as never }) });
+  }),
+  http.patch(url("/work-orders/:id"), ({ params }) =>
+    HttpResponse.json({ data: makeWorkOrder({ id: String(params.id) }) }),
+  ),
+  http.delete(url("/work-orders/:id"), () => new HttpResponse(null, { status: 204 })),
+  http.get(url("/work-orders/:id"), ({ params }) =>
+    HttpResponse.json({ data: makeWorkOrder({ id: String(params.id) }) }),
+  ),
+  http.get(url("/work-orders"), ({ request }) => {
+    const status = new URL(request.url).searchParams.get("status");
+    let all = [
+      makeWorkOrder(),
+      makeWorkOrder({ id: "task_2", title: "Label batch", status: "IN_PROGRESS", sort_order: 2 }),
+      makeWorkOrder({ id: "task_3", title: "Ship order", status: "DONE", sort_order: 3 }),
+    ];
+    if (status) all = all.filter((t) => t.status === status);
+    return HttpResponse.json({ data: all });
   }),
 ];
