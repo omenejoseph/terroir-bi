@@ -114,12 +114,12 @@ These read or reassign **orders**, so they land **after Phase 3 (Orders core)**:
 > Note: deleting a consignment order currently restocks **all** catalog lines (Phase 3 `DeleteOrderAction`). The "remainder-only on delete" refinement moves with the customer-level FIFO work in Phase 2b.
 
 ### 4.3 Comments & notifications (module 10)
-- [ ] `POST /orders/{id}/comments`, `PATCH/DELETE /order-comments/{id}` (author/ADMIN; parse `@mentions`).
-- [ ] Migration `notifications`; `GET /notifications`, `POST /notifications/read`.
-- [ ] `Notifier` service emits `NEW_ORDER/ORDER_STATUS/MENTION/REPLY` **after commit**.
-- [ ] `push_subscriptions` + `POST /push-subscriptions`; Web Push/WhatsApp **stubbed/queued**.
-- [ ] Scheduled `orders:stale` command (idle >24h, dedup via `last_stale_notified_at`).
-- **Accept:** mention notifies the mentioned user; transports never break the order txn.
+- [x] `POST /orders/{id}/comments`, `PATCH/DELETE /order-comments/{id}` (author/ADMIN; `mentions[]` of tenant members).
+- [x] Migration `notifications` + model; `GET /notifications?unread=`, `POST /notifications/read`.
+- [x] `Notifier` emits `NEW_ORDER` (create) / `ORDER_STATUS` (status) / `MENTION` + `REPLY` (comments), **after the order transaction commits**.
+- [—] `push_subscriptions` + `POST /push-subscriptions`; Web Push / WhatsApp transports → **deferred** (the persisted in-app feed is the must-have and is done).
+- [x] Scheduled `orders:stale` command (per-tenant; idle >24h; dedup via `last_stale_notified_at`; hourly in `routes/console.php`).
+- **Accept:** ✅ new order notifies order-role members; status notifies followers (not the actor); mention → MENTION; read-marking works; comment edit is author/admin-only; stale command flags + stamps — `tests/Feature/Orders/NotificationTest.php` (6 tests). `composer check` green (335 tests).
 
 ---
 

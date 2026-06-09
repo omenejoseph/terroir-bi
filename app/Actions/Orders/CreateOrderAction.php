@@ -7,6 +7,7 @@ namespace App\Actions\Orders;
 use App\Enums\OrderStatus;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Services\Notifications\Notifier;
 use App\Services\Orders\OrderLineWriter;
 use App\Services\Orders\OrderNumberGenerator;
 use App\Services\Orders\OrderTotals;
@@ -24,6 +25,7 @@ class CreateOrderAction
         private readonly OrderNumberGenerator $numbers,
         private readonly OrderLineWriter $lines,
         private readonly OrderTotals $totals,
+        private readonly Notifier $notifier,
     ) {}
 
     /**
@@ -31,7 +33,7 @@ class CreateOrderAction
      */
     public function execute(Customer $customer, string $createdById, array $data): Order
     {
-        return DB::transaction(function () use ($customer, $createdById, $data): Order {
+        $order = DB::transaction(function () use ($customer, $createdById, $data): Order {
             $status = isset($data['status'])
                 ? OrderStatus::from((string) $data['status'])
                 : OrderStatus::Received;
@@ -74,5 +76,10 @@ class CreateOrderAction
 
             return $order;
         });
+
+        // Emitted after the order commits so a notification failure can't roll it back.
+        $this->notifier->orderCreated($order->loadMissing('customer'));
+
+        return $order;
     }
 }

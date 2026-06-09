@@ -31,6 +31,7 @@ use Illuminate\Support\Carbon;
  * @property bool $shipping_paid_by_us
  * @property bool $is_consignment
  * @property Carbon|null $consignment_closed_at
+ * @property Carbon|null $last_stale_notified_at
  * @property Carbon|null $created_at
  */
 class Order extends Model

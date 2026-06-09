@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InventoryItemController;
 use App\Http\Controllers\Api\InvitationController;
 use App\Http\Controllers\Api\MemberController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\OrderCommentController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PriceController;
 use App\Http\Controllers\Api\PricingTierController;
@@ -111,11 +113,19 @@ Route::prefix('v1')->group(function () {
             Route::delete('customers/{customer}/order-token', [CustomerController::class, 'revokeToken']);
         });
 
+        // In-app notification feed (any member).
+        Route::get('notifications', [NotificationController::class, 'index']);
+        Route::post('notifications/read', [NotificationController::class, 'read']);
+
         // Orders.
         Route::middleware('can:orders.view')->group(function () {
             Route::get('orders', [OrderController::class, 'index']);
             Route::get('orders/{order}', [OrderController::class, 'show']);
             Route::get('orders/{order}/consignment', [ConsignmentController::class, 'summary']);
+            // Comments (participation): any order viewer; edit/delete is author/admin.
+            Route::post('orders/{order}/comments', [OrderCommentController::class, 'store']);
+            Route::patch('order-comments/{orderNote}', [OrderCommentController::class, 'update']);
+            Route::delete('order-comments/{orderNote}', [OrderCommentController::class, 'destroy']);
         });
         Route::middleware('can:orders.manage')->group(function () {
             Route::post('orders', [OrderController::class, 'store']);
