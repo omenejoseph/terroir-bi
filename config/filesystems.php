@@ -60,6 +60,21 @@ return [
             'report' => false,
         ],
 
+        // Private bucket for user uploads (images / tech sheets). S3-compatible:
+        // set UPLOADS_S3_ENDPOINT + path-style for MinIO / R2 / B2 / Spaces.
+        'uploads' => [
+            'driver' => 's3',
+            'key' => env('UPLOADS_S3_KEY', env('AWS_ACCESS_KEY_ID')),
+            'secret' => env('UPLOADS_S3_SECRET', env('AWS_SECRET_ACCESS_KEY')),
+            'region' => env('UPLOADS_S3_REGION', env('AWS_DEFAULT_REGION', 'us-east-1')),
+            'bucket' => env('UPLOADS_S3_BUCKET', env('AWS_BUCKET')),
+            'endpoint' => env('UPLOADS_S3_ENDPOINT', env('AWS_ENDPOINT')),
+            'use_path_style_endpoint' => env('UPLOADS_S3_PATH_STYLE', true),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
     ],
 
     /*

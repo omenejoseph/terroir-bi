@@ -43,9 +43,17 @@ Progress key: `[ ]` todo · `[~]` in progress · `[x]` done.
 - [x] `ProduceItemAction` + `POST /inventory-items/{id}/produce` (guarded PRODUCTION_OUT inputs, PRODUCTION_IN output, ref `PROD-{sku}`).
 - [x] `ApplyInventoryCheckAction` + `POST /inventory-items/check` → `ADJUSTMENT` rows `is_reconciliation=true`, ref `INVCHECK-{date}` (computed vs live stock).
 - [x] `PATCH /stock-movements/{id}/reconciliation` toggles the flag (no stock change); `is_reconciliation` also threadable through manual `POST .../stock`.
-- [—] `inventory_images` + `inventory_tech_sheets` tables + add/remove endpoints → **deferred to Phase 1b** (pure CRUD, no business logic; keeps this PR focused).
+- [x] `inventory_images` + `inventory_tech_sheets` tables + add/remove endpoints → **done in Phase 1b** (S3 presigned direct-to-bucket uploads).
 - [x] `Store/UpdateInventoryItemRequest` + `InventoryItemData` carry the new fields. *(Portal `hide_from_portal` **filter** in `ListInventoryItemsQuery` lands with the public catalog in Phase 4.)*
 - **Accept:** ✅ produce respects input stock (guarded) and rejects no-recipe; check writes reconciliation adjustments vs live stock — `tests/Feature/Inventory/ProduceAndCheckTest.php`. `composer check` green (243 tests).
+
+### 1b — S3 presigned uploads (images + tech sheets) ✅
+Direct-to-bucket uploads to a **private S3-compatible** bucket (`uploads` disk; MinIO/R2/B2/Spaces via endpoint + path-style).
+- [x] **General presign API** — `POST /uploads/presign` `{purpose, filename, content_type, size}` → presigned **PUT** url + headers (`PresignedUploadService` + `ObjectStore` contract / `S3ObjectStore`).
+- [x] **Security:** per-purpose MIME allowlist + hard size cap; the **Content-Type is baked into the signature** so the bucket rejects a mismatched header; the object **key is generated server-side**, namespaced `tenants/{tenant}/…`, extension derived from the MIME (never the client filename).
+- [x] **Attach with verification** — `inventory_images` / `inventory_tech_sheets` tables + `POST/GET/DELETE /inventory-items/{id}/images|tech-sheets`. Attach re-checks the object **exists**, is **within size**, and the **key is owned by the tenant** (cross-tenant keys → 422). Reads are short-lived presigned **GET** URLs (private bucket); delete removes the object.
+- **Accept:** ✅ presign returns tenant-scoped key + signed Content-Type; disallowed type / oversize / unknown purpose → 422; attach rejects foreign or missing keys; read URL minted; delete clears the object — `tests/Feature/Uploads/PresignedUploadTest.php` (7 tests).
+- [—] Hardening to revisit: bucket-side `content-length-range` via a presigned **POST policy** (PUT can't hard-cap size at the edge; we cap at presign + verify on attach), background sweep of orphaned (never-attached) objects.
 
 ---
 

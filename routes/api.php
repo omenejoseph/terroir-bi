@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CustomerProductOverrideController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InventoryItemController;
+use App\Http\Controllers\Api\InventoryMediaController;
 use App\Http\Controllers\Api\InvitationController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\NotificationController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Api\PricingTierController;
 use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\TranslationController;
+use App\Http\Controllers\Api\UploadController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -76,6 +78,8 @@ Route::prefix('v1')->group(function () {
             Route::get('inventory-items/{item}', [InventoryItemController::class, 'show']);
             Route::get('inventory-items/{item}/movements', [StockController::class, 'movements']);
             Route::get('inventory-items/{item}/recipe', [StockController::class, 'recipe']);
+            Route::get('inventory-items/{item}/images', [InventoryMediaController::class, 'listImages']);
+            Route::get('inventory-items/{item}/tech-sheets', [InventoryMediaController::class, 'listTechSheets']);
         });
         Route::middleware('can:inventory.manage')->group(function () {
             // Static segment before the {item} wildcard so it isn't treated as an id.
@@ -85,6 +89,10 @@ Route::prefix('v1')->group(function () {
             Route::post('inventory-items/{item}/stock', [StockController::class, 'adjust']);
             Route::post('inventory-items/{item}/produce', [StockController::class, 'produce']);
             Route::put('inventory-items/{item}/recipe', [StockController::class, 'setRecipe']);
+            Route::post('inventory-items/{item}/images', [InventoryMediaController::class, 'attachImage']);
+            Route::delete('inventory-items/{item}/images/{image}', [InventoryMediaController::class, 'deleteImage']);
+            Route::post('inventory-items/{item}/tech-sheets', [InventoryMediaController::class, 'attachTechSheet']);
+            Route::delete('inventory-items/{item}/tech-sheets/{techSheet}', [InventoryMediaController::class, 'deleteTechSheet']);
             Route::patch('stock-movements/{stockMovement}/reconciliation', [StockController::class, 'setReconciliation']);
         });
         Route::delete('inventory-items/{item}', [InventoryItemController::class, 'destroy'])
@@ -113,6 +121,9 @@ Route::prefix('v1')->group(function () {
             Route::post('customers/{customer}/order-token', [CustomerController::class, 'generateToken']);
             Route::delete('customers/{customer}/order-token', [CustomerController::class, 'revokeToken']);
         });
+
+        // General presigned upload URL (any member; the attach step is gated).
+        Route::post('uploads/presign', [UploadController::class, 'presign']);
 
         // In-app notification feed (any member).
         Route::get('notifications', [NotificationController::class, 'index']);
