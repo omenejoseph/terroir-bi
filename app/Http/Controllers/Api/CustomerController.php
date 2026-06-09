@@ -9,6 +9,7 @@ use App\Actions\Customers\OrderTokenAction;
 use App\Actions\Customers\UpdateCustomerAction;
 use App\DataTransferObjects\CustomerData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Customers\MergeCustomersRequest;
 use App\Http\Requests\Customers\QuickCustomerRequest;
 use App\Http\Requests\Customers\StoreCustomerRequest;
 use App\Http\Requests\Customers\UpdateCustomerRequest;
@@ -16,6 +17,7 @@ use App\Models\Customer;
 use App\Queries\CustomerInsightsQuery;
 use App\Queries\ListCustomersQuery;
 use App\Queries\ReorderRadarQuery;
+use App\Services\Customers\CustomerMergeService;
 use App\Services\Customers\LookupCompanyByVatService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,6 +43,24 @@ class CustomerController extends Controller
         $customer->save();
 
         return response()->json(['data' => CustomerData::fromModel($customer)->toArray()]);
+    }
+
+    public function mergePreview(MergeCustomersRequest $request, CustomerMergeService $service): JsonResponse
+    {
+        $winner = Customer::query()->whereKey((string) $request->validated('winner_id'))->firstOrFail();
+        /** @var list<string> $losers */
+        $losers = array_values((array) $request->validated('loser_ids'));
+
+        return response()->json(['data' => $service->preview($winner, $losers)]);
+    }
+
+    public function merge(MergeCustomersRequest $request, CustomerMergeService $service): JsonResponse
+    {
+        $winner = Customer::query()->whereKey((string) $request->validated('winner_id'))->firstOrFail();
+        /** @var list<string> $losers */
+        $losers = array_values((array) $request->validated('loser_ids'));
+
+        return response()->json(['data' => $service->merge($winner, $losers)]);
     }
 
     /** VIES/OIB lookup to auto-fill name + address on the customer form. */

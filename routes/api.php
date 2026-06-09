@@ -112,11 +112,14 @@ Route::prefix('v1')->group(function () {
         Route::middleware('can:customers.manage')->group(function () {
             Route::post('customers', [CustomerController::class, 'store']);
             Route::post('customers/quick', [CustomerController::class, 'quickStore']);
+            Route::post('customers/merge/preview', [CustomerController::class, 'mergePreview']);
             Route::patch('customers/{customer}', [CustomerController::class, 'update']);
             Route::post('customers/{customer}/contacted', [CustomerController::class, 'markContacted']);
             Route::put('customers/{customer}/product-overrides/{item}', [CustomerProductOverrideController::class, 'upsert']);
             Route::delete('customers/{customer}/product-overrides/{item}', [CustomerProductOverrideController::class, 'destroy']);
         });
+        Route::post('customers/merge', [CustomerController::class, 'merge'])
+            ->middleware('can:customers.delete');
         Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])
             ->middleware('can:customers.delete');
         Route::middleware('can:customers.tokens')->group(function () {
