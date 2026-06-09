@@ -191,6 +191,7 @@ categories; compress & store uploads.
 - **Source today:** `src/app/api/parse-*`, `upload*`, `suggest-category` route handlers.
 - **Models:** Haiku (`claude-haiku-4-5-20251001`) for screenshots/statements/category; Sonnet for receipts/invoices. *(Re-evaluate to current models on rebuild — see `07-integrations.md`.)*
 - **Provides:** parse endpoints returning structured JSON + fuzzy matches.
+- 🆕 **Status: deferred this pass.** When AI work resumes the platform will standardize on **Laravel AI** for all model access (no hand-rolled provider client). Nothing in the Customers/Inventory/Orders backend depends on it — the screenshot capture (flow 03) is draft-only.
 
 ## 9. Localization *(cross-cutting)*
 

@@ -90,11 +90,17 @@ Now backfill the deferred **soft-delete rules**: customer/inventory hard-delete 
 - **Notifications** (module 10): `notifications` table, `GET /notifications`, `POST /notifications/read`. Emit `NEW_ORDER/ORDER_STATUS/MENTION/REPLY` via a `Notifier` service. Web Push (`push_subscriptions` + `POST /push-subscriptions`) and WhatsApp are best-effort transports — **stub/queue them**; the persisted feed is the must-have.
 - **Stale-order job**: scheduled command flagging unshipped orders idle > 24h, deduped via `last_stale_notified_at`.
 
-## Phase 5 — Analytics & AI (backend)
+## Phase 5 — Analytics (backend)
 
 - **Order analytics** — `OrderAnalyticsQuery` + `GET /orders/analytics?period=`: revenue/COGS/margin, top customers/products, low-margin alerts, price realization. Respect `canSeeFinancials()`.
 - **Customer insights** (deferred from Phase 2) now computable.
-- **AI screenshot** (flow 03) — `POST /ai/parse-order-screenshot`: Claude vision extract → fuzzy product/customer match → **draft** response (no stock touched). Use the latest Claude models per [`07-integrations.md`](07-integrations.md); make the client injectable for tests; gate behind per-tenant AI key.
+
+> **AI is out of scope for this backend pass.** The platform will standardize on
+> **Laravel AI** for all model access, so no provider client is hand-rolled now.
+> The order-from-screenshot flow (03) and the fuzzy product/customer matcher are
+> **deferred**; both are draft-only (no stock effect), so they slot in later
+> without touching the Orders core. Revisit under `07-integrations.md` when AI work
+> resumes.
 
 ---
 

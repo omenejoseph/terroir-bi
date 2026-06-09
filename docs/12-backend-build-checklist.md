@@ -118,13 +118,19 @@ Progress key: `[ ]` todo · `[~]` in progress · `[x]` done.
 
 ---
 
-## Phase 5 — Analytics & AI (backend)
+## Phase 5 — Analytics (backend)
 
 - [ ] `OrderAnalyticsQuery` + `GET /orders/analytics?period=` (revenue/COGS/margin, top customers/products, low-margin), gated by `canSeeFinancials()`.
 - [ ] Spend reconciliation: scale `ORDER_DEDUCT` to live line qty; exclude `is_reconciliation`.
 - [ ] `CustomerInsightsQuery` + `GET /customers/{id}/insights` (now computable).
-- [ ] `POST /ai/parse-order-screenshot` (Claude vision → fuzzy match → **draft**; latest models per `07-integrations.md`; per-tenant key; injectable client).
-- **Accept:** analytics exclude reconciliations; screenshot parse touches no stock.
+- **Accept:** analytics exclude reconciliations.
+
+> **AI integrations are skipped this pass.** When they land they'll be built on
+> **Laravel AI** (not a hand-rolled Anthropic client). The order-from-screenshot
+> capture (`POST /ai/parse-order-screenshot`, flow 03) is **deferred** — and since
+> it's draft-only (touches no stock), it can be added later without reworking the
+> Orders module. The fuzzy product/customer matcher it depends on is likewise
+> deferred. See `07-integrations.md`.
 
 ---
 

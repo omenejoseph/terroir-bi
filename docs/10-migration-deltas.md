@@ -69,5 +69,8 @@ New since the snapshot (all ❌): `is_backorder`/`backorder_date`,
 **AI screenshot capture**. See flows 01/02/03/10 and the build plan.
 
 ## Out of scope (noted, not planned this pass)
+- **AI integrations** — deferred. The platform will use **Laravel AI** for all model
+  access; the order-from-screenshot capture (flow 03) and fuzzy matcher come later
+  (draft-only, no stock effect, so no Orders rework needed).
 - **Employees / HR** (`dashboard/employees/**`) — separate module (module 11 in `02-modules.md`).
 - **Hospitality / agency price book**, **Wine Club**, **Cellar tasting reports**, **Kitchen** inventory — tracked elsewhere; keep the `is_agency` flag only.

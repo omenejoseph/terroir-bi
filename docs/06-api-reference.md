@@ -123,7 +123,7 @@ Registration of the first user happens during tenant onboarding (flow 09).
 | POST | `/orders/{id}/consignment/return` 🆕 | — | Record return + restock |
 | POST | `/orders/{id}/consignment/close` 🆕 | — | Auto-return remainder, set `consignment_closed_at` |
 | GET | `/orders/analytics?period=` 🆕 | ADMIN | Profitability: revenue/COGS/margin, top customers/products, low-margin alerts |
-| POST | `/ai/parse-order-screenshot` 🆕 | — | Image → `{customer, items[], notes}` + fuzzy matches (draft only; see flow 03) |
+| POST | `/ai/parse-order-screenshot` 🆕 | — | Image → `{customer, items[], notes}` + fuzzy matches (draft only; see flow 03). **Deferred — will use Laravel AI; not in the current backend pass.** |
 | GET | `/public/{token}/catalog` | public | Tokenized catalog; respects `hide_prices`, `hide_from_portal`, `customer_product_overrides`, `allow_single_bottle` 🆕 |
 | POST | `/public/{token}/orders` | public | Customer self-service order; **server re-verifies prices**; rate-limited (flow 02) |
 
