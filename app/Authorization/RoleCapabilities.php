@@ -35,13 +35,30 @@ final class RoleCapabilities
                 'pricing.manage',
                 'inventory.view',
                 'inventory.manage',
+                'financials.view',
                 // customers.delete, customers.tokens and inventory.delete are ADMIN-only.
             ],
             TenantRole::Cellar->value => [
                 // Filled in as the Cellar module lands.
             ],
             TenantRole::Orders->value => [
-                // Filled in as the Orders module lands.
+                'financials.view',
+                // Order capabilities filled in as the Orders module lands.
+            ],
+            TenantRole::Manager->value => [
+                'financials.view',
+            ],
+            TenantRole::Sales->value => [
+                'financials.view',
+            ],
+            // Roles below accumulate capabilities as their modules land.
+            TenantRole::Hospitality->value => [],
+            TenantRole::Kitchen->value => [],
+            TenantRole::Employee->value => [],
+            TenantRole::WineClub->value => [],
+            TenantRole::Inventory->value => [
+                'inventory.view',
+                'inventory.manage',
             ],
         ];
     }

@@ -75,4 +75,22 @@ class MembershipContext implements Authorizer
 
         return false;
     }
+
+    /** Whether the active member may see money/margin/cost figures. */
+    public function canSeeFinancials(): bool
+    {
+        return $this->can('financials.view');
+    }
+
+    /** Whether the active member may edit orders past the 1-hour window. */
+    public function canEditOrders(): bool
+    {
+        return $this->current()?->canEditOrders() ?? false;
+    }
+
+    /** Whether the active member may see SHIPPED orders. */
+    public function canSeeShippedOrders(): bool
+    {
+        return $this->current()?->canSeeShippedOrders() ?? false;
+    }
 }

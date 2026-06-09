@@ -17,17 +17,17 @@ Progress key: `[ ]` todo · `[~]` in progress · `[x]` done.
 ## Phase 0 — Foundations  *(blocks Orders)*
 
 ### 0.1 Roles & membership flags
-- [ ] Extend `app/Enums/TenantRole.php` to 11 cases (`ADMIN, TEAM, CELLAR, ORDERS, MANAGER, SALES, HOSPITALITY, KITCHEN, EMPLOYEE, WINE_CLUB, INVENTORY`).
-- [ ] Migration: add `can_edit_orders` (bool, default false) + `can_see_shipped_orders` (bool, default false) to `memberships`.
-- [ ] `Membership` casts/fillable updated; `MembershipContext::canSeeFinancials()` (ADMIN/TEAM/MANAGER/SALES/ORDERS) + `canEditOrders()`.
-- [ ] Seeder maps legacy `role` → `memberships.roles`.
-- **Accept:** PHPStan green; a TEAM member resolves the right capabilities; tests for `canSeeFinancials`/`canEditOrders`.
+- [x] Extend `app/Enums/TenantRole.php` to 11 cases (`ADMIN, TEAM, CELLAR, ORDERS, MANAGER, SALES, HOSPITALITY, KITCHEN, EMPLOYEE, WINE_CLUB, INVENTORY`).
+- [x] Migration: add `can_edit_orders` (bool, default false) + `can_see_shipped_orders` (bool, default false) to `memberships`.
+- [x] `Membership` casts/fillable + `canEditOrders()`/`canSeeShippedOrders()` (ADMIN overrides); `MembershipContext::canSeeFinancials()` (via `financials.view` capability on ADMIN/TEAM/MANAGER/SALES/ORDERS) + `canEditOrders()`/`canSeeShippedOrders()`.
+- [—] ~~Seeder maps legacy `role` → `memberships.roles`~~ — N/A: the Laravel app has no legacy `users.role` column (roles already live on `memberships.roles`). This is a **data-cutover** task for the actual migration, not backend code.
+- **Accept:** ✅ PHPStan level 8 clean; tests for `canSeeFinancials`/`canEditOrders`/`canSeeShippedOrders` (`tests/Feature/Members/OrderPermissionsTest.php`).
 
 ### 0.2 StockLedger deduction/restoration
-- [ ] Extend `app/Services/Inventory/StockLedger.php`: `deduct(item, qty, unitType, reference, note)` → convert via `bottles_per_case` (6-dp), `lockForUpdate()`, guard negative (throw `InsufficientStockException`), write `ORDER_DEDUCT`, decrement `current_stock` — one transaction.
-- [ ] `restore(item, qty, unitType, type, reference)` mirror for deletes/returns.
-- [ ] Map `InsufficientStockException` → `422` with the source's message text.
-- **Accept:** Pest test proves no negative stock under the guard; unit conversion correct for bottles↔cases.
+- [x] Extend `app/Services/Inventory/StockLedger.php`: `deduct(item, qty, unitType, reference, note)` → convert via `bottles_per_case`, `lockForUpdate()`, guard negative (throw `InsufficientStockException`), write `ORDER_DEDUCT`, decrement `current_stock` — one transaction.
+- [x] `restore(item, qty, unitType, type, reference)` mirror for deletes/returns.
+- [x] Map `InsufficientStockException` → `422` (self-rendering) with the source's message text.
+- **Accept:** ✅ `tests/Feature/Inventory/StockLedgerDeductTest.php` proves no negative stock under the guard and correct bottles↔cases conversion.
 
 ---
 
