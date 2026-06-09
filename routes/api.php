@@ -102,6 +102,7 @@ Route::prefix('v1')->group(function () {
         Route::middleware('can:customers.view')->group(function () {
             // Static segments before the {customer} wildcard so they aren't treated as ids.
             Route::get('customers/lookup-vat', [CustomerController::class, 'lookupVat']);
+            Route::get('customers/reorder-radar', [CustomerController::class, 'reorderRadar']);
             Route::get('customers', [CustomerController::class, 'index']);
             Route::get('customers/{customer}', [CustomerController::class, 'show']);
             Route::get('customers/{customer}/insights', [CustomerController::class, 'insights'])->middleware('can:financials.view');
@@ -112,6 +113,7 @@ Route::prefix('v1')->group(function () {
             Route::post('customers', [CustomerController::class, 'store']);
             Route::post('customers/quick', [CustomerController::class, 'quickStore']);
             Route::patch('customers/{customer}', [CustomerController::class, 'update']);
+            Route::post('customers/{customer}/contacted', [CustomerController::class, 'markContacted']);
             Route::put('customers/{customer}/product-overrides/{item}', [CustomerProductOverrideController::class, 'upsert']);
             Route::delete('customers/{customer}/product-overrides/{item}', [CustomerProductOverrideController::class, 'destroy']);
         });

@@ -15,6 +15,7 @@ use App\Http\Requests\Customers\UpdateCustomerRequest;
 use App\Models\Customer;
 use App\Queries\CustomerInsightsQuery;
 use App\Queries\ListCustomersQuery;
+use App\Queries\ReorderRadarQuery;
 use App\Services\Customers\LookupCompanyByVatService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,22 @@ class CustomerController extends Controller
     public function insights(Customer $customer, CustomerInsightsQuery $query): JsonResponse
     {
         return response()->json(['data' => $query->get($customer)]);
+    }
+
+    /** Customers overdue to reorder, ranked by value-weighted urgency. */
+    public function reorderRadar(ReorderRadarQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->get()]);
+    }
+
+    /** Flag/unflag a customer as contacted (mutes it on the radar until its next order). */
+    public function markContacted(Request $request, Customer $customer): JsonResponse
+    {
+        $contacted = $request->boolean('contacted', true);
+        $customer->reorder_contacted_at = $contacted ? now() : null;
+        $customer->save();
+
+        return response()->json(['data' => CustomerData::fromModel($customer)->toArray()]);
     }
 
     /** VIES/OIB lookup to auto-fill name + address on the customer form. */
