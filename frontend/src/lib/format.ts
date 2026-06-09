@@ -60,7 +60,7 @@ export function useFormatters() {
         if (!m) return "—";
         if (m.formatted) return m.formatted;
         return new Intl.NumberFormat(locale, { style: "currency", currency: m.currency }).format(
-          m.amount / 100,
+          m.minor / 100,
         );
       },
       /** ISO/date → medium date in the org timezone. */

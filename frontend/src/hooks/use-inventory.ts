@@ -7,6 +7,7 @@ import type {
   InventoryItemInput,
   InventoryItemUpdate,
   InventoryQuery,
+  ProduceInput,
   RecipeLineInput,
   StockAdjustmentInput,
 } from "@/lib/types";
@@ -113,6 +114,18 @@ export function useAdjustStock() {
   return useMutation({
     mutationFn: (vars: { id: string; input: StockAdjustmentInput }) =>
       inventoryApi.adjustStock(vars.id, vars.input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    },
+  });
+}
+
+/** Run a production: consume recipe inputs and add finished stock. */
+export function useProduce() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; input: ProduceInput }) =>
+      inventoryApi.produce(vars.id, vars.input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["inventory"] });
     },

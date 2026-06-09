@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Boxes,
   ChevronsLeft,
+  ClipboardList,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -23,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { TenantSwitcher } from "@/components/tenant-switcher";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { NotificationsBell } from "@/components/notifications-bell";
 
 interface NavItem {
   href: string;
@@ -36,6 +38,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
   { href: "/inventory", labelKey: "nav.inventory", icon: Boxes },
+  { href: "/orders", labelKey: "nav.orders", icon: ClipboardList, cap: "orders.view" },
   { href: "/customers", labelKey: "nav.customers", icon: Users },
   { href: "/team", labelKey: "nav.team", icon: UsersRound, cap: "members.view" },
   { href: "/settings", labelKey: "nav.settings", icon: Settings, cap: "settings.manage" },
@@ -123,9 +126,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Link href="/dashboard" aria-label={APP_NAME}>
           <Logo className="size-9" />
         </Link>
-        <Button variant="ghost" size="icon" aria-label="menu" onClick={() => setMobileOpen(true)}>
-          <Menu />
-        </Button>
+        <div className="flex items-center gap-1">
+          <NotificationsBell />
+          <Button variant="ghost" size="icon" aria-label="menu" onClick={() => setMobileOpen(true)}>
+            <Menu />
+          </Button>
+        </div>
       </header>
 
       {/* Mobile drawer */}
@@ -177,6 +183,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <main className="min-w-0 flex-1 overflow-x-hidden">
+        {/* Desktop top bar — holds the notifications bell. */}
+        <div className="sticky top-0 z-20 hidden justify-end border-b border-border bg-background/70 px-4 py-2 backdrop-blur-xl md:flex sm:px-6 lg:px-8">
+          <NotificationsBell />
+        </div>
         <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
       </main>
     </div>

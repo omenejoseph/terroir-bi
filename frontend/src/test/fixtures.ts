@@ -1,5 +1,6 @@
 import type {
   AuthSession,
+  ConsignmentSummary,
   Customer,
   DashboardSummary,
   InventoryAnalytics,
@@ -7,12 +8,19 @@ import type {
   InventoryItem,
   Invitation,
   Member,
+  Notification,
+  Order,
+  OrderComment,
+  OrderItem,
+  OrderStatusEntry,
   OrganizationSettings,
   PricingTier,
   RecipeLine,
   StockMovement,
   TenantMembership,
 } from "@/lib/types";
+
+const money = (minor: number) => ({ minor, currency: "EUR", formatted: `€${(minor / 100).toFixed(2)}` });
 
 /** Reusable test fixtures shaped like the real API DTOs. */
 
@@ -84,8 +92,8 @@ export function makeItem(overrides: Partial<InventoryItem> = {}): InventoryItem 
     pack_size: null,
     base_product_id: null,
     is_auto_created: false,
-    default_price: { amount: 1500, currency: "EUR", formatted: "€15.00" },
-    cost_per_unit: { amount: 700, currency: "EUR", formatted: "€7.00" },
+    default_price: { minor: 1500, currency: "EUR", formatted: "€15.00" },
+    cost_per_unit: { minor: 700, currency: "EUR", formatted: "€7.00" },
     ...overrides,
   };
 }
@@ -229,6 +237,109 @@ export function makeDashboard(overrides: Partial<DashboardSummary> = {}): Dashbo
     recent_orders: [
       { id: "ORD-20260042", customer: "Acme Corporation", items: 5, total: 9995, status: "received", date: "Jun 8" },
     ],
+    ...overrides,
+  };
+}
+export function makeOrderItem(overrides: Partial<OrderItem> = {}): OrderItem {
+  return {
+    id: "oi_1",
+    inventory_item_id: "itm_1",
+    name: "Plavac Mali 2021",
+    sku: "PM-2021",
+    quantity: 6,
+    unit_type: "bottles",
+    unit_price: money(1500),
+    total: money(9000),
+    custom_description: null,
+    cost_per_unit: money(700),
+    ...overrides,
+  };
+}
+
+export function makeOrderStatusEntry(overrides: Partial<OrderStatusEntry> = {}): OrderStatusEntry {
+  return {
+    status: "RECEIVED",
+    note: null,
+    changed_by: { id: "usr_1", name: "Ada Lovelace" },
+    created_at: "2026-06-01T10:00:00+00:00",
+    ...overrides,
+  };
+}
+
+export function makeOrderComment(overrides: Partial<OrderComment> = {}): OrderComment {
+  return {
+    id: "cmt_1",
+    content: "Packed and ready.",
+    author: { id: "usr_1", name: "Ada Lovelace" },
+    created_at: "2026-06-01T11:00:00+00:00",
+    ...overrides,
+  };
+}
+
+export function makeOrder(overrides: Partial<Order> = {}): Order {
+  return {
+    id: "ord_1",
+    order_number: "ORD-1001",
+    status: "RECEIVED",
+    total_amount: money(9000),
+    notes: null,
+    customer: { id: "cus_1", company_name: "Acme Corporation" },
+    created_by: { id: "usr_1", name: "Ada Lovelace" },
+    is_backorder: false,
+    backorder_date: null,
+    shipping_cost: null,
+    shipping_paid_by_us: false,
+    is_consignment: false,
+    consignment_closed_at: null,
+    created_at: "2026-06-01T10:00:00+00:00",
+    items: [makeOrderItem()],
+    status_history: [makeOrderStatusEntry()],
+    comments: [],
+    ...overrides,
+  };
+}
+
+export function makeConsignmentSummary(overrides: Partial<ConsignmentSummary> = {}): ConsignmentSummary {
+  return {
+    is_consignment: true,
+    closed_at: null,
+    lines: [
+      {
+        order_item_id: "oi_1",
+        name: "Plavac Mali 2021",
+        placed: 12,
+        sold: 4,
+        returned: 0,
+        remaining: 8,
+        per_bottle_price: money(1500),
+        revenue: money(6000),
+        cogs: money(2800),
+      },
+    ],
+    totals: {
+      placed: 12,
+      sold: 4,
+      returned: 0,
+      remaining: 8,
+      revenue: money(6000),
+      cogs: money(2800),
+      profit: money(3200),
+      margin_percent: "53.33",
+    },
+    history: [{ id: "cr_1", kind: "SALE", date: "2026-06-02T10:00:00+00:00", note: null }],
+    ...overrides,
+  };
+}
+
+export function makeNotification(overrides: Partial<Notification> = {}): Notification {
+  return {
+    id: "ntf_1",
+    type: "NEW_ORDER",
+    title: "New order ORD-1001",
+    body: "Acme Corporation placed an order.",
+    link: "/orders/ord_1",
+    is_read: false,
+    created_at: "2026-06-01T10:05:00+00:00",
     ...overrides,
   };
 }

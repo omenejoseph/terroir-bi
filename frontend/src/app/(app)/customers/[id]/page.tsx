@@ -4,16 +4,19 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+import { useAuth } from "@/lib/auth/context";
 import { useCustomer } from "@/hooks/use-customers";
 import { useTranslation } from "@/i18n/context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { CustomerForm } from "@/components/customers/customer-form";
+import { CustomerConsignmentSection } from "@/components/customers/customer-consignment-section";
 
 export default function CustomerDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const { t } = useTranslation();
+  const { can } = useAuth();
   const router = useRouter();
 
   const { data: customer, isLoading, isError } = useCustomer(id);
@@ -47,6 +50,7 @@ export default function CustomerDetailPage() {
             onCancel={() => router.push("/customers")}
             onDeleted={() => router.push("/customers")}
           />
+          {can("orders.view") && <CustomerConsignmentSection customerId={customer.id} />}
         </>
       )}
     </div>

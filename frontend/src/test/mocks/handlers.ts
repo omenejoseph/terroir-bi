@@ -3,6 +3,7 @@ import { http, HttpResponse } from "msw";
 import { API_URL } from "@/lib/config";
 import {
   makeAnalytics,
+  makeConsignmentSummary,
   makeCustomer,
   makeDashboard,
   makeImage,
@@ -10,6 +11,9 @@ import {
   makeItem,
   makeMember,
   makeMovement,
+  makeNotification,
+  makeOrder,
+  makeOrderComment,
   makePricingTier,
   makeSession,
   makeSettings,
@@ -18,6 +22,8 @@ import {
 } from "@/test/fixtures";
 
 const url = (path: string) => `${API_URL}${path}`;
+
+const pageMeta = (total: number) => ({ current_page: 1, last_page: 1, per_page: 25, total });
 
 /**
  * Default happy-path handlers. Individual tests override these with
@@ -118,6 +124,92 @@ export const handlers = [
   // Inventory — recipe (read + replace).
   http.get(url("/inventory-items/:id/recipe"), () => HttpResponse.json({ data: [] })),
   http.put(url("/inventory-items/:id/recipe"), () => HttpResponse.json({ data: [] })),
+
+  // Inventory — produce (production run).
+  http.post(url("/inventory-items/:id/produce"), ({ params }) =>
+    HttpResponse.json({ data: makeItem({ id: String(params.id) }) }),
+  ),
+
+  // Orders — sub-resources first (static before :id).
+  http.get(url("/orders/analytics"), () =>
+    HttpResponse.json({
+      data: {
+        period: { from: "2026-05-01", to: "2026-06-01" },
+        revenue: { minor: 900000, currency: "EUR", formatted: "€9,000.00" },
+        cogs: { minor: 400000, currency: "EUR", formatted: "€4,000.00" },
+        gross_profit: { minor: 500000, currency: "EUR", formatted: "€5,000.00" },
+        margin_percent: "55.56",
+        order_count: 12,
+        avg_order_value: { minor: 75000, currency: "EUR", formatted: "€750.00" },
+        items_with_unknown_cost: 0,
+        consignment_revenue: { minor: 0, currency: "EUR", formatted: "€0.00" },
+        top_customers: [
+          { customer_id: "cus_1", company_name: "Acme Corporation", revenue: { minor: 600000, currency: "EUR", formatted: "€6,000.00" } },
+        ],
+        top_products: [
+          { inventory_item_id: "itm_1", name: "Plavac Mali 2021", quantity: 40, revenue: { minor: 600000, currency: "EUR", formatted: "€6,000.00" } },
+        ],
+        low_margin_orders: [],
+      },
+    }),
+  ),
+  http.get(url("/orders/:id/consignment"), () => HttpResponse.json({ data: makeConsignmentSummary() })),
+  http.post(url("/orders/:id/consignment/sale"), () => HttpResponse.json({ data: makeConsignmentSummary() })),
+  http.post(url("/orders/:id/consignment/return"), () => HttpResponse.json({ data: makeConsignmentSummary() })),
+  http.post(url("/orders/:id/consignment/close"), () =>
+    HttpResponse.json({ data: makeConsignmentSummary({ closed_at: "2026-06-03T00:00:00+00:00" }) }),
+  ),
+  http.post(url("/orders/:id/comments"), () => HttpResponse.json({ data: makeOrderComment() }, { status: 201 })),
+  http.post(url("/orders/:id/items"), ({ params }) =>
+    HttpResponse.json({ data: makeOrder({ id: String(params.id) }) }),
+  ),
+  http.patch(url("/orders/:id/status"), ({ params }) =>
+    HttpResponse.json({ data: makeOrder({ id: String(params.id) }) }),
+  ),
+  http.patch(url("/orders/:id/shipping"), ({ params }) =>
+    HttpResponse.json({ data: makeOrder({ id: String(params.id) }) }),
+  ),
+  http.patch(url("/orders/:id/notes"), ({ params }) =>
+    HttpResponse.json({ data: makeOrder({ id: String(params.id) }) }),
+  ),
+  http.patch(url("/orders/:id/backorder"), ({ params }) =>
+    HttpResponse.json({ data: makeOrder({ id: String(params.id) }) }),
+  ),
+  http.get(url("/orders/:id"), ({ params }) =>
+    HttpResponse.json({ data: makeOrder({ id: String(params.id) }) }),
+  ),
+  http.get(url("/orders"), ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const status = params.get("status");
+    const search = params.get("search")?.toLowerCase();
+    let all = [makeOrder(), makeOrder({ id: "ord_2", order_number: "ORD-1002", status: "SHIPPED" })];
+    if (status) all = all.filter((o) => o.status === status);
+    if (params.get("hide_shipped") === "true") all = all.filter((o) => o.status !== "SHIPPED");
+    if (search) all = all.filter((o) => o.order_number.toLowerCase().includes(search));
+    return HttpResponse.json({ data: all, meta: pageMeta(all.length) });
+  }),
+  http.post(url("/orders"), () => HttpResponse.json({ data: makeOrder({ id: "ord_new" }) }, { status: 201 })),
+
+  // Order items + comments.
+  http.patch(url("/order-items/:id/cost"), () => HttpResponse.json({ data: makeOrder() })),
+  http.patch(url("/order-items/:id"), () => HttpResponse.json({ data: makeOrder() })),
+  http.delete(url("/order-items/:id"), () => HttpResponse.json({ data: makeOrder({ items: [] }) })),
+  http.patch(url("/order-comments/:id"), () => HttpResponse.json({ data: makeOrderComment() })),
+  http.delete(url("/order-comments/:id"), () => new HttpResponse(null, { status: 204 })),
+
+  // Customer-level consignment.
+  http.get(url("/customers/:id/consignment"), () =>
+    HttpResponse.json({ data: { products: [], placements: [] } }),
+  ),
+  http.post(url("/customers/:id/consignment/place"), () =>
+    HttpResponse.json({ data: { order_number: "ORD-1003" } }, { status: 201 }),
+  ),
+  http.post(url("/customers/:id/consignment/sale"), () => new HttpResponse(null, { status: 204 })),
+  http.post(url("/customers/:id/consignment/return"), () => new HttpResponse(null, { status: 204 })),
+
+  // Notifications.
+  http.get(url("/notifications"), () => HttpResponse.json({ data: [makeNotification()] })),
+  http.post(url("/notifications/read"), () => new HttpResponse(null, { status: 204 })),
 
   // Customers + pricing tiers.
   http.get(url("/pricing-tiers"), () => HttpResponse.json({ data: [makePricingTier()] })),

@@ -67,7 +67,7 @@ export function itemToForm(item: InventoryItem): ItemFormState {
     sales_unit: item.sales_unit ?? "",
     vintage: item.vintage != null ? String(item.vintage) : "",
     min_stock: item.min_stock != null ? String(item.min_stock) : "",
-    default_price: item.default_price ? String(item.default_price.amount) : "",
+    default_price: item.default_price ? String(item.default_price.minor) : "",
     pack_size: item.pack_size != null ? String(item.pack_size) : "",
     is_active: item.is_active,
     is_for_sale: item.is_for_sale,

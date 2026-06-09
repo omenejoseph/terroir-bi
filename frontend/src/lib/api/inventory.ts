@@ -8,6 +8,7 @@ import type {
   InventoryQuery,
   PaginationMeta,
   InventoryAnalytics,
+  ProduceInput,
   RecipeLine,
   RecipeLineInput,
   StockAdjustmentInput,
@@ -56,6 +57,10 @@ export const inventoryApi = {
   /** PUT /inventory-items/{id}/recipe — replaces the whole recipe. */
   setRecipe: (id: string, items: RecipeLineInput[]) =>
     api.put<RecipeLine[]>(`/inventory-items/${id}/recipe`, { items }),
+
+  /** POST /inventory-items/{id}/produce — a production run (consumes recipe inputs). */
+  produce: (id: string, input: ProduceInput) =>
+    api.post<InventoryItem>(`/inventory-items/${id}/produce`, input),
 
   /** GET /inventory-items/{id}/images — attached images (presigned read URLs). */
   images: (id: string) => api.get<InventoryImage[]>(`/inventory-items/${id}/images`),

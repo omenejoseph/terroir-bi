@@ -3,13 +3,15 @@
 import * as React from "react";
 import { Plus, X } from "lucide-react";
 
-import { useRecipe, useSetRecipe } from "@/hooks/use-inventory";
+import { ApiError } from "@/lib/api/client";
+import { useProduce, useRecipe, useSetRecipe } from "@/hooks/use-inventory";
 import { useTranslation } from "@/i18n/context";
 import type { InventoryItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { useConfirm } from "@/components/ui/confirm";
 import { InventoryItemPicker } from "@/components/inventory/inventory-item-picker";
 
 interface DraftLine {
@@ -167,7 +169,71 @@ export function RecipeSection({ item, canManage }: { item: InventoryItem; canMan
             </div>
           </>
         )}
+
+        {canManage && (recipeQ.data?.length ?? 0) > 0 && <ProducePanel item={item} />}
       </CardContent>
     </Card>
+  );
+}
+
+function ProducePanel({ item }: { item: InventoryItem }) {
+  const { t } = useTranslation();
+  const confirm = useConfirm();
+  const produce = useProduce();
+  const [quantity, setQuantity] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
+  const [done, setDone] = React.useState<string | null>(null);
+
+  async function run() {
+    const qty = Number(quantity.trim());
+    if (!Number.isFinite(qty) || qty <= 0) return;
+    setError(null);
+    setDone(null);
+    const ok = await confirm({
+      title: t("inventory.produce.confirmTitle"),
+      description: t("inventory.produce.confirmBody", { quantity: qty, unit: item.unit, name: item.name }),
+    });
+    if (!ok) return;
+    try {
+      await produce.mutateAsync({ id: item.id, input: { display_quantity: qty } });
+      setDone(t("inventory.produce.success", { quantity: qty, unit: item.unit }));
+      setQuantity("");
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? (err.fieldError("quantity") ?? err.message)
+          : t("inventory.produce.errorGeneric"),
+      );
+    }
+  }
+
+  return (
+    <div className="space-y-3 border-t border-border pt-4">
+      <div>
+        <p className="text-sm font-medium">{t("inventory.produce.title")}</p>
+        <p className="text-xs text-muted-foreground">{t("inventory.produce.subtitle")}</p>
+      </div>
+      <div className="flex items-end gap-2">
+        <div className="flex-1 space-y-1">
+          <label htmlFor="produce-qty" className="text-xs text-muted-foreground">
+            {t("inventory.produce.quantityLabel")}
+          </label>
+          <Input
+            id="produce-qty"
+            type="number"
+            min={0}
+            step="any"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+          />
+        </div>
+        <Button type="button" onClick={run} disabled={produce.isPending || quantity.trim() === ""}>
+          {produce.isPending && <Spinner />}
+          {t("inventory.produce.action")}
+        </Button>
+      </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      {done && <p className="text-sm text-success">{done}</p>}
+    </div>
   );
 }

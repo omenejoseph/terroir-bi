@@ -71,7 +71,7 @@ export interface OrganizationSettingsInput {
 // ── Inventory ─────────────────────────────────────────────────────────────────
 
 export interface Money {
-  amount: number;
+  minor: number;
   currency: string;
   formatted?: string;
   [key: string]: unknown;
@@ -396,4 +396,202 @@ export interface PresignInput {
   filename: string;
   content_type: string;
   size: number;
+}
+
+// ── Orders ────────────────────────────────────────────────────────────────────
+
+/** Order lifecycle — mirrors App\Enums\OrderStatus. */
+export const ORDER_STATUSES = ["RECEIVED", "IN_PROCESS", "READY_TO_SHIP", "SHIPPED"] as const;
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+export type OrderItemUnit = "bottles" | "cases";
+
+export interface OrderItem {
+  id: string;
+  inventory_item_id: string | null;
+  name: string;
+  sku: string | null;
+  quantity: number;
+  unit_type: OrderItemUnit;
+  unit_price: Money;
+  total: Money;
+  custom_description: string | null;
+  /** Only present when the viewer has financials.view. */
+  cost_per_unit?: Money | null;
+}
+
+export interface OrderStatusEntry {
+  status: OrderStatus;
+  note: string | null;
+  changed_by: { id: string; name: string } | null;
+  created_at: string | null;
+}
+
+export interface OrderComment {
+  id: string;
+  content: string;
+  author: { id: string; name: string } | null;
+  created_at: string | null;
+}
+
+export interface Order {
+  id: string;
+  order_number: string;
+  status: OrderStatus;
+  total_amount: Money;
+  notes: string | null;
+  customer: { id: string; company_name: string } | null;
+  created_by: { id: string; name: string } | null;
+  is_backorder: boolean;
+  backorder_date: string | null;
+  shipping_cost: Money | null;
+  shipping_paid_by_us: boolean;
+  is_consignment: boolean;
+  consignment_closed_at: string | null;
+  created_at: string | null;
+  items: OrderItem[];
+  status_history: OrderStatusEntry[];
+  comments: OrderComment[];
+}
+
+/** One line in POST /orders or POST /orders/{id}/items. */
+export interface OrderItemInput {
+  inventory_item_id?: string | null;
+  quantity: number;
+  unit_type?: OrderItemUnit;
+  unit_price?: number;
+  custom_description?: string | null;
+}
+
+/** Payload for POST /orders. Money inputs are integer minor units. */
+export interface OrderInput {
+  customer_id: string;
+  notes?: string | null;
+  status?: OrderStatus;
+  is_backorder?: boolean;
+  backorder_date?: string | null;
+  is_consignment?: boolean;
+  shipping_cost?: number | null;
+  shipping_paid_by_us?: boolean;
+  items: OrderItemInput[];
+}
+
+export interface OrderQuery {
+  status?: OrderStatus;
+  search?: string;
+  hide_shipped?: boolean;
+  page?: number;
+}
+
+/** GET /orders/analytics — money fields are Money objects. */
+export interface OrderAnalytics {
+  period: { from: string; to: string };
+  revenue: Money;
+  cogs: Money;
+  gross_profit: Money;
+  margin_percent: string;
+  order_count: number;
+  avg_order_value: Money;
+  items_with_unknown_cost: number;
+  consignment_revenue: Money;
+  top_customers: { customer_id: string; company_name: string | null; revenue: Money }[];
+  top_products: { inventory_item_id: string; name: string | null; quantity: number; revenue: Money }[];
+  low_margin_orders: {
+    order_id: string;
+    order_number: string;
+    revenue: Money;
+    cogs: Money;
+    margin_percent: string;
+  }[];
+}
+
+// ── Consignment ───────────────────────────────────────────────────────────────
+
+export interface ConsignmentLine {
+  order_item_id: string;
+  name: string;
+  placed: number;
+  sold: number;
+  returned: number;
+  remaining: number;
+  per_bottle_price: Money;
+  revenue: Money;
+  cogs: Money | null;
+}
+
+export interface ConsignmentSummary {
+  is_consignment: boolean;
+  closed_at: string | null;
+  lines: ConsignmentLine[];
+  totals: {
+    placed: number;
+    sold: number;
+    returned: number;
+    remaining: number;
+    revenue: Money;
+    cogs: Money;
+    profit: Money;
+    margin_percent: string;
+  };
+  history: { id: string; kind: "SALE" | "RETURN"; date: string; note: string | null }[];
+}
+
+export interface ConsignmentSaleInput {
+  items: { order_item_id: string; quantity: number; unit_price?: number }[];
+  note?: string | null;
+}
+
+export interface ConsignmentReturnInput {
+  items: { order_item_id: string; quantity: number }[];
+  note?: string | null;
+}
+
+/** Customer-level (FIFO) consignment rollup. */
+export interface CustomerConsignmentSummary {
+  products: {
+    inventory_item_id: string;
+    name: string;
+    placed: number;
+    sold: number;
+    returned: number;
+    remaining: number;
+  }[];
+  placements: { order_id: string; order_number: string; placed_at: string; closed_at: string | null }[];
+}
+
+export interface PlaceConsignmentInput {
+  items: { inventory_item_id: string; quantity: number; unit_type?: OrderItemUnit }[];
+  note?: string | null;
+}
+
+export interface CustomerConsignmentSaleInput {
+  items: { inventory_item_id: string; quantity: number; unit_price?: number }[];
+  note?: string | null;
+}
+
+export interface CustomerConsignmentReturnInput {
+  items: { inventory_item_id: string; quantity: number }[];
+  note?: string | null;
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+
+export const NOTIFICATION_TYPES = ["MENTION", "NEW_ORDER", "ORDER_STATUS", "REPLY"] as const;
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  link: string | null;
+  is_read: boolean;
+  created_at: string | null;
+}
+
+// ── Produce ───────────────────────────────────────────────────────────────────
+
+/** Payload for POST /inventory-items/{id}/produce. */
+export interface ProduceInput {
+  display_quantity: number;
 }
