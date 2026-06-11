@@ -62,6 +62,45 @@ class PriceController extends Controller
     }
 
     /**
+     * Tier price book for an item (tier → absolute price).
+     */
+    public function itemTierPrices(InventoryItem $item): JsonResponse
+    {
+        $rows = TierPrice::query()
+            ->where('inventory_item_id', $item->getKey())
+            ->with('pricingTier')
+            ->get()
+            ->map(fn (TierPrice $tp) => [
+                'pricing_tier_id' => $tp->pricing_tier_id,
+                'tier_name' => $tp->pricingTier?->name,
+                'rebate_percent' => $tp->pricingTier?->rebate_percent,
+                'price' => $tp->price->jsonSerialize(),
+            ])
+            ->all();
+
+        return response()->json(['data' => $rows]);
+    }
+
+    /**
+     * Customer-specific price overrides for an item (customer → absolute price).
+     */
+    public function itemCustomerPrices(InventoryItem $item): JsonResponse
+    {
+        $rows = CustomerPrice::query()
+            ->where('inventory_item_id', $item->getKey())
+            ->with('customer')
+            ->get()
+            ->map(fn (CustomerPrice $cp) => [
+                'customer_id' => $cp->customer_id,
+                'company_name' => $cp->customer?->company_name,
+                'price' => $cp->price->jsonSerialize(),
+            ])
+            ->all();
+
+        return response()->json(['data' => $rows]);
+    }
+
+    /**
      * The customer's negotiated per-product prices (absolute; override rebate).
      */
     public function customerPrices(Customer $customer): JsonResponse

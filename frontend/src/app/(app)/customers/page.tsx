@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Plus } from "lucide-react";
+import { BarChart3, ChevronDown, GitMerge, Plus } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
 import { CustomerDetailPanel } from "@/components/customers/customer-detail-panel";
+import { CustomerMergeDialog } from "@/components/customers/customer-merge-dialog";
 
 type StatusTab = "all" | "active" | "inactive";
 
@@ -26,6 +27,8 @@ export default function CustomersPage() {
   const [tab, setTab] = React.useState<StatusTab>("all");
   const [search, setSearch] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
+  const [mergeOpen, setMergeOpen] = React.useState(false);
+  const [mergedMsg, setMergedMsg] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const id = setTimeout(() => setDebounced(search), 300);
@@ -63,6 +66,22 @@ export default function CustomersPage() {
             placeholder={t("customers.search")}
             className="sm:max-w-xs"
           />
+          {can("financials.view") && (
+            <Button
+              variant="outline"
+              onClick={() => router.push("/customers/analytics")}
+              className="shrink-0"
+            >
+              <BarChart3 className="size-4" />
+              {t("customers.analytics.trigger")}
+            </Button>
+          )}
+          {can("customers.delete") && (
+            <Button variant="outline" onClick={() => setMergeOpen(true)} className="shrink-0">
+              <GitMerge className="size-4" />
+              {t("customers.merge.trigger")}
+            </Button>
+          )}
           {can("customers.manage") && (
             <Button onClick={() => router.push("/customers/new")} className="shrink-0">
               <Plus className="size-4" />
@@ -73,6 +92,10 @@ export default function CustomersPage() {
       </header>
 
       <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as StatusTab)} />
+
+      {mergedMsg && (
+        <p className="rounded-md bg-success/10 px-3 py-2 text-sm text-success">{mergedMsg}</p>
+      )}
 
       {isLoading && (
         <div className="flex items-center justify-center py-16">
@@ -105,6 +128,12 @@ export default function CustomersPage() {
           ))}
         </div>
       )}
+
+      <CustomerMergeDialog
+        open={mergeOpen}
+        onOpenChange={setMergeOpen}
+        onMerged={setMergedMsg}
+      />
     </div>
   );
 }

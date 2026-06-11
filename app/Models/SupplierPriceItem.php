@@ -45,6 +45,38 @@ class SupplierPriceItem extends Model
     }
 
     /**
+     * Audit every cost change. Fires for all write paths (manual add/edit, CSV
+     * import, upsert) since they all save the model. getOriginal() is still the
+     * pre-save value inside the saved event (syncOriginal runs after).
+     */
+    protected static function booted(): void
+    {
+        static::created(fn (SupplierPriceItem $item) => self::recordChange($item, null));
+
+        static::updated(function (SupplierPriceItem $item): void {
+            // Compare raw minor amounts — the Money cast makes wasChanged() unreliable.
+            // In the updated event, getRawOriginal() is still the pre-save value.
+            $oldMinor = $item->getRawOriginal('unit_price');
+            if ((int) $oldMinor === $item->unit_price->getMinorAmount()) {
+                return; // no cost change
+            }
+            self::recordChange($item, Money::fromMinor((int) $oldMinor, $item->unit_price->getCurrencyCode()));
+        });
+    }
+
+    private static function recordChange(self $item, ?Money $old): void
+    {
+        SupplierPriceChange::create([
+            'supplier_id' => $item->supplier_id,
+            'supplier_price_item_id' => $item->getKey(),
+            'description' => $item->description,
+            'unit' => $item->unit,
+            'old_price' => $old,
+            'new_price' => $item->unit_price,
+        ]);
+    }
+
+    /**
      * @return BelongsTo<Supplier, $this>
      */
     public function supplier(): BelongsTo

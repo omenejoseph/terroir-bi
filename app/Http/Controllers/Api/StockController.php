@@ -20,10 +20,19 @@ use App\Http\Requests\Inventory\SetReconciliationRequest;
 use App\Models\InventoryItem;
 use App\Models\RecipeItem;
 use App\Models\StockMovement;
+use App\Models\User;
+use App\Queries\InventoryItemStockAnalyticsQuery;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class StockController extends Controller
 {
+    /** Per-item stock analytics (current, realized 12m, exits + channels for a period). */
+    public function stockAnalytics(Request $request, InventoryItem $item, InventoryItemStockAnalyticsQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->get($item, (string) $request->query('period', '30d'))]);
+    }
+
     /** Recent ledger entries for an item, newest first. ULIDs sort by creation. */
     public function movements(InventoryItem $item): JsonResponse
     {
@@ -88,7 +97,10 @@ class StockController extends Controller
             (array) $request->validated('items', []),
         ));
 
-        return response()->json(['data' => $action->execute($counts)]);
+        /** @var User|null $user */
+        $user = $request->user();
+
+        return response()->json(['data' => $action->execute($counts, $user)]);
     }
 
     /** Flip a movement's reconciliation tag (no stock change). */

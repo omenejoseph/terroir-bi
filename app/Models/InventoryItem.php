@@ -117,6 +117,14 @@ class InventoryItem extends Model
     }
 
     /**
+     * @return HasMany<BottleAnalysis, $this>
+     */
+    public function bottleAnalyses(): HasMany
+    {
+        return $this->hasMany(BottleAnalysis::class);
+    }
+
+    /**
      * The recipe (bill of materials) producing this item.
      *
      * @return HasMany<RecipeItem, $this>
@@ -148,5 +156,13 @@ class InventoryItem extends Model
     public function techSheets(): HasMany
     {
         return $this->hasMany(InventoryTechSheet::class);
+    }
+
+    /**
+     * @return HasMany<InventoryDocument, $this>
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(InventoryDocument::class);
     }
 }

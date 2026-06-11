@@ -154,20 +154,50 @@ describe("CustomerDetailPage", () => {
     expect(putUrl).toContain("/customer-price/");
   });
 
-  it("generates a self-service order link", async () => {
-    let generated = false;
+  it("generates a self-service order link and shows it immediately", async () => {
     server.use(
-      http.post(`${API_URL}/customers/:id/order-token`, ({ params }) => {
-        generated = true;
-        return HttpResponse.json({
+      // Start with no token so the Generate button is shown.
+      http.get(`${API_URL}/customers/:id/order-token`, () =>
+        HttpResponse.json({ data: { order_token: null } }),
+      ),
+      http.post(`${API_URL}/customers/:id/order-token`, ({ params }) =>
+        HttpResponse.json({
           data: { ...makeCustomer({ id: String(params.id), has_order_token: true }), order_token: "tok_x" },
-        });
-      }),
+        }),
+      ),
     );
 
     renderWithProviders(<CustomerDetailPage />);
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Generate link" }));
-    await waitFor(() => expect(generated).toBe(true));
+
+    // The link appears immediately (cache is written from the response).
+    const link = await screen.findByDisplayValue(/\/order\/tok_x$/);
+    expect(link).toBeInTheDocument();
+  });
+
+  it("revokes the link and returns to the Generate button without a refresh", async () => {
+    server.use(
+      // A token exists initially.
+      http.get(`${API_URL}/customers/:id/order-token`, () =>
+        HttpResponse.json({ data: { order_token: "tok_live" } }),
+      ),
+      http.delete(`${API_URL}/customers/:id/order-token`, ({ params }) =>
+        HttpResponse.json({ data: makeCustomer({ id: String(params.id), has_order_token: false }) }),
+      ),
+    );
+
+    renderWithProviders(<CustomerDetailPage />);
+    const user = userEvent.setup();
+
+    // The active link shows first.
+    expect(await screen.findByDisplayValue(/\/order\/tok_live$/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Revoke" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Revoke" }));
+
+    // Without a page refresh, it returns to the Generate state.
+    expect(await screen.findByRole("button", { name: "Generate link" })).toBeInTheDocument();
+    expect(screen.queryByDisplayValue(/\/order\/tok_live$/)).not.toBeInTheDocument();
   });
 });

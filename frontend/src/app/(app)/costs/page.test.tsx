@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import CostsPage from "./page";
 import { API_URL } from "@/lib/config";
 import { makeCost, makeSession } from "@/test/fixtures";
+import { mockRouter } from "@/test/setup";
 import { server } from "@/test/mocks/server";
 import {
   renderWithProviders,
@@ -35,13 +36,14 @@ describe("CostsPage", () => {
     expect(screen.getByText("500,00 €")).toBeInTheDocument();
   });
 
-  it("filters by status tab (sends status param)", async () => {
-    let lastStatus: string | null = null;
+  it("filters by group tab and status dropdown", async () => {
+    const params: { group: string | null; status: string | null }[] = [];
     server.use(
       http.get(`${API_URL}/costs`, ({ request }) => {
-        lastStatus = new URL(request.url).searchParams.get("status");
+        const u = new URL(request.url).searchParams;
+        params.push({ group: u.get("group"), status: u.get("status") });
         return HttpResponse.json({
-          data: [makeCost({ status: "PAID" })],
+          data: [makeCost()],
           meta: { current_page: 1, last_page: 1, per_page: 25, total: 1 },
         });
       }),
@@ -49,16 +51,21 @@ describe("CostsPage", () => {
 
     renderWithProviders(<CostsPage />);
     const user = userEvent.setup();
-    await screen.findByRole("tab", { name: "Paid" });
-    await user.click(screen.getByRole("tab", { name: "Paid" }));
-    await waitFor(() => expect(lastStatus).toBe("PAID"));
+
+    // Tabs carry the group counts from /costs/group-counts.
+    await user.click(await screen.findByRole("tab", { name: /Invoices \(5\)/ }));
+    await waitFor(() => expect(params.at(-1)?.group).toBe("invoices"));
+
+    await user.selectOptions(screen.getByLabelText("All Statuses"), "PAID");
+    await waitFor(() => expect(params.at(-1)?.status).toBe("PAID"));
   });
 
-  it("filters by category (sends category param)", async () => {
-    let lastCategory: string | null = null;
+  it("filters by category and time period (sends date range)", async () => {
+    const params: { category: string | null; from: string | null; to: string | null }[] = [];
     server.use(
       http.get(`${API_URL}/costs`, ({ request }) => {
-        lastCategory = new URL(request.url).searchParams.get("category");
+        const u = new URL(request.url).searchParams;
+        params.push({ category: u.get("category"), from: u.get("date_from"), to: u.get("date_to") });
         return HttpResponse.json({
           data: [makeCost()],
           meta: { current_page: 1, last_page: 1, per_page: 25, total: 1 },
@@ -69,30 +76,23 @@ describe("CostsPage", () => {
     renderWithProviders(<CostsPage />);
     const user = userEvent.setup();
     await screen.findByText("June electricity");
-    await user.selectOptions(screen.getByLabelText("All categories"), "Glass");
-    await waitFor(() => expect(lastCategory).toBe("Glass"));
+
+    await user.selectOptions(screen.getByLabelText("All Categories"), "Glass");
+    await waitFor(() => expect(params.at(-1)?.category).toBe("Glass"));
+
+    // A preset period sends a date range.
+    await user.selectOptions(screen.getByLabelText("Period"), "thisMonth");
+    await waitFor(() => {
+      expect(params.at(-1)?.from).toBeTruthy();
+      expect(params.at(-1)?.to).toBeTruthy();
+    });
   });
 
-  it("creates a cost and captures the POST body", async () => {
-    let posted: Record<string, unknown> | null = null;
-    server.use(
-      http.post(`${API_URL}/costs`, async ({ request }) => {
-        posted = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({ data: makeCost({ id: "cost_new" }) }, { status: 201 });
-      }),
-    );
-
+  it("routes to the dedicated new-cost page", async () => {
     renderWithProviders(<CostsPage />);
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: /Add cost/ }));
-
-    const dialog = await screen.findByRole("dialog");
-    await user.type(within(dialog).getByLabelText("Category"), "Rent");
-    await user.type(within(dialog).getByLabelText("Total (minor units)"), "45000");
-    await user.click(within(dialog).getByRole("button", { name: "Save cost" }));
-
-    await waitFor(() => expect(posted).not.toBeNull());
-    expect(posted).toMatchObject({ category: "Rent", total_amount: 45000 });
+    expect(mockRouter.push).toHaveBeenCalledWith("/costs/new");
   });
 
   it("changes a cost status (PATCH body)", async () => {

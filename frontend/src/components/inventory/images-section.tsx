@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ImagePlus, Scissors, Trash2, Upload, X } from "lucide-react";
+import { Scissors, Trash2, Upload, X } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import {
@@ -15,6 +15,7 @@ import { useTranslation } from "@/i18n/context";
 import type { InventoryItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dropzone } from "@/components/ui/dropzone";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -43,7 +44,6 @@ export function ImagesSection({ item, canManage }: { item: InventoryItem; canMan
   const [alt, setAlt] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
 
-  const fileInput = React.useRef<HTMLInputElement>(null);
   const imgRef = React.useRef<HTMLImageElement>(null);
 
   // Keep an object URL for the working blob, revoking the previous one.
@@ -63,12 +63,9 @@ export function ImagesSection({ item, canManage }: { item: InventoryItem; canMan
     setAlt("");
     setMaxEdge(2048);
     setError(null);
-    if (fileInput.current) fileInput.current.value = "";
   }
 
-  function onPick(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  function pickFile(file: File) {
     setError(null);
     setCrop(null);
     setWorking(file);
@@ -189,20 +186,14 @@ export function ImagesSection({ item, canManage }: { item: InventoryItem; canMan
         {/* Uploader / editor */}
         {canManage && (
           <div className="border-t border-border pt-4">
-            <input
-              ref={fileInput}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              className="hidden"
-              aria-label={t("inventory.images.fileLabel")}
-              onChange={onPick}
-            />
-
             {!working ? (
-              <Button type="button" variant="outline" size="sm" onClick={() => fileInput.current?.click()}>
-                <ImagePlus className="size-4" />
-                {t("inventory.images.add")}
-              </Button>
+              <Dropzone
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                inputLabel={t("inventory.images.fileLabel")}
+                title={t("inventory.images.dropzone")}
+                hint={t("inventory.images.dropzoneHint")}
+                onFile={pickFile}
+              />
             ) : (
               <div className="space-y-4">
                 <p className="text-xs text-muted-foreground">{t("inventory.images.cropHint")}</p>

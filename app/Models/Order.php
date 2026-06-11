@@ -27,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property string $created_by_id
  * @property bool $is_backorder
  * @property Carbon|null $backorder_date
+ * @property bool $deduct_stock
  * @property Money|null $shipping_cost
  * @property bool $shipping_paid_by_us
  * @property bool $is_consignment
@@ -48,6 +49,7 @@ class Order extends Model
         'created_by_id',
         'is_backorder',
         'backorder_date',
+        'deduct_stock',
         'shipping_cost',
         'shipping_paid_by_us',
         'is_consignment',
@@ -59,6 +61,7 @@ class Order extends Model
         'status' => 'RECEIVED',
         'total_amount' => 0,
         'is_backorder' => false,
+        'deduct_stock' => true,
         'shipping_paid_by_us' => false,
         'is_consignment' => false,
     ];
@@ -70,6 +73,7 @@ class Order extends Model
             'total_amount' => MoneyCast::class,
             'shipping_cost' => MoneyCast::class,
             'is_backorder' => 'boolean',
+            'deduct_stock' => 'boolean',
             'shipping_paid_by_us' => 'boolean',
             'is_consignment' => 'boolean',
             'backorder_date' => 'datetime',

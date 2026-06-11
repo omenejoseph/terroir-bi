@@ -1,23 +1,32 @@
 import { http, HttpResponse } from "msw";
 
 import { API_URL } from "@/lib/config";
+import type { BottleAnalysis } from "@/lib/types";
 import {
   makeAnalytics,
+  makeInventorySpend,
+  makeInventoryCheck,
+  makeInventoryCheckDetail,
   makeArAging,
   makeCashFlow,
   makeConsignmentSummary,
   makeCost,
   makeCostAnalytics,
   makeCustomer,
+  makeCustomerAnalytics,
+  makeMergePreview,
   makeCustomerOrderAnalytics,
   makePublicCatalog,
   makeDashboard,
   makeImage,
+  makeInventoryDocument,
   makeInflow,
   makeInvitation,
   makeItem,
   makeMember,
+  makeBottleAnalysis,
   makeMovement,
+  makeStockAnalytics,
   makeNotification,
   makeOrder,
   makeOrderComment,
@@ -27,7 +36,9 @@ import {
   makeSession,
   makeSettings,
   makeSupplier,
+  makeSupplierMergePreview,
   makeSupplierOrder,
+  makeSupplierPortal,
   makeWorkOrder,
   makeWorkOrderStats,
   tenantA,
@@ -116,6 +127,25 @@ export const handlers = [
   }),
   http.delete(url("/inventory-items/:id/images/:imageId"), () => new HttpResponse(null, { status: 204 })),
 
+  // Inventory documents.
+  http.get(url("/inventory-items/:id/documents"), () => HttpResponse.json({ data: [] })),
+  http.post(url("/inventory-items/:id/documents"), async ({ request }) => {
+    const body = (await request.json()) as { name?: string; content_type?: string };
+    return HttpResponse.json(
+      {
+        data: makeInventoryDocument({
+          id: "doc_new",
+          name: body.name ?? "file.pdf",
+          content_type: body.content_type ?? "application/pdf",
+        }),
+      },
+      { status: 201 },
+    );
+  }),
+  http.delete(url("/inventory-items/:id/documents/:documentId"), () =>
+    new HttpResponse(null, { status: 204 }),
+  ),
+
   // Inventory — create (echoes a new item; tests override to assert the payload).
   http.post(url("/inventory-items"), () =>
     HttpResponse.json({ data: makeItem({ id: "itm_new" }) }, { status: 201 }),
@@ -134,6 +164,22 @@ export const handlers = [
   // Inventory — stock movements ledger.
   http.get(url("/inventory-items/:id/movements"), () =>
     HttpResponse.json({ data: [makeMovement()] }),
+  ),
+
+  // Inventory — per-item stock analytics.
+  http.get(url("/inventory-items/:id/stock-analytics"), ({ request }) => {
+    const period = new URL(request.url).searchParams.get("period") ?? "30d";
+    return HttpResponse.json({ data: makeStockAnalytics({ period }) });
+  }),
+
+  // Inventory — bottle analyses.
+  http.get(url("/inventory-items/:id/bottle-analyses"), () => HttpResponse.json({ data: [] })),
+  http.post(url("/inventory-items/:id/bottle-analyses"), async ({ request }) => {
+    const body = (await request.json()) as Partial<BottleAnalysis>;
+    return HttpResponse.json({ data: makeBottleAnalysis(body) }, { status: 201 });
+  }),
+  http.delete(url("/inventory-items/:id/bottle-analyses/:analysisId"), () =>
+    new HttpResponse(null, { status: 204 }),
   ),
 
   // Inventory — recipe (read + replace).
@@ -237,6 +283,23 @@ export const handlers = [
   http.post(url("/customers/:id/consignment/return"), () => new HttpResponse(null, { status: 204 })),
 
   // Customer order analytics + custom pricing + order token.
+  http.get(url("/customers/analytics"), () =>
+    HttpResponse.json({ data: makeCustomerAnalytics() }),
+  ),
+  http.get(url("/customers/:id/resolved-prices"), ({ request }) => {
+    const ids = (new URL(request.url).searchParams.get("item_ids") ?? "").split(",").filter(Boolean);
+    const data: Record<string, { minor: number; currency: string }> = {};
+    for (const id of ids) data[id] = { minor: 1500, currency: "EUR" };
+    return HttpResponse.json({ data });
+  }),
+  http.post(url("/customers/merge/preview"), async ({ request }) => {
+    const body = (await request.json()) as { winner_id: string; loser_ids: string[] };
+    return HttpResponse.json({ data: makeMergePreview(body.winner_id, body.loser_ids) });
+  }),
+  http.post(url("/customers/merge"), async ({ request }) => {
+    const body = (await request.json()) as { winner_id: string; loser_ids: string[] };
+    return HttpResponse.json({ data: makeMergePreview(body.winner_id, body.loser_ids, true) });
+  }),
   http.get(url("/customers/:id/order-analytics"), () =>
     HttpResponse.json({ data: makeCustomerOrderAnalytics() }),
   ),
@@ -256,6 +319,16 @@ export const handlers = [
   http.delete(url("/inventory-items/:item/customer-price/:customer"), () =>
     new HttpResponse(null, { status: 204 }),
   ),
+
+  // Inventory — per-item price books (tier + customer).
+  http.get(url("/inventory-items/:id/tier-prices"), () => HttpResponse.json({ data: [] })),
+  http.put(url("/inventory-items/:item/tier-price/:tier"), () =>
+    HttpResponse.json({ data: { minor: 1999, currency: "EUR", formatted: "€19.99" } }),
+  ),
+  http.delete(url("/inventory-items/:item/tier-price/:tier"), () =>
+    new HttpResponse(null, { status: 204 }),
+  ),
+  http.get(url("/inventory-items/:id/customer-prices"), () => HttpResponse.json({ data: [] })),
 
   // Public self-service order flow (token in URL, no auth).
   http.get(url("/public/:token/catalog"), () => HttpResponse.json({ data: makePublicCatalog() })),
@@ -322,6 +395,24 @@ export const handlers = [
   // Inventory — taxonomy + analytics. Static segments must precede the /:id matcher.
   http.get(url("/inventory-items/taxonomy"), () => HttpResponse.json({ data: [] })),
   http.get(url("/inventory-items/analytics"), () => HttpResponse.json({ data: makeAnalytics() })),
+  http.get(url("/inventory-items/spend"), () => HttpResponse.json({ data: makeInventorySpend() })),
+
+  // Inventory check (stocktake) + audit history.
+  http.post(url("/inventory-items/check"), async ({ request }) => {
+    const body = (await request.json()) as { items: { item_id: string; physical_count: number }[] };
+    return HttpResponse.json({
+      data: body.items.map((i) => ({ item_id: i.item_id, difference: "-10.000" })),
+    });
+  }),
+  http.get(url("/inventory-checks"), () =>
+    HttpResponse.json({
+      data: [makeInventoryCheck()],
+      meta: { current_page: 1, last_page: 1, per_page: 15, total: 1 },
+    }),
+  ),
+  http.get(url("/inventory-checks/:id"), ({ params }) =>
+    HttpResponse.json({ data: makeInventoryCheckDetail({ id: String(params.id) }) }),
+  ),
 
   // Inventory — single item (detail page). Must come after the more specific
   // /movements, /recipe and /taxonomy routes above so it doesn't shadow them.
@@ -358,7 +449,67 @@ export const handlers = [
       { status: 201 },
     );
   }),
+  http.patch(url("/suppliers/:id/price-items/:priceItem"), async ({ request, params }) => {
+    const body = (await request.json()) as { description: string; unit_price: number };
+    return HttpResponse.json({
+      data: makePriceItem({
+        id: String(params.priceItem),
+        description: body.description,
+        unit_price: money(body.unit_price),
+      }),
+    });
+  }),
   http.delete(url("/suppliers/:id/price-items/:priceItem"), () => new HttpResponse(null, { status: 204 })),
+  http.post(url("/suppliers/merge/preview"), async ({ request }) => {
+    const body = (await request.json()) as { winner_id: string; loser_ids: string[] };
+    return HttpResponse.json({ data: makeSupplierMergePreview(body.winner_id, body.loser_ids) });
+  }),
+  http.post(url("/suppliers/merge"), async ({ request }) => {
+    const body = (await request.json()) as { winner_id: string; loser_ids: string[] };
+    return HttpResponse.json({ data: makeSupplierMergePreview(body.winner_id, body.loser_ids, true) });
+  }),
+  http.get(url("/suppliers/:id/stats"), () =>
+    HttpResponse.json({ data: { price_items: 2, cost_entries: 3, total_costs: money(45000) } }),
+  ),
+  http.get(url("/suppliers/:id/price-changes"), () =>
+    HttpResponse.json({
+      data: [
+        {
+          id: "spc_1",
+          description: "Natural cork 44mm",
+          unit: "units",
+          old_price: money(2000),
+          new_price: money(2500),
+          created_at: "2026-06-10T10:00:00+00:00",
+        },
+      ],
+    }),
+  ),
+
+  // Supplier portal token (admin)
+  http.get(url("/suppliers/:id/portal-token"), () => HttpResponse.json({ data: { portal_token: null } })),
+  http.post(url("/suppliers/:id/portal-token"), ({ params }) =>
+    HttpResponse.json({
+      data: { ...makeSupplier({ id: String(params.id), has_portal_token: true }), portal_token: "tok_abc123" },
+    }),
+  ),
+  http.delete(url("/suppliers/:id/portal-token"), ({ params }) =>
+    HttpResponse.json({ data: makeSupplier({ id: String(params.id), has_portal_token: false }) }),
+  ),
+
+  // Public supplier portal
+  http.get(url("/public/supplier/:token"), () => HttpResponse.json({ data: makeSupplierPortal() })),
+  http.post(url("/public/supplier/:token/price-items/import"), async ({ request }) => {
+    const body = (await request.json()) as { items: unknown[] };
+    return HttpResponse.json({
+      data: { added: body.items.length, updated: 0, total: body.items.length },
+    });
+  }),
+  http.patch(url("/public/supplier/:token/orders/:order/confirm"), ({ params }) =>
+    HttpResponse.json({
+      data: makeSupplierOrder({ id: String(params.order), status: "CONFIRMED" }),
+    }),
+  ),
   http.post(url("/suppliers"), () =>
     HttpResponse.json({ data: makeSupplier({ id: "sup_new" }) }, { status: 201 }),
   ),
@@ -410,7 +561,10 @@ export const handlers = [
 
   // ── Costs ───────────────────────────────────────────────────────────────────
   http.get(url("/costs/categories"), () =>
-    HttpResponse.json({ data: ["Utilities", "Glass", "Corks", "Labour"] }),
+    HttpResponse.json({ data: ["Invoice", "Payment", "Utilities", "Glass", "Corks", "Labour"] }),
+  ),
+  http.get(url("/costs/group-counts"), () =>
+    HttpResponse.json({ data: { all: 12, invoices: 5, payments: 4, others: 3 } }),
   ),
   http.get(url("/costs/analytics"), () => HttpResponse.json({ data: makeCostAnalytics() })),
   http.post(url("/costs"), () => HttpResponse.json({ data: makeCost({ id: "cost_new" }) }, { status: 201 })),

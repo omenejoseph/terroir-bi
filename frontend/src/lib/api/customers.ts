@@ -1,6 +1,9 @@
 import { api } from "@/lib/api/client";
 import type {
   Customer,
+  CustomerAnalytics,
+  MergeCustomersInput,
+  MergePreview,
   CustomerCustomPrice,
   CustomerInput,
   CustomerOrderAnalytics,
@@ -33,6 +36,22 @@ export const customersApi = {
 
   /** DELETE /customers/{id} — requires customers.delete. */
   delete: (id: string) => api.delete<void>(`/customers/${id}`),
+
+  /** GET /customers/analytics — tenant-wide customer analytics. */
+  analytics: () => api.get<CustomerAnalytics>("/customers/analytics"),
+
+  /** GET /customers/{id}/resolved-prices — per-bottle price for each item (custom/tier/rebate/default). */
+  resolvedPrices: (customerId: string, itemIds: string[]) =>
+    api.get<Record<string, Money>>(`/customers/${customerId}/resolved-prices`, {
+      item_ids: itemIds.join(","),
+    }),
+
+  /** POST /customers/merge/preview — what would move (requires customers.manage). */
+  mergePreview: (input: MergeCustomersInput) =>
+    api.post<MergePreview>("/customers/merge/preview", input),
+
+  /** POST /customers/merge — apply the merge (requires customers.delete). */
+  merge: (input: MergeCustomersInput) => api.post<MergePreview>("/customers/merge", input),
 
   /** GET /pricing-tiers — for the tier picker. */
   pricingTiers: () => api.get<PricingTier[]>("/pricing-tiers"),

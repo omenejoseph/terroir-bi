@@ -34,8 +34,9 @@ describe("Inventory item page", () => {
     const user = userEvent.setup();
 
     expect(await screen.findByRole("heading", { name: "Plavac Mali 2021" })).toBeInTheDocument();
-    await user.click(screen.getByRole("tab", { name: "Stock movements" }));
+    await user.click(screen.getByRole("tab", { name: "Stock" }));
 
+    // Movement history lives in the new Stock tab.
     expect(await screen.findByText("PO-42")).toBeInTheDocument();
     expect(screen.getByText("+25.000")).toBeInTheDocument();
   });

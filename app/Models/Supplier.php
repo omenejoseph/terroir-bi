@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $tax_id
  * @property bool $is_active
  * @property bool $exclude_from_stats
+ * @property string|null $portal_token
  */
 class Supplier extends Model
 {
@@ -35,6 +36,7 @@ class Supplier extends Model
         'notes',
         'is_active',
         'exclude_from_stats',
+        'portal_token',
     ];
 
     protected $attributes = [
@@ -56,5 +58,21 @@ class Supplier extends Model
     public function priceItems(): HasMany
     {
         return $this->hasMany(SupplierPriceItem::class);
+    }
+
+    /**
+     * @return HasMany<SupplierOrder, $this>
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(SupplierOrder::class);
+    }
+
+    /**
+     * @return HasMany<SupplierPriceChange, $this>
+     */
+    public function priceChanges(): HasMany
+    {
+        return $this->hasMany(SupplierPriceChange::class);
     }
 }

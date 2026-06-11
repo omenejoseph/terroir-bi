@@ -2,8 +2,10 @@ import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import InventoryPage from "./page";
+import NewInventoryItemPage from "./new/page";
 import { API_URL } from "@/lib/config";
 import { makeItem, makeSession } from "@/test/fixtures";
+import { mockRouter } from "@/test/setup";
 import { server } from "@/test/mocks/server";
 import {
   renderWithProviders,
@@ -15,13 +17,6 @@ import {
 } from "@/test/utils";
 
 const itemsUrl = `${API_URL}/inventory-items`;
-
-async function openAddDialog() {
-  const user = userEvent.setup();
-  await user.click(await screen.findByRole("button", { name: /Add item/ }));
-  await screen.findByText("Add inventory item");
-  return user;
-}
 
 describe("Inventory — add item", () => {
   beforeEach(() => seedLocale("en"));
@@ -43,12 +38,11 @@ describe("Inventory — add item", () => {
 
     renderWithProviders(<InventoryPage />);
 
-    // Wait for the list so the page (and auth) have settled.
     await screen.findAllByText("Plavac Mali 2021");
     expect(screen.queryByRole("button", { name: /Add item/ })).not.toBeInTheDocument();
   });
 
-  it("creates an item with the entered values and closes the dialog", async () => {
+  it("creates an item with the entered values and returns to the list", async () => {
     seedAuth();
 
     let captured: Record<string, unknown> | null = null;
@@ -59,15 +53,16 @@ describe("Inventory — add item", () => {
       }),
     );
 
-    renderWithProviders(<InventoryPage />);
-    const user = await openAddDialog();
+    renderWithProviders(<NewInventoryItemPage />);
+    const user = userEvent.setup();
 
     await user.type(screen.getByLabelText("Name"), "Test Wine");
     await user.type(screen.getByLabelText("SKU"), "TW-1");
     await user.selectOptions(screen.getByLabelText("Unit"), "case");
     await user.selectOptions(screen.getByLabelText("Sales unit"), "cases");
-    await user.type(screen.getByLabelText("Default price (per sales unit)"), "150");
-    await user.type(screen.getByLabelText("Cost per sales unit"), "7");
+    // Wine is priced per bottle regardless of the bottle/case unit.
+    await user.type(screen.getByLabelText("Default price (per Bottle)"), "150");
+    await user.type(screen.getByLabelText("Cost per Bottle"), "7");
     await user.click(screen.getByRole("button", { name: "Create item" }));
 
     await waitFor(() => expect(captured).not.toBeNull());
@@ -82,11 +77,61 @@ describe("Inventory — add item", () => {
       default_price: 15000,
       cost_per_unit: 700,
     });
+    await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith("/inventory"));
+  });
 
-    // Dialog closes on success.
-    await waitFor(() =>
-      expect(screen.queryByText("Add inventory item")).not.toBeInTheDocument(),
+  it("creates an item without a cost (COGS can come from a recipe)", async () => {
+    seedAuth();
+
+    let captured: Record<string, unknown> | null = null;
+    server.use(
+      http.post(itemsUrl, async ({ request }) => {
+        captured = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ data: makeItem({ id: "itm_new" }) }, { status: 201 });
+      }),
     );
+
+    renderWithProviders(<NewInventoryItemPage />);
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText("Name"), "No Cost Wine");
+    await user.type(screen.getByLabelText("SKU"), "NC-1");
+    // Cost left blank.
+    await user.click(screen.getByRole("button", { name: "Create item" }));
+
+    await waitFor(() => expect(captured).not.toBeNull());
+    expect(captured).toMatchObject({ name: "No Cost Wine", sku: "NC-1" });
+    expect(captured!.cost_per_unit).toBeNull();
+  });
+
+  it("hides sales unit / bottles-per-case for non-packaged units", async () => {
+    seedAuth();
+
+    let captured: Record<string, unknown> | null = null;
+    server.use(
+      http.post(itemsUrl, async ({ request }) => {
+        captured = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ data: makeItem({ id: "itm_bulk" }) }, { status: 201 });
+      }),
+    );
+
+    renderWithProviders(<NewInventoryItemPage />);
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText("Name"), "Bulk Plavac");
+    await user.type(screen.getByLabelText("SKU"), "BULK-1");
+    await user.selectOptions(screen.getByLabelText("Unit"), "liter");
+
+    // Wine-only fields disappear; price/cost are now per the chosen unit.
+    expect(screen.queryByLabelText("Sales unit")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Bottles per case")).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText("Cost per Litre"), "3");
+    await user.click(screen.getByRole("button", { name: "Create item" }));
+
+    await waitFor(() => expect(captured).not.toBeNull());
+    expect(captured).toMatchObject({ unit: "liter", cost_per_unit: 300 });
+    expect(captured).not.toHaveProperty("sales_unit");
+    expect(captured).not.toHaveProperty("bottles_per_case");
   });
 
   it("posts opening stock as a MANUAL_IN movement after creating", async () => {
@@ -102,13 +147,13 @@ describe("Inventory — add item", () => {
       }),
     );
 
-    renderWithProviders(<InventoryPage />);
-    const user = await openAddDialog();
+    renderWithProviders(<NewInventoryItemPage />);
+    const user = userEvent.setup();
 
     await user.type(screen.getByLabelText("Name"), "Opening Wine");
     await user.type(screen.getByLabelText("SKU"), "OW-1");
     await user.type(screen.getByLabelText("Opening stock (optional)"), "25");
-    await user.type(screen.getByLabelText("Cost per sales unit"), "7");
+    await user.type(screen.getByLabelText("Cost per Bottle"), "7");
     await user.click(screen.getByRole("button", { name: "Create item" }));
 
     await waitFor(() => expect(stockBody).not.toBeNull());
@@ -121,25 +166,23 @@ describe("Inventory — add item", () => {
 
     let captured: Record<string, unknown> | null = null;
     server.use(
-      http.post(`${API_URL}/inventory-items`, async ({ request }) => {
+      http.post(itemsUrl, async ({ request }) => {
         captured = (await request.json()) as Record<string, unknown>;
         return HttpResponse.json({ data: makeItem({ id: "itm_new" }) }, { status: 201 });
       }),
     );
 
-    renderWithProviders(<InventoryPage />);
-    const user = await openAddDialog();
+    renderWithProviders(<NewInventoryItemPage />);
+    const user = userEvent.setup();
 
     await user.type(screen.getByLabelText("Name"), "Pinot Noir");
     await user.type(screen.getByLabelText("SKU"), "PN-1");
 
-    // Open the group combobox, type a new value, and create it.
     await user.click(screen.getByText("e.g. Wine"));
     await user.type(screen.getByPlaceholderText("e.g. Wine"), "Wine");
     await user.click(screen.getByRole("button", { name: /Create "Wine"/ }));
 
-    await user.type(screen.getByLabelText("Cost per sales unit"), "7");
-
+    await user.type(screen.getByLabelText("Cost per Bottle"), "7");
     await user.click(screen.getByRole("button", { name: "Create item" }));
 
     await waitFor(() => expect(captured).not.toBeNull());
@@ -157,17 +200,16 @@ describe("Inventory — add item", () => {
       ),
     );
 
-    renderWithProviders(<InventoryPage />);
-    const user = await openAddDialog();
+    renderWithProviders(<NewInventoryItemPage />);
+    const user = userEvent.setup();
 
     await user.type(screen.getByLabelText("Name"), "Dup");
     await user.type(screen.getByLabelText("SKU"), "PM-2021");
-    // Unit defaults to "bottle" from the dropdown — no interaction needed.
-    await user.type(screen.getByLabelText("Cost per sales unit"), "7");
+    await user.type(screen.getByLabelText("Cost per Bottle"), "7");
     await user.click(screen.getByRole("button", { name: "Create item" }));
 
     expect(await screen.findByText("The sku has already been taken.")).toBeInTheDocument();
-    // Dialog stays open so the user can correct the error.
-    expect(screen.getByText("Add inventory item")).toBeInTheDocument();
+    // Stays on the page so the user can correct the error.
+    expect(mockRouter.push).not.toHaveBeenCalledWith("/inventory");
   });
 });

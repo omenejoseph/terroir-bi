@@ -6,11 +6,17 @@ import type {
   Cost,
   CostAnalytics,
   Customer,
+  CustomerAnalytics,
+  MergePreview,
   CustomerOrderAnalytics,
   PublicCatalog,
   DashboardSummary,
   Inflow,
   InventoryAnalytics,
+  InventorySpend,
+  InventoryCheckSummary,
+  InventoryCheckDetail,
+  InventoryDocument,
   InventoryImage,
   InventoryItem,
   Invitation,
@@ -23,10 +29,16 @@ import type {
   OrderStatusEntry,
   OrganizationSettings,
   PricingTier,
+  ItemTierPrice,
+  ItemCustomerPrice,
+  BottleAnalysis,
   RecipeLine,
+  StockAnalytics,
   StockMovement,
   Supplier,
   SupplierOrder,
+  SupplierMergePreview,
+  SupplierPortal,
   SupplierPriceItem,
   TenantMembership,
   WorkOrder,
@@ -88,6 +100,7 @@ export function makeItem(overrides: Partial<InventoryItem> = {}): InventoryItem 
     id: "itm_1",
     name: "Plavac Mali 2021",
     sku: "PM-2021",
+    description: null,
     category: "FINISHED",
     group: null,
     subcategory: null,
@@ -123,6 +136,19 @@ export function makeImage(overrides: Partial<InventoryImage> = {}): InventoryIma
   };
 }
 
+export function makeInventoryDocument(
+  overrides: Partial<InventoryDocument> = {},
+): InventoryDocument {
+  return {
+    id: "doc_1",
+    name: "lab-report.pdf",
+    content_type: "application/pdf",
+    size_bytes: 204800,
+    url: "https://bucket.test/read/doc_1.pdf",
+    ...overrides,
+  };
+}
+
 export function makeMovement(overrides: Partial<StockMovement> = {}): StockMovement {
   return {
     id: "mv_1",
@@ -137,6 +163,140 @@ export function makeMovement(overrides: Partial<StockMovement> = {}): StockMovem
   };
 }
 
+export function makeInventoryCheck(
+  overrides: Partial<InventoryCheckSummary> = {},
+): InventoryCheckSummary {
+  return {
+    id: "chk_1",
+    reference: "INVCHECK-2026-06-10",
+    performed_by: "Ada Lovelace",
+    items_counted: 2,
+    items_adjusted: 1,
+    net_difference: "-10.000",
+    created_at: "2026-06-10T10:00:00+00:00",
+    ...overrides,
+  };
+}
+
+export function makeInventoryCheckDetail(
+  overrides: Partial<InventoryCheckDetail> = {},
+): InventoryCheckDetail {
+  return {
+    ...makeInventoryCheck(),
+    lines: [
+      {
+        name: "Premium Red Blend",
+        sku: "FP-REDWINE-001",
+        system_count: "100.000",
+        physical_count: "90.000",
+        difference: "-10.000",
+      },
+    ],
+    ...overrides,
+  };
+}
+
+export function makeInventorySpend(overrides: Partial<InventorySpend> = {}): InventorySpend {
+  const zeroSummary = {
+    units_exited: 60,
+    movements: 2,
+    cost_value: money(24000),
+    revenue: money(120000),
+    distinct_skus: 1,
+  };
+  return {
+    period: { from: "2026-06-01", to: "2026-06-10", days: 10 },
+    previous_period: { from: "2026-05-22", to: "2026-05-31", days: 10 },
+    summary: zeroSummary,
+    previous: {
+      units_exited: 10,
+      movements: 1,
+      cost_value: money(4000),
+      revenue: money(0),
+      distinct_skus: 1,
+    },
+    daily: [
+      { date: "2026-06-03", units: 40 },
+      { date: "2026-06-07", units: 20 },
+    ],
+    per_product: [
+      {
+        id: "itm_1",
+        name: "Premium Red Blend",
+        sku: "FP-REDWINE-001",
+        vintage: 2024,
+        group: "Wine",
+        subcategory: "Red Wine",
+        on_hand: 150,
+        units_exited: 60,
+        prev_units_exited: 10,
+        velocity_per_day: "6.00",
+        days_left: 25,
+        cost_of_exits: money(24000),
+        revenue: money(120000),
+        daily: [0, 0, 40, 0, 0, 0, 20, 0, 0, 0],
+      },
+    ],
+    ...overrides,
+  };
+}
+
+export function makeBottleAnalysis(overrides: Partial<BottleAnalysis> = {}): BottleAnalysis {
+  return {
+    id: "ba_1",
+    analyzed_on: "2026-06-10",
+    note: null,
+    ph: null,
+    total_acidity: null,
+    volatile_acidity: null,
+    alcohol: null,
+    residual_sugar: null,
+    free_so2: null,
+    total_so2: null,
+    temperature: null,
+    density: null,
+    tpi: null,
+    ...overrides,
+  };
+}
+
+export function makeStockAnalytics(overrides: Partial<StockAnalytics> = {}): StockAnalytics {
+  return {
+    period: "30d",
+    current: {
+      stock_bottles: 150,
+      unit: "bottles",
+      bottles_per_case: 12,
+      min_stock_bottles: 50,
+      cost_per_bottle: null,
+      selling_per_bottle: money(2999),
+    },
+    realized: {
+      mean_price: money(1999),
+      rebate_percent: "33.3",
+      rebate_amount: money(1000),
+      margin_percent: "100.0",
+      margin_amount: money(1999),
+      sales_value: money(299850),
+      bottles_sold: 150,
+    },
+    exits: {
+      bottles_exited: 130,
+      cost_of_exits: null,
+      revenue_realized: money(299850),
+      mean_margin_percent: "100.0",
+      velocity_per_day: "4.33",
+      days_of_stock_left: 35,
+    },
+    channels: [
+      { channel: "sales", bottles: 100 },
+      { channel: "manual", bottles: 20 },
+      { channel: "production", bottles: 10 },
+    ],
+    ...overrides,
+  };
+}
+
 export function makeRecipeLine(overrides: Partial<RecipeLine> = {}): RecipeLine {
   return {
     input_id: "itm_2",
@@ -144,6 +304,8 @@ export function makeRecipeLine(overrides: Partial<RecipeLine> = {}): RecipeLine 
     input_sku: "GR-2022",
     input_unit: "bottle",
     quantity: "2.000",
+    input_group: "Wine",
+    input_stock: "500",
     ...overrides,
   };
 }
@@ -182,6 +344,27 @@ export function makePricingTier(overrides: Partial<PricingTier> = {}): PricingTi
   };
 }
 
+export function makeItemTierPrice(overrides: Partial<ItemTierPrice> = {}): ItemTierPrice {
+  return {
+    pricing_tier_id: "tier_1",
+    tier_name: "Wholesale",
+    rebate_percent: "10.00",
+    price: money(1999),
+    ...overrides,
+  };
+}
+
+export function makeItemCustomerPrice(
+  overrides: Partial<ItemCustomerPrice> = {},
+): ItemCustomerPrice {
+  return {
+    customer_id: "cus_1",
+    company_name: "Konoba Riva",
+    price: money(1500),
+    ...overrides,
+  };
+}
+
 export function makeCustomer(overrides: Partial<Customer> = {}): Customer {
   return {
     id: "cus_1",
@@ -207,6 +390,67 @@ export function makeCustomer(overrides: Partial<Customer> = {}): Customer {
     reorder_contacted_at: null,
     has_order_token: false,
     pricing_tier: { id: "tier_1", name: "Wholesale", rebate_percent: "10.00" },
+    ...overrides,
+  };
+}
+
+export function makeMergePreview(
+  winnerId = "cus_1",
+  loserIds: string[] = ["cus_2"],
+  applied = false,
+): MergePreview {
+  return {
+    applied,
+    winner: { id: winnerId, company_name: "Acme Corporation" },
+    losers: loserIds.map((id) => ({
+      id,
+      company_name: "Retail Shop LLC",
+      orders: 3,
+      price_reassign: 1,
+      price_drop: 0,
+      override_reassign: 0,
+      override_drop: 0,
+    })),
+    totals: {
+      orders: 3 * loserIds.length,
+      price_reassign: loserIds.length,
+      price_drop: 0,
+      override_reassign: 0,
+      override_drop: 0,
+      losers_deleted: loserIds.length,
+    },
+  };
+}
+
+export function makeCustomerAnalytics(
+  overrides: Partial<CustomerAnalytics> = {},
+): CustomerAnalytics {
+  return {
+    summary: {
+      active_customers: 1,
+      revenue_12m: money(10000),
+      top_customer: {
+        id: "cus_1",
+        company_name: "Acme Corporation",
+        contact_name: "John Smith",
+        revenue_12m: money(9995),
+      },
+    },
+    customers: [
+      {
+        customer_id: "cus_1",
+        company_name: "Acme Corporation",
+        contact_name: "John Smith",
+        revenue_12m: money(9995),
+        revenue_all_time: money(9995),
+        order_count_12m: 1,
+        avg_order_value: money(9995),
+        last_order_date: "2026-06-08T00:00:00+00:00",
+        days_since_last_order: 2,
+        median_gap_days: null,
+        expected_next_order_date: null,
+      },
+    ],
     ...overrides,
   };
 }
@@ -247,14 +491,48 @@ export function makePublicCatalog(overrides: Partial<PublicCatalog> = {}): Publi
 
 export function makeAnalytics(overrides: Partial<InventoryAnalytics> = {}): InventoryAnalytics {
   return {
-    stock_levels: [
-      { name: "Plavac Mali 2021", stock: "120" },
-      { name: "Graševina 2022", stock: "40" },
+    summary: {
+      total_active: 6,
+      low_stock: 1,
+      out_of_stock: 0,
+      for_sale: 1,
+      by_category: { FINISHED: 1, SEMI_FINISHED: 1, RAW_MATERIAL: 4 },
+      priced_count: 1,
+      sale_value: money(449850),
+      production_value: money(0),
+      margin_percent: "100",
+    },
+    portfolio_exits: {
+      period_days: 90,
+      external: {
+        units_exited: 100,
+        cost_of_exits: null,
+        revenue_realized: money(199900),
+        mean_margin_percent: "100.0",
+        mean_price: money(1999),
+        off_target_percent: "33.3",
+      },
+      blended: {
+        units_exited: 130,
+        cost_of_exits: null,
+        revenue_realized: money(199900),
+        velocity_per_day: "1.4",
+      },
+    },
+    movements_12m: [
+      { month: "2026-05", in: 0, out: 10 },
+      { month: "2026-06", in: 0, out: 120 },
     ],
-    value: { total: 449900, currency: "EUR", categories: [{ category: "FINISHED", value: 449900 }] },
+    top_products: [{ name: "Premium Red Blend", value: 449850 }],
+    by_group: [
+      { group: "Packaging", count: 4 },
+      { group: "Wine", count: 2 },
+    ],
+    stock_levels: [{ name: "Premium Red Blend", stock: "150" }],
+    value: { total: 449850, currency: "EUR", categories: [{ category: "FINISHED", value: 449850 }] },
     low_stock: {
-      below: [{ name: "Capsules", stock: "6", min: "24" }],
-      approaching: [{ name: "Corks", stock: "18", min: "20" }],
+      below: [{ name: "Cork", stock: "0", min: "100" }],
+      approaching: [],
     },
     ...overrides,
   };
@@ -557,6 +835,43 @@ export function makeSupplierOrder(overrides: Partial<SupplierOrder> = {}): Suppl
   };
 }
 
+export function makeSupplierMergePreview(
+  winnerId = "sup_1",
+  loserIds: string[] = ["sup_2"],
+  applied = false,
+): SupplierMergePreview {
+  return {
+    applied,
+    winner: { id: winnerId, company_name: "Vinogradar d.o.o." },
+    losers: loserIds.map((id) => ({
+      id,
+      company_name: "Glass Co.",
+      orders: 2,
+      costs: 1,
+      price_reassign: 3,
+      price_drop: 1,
+    })),
+    totals: {
+      orders: 2 * loserIds.length,
+      costs: loserIds.length,
+      price_reassign: 3 * loserIds.length,
+      price_drop: loserIds.length,
+      losers_deleted: loserIds.length,
+    },
+  };
+}
+
+export function makeSupplierPortal(overrides: Partial<SupplierPortal> = {}): SupplierPortal {
+  return {
+    supplier: { company_name: "Serrano and Crawford Inc", contact_name: "Hiram Richards" },
+    orders: [makeSupplierOrder({ id: "po_1", order_number: "PO-1", status: "SENT" })],
+    price_items: [
+      { id: "pli_1", description: "Natural cork 44mm", unit_price: money(2500), unit: "units" },
+    ],
+    ...overrides,
+  };
+}
+
 // ── Cash flow ─────────────────────────────────────────────────────────────────
 
 export function makeCashFlow(overrides: Partial<CashFlow> = {}): CashFlow {
@@ -607,7 +922,9 @@ export function makeWorkOrder(overrides: Partial<WorkOrder> = {}): WorkOrder {
     priority: "MEDIUM",
     status: "TODO",
     start_date: null,
-    due_date: "2026-06-10T00:00:00+00:00",
+    // Far-future so the default item is never spuriously "overdue" (which would
+    // render a board badge colliding with the "Overdue" stat tile).
+    due_date: "2030-01-01T00:00:00+00:00",
     completed_at: null,
     sort_order: 1,
     assignee: { id: "usr_1", name: "Ada Lovelace" },

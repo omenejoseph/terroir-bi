@@ -4,6 +4,7 @@ import * as React from "react";
 import { Plus, Trash2 } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
+import { majorToMinor } from "@/lib/money";
 import { useCreateSupplierOrder } from "@/hooks/use-suppliers";
 import { useSuppliers } from "@/hooks/use-suppliers";
 import { useTranslation } from "@/i18n/context";
@@ -69,7 +70,7 @@ export function SupplierOrderDialog({
           description: l.description.trim(),
           quantity: Number(l.quantity),
           unit: l.unit.trim() || null,
-          unit_price: Number(l.unit_price || 0),
+          unit_price: majorToMinor(l.unit_price) ?? 0, // major units (€) → minor
         })),
     };
     try {
@@ -141,7 +142,7 @@ export function SupplierOrderDialog({
                   aria-label={`${t("supplierOrders.form.unitPrice")} ${index + 1}`}
                   type="number"
                   min={0}
-                  step="1"
+                  step="0.01"
                   value={line.unit_price}
                   onChange={(e) => setLine(index, { unit_price: e.target.value })}
                   placeholder={t("supplierOrders.form.unitPrice")}

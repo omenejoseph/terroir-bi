@@ -1,13 +1,15 @@
 "use client";
 
 import * as React from "react";
-
-import { ChevronDown, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { BarChart3, ChevronDown, ClipboardCheck, Plus, TrendingDown } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
-import { useInventory } from "@/hooks/use-inventory";
+import { useBottleAnalyses, useInventory } from "@/hooks/use-inventory";
+import { useInventoryDocuments, useInventoryImages } from "@/hooks/use-inventory-media";
 import { useTranslation } from "@/i18n/context";
+import { withCount } from "@/lib/labels";
 import {
   INVENTORY_CATEGORIES,
   type InventoryCategory,
@@ -21,15 +23,25 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { AddInventoryItemDialog } from "@/components/inventory/add-inventory-item-dialog";
-import { InventoryCharts } from "@/components/inventory/inventory-charts";
 import { ItemOverviewSection } from "@/components/inventory/item-overview-section";
-import { StockSection } from "@/components/inventory/stock-section";
+import { StockTab } from "@/components/inventory/stock-tab";
 import { RecipeSection } from "@/components/inventory/recipe-section";
+import { ProduceSection } from "@/components/inventory/produce-section";
+import { PricingTab } from "@/components/inventory/pricing-tab";
+import { AnalysisSection } from "@/components/inventory/analysis-section";
 import { ImagesSection } from "@/components/inventory/images-section";
+import { DocumentsSection } from "@/components/inventory/documents-section";
 
 type CategoryTab = InventoryCategory | "ALL";
-type DetailTab = "overview" | "stock" | "recipe" | "images";
+type DetailTab =
+  | "overview"
+  | "pricing"
+  | "stock"
+  | "recipe"
+  | "produce"
+  | "analysis"
+  | "images"
+  | "documents";
 
 interface SubBucket {
   subcategory: string | null;
@@ -74,8 +86,8 @@ function groupItems(items: InventoryItem[]): GroupBucket[] {
 export default function InventoryPage() {
   const { t } = useTranslation();
   const { can } = useAuth();
+  const router = useRouter();
   const canManage = can("inventory.manage");
-  const [addOpen, setAddOpen] = React.useState(false);
   const [tab, setTab] = React.useState<CategoryTab>("ALL");
   const [search, setSearch] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
@@ -117,17 +129,40 @@ export default function InventoryPage() {
             placeholder={t("inventory.searchPlaceholder")}
             className="sm:max-w-xs"
           />
+          <Button
+            variant="outline"
+            onClick={() => router.push("/inventory/analytics")}
+            className="shrink-0"
+          >
+            <BarChart3 className="size-4" />
+            {t("inventory.analytics.trigger")}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/inventory/spend")}
+            className="shrink-0"
+          >
+            <TrendingDown className="size-4" />
+            {t("inventory.spend.trigger")}
+          </Button>
           {can("inventory.manage") && (
-            <Button onClick={() => setAddOpen(true)} className="shrink-0">
+            <Button
+              variant="outline"
+              onClick={() => router.push("/inventory/check")}
+              className="shrink-0"
+            >
+              <ClipboardCheck className="size-4" />
+              {t("inventory.check.trigger")}
+            </Button>
+          )}
+          {can("inventory.manage") && (
+            <Button onClick={() => router.push("/inventory/new")} className="shrink-0">
               <Plus className="size-4" />
               {t("inventory.add.trigger")}
             </Button>
           )}
         </div>
       </header>
-
-      {/* Analytics charts */}
-      <InventoryCharts />
 
       {/* Category tabs */}
       <div className="flex flex-wrap gap-1 border-b border-border">
@@ -155,8 +190,6 @@ export default function InventoryPage() {
           );
         })}
       </div>
-
-      <AddInventoryItemDialog open={addOpen} onOpenChange={setAddOpen} />
 
       {isLoading && (
         <div className="flex items-center justify-center py-16">
@@ -211,16 +244,41 @@ export default function InventoryPage() {
 
 function InventoryItemCard({ item, canManage }: { item: InventoryItem; canManage: boolean }) {
   const { t } = useTranslation();
-  const { moneyObject } = useFormatters();
+  const { can } = useAuth();
+  const { moneyObject, number } = useFormatters();
+  const canPricing = can("pricing.view");
   const [open, setOpen] = React.useState(false);
   const [detailTab, setDetailTab] = React.useState<DetailTab>("overview");
 
+  // Counts for the tab labels — only fetched once the card is expanded.
+  const analysesQ = useBottleAnalyses(open ? item.id : undefined);
+  const imagesQ = useInventoryImages(item.id, { enabled: open });
+  const documentsQ = useInventoryDocuments(item.id, { enabled: open });
+
   const tabs = [
     { value: "overview", label: t("inventory.page.overview") },
-    { value: "stock", label: t("inventory.movements.title") },
+    ...(canPricing ? [{ value: "pricing", label: t("inventory.pricing.title") }] : []),
+    { value: "stock", label: t("inventory.stock.title") },
     { value: "recipe", label: t("inventory.recipe.title") },
-    { value: "images", label: t("inventory.images.title") },
+    { value: "produce", label: t("inventory.produce.title") },
+    { value: "analysis", label: withCount(t("inventory.analysis.title"), analysesQ.data?.length) },
+    { value: "images", label: withCount(t("inventory.images.title"), imagesQ.data?.length) },
+    { value: "documents", label: withCount(t("inventory.documents.title"), documentsQ.data?.length) },
   ];
+
+  // Stock "what's left" with a bottle hint: cases → total bottles, bottles → per case.
+  const unitLower = item.unit.trim().toLowerCase();
+  const isCase = unitLower === "case" || unitLower === "cases";
+  const isBottle = unitLower === "bottle" || unitLower === "bottles";
+  const stockNum = Number(item.current_stock);
+  const stockText = Number.isFinite(stockNum) ? number(stockNum) : item.current_stock;
+  const bpc = item.bottles_per_case ?? 0;
+  const stockHint =
+    isCase && bpc > 0 && Number.isFinite(stockNum)
+      ? t("inventory.summary.totalBottles", { count: number(Math.round(stockNum * bpc)) })
+      : isBottle && bpc > 0
+        ? t("inventory.summary.perCase", { count: number(bpc) })
+        : null;
 
   return (
     <Card className="overflow-hidden">
@@ -232,11 +290,15 @@ function InventoryItemCard({ item, canManage }: { item: InventoryItem; canManage
       >
         <div className="min-w-0">
           <p className="truncate font-medium">{item.name}</p>
-          <p className="truncate text-xs text-muted-foreground">{item.sku}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {item.sku}
+            {item.vintage ? ` · ${item.vintage}` : ""}
+          </p>
         </div>
         <div className="flex shrink-0 items-center gap-3 text-sm">
           <span className="tabular-nums">
-            {item.current_stock} {item.unit}
+            {stockText} {item.unit}
+            {stockHint && <span className="text-muted-foreground"> ({stockHint})</span>}
           </span>
           <span className="hidden tabular-nums text-muted-foreground sm:inline">
             {moneyObject(item.default_price)}
@@ -266,9 +328,15 @@ function InventoryItemCard({ item, canManage }: { item: InventoryItem; canManage
                 {detailTab === "overview" && (
                   <ItemOverviewSection item={item} canManage={canManage} />
                 )}
-                {detailTab === "stock" && <StockSection item={item} canManage={canManage} />}
+                {detailTab === "pricing" && <PricingTab item={item} canManage={canManage} />}
+                {detailTab === "stock" && <StockTab item={item} canManage={canManage} />}
                 {detailTab === "recipe" && <RecipeSection item={item} canManage={canManage} />}
+                {detailTab === "produce" && <ProduceSection item={item} canManage={canManage} />}
+                {detailTab === "analysis" && <AnalysisSection item={item} canManage={canManage} />}
                 {detailTab === "images" && <ImagesSection item={item} canManage={canManage} />}
+                {detailTab === "documents" && (
+                  <DocumentsSection item={item} canManage={canManage} />
+                )}
               </>
             )}
           </div>

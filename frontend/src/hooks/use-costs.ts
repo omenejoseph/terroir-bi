@@ -20,6 +20,14 @@ export function useCostCategories() {
   });
 }
 
+/** All / Invoices / Payments / Others counts for the current filter context (sans tab group). */
+export function useCostGroupCounts(query: CostQuery = {}) {
+  return useQuery({
+    queryKey: ["costs", "group-counts", query],
+    queryFn: () => costsApi.groupCounts(query),
+  });
+}
+
 export function useCostAnalytics() {
   return useQuery({
     queryKey: ["costs", "analytics"],

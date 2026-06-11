@@ -68,6 +68,38 @@ class CostTest extends TestCase
             ->assertJsonFragment(['Glass']);
     }
 
+    public function test_group_filters_and_counts_split_by_category(): void
+    {
+        $this->postJson('/api/v1/costs', ['total_amount' => 1000, 'category' => 'Invoice', 'date' => '2026-06-05'], $this->headers())->assertCreated();
+        $this->postJson('/api/v1/costs', ['total_amount' => 2000, 'category' => 'Payment', 'date' => '2026-06-06'], $this->headers())->assertCreated();
+        $this->postJson('/api/v1/costs', ['total_amount' => 3000, 'category' => 'Glass', 'date' => '2026-06-07'], $this->headers())->assertCreated();
+        $this->postJson('/api/v1/costs', ['total_amount' => 4000, 'category' => 'Corks', 'date' => '2026-01-01'], $this->headers())->assertCreated();
+
+        // Group filter narrows the list.
+        $this->getJson('/api/v1/costs?group=invoices', $this->headers())->assertOk()->assertJsonCount(1, 'data');
+        $this->getJson('/api/v1/costs?group=others', $this->headers())->assertOk()->assertJsonCount(2, 'data'); // Glass + Corks
+
+        // Counts split by category group.
+        $this->getJson('/api/v1/costs/group-counts', $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.all', 4)
+            ->assertJsonPath('data.invoices', 1)
+            ->assertJsonPath('data.payments', 1)
+            ->assertJsonPath('data.others', 2);
+
+        // Date range filters both the list and the counts (excludes the January cost).
+        $this->getJson('/api/v1/costs?date_from=2026-06-01&date_to=2026-06-30', $this->headers())
+            ->assertOk()->assertJsonCount(3, 'data');
+        $this->getJson('/api/v1/costs/group-counts?date_from=2026-06-01&date_to=2026-06-30', $this->headers())
+            ->assertOk()->assertJsonPath('data.all', 3)->assertJsonPath('data.others', 1); // only Glass
+
+        // Categories always offer Invoice + Payment.
+        $this->getJson('/api/v1/costs/categories', $this->headers())
+            ->assertOk()
+            ->assertJsonFragment(['Invoice'])
+            ->assertJsonFragment(['Payment']);
+    }
+
     public function test_cost_analytics_summarises_spend_and_unpaid(): void
     {
         $this->postJson('/api/v1/costs', ['total_amount' => 5000, 'category' => 'Glass', 'supplier_id' => $this->supplier->getKey()], $this->headers())->assertCreated();

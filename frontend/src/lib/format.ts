@@ -60,6 +60,7 @@ export function useFormatters() {
     });
     const monthYearFmt = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric", timeZone });
     const monthShortFmt = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric", timeZone });
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
 
     return {
       currency,
@@ -91,6 +92,14 @@ export function useFormatters() {
       monthYear: (value: string | number | Date) => monthYearFmt.format(new Date(value)),
       /** ISO/date → "Sep 2026". */
       monthShort: (value: string | number | Date) => monthShortFmt.format(new Date(value)),
+      /** A number of days ago → locale phrase, e.g. "2 days ago" / "yesterday" / "today". */
+      relativeDays: (days: number) => {
+        if (days <= 0) return rtf.format(0, "day");
+        if (days < 45) return rtf.format(-days, "day");
+        const months = Math.round(days / 30);
+        if (months < 18) return rtf.format(-months, "month");
+        return rtf.format(-Math.round(days / 365), "year");
+      },
     };
   }, [locale, currency, timeZone]);
 }

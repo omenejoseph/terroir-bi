@@ -2,21 +2,21 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Plus, Truck } from "lucide-react";
+import { ChevronDown, GitMerge, Plus, Truck } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
 import { useSuppliers } from "@/hooks/use-suppliers";
 import { useTranslation } from "@/i18n/context";
-import type { SupplierQuery } from "@/lib/types";
+import type { Supplier, SupplierQuery } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
-import { SupplierForm } from "@/components/suppliers/supplier-form";
+import { SupplierDetailPanel } from "@/components/suppliers/supplier-detail-panel";
+import { SupplierMergeDialog } from "@/components/suppliers/supplier-merge-dialog";
 
 type StatusTab = "all" | "active" | "inactive";
 
@@ -27,7 +27,8 @@ export default function SuppliersPage() {
   const [tab, setTab] = React.useState<StatusTab>("all");
   const [search, setSearch] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
-  const [creating, setCreating] = React.useState(false);
+  const [mergeOpen, setMergeOpen] = React.useState(false);
+  const [mergedMsg, setMergedMsg] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const id = setTimeout(() => setDebounced(search), 300);
@@ -69,8 +70,14 @@ export default function SuppliersPage() {
             <Truck className="size-4" />
             {t("suppliers.viewOrders")}
           </Button>
+          {can("suppliers.delete") && (
+            <Button variant="outline" onClick={() => setMergeOpen(true)} className="shrink-0">
+              <GitMerge className="size-4" />
+              {t("suppliers.merge.trigger")}
+            </Button>
+          )}
           {can("suppliers.manage") && (
-            <Button onClick={() => setCreating(true)} className="shrink-0">
+            <Button onClick={() => router.push("/suppliers/new")} className="shrink-0">
               <Plus className="size-4" />
               {t("suppliers.add")}
             </Button>
@@ -79,6 +86,10 @@ export default function SuppliersPage() {
       </header>
 
       <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as StatusTab)} />
+
+      {mergedMsg && (
+        <p className="rounded-md bg-success/10 px-3 py-2 text-sm text-success">{mergedMsg}</p>
+      )}
 
       {isLoading && (
         <div className="flex items-center justify-center py-16">
@@ -107,46 +118,62 @@ export default function SuppliersPage() {
       {!isLoading && !isError && suppliers.length > 0 && (
         <div className="space-y-2">
           {suppliers.map((supplier) => (
-            <Card key={supplier.id} className="overflow-hidden">
-              <button
-                type="button"
-                onClick={() => router.push(`/suppliers/${supplier.id}`)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{supplier.company_name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {supplier.contact_name ? `${supplier.contact_name} · ` : ""}
-                    {supplier.email ?? supplier.tax_id ?? ""}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-2 text-sm">
-                  {supplier.price_items_count != null && (
-                    <Badge variant="outline">
-                      {t("suppliers.priceItemsCount", { count: supplier.price_items_count })}
-                    </Badge>
-                  )}
-                  <Badge variant={supplier.is_active ? "success" : "secondary"}>
-                    {supplier.is_active ? t("common.status.active") : t("common.status.inactive")}
-                  </Badge>
-                  <ChevronRight className="size-4 text-muted-foreground" />
-                </div>
-              </button>
-            </Card>
+            <SupplierCard key={supplier.id} supplier={supplier} />
           ))}
         </div>
       )}
 
-      <Dialog open={creating} onOpenChange={setCreating} title={t("suppliers.add")}>
-        <SupplierForm
-          supplier={null}
-          onSaved={(saved) => {
-            setCreating(false);
-            router.push(`/suppliers/${saved.id}`);
-          }}
-          onCancel={() => setCreating(false)}
-        />
-      </Dialog>
+      <SupplierMergeDialog open={mergeOpen} onOpenChange={setMergeOpen} onMerged={setMergedMsg} />
     </div>
+  );
+}
+
+function SupplierCard({ supplier }: { supplier: Supplier }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <Card className="overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+      >
+        <div className="min-w-0">
+          <p className="truncate font-medium">{supplier.company_name}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {supplier.contact_name ? `${supplier.contact_name} · ` : ""}
+            {supplier.email ?? supplier.tax_id ?? ""}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 text-sm">
+          {supplier.price_items_count != null && (
+            <Badge variant="outline">
+              {t("suppliers.priceItemsCount", { count: supplier.price_items_count })}
+            </Badge>
+          )}
+          <Badge variant={supplier.is_active ? "success" : "secondary"}>
+            {supplier.is_active ? t("common.status.active") : t("common.status.inactive")}
+          </Badge>
+          <ChevronDown
+            className={`size-4 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          />
+        </div>
+      </button>
+
+      {/* Expandable dropdown panel */}
+      <div
+        className={`grid transition-all duration-300 ease-out ${
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="border-t border-border px-4 py-4">
+            {open && <SupplierDetailPanel supplier={supplier} onDeleted={() => setOpen(false)} />}
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }

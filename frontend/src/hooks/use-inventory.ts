@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { inventoryApi } from "@/lib/api/inventory";
 import type {
+  BottleAnalysisInput,
+  InventoryCheckInput,
   InventoryItemInput,
   InventoryItemUpdate,
   InventoryQuery,
@@ -48,6 +50,136 @@ export function useStockMovements(id: string | undefined) {
     queryKey: ["inventory", "movements", id],
     queryFn: () => inventoryApi.movements(id!),
     enabled: !!id,
+  });
+}
+
+/** Per-item stock analytics for a period (current, realized 12m, exits, channels). */
+export function useStockAnalytics(id: string | undefined, period: string) {
+  return useQuery({
+    queryKey: ["inventory", "stock-analytics", id, period],
+    queryFn: () => inventoryApi.stockAnalytics(id!, period),
+    enabled: !!id,
+  });
+}
+
+/** An item's tier price book. */
+export function useItemTierPrices(id: string | undefined) {
+  return useQuery({
+    queryKey: ["inventory", "tier-prices", id],
+    queryFn: () => inventoryApi.tierPrices(id!),
+    enabled: !!id,
+  });
+}
+
+export function useSetItemTierPrice(itemId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { tierId: string; minor: number }) =>
+      inventoryApi.setTierPrice(itemId, vars.tierId, vars.minor),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["inventory", "tier-prices", itemId] }),
+  });
+}
+
+export function useRemoveItemTierPrice(itemId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (tierId: string) => inventoryApi.removeTierPrice(itemId, tierId),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["inventory", "tier-prices", itemId] }),
+  });
+}
+
+/** An item's per-customer price overrides. */
+export function useItemCustomerPrices(id: string | undefined) {
+  return useQuery({
+    queryKey: ["inventory", "customer-prices", id],
+    queryFn: () => inventoryApi.customerPrices(id!),
+    enabled: !!id,
+  });
+}
+
+export function useSetItemCustomerPrice(itemId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { customerId: string; minor: number }) =>
+      inventoryApi.setCustomerPrice(itemId, vars.customerId, vars.minor),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["inventory", "customer-prices", itemId] }),
+  });
+}
+
+export function useRemoveItemCustomerPrice(itemId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (customerId: string) => inventoryApi.removeCustomerPrice(itemId, customerId),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["inventory", "customer-prices", itemId] }),
+  });
+}
+
+/** Audit history of stocktakes (paginated). */
+export function useInventoryChecks(page: number) {
+  return useQuery({
+    queryKey: ["inventory", "checks", page],
+    queryFn: () => inventoryApi.checkHistory(page),
+  });
+}
+
+/** A single check with its adjusted lines. */
+export function useInventoryCheck(id: string | undefined) {
+  return useQuery({
+    queryKey: ["inventory", "check", id],
+    queryFn: () => inventoryApi.check(id!),
+    enabled: !!id,
+  });
+}
+
+/** Apply a physical stocktake; invalidates inventory + check history. */
+export function useApplyInventoryCheck() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: InventoryCheckInput) => inventoryApi.applyCheck(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    },
+  });
+}
+
+/** Warehouse-exit spend for a date range (FINISHED products). */
+export function useInventorySpend(from: string, to: string) {
+  return useQuery({
+    queryKey: ["inventory", "spend", from, to],
+    queryFn: () => inventoryApi.spend(from, to),
+    enabled: !!from && !!to,
+    staleTime: 60_000,
+  });
+}
+
+/** An item's bottle (enology) analyses. */
+export function useBottleAnalyses(id: string | undefined) {
+  return useQuery({
+    queryKey: ["inventory", "bottle-analyses", id],
+    queryFn: () => inventoryApi.bottleAnalyses(id!),
+    enabled: !!id,
+  });
+}
+
+export function useCreateBottleAnalysis(itemId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: BottleAnalysisInput) => inventoryApi.createBottleAnalysis(itemId, input),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["inventory", "bottle-analyses", itemId] }),
+  });
+}
+
+export function useDeleteBottleAnalysis(itemId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (analysisId: string) => inventoryApi.deleteBottleAnalysis(itemId, analysisId),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["inventory", "bottle-analyses", itemId] }),
   });
 }
 

@@ -16,6 +16,7 @@ import { useConfirm } from "@/components/ui/confirm";
 import {
   formToInput,
   InventoryItemFields,
+  isPackagedUnit,
   itemToForm,
   type ItemFormState,
 } from "@/components/inventory/inventory-item-fields";
@@ -33,6 +34,7 @@ export function ItemOverviewSection({
   const confirm = useConfirm();
 
   const yesNo = (v: boolean) => (v ? t("common.yes") : t("common.no"));
+  const packaged = isPackagedUnit(item.unit);
 
   const [editing, setEditing] = React.useState(false);
   const [form, setForm] = React.useState<ItemFormState>(() => itemToForm(item));
@@ -108,6 +110,14 @@ export function ItemOverviewSection({
           </form>
         ) : (
           <div className="space-y-4">
+            {item.description && (
+              <div className="space-y-0.5">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {t("inventory.add.descriptionLabel")}
+                </p>
+                <p className="text-sm">{item.description}</p>
+              </div>
+            )}
             <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-3">
               <Detail label={t("inventory.details.category")}>
                 {t(`inventory.category.${item.category}`)}
@@ -118,10 +128,16 @@ export function ItemOverviewSection({
                 {t(`inventory.add.unit.${item.unit}`)}
               </Detail>
               <Detail label={t("inventory.add.unitSizeLabel")}>{item.unit_size ?? "—"}</Detail>
-              <Detail label={t("inventory.add.salesUnitLabel")}>
-                {item.sales_unit ? t(`inventory.add.salesUnit.${item.sales_unit}`) : "—"}
-              </Detail>
-              <Detail label={t("inventory.add.bottlesPerCaseLabel")}>{item.bottles_per_case ?? "—"}</Detail>
+              {packaged && (
+                <>
+                  <Detail label={t("inventory.add.salesUnitLabel")}>
+                    {item.sales_unit ? t(`inventory.add.salesUnit.${item.sales_unit}`) : "—"}
+                  </Detail>
+                  <Detail label={t("inventory.add.bottlesPerCaseLabel")}>
+                    {item.bottles_per_case ?? "—"}
+                  </Detail>
+                </>
+              )}
               <Detail label={t("inventory.details.vintage")}>{item.vintage ?? "—"}</Detail>
               <Detail label={t("inventory.details.minStock")}>{item.min_stock ?? "—"}</Detail>
               <Detail label={t("inventory.details.price")}>{moneyObject(item.default_price)}</Detail>

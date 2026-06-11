@@ -11,8 +11,13 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ListCostsQuery
 {
+    /** Reserved categories that drive the All / Invoices / Payments / Others tabs. */
+    public const INVOICE_CATEGORY = 'Invoice';
+
+    public const PAYMENT_CATEGORY = 'Payment';
+
     /**
-     * @param  array{search?: ?string, category?: ?string, status?: ?string, supplier_id?: ?string}  $filters
+     * @param  array<string, mixed>  $filters
      * @return LengthAwarePaginator<int, Cost>
      */
     public function paginate(array $filters = [], int $perPage = 25): LengthAwarePaginator
@@ -21,7 +26,7 @@ class ListCostsQuery
     }
 
     /**
-     * @param  array{search?: ?string, category?: ?string, status?: ?string, supplier_id?: ?string}  $filters
+     * @param  array<string, mixed>  $filters
      * @return Builder<Cost>
      */
     public function build(array $filters): Builder
@@ -40,13 +45,37 @@ class ListCostsQuery
         }
 
         if (! empty($filters['status'])) {
-            $query->where('status', CostStatus::from($filters['status']));
+            $query->where('status', CostStatus::from((string) $filters['status']));
         }
 
         if (! empty($filters['supplier_id'])) {
             $query->where('supplier_id', $filters['supplier_id']);
         }
 
+        $this->applyGroup($query, isset($filters['group']) ? (string) $filters['group'] : null);
+
+        if (! empty($filters['date_from'])) {
+            $query->whereDate('date', '>=', $filters['date_from']);
+        }
+        if (! empty($filters['date_to'])) {
+            $query->whereDate('date', '<=', $filters['date_to']);
+        }
+
         return $query;
+    }
+
+    /**
+     * Tab group: Invoices / Payments are the reserved categories; Others is the rest.
+     *
+     * @param  Builder<Cost>  $query
+     */
+    private function applyGroup(Builder $query, ?string $group): void
+    {
+        match ($group) {
+            'invoices' => $query->where('category', self::INVOICE_CATEGORY),
+            'payments' => $query->where('category', self::PAYMENT_CATEGORY),
+            'others' => $query->whereNotIn('category', [self::INVOICE_CATEGORY, self::PAYMENT_CATEGORY]),
+            default => null,
+        };
     }
 }

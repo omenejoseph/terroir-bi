@@ -55,8 +55,8 @@ class UpdateInventoryItemRequest extends FormRequest
                 Rule::exists('inventory_items', 'id')->where('tenant_id', $tenantId),
                 'not_in:'.$itemId,
             ],
-            // Cost can be changed but not unset (no nullable) — every item keeps a COGS.
-            'cost_per_unit' => ['sometimes', 'integer', 'min:0'],
+            // Optional — can be cleared to fall back to the recipe roll-up for COGS.
+            'cost_per_unit' => ['sometimes', 'nullable', 'integer', 'min:0'],
         ];
     }
 }

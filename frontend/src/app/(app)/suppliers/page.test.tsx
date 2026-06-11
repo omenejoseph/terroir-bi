@@ -67,33 +67,27 @@ describe("SuppliersPage (list)", () => {
     await waitFor(() => expect(lastSearch).toBe("vino"));
   });
 
-  it("creates a supplier from the dialog and captures the POST body", async () => {
-    let posted: Record<string, unknown> | null = null;
-    server.use(
-      http.post(`${API_URL}/suppliers`, async ({ request }) => {
-        posted = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({ data: makeSupplier({ id: "sup_new" }) }, { status: 201 });
-      }),
-    );
-
+  it("routes to the dedicated new-supplier page", async () => {
     renderWithProviders(<SuppliersPage />);
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: /Add supplier/ }));
-
-    const dialog = await screen.findByRole("dialog");
-    await user.type(within(dialog).getByLabelText("Company name"), "New Vendor Ltd");
-    await user.click(within(dialog).getByRole("button", { name: "Create supplier" }));
-
-    await waitFor(() => expect(posted).not.toBeNull());
-    expect(posted).toMatchObject({ company_name: "New Vendor Ltd" });
-    expect(mockRouter.push).toHaveBeenCalledWith("/suppliers/sup_new");
+    expect(mockRouter.push).toHaveBeenCalledWith("/suppliers/new");
   });
 
-  it("navigates to the detail page on row click", async () => {
+  it("opens the merge dialog from the Merge button", async () => {
+    renderWithProviders(<SuppliersPage />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /Merge/ }));
+    expect(await screen.findByRole("dialog", { name: /Merge suppliers/ })).toBeInTheDocument();
+  });
+
+  it("expands a row inline to reveal its actions", async () => {
     renderWithProviders(<SuppliersPage />);
     const user = userEvent.setup();
     await user.click(await screen.findByText("Vinogradar d.o.o."));
-    expect(mockRouter.push).toHaveBeenCalledWith("/suppliers/sup_1");
+    // The expanded panel exposes the inline actions (no navigation).
+    expect(await screen.findByRole("button", { name: "Deactivate" })).toBeInTheDocument();
+    expect(mockRouter.push).not.toHaveBeenCalled();
   });
 
   it("hides the Add button for users without suppliers.manage", async () => {

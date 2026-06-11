@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AtSign, Trash2, X } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
@@ -13,6 +13,7 @@ import type { Order, OrderComment } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { MentionInput } from "@/components/ui/mention-input";
 import { Spinner } from "@/components/ui/spinner";
 import { useConfirm } from "@/components/ui/confirm";
 
@@ -20,6 +21,8 @@ export function OrderCommentsSection({ order }: { order: Order }) {
   const { t } = useTranslation();
   const { dateTime } = useFormatters();
   const add = useAddComment(order.id);
+  const members = useMembers().data ?? [];
+  const named = (id: string) => members.find((m) => m.user_id === id)?.name ?? id;
 
   const [content, setContent] = React.useState("");
   const [mentions, setMentions] = React.useState<string[]>([]);
@@ -51,12 +54,19 @@ export function OrderCommentsSection({ order }: { order: Order }) {
         )}
 
         <div className="space-y-2 border-t border-border pt-4">
-          <Input
+          <MentionInput
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={setContent}
+            onMentionsChange={setMentions}
+            members={members}
             placeholder={t("orders.comments.placeholder")}
+            aria-label={t("orders.comments.placeholder")}
           />
-          <MentionRow mentions={mentions} onChange={setMentions} />
+          {mentions.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {t("orders.comments.mentioning")} {mentions.map(named).join(", ")}
+            </p>
+          )}
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex justify-end">
             <Button type="button" size="sm" onClick={submit} disabled={add.isPending || !content.trim()}>
@@ -67,62 +77,6 @@ export function OrderCommentsSection({ order }: { order: Order }) {
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function MentionRow({
-  mentions,
-  onChange,
-}: {
-  mentions: string[];
-  onChange: (m: string[]) => void;
-}) {
-  const { t } = useTranslation();
-  const membersQ = useMembers();
-  const [open, setOpen] = React.useState(false);
-  const members = membersQ.data ?? [];
-  const named = (id: string) => members.find((m) => m.user_id === id)?.name ?? id;
-
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="relative">
-        <Button type="button" variant="outline" size="sm" onClick={() => setOpen((o) => !o)}>
-          <AtSign className="size-3.5" />
-          {t("orders.comments.mention")}
-        </Button>
-        {open && (
-          <div className="absolute z-30 mt-1 max-h-48 w-56 overflow-auto rounded-md border border-border bg-popover p-1 shadow-md">
-            {members.map((m) => (
-              <button
-                key={m.user_id}
-                type="button"
-                className="block w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
-                onClick={() => {
-                  if (!mentions.includes(m.user_id)) onChange([...mentions, m.user_id]);
-                  setOpen(false);
-                }}
-              >
-                {m.name}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-      {mentions.length > 0 && (
-        <span className="text-xs text-muted-foreground">{t("orders.comments.mentioning")}</span>
-      )}
-      {mentions.map((id) => (
-        <span
-          key={id}
-          className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs"
-        >
-          {named(id)}
-          <button type="button" onClick={() => onChange(mentions.filter((m) => m !== id))} aria-label="remove">
-            <X className="size-3" />
-          </button>
-        </span>
-      ))}
-    </div>
   );
 }
 

@@ -26,6 +26,7 @@ export function InventoryItemPicker({
   placeholder,
   searchPlaceholder,
   emptyLabel,
+  forSale = false,
 }: {
   id?: string;
   valueLabel?: string;
@@ -34,11 +35,20 @@ export function InventoryItemPicker({
   placeholder: string;
   searchPlaceholder: string;
   emptyLabel: string;
+  /** Restrict results to for-sale items (used when adding order lines). */
+  forSale?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
-  const [pos, setPos] = React.useState<{ top: number; left: number; width: number } | null>(null);
+  const [pos, setPos] = React.useState<{
+    top: number;
+    bottom: number;
+    left: number;
+    width: number;
+    openUp: boolean;
+    maxHeight: number;
+  } | null>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -48,12 +58,25 @@ export function InventoryItemPicker({
     return () => clearTimeout(t);
   }, [query]);
 
-  // Keep the portal aligned under the trigger while open (incl. on scroll).
+  // Keep the portal aligned with the trigger while open (incl. on scroll). Flip
+  // above the trigger when there's more room there, and clamp the height to the
+  // available space so the list always scrolls internally — never off-screen.
   const updatePosition = React.useCallback(() => {
     const el = triggerRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setPos({ top: r.bottom + 4, left: r.left, width: r.width });
+    const margin = 8;
+    const spaceBelow = window.innerHeight - r.bottom - margin;
+    const spaceAbove = r.top - margin;
+    const openUp = spaceBelow < 240 && spaceAbove > spaceBelow;
+    setPos({
+      top: r.bottom + 4,
+      bottom: window.innerHeight - r.top + 4,
+      left: r.left,
+      width: r.width,
+      openUp,
+      maxHeight: Math.max(140, openUp ? spaceAbove : spaceBelow),
+    });
   }, []);
 
   React.useLayoutEffect(() => {
@@ -81,7 +104,13 @@ export function InventoryItemPicker({
 
   // Only query while the dropdown is open — a closed picker makes no calls.
   // Identical queries (same search) across rows are deduped + cached.
-  const listQ = useInventory(debounced ? { search: debounced } : {}, { enabled: open });
+  const listQ = useInventory(
+    {
+      ...(debounced ? { search: debounced } : {}),
+      ...(forSale ? { is_for_sale: true } : {}),
+    },
+    { enabled: open },
+  );
   const items = React.useMemo(
     () => (listQ.data?.data ?? []).filter((i) => i.id !== excludeId),
     [listQ.data, excludeId],
@@ -115,17 +144,23 @@ export function InventoryItemPicker({
         createPortal(
           <div
             ref={dropdownRef}
-            style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}
-            className="z-50 overflow-hidden rounded-md border border-border bg-popover shadow-md"
+            style={{
+              position: "fixed",
+              left: pos.left,
+              width: pos.width,
+              maxHeight: pos.maxHeight,
+              ...(pos.openUp ? { bottom: pos.bottom } : { top: pos.top }),
+            }}
+            className="z-50 flex flex-col overflow-hidden rounded-md border border-border bg-popover shadow-md"
           >
             <input
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={searchPlaceholder}
-              className="w-full border-b border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none"
+              className="w-full shrink-0 border-b border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none"
             />
-            <ul className="max-h-56 overflow-auto p-1">
+            <ul className="flex-1 overflow-auto p-1">
               {listQ.isLoading ? (
                 <li className="flex justify-center py-3">
                   <Spinner className="size-4 text-muted-foreground" />

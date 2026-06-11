@@ -156,17 +156,46 @@ class InventoryItemTest extends TestCase
             ->assertJsonFragment(['category' => 'FINISHED', 'group' => 'Wine', 'subcategory' => 'Packaging']);
     }
 
-    public function test_create_requires_sales_unit_cost_and_bottles_per_case(): void
+    public function test_packaged_item_requires_sales_unit_and_bottles_per_case_but_not_cost(): void
     {
         $tenant = $this->createTenant();
         Sanctum::actingAs($this->createMember($tenant, [TenantRole::Team]));
 
+        // unit 'bottles' is packaged; cost is optional (can come from a recipe).
         $payload = $this->payload();
         unset($payload['sales_unit'], $payload['cost_per_unit'], $payload['bottles_per_case']);
 
         $this->postJson('/api/v1/inventory-items', $payload, $this->tenantHeader($tenant))
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['sales_unit', 'cost_per_unit', 'bottles_per_case']);
+            ->assertJsonValidationErrors(['sales_unit', 'bottles_per_case'])
+            ->assertJsonMissingValidationErrors(['cost_per_unit']);
+    }
+
+    public function test_item_can_be_created_without_a_cost(): void
+    {
+        $tenant = $this->createTenant();
+        Sanctum::actingAs($this->createMember($tenant, [TenantRole::Admin]));
+
+        $payload = $this->payload(['sku' => 'NOCOST-1']);
+        unset($payload['cost_per_unit']);
+
+        $this->postJson('/api/v1/inventory-items', $payload, $this->tenantHeader($tenant))
+            ->assertCreated()
+            ->assertJsonPath('data.cost_per_unit', null);
+    }
+
+    public function test_non_packaged_unit_does_not_require_sales_unit_or_bottles_per_case(): void
+    {
+        $tenant = $this->createTenant();
+        Sanctum::actingAs($this->createMember($tenant, [TenantRole::Admin]));
+
+        // A bulk item measured in litres: no sales_unit / bottles_per_case needed.
+        $payload = $this->payload(['sku' => 'BULK-1', 'unit' => 'litre']);
+        unset($payload['sales_unit'], $payload['bottles_per_case']);
+
+        $this->postJson('/api/v1/inventory-items', $payload, $this->tenantHeader($tenant))
+            ->assertCreated()
+            ->assertJsonPath('data.unit', 'litre');
     }
 
     public function test_stock_is_not_editable_via_update(): void
@@ -183,7 +212,7 @@ class InventoryItemTest extends TestCase
             ->assertJsonPath('data.current_stock', '0.000');
     }
 
-    public function test_cost_cannot_be_unset_on_update(): void
+    public function test_cost_can_be_cleared_on_update(): void
     {
         $tenant = $this->createTenant();
         Sanctum::actingAs($this->createMember($tenant, [TenantRole::Admin]));
@@ -191,8 +220,9 @@ class InventoryItemTest extends TestCase
         $id = $this->postJson('/api/v1/inventory-items', $this->payload(), $this->tenantHeader($tenant))
             ->assertCreated()->json('data.id');
 
+        // Clearing the cost is allowed — COGS can fall back to the recipe.
         $this->patchJson("/api/v1/inventory-items/{$id}", ['cost_per_unit' => null], $this->tenantHeader($tenant))
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['cost_per_unit']);
+            ->assertOk()
+            ->assertJsonPath('data.cost_per_unit', null);
     }
 }

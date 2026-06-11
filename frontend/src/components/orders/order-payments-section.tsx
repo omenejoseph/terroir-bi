@@ -7,6 +7,7 @@ import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
 import { useOrderPayments, useRecordPayment } from "@/hooks/use-finance";
 import { useFormatters } from "@/lib/format";
+import { majorToMinor } from "@/lib/money";
 import { useTranslation } from "@/i18n/context";
 import type { OrderPaymentSummary } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -166,7 +167,7 @@ function RecordPaymentDialog({
     setFormError(null);
     try {
       await record.mutateAsync({
-        amount: Number(amount || 0),
+        amount: majorToMinor(amount) ?? 0, // input is in major units (€)
         ...(paymentDate ? { date: paymentDate } : {}),
         ...(method.trim() ? { payment_method: method.trim() } : {}),
         ...(reference.trim() ? { reference: reference.trim() } : {}),
@@ -192,7 +193,7 @@ function RecordPaymentDialog({
             id="payment_amount"
             type="number"
             min={0}
-            step="1"
+            step="0.01"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required

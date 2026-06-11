@@ -17,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * Writes a single order line: resolves the unit price (server truth unless an
  * explicit override is given), snapshots COGS, persists the line, and — for
- * catalog lines on a non-backorder order — deducts stock (overdraw-guarded).
+ * catalog lines when the order deducts stock — deducts it (overdraw-guarded).
  * Shared by order creation and add-items so the rules live in one place.
  */
 class OrderLineWriter
@@ -55,10 +55,10 @@ class OrderLineWriter
         $override = isset($line['unit_price']) ? (int) $line['unit_price'] : null;
 
         if ($item !== null) {
-            // Price and cost are stored per sales unit, and a catalog line is
-            // always in that unit, so they apply directly — no case scaling.
-            $unitPriceMinor = $override ?? $this->pricing->resolve($customer, $item)->getMinorAmount();
-            $cost = $this->cogs->forLine($item);
+            // Price and cost are stored per bottle; a case line is scaled up by
+            // bottles_per_case.
+            $unitPriceMinor = $override ?? $this->resolvedUnitPrice($customer, $item, $unitType);
+            $cost = $this->cogs->forLine($item, $unitType);
             $costMinor = $cost?->getMinorAmount();
         } else {
             $unitPriceMinor = $override ?? 0;
@@ -75,10 +75,18 @@ class OrderLineWriter
             'custom_description' => $line['custom_description'] ?? null,
         ]);
 
-        if ($item !== null && ! $order->is_backorder) {
+        if ($item !== null && $order->deduct_stock) {
             $this->ledger->deduct($item, (string) $quantity, $unitType, $order->order_number);
         }
 
         return $orderItem;
+    }
+
+    /** Per-bottle resolved price, scaled to a case line by bottles_per_case. */
+    private function resolvedUnitPrice(Customer $customer, InventoryItem $item, string $unitType): int
+    {
+        $base = $this->pricing->resolve($customer, $item)->getMinorAmount();
+
+        return $unitType === SalesUnit::Cases->value ? $base * max(1, (int) $item->bottles_per_case) : $base;
     }
 }

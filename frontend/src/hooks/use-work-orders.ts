@@ -12,10 +12,10 @@ export function useWorkOrders(query: WorkOrderQuery = {}) {
   });
 }
 
-export function useWorkOrderStats() {
+export function useWorkOrderStats(range?: string) {
   return useQuery({
-    queryKey: ["work-orders", "stats"],
-    queryFn: () => workOrdersApi.stats(),
+    queryKey: ["work-orders", "stats", range ?? "ALL"],
+    queryFn: () => workOrdersApi.stats(range),
   });
 }
 
@@ -31,6 +31,15 @@ export function useCreateWorkOrder() {
   const invalidate = useInvalidateTasks();
   return useMutation({
     mutationFn: (input: WorkOrderInput) => workOrdersApi.create(input),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateWorkOrder() {
+  const invalidate = useInvalidateTasks();
+  return useMutation({
+    mutationFn: (vars: { id: string; input: Partial<WorkOrderInput> }) =>
+      workOrdersApi.update(vars.id, vars.input),
     onSuccess: invalidate,
   });
 }

@@ -8,6 +8,7 @@ import { server } from "@/test/mocks/server";
 import {
   renderWithProviders,
   screen,
+  seedAuth,
   seedLocale,
   userEvent,
   waitFor,
@@ -24,6 +25,43 @@ describe("InventoryPage", () => {
     // Rendered in both the mobile card list and the desktop table.
     expect((await screen.findAllByText("Plavac Mali 2021")).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Graševina 2022").length).toBeGreaterThan(0);
+  });
+
+  it("links to the analytics, spend and check pages", async () => {
+    seedAuth(); // Check is gated by inventory.manage (admin by default)
+    renderWithProviders(<InventoryPage />);
+    expect(await screen.findByRole("button", { name: /Analytics/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Spend/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Check/ })).toBeInTheDocument();
+  });
+
+  it("shows the vintage and a bottle-aware stock hint in the card summary", async () => {
+    server.use(
+      http.get(url, () =>
+        HttpResponse.json({
+          data: [
+            makeItem({
+              id: "b1", name: "Bottle Wine", sku: "BW",
+              current_stock: "60", unit: "bottles", bottles_per_case: 12, vintage: 2021,
+            }),
+            makeItem({
+              id: "c1", name: "Case Wine", sku: "CW",
+              current_stock: "5", unit: "cases", bottles_per_case: 12, vintage: 2020,
+            }),
+          ],
+          meta: { current_page: 1, last_page: 1, per_page: 25, total: 2 },
+        }),
+      ),
+    );
+
+    renderWithProviders(<InventoryPage />);
+
+    // Case item: 5 cases × 12 = 60 bottles.
+    expect((await screen.findAllByText(/60 bottles/)).length).toBeGreaterThan(0);
+    // Bottle item: shows bottles-per-case.
+    expect(screen.getAllByText(/12\/case/).length).toBeGreaterThan(0);
+    // Vintage appears in the summary line.
+    expect(screen.getAllByText(/· 2021/).length).toBeGreaterThan(0);
   });
 
   it("filters the list via the search box (debounced, re-queries the API)", async () => {
@@ -108,7 +146,7 @@ describe("InventoryPage", () => {
 
     // The dropdown panel shows the tabbed detail (overview / stock / recipe).
     expect(await screen.findByRole("tab", { name: "Recipe" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Stock movements" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Stock" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Overview" })).toBeInTheDocument();
   });
 

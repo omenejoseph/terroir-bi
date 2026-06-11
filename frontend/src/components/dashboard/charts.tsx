@@ -7,6 +7,8 @@ import {
   Bar,
   BarChart,
   Cell,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -208,6 +210,73 @@ export function StockWatchChart({
               <Cell key={d.name} fill={d.stock < d.min ? "var(--color-destructive)" : "var(--color-primary)"} />
             ))}
           </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+/** Single-series daily bars (e.g. units exited per day). */
+export function DailyBarChart({
+  data,
+  formatValue,
+}: {
+  data: { label: string; value: number }[];
+  formatValue: (n: number) => string;
+}) {
+  return (
+    <div className="h-[220px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
+          <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} minTickGap={4} />
+          <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} width={32} allowDecimals={false} />
+          <Tooltip content={<TooltipBox formatValue={formatValue} />} cursor={{ fill: "var(--color-muted)" }} />
+          <Bar dataKey="value" fill="var(--color-primary)" radius={[3, 3, 0, 0]} animationDuration={ANIM} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+/** Tiny inline trend line (no axes), or an em-dash when there's no movement. */
+export function Sparkline({ data }: { data: number[] }) {
+  if (!data.length || data.every((v) => v === 0)) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+  const points = data.map((v, i) => ({ i, v }));
+  return (
+    <div className="h-7 w-24">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={points} margin={{ top: 3, right: 2, bottom: 3, left: 2 }}>
+          <Line
+            type="monotone"
+            dataKey="v"
+            stroke="var(--color-primary)"
+            strokeWidth={1.5}
+            dot={false}
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+/** Grouped In/Out bars over months (stock movement timeseries). */
+export function MovementsBarChart({
+  data,
+}: {
+  data: { month: string; in: number; out: number }[];
+}) {
+  return (
+    <div className="h-[260px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
+          <XAxis dataKey="month" tick={AXIS_TICK} axisLine={false} tickLine={false} minTickGap={6} />
+          <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} width={32} allowDecimals={false} />
+          <Tooltip cursor={{ fill: "var(--color-muted)" }} />
+          <Bar dataKey="in" name="In" fill="#10b981" radius={[3, 3, 0, 0]} animationDuration={ANIM} />
+          <Bar dataKey="out" name="Out" fill="var(--color-destructive)" radius={[3, 3, 0, 0]} animationDuration={ANIM} />
         </BarChart>
       </ResponsiveContainer>
     </div>

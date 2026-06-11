@@ -3,9 +3,19 @@
 import * as React from "react";
 import { Package, Pencil, Plus, X } from "lucide-react";
 
+import { useResolvedPrices } from "@/hooks/use-customers";
+import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
-import { SALES_UNITS, type InventoryItem, type OrderItemInput, type OrderItemUnit } from "@/lib/types";
+import { majorToMinor } from "@/lib/money";
+import {
+  SALES_UNITS,
+  type InventoryItem,
+  type Money,
+  type OrderItemInput,
+  type OrderItemUnit,
+} from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { InventoryItemPicker } from "@/components/inventory/inventory-item-picker";
@@ -20,6 +30,9 @@ export interface DraftLine {
   unit_type: OrderItemUnit;
   unit_price: string;
   custom_description: string;
+  gift: boolean;
+  bottles_per_case: number;
+  default_price: Money | null;
 }
 
 let counter = 0;
@@ -36,6 +49,9 @@ export function blankCatalogLine(): DraftLine {
     unit_type: "bottles",
     unit_price: "",
     custom_description: "",
+    gift: false,
+    bottles_per_case: 1,
+    default_price: null,
   };
 }
 
@@ -49,23 +65,26 @@ export function linesToItems(lines: DraftLine[]): OrderItemInput[] {
   for (const line of lines) {
     const quantity = Number(line.quantity);
     if (!Number.isFinite(quantity) || quantity < 1) continue;
-    const price = line.unit_price.trim();
+    // A gift line is free regardless of any typed price. Prices are entered in
+    // major units (€) and converted to the API's minor units here.
+    const price = line.gift ? "0" : line.unit_price.trim();
+    const priceMinor = majorToMinor(price);
     if (line.kind === "catalog") {
       if (!line.inventory_item_id) continue;
       out.push({
         inventory_item_id: line.inventory_item_id,
         quantity,
         unit_type: line.unit_type,
-        ...(price === "" ? {} : { unit_price: Number(price) }),
+        ...(priceMinor === null ? {} : { unit_price: priceMinor }),
       });
     } else {
       const description = line.custom_description.trim();
-      if (!description || price === "") continue;
+      if (!description || priceMinor === null) continue;
       out.push({
         inventory_item_id: null,
         quantity,
         unit_type: line.unit_type,
-        unit_price: Number(price),
+        unit_price: priceMinor,
         custom_description: description,
       });
     }
@@ -76,17 +95,73 @@ export function linesToItems(lines: DraftLine[]): OrderItemInput[] {
 export function OrderLineItemsEditor({
   lines,
   onChange,
+  customerId,
+  onSubtotalChange,
 }: {
   lines: DraftLine[];
   onChange: (lines: DraftLine[]) => void;
+  /** When set, prices resolve for this customer (custom/tier/rebate); else the list price. */
+  customerId?: string;
+  /** Reports the live items subtotal (minor units) + currency as lines/prices change. */
+  onSubtotalChange?: (minor: number, currency: string) => void;
 }) {
   const { t } = useTranslation();
+  const { moneyObject } = useFormatters();
+
+  const itemIds = React.useMemo(
+    () =>
+      lines
+        .filter((l) => l.kind === "catalog" && l.inventory_item_id !== "")
+        .map((l) => l.inventory_item_id),
+    [lines],
+  );
+  const resolvedQ = useResolvedPrices(customerId ?? "", itemIds);
+
+  // The per-unit price (minor) for a catalog line: a manual override wins, else the
+  // customer-resolved per-bottle price (scaled for cases), else the list price.
+  function unitMinor(line: DraftLine): number | null {
+    if (line.unit_price.trim() !== "") return majorToMinor(line.unit_price);
+    const perBottle = resolvedQ.data?.[line.inventory_item_id]?.minor ?? line.default_price?.minor;
+    if (perBottle == null) return null;
+    return line.unit_type === "cases" ? perBottle * Math.max(1, line.bottles_per_case) : perBottle;
+  }
+  function currencyFor(line: DraftLine): string {
+    return (
+      line.default_price?.currency ?? resolvedQ.data?.[line.inventory_item_id]?.currency ?? "EUR"
+    );
+  }
+
+  // Live items subtotal — sum of each line's unit price × quantity (gifts = 0).
+  const resolvedData = resolvedQ.data;
+  const subtotal = React.useMemo(() => {
+    let sum = 0;
+    let currency = "EUR";
+    for (const line of lines) {
+      const c = line.default_price?.currency ?? resolvedData?.[line.inventory_item_id]?.currency;
+      if (c) currency = c;
+      const u = unitMinor(line);
+      const qty = Number(line.quantity);
+      if (u != null && Number.isFinite(qty) && qty > 0) sum += u * qty;
+    }
+    return { minor: sum, currency };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lines, resolvedData]);
+
+  const subtotalCb = React.useRef(onSubtotalChange);
+  subtotalCb.current = onSubtotalChange;
+  React.useEffect(() => {
+    subtotalCb.current?.(subtotal.minor, subtotal.currency);
+  }, [subtotal]);
 
   function update(key: string, patch: Partial<DraftLine>) {
     onChange(lines.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   }
   function remove(key: string) {
     onChange(lines.filter((l) => l.key !== key));
+  }
+  function toggleGift(key: string, gift: boolean) {
+    // Gifting forces the price to 0; un-gifting clears it (catalog → auto-price).
+    update(key, { gift, unit_price: gift ? "0" : "" });
   }
   function selectItem(key: string, item: InventoryItem) {
     // A catalog item can only be ordered in its sales unit (strict).
@@ -95,6 +170,8 @@ export function OrderLineItemsEditor({
       name: item.name,
       sku: item.sku,
       unit_type: (item.sales_unit as OrderItemUnit | null) ?? "bottles",
+      bottles_per_case: item.bottles_per_case ?? 1,
+      default_price: item.default_price,
     });
   }
 
@@ -114,6 +191,7 @@ export function OrderLineItemsEditor({
                   placeholder={t("orders.items.selectItem")}
                   searchPlaceholder={t("orders.items.searchItems")}
                   emptyLabel={t("orders.items.noItems")}
+                  forSale
                 />
               ) : (
                 <Input
@@ -129,28 +207,28 @@ export function OrderLineItemsEditor({
                 type="number"
                 min={1}
                 value={line.quantity}
+                aria-label={t("orders.items.quantity")}
                 onChange={(e) => update(line.key, { quantity: e.target.value })}
               />
             </div>
-            <div className="w-28 space-y-1">
-              <label className="text-xs text-muted-foreground">{t("orders.items.unitType")}</label>
-              <Select
-                value={line.unit_type}
-                aria-label={t("orders.items.unitType")}
-                // Catalog items are locked to their sales unit; custom lines are free.
-                disabled={line.kind === "catalog" && line.inventory_item_id !== ""}
-                onChange={(e) => update(line.key, { unit_type: e.target.value as OrderItemUnit })}
-              >
-                {(line.kind === "catalog" && line.inventory_item_id !== ""
-                  ? [line.unit_type]
-                  : SALES_UNITS
-                ).map((u) => (
-                  <option key={u} value={u}>
-                    {t(`orders.items.unitTypes.${u}`)}
-                  </option>
-                ))}
-              </Select>
-            </div>
+            {/* Catalog lines carry a unit (locked to the item's sales unit); custom lines have none. */}
+            {line.kind === "catalog" && (
+              <div className="w-28 space-y-1">
+                <label className="text-xs text-muted-foreground">{t("orders.items.unitType")}</label>
+                <Select
+                  value={line.unit_type}
+                  aria-label={t("orders.items.unitType")}
+                  disabled={line.inventory_item_id !== ""}
+                  onChange={(e) => update(line.key, { unit_type: e.target.value as OrderItemUnit })}
+                >
+                  {(line.inventory_item_id !== "" ? [line.unit_type] : SALES_UNITS).map((u) => (
+                    <option key={u} value={u}>
+                      {t(`orders.items.unitTypes.${u}`)}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            )}
             <div className="w-28 space-y-1">
               <label className="text-xs text-muted-foreground">
                 {line.kind === "custom" ? t("orders.items.unitPrice") : t("orders.items.priceOverride")}
@@ -158,7 +236,9 @@ export function OrderLineItemsEditor({
               <Input
                 type="number"
                 min={0}
+                step="0.01"
                 value={line.unit_price}
+                disabled={line.gift}
                 onChange={(e) => update(line.key, { unit_price: e.target.value })}
                 placeholder={line.kind === "catalog" ? t("orders.items.auto") : ""}
                 aria-label={
@@ -166,6 +246,31 @@ export function OrderLineItemsEditor({
                 }
               />
             </div>
+            <label className="flex items-center gap-1.5 pb-2 text-xs text-muted-foreground sm:self-end">
+              <Checkbox
+                checked={line.gift}
+                onChange={(e) => toggleGift(line.key, e.target.checked)}
+                aria-label={t("orders.items.gift")}
+              />
+              {t("orders.items.gift")}
+            </label>
+            {line.kind === "catalog" &&
+              (() => {
+                const u = unitMinor(line);
+                const qty = Number(line.quantity);
+                const total = u != null && Number.isFinite(qty) ? u * qty : null;
+                const currency = currencyFor(line);
+                return (
+                  <div className="min-w-24 space-y-0.5 text-right text-xs sm:self-end sm:pb-1.5">
+                    <div className="text-muted-foreground">
+                      {u != null ? `${moneyObject({ minor: u, currency })} ${t("orders.items.each")}` : "—"}
+                    </div>
+                    <div className="text-sm font-medium tabular-nums text-foreground">
+                      {total != null ? moneyObject({ minor: total, currency }) : "—"}
+                    </div>
+                  </div>
+                );
+              })()}
             <Button
               type="button"
               variant="ghost"

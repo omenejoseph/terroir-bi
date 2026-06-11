@@ -7,7 +7,6 @@ import { useCreateSupplier, useUpdateSupplier } from "@/hooks/use-suppliers";
 import { useTranslation } from "@/i18n/context";
 import type { Supplier, SupplierInput } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
@@ -24,7 +23,6 @@ interface FormState {
   bank_account: string;
   payment_terms: string;
   notes: string;
-  is_active: boolean;
   exclude_from_stats: boolean;
 }
 
@@ -40,7 +38,6 @@ const EMPTY: FormState = {
   bank_account: "",
   payment_terms: "",
   notes: "",
-  is_active: true,
   exclude_from_stats: false,
 };
 
@@ -57,7 +54,6 @@ function toForm(supplier: Supplier): FormState {
     bank_account: supplier.bank_account ?? "",
     payment_terms: supplier.payment_terms ?? "",
     notes: supplier.notes ?? "",
-    is_active: supplier.is_active,
     exclude_from_stats: supplier.exclude_from_stats,
   };
 }
@@ -102,7 +98,6 @@ export function SupplierForm({
       bank_account: trimmed(form.bank_account),
       payment_terms: trimmed(form.payment_terms),
       notes: trimmed(form.notes),
-      is_active: form.is_active,
       exclude_from_stats: form.exclude_from_stats,
     };
   }
@@ -185,11 +180,6 @@ export function SupplierForm({
       <Field id="notes" label={t("suppliers.form.notes")} error={errors.notes}>
         <Input id="notes" value={form.notes} onChange={(e) => set("notes", e.target.value)} />
       </Field>
-
-      <label className="flex items-center gap-2 text-sm">
-        <Checkbox checked={form.is_active} onChange={(e) => set("is_active", e.target.checked)} />
-        {t("common.status.active")}
-      </label>
 
       {formError && (
         <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{formError}</p>

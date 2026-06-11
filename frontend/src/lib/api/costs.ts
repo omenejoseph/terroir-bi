@@ -2,6 +2,7 @@ import { api } from "@/lib/api/client";
 import type {
   Cost,
   CostAnalytics,
+  CostGroupCounts,
   CostInput,
   CostQuery,
   CostStatus,
@@ -17,7 +18,21 @@ export const costsApi = {
       category: query.category,
       status: query.status,
       supplier_id: query.supplier_id,
+      group: query.group,
+      date_from: query.date_from,
+      date_to: query.date_to,
       page: query.page,
+    }),
+
+  /** GET /costs/group-counts — All / Invoices / Payments / Others counts. */
+  groupCounts: (query: CostQuery = {}) =>
+    api.get<CostGroupCounts>("/costs/group-counts", {
+      search: query.search,
+      category: query.category,
+      status: query.status,
+      supplier_id: query.supplier_id,
+      date_from: query.date_from,
+      date_to: query.date_to,
     }),
 
   /** GET /costs/categories — distinct categories for the filter/picker. */

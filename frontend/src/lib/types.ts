@@ -81,6 +81,7 @@ export interface InventoryItem {
   id: string;
   name: string;
   sku: string;
+  description: string | null;
   category: string;
   group: string | null;
   subcategory: string | null;
@@ -108,6 +109,7 @@ export interface InventoryQuery {
   is_active?: boolean;
   is_for_sale?: boolean;
   sellable?: boolean;
+  page?: number;
 }
 
 /** Inventory categories — mirrors App\Enums\InventoryCategory. */
@@ -118,7 +120,7 @@ export type InventoryCategory = (typeof INVENTORY_CATEGORIES)[number];
  * Common units of measure. The backend stores `unit` as a free string (max 50),
  * so this is a curated convenience list, not a hard enum — extend freely.
  */
-export const INVENTORY_UNITS = ["bottle", "case", "liter", "kg", "gram", "unit"] as const;
+export const INVENTORY_UNITS = ["bottle", "case", "liter", "ml", "kg", "gram", "unit"] as const;
 export type InventoryUnit = (typeof INVENTORY_UNITS)[number];
 
 /** Measure units for an item's unit size (e.g. 750 ml). Universal abbreviations. */
@@ -142,9 +144,12 @@ export interface InventoryItemInput {
   sku: string;
   category: InventoryCategory;
   unit: string;
-  sales_unit: SalesUnit;
-  bottles_per_case: number;
-  cost_per_unit: number;
+  // Optional — COGS can be derived from the item's recipe instead.
+  cost_per_unit?: number | null;
+  // Only sent for packaged (bottle/case) items.
+  sales_unit?: SalesUnit;
+  bottles_per_case?: number;
+  description?: string | null;
   group?: string | null;
   subcategory?: string | null;
   vintage?: string | null;
@@ -171,7 +176,99 @@ export interface StockWatchItem {
 }
 
 /** GET /inventory-items/analytics — read-optimised inventory metrics. */
+export interface InventoryExitMetrics {
+  units_exited: number;
+  cost_of_exits: Money | null;
+  revenue_realized: Money | null;
+  mean_margin_percent?: string | null;
+  mean_price?: Money | null;
+  off_target_percent?: string | null;
+  velocity_per_day?: string;
+}
+
+/** A row in the inventory-check audit history. */
+export interface InventoryCheckSummary {
+  id: string;
+  reference: string;
+  performed_by: string | null;
+  items_counted: number;
+  items_adjusted: number;
+  net_difference: string;
+  created_at: string | null;
+}
+
+export interface InventoryCheckLine {
+  name: string;
+  sku: string;
+  system_count: string;
+  physical_count: string;
+  difference: string;
+}
+
+export interface InventoryCheckDetail extends InventoryCheckSummary {
+  lines: InventoryCheckLine[];
+}
+
+/** Payload for POST /inventory-items/check. */
+export interface InventoryCheckInput {
+  items: { item_id: string; physical_count: number; system_stock?: number }[];
+}
+
+export interface SpendSummary {
+  units_exited: number;
+  movements: number;
+  cost_value: Money;
+  revenue: Money;
+  distinct_skus: number;
+}
+
+export interface SpendProduct {
+  id: string;
+  name: string;
+  sku: string;
+  vintage: number | null;
+  group: string | null;
+  subcategory: string | null;
+  on_hand: number;
+  units_exited: number;
+  prev_units_exited: number;
+  velocity_per_day: string;
+  days_left: number | null;
+  cost_of_exits: Money | null;
+  revenue: Money | null;
+  daily: number[];
+}
+
+/** GET /inventory-items/spend — warehouse-exit spend over a date range. */
+export interface InventorySpend {
+  period: { from: string; to: string; days: number };
+  previous_period: { from: string; to: string; days: number };
+  summary: SpendSummary;
+  previous: SpendSummary;
+  daily: { date: string; units: number }[];
+  per_product: SpendProduct[];
+}
+
 export interface InventoryAnalytics {
+  summary: {
+    total_active: number;
+    low_stock: number;
+    out_of_stock: number;
+    for_sale: number;
+    by_category: { FINISHED: number; SEMI_FINISHED: number; RAW_MATERIAL: number };
+    priced_count: number;
+    sale_value: Money;
+    production_value: Money;
+    margin_percent: string;
+  };
+  portfolio_exits: {
+    period_days: number;
+    external: InventoryExitMetrics;
+    blended: InventoryExitMetrics;
+  };
+  movements_12m: { month: string; in: number; out: number }[];
+  top_products: { name: string; value: number }[];
+  by_group: { group: string | null; count: number }[];
   stock_levels: { name: string; stock: string }[];
   value: {
     total: number;
@@ -182,6 +279,66 @@ export interface InventoryAnalytics {
 }
 
 // ── Customers & pricing ───────────────────────────────────────────────────────
+
+/** Payload for POST /customers/merge[/preview]. */
+export interface MergeCustomersInput {
+  winner_id: string;
+  loser_ids: string[];
+}
+
+export interface MergePreviewLoser {
+  id: string;
+  company_name: string;
+  orders: number;
+  price_reassign: number;
+  price_drop: number;
+  override_reassign: number;
+  override_drop: number;
+}
+
+/** Result of merge preview/apply: what moves and what gets dropped. */
+export interface MergePreview {
+  applied: boolean;
+  winner: { id: string; company_name: string };
+  losers: MergePreviewLoser[];
+  totals: {
+    orders: number;
+    price_reassign: number;
+    price_drop: number;
+    override_reassign: number;
+    override_drop: number;
+    losers_deleted: number;
+  };
+}
+
+export interface CustomerAnalyticsRow {
+  customer_id: string;
+  company_name: string;
+  contact_name: string | null;
+  revenue_12m: Money;
+  revenue_all_time: Money;
+  order_count_12m: number;
+  avg_order_value: Money;
+  last_order_date: string | null;
+  days_since_last_order: number | null;
+  median_gap_days: number | null;
+  expected_next_order_date: string | null;
+}
+
+/** GET /customers/analytics — tenant-wide customer analytics. */
+export interface CustomerAnalytics {
+  summary: {
+    active_customers: number;
+    revenue_12m: Money;
+    top_customer: {
+      id: string;
+      company_name: string;
+      contact_name: string | null;
+      revenue_12m: Money;
+    } | null;
+  };
+  customers: CustomerAnalyticsRow[];
+}
 
 export interface PricingTier {
   id: string;
@@ -242,6 +399,49 @@ export interface CustomerCustomPrice {
   name: string | null;
   sku: string | null;
   price: Money;
+}
+
+/** GET /inventory-items/{id}/tier-prices — an item's tier price book. */
+export interface ItemTierPrice {
+  pricing_tier_id: string;
+  tier_name: string | null;
+  rebate_percent: string | null;
+  price: Money;
+}
+
+/** GET /inventory-items/{id}/customer-prices — an item's per-customer overrides. */
+export interface ItemCustomerPrice {
+  customer_id: string;
+  company_name: string | null;
+  price: Money;
+}
+
+/** The numeric enology measurements on a bottle analysis (all optional). */
+export const BOTTLE_ANALYSIS_FIELDS = [
+  "ph",
+  "total_acidity",
+  "volatile_acidity",
+  "alcohol",
+  "residual_sugar",
+  "free_so2",
+  "total_so2",
+  "temperature",
+  "density",
+  "tpi",
+] as const;
+export type BottleAnalysisField = (typeof BOTTLE_ANALYSIS_FIELDS)[number];
+
+/** GET /inventory-items/{id}/bottle-analyses — lab analyses for an item. */
+export interface BottleAnalysis extends Record<BottleAnalysisField, number | null> {
+  id: string;
+  analyzed_on: string;
+  note: string | null;
+}
+
+/** Payload for POST /inventory-items/{id}/bottle-analyses. */
+export interface BottleAnalysisInput extends Partial<Record<BottleAnalysisField, number | null>> {
+  analyzed_on: string;
+  note?: string | null;
 }
 
 /** GET /public/{token}/catalog — the customer-facing self-service catalog. */
@@ -396,6 +596,41 @@ export interface StockAdjustmentInput {
   is_reconciliation?: boolean;
 }
 
+/** Period windows for the per-item Stock tab analytics. */
+export const STOCK_PERIODS = ["today", "mtd", "ytd", "30d", "90d"] as const;
+export type StockPeriod = (typeof STOCK_PERIODS)[number];
+
+/** GET /inventory-items/{id}/stock-analytics — per-item stock dashboard. */
+export interface StockAnalytics {
+  period: string;
+  current: {
+    stock_bottles: number;
+    unit: string;
+    bottles_per_case: number;
+    min_stock_bottles: number | null;
+    cost_per_bottle: Money | null;
+    selling_per_bottle: Money | null;
+  };
+  realized: {
+    mean_price: Money | null;
+    rebate_percent: string | null;
+    rebate_amount: Money | null;
+    margin_percent: string | null;
+    margin_amount: Money | null;
+    sales_value: Money;
+    bottles_sold: number;
+  };
+  exits: {
+    bottles_exited: number;
+    cost_of_exits: Money | null;
+    revenue_realized: Money | null;
+    mean_margin_percent: string | null;
+    velocity_per_day: string;
+    days_of_stock_left: number | null;
+  };
+  channels: { channel: string; bottles: number }[];
+}
+
 /** A stock ledger entry (GET /inventory-items/{id}/movements). */
 export interface StockMovement {
   id: string;
@@ -419,6 +654,8 @@ export interface RecipeLine {
   input_sku: string;
   input_unit: string;
   quantity: string;
+  input_group: string | null;
+  input_stock: string | null;
 }
 
 /** Payload line for PUT /inventory-items/{id}/recipe. */
@@ -442,6 +679,22 @@ export interface AttachImageInput {
   key: string;
   content_type: string;
   alt?: string | null;
+}
+
+/** GET /inventory-items/{id}/documents — an attached file with a read URL. */
+export interface InventoryDocument {
+  id: string;
+  name: string;
+  content_type: string;
+  size_bytes: number;
+  url: string;
+}
+
+/** Payload for POST /inventory-items/{id}/documents (after the object is uploaded). */
+export interface AttachDocumentInput {
+  key: string;
+  name: string;
+  content_type: string;
 }
 
 /** Response of POST /uploads/presign — a direct-to-bucket PUT target. */
@@ -536,6 +789,7 @@ export interface OrderInput {
   status?: OrderStatus;
   is_backorder?: boolean;
   backorder_date?: string | null;
+  deduct_stock?: boolean;
   is_consignment?: boolean;
   shipping_cost?: number | null;
   shipping_paid_by_us?: boolean;
@@ -726,6 +980,10 @@ export interface ArAging {
 export const COST_STATUSES = ["PENDING", "APPROVED", "PAID"] as const;
 export type CostStatus = (typeof COST_STATUSES)[number];
 
+/** Suggested payment methods for a cost (stored as free text on the backend). */
+export const PAYMENT_METHODS = ["cash", "bank_transfer", "card", "other"] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
 export interface CostItem {
   id: string;
   inventory_item_id: string | null;
@@ -777,12 +1035,26 @@ export interface CostInput {
   }[];
 }
 
+/** Cost tab groups, driven by the reserved Invoice / Payment categories. */
+export type CostGroup = "invoices" | "payments" | "others";
+
 export interface CostQuery {
   search?: string;
   category?: string;
   status?: CostStatus;
   supplier_id?: string;
+  group?: CostGroup;
+  date_from?: string;
+  date_to?: string;
   page?: number;
+}
+
+/** Tab counts for All / Invoices / Payments / Others. */
+export interface CostGroupCounts {
+  all: number;
+  invoices: number;
+  payments: number;
+  others: number;
 }
 
 /** GET /costs/analytics. */
@@ -809,6 +1081,52 @@ export interface SupplierPriceItem {
   last_updated: string | null;
 }
 
+/** Payload for POST /suppliers/merge[/preview]. */
+export interface MergeSuppliersInput {
+  winner_id: string;
+  loser_ids: string[];
+}
+
+export interface SupplierMergeLoser {
+  id: string;
+  company_name: string;
+  orders: number;
+  costs: number;
+  price_reassign: number;
+  price_drop: number;
+}
+
+/** Result of a supplier merge preview/apply: what moves and what gets dropped. */
+export interface SupplierMergePreview {
+  applied: boolean;
+  winner: { id: string; company_name: string };
+  losers: SupplierMergeLoser[];
+  totals: {
+    orders: number;
+    costs: number;
+    price_reassign: number;
+    price_drop: number;
+    losers_deleted: number;
+  };
+}
+
+/** Supplier summary cards. Cost figures present only with finance visibility. */
+export interface SupplierStats {
+  price_items: number;
+  cost_entries?: number;
+  total_costs?: Money;
+}
+
+/** An audited cost change on a supplier price-list line. */
+export interface SupplierPriceChange {
+  id: string;
+  description: string;
+  unit: string | null;
+  old_price: Money | null;
+  new_price: Money;
+  created_at: string | null;
+}
+
 /** Mirrors SupplierData. */
 export interface Supplier {
   id: string;
@@ -825,8 +1143,24 @@ export interface Supplier {
   notes: string | null;
   is_active: boolean;
   exclude_from_stats: boolean;
+  has_portal_token?: boolean;
   price_items_count: number | null;
+  price_changes_count?: number | null;
   price_items?: SupplierPriceItem[];
+}
+
+/** Result of a bulk price-list import/upsert. */
+export interface PriceImportResult {
+  added: number;
+  updated: number;
+  total: number;
+}
+
+/** GET /public/supplier/{token} — the public supplier portal payload. */
+export interface SupplierPortal {
+  supplier: { company_name: string; contact_name: string | null };
+  orders: SupplierOrder[];
+  price_items: { id: string; description: string; unit_price: Money; unit: string | null }[];
 }
 
 export interface SupplierInput {

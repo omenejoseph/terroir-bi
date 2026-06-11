@@ -110,46 +110,49 @@ export function CustomerDetailPanel({
 
       <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as DetailTab)} />
 
-      {tab === "overview" &&
-        (editing ? (
-          <CustomerForm
-            customer={customer}
-            onSaved={() => setEditing(false)}
-            onCancel={() => setEditing(false)}
-            onDeleted={onDeleted}
-            bare
-          />
-        ) : (
-          <div className="space-y-4">
-            <CustomerDetails customer={customer} />
-            {canManage && (
-              <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
-                <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                  <Pencil className="size-3.5" />
-                  {t("customers.edit")}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={
-                    customer.is_active
-                      ? "text-destructive hover:bg-destructive/10 hover:text-destructive"
-                      : undefined
-                  }
-                  onClick={toggleActive}
-                  disabled={update.isPending}
-                >
-                  {update.isPending ? <Spinner /> : <Power className="size-3.5" />}
-                  {customer.is_active
-                    ? t("customers.deactivate.action")
-                    : t("customers.activate.action")}
-                </Button>
-              </div>
-            )}
-            {can("orders.view") && <CustomerConsignmentSection customerId={customer.id} />}
-            {can("customers.tokens") && <OrderLinkSection customer={customer} />}
-          </div>
-        ))}
+      {tab === "overview" && (
+        <div className="space-y-4">
+          {can("customers.tokens") && <OrderLinkSection customer={customer} />}
+          {editing ? (
+            <CustomerForm
+              customer={customer}
+              onSaved={() => setEditing(false)}
+              onCancel={() => setEditing(false)}
+              onDeleted={onDeleted}
+              bare
+            />
+          ) : (
+            <div className="space-y-4">
+              <CustomerDetails customer={customer} />
+              {canManage && (
+                <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
+                  <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                    <Pencil className="size-3.5" />
+                    {t("customers.edit")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={
+                      customer.is_active
+                        ? "text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        : undefined
+                    }
+                    onClick={toggleActive}
+                    disabled={update.isPending}
+                  >
+                    {update.isPending ? <Spinner /> : <Power className="size-3.5" />}
+                    {customer.is_active
+                      ? t("customers.deactivate.action")
+                      : t("customers.activate.action")}
+                  </Button>
+                </div>
+              )}
+              {can("orders.view") && <CustomerConsignmentSection customerId={customer.id} />}
+            </div>
+          )}
+        </div>
+      )}
 
       {tab === "pricing" && (
         <CustomPricingSection customerId={customer.id} canManage={can("pricing.manage")} />

@@ -6,6 +6,7 @@ import { API_URL } from "@/lib/config";
 import { makeWorkOrder } from "@/test/fixtures";
 import { server } from "@/test/mocks/server";
 import {
+  fireEvent,
   renderWithProviders,
   screen,
   seedAuth,
@@ -76,6 +77,8 @@ describe("WorkOrdersPage", () => {
 
     renderWithProviders(<WorkOrdersPage />);
     const user = userEvent.setup();
+    // The create form is collapsed until "New work order" is clicked.
+    await user.click(await screen.findByRole("button", { name: "New work order" }));
     await user.type(await screen.findByLabelText("Title"), "Rack barrels");
     await user.click(screen.getByRole("button", { name: "Add work order" }));
 
@@ -222,6 +225,68 @@ describe("WorkOrdersPage", () => {
 
     await waitFor(() => expect(patched).not.toBeNull());
     expect(patched).toMatchObject({ status: "DONE" });
+  });
+
+  it("updates the due date from the detail dialog (PATCH body)", async () => {
+    let patched: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`${API_URL}/work-orders`, () => HttpResponse.json({ data: [scheduledToday()] })),
+      http.patch(`${API_URL}/work-orders/:id`, async ({ request, params }) => {
+        patched = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ data: makeWorkOrder({ id: String(params.id) }) });
+      }),
+    );
+
+    renderWithProviders(<WorkOrdersPage />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("tab", { name: "Month" }));
+    await user.click(await screen.findByRole("button", { name: "Harvest planning" }));
+
+    const dialog = await screen.findByRole("dialog");
+    const due = within(dialog).getByLabelText("Due");
+    fireEvent.change(due, { target: { value: "2026-07-15" } });
+
+    await waitFor(() => expect(patched).not.toBeNull());
+    expect(patched).toMatchObject({ due_date: "2026-07-15" });
+  });
+
+  it("reassigns a work order from the detail dialog (PATCH body)", async () => {
+    let patched: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`${API_URL}/work-orders`, () => HttpResponse.json({ data: [scheduledToday()] })),
+      http.patch(`${API_URL}/work-orders/:id`, async ({ request, params }) => {
+        patched = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ data: makeWorkOrder({ id: String(params.id) }) });
+      }),
+    );
+
+    renderWithProviders(<WorkOrdersPage />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("tab", { name: "Month" }));
+    await user.click(await screen.findByRole("button", { name: "Harvest planning" }));
+
+    const dialog = await screen.findByRole("dialog");
+    // Default assignee is usr_1 → unassign it.
+    await user.selectOptions(within(dialog).getByLabelText("Assignee"), "");
+
+    await waitFor(() => expect(patched).not.toBeNull());
+    expect(patched).toMatchObject({ assignee_id: null });
+  });
+
+  it("filters the stat summary by a due-date range", async () => {
+    let lastRange: string | null = "unset";
+    server.use(
+      http.get(`${API_URL}/work-orders/stats`, ({ request }) => {
+        lastRange = new URL(request.url).searchParams.get("range");
+        return HttpResponse.json({ data: { todo: 1, in_progress: 0, done: 0, overdue: 0 } });
+      }),
+    );
+
+    renderWithProviders(<WorkOrdersPage />);
+    const user = userEvent.setup();
+    await screen.findByRole("heading", { name: "Work orders" });
+    await user.click(screen.getByRole("tab", { name: "7D" }));
+    await waitFor(() => expect(lastRange).toBe("7D"));
   });
 
   it("renders three month grids in quarter view and picking a day opens day view", async () => {

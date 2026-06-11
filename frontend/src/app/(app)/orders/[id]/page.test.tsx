@@ -152,7 +152,7 @@ describe("OrderDetailPage", () => {
     await user.click(within(row).getByText("7,00 €")); // cost cell
     const costInput = within(row).getByLabelText("Cost/unit");
     await user.clear(costInput);
-    await user.type(costInput, "800");
+    await user.type(costInput, "8"); // major (€8.00) → 800 minor
     await user.click(within(row).getByRole("button", { name: "Save" }));
 
     await waitFor(() => expect(patched).not.toBeNull());
@@ -196,11 +196,11 @@ describe("OrderDetailPage", () => {
     await user.click(within(detailsHeading.parentElement!).getByRole("button", { name: "Edit" }));
     const shippingInput = screen.getByLabelText("Shipping");
     await user.clear(shippingInput);
-    await user.type(shippingInput, "1500");
+    await user.type(shippingInput, "15"); // major units (€15.00)
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => expect(shipping).not.toBeNull());
-    expect(shipping).toMatchObject({ shipping_cost: 1500 });
+    expect(shipping).toMatchObject({ shipping_cost: 1500 }); // sent as minor
   });
 
   it("adds a mention to a comment", async () => {
@@ -217,13 +217,17 @@ describe("OrderDetailPage", () => {
     await screen.findByText("ORD-1001");
     await user.click(screen.getByRole("tab", { name: "Comments" }));
 
-    await user.click(await screen.findByRole("button", { name: "Mention" }));
-    await user.click(await screen.findByText("Ada Lovelace")); // member from the dropdown
-    await user.type(screen.getByPlaceholderText("Write a comment…"), "FYI");
+    // Type "@" to open the inline mention dropdown, pick a member, then keep typing.
+    const box = screen.getByPlaceholderText("Write a comment…");
+    await user.type(box, "@Ada");
+    await user.click(await screen.findByText("Ada Lovelace")); // option in the @-dropdown
+    await user.type(box, "FYI");
     await user.click(screen.getByRole("button", { name: "Comment" }));
 
     await waitFor(() => expect(body).not.toBeNull());
-    expect(body).toMatchObject({ content: "FYI", mentions: ["usr_1"] });
+    expect(body!.mentions).toEqual(["usr_1"]);
+    expect(body!.content).toContain("@Ada Lovelace");
+    expect(body!.content).toContain("FYI");
   });
 
   it("edits and deletes a comment (author/admin)", async () => {

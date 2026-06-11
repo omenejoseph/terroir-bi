@@ -18,8 +18,10 @@ use App\Http\Requests\Tasks\UpdateWorkOrderRequest;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Queries\ListWorkOrdersQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class WorkOrderController extends Controller
 {
@@ -38,18 +40,42 @@ class WorkOrderController extends Controller
         ]);
     }
 
-    public function stats(): JsonResponse
+    public function stats(Request $request): JsonResponse
     {
+        $horizon = $this->statsHorizon((string) $request->query('range', 'ALL'));
+
+        // When a range is chosen, scope the counters to work due within the
+        // horizon (undated work is excluded). ALL applies no date filter.
+        $scoped = function () use ($horizon): Builder {
+            $query = WorkOrder::query();
+            if ($horizon !== null) {
+                $query->whereNotNull('due_date')->where('due_date', '<=', $horizon);
+            }
+
+            return $query;
+        };
+
         return response()->json(['data' => [
-            'todo' => WorkOrder::query()->where('status', TaskStatus::Todo)->count(),
-            'in_progress' => WorkOrder::query()->where('status', TaskStatus::InProgress)->count(),
-            'done' => WorkOrder::query()->where('status', TaskStatus::Done)->count(),
-            'overdue' => WorkOrder::query()
+            'todo' => $scoped()->where('status', TaskStatus::Todo)->count(),
+            'in_progress' => $scoped()->where('status', TaskStatus::InProgress)->count(),
+            'done' => $scoped()->where('status', TaskStatus::Done)->count(),
+            'overdue' => $scoped()
                 ->where('status', '!=', TaskStatus::Done)
                 ->whereNotNull('due_date')
                 ->where('due_date', '<', now())
                 ->count(),
         ]]);
+    }
+
+    private function statsHorizon(string $range): ?Carbon
+    {
+        return match ($range) {
+            '7D' => now()->addDays(7),
+            '30D' => now()->addDays(30),
+            '90D' => now()->addDays(90),
+            '1Y' => now()->addYear(),
+            default => null, // ALL — no date filter
+        };
     }
 
     public function show(WorkOrder $workOrder): JsonResponse

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Inventory\AttachInventoryDocumentRequest;
 use App\Http\Requests\Inventory\AttachInventoryImageRequest;
 use App\Http\Requests\Inventory\AttachInventoryTechSheetRequest;
+use App\Models\InventoryDocument;
 use App\Models\InventoryImage;
 use App\Models\InventoryItem;
 use App\Models\InventoryTechSheet;
@@ -91,6 +93,40 @@ class InventoryMediaController extends Controller
         return response()->json(status: 204);
     }
 
+    public function listDocuments(InventoryItem $item): JsonResponse
+    {
+        $data = $item->documents()->orderByDesc('id')->get()
+            ->map(fn (InventoryDocument $doc) => $this->presentDocument($doc))
+            ->all();
+
+        return response()->json(['data' => $data]);
+    }
+
+    public function attachDocument(AttachInventoryDocumentRequest $request, InventoryItem $item): JsonResponse
+    {
+        $key = (string) $request->validated('key');
+        $size = $this->uploads->verifyOwnedObject('inventory_document', $key);
+
+        $document = $item->documents()->create([
+            'name' => (string) $request->validated('name'),
+            'object_key' => $key,
+            'content_type' => (string) $request->validated('content_type'),
+            'size_bytes' => $size,
+        ]);
+
+        return response()->json(['data' => $this->presentDocument($document)], 201);
+    }
+
+    public function deleteDocument(InventoryItem $item, InventoryDocument $document): JsonResponse
+    {
+        abort_unless($document->inventory_item_id === $item->getKey(), 404);
+
+        $this->uploads->delete($document->object_key);
+        $document->delete();
+
+        return response()->json(status: 204);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -117,6 +153,20 @@ class InventoryMediaController extends Controller
             'content_type' => $sheet->content_type,
             'size_bytes' => $sheet->size_bytes,
             'url' => $this->uploads->readUrl($sheet->object_key),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function presentDocument(InventoryDocument $document): array
+    {
+        return [
+            'id' => $document->getKey(),
+            'name' => $document->name,
+            'content_type' => $document->content_type,
+            'size_bytes' => $document->size_bytes,
+            'url' => $this->uploads->readUrl($document->object_key),
         ];
     }
 }

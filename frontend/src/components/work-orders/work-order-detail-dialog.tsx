@@ -3,14 +3,20 @@
 import * as React from "react";
 import { Trash2 } from "lucide-react";
 
-import { useDeleteWorkOrder, useUpdateWorkOrderStatus } from "@/hooks/use-work-orders";
-import { useFormatters } from "@/lib/format";
+import {
+  useDeleteWorkOrder,
+  useUpdateWorkOrder,
+  useUpdateWorkOrderStatus,
+} from "@/hooks/use-work-orders";
+import { useAuth } from "@/lib/auth/context";
+import { useMembers } from "@/hooks/use-team";
 import { useTranslation } from "@/i18n/context";
 import type { TaskStatus, WorkOrder } from "@/lib/types";
 import { TASK_STATUSES } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
@@ -26,9 +32,9 @@ export function WorkOrderDetailDialog({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const { date } = useFormatters();
   const confirm = useConfirm();
   const updateStatus = useUpdateWorkOrderStatus();
+  const update = useUpdateWorkOrder();
   const remove = useDeleteWorkOrder();
 
   if (!workOrder) return null;
@@ -53,25 +59,36 @@ export function WorkOrderDetailDialog({
           <Badge variant={PRIORITY_VARIANT[workOrder.priority]}>
             {t(`tasks.priority.${workOrder.priority}`)}
           </Badge>
-          {workOrder.assignee && (
-            <span className="text-sm text-muted-foreground">{workOrder.assignee.name}</span>
-          )}
         </div>
 
         {workOrder.description && (
           <p className="text-sm text-muted-foreground">{workOrder.description}</p>
         )}
 
-        <dl className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <dt className="text-xs text-muted-foreground">{t("tasks.detail.start")}</dt>
-            <dd>{workOrder.start_date ? date(workOrder.start_date) : "—"}</dd>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="wo_detail_start">{t("tasks.detail.start")}</Label>
+            <Input
+              id="wo_detail_start"
+              type="date"
+              value={workOrder.start_date ? workOrder.start_date.slice(0, 10) : ""}
+              onChange={(e) =>
+                update.mutate({ id: workOrder.id, input: { start_date: e.target.value || null } })
+              }
+            />
           </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">{t("tasks.detail.due")}</dt>
-            <dd>{workOrder.due_date ? date(workOrder.due_date) : "—"}</dd>
+          <div className="space-y-1">
+            <Label htmlFor="wo_detail_due">{t("tasks.detail.due")}</Label>
+            <Input
+              id="wo_detail_due"
+              type="date"
+              value={workOrder.due_date ? workOrder.due_date.slice(0, 10) : ""}
+              onChange={(e) =>
+                update.mutate({ id: workOrder.id, input: { due_date: e.target.value || null } })
+              }
+            />
           </div>
-        </dl>
+        </div>
 
         <div className="space-y-1">
           <Label htmlFor="wo_detail_status">{t("tasks.detail.status")}</Label>
@@ -90,6 +107,8 @@ export function WorkOrderDetailDialog({
           </Select>
         </div>
 
+        <AssigneeField workOrder={workOrder} />
+
         <div className="flex justify-between border-t border-border pt-4">
           <Button
             type="button"
@@ -107,5 +126,54 @@ export function WorkOrderDetailDialog({
         </div>
       </div>
     </Dialog>
+  );
+}
+
+/**
+ * Reassign the work order. Editable for members-viewers, read-only otherwise.
+ * The members list is only fetched (via the inner select) while the dialog is
+ * open and the user can view members.
+ */
+function AssigneeField({ workOrder }: { workOrder: WorkOrder }) {
+  const { t } = useTranslation();
+  const { can } = useAuth();
+
+  if (!can("members.view")) {
+    return (
+      <div className="space-y-1">
+        <Label>{t("tasks.detail.assignee")}</Label>
+        <p className="text-sm text-muted-foreground">
+          {workOrder.assignee?.name ?? t("tasks.create.unassigned")}
+        </p>
+      </div>
+    );
+  }
+
+  return <AssigneeSelect workOrder={workOrder} />;
+}
+
+function AssigneeSelect({ workOrder }: { workOrder: WorkOrder }) {
+  const { t } = useTranslation();
+  const update = useUpdateWorkOrder();
+  const membersQ = useMembers();
+
+  return (
+    <div className="space-y-1">
+      <Label htmlFor="wo_detail_assignee">{t("tasks.detail.assignee")}</Label>
+      <Select
+        id="wo_detail_assignee"
+        value={workOrder.assignee?.id ?? ""}
+        onChange={(e) =>
+          update.mutate({ id: workOrder.id, input: { assignee_id: e.target.value || null } })
+        }
+      >
+        <option value="">{t("tasks.create.unassigned")}</option>
+        {(membersQ.data ?? []).map((m) => (
+          <option key={m.user_id} value={m.user_id}>
+            {m.name}
+          </option>
+        ))}
+      </Select>
+    </div>
   );
 }

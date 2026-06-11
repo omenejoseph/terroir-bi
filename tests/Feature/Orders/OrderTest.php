@@ -40,7 +40,7 @@ class OrderTest extends TestCase
             'name' => 'Plavac', 'sku' => 'PLV', 'category' => 'FINISHED', 'unit' => 'bottles',
             'sales_unit' => 'cases',
             'current_stock' => '100.000', 'bottles_per_case' => 12, 'is_for_sale' => true,
-            'default_price' => 12000, 'cost_per_unit' => 4800, // per case (sales_unit=cases)
+            'default_price' => 1000, 'cost_per_unit' => 400,
         ]);
         $this->forgetTenant();
     }
@@ -120,6 +120,24 @@ class OrderTest extends TestCase
         ], $this->headers())->assertCreated()->assertJsonPath('data.is_backorder', true);
 
         $this->assertSame('100.000', (string) $this->wine->refresh()->current_stock);
+    }
+
+    public function test_backorder_deducts_stock_when_opted_in(): void
+    {
+        Sanctum::actingAs($this->admin);
+        $this->postJson('/api/v1/orders', [
+            'customer_id' => $this->customer->getKey(),
+            'is_backorder' => true,
+            'backorder_date' => '2026-07-01',
+            'deduct_stock' => true,
+            'items' => [['inventory_item_id' => $this->wine->getKey(), 'quantity' => 5, 'unit_type' => 'cases']],
+        ], $this->headers())
+            ->assertCreated()
+            ->assertJsonPath('data.is_backorder', true)
+            ->assertJsonPath('data.deduct_stock', true);
+
+        // 100 cases - (5 cases × 12 bottles) = 100 - 60 ... wine stocked in bottles.
+        $this->assertSame('40.000', (string) $this->wine->refresh()->current_stock);
     }
 
     public function test_status_transition_appends_history(): void

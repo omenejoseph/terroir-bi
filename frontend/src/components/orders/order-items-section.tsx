@@ -11,6 +11,7 @@ import {
   useUpdateOrderItemCost,
 } from "@/hooks/use-orders";
 import { useFormatters } from "@/lib/format";
+import { majorToMinor, minorToMajorInput } from "@/lib/money";
 import { useTranslation } from "@/i18n/context";
 import type { Order, OrderItem, OrderItemUnit } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -94,7 +95,11 @@ export function OrderItemsSection({ order, canManage }: { order: Order; canManag
               </Button>
             ) : (
               <div className="space-y-3">
-                <OrderLineItemsEditor lines={lines} onChange={setLines} />
+                <OrderLineItemsEditor
+                  lines={lines}
+                  onChange={setLines}
+                  customerId={order.customer?.id}
+                />
                 {addError && <p className="text-sm text-destructive">{addError}</p>}
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(false)}>
@@ -137,15 +142,15 @@ function ItemRow({
   const [qty, setQty] = React.useState(String(item.quantity));
   const [unit, setUnit] = React.useState<OrderItemUnit>(item.unit_type);
   const [editingCost, setEditingCost] = React.useState(false);
-  const [cost, setCost] = React.useState(item.cost_per_unit ? String(item.cost_per_unit.minor) : "");
+  // Cost per unit is shown/edited in major units (€); converted to minor on save.
+  const [cost, setCost] = React.useState(minorToMajorInput(item.cost_per_unit?.minor));
 
   async function saveEdit() {
     await update.mutateAsync({ itemId: item.id, input: { quantity: Number(qty), unit_type: unit } });
     setEditing(false);
   }
   async function saveCost() {
-    const trimmed = cost.trim();
-    await updateCost.mutateAsync({ itemId: item.id, costPerUnit: trimmed === "" ? null : Number(trimmed) });
+    await updateCost.mutateAsync({ itemId: item.id, costPerUnit: majorToMinor(cost) });
     setEditingCost(false);
   }
   async function handleDelete() {
@@ -208,6 +213,7 @@ function ItemRow({
               <Input
                 type="number"
                 min={0}
+                step="0.01"
                 value={cost}
                 onChange={(e) => setCost(e.target.value)}
                 className="h-8 w-20"

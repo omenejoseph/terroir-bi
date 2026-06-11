@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Orders;
 
+use App\Enums\SalesUnit;
 use App\Models\InventoryItem;
 use App\Models\RecipeItem;
 use App\Support\Money\Money;
@@ -12,18 +13,30 @@ use Illuminate\Database\Eloquent\Collection;
 /**
  * Resolves the COGS to freeze onto an order line at order time. Prefers a recipe
  * roll-up (sum of input costs), falling back to the item's own cost_per_unit.
- * The figure is per sales unit — a catalog line is always in the item's sales
- * unit, so it applies directly (no case scaling). Returns null when no cost is
- * known (line flagged later as "unknown cost" in analytics).
+ * The base figure is per bottle; a case line is scaled by bottles_per_case.
+ * Returns null when no cost is known (line flagged later as "unknown cost").
  */
 class CogsSnapshot
 {
-    public function forLine(InventoryItem $item): ?Money
+    public function forLine(InventoryItem $item, string $unitType): ?Money
     {
-        return $this->perSalesUnit($item);
+        $perBottle = $this->perBottle($item);
+
+        if ($perBottle === null) {
+            return null;
+        }
+
+        if ($unitType === SalesUnit::Cases->value) {
+            $factor = max(1, (int) $item->bottles_per_case);
+
+            return Money::fromMinor($perBottle->getMinorAmount() * $factor, $perBottle->getCurrencyCode());
+        }
+
+        return $perBottle;
     }
 
-    private function perSalesUnit(InventoryItem $item): ?Money
+    /** Per-bottle COGS: recipe roll-up if present, else the item's own cost_per_unit. */
+    public function perBottle(InventoryItem $item): ?Money
     {
         /** @var Collection<int, RecipeItem> $recipe */
         $recipe = $item->recipe()->with('input')->get();

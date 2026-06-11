@@ -34,6 +34,7 @@ class StoreOrderRequest extends FormRequest
             'status' => ['sometimes', Rule::enum(OrderStatus::class)],
             'is_backorder' => ['sometimes', 'boolean'],
             'backorder_date' => ['sometimes', 'nullable', 'date'],
+            'deduct_stock' => ['sometimes', 'boolean'],
             'is_consignment' => ['sometimes', 'boolean'],
             'shipping_cost' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'shipping_paid_by_us' => ['sometimes', 'boolean'],

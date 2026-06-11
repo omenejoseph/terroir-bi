@@ -66,7 +66,7 @@ describe("PurchaseOrdersPage", () => {
     await user.type(within(dialog).getByLabelText(/Description 1/), "Cork 44mm");
     await user.clear(within(dialog).getByLabelText(/Quantity 1/));
     await user.type(within(dialog).getByLabelText(/Quantity 1/), "500");
-    await user.type(within(dialog).getByLabelText(/Unit price \(minor units\) 1/), "25");
+    await user.type(within(dialog).getByLabelText(/Unit price 1/), "0.25"); // major (€0.25) → 25 minor
     await user.click(within(dialog).getByRole("button", { name: "Create purchase order" }));
 
     await waitFor(() => expect(posted).not.toBeNull());

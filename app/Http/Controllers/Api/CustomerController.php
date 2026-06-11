@@ -14,6 +14,7 @@ use App\Http\Requests\Customers\QuickCustomerRequest;
 use App\Http\Requests\Customers\StoreCustomerRequest;
 use App\Http\Requests\Customers\UpdateCustomerRequest;
 use App\Models\Customer;
+use App\Queries\CustomerAnalyticsQuery;
 use App\Queries\CustomerInsightsQuery;
 use App\Queries\CustomerOrderAnalyticsQuery;
 use App\Queries\ListCustomersQuery;
@@ -38,6 +39,12 @@ class CustomerController extends Controller
 
     /** Customers overdue to reorder, ranked by value-weighted urgency. */
     public function reorderRadar(ReorderRadarQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->get()]);
+    }
+
+    /** Tenant-wide customer analytics: headline totals + per-customer table. */
+    public function analytics(CustomerAnalyticsQuery $query): JsonResponse
     {
         return response()->json(['data' => $query->get()]);
     }

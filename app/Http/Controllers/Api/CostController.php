@@ -28,12 +28,7 @@ class CostController extends Controller
 {
     public function index(Request $request, ListCostsQuery $query): JsonResponse
     {
-        $paginator = $query->paginate([
-            'search' => $request->query('search'),
-            'category' => $request->query('category'),
-            'status' => $request->query('status'),
-            'supplier_id' => $request->query('supplier_id'),
-        ]);
+        $paginator = $query->paginate($this->filters($request));
 
         return response()->json([
             'data' => array_map(fn (Cost $c) => CostData::fromModel($c)->toArray(), $paginator->items()),
@@ -46,9 +41,50 @@ class CostController extends Controller
         ]);
     }
 
+    /** Tab counts (All / Invoices / Payments / Others) for the current filter context. */
+    public function groupCounts(Request $request, ListCostsQuery $query): JsonResponse
+    {
+        // Counts ignore the tab group itself but respect the other filters.
+        $base = $this->filters($request);
+        unset($base['group']);
+
+        $count = fn (?string $group): int => $query->build([...$base, ...($group ? ['group' => $group] : [])])->count();
+
+        return response()->json(['data' => [
+            'all' => $count(null),
+            'invoices' => $count('invoices'),
+            'payments' => $count('payments'),
+            'others' => $count('others'),
+        ]]);
+    }
+
     public function categories(): JsonResponse
     {
-        return response()->json(['data' => Cost::query()->distinct()->orderBy('category')->pluck('category')->all()]);
+        $existing = Cost::query()->distinct()->orderBy('category')->pluck('category')->all();
+        // Invoice + Payment are always offered so the tabs can always be populated.
+        $categories = array_values(array_unique([
+            ListCostsQuery::INVOICE_CATEGORY,
+            ListCostsQuery::PAYMENT_CATEGORY,
+            ...$existing,
+        ]));
+
+        return response()->json(['data' => $categories]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function filters(Request $request): array
+    {
+        return [
+            'search' => $request->query('search'),
+            'category' => $request->query('category'),
+            'status' => $request->query('status'),
+            'supplier_id' => $request->query('supplier_id'),
+            'group' => $request->query('group'),
+            'date_from' => $request->query('date_from'),
+            'date_to' => $request->query('date_to'),
+        ];
     }
 
     public function analytics(Request $request, CostAnalyticsQuery $query): JsonResponse

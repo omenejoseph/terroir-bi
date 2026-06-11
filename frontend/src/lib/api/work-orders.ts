@@ -20,7 +20,7 @@ export const workOrdersApi = {
     }),
 
   /** GET /work-orders/stats — board counters. */
-  stats: () => api.get<WorkOrderStats>("/work-orders/stats"),
+  stats: (range?: string) => api.get<WorkOrderStats>("/work-orders/stats", { range }),
 
   /** POST /work-orders. */
   create: (input: WorkOrderInput) => api.post<WorkOrder>("/work-orders", input),

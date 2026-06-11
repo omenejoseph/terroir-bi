@@ -35,6 +35,13 @@ describe("CustomersPage (list)", () => {
     expect(mockRouter.push).toHaveBeenCalledWith("/customers/new");
   });
 
+  it("navigates to customer analytics", async () => {
+    renderWithProviders(<CustomersPage />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /Analytics/ }));
+    expect(mockRouter.push).toHaveBeenCalledWith("/customers/analytics");
+  });
+
   it("expands an inline read-only panel on row click", async () => {
     renderWithProviders(<CustomersPage />);
     const user = userEvent.setup();

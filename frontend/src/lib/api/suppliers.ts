@@ -8,7 +8,11 @@ import type {
   SupplierOrderInput,
   SupplierOrderQuery,
   SupplierOrderStatus,
+  MergeSuppliersInput,
+  SupplierMergePreview,
+  SupplierPriceChange,
   SupplierPriceItem,
+  SupplierStats,
   SupplierQuery,
 } from "@/lib/types";
 
@@ -38,9 +42,40 @@ export const suppliersApi = {
   addPriceItem: (id: string, input: PriceItemInput) =>
     api.post<SupplierPriceItem>(`/suppliers/${id}/price-items`, input),
 
+  /** PATCH /suppliers/{id}/price-items/{priceItem} — edit a line by id. */
+  updatePriceItem: (id: string, priceItemId: string, input: PriceItemInput) =>
+    api.patch<SupplierPriceItem>(`/suppliers/${id}/price-items/${priceItemId}`, input),
+
   /** DELETE /suppliers/{id}/price-items/{priceItem}. */
   deletePriceItem: (id: string, priceItemId: string) =>
     api.delete<void>(`/suppliers/${id}/price-items/${priceItemId}`),
+
+  /** GET /suppliers/{id}/stats — summary cards (price items + cost totals). */
+  stats: (id: string) => api.get<SupplierStats>(`/suppliers/${id}/stats`),
+
+  /** POST /suppliers/merge/preview — what would move (requires suppliers.manage). */
+  mergePreview: (input: MergeSuppliersInput) =>
+    api.post<SupplierMergePreview>("/suppliers/merge/preview", input),
+
+  /** POST /suppliers/merge — apply the merge (requires suppliers.delete). */
+  merge: (input: MergeSuppliersInput) => api.post<SupplierMergePreview>("/suppliers/merge", input),
+
+  /** GET /suppliers/{id}/price-changes — audited cost-change history. */
+  priceChanges: (id: string) =>
+    api.get<SupplierPriceChange[]>(`/suppliers/${id}/price-changes`),
+
+  // ── Public portal token (admin) ─────────────────────────────────────────────
+
+  /** GET /suppliers/{id}/portal-token. */
+  portalToken: (id: string) =>
+    api.get<{ portal_token: string | null }>(`/suppliers/${id}/portal-token`),
+
+  /** POST /suppliers/{id}/portal-token — (re)generate the portal link. */
+  generatePortalToken: (id: string) =>
+    api.post<Supplier & { portal_token: string }>(`/suppliers/${id}/portal-token`, {}),
+
+  /** DELETE /suppliers/{id}/portal-token — disable the portal. */
+  revokePortalToken: (id: string) => api.delete<Supplier>(`/suppliers/${id}/portal-token`),
 
   // ── Purchase orders ─────────────────────────────────────────────────────────
 

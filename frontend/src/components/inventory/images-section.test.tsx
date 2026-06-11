@@ -108,6 +108,6 @@ describe("ImagesSection", () => {
   it("hides the uploader for non-managers", async () => {
     renderWithProviders(<ImagesSection item={item} canManage={false} />);
     await screen.findByText("No images yet.");
-    expect(screen.queryByRole("button", { name: "Add image" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Choose image file")).not.toBeInTheDocument();
   });
 });

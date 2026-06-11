@@ -70,7 +70,7 @@ class DashboardTest extends TestCase
         $wine = InventoryItem::create([
             'name' => 'Plavac', 'sku' => 'PLV', 'category' => 'FINISHED', 'unit' => 'bottles',
             'sales_unit' => 'cases',
-            'current_stock' => '500.000', 'bottles_per_case' => 12, 'is_for_sale' => true, 'default_price' => 12000,
+            'current_stock' => '500.000', 'bottles_per_case' => 12, 'is_for_sale' => true, 'default_price' => 1000,
         ]);
         WorkOrder::create(['title' => 'Overdue', 'created_by_id' => $admin->getKey(), 'due_date' => now()->subDay(), 'status' => 'TODO']);
         $this->forgetTenant();

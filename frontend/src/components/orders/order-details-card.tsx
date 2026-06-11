@@ -6,6 +6,7 @@ import { Pencil } from "lucide-react";
 import { useAuth } from "@/lib/auth/context";
 import { useUpdateBackorder, useUpdateNotes, useUpdateShipping } from "@/hooks/use-orders";
 import { useFormatters } from "@/lib/format";
+import { majorToMinor, minorToMajorInput } from "@/lib/money";
 import { useTranslation } from "@/i18n/context";
 import type { Order } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -26,14 +27,15 @@ export function OrderDetailsCard({ order, canManage }: { order: Order; canManage
   const updateBackorder = useUpdateBackorder(order.id);
 
   const [editing, setEditing] = React.useState(false);
-  const [shipping, setShipping] = React.useState(order.shipping_cost ? String(order.shipping_cost.minor) : "");
+  // Shipping is shown/edited in major units (€); converted to minor on save.
+  const [shipping, setShipping] = React.useState(minorToMajorInput(order.shipping_cost?.minor));
   const [paidByUs, setPaidByUs] = React.useState(order.shipping_paid_by_us);
   const [notes, setNotes] = React.useState(order.notes ?? "");
   const [backorderDate, setBackorderDate] = React.useState(order.backorder_date?.slice(0, 10) ?? "");
   const [saving, setSaving] = React.useState(false);
 
   function start() {
-    setShipping(order.shipping_cost ? String(order.shipping_cost.minor) : "");
+    setShipping(minorToMajorInput(order.shipping_cost?.minor));
     setPaidByUs(order.shipping_paid_by_us);
     setNotes(order.notes ?? "");
     setBackorderDate(order.backorder_date?.slice(0, 10) ?? "");
@@ -43,9 +45,8 @@ export function OrderDetailsCard({ order, canManage }: { order: Order; canManage
   async function save() {
     setSaving(true);
     try {
-      const shippingTrim = shipping.trim();
       await updateShipping.mutateAsync({
-        shipping_cost: shippingTrim === "" ? null : Number(shippingTrim),
+        shipping_cost: majorToMinor(shipping),
         shipping_paid_by_us: paidByUs,
       });
       await updateNotes.mutateAsync(notes.trim() || null);
@@ -80,6 +81,7 @@ export function OrderDetailsCard({ order, canManage }: { order: Order; canManage
                   id="d-shipping"
                   type="number"
                   min={0}
+                  step="0.01"
                   value={shipping}
                   onChange={(e) => setShipping(e.target.value)}
                 />

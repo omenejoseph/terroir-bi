@@ -98,4 +98,28 @@ class WorkOrderTest extends TestCase
             ->assertJsonPath('data.done', 1)
             ->assertJsonPath('data.overdue', 1); // only the TODO past-due one
     }
+
+    public function test_stats_can_be_filtered_by_a_due_date_range(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        WorkOrder::create(['title' => 'soon', 'created_by_id' => $this->admin->getKey(), 'due_date' => now()->addDays(3), 'status' => 'TODO']);
+        WorkOrder::create(['title' => 'later', 'created_by_id' => $this->admin->getKey(), 'due_date' => now()->addDays(20), 'status' => 'TODO']);
+        WorkOrder::create(['title' => 'undated', 'created_by_id' => $this->admin->getKey(), 'status' => 'TODO']);
+        $this->forgetTenant();
+
+        // 7D horizon: only the task due in 3 days (undated + far-out excluded).
+        $this->getJson('/api/v1/work-orders/stats?range=7D', $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.todo', 1);
+
+        // 30D includes both dated tasks.
+        $this->getJson('/api/v1/work-orders/stats?range=30D', $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.todo', 2);
+
+        // ALL counts everything, including the undated one.
+        $this->getJson('/api/v1/work-orders/stats?range=ALL', $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.todo', 3);
+    }
 }

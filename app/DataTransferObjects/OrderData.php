@@ -58,6 +58,7 @@ final class OrderData implements Arrayable, JsonSerializable
             'created_by' => $this->user($order->createdBy),
             'is_backorder' => $order->is_backorder,
             'backorder_date' => $order->backorder_date?->toIso8601String(),
+            'deduct_stock' => $order->deduct_stock,
             'shipping_cost' => $order->shipping_cost?->jsonSerialize(),
             'shipping_paid_by_us' => $order->shipping_paid_by_us,
             'is_consignment' => $order->is_consignment,

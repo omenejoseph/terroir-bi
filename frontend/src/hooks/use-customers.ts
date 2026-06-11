@@ -3,12 +3,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { customersApi } from "@/lib/api/customers";
-import type { Customer, CustomerInput, CustomerQuery, PricingTierInput } from "@/lib/types";
+import type {
+  Customer,
+  CustomerInput,
+  CustomerQuery,
+  MergeCustomersInput,
+  PricingTierInput,
+} from "@/lib/types";
 
-export function useCustomers(query: CustomerQuery = {}) {
+export function useCustomers(query: CustomerQuery = {}, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["customers", query],
     queryFn: () => customersApi.list(query),
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -35,6 +42,41 @@ export function useCustomer(id: string | undefined) {
     queryKey: ["customers", "item", id],
     queryFn: () => customersApi.get(id!),
     enabled: !!id,
+  });
+}
+
+/** Preview a customer merge (no changes applied). */
+export function useMergePreview() {
+  return useMutation({
+    mutationFn: (input: MergeCustomersInput) => customersApi.mergePreview(input),
+  });
+}
+
+/** Apply a customer merge; invalidates the customer list. */
+export function useMergeCustomers() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: MergeCustomersInput) => customersApi.merge(input),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["customers"] }),
+  });
+}
+
+/** Per-bottle resolved prices for a customer + a set of items (custom/tier/rebate/default). */
+export function useResolvedPrices(customerId: string, itemIds: string[]) {
+  const key = [...itemIds].sort().join(",");
+  return useQuery({
+    queryKey: ["customers", "resolved-prices", customerId, key],
+    queryFn: () => customersApi.resolvedPrices(customerId, itemIds),
+    enabled: !!customerId && itemIds.length > 0,
+  });
+}
+
+/** Tenant-wide customer analytics (summary + per-customer table). */
+export function useCustomerAnalytics() {
+  return useQuery({
+    queryKey: ["customers", "analytics"],
+    queryFn: () => customersApi.analytics(),
+    staleTime: 60_000,
   });
 }
 
@@ -115,7 +157,7 @@ export function useRemoveCustomPrice(customerId: string) {
 }
 
 /** The customer's current order token (admins with customers.tokens). */
-export function useCustomerToken(id: string | undefined, enabled: boolean) {
+export function useCustomerToken(id: string | undefined, enabled = true) {
   return useQuery({
     queryKey: ["customers", "order-token", id],
     queryFn: () => customersApi.orderToken(id!),
@@ -127,9 +169,11 @@ export function useGenerateOrderToken(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => customersApi.generateToken(id),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Write the fresh token straight into the cache so the panel updates
+      // immediately (no refetch/flicker); refresh the single customer for consistency.
+      queryClient.setQueryData(["customers", "order-token", id], { order_token: data.order_token });
       void queryClient.invalidateQueries({ queryKey: ["customers", "item", id] });
-      void queryClient.invalidateQueries({ queryKey: ["customers", "order-token", id] });
     },
   });
 }
@@ -139,8 +183,8 @@ export function useRevokeOrderToken(id: string) {
   return useMutation({
     mutationFn: () => customersApi.revokeToken(id),
     onSuccess: () => {
+      queryClient.setQueryData(["customers", "order-token", id], { order_token: null });
       void queryClient.invalidateQueries({ queryKey: ["customers", "item", id] });
-      void queryClient.invalidateQueries({ queryKey: ["customers", "order-token", id] });
     },
   });
 }

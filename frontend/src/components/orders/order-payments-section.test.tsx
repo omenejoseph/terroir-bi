@@ -53,7 +53,7 @@ describe("OrderPaymentsSection", () => {
     await user.click(await screen.findByRole("button", { name: "Record payment" }));
 
     const dialog = await screen.findByRole("dialog");
-    await user.type(within(dialog).getByLabelText("Amount (minor units)"), "40000");
+    await user.type(within(dialog).getByLabelText("Amount"), "400"); // major (€400) → 40000 minor
     await user.click(within(dialog).getByRole("button", { name: "Save payment" }));
 
     await waitFor(() => expect(posted).not.toBeNull());

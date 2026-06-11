@@ -29,6 +29,9 @@ import { WorkOrderDetailDialog } from "@/components/work-orders/work-order-detai
 
 type View = "board" | Granularity;
 
+/** Due-date horizons for the stat summary, mirroring the dashboard. */
+const STAT_RANGES = ["7D", "30D", "90D", "1Y", "ALL"];
+
 export default function WorkOrdersPage() {
   const { t } = useTranslation();
   const { date, monthYear } = useFormatters();
@@ -37,6 +40,8 @@ export default function WorkOrdersPage() {
   const [selected, setSelected] = React.useState<WorkOrder | null>(null);
   const [search, setSearch] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
+  const [statsRange, setStatsRange] = React.useState("ALL");
+  const [creating, setCreating] = React.useState(false);
 
   React.useEffect(() => {
     const id = setTimeout(() => setDebounced(search), 300);
@@ -44,7 +49,8 @@ export default function WorkOrdersPage() {
   }, [search]);
 
   const { data, isLoading, isError, error } = useWorkOrders(debounced ? { search: debounced } : {});
-  const statsQ = useWorkOrderStats();
+  const statsQ = useWorkOrderStats(statsRange);
+  const rangeTabs = STAT_RANGES.map((r) => ({ value: r, label: r === "ALL" ? t("tasks.range.all") : r }));
 
   const workOrders = React.useMemo(
     () => [...(data ?? [])].sort((a, b) => a.sort_order - b.sort_order),
@@ -103,24 +109,34 @@ export default function WorkOrdersPage() {
           <h1 className="text-2xl font-semibold tracking-tight">{t("tasks.title")}</h1>
           <p className="text-sm text-muted-foreground">{t("tasks.subtitle")}</p>
         </div>
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t("tasks.search")}
-          className="sm:max-w-xs"
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("tasks.search")}
+            className="sm:max-w-xs"
+          />
+          <Button onClick={() => setCreating((c) => !c)} className="shrink-0">
+            <Plus className="size-4" />
+            {t("tasks.create.open")}
+          </Button>
+        </div>
       </header>
 
-      {statsQ.data && (
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          <StatTile label={t("tasks.stats.todo")} value={statsQ.data.todo} />
-          <StatTile label={t("tasks.stats.inProgress")} value={statsQ.data.in_progress} />
-          <StatTile label={t("tasks.stats.done")} value={statsQ.data.done} />
-          <StatTile label={t("tasks.stats.overdue")} value={statsQ.data.overdue} accent />
-        </div>
-      )}
+      {/* Stat summary with a due-date timeline filter. */}
+      <div className="space-y-3">
+        <Tabs tabs={rangeTabs} value={statsRange} onChange={setStatsRange} />
+        {statsQ.data && (
+          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+            <StatTile label={t("tasks.stats.todo")} value={statsQ.data.todo} />
+            <StatTile label={t("tasks.stats.inProgress")} value={statsQ.data.in_progress} />
+            <StatTile label={t("tasks.stats.done")} value={statsQ.data.done} />
+            <StatTile label={t("tasks.stats.overdue")} value={statsQ.data.overdue} accent />
+          </div>
+        )}
+      </div>
 
-      <QuickCreateRow />
+      {creating && <QuickCreateRow onDone={() => setCreating(false)} />}
 
       {/* View switcher + date navigator */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -202,7 +218,7 @@ function StatTile({ label, value, accent }: { label: string; value: number; acce
   );
 }
 
-function QuickCreateRow() {
+function QuickCreateRow({ onDone }: { onDone: () => void }) {
   const { t } = useTranslation();
   const { can } = useAuth();
   const create = useCreateWorkOrder();
@@ -226,6 +242,7 @@ function QuickCreateRow() {
     setDueDate("");
     setPriority("MEDIUM");
     setAssigneeId("");
+    onDone();
   }
 
   return (
@@ -259,10 +276,15 @@ function QuickCreateRow() {
               ))}
             </Select>
           </div>
-          <Button type="submit" disabled={create.isPending || !title.trim()}>
-            {create.isPending ? <Spinner /> : <Plus className="size-4" />}
-            {t("tasks.create.submit")}
-          </Button>
+          <div className="flex gap-2">
+            <Button type="submit" disabled={create.isPending || !title.trim()}>
+              {create.isPending ? <Spinner /> : <Plus className="size-4" />}
+              {t("tasks.create.submit")}
+            </Button>
+            <Button type="button" variant="outline" onClick={onDone}>
+              {t("tasks.create.cancel")}
+            </Button>
+          </div>
           {canViewMembers && <AssigneeField value={assigneeId} onChange={setAssigneeId} />}
         </form>
       </CardContent>

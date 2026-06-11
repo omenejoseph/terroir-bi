@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\TenantSessionController;
+use App\Http\Controllers\Api\BottleAnalysisController;
 use App\Http\Controllers\Api\CashFlowController;
 use App\Http\Controllers\Api\ConsignmentController;
 use App\Http\Controllers\Api\CostController;
@@ -10,8 +11,10 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CustomerProductOverrideController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InflowController;
+use App\Http\Controllers\Api\InventoryCheckController;
 use App\Http\Controllers\Api\InventoryItemController;
 use App\Http\Controllers\Api\InventoryMediaController;
+use App\Http\Controllers\Api\InventorySpendController;
 use App\Http\Controllers\Api\InvitationController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\NotificationController;
@@ -21,6 +24,7 @@ use App\Http\Controllers\Api\OrderPaymentController;
 use App\Http\Controllers\Api\PriceController;
 use App\Http\Controllers\Api\PricingTierController;
 use App\Http\Controllers\Api\PublicOrderController;
+use App\Http\Controllers\Api\PublicSupplierController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\SupplierController;
@@ -42,6 +46,11 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/invitations/accept', [InvitationController::class, 'accept']);
     Route::get('public/{token}/catalog', [PublicOrderController::class, 'catalog']);
     Route::post('public/{token}/orders', [PublicOrderController::class, 'store']);
+
+    // Public supplier portal — the portal token authenticates and selects the tenant.
+    Route::get('public/supplier/{token}', [PublicSupplierController::class, 'show']);
+    Route::post('public/supplier/{token}/price-items/import', [PublicSupplierController::class, 'importPriceItems']);
+    Route::patch('public/supplier/{token}/orders/{order}/confirm', [PublicSupplierController::class, 'confirmOrder']);
 
     // Authenticated, but no active tenant required (e.g. to switch tenants).
     Route::middleware('auth:sanctum')->group(function () {
@@ -87,12 +96,18 @@ Route::prefix('v1')->group(function () {
             // Static segments must precede the {item} wildcard so they aren't treated as ids.
             Route::get('inventory-items/taxonomy', [InventoryItemController::class, 'taxonomy']);
             Route::get('inventory-items/analytics', [InventoryItemController::class, 'analytics']);
+            Route::get('inventory-items/spend', [InventorySpendController::class, 'index']);
             Route::get('inventory-items', [InventoryItemController::class, 'index']);
             Route::get('inventory-items/{item}', [InventoryItemController::class, 'show']);
             Route::get('inventory-items/{item}/movements', [StockController::class, 'movements']);
+            Route::get('inventory-items/{item}/stock-analytics', [StockController::class, 'stockAnalytics']);
             Route::get('inventory-items/{item}/recipe', [StockController::class, 'recipe']);
             Route::get('inventory-items/{item}/images', [InventoryMediaController::class, 'listImages']);
             Route::get('inventory-items/{item}/tech-sheets', [InventoryMediaController::class, 'listTechSheets']);
+            Route::get('inventory-items/{item}/documents', [InventoryMediaController::class, 'listDocuments']);
+            Route::get('inventory-items/{item}/bottle-analyses', [BottleAnalysisController::class, 'index']);
+            Route::get('inventory-checks', [InventoryCheckController::class, 'index']);
+            Route::get('inventory-checks/{check}', [InventoryCheckController::class, 'show']);
         });
         Route::middleware('can:inventory.manage')->group(function () {
             // Static segment before the {item} wildcard so it isn't treated as an id.
@@ -106,6 +121,10 @@ Route::prefix('v1')->group(function () {
             Route::delete('inventory-items/{item}/images/{image}', [InventoryMediaController::class, 'deleteImage']);
             Route::post('inventory-items/{item}/tech-sheets', [InventoryMediaController::class, 'attachTechSheet']);
             Route::delete('inventory-items/{item}/tech-sheets/{techSheet}', [InventoryMediaController::class, 'deleteTechSheet']);
+            Route::post('inventory-items/{item}/documents', [InventoryMediaController::class, 'attachDocument']);
+            Route::delete('inventory-items/{item}/documents/{document}', [InventoryMediaController::class, 'deleteDocument']);
+            Route::post('inventory-items/{item}/bottle-analyses', [BottleAnalysisController::class, 'store']);
+            Route::delete('inventory-items/{item}/bottle-analyses/{analysis}', [BottleAnalysisController::class, 'destroy']);
             Route::patch('stock-movements/{stockMovement}/reconciliation', [StockController::class, 'setReconciliation']);
         });
         Route::delete('inventory-items/{item}', [InventoryItemController::class, 'destroy'])
@@ -116,6 +135,7 @@ Route::prefix('v1')->group(function () {
             // Static segments before the {customer} wildcard so they aren't treated as ids.
             Route::get('customers/lookup-vat', [CustomerController::class, 'lookupVat']);
             Route::get('customers/reorder-radar', [CustomerController::class, 'reorderRadar']);
+            Route::get('customers/analytics', [CustomerController::class, 'analytics'])->middleware('can:financials.view');
             Route::get('customers', [CustomerController::class, 'index']);
             Route::get('customers/{customer}', [CustomerController::class, 'show']);
             Route::get('customers/{customer}/insights', [CustomerController::class, 'insights'])->middleware('can:financials.view');
@@ -149,16 +169,25 @@ Route::prefix('v1')->group(function () {
             Route::get('supplier-orders/{supplierOrder}', [SupplierOrderController::class, 'show']);
             Route::get('suppliers', [SupplierController::class, 'index']);
             Route::get('suppliers/{supplier}', [SupplierController::class, 'show']);
+            Route::get('suppliers/{supplier}/stats', [SupplierController::class, 'stats']);
+            Route::get('suppliers/{supplier}/price-changes', [SupplierController::class, 'priceChanges']);
         });
         Route::middleware('can:suppliers.manage')->group(function () {
+            Route::post('suppliers/merge/preview', [SupplierController::class, 'mergePreview']);
             Route::post('suppliers', [SupplierController::class, 'store']);
             Route::patch('suppliers/{supplier}', [SupplierController::class, 'update']);
+            Route::get('suppliers/{supplier}/portal-token', [SupplierController::class, 'showToken']);
+            Route::post('suppliers/{supplier}/portal-token', [SupplierController::class, 'generateToken']);
+            Route::delete('suppliers/{supplier}/portal-token', [SupplierController::class, 'revokeToken']);
             Route::post('suppliers/{supplier}/price-items', [SupplierController::class, 'addPriceItem']);
+            Route::patch('suppliers/{supplier}/price-items/{priceItem}', [SupplierController::class, 'updatePriceItem']);
             Route::delete('suppliers/{supplier}/price-items/{priceItem}', [SupplierController::class, 'deletePriceItem']);
             Route::post('supplier-orders', [SupplierOrderController::class, 'store']);
             Route::patch('supplier-orders/{supplierOrder}/status', [SupplierOrderController::class, 'updateStatus']);
             Route::delete('supplier-orders/{supplierOrder}', [SupplierOrderController::class, 'destroy']);
         });
+        Route::post('suppliers/merge', [SupplierController::class, 'merge'])
+            ->middleware('can:suppliers.delete');
         Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])
             ->middleware('can:suppliers.delete');
 
@@ -170,6 +199,7 @@ Route::prefix('v1')->group(function () {
             Route::get('orders/{order}/payments', [OrderPaymentController::class, 'index']);
             // Static segments before the {cost} wildcard.
             Route::get('costs/categories', [CostController::class, 'categories']);
+            Route::get('costs/group-counts', [CostController::class, 'groupCounts']);
             Route::get('costs/analytics', [CostController::class, 'analytics']);
             Route::get('costs', [CostController::class, 'index']);
             Route::get('costs/{cost}', [CostController::class, 'show']);
@@ -252,6 +282,10 @@ Route::prefix('v1')->group(function () {
         // Pricing tiers.
         Route::middleware('can:pricing.view')->group(function () {
             Route::get('pricing-tiers', [PricingTierController::class, 'index']);
+
+            // Per-item price books (read).
+            Route::get('inventory-items/{item}/tier-prices', [PriceController::class, 'itemTierPrices']);
+            Route::get('inventory-items/{item}/customer-prices', [PriceController::class, 'itemCustomerPrices']);
         });
         Route::middleware('can:pricing.manage')->group(function () {
             Route::post('pricing-tiers', [PricingTierController::class, 'store']);

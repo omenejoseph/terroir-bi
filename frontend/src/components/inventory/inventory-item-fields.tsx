@@ -23,10 +23,16 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { YesNoToggle } from "@/components/ui/yes-no-toggle";
 
+/** Whether the item is sold packaged (bottles/cases) — drives the wine-only fields. */
+export function isPackagedUnit(unit: string): boolean {
+  return ["bottle", "bottles", "case", "cases"].includes(unit.trim().toLowerCase());
+}
+
 /** Editable item fields as strings (form-friendly), shared by Add and Edit. */
 export interface ItemFormState {
   name: string;
   sku: string;
+  description: string;
   category: InventoryCategory;
   group: string;
   subcategory: string;
@@ -46,6 +52,7 @@ export interface ItemFormState {
 export const EMPTY_ITEM_FORM: ItemFormState = {
   name: "",
   sku: "",
+  description: "",
   category: "FINISHED",
   group: "",
   subcategory: "",
@@ -75,6 +82,7 @@ export function itemToForm(item: InventoryItem): ItemFormState {
   return {
     name: item.name,
     sku: item.sku,
+    description: item.description ?? "",
     category: (item.category as InventoryCategory) ?? "FINISHED",
     group: item.group ?? "",
     subcategory: item.subcategory ?? "",
@@ -102,16 +110,21 @@ function toNumber(value: string): number | undefined {
 /** Build the API payload from form state (trims, coerces, nulls empties). */
 export function formToInput(form: ItemFormState): InventoryItemInput {
   const sizeValue = form.unit_size_value.trim();
+  const packaged = isPackagedUnit(form.unit);
   return {
     name: form.name.trim(),
     sku: form.sku.trim(),
+    description: form.description.trim() || null,
     category: form.category,
     unit: form.unit.trim(),
-    sales_unit: form.sales_unit,
-    bottles_per_case: toNumber(form.bottles_per_case) ?? 1,
-    // Price & cost are entered in major units, per sales unit.
-    cost_per_unit: majorToMinor(form.cost_per_unit) ?? 0,
+    // Price & cost are entered in major units, per bottle for packaged items,
+    // otherwise per the chosen unit. Cost is optional (may come from a recipe).
+    cost_per_unit: majorToMinor(form.cost_per_unit),
     default_price: majorToMinor(form.default_price),
+    // sales_unit / bottles_per_case only apply to bottle/case items.
+    ...(packaged
+      ? { sales_unit: form.sales_unit, bottles_per_case: toNumber(form.bottles_per_case) ?? 1 }
+      : {}),
     group: form.group.trim() || null,
     subcategory: form.subcategory.trim() || null,
     unit_size: sizeValue ? `${sizeValue}${form.unit_size_unit}` : null,
@@ -178,6 +191,13 @@ export function InventoryItemFields({
   const createLabel = (value: string) => t("inventory.combobox.create", { value });
   const emptyLabel = t("inventory.combobox.empty");
 
+  // Bottle/case items expose sales unit + bottles-per-case and are priced per
+  // bottle; everything else is priced per its own unit (kg, litre, …).
+  const packaged = isPackagedUnit(form.unit);
+  const priceUnit = packaged
+    ? t("inventory.add.unit.bottle")
+    : t(`inventory.add.unit.${form.unit}`);
+
   return (
     <>
       <Field id="name" label={t("inventory.add.nameLabel")} error={errors.name}>
@@ -197,6 +217,22 @@ export function InventoryItemFields({
           onChange={(e) => set("sku", e.target.value)}
           placeholder={t("inventory.add.skuPlaceholder")}
           required
+        />
+      </Field>
+
+      <Field
+        id="description"
+        label={t("inventory.add.descriptionLabel")}
+        error={errors.description}
+        hint={t("inventory.add.descriptionHint")}
+      >
+        <textarea
+          id="description"
+          value={form.description}
+          onChange={(e) => set("description", e.target.value)}
+          rows={2}
+          placeholder={t("inventory.add.descriptionPlaceholder")}
+          className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </Field>
 
@@ -305,46 +341,50 @@ export function InventoryItemFields({
           </div>
         </Field>
 
-        <Field
-          id="sales_unit"
-          label={t("inventory.add.salesUnitLabel")}
-          error={errors.sales_unit}
-          hint={t("inventory.add.salesUnitHint")}
-        >
-          <Select
-            id="sales_unit"
-            value={form.sales_unit}
-            onChange={(e) => set("sales_unit", e.target.value as SalesUnit)}
-          >
-            {SALES_UNITS.map((u) => (
-              <option key={u} value={u}>
-                {t(`inventory.add.salesUnit.${u}`)}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        {packaged && (
+          <>
+            <Field
+              id="sales_unit"
+              label={t("inventory.add.salesUnitLabel")}
+              error={errors.sales_unit}
+              hint={t("inventory.add.salesUnitHint")}
+            >
+              <Select
+                id="sales_unit"
+                value={form.sales_unit}
+                onChange={(e) => set("sales_unit", e.target.value as SalesUnit)}
+              >
+                {SALES_UNITS.map((u) => (
+                  <option key={u} value={u}>
+                    {t(`inventory.add.salesUnit.${u}`)}
+                  </option>
+                ))}
+              </Select>
+            </Field>
 
-        <Field
-          id="bottles_per_case"
-          label={t("inventory.add.bottlesPerCaseLabel")}
-          error={errors.bottles_per_case}
-          hint={t("inventory.add.bottlesPerCaseHint")}
-        >
-          <Input
-            id="bottles_per_case"
-            type="number"
-            min={1}
-            value={form.bottles_per_case}
-            onChange={(e) => set("bottles_per_case", e.target.value)}
-            required
-          />
-        </Field>
+            <Field
+              id="bottles_per_case"
+              label={t("inventory.add.bottlesPerCaseLabel")}
+              error={errors.bottles_per_case}
+              hint={t("inventory.add.bottlesPerCaseHint")}
+            >
+              <Input
+                id="bottles_per_case"
+                type="number"
+                min={1}
+                value={form.bottles_per_case}
+                onChange={(e) => set("bottles_per_case", e.target.value)}
+                required
+              />
+            </Field>
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           id="default_price"
-          label={t("inventory.add.priceLabel")}
+          label={t("inventory.add.priceLabel", { unit: priceUnit })}
           error={errors.default_price}
           hint={t("inventory.add.priceHint")}
         >
@@ -360,7 +400,7 @@ export function InventoryItemFields({
 
         <Field
           id="cost_per_unit"
-          label={t("inventory.add.costLabel")}
+          label={t("inventory.add.costLabel", { unit: priceUnit })}
           error={errors.cost_per_unit}
           hint={t("inventory.add.costHint")}
         >
@@ -371,7 +411,6 @@ export function InventoryItemFields({
             step="0.01"
             value={form.cost_per_unit}
             onChange={(e) => set("cost_per_unit", e.target.value)}
-            required
           />
         </Field>
       </div>

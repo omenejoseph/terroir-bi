@@ -23,19 +23,24 @@ final class RecipeLineData implements Arrayable, JsonSerializable
         public readonly string $inputSku,
         public readonly string $inputUnit,
         public readonly string $quantity,
+        public readonly ?string $inputGroup,
+        public readonly ?string $inputStock,
     ) {}
 
     public static function fromModel(RecipeItem $line): self
     {
         $input = $line->input;
+        $isItem = $input instanceof InventoryItem;
 
         // Custom (non-catalog) lines fall back to their own name/unit.
         return new self(
             inputId: $line->input_id,
-            inputName: $input instanceof InventoryItem ? $input->name : ($line->custom_name ?? ''),
-            inputSku: $input instanceof InventoryItem ? $input->sku : '',
-            inputUnit: $input instanceof InventoryItem ? $input->unit : ($line->custom_unit ?? ''),
+            inputName: $isItem ? $input->name : ($line->custom_name ?? ''),
+            inputSku: $isItem ? $input->sku : '',
+            inputUnit: $isItem ? $input->unit : ($line->custom_unit ?? ''),
             quantity: (string) $line->quantity,
+            inputGroup: $isItem ? $input->group : null,
+            inputStock: $isItem ? (string) $input->current_stock : null,
         );
     }
 
@@ -50,6 +55,8 @@ final class RecipeLineData implements Arrayable, JsonSerializable
             'input_sku' => $this->inputSku,
             'input_unit' => $this->inputUnit,
             'quantity' => $this->quantity,
+            'input_group' => $this->inputGroup,
+            'input_stock' => $this->inputStock,
         ];
     }
 

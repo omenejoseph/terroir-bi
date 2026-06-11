@@ -5,12 +5,16 @@ import * as React from "react";
 import { ApiError } from "@/lib/api/client";
 import { useCreateOrder } from "@/hooks/use-orders";
 import { useTranslation } from "@/i18n/context";
-import type { Order } from "@/lib/types";
+import { useFormatters } from "@/lib/format";
+import { majorToMinor } from "@/lib/money";
+import { cn } from "@/lib/utils";
+import { ORDER_STATUSES, type Order, type OrderStatus } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { CustomerPicker } from "@/components/customers/customer-picker";
 import {
@@ -28,18 +32,25 @@ export function OrderForm({
   onCancel: () => void;
 }) {
   const { t } = useTranslation();
+  const { moneyObject } = useFormatters();
   const create = useCreateOrder();
 
   const [customerId, setCustomerId] = React.useState("");
   const [customerLabel, setCustomerLabel] = React.useState("");
   const [lines, setLines] = React.useState<DraftLine[]>(() => [blankCatalogLine()]);
   const [notes, setNotes] = React.useState("");
-  const [isConsignment, setIsConsignment] = React.useState(false);
-  const [isBackorder, setIsBackorder] = React.useState(false);
+  const [status, setStatus] = React.useState<OrderStatus>("RECEIVED");
+  const [orderType, setOrderType] = React.useState<"standard" | "backorder" | "consignment">(
+    "standard",
+  );
+  const [deductStock, setDeductStock] = React.useState(false); // backorder: deduct now?
   const [backorderDate, setBackorderDate] = React.useState("");
   const [shippingCost, setShippingCost] = React.useState("");
-  const [shippingPaidByUs, setShippingPaidByUs] = React.useState(false);
+  const [subtotal, setSubtotal] = React.useState({ minor: 0, currency: "EUR" });
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+  const isBackorder = orderType === "backorder";
+  const isConsignment = orderType === "consignment";
   const [formError, setFormError] = React.useState<string | null>(null);
 
   async function handleSubmit(event: React.SyntheticEvent) {
@@ -57,17 +68,20 @@ export function OrderForm({
       return;
     }
 
-    const shipping = shippingCost.trim();
+    const shippingMinor = majorToMinor(shippingCost); // input is in major units (€)
     try {
       const order = await create.mutateAsync({
         customer_id: customerId,
         items,
+        status,
         notes: notes.trim() || null,
         is_consignment: isConsignment,
         is_backorder: isBackorder,
         backorder_date: isBackorder && backorderDate ? backorderDate : null,
-        ...(shipping === "" ? {} : { shipping_cost: Number(shipping) }),
-        shipping_paid_by_us: shippingPaidByUs,
+        // Only a backorder offers the deduct-now choice; others use the API default.
+        ...(isBackorder ? { deduct_stock: deductStock } : {}),
+        // A logistics cost means we bear the freight; the API infers shipping_paid_by_us.
+        ...(shippingMinor === null ? {} : { shipping_cost: shippingMinor }),
       });
       onSaved(order);
     } catch (err) {
@@ -106,8 +120,19 @@ export function OrderForm({
 
           <div className="space-y-2">
             <Label>{t("orders.form.items")}</Label>
-            <OrderLineItemsEditor lines={lines} onChange={setLines} />
+            <OrderLineItemsEditor
+              lines={lines}
+              onChange={setLines}
+              customerId={customerId}
+              onSubtotalChange={(minor, currency) => setSubtotal({ minor, currency })}
+            />
             {errors.items && <p className="text-sm text-destructive">{errors.items}</p>}
+            <div className="flex items-center justify-end gap-3 border-t border-border pt-2 text-sm">
+              <span className="text-muted-foreground">{t("orders.form.total")}</span>
+              <span className="text-base font-semibold tabular-nums">
+                {moneyObject({ minor: subtotal.minor, currency: subtotal.currency })}
+              </span>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -122,50 +147,95 @@ export function OrderForm({
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="order-shipping">{t("orders.form.shipping")}</Label>
-              <Input
-                id="order-shipping"
-                type="number"
-                min={0}
-                value={shippingCost}
-                onChange={(e) => setShippingCost(e.target.value)}
-                placeholder={t("orders.form.shippingPlaceholder")}
-              />
+              <Label htmlFor="order-status">{t("orders.form.initialStatus")}</Label>
+              <Select
+                id="order-status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value as OrderStatus)}
+              >
+                {ORDER_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {t(`orders.status.${s}`)}
+                  </option>
+                ))}
+              </Select>
             </div>
-            <div className="flex items-end">
-              <label className="flex items-center gap-2 text-sm">
-                <Checkbox
-                  checked={shippingPaidByUs}
-                  onChange={(e) => setShippingPaidByUs(e.target.checked)}
+            <div className="space-y-1">
+              <Label htmlFor="order-shipping">{t("orders.form.logistics")}</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="order-shipping"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={shippingCost}
+                  onChange={(e) => setShippingCost(e.target.value)}
+                  placeholder={t("orders.form.shippingPlaceholder")}
                 />
-                {t("orders.form.shippingPaidByUs")}
-              </label>
+                <span className="text-sm text-muted-foreground">€</span>
+              </div>
+              <p className="text-xs text-muted-foreground">{t("orders.form.logisticsHint")}</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-6">
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox checked={isConsignment} onChange={(e) => setIsConsignment(e.target.checked)} />
-              {t("orders.form.consignment")}
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox checked={isBackorder} onChange={(e) => setIsBackorder(e.target.checked)} />
-              {t("orders.form.backorder")}
-            </label>
-            {isBackorder && (
-              <div className="flex items-center gap-2">
-                <Label htmlFor="order-backorder-date" className="text-sm">
-                  {t("orders.form.backorderDate")}
-                </Label>
-                <Input
-                  id="order-backorder-date"
-                  type="date"
-                  value={backorderDate}
-                  onChange={(e) => setBackorderDate(e.target.value)}
+          {/* Fulfilment type — mutually exclusive */}
+          <fieldset className="space-y-2">
+            <legend className="mb-1 text-sm font-medium">{t("orders.form.fulfilment")}</legend>
+            {(["standard", "backorder", "consignment"] as const).map((opt) => (
+              <label
+                key={opt}
+                className={cn(
+                  "flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors",
+                  orderType === opt ? "border-primary bg-primary/5" : "border-border",
+                )}
+              >
+                <input
+                  type="radio"
+                  name="order-type"
+                  value={opt}
+                  checked={orderType === opt}
+                  onChange={() => setOrderType(opt)}
+                  className="mt-0.5 size-4 accent-primary"
+                  aria-label={t(`orders.form.type.${opt}`)}
                 />
-              </div>
-            )}
-          </div>
+                <div className="space-y-1">
+                  <span className="block text-sm font-medium">{t(`orders.form.type.${opt}`)}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {t(`orders.form.type.${opt}Hint`)}
+                  </span>
+
+                  {opt === "backorder" && isBackorder && (
+                    <div className="space-y-3 pt-2">
+                      <label className="flex items-center gap-2 text-xs font-medium">
+                        <Checkbox
+                          checked={deductStock}
+                          onChange={(e) => setDeductStock(e.target.checked)}
+                        />
+                        {t("orders.form.deductStock")}
+                        <span className="font-normal text-muted-foreground">
+                          {deductStock
+                            ? t("orders.form.deductStockOn")
+                            : t("orders.form.deductStockOff")}
+                        </span>
+                      </label>
+                      <div className="space-y-1">
+                        <Label htmlFor="order-backorder-date" className="text-xs">
+                          {t("orders.form.expectedDate")}
+                        </Label>
+                        <Input
+                          id="order-backorder-date"
+                          type="date"
+                          value={backorderDate}
+                          onChange={(e) => setBackorderDate(e.target.value)}
+                          className="max-w-48"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </label>
+            ))}
+          </fieldset>
 
           {formError && (
             <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{formError}</p>

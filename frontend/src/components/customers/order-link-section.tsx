@@ -19,7 +19,10 @@ import { useConfirm } from "@/components/ui/confirm";
 export function OrderLinkSection({ customer }: { customer: Customer }) {
   const { t } = useTranslation();
   const confirm = useConfirm();
-  const tokenQ = useCustomerToken(customer.id, customer.has_order_token);
+  // Drive the panel from the token query itself (not the possibly-stale customer
+  // prop), so generate/revoke reflect immediately regardless of where the
+  // customer came from (list card vs. detail page).
+  const tokenQ = useCustomerToken(customer.id);
   const generate = useGenerateOrderToken(customer.id);
   const revoke = useRevokeOrderToken(customer.id);
   const [copied, setCopied] = React.useState(false);
@@ -54,7 +57,11 @@ export function OrderLinkSection({ customer }: { customer: Customer }) {
         </div>
         <p className="text-sm text-muted-foreground">{t("customers.orderLink.intro")}</p>
 
-        {customer.has_order_token ? (
+        {tokenQ.isLoading ? (
+          <div className="flex py-2">
+            <Spinner className="size-5 text-muted-foreground" />
+          </div>
+        ) : token ? (
           <>
             <div className="flex items-center gap-2">
               <Input

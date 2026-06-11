@@ -16,8 +16,9 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Create an internal order (flow 01): generate a number, snapshot COGS per line,
- * deduct stock (overdraw-guarded) unless it's a backorder, record the opening
- * status, and total it up — all in one transaction.
+ * deduct stock (overdraw-guarded) when the order deducts (backorders default to
+ * no deduction but may opt in), record the opening status, and total it up —
+ * all in one transaction.
  */
 class CreateOrderAction
 {
@@ -41,6 +42,12 @@ class CreateOrderAction
             $isBackorder = (bool) ($data['is_backorder'] ?? false);
             $shippingCost = isset($data['shipping_cost']) ? (int) $data['shipping_cost'] : null;
 
+            // Standard/consignment orders deduct now; a backorder defaults to no
+            // deduction (stock leaves when fulfilled) but may opt in via deduct_stock.
+            $deductStock = array_key_exists('deduct_stock', $data)
+                ? (bool) $data['deduct_stock']
+                : ! $isBackorder;
+
             $order = Order::create([
                 'order_number' => $this->numbers->next(),
                 'status' => $status,
@@ -49,6 +56,7 @@ class CreateOrderAction
                 'notes' => $data['notes'] ?? null,
                 'is_backorder' => $isBackorder,
                 'backorder_date' => $isBackorder ? ($data['backorder_date'] ?? null) : null,
+                'deduct_stock' => $deductStock,
                 'is_consignment' => (bool) ($data['is_consignment'] ?? false),
                 'shipping_paid_by_us' => (bool) ($data['shipping_paid_by_us'] ?? ($shippingCost !== null)),
             ]);
