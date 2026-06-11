@@ -41,6 +41,36 @@ export interface TenantMembership {
   status: string;
 }
 
+/** Billable application modules — mirrors App\Enums\Module. */
+export const MODULES = [
+  "dashboard",
+  "inventory",
+  "orders",
+  "customers",
+  "suppliers",
+  "inflows",
+  "costs",
+  "cash_flow",
+  "work_orders",
+  "team",
+  "settings",
+] as const;
+export type Module = (typeof MODULES)[number];
+
+/** Subscription access level — mirrors App\Enums\AccessLevel. */
+export type AccessLevel = "full" | "read_only" | "blocked";
+
+/** Computed subscription access for the active tenant (GET /auth/me). */
+export interface TenantAccess {
+  level: AccessLevel;
+  status: string;
+  trial_ends_at: string | null;
+  current_period_end: string | null;
+  grace_full_until: string | null;
+  grace_readonly_until: string | null;
+  days_remaining: number | null;
+}
+
 /** Returned by login / switch-tenant / me. The `token` is tenant-bound. */
 export interface AuthSession {
   token: string | null;
@@ -49,6 +79,10 @@ export interface AuthSession {
   roles: string[];
   tenants: TenantMembership[];
   settings: OrganizationSettings | null;
+  /** Module keys the active tenant's plan includes (empty when no tenant). */
+  modules: string[];
+  /** Subscription access state, or null when there's no active tenant. */
+  access: TenantAccess | null;
 }
 
 /** Organisation-wide settings for the active tenant (GET/PATCH /settings). */

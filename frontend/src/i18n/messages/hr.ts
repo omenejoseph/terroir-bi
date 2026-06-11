@@ -36,6 +36,16 @@ export const hr: Messages = {
     team: "Tim",
     settings: "Postavke",
   },
+  access: {
+    blockedTitle: "Pretplata je istekla",
+    blockedBody:
+      "Vaša je pretplata istekla i pristup je pauziran. Obnovite plan kako biste vratili pristup.",
+    readOnlyTitle: "Način samo za čitanje",
+    readOnlyBody:
+      "Vaša je pretplata u razdoblju počeka — možete pregledavati podatke, ali ne i raditi izmjene dok ne obnovite.",
+    daysRemaining: "još {count} dana",
+    contactSupport: "Obratite se administratoru ili obnovite za nastavak.",
+  },
   tenant: {
     select: "Odaberi organizaciju",
     switcherLabel: "Aktivna organizacija",

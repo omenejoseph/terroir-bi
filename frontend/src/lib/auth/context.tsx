@@ -5,7 +5,13 @@ import * as React from "react";
 import { authApi } from "@/lib/api/auth";
 import { tokenStorage } from "@/lib/auth/storage";
 import { rolesGrant } from "@/lib/auth/capabilities";
-import type { AuthSession, OrganizationSettings, TenantMembership, User } from "@/lib/types";
+import type {
+  AuthSession,
+  OrganizationSettings,
+  TenantAccess,
+  TenantMembership,
+  User,
+} from "@/lib/types";
 
 interface AuthState {
   user: User | null;
@@ -14,6 +20,10 @@ interface AuthState {
   tenants: TenantMembership[];
   /** Active tenant's org settings (currency/timezone/locale), or null. */
   settings: OrganizationSettings | null;
+  /** Module keys the active tenant's plan includes. */
+  modules: string[];
+  /** Subscription access state for the active tenant, or null. */
+  access: TenantAccess | null;
   /** True until the initial session restore completes. */
   loading: boolean;
   isAuthenticated: boolean;
@@ -37,6 +47,12 @@ interface AuthContextValue extends AuthState {
   hasRole: (role: string) => boolean;
   /** True if the active tenant's roles grant the given capability (e.g. "inventory.manage"). */
   can: (capability: string) => boolean;
+  /** True if the active tenant's plan includes the given module. */
+  hasModule: (module: string) => boolean;
+  /** Subscription is in the read-only grace window (writes blocked server-side). */
+  isReadOnly: boolean;
+  /** Subscription has fully lapsed — no access. */
+  isBlocked: boolean;
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null);
@@ -47,6 +63,8 @@ const EMPTY: AuthState = {
   roles: [],
   tenants: [],
   settings: null,
+  modules: [],
+  access: null,
   loading: true,
   isAuthenticated: false,
 };
@@ -62,6 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       roles: session.roles,
       tenants: session.tenants,
       settings: session.settings ?? null,
+      modules: session.modules ?? [],
+      access: session.access ?? null,
       loading: false,
       isAuthenticated: true,
     });
@@ -137,9 +157,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [state.roles],
   );
 
+  const hasModule = React.useCallback(
+    (module: string) => state.modules.includes(module),
+    [state.modules],
+  );
+
+  const isReadOnly = state.access?.level === "read_only";
+  const isBlocked = state.access?.level === "blocked";
+
   const value = React.useMemo<AuthContextValue>(
-    () => ({ ...state, login, acceptInvitation, logout, switchTenant, refreshSession, hasRole, can }),
-    [state, login, acceptInvitation, logout, switchTenant, refreshSession, hasRole, can],
+    () => ({
+      ...state,
+      login,
+      acceptInvitation,
+      logout,
+      switchTenant,
+      refreshSession,
+      hasRole,
+      can,
+      hasModule,
+      isReadOnly,
+      isBlocked,
+    }),
+    [state, login, acceptInvitation, logout, switchTenant, refreshSession, hasRole, can, hasModule, isReadOnly, isBlocked],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
