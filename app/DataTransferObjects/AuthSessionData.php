@@ -19,6 +19,7 @@ final class AuthSessionData implements Arrayable, JsonSerializable
     /**
      * @param  list<string>  $roles
      * @param  list<TenantMembershipData>  $tenants
+     * @param  list<string>  $modules  Module keys the active tenant's plan includes.
      */
     public function __construct(
         public readonly UserData $user,
@@ -27,6 +28,8 @@ final class AuthSessionData implements Arrayable, JsonSerializable
         public readonly array $roles,
         public readonly array $tenants,
         public readonly ?OrganizationSettingsData $settings = null,
+        public readonly array $modules = [],
+        public readonly ?TenantAccessData $access = null,
     ) {}
 
     /**
@@ -41,6 +44,8 @@ final class AuthSessionData implements Arrayable, JsonSerializable
             'roles' => $this->roles,
             'tenants' => array_map(fn (TenantMembershipData $t) => $t->toArray(), $this->tenants),
             'settings' => $this->settings?->toArray(),
+            'modules' => $this->modules,
+            'access' => $this->access?->toArray(),
         ];
     }
 

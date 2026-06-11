@@ -59,6 +59,14 @@ class EnforceTenantAccess
 
     private function isAlwaysAllowed(Request $request): bool
     {
-        return $request->is('api/v1/dashboard', 'api/v1/billing', 'api/v1/billing/*');
+        // auth/me carries the access state the FE reads to render its blocked /
+        // read-only screens, so it must survive every level. Dashboard + the
+        // (future) tenant billing self-service stay reachable too.
+        return $request->is(
+            'api/v1/auth/me',
+            'api/v1/dashboard',
+            'api/v1/billing',
+            'api/v1/billing/*',
+        );
     }
 }
