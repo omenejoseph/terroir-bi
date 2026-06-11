@@ -9,3 +9,9 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+// Deployed to Cloudflare Workers via the OpenNext adapter. This call only runs in
+// `next dev` and lets the dev server use the Cloudflare runtime/bindings; it's a
+// no-op in production builds.
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+initOpenNextCloudflareForDev();
