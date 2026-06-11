@@ -46,6 +46,18 @@ export const hr: Messages = {
     daysRemaining: "još {count} dana",
     contactSupport: "Obratite se administratoru ili obnovite za nastavak.",
   },
+  billing: {
+    successTitle: "Pretplata je aktivna",
+    successBody:
+      "Hvala! Vaš način plaćanja je postavljen i pretplata je sada aktivna.",
+    syncing: "Potvrđujemo vašu pretplatu…",
+    successGuestBody: "Vaše plaćanje je dovršeno. Prijavite se za nastavak.",
+    canceledTitle: "Plaćanje je otkazano",
+    canceledBody:
+      "Naplata nije izvršena. Postavljanje pretplate možete ponovno pokrenuti kad budete spremni.",
+    goToDashboard: "Idi na nadzornu ploču",
+    signIn: "Prijava",
+  },
   tenant: {
     select: "Odaberi organizaciju",
     switcherLabel: "Aktivna organizacija",

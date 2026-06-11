@@ -38,8 +38,9 @@ return [
     'stripe' => [
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
-        'success_url' => env('STRIPE_SUCCESS_URL', env('APP_URL').'/billing/success'),
-        'cancel_url' => env('STRIPE_CANCEL_URL', env('APP_URL').'/billing/cancel'),
+        // After Checkout, Stripe returns the user to the frontend (not the API).
+        'success_url' => env('STRIPE_SUCCESS_URL', rtrim((string) env('FRONTEND_URL', 'http://localhost:3000'), '/').'/billing/success'),
+        'cancel_url' => env('STRIPE_CANCEL_URL', rtrim((string) env('FRONTEND_URL', 'http://localhost:3000'), '/').'/billing/cancel'),
     ],
 
 ];

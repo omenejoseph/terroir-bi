@@ -41,6 +41,8 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('Terroir BI')
             ->brandLogo(asset('images/logo.png'))
             ->brandLogoHeight('2rem')
+            // The frontend has no dark mode; keep the back office light to match.
+            ->darkMode(false)
             ->renderHook(
                 PanelsRenderHook::STYLES_AFTER,
                 fn (): string => view('filament.theme.brand')->render(),
