@@ -441,6 +441,38 @@ export const handlers = [
   http.get(url("/inflows/aging"), () => HttpResponse.json({ data: makeArAging() })),
   http.get(url("/cash-flow"), () => HttpResponse.json({ data: makeCashFlow() })),
 
+  // ── Inflows (money in) — static /aging is registered above. ─────────────────
+  http.post(url("/inflows"), () => HttpResponse.json({ data: makeInflow({ id: "inf_new" }) }, { status: 201 })),
+  http.patch(url("/inflows/:id/status"), async ({ params, request }) => {
+    const body = (await request.json()) as { status: string };
+    return HttpResponse.json({ data: makeInflow({ id: String(params.id), status: body.status as never }) });
+  }),
+  http.patch(url("/inflows/:id"), ({ params }) =>
+    HttpResponse.json({ data: makeInflow({ id: String(params.id) }) }),
+  ),
+  http.delete(url("/inflows/:id"), () => new HttpResponse(null, { status: 204 })),
+  http.get(url("/inflows/:id"), ({ params }) =>
+    HttpResponse.json({ data: makeInflow({ id: String(params.id) }) }),
+  ),
+  http.get(url("/inflows"), ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const status = params.get("status");
+    const customerId = params.get("customer_id");
+    const search = params.get("search")?.toLowerCase();
+    let all = [
+      makeInflow(),
+      makeInflow({ id: "inf_2", status: "PENDING", category: "Grant", reference: "G-2026", customer_id: null }),
+    ];
+    if (status) all = all.filter((i) => i.status === status);
+    if (customerId) all = all.filter((i) => i.customer_id === customerId);
+    if (search) {
+      all = all.filter(
+        (i) => (i.reference ?? "").toLowerCase().includes(search) || (i.notes ?? "").toLowerCase().includes(search),
+      );
+    }
+    return HttpResponse.json({ data: all, meta: pageMeta(all.length) });
+  }),
+
   // ── Suppliers ───────────────────────────────────────────────────────────────
   http.post(url("/suppliers/:id/price-items"), async ({ request }) => {
     const body = (await request.json()) as { description: string; unit_price: number };

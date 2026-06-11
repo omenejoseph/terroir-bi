@@ -963,6 +963,30 @@ export interface RecordPaymentInput {
   notes?: string | null;
 }
 
+/** POST/PATCH /inflows — `amount` is integer minor units. Mirrors StoreInflowRequest. */
+export interface InflowInput {
+  amount: number;
+  date?: string;
+  customer_id?: string | null;
+  order_id?: string | null;
+  status?: InflowStatus;
+  is_credit_note?: boolean;
+  category?: string | null;
+  reference?: string | null;
+  payment_method?: string | null;
+  notes?: string | null;
+  due_date?: string | null;
+}
+
+/** GET /inflows filters. Mirrors ListInflowsQuery. */
+export interface InflowQuery {
+  status?: InflowStatus;
+  customer_id?: string;
+  order_id?: string;
+  search?: string;
+  page?: number;
+}
+
 /** GET /inflows/aging. Bucket keys start with digits → quoted. */
 export interface ArAging {
   total_outstanding: Money;
