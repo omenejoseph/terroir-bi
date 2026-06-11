@@ -20,4 +20,14 @@ class ListPlansQuery
     {
         return Plan::query()->withCount('tenants');
     }
+
+    /**
+     * Plan id → name, for back-office select inputs (keeps the DB read here).
+     *
+     * @return array<string, string>
+     */
+    public function options(): array
+    {
+        return Plan::query()->orderBy('name')->pluck('name', 'id')->all();
+    }
 }

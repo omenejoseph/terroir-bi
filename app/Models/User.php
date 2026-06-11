@@ -6,6 +6,9 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasName;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -27,7 +30,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $email
  * @property bool $is_platform_admin
  */
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser, HasName
 {
     /** @use HasApiTokens<HasAbilities> */
     use HasApiTokens;
@@ -59,6 +62,18 @@ class User extends Authenticatable
             // Not fillable — set only via an admin action, never mass-assigned.
             'is_platform_admin' => 'boolean',
         ];
+    }
+
+    /** Only platform admins may access the Filament back office at /admin. */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->is_platform_admin === true;
+    }
+
+    /** Display name for Filament (avatar, account widget). */
+    public function getFilamentName(): string
+    {
+        return $this->fullName();
     }
 
     /** The user's full name (first [middle] last). */
