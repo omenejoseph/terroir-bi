@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | Base URL of the decoupled Next.js frontend (no trailing slash). Used to
+    | build URLs the user is sent back to from external flows — e.g. the Stripe
+    | Checkout success/cancel return URLs.
+    |
+    */
+
+    'frontend_url' => rtrim((string) env('FRONTEND_URL', 'http://localhost:3000'), '/'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

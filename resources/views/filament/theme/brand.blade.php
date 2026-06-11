@@ -30,14 +30,4 @@
         background-repeat: no-repeat;
         font-feature-settings: 'rlig' 1, 'calt' 1;
     }
-
-    .dark .fi-body {
-        /* Frontend dark background: oklch(0.141 0.005 285.823). */
-        background-color: oklch(0.141 0.005 285.823);
-        background-image: radial-gradient(
-            72% 42% at 50% -8%,
-            color-mix(in oklch, var(--primary-500) 12%, transparent),
-            transparent 70%
-        );
-    }
 </style>

@@ -50,6 +50,18 @@ export const en = {
     daysRemaining: "{count} days remaining",
     contactSupport: "Contact your administrator or renew to continue.",
   },
+  billing: {
+    successTitle: "Subscription active",
+    successBody:
+      "Thank you! Your payment method is set up and your subscription is now active.",
+    syncing: "Confirming your subscription…",
+    successGuestBody: "Your checkout is complete. Sign in to continue.",
+    canceledTitle: "Checkout canceled",
+    canceledBody:
+      "No charge was made. You can restart the subscription setup whenever you're ready.",
+    goToDashboard: "Go to dashboard",
+    signIn: "Sign in",
+  },
   tenant: {
     select: "Select tenant",
     switcherLabel: "Active tenant",
