@@ -1,6 +1,8 @@
 import { api } from "@/lib/api/client";
 import type {
   Inflow,
+  InflowAnalytics,
+  InflowChange,
   InflowInput,
   InflowQuery,
   InflowStatus,
@@ -21,6 +23,13 @@ export const inflowsApi = {
 
   /** GET /inflows/{id}. */
   get: (id: string) => api.get<Inflow>(`/inflows/${id}`),
+
+  /** GET /inflows/{id}/changes — edit history (newest first). */
+  changes: (id: string) => api.get<InflowChange[]>(`/inflows/${id}/changes`),
+
+  /** GET /inflows/analytics — cash-in analytics for a date range. */
+  analytics: (range: { from?: string; to?: string } = {}) =>
+    api.get<InflowAnalytics>("/inflows/analytics", { from: range.from, to: range.to }),
 
   /** POST /inflows — requires finance.manage (amount is minor units). */
   create: (input: InflowInput) => api.post<Inflow>("/inflows", input),

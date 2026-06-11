@@ -29,8 +29,11 @@ describe("NewInflowPage", () => {
     await user.type(await screen.findByLabelText("Amount"), "450"); // €450 → 45000 minor
     await user.selectOptions(screen.getByLabelText("Status"), "PENDING");
     await user.selectOptions(screen.getByLabelText("Payment Method"), "bank_transfer");
-    await user.type(screen.getByLabelText("Category"), "Order payment");
-    await user.click(screen.getByRole("button", { name: "Save money in" }));
+    // Category is the shared creatable combobox (same as costs): open, type, create.
+    await user.click(screen.getByLabelText("Category"));
+    await user.type(screen.getByPlaceholderText("e.g. Order payment, Grant…"), "Order payment");
+    await user.click(screen.getByText('Create "Order payment"'));
+    await user.click(screen.getByRole("button", { name: "Save cash inflow" }));
 
     await waitFor(() => expect(posted).not.toBeNull());
     expect(posted).toMatchObject({

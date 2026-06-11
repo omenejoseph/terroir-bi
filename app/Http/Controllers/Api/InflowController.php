@@ -14,9 +14,12 @@ use App\Http\Requests\Finance\StoreInflowRequest;
 use App\Http\Requests\Finance\UpdateInflowRequest;
 use App\Http\Requests\Finance\UpdateInflowStatusRequest;
 use App\Models\Inflow;
+use App\Models\InflowChange;
 use App\Models\User;
 use App\Queries\ArAgingQuery;
+use App\Queries\InflowAnalyticsQuery;
 use App\Queries\ListInflowsQuery;
+use App\Support\Period;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -48,23 +51,55 @@ class InflowController extends Controller
         return response()->json(['data' => $query->get()]);
     }
 
+    /** Cash-in analytics (invoiced / collected / pending, cash flow, by category/customer). */
+    public function analytics(Request $request, InflowAnalyticsQuery $query): JsonResponse
+    {
+        [$from, $to] = Period::resolve(
+            $request->query('period') !== null ? (string) $request->query('period') : null,
+            $request->query('from') !== null ? (string) $request->query('from') : null,
+            $request->query('to') !== null ? (string) $request->query('to') : null,
+        );
+
+        return response()->json(['data' => $query->get($from, $to)]);
+    }
+
     public function show(Inflow $inflow): JsonResponse
     {
-        return response()->json(['data' => InflowData::fromModel($inflow)->toArray()]);
+        return response()->json(['data' => InflowData::fromModel($this->hydrate($inflow))->toArray()]);
+    }
+
+    /** Edit history (newest first) for an inflow. */
+    public function changes(Inflow $inflow): JsonResponse
+    {
+        $changes = $inflow->changes()->with('changedBy')->orderByDesc('created_at')->get()
+            ->map(fn (InflowChange $c): array => [
+                'id' => $c->getKey(),
+                'changes' => $c->changes,
+                'changed_by' => $c->changedBy?->fullName(),
+                'created_at' => $c->created_at?->toIso8601String(),
+            ])->all();
+
+        return response()->json(['data' => $changes]);
     }
 
     public function store(StoreInflowRequest $request, CreateInflowAction $action): JsonResponse
     {
         $inflow = $action->execute($request->validated(), $this->userId($request));
 
-        return response()->json(['data' => InflowData::fromModel($inflow)->toArray()], 201);
+        return response()->json(['data' => InflowData::fromModel($this->hydrate($inflow))->toArray()], 201);
     }
 
     public function update(UpdateInflowRequest $request, Inflow $inflow, UpdateInflowAction $action): JsonResponse
     {
         $inflow = $action->execute($inflow, $request->validated());
 
-        return response()->json(['data' => InflowData::fromModel($inflow)->toArray()]);
+        return response()->json(['data' => InflowData::fromModel($this->hydrate($inflow))->toArray()]);
+    }
+
+    /** Load the order + change count so the DTO can expose order_number / changes_count. */
+    private function hydrate(Inflow $inflow): Inflow
+    {
+        return $inflow->load('order')->loadCount('changes');
     }
 
     public function updateStatus(UpdateInflowStatusRequest $request, Inflow $inflow, UpdateInflowStatusAction $action): JsonResponse

@@ -194,7 +194,9 @@ Route::prefix('v1')->group(function () {
         // Finance — money-in (A/R) and money-out (costs).
         Route::middleware('can:finance.view')->group(function () {
             Route::get('inflows/aging', [InflowController::class, 'aging']); // static before {inflow}
+            Route::get('inflows/analytics', [InflowController::class, 'analytics']);
             Route::get('inflows', [InflowController::class, 'index']);
+            Route::get('inflows/{inflow}/changes', [InflowController::class, 'changes']); // static before {inflow}
             Route::get('inflows/{inflow}', [InflowController::class, 'show']);
             Route::get('orders/{order}/payments', [OrderPaymentController::class, 'index']);
             // Static segments before the {cost} wildcard.

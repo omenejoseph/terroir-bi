@@ -12,6 +12,29 @@ export function useInflows(query: InflowQuery = {}) {
   });
 }
 
+export function useInflow(id: string | undefined) {
+  return useQuery({
+    queryKey: ["inflows", "item", id],
+    queryFn: () => inflowsApi.get(id!),
+    enabled: !!id,
+  });
+}
+
+export function useInflowChanges(id: string | undefined) {
+  return useQuery({
+    queryKey: ["inflows", "changes", id],
+    queryFn: () => inflowsApi.changes(id!),
+    enabled: !!id,
+  });
+}
+
+export function useInflowAnalytics(range: { from?: string; to?: string } = {}) {
+  return useQuery({
+    queryKey: ["inflows", "analytics", range],
+    queryFn: () => inflowsApi.analytics(range),
+  });
+}
+
 /** Money-in changes ripple into cash flow, A/R aging and the dashboard KPIs. */
 function useInvalidateInflows() {
   const queryClient = useQueryClient();
@@ -28,6 +51,20 @@ export function useCreateInflow() {
   return useMutation({
     mutationFn: (input: InflowInput) => inflowsApi.create(input),
     onSuccess: invalidate,
+  });
+}
+
+export function useUpdateInflow() {
+  const invalidate = useInvalidateInflows();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; input: Partial<InflowInput> }) =>
+      inflowsApi.update(vars.id, vars.input),
+    onSuccess: (_data, vars) => {
+      invalidate();
+      void queryClient.invalidateQueries({ queryKey: ["inflows", "item", vars.id] });
+      void queryClient.invalidateQueries({ queryKey: ["inflows", "changes", vars.id] });
+    },
   });
 }
 

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import InflowsPage from "./page";
 import { API_URL } from "@/lib/config";
 import { makeInflow, makeSession } from "@/test/fixtures";
-import { mockRouter } from "@/test/setup";
+import { mockRouter, mockSearchParams } from "@/test/setup";
 import { server } from "@/test/mocks/server";
 import {
   renderWithProviders,
@@ -27,6 +27,33 @@ describe("InflowsPage", () => {
     // makeInflow category "Order payment"; amount money(50000) = 500,00 € (hr-HR for EUR).
     expect(await screen.findByText("Order payment")).toBeInTheDocument();
     expect(screen.getAllByText("500,00 €").length).toBeGreaterThan(0);
+  });
+
+  it("links each inflow to its tied order from the expanded card", async () => {
+    renderWithProviders(<InflowsPage />);
+    const user = userEvent.setup();
+    const cards = await screen.findAllByRole("button", { expanded: false });
+    await user.click(cards[0]);
+    const link = await screen.findByRole("link", { name: /View order/ });
+    expect(link).toHaveAttribute("href", "/orders/ord_1");
+  });
+
+  it("pre-filters by order_id from the URL and sends it", async () => {
+    mockSearchParams.set("order_id", "ord_1");
+    let lastOrder: string | null = null;
+    server.use(
+      http.get(`${API_URL}/inflows`, ({ request }) => {
+        lastOrder = new URL(request.url).searchParams.get("order_id");
+        return HttpResponse.json({
+          data: [makeInflow()],
+          meta: { current_page: 1, last_page: 1, per_page: 25, total: 1 },
+        });
+      }),
+    );
+
+    renderWithProviders(<InflowsPage />);
+    expect(await screen.findByText(/Showing cash inflows for order/)).toBeInTheDocument();
+    await waitFor(() => expect(lastOrder).toBe("ord_1"));
   });
 
   it("filters by status tab (sends status param)", async () => {
@@ -68,10 +95,17 @@ describe("InflowsPage", () => {
     await waitFor(() => expect(lastCustomer).toBe("cus_1"));
   });
 
+  it("routes to the inflow analytics page", async () => {
+    renderWithProviders(<InflowsPage />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /Analytics/ }));
+    expect(mockRouter.push).toHaveBeenCalledWith("/inflows/analytics");
+  });
+
   it("routes to the dedicated new-money-in page", async () => {
     renderWithProviders(<InflowsPage />);
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: /Add money in/ }));
+    await user.click(await screen.findByRole("button", { name: /Add cash inflow/ }));
     expect(mockRouter.push).toHaveBeenCalledWith("/inflows/new");
   });
 
@@ -86,8 +120,9 @@ describe("InflowsPage", () => {
 
     renderWithProviders(<InflowsPage />);
     const user = userEvent.setup();
-    await screen.findByText("Order payment");
-    await user.selectOptions(screen.getAllByLabelText("Set status")[0], "PENDING");
+    const cards = await screen.findAllByRole("button", { expanded: false });
+    await user.click(cards[0]);
+    await user.selectOptions(await screen.findByLabelText("Set status"), "PENDING");
 
     await waitFor(() => expect(patched).not.toBeNull());
     expect(patched).toMatchObject({ status: "PENDING" });
@@ -104,8 +139,9 @@ describe("InflowsPage", () => {
 
     renderWithProviders(<InflowsPage />);
     const user = userEvent.setup();
-    await screen.findByText("Order payment");
-    await user.click(screen.getAllByRole("button", { name: "Delete" })[0]);
+    const cards = await screen.findAllByRole("button", { expanded: false });
+    await user.click(cards[0]);
+    await user.click(await screen.findByRole("button", { name: "Delete" }));
 
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Delete" }));
@@ -120,7 +156,7 @@ describe("InflowsPage", () => {
     );
 
     renderWithProviders(<InflowsPage />);
-    expect(await screen.findByText("You don't have permission to view money in.")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Add money in/ })).not.toBeInTheDocument();
+    expect(await screen.findByText("You don't have permission to view cash inflow.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Add cash inflow/ })).not.toBeInTheDocument();
   });
 });

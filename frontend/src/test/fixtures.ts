@@ -12,6 +12,8 @@ import type {
   PublicCatalog,
   DashboardSummary,
   Inflow,
+  InflowAnalytics,
+  InflowChange,
   InventoryAnalytics,
   InventorySpend,
   InventoryCheckSummary,
@@ -682,7 +684,9 @@ export function makeInflow(overrides: Partial<Inflow> = {}): Inflow {
   return {
     id: "inf_1",
     customer_id: "cus_1",
-    order_id: "itm_1",
+    order_id: "ord_1",
+    order_number: "ORD-1001",
+    changes_count: 0,
     date: "2026-06-02T10:00:00+00:00",
     amount: money(50000),
     status: "RECEIVED",
@@ -694,6 +698,42 @@ export function makeInflow(overrides: Partial<Inflow> = {}): Inflow {
     due_date: null,
     received_at: "2026-06-02T10:00:00+00:00",
     created_at: "2026-06-02T10:00:00+00:00",
+    ...overrides,
+  };
+}
+
+export function makeInflowAnalytics(overrides: Partial<InflowAnalytics> = {}): InflowAnalytics {
+  return {
+    period: { from: "2026-06-01T00:00:00+00:00", to: "2026-06-30T00:00:00+00:00" },
+    invoiced: { total: money(16000), count: 2 },
+    collected: { total: money(10000), count: 1 },
+    pending: { total: money(6000), count: 1 },
+    net_cash_flow: { net: money(6000), inflows: money(10000), costs: money(4000) },
+    avg_days_to_collect: { days: 5, count: 1 },
+    avg_inflow: { avg: money(8000) },
+    by_category: [
+      { name: "Invoice", total: money(16000) },
+      { name: "Grant", total: money(5000) },
+    ],
+    by_customer: [{ customer_id: "cus_1", company_name: "Konoba", total: money(16000) }],
+    over_time: [
+      { month: "2026-05", total: money(8000) },
+      { month: "2026-06", total: money(16000) },
+    ],
+    cash_flow: [{ month: "2026-06", inflows: money(10000), costs: money(4000), net: money(6000) }],
+    ...overrides,
+  };
+}
+
+export function makeInflowChange(overrides: Partial<InflowChange> = {}): InflowChange {
+  return {
+    id: "ic_1",
+    changes: [
+      { field: "amount", old: 50000, new: 60000 },
+      { field: "status", old: "PENDING", new: "RECEIVED" },
+    ],
+    changed_by: "Ada Lovelace",
+    created_at: "2026-06-05T10:00:00+00:00",
     ...overrides,
   };
 }

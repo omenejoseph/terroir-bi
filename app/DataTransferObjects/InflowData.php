@@ -31,6 +31,8 @@ final class InflowData implements Arrayable, JsonSerializable
             'id' => $inflow->getKey(),
             'customer_id' => $inflow->customer_id,
             'order_id' => $inflow->order_id,
+            'order_number' => $inflow->relationLoaded('order') ? $inflow->order?->order_number : null,
+            'changes_count' => $inflow->getAttribute('changes_count') !== null ? (int) $inflow->getAttribute('changes_count') : null,
             'date' => $inflow->date->toIso8601String(),
             'amount' => $inflow->amount->jsonSerialize(),
             'status' => $inflow->status->value,

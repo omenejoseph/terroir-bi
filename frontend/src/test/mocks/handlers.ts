@@ -21,6 +21,8 @@ import {
   makeImage,
   makeInventoryDocument,
   makeInflow,
+  makeInflowAnalytics,
+  makeInflowChange,
   makeInvitation,
   makeItem,
   makeMember,
@@ -439,6 +441,7 @@ export const handlers = [
 
   // ── Finance: A/R aging + cash flow ──────────────────────────────────────────
   http.get(url("/inflows/aging"), () => HttpResponse.json({ data: makeArAging() })),
+  http.get(url("/inflows/analytics"), () => HttpResponse.json({ data: makeInflowAnalytics() })),
   http.get(url("/cash-flow"), () => HttpResponse.json({ data: makeCashFlow() })),
 
   // ── Inflows (money in) — static /aging is registered above. ─────────────────
@@ -451,6 +454,7 @@ export const handlers = [
     HttpResponse.json({ data: makeInflow({ id: String(params.id) }) }),
   ),
   http.delete(url("/inflows/:id"), () => new HttpResponse(null, { status: 204 })),
+  http.get(url("/inflows/:id/changes"), () => HttpResponse.json({ data: [makeInflowChange()] })),
   http.get(url("/inflows/:id"), ({ params }) =>
     HttpResponse.json({ data: makeInflow({ id: String(params.id) }) }),
   ),

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
 
@@ -18,7 +19,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 
 type Phase = "intro" | "profile" | "success";
 
-export default function AcceptInvitationPage() {
+function AcceptInvitationForm() {
   const { acceptInvitation } = useAuth();
   const { t } = useTranslation();
   const router = useRouter();
@@ -207,5 +208,13 @@ export default function AcceptInvitationPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function AcceptInvitationPage() {
+  return (
+    <Suspense fallback={null}>
+      <AcceptInvitationForm />
+    </Suspense>
   );
 }

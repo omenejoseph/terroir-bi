@@ -20,7 +20,11 @@ class ListInflowsQuery
      */
     public function paginate(array $filters = [], int $perPage = 25): LengthAwarePaginator
     {
-        return $this->build($filters)->orderByDesc('date')->paginate($perPage);
+        return $this->build($filters)
+            ->with('order')
+            ->withCount('changes')
+            ->orderByDesc('date')
+            ->paginate($perPage);
     }
 
     /**

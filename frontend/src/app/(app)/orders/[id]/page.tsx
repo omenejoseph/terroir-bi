@@ -24,6 +24,7 @@ import { OrderCommentsSection } from "@/components/orders/order-comments-section
 import { OrderDetailsCard } from "@/components/orders/order-details-card";
 import { OrderConsignmentSection } from "@/components/orders/order-consignment-section";
 import { OrderPaymentsSection } from "@/components/orders/order-payments-section";
+import { OrderInflowsCard } from "@/components/orders/order-inflows-card";
 
 type DetailTab = "items" | "history" | "comments" | "consignment" | "payments";
 
@@ -150,6 +151,8 @@ export default function OrderDetailPage() {
           </header>
 
           <OrderDetailsCard order={order} canManage={canManage} />
+
+          {can("finance.view") && <OrderInflowsCard orderId={order.id} />}
 
           <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as DetailTab)} />
 

@@ -927,6 +927,8 @@ export interface Inflow {
   id: string;
   customer_id: string | null;
   order_id: string | null;
+  order_number?: string | null;
+  changes_count?: number | null;
   date: string;
   amount: Money;
   status: InflowStatus;
@@ -937,6 +939,36 @@ export interface Inflow {
   notes: string | null;
   due_date: string | null;
   received_at: string | null;
+  created_at: string | null;
+}
+
+/** Cash-in analytics for a period. Mirrors InflowAnalyticsQuery. */
+export interface InflowAnalytics {
+  period: { from: string; to: string };
+  invoiced: { total: Money; count: number };
+  collected: { total: Money; count: number };
+  pending: { total: Money; count: number };
+  net_cash_flow: { net: Money; inflows: Money; costs: Money };
+  avg_days_to_collect: { days: number | null; count: number };
+  avg_inflow: { avg: Money };
+  by_category: { name: string; total: Money }[];
+  by_customer: { customer_id: string; company_name: string | null; total: Money }[];
+  over_time: { month: string; total: Money }[];
+  cash_flow: { month: string; inflows: Money; costs: Money; net: Money }[];
+}
+
+/** A single edited field within an inflow change-history entry. */
+export interface InflowFieldChange {
+  field: string;
+  old: string | number | boolean | null;
+  new: string | number | boolean | null;
+}
+
+/** One audited edit of an inflow (a set of field diffs). Mirrors InflowChange. */
+export interface InflowChange {
+  id: string;
+  changes: InflowFieldChange[];
+  changed_by: string | null;
   created_at: string | null;
 }
 

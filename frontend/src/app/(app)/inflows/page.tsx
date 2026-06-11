@@ -1,12 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { Suspense } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { BarChart3, ChevronDown, Plus, X } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
-import { useDeleteInflow, useInflows, useUpdateInflowStatus } from "@/hooks/use-inflows";
+import { useInflows } from "@/hooks/use-inflows";
 import { useCustomers } from "@/hooks/use-customers";
 import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
@@ -19,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
-import { useConfirm } from "@/components/ui/confirm";
+import { InflowDetailPanel } from "@/components/inflows/inflow-detail-panel";
 
 type Tab = "all" | InflowStatus;
 
@@ -28,12 +30,13 @@ const STATUS_VARIANT: Record<InflowStatus, "secondary" | "success"> = {
   RECEIVED: "success",
 };
 
-export default function InflowsPage() {
+function InflowsView() {
   const { t } = useTranslation();
   const { can } = useAuth();
   const router = useRouter();
-  const { moneyObject, date } = useFormatters();
-  const confirm = useConfirm();
+
+  const searchParams = useSearchParams();
+  const orderId = searchParams?.get("order_id") ?? "";
 
   const [tab, setTab] = React.useState<Tab>("all");
   const [customerId, setCustomerId] = React.useState("");
@@ -48,18 +51,16 @@ export default function InflowsPage() {
   const query: InflowQuery = {
     ...(debounced ? { search: debounced } : {}),
     ...(customerId ? { customer_id: customerId } : {}),
+    ...(orderId ? { order_id: orderId } : {}),
     ...(tab === "all" ? {} : { status: tab }),
   };
 
   const { data, isLoading, isError, error } = useInflows(query);
   const customersQ = useCustomers();
-  const updateStatus = useUpdateInflowStatus();
-  const remove = useDeleteInflow();
 
   const inflows = data?.data ?? [];
   const customers = customersQ.data?.data ?? [];
   const canManage = can("finance.manage");
-  const canDelete = can("finance.delete");
 
   const customerName = (id: string | null) =>
     id ? customers.find((c) => c.id === id)?.company_name ?? null : null;
@@ -68,17 +69,6 @@ export default function InflowsPage() {
     { value: "all", label: t("inflows.tabs.all") },
     ...INFLOW_STATUSES.map((s) => ({ value: s, label: t(`inflows.status.${s}`) })),
   ];
-
-  async function handleDelete(inflow: Inflow) {
-    const ok = await confirm({
-      title: t("inflows.deleteTitle"),
-      description: t("inflows.deleteBody"),
-      confirmLabel: t("inflows.delete"),
-      tone: "danger",
-    });
-    if (!ok) return;
-    await remove.mutateAsync(inflow.id);
-  }
 
   return (
     <div className="space-y-6">
@@ -91,12 +81,18 @@ export default function InflowsPage() {
               : t("inflows.subtitleDefault")}
           </p>
         </div>
-        {canManage && (
-          <Button onClick={() => router.push("/inflows/new")} className="shrink-0">
-            <Plus className="size-4" />
-            {t("inflows.add")}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => router.push("/inflows/analytics")} className="shrink-0">
+            <BarChart3 className="size-4" />
+            {t("inflows.analytics.trigger")}
           </Button>
-        )}
+          {canManage && (
+            <Button onClick={() => router.push("/inflows/new")} className="shrink-0">
+              <Plus className="size-4" />
+              {t("inflows.add")}
+            </Button>
+          )}
+        </div>
       </header>
 
       <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as Tab)} />
@@ -124,6 +120,16 @@ export default function InflowsPage() {
         />
       </div>
 
+      {orderId && (
+        <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+          <span>{t("inflows.filteredByOrder", { order: inflows[0]?.order_number ?? orderId })}</span>
+          <Link href="/inflows" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+            <X className="size-3.5" />
+            {t("inflows.clearFilter")}
+          </Link>
+        </div>
+      )}
+
       {isLoading && (
         <div className="flex items-center justify-center py-16">
           <Spinner className="size-6 text-muted-foreground" />
@@ -149,81 +155,68 @@ export default function InflowsPage() {
       )}
 
       {!isLoading && !isError && inflows.length > 0 && (
-        <Card>
-          <CardContent className="overflow-x-auto pt-6">
-            <table className="w-full text-sm">
-              <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="py-2 pr-3 font-medium">{t("inflows.colDate")}</th>
-                  <th className="py-2 pr-3 font-medium">{t("inflows.colSource")}</th>
-                  <th className="py-2 pr-3 font-medium">{t("inflows.colCustomer")}</th>
-                  <th className="py-2 pr-3 text-right font-medium">{t("inflows.colAmount")}</th>
-                  <th className="py-2 pr-3 font-medium">{t("inflows.colStatus")}</th>
-                  <th className="py-2 font-medium" />
-                </tr>
-              </thead>
-              <tbody>
-                {inflows.map((inflow) => (
-                  <tr key={inflow.id} className="border-b border-border last:border-0">
-                    <td className="py-2.5 pr-3 text-muted-foreground">{date(inflow.date)}</td>
-                    <td className="py-2.5 pr-3">
-                      <p className="flex items-center gap-2 font-medium">
-                        {inflow.category ?? inflow.reference ?? t("inflows.noSource")}
-                        {inflow.is_credit_note && (
-                          <Badge variant="outline">{t("inflows.creditNote")}</Badge>
-                        )}
-                      </p>
-                      {inflow.reference && inflow.category && (
-                        <p className="text-xs text-muted-foreground">{inflow.reference}</p>
-                      )}
-                    </td>
-                    <td className="py-2.5 pr-3 text-muted-foreground">
-                      {customerName(inflow.customer_id) ?? t("inflows.noCustomer")}
-                    </td>
-                    <td className="py-2.5 pr-3 text-right tabular-nums">
-                      {moneyObject(inflow.amount)}
-                    </td>
-                    <td className="py-2.5 pr-3">
-                      {canManage ? (
-                        <Select
-                          aria-label={t("inflows.markAs")}
-                          value={inflow.status}
-                          onChange={(e) =>
-                            updateStatus.mutate({ id: inflow.id, status: e.target.value as InflowStatus })
-                          }
-                          className="h-8 w-32"
-                        >
-                          {INFLOW_STATUSES.map((s) => (
-                            <option key={s} value={s}>
-                              {t(`inflows.status.${s}`)}
-                            </option>
-                          ))}
-                        </Select>
-                      ) : (
-                        <Badge variant={STATUS_VARIANT[inflow.status]}>
-                          {t(`inflows.status.${inflow.status}`)}
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="py-2.5 text-right">
-                      {canDelete && (
-                        <button
-                          type="button"
-                          aria-label={t("inflows.delete")}
-                          onClick={() => handleDelete(inflow)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="size-4" />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+        <div className="space-y-2">
+          {inflows.map((inflow) => (
+            <InflowCard key={inflow.id} inflow={inflow} customerName={customerName(inflow.customer_id)} />
+          ))}
+        </div>
       )}
     </div>
+  );
+}
+
+export default function InflowsPage() {
+  return (
+    <Suspense fallback={null}>
+      <InflowsView />
+    </Suspense>
+  );
+}
+
+function InflowCard({ inflow, customerName }: { inflow: Inflow; customerName: string | null }) {
+  const { t } = useTranslation();
+  const { moneyObject, date } = useFormatters();
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <Card className="overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+      >
+        <div className="min-w-0">
+          <p className="flex items-center gap-2 truncate font-medium">
+            {inflow.category ?? inflow.reference ?? t("inflows.noSource")}
+            {inflow.is_credit_note && <Badge variant="outline">{t("inflows.creditNote")}</Badge>}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {date(inflow.date)}
+            {customerName ? ` · ${customerName}` : ""}
+            {inflow.order_number ? ` · ${inflow.order_number}` : ""}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 text-sm">
+          <span className="font-medium tabular-nums">{moneyObject(inflow.amount)}</span>
+          <Badge variant={STATUS_VARIANT[inflow.status]}>{t(`inflows.status.${inflow.status}`)}</Badge>
+          <ChevronDown
+            className={`size-4 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          />
+        </div>
+      </button>
+
+      <div
+        className={`grid transition-all duration-300 ease-out ${
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="border-t border-border px-4 py-4">
+            {open && <InflowDetailPanel inflow={inflow} onDeleted={() => setOpen(false)} />}
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }

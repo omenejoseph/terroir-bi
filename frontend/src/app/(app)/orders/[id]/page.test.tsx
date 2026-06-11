@@ -32,6 +32,15 @@ describe("OrderDetailPage", () => {
     expect(screen.getByText(/Plavac Mali 2021/)).toBeInTheDocument();
   });
 
+  it("shows the cash inflows cross-link card", async () => {
+    renderWithProviders(<OrderDetailPage />);
+    expect(await screen.findByText("Cash inflows")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /View cash inflows/ })).toHaveAttribute(
+      "href",
+      "/inflows?order_id=itm_1",
+    );
+  });
+
   it("changes the status after confirming", async () => {
     let patched: { status?: string } | null = null;
     server.use(
