@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Banknote,
   Boxes,
   ChevronsLeft,
   ClipboardList,
@@ -45,6 +46,7 @@ const NAV: NavItem[] = [
   { href: "/orders", labelKey: "nav.orders", icon: ClipboardList, cap: "orders.view" },
   { href: "/customers", labelKey: "nav.customers", icon: Users },
   { href: "/suppliers", labelKey: "nav.suppliers", icon: Truck, cap: "suppliers.view" },
+  { href: "/inflows", labelKey: "nav.inflows", icon: Banknote, cap: "finance.view" },
   { href: "/costs", labelKey: "nav.costs", icon: Receipt, cap: "finance.view" },
   { href: "/cash-flow", labelKey: "nav.cashFlow", icon: TrendingUp, cap: "finance.view" },
   { href: "/work-orders", labelKey: "nav.tasks", icon: ListTodo },

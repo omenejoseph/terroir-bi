@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\CostStatus;
+use App\Enums\PaymentMethod;
 use App\Support\Money\Money;
 use App\Support\Money\MoneyCast;
 use App\Tenancy\BelongsToTenant;
@@ -21,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property Money|null $vat_amount
  * @property string $category
  * @property CostStatus $status
+ * @property PaymentMethod|null $payment_method
  * @property Carbon|null $paid_at
  * @property Carbon|null $due_date
  * @property string|null $supplier_id
@@ -47,6 +49,7 @@ class Cost extends Model
             'total_amount' => MoneyCast::class,
             'vat_amount' => MoneyCast::class,
             'status' => CostStatus::class,
+            'payment_method' => PaymentMethod::class,
             'paid_at' => 'datetime',
             'due_date' => 'datetime',
         ];

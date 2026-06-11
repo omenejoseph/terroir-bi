@@ -142,4 +142,21 @@ class CostTest extends TestCase
             ->assertJsonPath('data.unpaid.minor', 5000) // only the PENDING one
             ->assertJsonCount(2, 'data.by_category');
     }
+
+    public function test_payment_method_is_validated_against_the_enum(): void
+    {
+        // A value outside the PaymentMethod enum is rejected.
+        $this->postJson('/api/v1/costs', [
+            'total_amount' => 5000, 'category' => 'Glass', 'payment_method' => 'bitcoin',
+        ], $this->headers())
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('payment_method');
+
+        // A valid enum value is accepted and echoed back unchanged.
+        $this->postJson('/api/v1/costs', [
+            'total_amount' => 5000, 'category' => 'Glass', 'payment_method' => 'bank_transfer',
+        ], $this->headers())
+            ->assertCreated()
+            ->assertJsonPath('data.payment_method', 'bank_transfer');
+    }
 }

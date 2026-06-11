@@ -119,6 +119,30 @@ class OrderPaymentTest extends TestCase
             ->assertJsonPath('data.summary.status', 'PAID');
     }
 
+    public function test_payment_method_is_validated_against_the_enum(): void
+    {
+        $id = $this->createOrder();
+
+        // Standalone inflow: an unknown payment method is rejected.
+        $this->postJson('/api/v1/inflows', [
+            'customer_id' => $this->customer->getKey(), 'amount' => 1000, 'payment_method' => 'cheque',
+        ], $this->headers())
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('payment_method');
+
+        // A valid enum value is accepted and round-trips on the DTO.
+        $this->postJson('/api/v1/inflows', [
+            'customer_id' => $this->customer->getKey(), 'amount' => 1000, 'payment_method' => 'card',
+        ], $this->headers())
+            ->assertCreated()
+            ->assertJsonPath('data.payment_method', 'card');
+
+        // The order-payment endpoint shares the same rule.
+        $this->postJson("/api/v1/orders/{$id}/payments", ['amount' => 1000, 'payment_method' => 'paypal'], $this->headers())
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('payment_method');
+    }
+
     public function test_ar_aging_reports_outstanding_balances(): void
     {
         $id = $this->createOrder(); // unpaid 24000
