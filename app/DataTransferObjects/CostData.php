@@ -39,7 +39,7 @@ final class CostData implements Arrayable, JsonSerializable
             'description' => $c->description,
             'reference' => $c->reference,
             'status' => $c->status->value,
-            'payment_method' => $c->payment_method,
+            'payment_method' => $c->payment_method?->value,
             'notes' => $c->notes,
             'paid_at' => $c->paid_at?->toIso8601String(),
             'due_date' => $c->due_date?->toIso8601String(),

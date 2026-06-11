@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Finance;
 
 use App\Enums\InflowStatus;
+use App\Enums\PaymentMethod;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -32,7 +33,7 @@ class StoreInflowRequest extends FormRequest
             'is_credit_note' => ['sometimes', 'boolean'],
             'category' => ['sometimes', 'nullable', 'string', 'max:255'],
             'reference' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'payment_method' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'payment_method' => ['sometimes', 'nullable', Rule::enum(PaymentMethod::class)],
             'notes' => ['sometimes', 'nullable', 'string'],
             'due_date' => ['sometimes', 'nullable', 'date'],
         ];

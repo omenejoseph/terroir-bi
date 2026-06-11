@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\InflowStatus;
+use App\Enums\PaymentMethod;
 use App\Support\Money\Money;
 use App\Support\Money\MoneyCast;
 use App\Tenancy\BelongsToTenant;
@@ -26,7 +27,7 @@ use Illuminate\Support\Carbon;
  * @property bool $is_credit_note
  * @property string|null $category
  * @property string|null $reference
- * @property string|null $payment_method
+ * @property PaymentMethod|null $payment_method
  * @property string|null $notes
  * @property Carbon|null $due_date
  * @property Carbon|null $received_at
@@ -65,6 +66,7 @@ class Inflow extends Model
             'date' => 'datetime',
             'amount' => MoneyCast::class,
             'status' => InflowStatus::class,
+            'payment_method' => PaymentMethod::class,
             'is_credit_note' => 'boolean',
             'due_date' => 'datetime',
             'received_at' => 'datetime',

@@ -37,7 +37,7 @@ final class InflowData implements Arrayable, JsonSerializable
             'is_credit_note' => $inflow->is_credit_note,
             'category' => $inflow->category,
             'reference' => $inflow->reference,
-            'payment_method' => $inflow->payment_method,
+            'payment_method' => $inflow->payment_method?->value,
             'notes' => $inflow->notes,
             'due_date' => $inflow->due_date?->toIso8601String(),
             'received_at' => $inflow->received_at?->toIso8601String(),
