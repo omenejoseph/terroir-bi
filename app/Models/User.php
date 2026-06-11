@@ -25,6 +25,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string|null $middle_name
  * @property string $last_name
  * @property string $email
+ * @property bool $is_platform_admin
  */
 class User extends Authenticatable
 {
@@ -55,6 +56,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            // Not fillable — set only via an admin action, never mass-assigned.
+            'is_platform_admin' => 'boolean',
         ];
     }
 
