@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Finance;
 
 use App\Enums\TenantRole;
+use App\Models\Cost;
+use App\Models\Inflow;
 use App\Models\Supplier;
 use App\Models\Tenant;
 use App\Models\User;
@@ -98,6 +100,35 @@ class CostTest extends TestCase
             ->assertOk()
             ->assertJsonFragment(['Invoice'])
             ->assertJsonFragment(['Payment']);
+    }
+
+    public function test_cost_analytics_invoice_metrics_and_margin(): void
+    {
+        // Create directly so paid_at is exact (the create action would stamp now()).
+        $this->actingAsTenant($this->tenant);
+        Cost::create(['date' => '2026-06-01', 'total_amount' => 10000, 'category' => 'Invoice', 'status' => 'PAID', 'paid_at' => '2026-06-06', 'created_by_id' => $this->admin->getKey()]);
+        Cost::create(['date' => '2026-06-03', 'total_amount' => 6000, 'category' => 'Invoice', 'created_by_id' => $this->admin->getKey()]);
+        Cost::create(['date' => '2026-06-04', 'total_amount' => 2000, 'category' => 'Glass', 'created_by_id' => $this->admin->getKey()]);
+        Inflow::create(['date' => '2026-06-05', 'amount' => 40000, 'status' => 'RECEIVED', 'created_by_id' => $this->admin->getKey()]);
+        $this->forgetTenant();
+
+        $this->getJson('/api/v1/costs/analytics?from=2026-06-01&to=2026-06-30', $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.invoiced.total.minor', 16000)
+            ->assertJsonPath('data.invoiced.count', 2)
+            ->assertJsonPath('data.paid.total.minor', 10000)
+            ->assertJsonPath('data.paid.count', 1)
+            ->assertJsonPath('data.unpaid_invoices.total.minor', 6000)
+            ->assertJsonPath('data.unpaid_invoices.count', 1)
+            ->assertJsonPath('data.avg_invoice.avg.minor', 8000)
+            ->assertJsonPath('data.avg_invoice.max.minor', 10000)
+            ->assertJsonPath('data.avg_days_to_pay.days', 5)
+            ->assertJsonPath('data.avg_days_to_pay.count', 1)
+            ->assertJsonPath('data.gross_margin.revenue.minor', 40000)
+            ->assertJsonPath('data.gross_margin.percent', '55') // (40000-18000)/40000 = 55.0
+            ->assertJsonPath('data.yoy.current_year', 2026)
+            ->assertJsonCount(12, 'data.yoy.months')
+            ->assertJsonCount(3, 'data.top_costs');
     }
 
     public function test_cost_analytics_summarises_spend_and_unpaid(): void

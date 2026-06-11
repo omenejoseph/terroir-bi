@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { BarChart3, Plus, Trash2 } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
@@ -139,12 +139,18 @@ export default function CostsPage() {
           <h1 className="text-2xl font-semibold tracking-tight">{t("costs.title")}</h1>
           <p className="text-sm text-muted-foreground">{t("costs.subtitleDefault")}</p>
         </div>
-        {canManage && (
-          <Button onClick={() => router.push("/costs/new")} className="shrink-0">
-            <Plus className="size-4" />
-            {t("costs.add")}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => router.push("/costs/analytics")} className="shrink-0">
+            <BarChart3 className="size-4" />
+            {t("costs.analytics.trigger")}
           </Button>
-        )}
+          {canManage && (
+            <Button onClick={() => router.push("/costs/new")} className="shrink-0">
+              <Plus className="size-4" />
+              {t("costs.add")}
+            </Button>
+          )}
+        </div>
       </header>
 
       {/* Analytics strip */}

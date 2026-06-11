@@ -95,6 +95,13 @@ describe("CostsPage", () => {
     expect(mockRouter.push).toHaveBeenCalledWith("/costs/new");
   });
 
+  it("routes to the cost analytics page", async () => {
+    renderWithProviders(<CostsPage />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /Analytics/ }));
+    expect(mockRouter.push).toHaveBeenCalledWith("/costs/analytics");
+  });
+
   it("changes a cost status (PATCH body)", async () => {
     let patched: Record<string, unknown> | null = null;
     server.use(

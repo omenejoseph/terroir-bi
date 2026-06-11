@@ -752,6 +752,25 @@ export function makeCostAnalytics(overrides: Partial<CostAnalytics> = {}): CostA
     period: { from: "2026-05-01T00:00:00+00:00", to: "2026-06-01T00:00:00+00:00" },
     total_spend: money(70000),
     unpaid: money(50000),
+    invoiced: { total: money(60000), count: 4 },
+    paid: { total: money(20000), count: 1 },
+    unpaid_invoices: { total: money(40000), count: 3 },
+    avg_invoice: { avg: money(15000), max: money(30000) },
+    avg_days_to_pay: { days: 12.5, count: 1 },
+    gross_margin: { percent: "73.1", revenue: money(260000) },
+    yoy: {
+      current_year: 2026,
+      previous_year: 2025,
+      months: Array.from({ length: 12 }, (_, i) => ({
+        month: i + 1,
+        current: money(i < 6 ? (i + 1) * 1000 : 0),
+        previous: money(i < 6 ? i * 800 : 0),
+      })),
+    },
+    top_costs: [
+      { id: "cost_1", date: "2026-05-20T00:00:00+00:00", category: "Glass", supplier_name: "Vinogradar d.o.o.", total: money(50000) },
+      { id: "cost_2", date: "2026-05-10T00:00:00+00:00", category: "Corks", supplier_name: null, total: money(20000) },
+    ],
     by_status: [
       { status: "PENDING", count: 1, total: money(50000) },
       { status: "PAID", count: 1, total: money(20000) },

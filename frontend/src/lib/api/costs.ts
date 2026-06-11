@@ -38,8 +38,9 @@ export const costsApi = {
   /** GET /costs/categories — distinct categories for the filter/picker. */
   categories: () => api.get<string[]>("/costs/categories"),
 
-  /** GET /costs/analytics — spend totals + breakdowns. */
-  analytics: () => api.get<CostAnalytics>("/costs/analytics"),
+  /** GET /costs/analytics — spend totals + breakdowns for a date range. */
+  analytics: (range: { from?: string; to?: string } = {}) =>
+    api.get<CostAnalytics>("/costs/analytics", { from: range.from, to: range.to }),
 
   /** POST /costs — requires finance.manage (money fields are minor units). */
   create: (input: CostInput) => api.post<Cost>("/costs", input),

@@ -1062,10 +1062,22 @@ export interface CostAnalytics {
   period: { from: string; to: string };
   total_spend: Money;
   unpaid: Money;
+  invoiced: { total: Money; count: number };
+  paid: { total: Money; count: number };
+  unpaid_invoices: { total: Money; count: number };
+  avg_invoice: { avg: Money; max: Money };
+  avg_days_to_pay: { days: number | null; count: number };
+  gross_margin: { percent: string | null; revenue: Money };
   by_status: { status: string; count: number; total: Money }[];
   by_category: { name: string; total: Money }[];
   by_supplier: { supplier_id: string; company_name: string | null; total: Money }[];
   over_time: { month: string; total: Money }[];
+  yoy: {
+    current_year: number;
+    previous_year: number;
+    months: { month: number; current: Money; previous: Money }[];
+  };
+  top_costs: { id: string; date: string; category: string; supplier_name: string | null; total: Money }[];
   profit_loss: { month: string; revenue: Money; costs: Money; profit: Money }[];
 }
 

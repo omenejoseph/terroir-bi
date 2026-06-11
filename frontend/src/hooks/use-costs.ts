@@ -28,10 +28,10 @@ export function useCostGroupCounts(query: CostQuery = {}) {
   });
 }
 
-export function useCostAnalytics() {
+export function useCostAnalytics(range: { from?: string; to?: string } = {}) {
   return useQuery({
-    queryKey: ["costs", "analytics"],
-    queryFn: () => costsApi.analytics(),
+    queryKey: ["costs", "analytics", range],
+    queryFn: () => costsApi.analytics(range),
   });
 }
 

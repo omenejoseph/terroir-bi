@@ -6,6 +6,7 @@ namespace App\Queries;
 
 use App\Enums\CostStatus;
 use App\Models\Cost;
+use App\Models\Inflow;
 use App\Models\Order;
 use App\Models\Supplier;
 use App\Support\Money\CurrencyRegistry;
@@ -31,7 +32,7 @@ class CostAnalyticsQuery
         $currency = $this->currency();
 
         $costs = Cost::query()->whereBetween('date', [$from, $to])
-            ->get(['date', 'total_amount', 'category', 'status', 'supplier_id']);
+            ->get(['id', 'date', 'total_amount', 'category', 'status', 'supplier_id', 'paid_at']);
 
         $total = $costs->sum(fn (Cost $c) => $c->total_amount->getMinorAmount());
         $unpaid = $costs->where('status', '!=', CostStatus::Paid)
@@ -41,16 +42,148 @@ class CostAnalyticsQuery
             ->whereBetween('created_at', [$from, $to])
             ->get(['created_at', 'total_amount']);
 
+        // Revenue (for gross margin) comes from inflows in the same period.
+        $revenue = (int) Inflow::query()->whereBetween('date', [$from, $to])
+            ->get(['amount'])->sum(fn (Inflow $i) => $i->amount->getMinorAmount());
+
         return [
             'period' => ['from' => $from->toIso8601String(), 'to' => $to->toIso8601String()],
             'total_spend' => Money::fromMinor((int) $total, $currency)->jsonSerialize(),
             'unpaid' => Money::fromMinor((int) $unpaid, $currency)->jsonSerialize(),
+            'invoiced' => $this->invoiceCard($costs, null, $currency),
+            'paid' => $this->invoiceCard($costs, CostStatus::Paid, $currency),
+            'unpaid_invoices' => $this->invoiceCard($costs, 'unpaid', $currency),
+            'avg_invoice' => $this->avgInvoice($costs, $currency),
+            'avg_days_to_pay' => $this->avgDaysToPay($costs),
+            'gross_margin' => [
+                'percent' => $revenue > 0 ? (string) round(($revenue - (int) $total) / $revenue * 100, 1) : null,
+                'revenue' => Money::fromMinor($revenue, $currency)->jsonSerialize(),
+            ],
             'by_status' => $this->byStatus($costs, $currency),
             'by_category' => $this->grouped($costs, fn (Cost $c) => $c->category, $currency),
             'by_supplier' => $this->bySupplier($costs, $currency),
             'over_time' => $this->monthly(array_values($costs->map(fn (Cost $c) => [$c->date, $c->total_amount->getMinorAmount()])->all()), $currency),
+            'yoy' => $this->yearOverYear($to->year, $currency),
+            'top_costs' => $this->topCosts($costs, $currency),
             'profit_loss' => $this->profitLoss($costs, $orders, $currency),
         ];
+    }
+
+    /**
+     * Invoiced / Paid / Unpaid card: total + count over the 'Invoice' category.
+     *
+     * @param  Collection<int, Cost>  $costs
+     * @return array<string, mixed>
+     */
+    private function invoiceCard(Collection $costs, CostStatus|string|null $filter, string $currency): array
+    {
+        $invoices = $costs->where('category', ListCostsQuery::INVOICE_CATEGORY);
+        $rows = match (true) {
+            $filter instanceof CostStatus => $invoices->where('status', $filter),
+            $filter === 'unpaid' => $invoices->where('status', '!=', CostStatus::Paid),
+            default => $invoices,
+        };
+
+        return [
+            'total' => Money::fromMinor((int) $rows->sum(fn (Cost $c) => $c->total_amount->getMinorAmount()), $currency)->jsonSerialize(),
+            'count' => $rows->count(),
+        ];
+    }
+
+    /**
+     * Average + maximum invoice amount over the 'Invoice' category.
+     *
+     * @param  Collection<int, Cost>  $costs
+     * @return array<string, mixed>
+     */
+    private function avgInvoice(Collection $costs, string $currency): array
+    {
+        $invoices = $costs->where('category', ListCostsQuery::INVOICE_CATEGORY);
+        $count = $invoices->count();
+        $sum = (int) $invoices->sum(fn (Cost $c) => $c->total_amount->getMinorAmount());
+        $max = (int) ($invoices->max(fn (Cost $c) => $c->total_amount->getMinorAmount()) ?? 0);
+
+        return [
+            'avg' => Money::fromMinor($count > 0 ? intdiv($sum, $count) : 0, $currency)->jsonSerialize(),
+            'max' => Money::fromMinor($max, $currency)->jsonSerialize(),
+        ];
+    }
+
+    /**
+     * Mean days from invoice date to paid date, over paid invoices.
+     *
+     * @param  Collection<int, Cost>  $costs
+     * @return array<string, mixed>
+     */
+    private function avgDaysToPay(Collection $costs): array
+    {
+        $paid = $costs->where('category', ListCostsQuery::INVOICE_CATEGORY)
+            ->where('status', CostStatus::Paid)
+            ->filter(fn (Cost $c) => $c->paid_at !== null);
+        $count = $paid->count();
+        $days = (float) $paid->sum(fn (Cost $c) => (float) $c->date->diffInDays($c->paid_at));
+
+        return ['days' => $count > 0 ? round($days / $count, 1) : null, 'count' => $count];
+    }
+
+    /**
+     * @param  Collection<int, Cost>  $costs
+     * @return list<array<string, mixed>>
+     */
+    private function topCosts(Collection $costs, string $currency): array
+    {
+        $names = Supplier::query()
+            ->whereIn('id', $costs->pluck('supplier_id')->filter()->unique()->values())
+            ->pluck('company_name', 'id');
+
+        return array_values($costs
+            ->sortByDesc(fn (Cost $c) => $c->total_amount->getMinorAmount())
+            ->take(10)
+            ->map(fn (Cost $c) => [
+                'id' => $c->getKey(),
+                'date' => $c->date->toIso8601String(),
+                'category' => $c->category,
+                'supplier_name' => $c->supplier_id !== null ? ($names[$c->supplier_id] ?? null) : null,
+                'total' => $c->total_amount->jsonSerialize(),
+            ])->values()->all());
+    }
+
+    /**
+     * Monthly cost totals for the given year vs the prior year.
+     *
+     * @return array<string, mixed>
+     */
+    private function yearOverYear(int $year, string $currency): array
+    {
+        $rows = Cost::query()
+            ->whereBetween('date', [
+                Carbon::parse(sprintf('%d-01-01', $year - 1))->startOfDay(),
+                Carbon::parse(sprintf('%d-12-31', $year))->endOfDay(),
+            ])
+            ->get(['date', 'total_amount']);
+
+        $current = array_fill(1, 12, 0);
+        $previous = array_fill(1, 12, 0);
+        foreach ($rows as $c) {
+            $m = (int) $c->date->format('n');
+            $minor = $c->total_amount->getMinorAmount();
+            if ($c->date->year === $year) {
+                $current[$m] += $minor;
+            } elseif ($c->date->year === $year - 1) {
+                $previous[$m] += $minor;
+            }
+        }
+
+        $months = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $months[] = [
+                'month' => $m,
+                'current' => Money::fromMinor($current[$m], $currency)->jsonSerialize(),
+                'previous' => Money::fromMinor($previous[$m], $currency)->jsonSerialize(),
+            ];
+        }
+
+        return ['current_year' => $year, 'previous_year' => $year - 1, 'months' => $months];
     }
 
     /**
