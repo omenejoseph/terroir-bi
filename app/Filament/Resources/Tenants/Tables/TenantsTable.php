@@ -2,12 +2,11 @@
 
 namespace App\Filament\Resources\Tenants\Tables;
 
-use App\Actions\Billing\SendBillingSetupLinkAction;
+use App\Filament\Resources\Tenants\Actions\TenantBillingActions;
 use App\Models\Tenant;
 use App\Services\Billing\SubscriptionAccessService;
-use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Notifications\Notification;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Carbon;
@@ -30,15 +29,11 @@ class TenantsTable
                 TextColumn::make('subscription.stripe_status')->label('Stripe')->placeholder('—'),
             ])
             ->recordActions([
+                // First so the row click resolves to the read-only view.
+                ViewAction::make(),
                 EditAction::make(),
-                Action::make('sendBillingLink')
-                    ->label('Send billing link')
-                    ->requiresConfirmation()
-                    ->visible(fn (Tenant $record): bool => $record->plan?->stripe_price_id !== null)
-                    ->action(function (Tenant $record): void {
-                        $url = app(SendBillingSetupLinkAction::class)->execute($record);
-                        Notification::make()->title('Billing link sent')->body($url)->success()->send();
-                    }),
+                TenantBillingActions::generateOnboardingLink(),
+                TenantBillingActions::emailBillingLink(),
             ]);
     }
 }

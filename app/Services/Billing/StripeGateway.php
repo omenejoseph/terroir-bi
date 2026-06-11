@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\Billing;
 
+use App\DataTransferObjects\StripeAccountSnapshot;
 use App\DataTransferObjects\StripeSubscriptionSnapshot;
+use App\Models\Plan;
 use App\Models\Tenant;
 use Illuminate\Support\Carbon;
 use RuntimeException;
@@ -19,6 +21,79 @@ use Stripe\Webhook;
 class StripeGateway
 {
     public function __construct(private readonly StripeClientFactory $factory) {}
+
+    /** Whether a Stripe secret is configured at all (no SDK call). */
+    public function isConfigured(): bool
+    {
+        $secret = config('services.stripe.secret');
+
+        return is_string($secret) && $secret !== '';
+    }
+
+    /** Whether the webhook signing secret is configured (no SDK call). */
+    public function hasWebhookSecret(): bool
+    {
+        $secret = config('services.stripe.webhook_secret');
+
+        return is_string($secret) && $secret !== '';
+    }
+
+    /**
+     * Live "test connection": retrieve the connected Stripe account. Throws if the
+     * secret is missing/invalid — the caller turns that into an admin notification.
+     */
+    public function retrieveAccount(): StripeAccountSnapshot
+    {
+        $a = $this->factory->make()->accounts->retrieve()->toArray();
+
+        $profile = is_array($a['business_profile'] ?? null) ? $a['business_profile'] : [];
+
+        return new StripeAccountSnapshot(
+            id: $this->str($a['id'] ?? null) ?? 'unknown',
+            businessName: $this->str($profile['name'] ?? null),
+            country: $this->str($a['country'] ?? null),
+            defaultCurrency: $this->str($a['default_currency'] ?? null),
+            chargesEnabled: (bool) ($a['charges_enabled'] ?? false),
+            livemode: (bool) ($a['livemode'] ?? false),
+        );
+    }
+
+    /**
+     * Create a Stripe product + recurring price from the plan's amount/interval and
+     * return the new price id. Used to "set the price" on a plan from the back
+     * office without leaving the app.
+     */
+    public function createPrice(Plan $plan): string
+    {
+        $amount = $plan->price_minor?->getMinorAmount();
+
+        if ($amount === null || $amount <= 0) {
+            throw new RuntimeException('The plan has no positive price to push to Stripe.');
+        }
+
+        $client = $this->factory->make();
+
+        $product = $client->products->create([
+            'name' => $plan->name,
+            'metadata' => ['plan_id' => $plan->getKey()],
+        ]);
+
+        $price = $client->prices->create([
+            'product' => (string) $product->id,
+            'unit_amount' => $amount,
+            'currency' => strtolower($plan->currency),
+            'recurring' => ['interval' => $plan->interval],
+            'metadata' => ['plan_id' => $plan->getKey()],
+        ]);
+
+        $priceId = $this->str($price->id);
+
+        if ($priceId === null) {
+            throw new RuntimeException('Stripe did not return a price id.');
+        }
+
+        return $priceId;
+    }
 
     /** Create a Stripe customer for the tenant; returns the customer id. */
     public function createCustomer(Tenant $tenant): string

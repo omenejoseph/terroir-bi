@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
+use App\DataTransferObjects\StripeAccountSnapshot;
 use App\DataTransferObjects\StripeSubscriptionSnapshot;
+use App\Models\Plan;
 use App\Models\Tenant;
 use App\Services\Billing\StripeGateway;
 use RuntimeException;
@@ -27,9 +29,48 @@ class FakeStripeGateway extends StripeGateway
 
     public ?string $canceledSubscriptionId = null;
 
+    public bool $configured = true;
+
+    public bool $webhookConfigured = true;
+
+    public string $priceId = 'price_fake';
+
+    public ?StripeAccountSnapshot $account = null;
+
+    public ?string $createdPriceForPlan = null;
+
     public function __construct()
     {
         // No StripeClientFactory needed for the fake.
+    }
+
+    public function isConfigured(): bool
+    {
+        return $this->configured;
+    }
+
+    public function hasWebhookSecret(): bool
+    {
+        return $this->webhookConfigured;
+    }
+
+    public function retrieveAccount(): StripeAccountSnapshot
+    {
+        return $this->account ?? new StripeAccountSnapshot(
+            id: 'acct_fake',
+            businessName: 'Terroir Test',
+            country: 'HR',
+            defaultCurrency: 'eur',
+            chargesEnabled: true,
+            livemode: false,
+        );
+    }
+
+    public function createPrice(Plan $plan): string
+    {
+        $this->createdPriceForPlan = (string) $plan->getKey();
+
+        return $this->priceId;
     }
 
     public function createCustomer(Tenant $tenant): string

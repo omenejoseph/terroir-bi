@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Plans;
 use App\Filament\Resources\Plans\Pages\CreatePlan;
 use App\Filament\Resources\Plans\Pages\EditPlan;
 use App\Filament\Resources\Plans\Pages\ListPlans;
+use App\Filament\Resources\Plans\Pages\ViewPlan;
 use App\Filament\Resources\Plans\Schemas\PlanForm;
+use App\Filament\Resources\Plans\Schemas\PlanInfolist;
 use App\Filament\Resources\Plans\Tables\PlansTable;
 use App\Models\Plan;
 use App\Queries\ListPlansQuery;
@@ -40,6 +42,12 @@ class PlanResource extends Resource
         return PlanForm::configure($schema);
     }
 
+    /** The read-only view — the default click target from the table. */
+    public static function infolist(Schema $schema): Schema
+    {
+        return PlanInfolist::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return PlansTable::configure($table);
@@ -57,6 +65,7 @@ class PlanResource extends Resource
         return [
             'index' => ListPlans::route('/'),
             'create' => CreatePlan::route('/create'),
+            'view' => ViewPlan::route('/{record}'),
             'edit' => EditPlan::route('/{record}/edit'),
         ];
     }

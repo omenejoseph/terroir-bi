@@ -39,6 +39,9 @@ class TenantForm
                         TextInput::make('currency')->default('EUR')->required()->maxLength(3),
                         TextInput::make('locale')->default('hr')->required()->maxLength(5),
                     ]),
+
+                // The live Stripe subscription state lives on the read-only View
+                // page (TenantInfolist) — this form only edits what the admin owns.
             ]);
     }
 }
