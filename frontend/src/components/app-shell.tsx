@@ -38,20 +38,22 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   /** Capability required to see this item (omit = always visible). */
   cap?: string;
+  /** Plan module that must be present to see this item (omit = not gated by plan). */
+  module?: string;
 }
 
 const NAV: NavItem[] = [
-  { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
-  { href: "/inventory", labelKey: "nav.inventory", icon: Boxes },
-  { href: "/orders", labelKey: "nav.orders", icon: ClipboardList, cap: "orders.view" },
-  { href: "/customers", labelKey: "nav.customers", icon: Users },
-  { href: "/suppliers", labelKey: "nav.suppliers", icon: Truck, cap: "suppliers.view" },
-  { href: "/inflows", labelKey: "nav.inflows", icon: Banknote, cap: "finance.view" },
-  { href: "/costs", labelKey: "nav.costs", icon: Receipt, cap: "finance.view" },
-  { href: "/cash-flow", labelKey: "nav.cashFlow", icon: TrendingUp, cap: "finance.view" },
-  { href: "/work-orders", labelKey: "nav.tasks", icon: ListTodo },
-  { href: "/team", labelKey: "nav.team", icon: UsersRound, cap: "members.view" },
-  { href: "/settings", labelKey: "nav.settings", icon: Settings, cap: "settings.manage" },
+  { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard, module: "dashboard" },
+  { href: "/inventory", labelKey: "nav.inventory", icon: Boxes, module: "inventory" },
+  { href: "/orders", labelKey: "nav.orders", icon: ClipboardList, cap: "orders.view", module: "orders" },
+  { href: "/customers", labelKey: "nav.customers", icon: Users, module: "customers" },
+  { href: "/suppliers", labelKey: "nav.suppliers", icon: Truck, cap: "suppliers.view", module: "suppliers" },
+  { href: "/inflows", labelKey: "nav.inflows", icon: Banknote, cap: "finance.view", module: "inflows" },
+  { href: "/costs", labelKey: "nav.costs", icon: Receipt, cap: "finance.view", module: "costs" },
+  { href: "/cash-flow", labelKey: "nav.cashFlow", icon: TrendingUp, cap: "finance.view", module: "cash_flow" },
+  { href: "/work-orders", labelKey: "nav.tasks", icon: ListTodo, module: "work_orders" },
+  { href: "/team", labelKey: "nav.team", icon: UsersRound, cap: "members.view", module: "team" },
+  { href: "/settings", labelKey: "nav.settings", icon: Settings, cap: "settings.manage", module: "settings" },
 ];
 
 // Desktop rail sizing (px).
@@ -216,9 +218,11 @@ function SidebarContent({
   onToggle?: () => void;
   showClose?: boolean;
 }) {
-  const { user, logout, can } = useAuth();
+  const { user, logout, can, hasModule } = useAuth();
   const { t } = useTranslation();
-  const nav = NAV.filter((item) => !item.cap || can(item.cap));
+  const nav = NAV.filter(
+    (item) => (!item.cap || can(item.cap)) && (!item.module || hasModule(item.module)),
+  );
 
   return (
     <div className="flex h-full flex-col">

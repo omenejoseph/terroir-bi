@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnforceModuleAccess;
+use App\Http\Middleware\EnforceTenantAccess;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -23,10 +25,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // Applied to authenticated tenant-facing API routes. Order matters:
-        // authenticate, then resolve+authorize the tenant, then set the locale.
+        // authenticate, resolve+authorize the tenant, enforce plan modules +
+        // subscription access (both need the resolved tenant), then set locale.
         $middleware->group('tenant', [
             'auth:sanctum',
             ResolveTenant::class,
+            EnforceModuleAccess::class,
+            EnforceTenantAccess::class,
             SetLocale::class,
         ]);
 

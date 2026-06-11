@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\TenantSessionController;
+use App\Http\Controllers\Api\Billing\StripeWebhookController;
 use App\Http\Controllers\Api\BottleAnalysisController;
 use App\Http\Controllers\Api\CashFlowController;
 use App\Http\Controllers\Api\ConsignmentController;
@@ -46,6 +47,9 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/invitations/accept', [InvitationController::class, 'accept']);
     Route::get('public/{token}/catalog', [PublicOrderController::class, 'catalog']);
     Route::post('public/{token}/orders', [PublicOrderController::class, 'store']);
+
+    // Stripe webhooks — authenticated by signature, no tenant context.
+    Route::post('stripe/webhook', [StripeWebhookController::class, 'handle']);
 
     // Public supplier portal — the portal token authenticates and selects the tenant.
     Route::get('public/supplier/{token}', [PublicSupplierController::class, 'show']);

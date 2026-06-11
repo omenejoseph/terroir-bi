@@ -104,4 +104,12 @@ class Tenant extends Model implements StanclTenantContract
     {
         return $this->belongsTo(Plan::class);
     }
+
+    /**
+     * @return HasOne<TenantSubscription, $this>
+     */
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(TenantSubscription::class);
+    }
 }

@@ -40,6 +40,16 @@ export const en = {
     team: "Team",
     settings: "Settings",
   },
+  access: {
+    blockedTitle: "Subscription expired",
+    blockedBody:
+      "Your subscription has lapsed and access is paused. Please renew your plan to restore access.",
+    readOnlyTitle: "Read-only mode",
+    readOnlyBody:
+      "Your subscription is in a grace period — you can view data but can't make changes until you renew.",
+    daysRemaining: "{count} days remaining",
+    contactSupport: "Contact your administrator or renew to continue.",
+  },
   tenant: {
     select: "Select tenant",
     switcherLabel: "Active tenant",

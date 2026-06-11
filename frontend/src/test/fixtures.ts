@@ -1,3 +1,4 @@
+import { MODULES } from "@/lib/types";
 import type {
   ArAging,
   AuthSession,
@@ -42,6 +43,7 @@ import type {
   SupplierMergePreview,
   SupplierPortal,
   SupplierPriceItem,
+  TenantAccess,
   TenantMembership,
   WorkOrder,
   WorkOrderStats,
@@ -93,6 +95,22 @@ export function makeSession(overrides: Partial<AuthSession> = {}): AuthSession {
     roles: ["ADMIN"],
     tenants: [tenantA, tenantB],
     settings: makeSettings(),
+    modules: [...MODULES],
+    access: makeAccess(),
+    ...overrides,
+  };
+}
+
+/** Subscription access state — defaults to full; pass overrides for grace/blocked. */
+export function makeAccess(overrides: Partial<TenantAccess> = {}): TenantAccess {
+  return {
+    level: "full",
+    status: "active",
+    trial_ends_at: null,
+    current_period_end: null,
+    grace_full_until: null,
+    grace_readonly_until: null,
+    days_remaining: null,
     ...overrides,
   };
 }
