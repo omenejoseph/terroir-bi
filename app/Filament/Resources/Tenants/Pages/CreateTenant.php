@@ -11,6 +11,12 @@ class CreateTenant extends CreateRecord
 {
     protected static string $resource = TenantResource::class;
 
+    /** Back to the list after creating, not into the edit form. */
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
     /**
      * Provisions the tenant (+ settings + first admin) through the shared action.
      *

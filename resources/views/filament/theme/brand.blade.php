@@ -38,6 +38,16 @@
         padding-block: 1rem;
     }
 
+    /* The frontend sidebar is an elevated translucent-white surface (bg-card/80,
+       backdrop blur, right border) that lifts off the off-white canvas. Filament's
+       desktop sidebar is transparent by default — give it the same treatment so
+       the menu bar reads as a raised white panel, not part of the page. */
+    .fi-sidebar {
+        background-color: color-mix(in oklch, white 82%, transparent);
+        backdrop-filter: blur(16px);
+        border-inline-end: 1px solid var(--gray-200);
+    }
+
     /*
         Active nav item, as in the frontend sidebar: a light primary tint
         (bg-primary/10) plus a small primary bar on the left. The item's text

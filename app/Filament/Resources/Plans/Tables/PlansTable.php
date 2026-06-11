@@ -4,8 +4,10 @@ namespace App\Filament\Resources\Plans\Tables;
 
 use App\Actions\Billing\DeletePlanAction;
 use App\Filament\Resources\Plans\Actions\CreateStripePriceAction;
+use App\Filament\Resources\Plans\PlanResource;
 use App\Models\Plan;
 use App\Support\Money\Money;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -36,13 +38,16 @@ class PlansTable
                 IconColumn::make('is_active')->boolean(),
                 TextColumn::make('tenants_count')->label('Tenants'),
             ])
+            // Row click opens the read-only view; the rest live in a tidy menu.
+            ->recordUrl(fn (Plan $record): string => PlanResource::getUrl('view', ['record' => $record]))
             ->recordActions([
-                // First so the row click resolves to the read-only view.
-                ViewAction::make(),
-                CreateStripePriceAction::make(),
-                EditAction::make(),
-                // Deletion is routed through the action class, never inline.
-                DeleteAction::make()->using(fn (Plan $record) => app(DeletePlanAction::class)->execute($record)),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    CreateStripePriceAction::make(),
+                    EditAction::make(),
+                    // Deletion is routed through the action class, never inline.
+                    DeleteAction::make()->using(fn (Plan $record) => app(DeletePlanAction::class)->execute($record)),
+                ]),
             ]);
     }
 }

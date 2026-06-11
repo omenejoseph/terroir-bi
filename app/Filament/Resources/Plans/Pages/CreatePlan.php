@@ -11,6 +11,12 @@ class CreatePlan extends CreateRecord
 {
     protected static string $resource = PlanResource::class;
 
+    /** Back to the list after creating, not into the edit form. */
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
     /**
      * Persistence goes through the action — no DB call in the page.
      *

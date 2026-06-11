@@ -13,6 +13,12 @@ class CreatePlatformAdmin extends CreateRecord
 {
     protected static string $resource = PlatformAdminResource::class;
 
+    /** Back to the list after creating, not into the edit form. */
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
     /**
      * Create the account, then grant the platform-admin flag explicitly
      * (`is_platform_admin` is deliberately not mass-assignable).

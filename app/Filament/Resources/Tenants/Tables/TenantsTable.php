@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\Tenants\Tables;
 
 use App\Filament\Resources\Tenants\Actions\TenantBillingActions;
+use App\Filament\Resources\Tenants\TenantResource;
 use App\Models\Tenant;
 use App\Services\Billing\SubscriptionAccessService;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
@@ -28,12 +30,15 @@ class TenantsTable
                         ->level->value),
                 TextColumn::make('subscription.stripe_status')->label('Stripe')->placeholder('—'),
             ])
+            // Row click opens the read-only view; the rest live in a tidy menu.
+            ->recordUrl(fn (Tenant $record): string => TenantResource::getUrl('view', ['record' => $record]))
             ->recordActions([
-                // First so the row click resolves to the read-only view.
-                ViewAction::make(),
-                EditAction::make(),
-                TenantBillingActions::generateOnboardingLink(),
-                TenantBillingActions::emailBillingLink(),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                    TenantBillingActions::generateOnboardingLink(),
+                    TenantBillingActions::emailBillingLink(),
+                ]),
             ]);
     }
 }

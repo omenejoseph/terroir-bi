@@ -8,6 +8,7 @@ use App\Enums\TenantRole;
 use App\Models\Membership;
 use App\Models\Tenant;
 use App\Models\User;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -68,9 +69,11 @@ class MembersRelationManager extends RelationManager
                     }),
             ])
             ->recordActions([
-                EditAction::make()
-                    ->schema([self::rolesField(), self::statusField()]),
-                DeleteAction::make(),
+                ActionGroup::make([
+                    EditAction::make()
+                        ->schema([self::rolesField(), self::statusField()]),
+                    DeleteAction::make(),
+                ]),
             ]);
     }
 
