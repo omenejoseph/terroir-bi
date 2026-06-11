@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\Plans\Schemas;
 
 use App\Enums\Module;
+use App\Support\Money\Money;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class PlanForm
@@ -17,9 +19,17 @@ class PlanForm
                 TextInput::make('name')->required()->maxLength(255),
                 TextInput::make('slug')->required()->maxLength(255),
                 TextInput::make('price_minor')
-                    ->label('Price (minor units)')
+                    ->label('Price')
+                    ->helperText('Amount billed per interval, in major units (e.g. 15.00). Leave blank for a free plan.')
                     ->numeric()
-                    ->minValue(0),
+                    ->step('0.01')
+                    ->minValue(0)
+                    ->prefix(fn (Get $get): string => is_string($get('currency')) && $get('currency') !== '' ? $get('currency') : 'EUR')
+                    // Stored as integer minor units (MoneyCast); shown/entered in major.
+                    ->formatStateUsing(fn ($state): ?string => $state instanceof Money ? $state->toMajor() : $state)
+                    ->dehydrateStateUsing(fn ($state, Get $get): ?int => $state === null || $state === ''
+                        ? null
+                        : Money::fromMajor((string) $state, is_string($get('currency')) && $get('currency') !== '' ? $get('currency') : 'EUR')->getMinorAmount()),
                 TextInput::make('currency')->required()->default('EUR')->maxLength(3),
                 CheckboxList::make('modules')
                     ->options(collect(Module::cases())->mapWithKeys(fn (Module $m) => [$m->value => $m->label()])->all())

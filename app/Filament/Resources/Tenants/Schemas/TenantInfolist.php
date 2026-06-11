@@ -33,6 +33,11 @@ class TenantInfolist
                             ->label('Plan')
                             ->badge()
                             ->placeholder('— no plan (unrestricted) —'),
+                        TextEntry::make('plan_price')
+                            ->label('Plan price')
+                            ->state(fn (Tenant $record): string => $record->plan?->price_minor !== null
+                                ? $record->plan->price_minor->toMajor().' '.$record->plan->currency.' / '.$record->plan->interval
+                                : '— free / no plan —'),
                         TextEntry::make('plan_modules')
                             ->label('Plan modules')
                             ->badge()

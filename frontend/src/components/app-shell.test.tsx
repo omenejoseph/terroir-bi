@@ -48,6 +48,6 @@ describe("AppShell nav (plan module gating)", () => {
 
     expect(await screen.findAllByText("Costs")).not.toHaveLength(0);
     expect(screen.getAllByText("Cash flow").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Money in").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Cash inflow").length).toBeGreaterThan(0);
   });
 });
