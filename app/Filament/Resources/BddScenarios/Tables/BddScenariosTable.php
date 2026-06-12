@@ -49,7 +49,6 @@ class BddScenariosTable
                 ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make(),
-                    ScenarioActions::recompile(),
                     ScenarioActions::grantRequested(),
                     DeleteAction::make(),
                 ]),

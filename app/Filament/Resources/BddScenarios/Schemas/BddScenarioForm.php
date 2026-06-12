@@ -30,7 +30,7 @@ class BddScenarioForm
                     ->required()
                     ->rows(14)
                     ->placeholder(self::PLACEHOLDER)
-                    ->helperText('Plain Given/When/Then. On save, the AI compiles it against the granted operations — money in EUR is fine ("€12.00"); the compiler converts to minor units.')
+                    ->helperText('Plain Given/When/Then. On run, an AI agent executes it live against the granted operations (sandboxed, always rolled back) — money in EUR is fine ("€12.00"); the agent converts to minor units.')
                     ->extraInputAttributes(['class' => 'font-mono text-sm'])
                     ->columnSpanFull(),
                 Toggle::make('is_active')

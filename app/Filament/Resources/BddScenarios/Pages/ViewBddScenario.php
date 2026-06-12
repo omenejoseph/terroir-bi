@@ -20,7 +20,6 @@ class ViewBddScenario extends ViewRecord
         return [
             ScenarioActions::run(),
             ScenarioActions::grantRequested(),
-            ScenarioActions::recompile(),
             EditAction::make(),
         ];
     }

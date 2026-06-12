@@ -6,7 +6,7 @@ use App\Enums\BddRunStatus;
 use App\Filament\Resources\BddScenarios\BddScenarioResource;
 use App\Queries\Bdd\ListBddScenariosQuery;
 use App\Services\Bdd\CurrentOperator;
-use App\Services\Bdd\ScenarioRunner;
+use App\Services\Bdd\LiveScenarioRunner;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
@@ -20,13 +20,13 @@ class ListBddScenarios extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            // Replay every active READY scenario, sandboxed + rolled back.
+            // Execute every active scenario live, sandboxed + rolled back.
             Action::make('runAll')
                 ->label('Run all')
                 ->icon(Heroicon::OutlinedPlay)
                 ->color('success')
                 ->requiresConfirmation()
-                ->modalDescription('Run every active, compiled scenario against a throwaway sandbox (always rolled back).')
+                ->modalDescription('An AI agent executes every active scenario live against a throwaway sandbox (always rolled back). Costs one AI call per scenario.')
                 ->action(function (): void {
                     $scenarios = app(ListBddScenariosQuery::class)->runnable();
 
@@ -36,7 +36,7 @@ class ListBddScenarios extends ListRecords
                         return;
                     }
 
-                    $runner = app(ScenarioRunner::class);
+                    $runner = app(LiveScenarioRunner::class);
                     $passed = 0;
                     $failedTitles = [];
 

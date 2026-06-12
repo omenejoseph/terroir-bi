@@ -9,14 +9,16 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 /**
- * Read-only scenario view: the Gherkin, compile state (incl. the access the
- * compiler asked for), the compiled steps with their last-run results, and the
- * run history below.
+ * Read-only scenario view: the Gherkin (executed live by an AI agent on each
+ * run), any access the latest run was denied, the latest run's step results,
+ * and the full tool transcript for auditing the AI's judgements.
  */
 class BddScenarioInfolist
 {
     public static function configure(Schema $schema): Schema
     {
+        $runs = fn (): BddScenarioRunsQuery => app(BddScenarioRunsQuery::class);
+
         return $schema
             ->components([
                 Section::make('Scenario')
@@ -24,7 +26,6 @@ class BddScenarioInfolist
                     ->schema([
                         TextEntry::make('status')->badge(),
                         TextEntry::make('last_run_status')->label('Last run')->badge()->placeholder('— never —'),
-                        TextEntry::make('compile_model')->label('Compiled by')->placeholder('—'),
                         TextEntry::make('last_run_at')->dateTime()->placeholder('—'),
                         TextEntry::make('gherkin')
                             ->label('Gherkin')
@@ -33,50 +34,23 @@ class BddScenarioInfolist
                     ]),
 
                 Section::make('Access needed')
-                    ->description('The compiler could not bind these steps — grant access (header button) and it recompiles automatically.')
-                    ->visible(fn (BddScenario $record): bool => ($record->requested_operations ?? []) !== [])
+                    ->description('The latest run hit operations that are not granted — grant access (header button) and run again.')
+                    ->visible(fn (BddScenario $record): bool => $runs()->latestDeniedOperations($record) !== [])
                     ->schema([
-                        TextEntry::make('requested_operations')
+                        TextEntry::make('denied_operations')
                             ->hiddenLabel()
                             ->listWithLineBreaks()
-                            ->state(fn (BddScenario $record): array => array_map(
-                                fn (array $entry): string => ($entry['suggested_operation'] ?? '?')
-                                    .(($entry['step_text'] ?? '') !== '' ? ' — for: "'.$entry['step_text'].'"' : ''),
-                                $record->requested_operations ?? [],
-                            )),
-                    ]),
-
-                Section::make('Compile error')
-                    ->visible(fn (BddScenario $record): bool => $record->compile_error !== null
-                        && ($record->requested_operations ?? []) === [])
-                    ->schema([
-                        TextEntry::make('compile_error')->hiddenLabel()->color('danger'),
-                    ]),
-
-                Section::make('Compiled steps')
-                    ->description('The deterministic plan the runner replays — no AI at run time.')
-                    ->visible(fn (BddScenario $record): bool => $record->compiled_plan !== null)
-                    ->schema([
-                        TextEntry::make('compiled_plan')
-                            ->hiddenLabel()
-                            ->listWithLineBreaks()
-                            ->state(fn (BddScenario $record): array => array_map(
-                                fn (array $step): string => strtoupper((string) ($step['keyword'] ?? '')).' '
-                                    .($step['text'] ?? '')
-                                    .'  →  '.($step['op'] ?? ''),
-                                $record->compiled_plan['steps'] ?? [],
-                            ))
-                            ->extraAttributes(['class' => 'font-mono text-sm']),
+                            ->state(fn (BddScenario $record): array => $runs()->latestDeniedOperations($record)),
                     ]),
 
                 Section::make('Last run detail')
-                    ->visible(fn (BddScenario $record): bool => app(BddScenarioRunsQuery::class)->hasRuns($record))
+                    ->visible(fn (BddScenario $record): bool => $runs()->hasRuns($record))
                     ->schema([
                         TextEntry::make('last_run_steps')
                             ->hiddenLabel()
                             ->listWithLineBreaks()
-                            ->state(function (BddScenario $record): array {
-                                $run = app(BddScenarioRunsQuery::class)->latest($record);
+                            ->state(function (BddScenario $record) use ($runs): array {
+                                $run = $runs()->latest($record);
                                 if ($run === null) {
                                     return [];
                                 }
@@ -98,6 +72,20 @@ class BddScenarioInfolist
                                 return $lines;
                             })
                             ->extraAttributes(['class' => 'font-mono text-sm']),
+                    ]),
+
+                Section::make('Last run transcript')
+                    ->description('Every tool call the AI made, with arguments and results — the audit trail behind the verdict.')
+                    ->collapsed()
+                    ->visible(fn (BddScenario $record): bool => ($runs()->latest($record)->transcript ?? []) !== [])
+                    ->schema([
+                        TextEntry::make('last_run_transcript')
+                            ->hiddenLabel()
+                            ->state(fn (BddScenario $record): string => (string) json_encode(
+                                $runs()->latest($record)->transcript ?? [],
+                                JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
+                            ))
+                            ->extraAttributes(['class' => 'font-mono whitespace-pre-wrap text-xs']),
                     ]),
             ]);
     }

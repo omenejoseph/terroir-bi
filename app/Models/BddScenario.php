@@ -13,9 +13,11 @@ use Illuminate\Support\Carbon;
 
 /**
  * An admin-authored BDD scenario (central, not tenant-scoped). `gherkin` is the
- * source of truth; `compiled_plan` is the AI-compiled deterministic execution
- * plan (see App\Services\Bdd\PlanValidator for its shape) replayed by the
- * runner inside an always-rolled-back sandbox transaction.
+ * source of truth and is executed LIVE by an AI agent on every run (see
+ * App\Services\Bdd\LiveScenarioRunner) inside an always-rolled-back sandbox
+ * transaction. The compile-era columns (compiled_plan, requested_operations,
+ * compile_error, compile_model) are dormant — no longer written, kept only for
+ * reversibility until a cleanup migration drops them.
  *
  * @property string $id
  * @property string $title
@@ -60,6 +62,12 @@ class BddScenario extends Model
             'last_run_status' => BddRunStatus::class,
             'last_run_at' => 'datetime',
         ];
+    }
+
+    /** Live runs need only Gherkin to execute — there is no compile step. */
+    public function isRunnable(): bool
+    {
+        return trim($this->gherkin) !== '';
     }
 
     /**

@@ -104,6 +104,17 @@ class AiClient
     }
 
     /**
+     * Re-record usage for a prompt whose original log row was swallowed by a
+     * rolled-back transaction (BDD live runs execute their whole tool loop
+     * inside an always-rolled-back sandbox transaction). Call AFTER the
+     * rollback so per-tenant spend reporting stays accurate.
+     */
+    public function recordUsage(AiCapability $capability, string $feature, ?AgentResponse $response, bool $ok): void
+    {
+        $this->log($capability, $feature, $this->modelFor($capability), $response, $ok, $this->tenant->currentId());
+    }
+
+    /**
      * Build the vision attachment(s) for a stored document.
      *
      * Both images AND PDFs are sent as `image_url` parts (data URIs): Cloudflare's

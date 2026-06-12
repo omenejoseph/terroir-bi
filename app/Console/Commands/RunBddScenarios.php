@@ -6,22 +6,24 @@ namespace App\Console\Commands;
 
 use App\Enums\BddRunStatus;
 use App\Queries\Bdd\ListBddScenariosQuery;
-use App\Services\Bdd\ScenarioRunner;
+use App\Services\Bdd\LiveScenarioRunner;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 
 /**
- * Replay saved BDD scenarios (no AI involved — compiled plans only). Exits
- * non-zero when any scenario fails, so this can back a cron or CI gate later;
- * runs stay manual-by-default (no scheduler entry).
+ * Execute saved BDD scenarios live (an AI agent drives each Gherkin through
+ * tools — one AI call per scenario, and verdicts include the model's own Then
+ * judgements, so treat results as evidence rather than a strict gate). Exits
+ * non-zero when any scenario fails; runs stay manual-by-default (no scheduler
+ * entry).
  */
 class RunBddScenarios extends Command
 {
-    protected $signature = 'bdd:run {--scenario= : Slug of a single scenario} {--all : Run every active READY scenario}';
+    protected $signature = 'bdd:run {--scenario= : Slug of a single scenario} {--all : Run every active scenario}';
 
     protected $description = 'Run saved BDD scenarios against a rolled-back sandbox tenant';
 
-    public function handle(ScenarioRunner $runner, ListBddScenariosQuery $scenarios): int
+    public function handle(LiveScenarioRunner $runner, ListBddScenariosQuery $scenarios): int
     {
         if (($slug = $this->option('scenario')) !== null) {
             $found = $scenarios->findBySlug((string) $slug);

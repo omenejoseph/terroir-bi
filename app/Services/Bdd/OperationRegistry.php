@@ -67,6 +67,26 @@ class OperationRegistry
         return $typeName === 'string' && preg_match('/Id$/', $name) === 1;
     }
 
+    /**
+     * Canonicalise an operation key's prefix separator. Models routinely conflate
+     * the two conventions — seeds/probes use a dot (`probe.stock_of`) while
+     * actions use a colon (`action:App\…`) — emitting `probe:stock_of` or
+     * `action.App\…`. Left as-is, the wrong separator reads as an unknown,
+     * ungranted operation and would park the step as needing access.
+     */
+    public static function canonicalKey(string $op): string
+    {
+        if (preg_match('/^(seed|probe)[:.](.+)$/', $op, $m) === 1) {
+            return $m[1].'.'.$m[2];
+        }
+
+        if (preg_match('/^action[:.](.+)$/', $op, $m) === 1) {
+            return self::ACTION_PREFIX.$m[1];
+        }
+
+        return $op;
+    }
+
     /** Whether a key is a built-in (grant-free) seed/probe. */
     public function isBuiltIn(string $key): bool
     {
