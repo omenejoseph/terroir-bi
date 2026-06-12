@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\BddScenarios\Actions;
 
 use App\Actions\Bdd\GrantBddOperationAction;
-use App\Enums\BddRunStatus;
 use App\Models\BddScenario;
 use App\Queries\Bdd\BddScenarioRunsQuery;
 use App\Services\Bdd\CurrentOperator;
@@ -19,7 +18,7 @@ use Throwable;
  */
 class ScenarioActions
 {
-    /** Execute the Gherkin live now (AI tool loop, sandboxed + rolled back) and show the verdict. */
+    /** Queue a live AI run (sandboxed + rolled back); the scenario page streams its log. */
     public static function run(): Action
     {
         return Action::make('runScenario')
@@ -27,29 +26,22 @@ class ScenarioActions
             ->icon(Heroicon::OutlinedPlay)
             ->color('success')
             ->visible(fn (BddScenario $record): bool => $record->isRunnable())
+            ->disabled(fn (BddScenario $record): bool => $record->last_run_status?->isInFlight() ?? false)
             ->requiresConfirmation()
-            ->modalDescription('An AI agent executes the Gherkin live against a throwaway sandbox (always rolled back). Costs one AI call.')
+            ->modalDescription('Queues a background run: an AI agent executes the Gherkin live against a throwaway sandbox (always rolled back). Costs one AI call.')
             ->action(function (BddScenario $record): void {
                 try {
-                    $run = app(LiveScenarioRunner::class)->run($record, CurrentOperator::id());
+                    app(LiveScenarioRunner::class)->queue($record, CurrentOperator::id());
                 } catch (Throwable $e) {
-                    Notification::make()->title('Run crashed')->body($e->getMessage())->danger()->send();
+                    Notification::make()->title('Could not queue the run')->body($e->getMessage())->danger()->send();
 
                     return;
                 }
 
-                $failing = collect($run->step_results ?? [])
-                    ->first(fn (array $step): bool => ! in_array($step['status'] ?? '', ['pass', 'info'], true));
-                $body = $run->status === BddRunStatus::Pass
-                    ? count($run->step_results ?? []).' steps in '.$run->duration_ms.'ms — sandbox rolled back.'
-                    : ($failing !== null
-                        ? 'Step '.($failing['index'] ?? '?').': '.($failing['detail'] ?? '')
-                        : (string) $run->error);
-
                 Notification::make()
-                    ->title('Scenario '.$run->status->value)
-                    ->body($body)
-                    ->{$run->status === BddRunStatus::Pass ? 'success' : 'danger'}()
+                    ->title('Run queued')
+                    ->body('Open the scenario page to watch the live log — it refreshes automatically while the run executes.')
+                    ->success()
                     ->send();
             });
     }

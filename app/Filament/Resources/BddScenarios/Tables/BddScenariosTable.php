@@ -20,6 +20,8 @@ class BddScenariosTable
     public static function configure(Table $table): Table
     {
         return $table
+            // Keep the last-run badges fresh while queued runs execute.
+            ->poll('10s')
             ->columns([
                 TextColumn::make('title')->searchable()->sortable(),
                 TextColumn::make('status')
@@ -38,6 +40,7 @@ class BddScenariosTable
                         BddRunStatus::Pass => 'success',
                         BddRunStatus::Fail, BddRunStatus::Error => 'danger',
                         BddRunStatus::NeedsAccess => 'warning',
+                        BddRunStatus::Queued, BddRunStatus::Running => 'info',
                         default => 'gray',
                     }),
                 TextColumn::make('last_run_at')->since()->placeholder('—'),

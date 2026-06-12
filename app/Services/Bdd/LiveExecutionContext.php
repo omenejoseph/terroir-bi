@@ -42,7 +42,28 @@ class LiveExecutionContext
 
     private ?int $stepStartedAt = null;
 
+    /** @var (callable(string): void)|null */
+    private $logger = null;
+
     public function __construct(public readonly SandboxContext $sandbox) {}
+
+    /**
+     * Sink for human-readable progress lines (the run's live log). Optional —
+     * everything works without one; lines are simply dropped.
+     *
+     * @param  callable(string): void  $logger
+     */
+    public function onLog(callable $logger): void
+    {
+        $this->logger = $logger;
+    }
+
+    public function log(string $line): void
+    {
+        if ($this->logger !== null) {
+            ($this->logger)($line);
+        }
+    }
 
     // --- Captures --------------------------------------------------------------
 

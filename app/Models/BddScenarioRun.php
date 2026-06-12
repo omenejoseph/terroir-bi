@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property list<array<string, mixed>>|null $step_results
  * @property string|null $error
  * @property list<array<string, mixed>>|null $transcript
+ * @property list<string>|null $logs
  * @property int $duration_ms
  * @property string|null $triggered_by_id
  * @property Carbon|null $created_at
@@ -35,6 +36,7 @@ class BddScenarioRun extends Model
         'step_results',
         'error',
         'transcript',
+        'logs',
         'duration_ms',
         'triggered_by_id',
     ];
@@ -45,6 +47,7 @@ class BddScenarioRun extends Model
             'status' => BddRunStatus::class,
             'step_results' => 'array',
             'transcript' => 'array',
+            'logs' => 'array',
             'duration_ms' => 'integer',
         ];
     }
