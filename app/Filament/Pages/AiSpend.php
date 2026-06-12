@@ -9,15 +9,16 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use UnitEnum;
 
 /**
- * AI spend monitoring. Local usage logs (requests + tokens) render instantly and
- * always; the per-request USD cost is pulled on demand from the Cloudflare AI
- * Gateway Logs API (the GraphQL analytics API can't group by the per-tenant
- * metadata tag, so we aggregate the logs client-side).
+ * AI spend monitoring. Local usage logs (requests + tokens) render instantly for
+ * the selected period and tenant; per-request USD cost is pulled on demand from
+ * the Cloudflare AI Gateway Logs API (the GraphQL analytics API can't group by
+ * the per-tenant metadata tag, so logs are aggregated client-side).
  */
 class AiSpend extends Page
 {
@@ -29,10 +30,18 @@ class AiSpend extends Page
 
     protected string $view = 'filament.pages.ai-spend';
 
-    public int $days = 30;
+    /** Period preset: 7d | 30d | 90d | ytd | custom. */
+    public string $period = '30d';
+
+    public ?string $from = null; // custom range (inclusive)
+
+    public ?string $to = null;
+
+    /** Tenant filter; '' = all tenants. */
+    public string $tenantId = '';
 
     /**
-     * Cloudflare spend loaded on demand: ['global' => array, 'by_tenant' => array].
+     * Cloudflare spend loaded on demand for the current filter window.
      *
      * @var array<string, mixed>
      */
@@ -43,9 +52,58 @@ class AiSpend extends Page
         return 'AI spend';
     }
 
-    private function since(): Carbon
+    /**
+     * @return array<string, string>
+     */
+    public function periodOptions(): array
     {
-        return now()->subDays($this->days);
+        return [
+            '7d' => 'Last 7 days',
+            '30d' => 'Last 30 days',
+            '90d' => 'Last 90 days (quarter)',
+            'ytd' => 'Year to date',
+            'custom' => 'Custom range',
+        ];
+    }
+
+    /**
+     * Tenants that have AI usage, id => name, for the filter dropdown.
+     *
+     * @return array<string, string>
+     */
+    public function tenantOptions(): array
+    {
+        $ids = DB::table('ai_usage_logs')->whereNotNull('tenant_id')->distinct()->pluck('tenant_id')->all();
+
+        if ($ids === []) {
+            return [];
+        }
+
+        return Tenant::query()->whereIn('id', $ids)->orderBy('name')->pluck('name', 'id')->all();
+    }
+
+    public function windowStart(): Carbon
+    {
+        return match ($this->period) {
+            '7d' => now()->subDays(7),
+            '90d' => now()->subDays(90),
+            'ytd' => now()->startOfYear(),
+            'custom' => $this->from !== null && $this->from !== '' ? Carbon::parse($this->from)->startOfDay() : now()->subDays(30),
+            default => now()->subDays(30),
+        };
+    }
+
+    public function windowEnd(): Carbon
+    {
+        return $this->period === 'custom' && $this->to !== null && $this->to !== ''
+            ? Carbon::parse($this->to)->endOfDay()
+            : now();
+    }
+
+    /** A filter change invalidates any loaded Cloudflare cost (avoids stale numbers). */
+    public function updated(): void
+    {
+        $this->cloudflare = [];
     }
 
     public function gatewayConfigured(): bool
@@ -53,33 +111,45 @@ class AiSpend extends Page
         return app(CloudflareAiGatewayClient::class)->configured();
     }
 
-    /**
-     * @return array{requests: int, prompt_tokens: int, completion_tokens: int}
-     */
-    public function localTotals(): array
+    /** Usage-log query scoped to the current period + tenant filter. */
+    private function baseQuery(): Builder
     {
-        // Query builder (stdClass rows) — usage logs are not tenant-scoped.
-        $row = DB::table('ai_usage_logs')
-            ->where('created_at', '>=', $this->since())
+        $query = DB::table('ai_usage_logs')->whereBetween('created_at', [$this->windowStart(), $this->windowEnd()]);
+
+        if ($this->tenantId !== '') {
+            $query->where('tenant_id', $this->tenantId);
+        }
+
+        return $query;
+    }
+
+    /**
+     * @return array{requests: int, prompt_tokens: int, completion_tokens: int, cost_usd: float|null}
+     */
+    public function totals(): array
+    {
+        $row = $this->baseQuery()
             ->selectRaw('COUNT(*) AS requests, COALESCE(SUM(prompt_tokens),0) AS pt, COALESCE(SUM(completion_tokens),0) AS ct')
             ->first();
+
+        $global = $this->cloudflare['global'] ?? null;
 
         return [
             'requests' => (int) ($row->requests ?? 0),
             'prompt_tokens' => (int) ($row->pt ?? 0),
             'completion_tokens' => (int) ($row->ct ?? 0),
+            'cost_usd' => is_array($global) && isset($global['cost_usd']) ? (float) $global['cost_usd'] : null,
         ];
     }
 
     /**
-     * Per-tenant local usage, newest window, with tenant names resolved.
+     * Per-tenant usage for the window (respects the tenant filter), newest first.
      *
      * @return list<array{tenant: string, requests: int, prompt_tokens: int, completion_tokens: int, cost_usd: float|null}>
      */
     public function byTenant(): array
     {
-        $rows = DB::table('ai_usage_logs')
-            ->where('created_at', '>=', $this->since())
+        $rows = $this->baseQuery()
             ->selectRaw('tenant_id, COUNT(*) AS requests, COALESCE(SUM(prompt_tokens),0) AS pt, COALESCE(SUM(completion_tokens),0) AS ct')
             ->groupBy('tenant_id')
             ->get();
@@ -108,7 +178,7 @@ class AiSpend extends Page
     {
         return [
             Action::make('loadCloudflare')
-                ->label('Load Cloudflare spend')
+                ->label('Load Cloudflare cost')
                 ->icon(Heroicon::OutlinedCloud)
                 ->action(function (): void {
                     $client = app(CloudflareAiGatewayClient::class);
@@ -119,15 +189,20 @@ class AiSpend extends Page
                         return;
                     }
 
-                    $from = $this->since()->toIso8601String();
-                    $to = now()->toIso8601String();
+                    $from = $this->windowStart()->toIso8601String();
+                    $to = $this->windowEnd()->toIso8601String();
 
-                    $this->cloudflare = [
-                        'global' => $client->spendGlobal($from, $to),
-                        'by_tenant' => $client->spendByTenant($from, $to),
-                    ];
+                    if ($this->tenantId !== '') {
+                        $tenant = $client->spendForTenant($this->tenantId, $from, $to);
+                        $this->cloudflare = ['global' => $tenant, 'by_tenant' => [$this->tenantId => $tenant]];
+                    } else {
+                        $this->cloudflare = [
+                            'global' => $client->spendGlobal($from, $to),
+                            'by_tenant' => $client->spendByTenant($from, $to),
+                        ];
+                    }
 
-                    Notification::make()->title('Cloudflare spend loaded')->success()->send();
+                    Notification::make()->title('Cloudflare cost loaded for the selected period')->success()->send();
                 }),
         ];
     }

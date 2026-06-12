@@ -6,8 +6,11 @@ namespace Tests\Feature\Admin;
 
 use App\Actions\Tenancy\SetPlatformAdminAction;
 use App\Enums\AiCapability;
+use App\Enums\TenantStatus;
 use App\Filament\Pages\AiSettings;
 use App\Filament\Pages\AiSpend;
+use App\Models\AiUsageLog;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Ai\AiModelConfig;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -130,5 +133,41 @@ class AiBackOfficeTest extends TestCase
             $models->setModel(AiCapability::Text, $bare);
             $this->assertSame($expected, $models->modelFor(AiCapability::Text), "for input {$bare}");
         }
+    }
+
+    public function test_ai_spend_resolves_and_filters_per_tenant(): void
+    {
+        $alpha = Tenant::create(['name' => 'Alpha Co', 'slug' => 'alpha-spend', 'status' => TenantStatus::Active]);
+        $beta = Tenant::create(['name' => 'Beta Co', 'slug' => 'beta-spend', 'status' => TenantStatus::Active]);
+        AiUsageLog::create(['tenant_id' => $alpha->id, 'capability' => 'text', 'prompt_tokens' => 10, 'completion_tokens' => 5, 'ok' => true]);
+        AiUsageLog::create(['tenant_id' => $beta->id, 'capability' => 'text', 'prompt_tokens' => 20, 'completion_tokens' => 8, 'ok' => true]);
+
+        // All tenants → both rows, resolved to their names.
+        $this->assertCount(2, (new AiSpend)->byTenant());
+
+        // Filtered to one tenant → just that tenant's usage.
+        $page = new AiSpend;
+        $page->tenantId = $alpha->id;
+        $filtered = $page->byTenant();
+
+        $this->assertCount(1, $filtered);
+        $this->assertSame('Alpha Co', $filtered[0]['tenant']);
+        $this->assertSame(10, $filtered[0]['prompt_tokens']);
+    }
+
+    public function test_ai_spend_period_excludes_older_usage(): void
+    {
+        $alpha = Tenant::create(['name' => 'Alpha Co', 'slug' => 'alpha-period', 'status' => TenantStatus::Active]);
+        AiUsageLog::create(['tenant_id' => $alpha->id, 'capability' => 'text', 'prompt_tokens' => 5, 'completion_tokens' => 1, 'ok' => true]);
+        $old = AiUsageLog::create(['tenant_id' => $alpha->id, 'capability' => 'text', 'prompt_tokens' => 99, 'completion_tokens' => 1, 'ok' => true]);
+        $old->created_at = now()->subDays(200);
+        $old->save();
+
+        $page = new AiSpend;
+        $page->period = '7d';
+        $totals = $page->totals();
+
+        $this->assertSame(1, $totals['requests']); // the 200-day-old row is outside the window
+        $this->assertSame(5, $totals['prompt_tokens']);
     }
 }
