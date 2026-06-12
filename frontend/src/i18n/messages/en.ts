@@ -26,6 +26,13 @@ export const en = {
     language: "Language",
     collapse: "Collapse",
     expand: "Expand",
+    dismiss: "Dismiss",
+  },
+  install: {
+    title: "Install Terroir BI",
+    description: "Add the app to your device for a faster, full-screen experience.",
+    action: "Install app",
+    iosHint: "Tap the Share button, then “Add to Home Screen”.",
   },
   nav: {
     dashboard: "Dashboard",
