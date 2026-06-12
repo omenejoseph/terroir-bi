@@ -142,17 +142,17 @@ class AiBackOfficeTest extends TestCase
         AiUsageLog::create(['tenant_id' => $alpha->id, 'capability' => 'text', 'prompt_tokens' => 10, 'completion_tokens' => 5, 'ok' => true]);
         AiUsageLog::create(['tenant_id' => $beta->id, 'capability' => 'text', 'prompt_tokens' => 20, 'completion_tokens' => 8, 'ok' => true]);
 
-        // All tenants → both rows, resolved to their names.
-        $this->assertCount(2, (new AiSpend)->byTenant());
+        // All tenants → both rows, resolved to their names (paginated result).
+        $this->assertSame(2, (new AiSpend)->perTenant()->total());
 
         // Filtered to one tenant → just that tenant's usage.
         $page = new AiSpend;
         $page->tenantId = $alpha->id;
-        $filtered = $page->byTenant();
+        $filtered = $page->perTenant();
 
-        $this->assertCount(1, $filtered);
-        $this->assertSame('Alpha Co', $filtered[0]['tenant']);
-        $this->assertSame(10, $filtered[0]['prompt_tokens']);
+        $this->assertSame(1, $filtered->total());
+        $this->assertSame('Alpha Co', $filtered->items()[0]['tenant']);
+        $this->assertSame(10, $filtered->items()[0]['prompt_tokens']);
     }
 
     public function test_ai_spend_period_excludes_older_usage(): void

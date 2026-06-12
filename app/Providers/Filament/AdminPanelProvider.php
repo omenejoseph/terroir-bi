@@ -28,6 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
             // Match the frontend's design tokens (frontend/src/app/globals.css).
             // The primary ramp is explicit so shade 600 — what Filament's filled

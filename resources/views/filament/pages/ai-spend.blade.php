@@ -70,6 +70,8 @@
         </dl>
     </x-filament::section>
 
+    @php($tenants = $this->perTenant())
+
     <x-filament::section>
         <x-slot name="heading">By tenant</x-slot>
         <x-slot name="description">Per-tenant usage for the selected period (tagged via <code>cf-aig-metadata</code>).</x-slot>
@@ -86,14 +88,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($this->byTenant() as $row)
+                    @forelse ($tenants as $row)
+                        @php($cost = $this->tenantCost($row['tenant_id']))
                         <tr class="border-t border-gray-200 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5">
                             <td class="px-4 py-2">{{ $row['tenant'] }}</td>
                             <td class="px-4 py-2 text-right tabular-nums">{{ number_format($row['requests']) }}</td>
                             <td class="px-4 py-2 text-right tabular-nums">{{ number_format($row['prompt_tokens']) }}</td>
                             <td class="px-4 py-2 text-right tabular-nums">{{ number_format($row['completion_tokens']) }}</td>
                             <td class="px-4 py-2 text-right tabular-nums">
-                                {{ $row['cost_usd'] !== null ? '$'.number_format($row['cost_usd'], 4) : '—' }}
+                                {{ $cost !== null ? '$'.number_format($cost, 4) : '—' }}
                             </td>
                         </tr>
                     @empty
@@ -102,5 +105,11 @@
                 </tbody>
             </table>
         </div>
+
+        @if ($tenants->hasPages())
+            <div class="mt-3">
+                {{ $tenants->links() }}
+            </div>
+        @endif
     </x-filament::section>
 </x-filament-panels::page>

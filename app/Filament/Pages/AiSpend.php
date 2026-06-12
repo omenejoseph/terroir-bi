@@ -2,26 +2,30 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Tenant;
+use App\Queries\AiSpendQuery;
 use App\Services\Ai\CloudflareAiGatewayClient;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
+use Livewire\WithPagination;
 use UnitEnum;
 
 /**
  * AI spend monitoring. Local usage logs (requests + tokens) render instantly for
  * the selected period and tenant; per-request USD cost is pulled on demand from
- * the Cloudflare AI Gateway Logs API (the GraphQL analytics API can't group by
- * the per-tenant metadata tag, so logs are aggregated client-side).
+ * the Cloudflare AI Gateway Logs API. All data access goes through AiSpendQuery —
+ * this component holds no direct DB queries.
+ *
+ * @phpstan-import-type AiSpendRow from AiSpendQuery
  */
 class AiSpend extends Page
 {
+    use WithPagination;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;
 
     protected static string|UnitEnum|null $navigationGroup = 'AI';
@@ -67,19 +71,11 @@ class AiSpend extends Page
     }
 
     /**
-     * Tenants that have AI usage, id => name, for the filter dropdown.
-     *
      * @return array<string, string>
      */
     public function tenantOptions(): array
     {
-        $ids = DB::table('ai_usage_logs')->whereNotNull('tenant_id')->distinct()->pluck('tenant_id')->all();
-
-        if ($ids === []) {
-            return [];
-        }
-
-        return Tenant::query()->whereIn('id', $ids)->orderBy('name')->pluck('name', 'id')->all();
+        return app(AiSpendQuery::class)->tenantsWithUsage();
     }
 
     public function windowStart(): Carbon
@@ -100,10 +96,25 @@ class AiSpend extends Page
             : now();
     }
 
-    /** A filter change invalidates any loaded Cloudflare cost (avoids stale numbers). */
-    public function updated(): void
+    // A filter change resets loaded cost (avoids stale numbers) and the page cursor.
+    public function updatedPeriod(): void
     {
-        $this->cloudflare = [];
+        $this->onFilterChange();
+    }
+
+    public function updatedFrom(): void
+    {
+        $this->onFilterChange();
+    }
+
+    public function updatedTo(): void
+    {
+        $this->onFilterChange();
+    }
+
+    public function updatedTenantId(): void
+    {
+        $this->onFilterChange();
     }
 
     public function gatewayConfigured(): bool
@@ -111,64 +122,36 @@ class AiSpend extends Page
         return app(CloudflareAiGatewayClient::class)->configured();
     }
 
-    /** Usage-log query scoped to the current period + tenant filter. */
-    private function baseQuery(): Builder
-    {
-        $query = DB::table('ai_usage_logs')->whereBetween('created_at', [$this->windowStart(), $this->windowEnd()]);
-
-        if ($this->tenantId !== '') {
-            $query->where('tenant_id', $this->tenantId);
-        }
-
-        return $query;
-    }
-
     /**
      * @return array{requests: int, prompt_tokens: int, completion_tokens: int, cost_usd: float|null}
      */
     public function totals(): array
     {
-        $row = $this->baseQuery()
-            ->selectRaw('COUNT(*) AS requests, COALESCE(SUM(prompt_tokens),0) AS pt, COALESCE(SUM(completion_tokens),0) AS ct')
-            ->first();
-
+        $totals = app(AiSpendQuery::class)->totals($this->windowStart(), $this->windowEnd(), $this->tenantId ?: null);
         $global = $this->cloudflare['global'] ?? null;
 
         return [
-            'requests' => (int) ($row->requests ?? 0),
-            'prompt_tokens' => (int) ($row->pt ?? 0),
-            'completion_tokens' => (int) ($row->ct ?? 0),
+            ...$totals,
             'cost_usd' => is_array($global) && isset($global['cost_usd']) ? (float) $global['cost_usd'] : null,
         ];
     }
 
     /**
-     * Per-tenant usage for the window (respects the tenant filter), newest first.
-     *
-     * @return list<array{tenant: string, requests: int, prompt_tokens: int, completion_tokens: int, cost_usd: float|null}>
+     * @return LengthAwarePaginator<int, AiSpendRow>
      */
-    public function byTenant(): array
+    public function perTenant(): LengthAwarePaginator
     {
-        $rows = $this->baseQuery()
-            ->selectRaw('tenant_id, COUNT(*) AS requests, COALESCE(SUM(prompt_tokens),0) AS pt, COALESCE(SUM(completion_tokens),0) AS ct')
-            ->groupBy('tenant_id')
-            ->get();
+        return app(AiSpendQuery::class)->perTenant($this->windowStart(), $this->windowEnd(), $this->tenantId ?: null);
+    }
 
-        $names = Tenant::query()
-            ->whereIn('id', $rows->pluck('tenant_id')->filter()->all())
-            ->pluck('name', 'id');
+    /** USD cost for a tenant from the loaded Cloudflare data (no DB). */
+    public function tenantCost(?string $tenantId): ?float
+    {
+        $byTenant = $this->cloudflare['by_tenant'] ?? [];
 
-        $cfByTenant = $this->cloudflare['by_tenant'] ?? [];
-
-        $mapped = $rows->map(fn ($r): array => [
-            'tenant' => $r->tenant_id === null ? 'Untagged / back-office' : (string) ($names[$r->tenant_id] ?? $r->tenant_id),
-            'requests' => (int) $r->requests,
-            'prompt_tokens' => (int) $r->pt,
-            'completion_tokens' => (int) $r->ct,
-            'cost_usd' => isset($cfByTenant[$r->tenant_id]) ? (float) $cfByTenant[$r->tenant_id]['cost_usd'] : null,
-        ])->sortByDesc('requests')->all();
-
-        return array_values($mapped);
+        return is_array($byTenant) && $tenantId !== null && isset($byTenant[$tenantId]['cost_usd'])
+            ? (float) $byTenant[$tenantId]['cost_usd']
+            : null;
     }
 
     /**
@@ -205,5 +188,11 @@ class AiSpend extends Page
                     Notification::make()->title('Cloudflare cost loaded for the selected period')->success()->send();
                 }),
         ];
+    }
+
+    private function onFilterChange(): void
+    {
+        $this->cloudflare = [];
+        $this->resetPage();
     }
 }

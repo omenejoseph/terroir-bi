@@ -8,28 +8,32 @@
             text and vision checks pass.
         </x-slot>
 
-        <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div class="flex items-center justify-between gap-3">
-                <dt class="text-sm text-gray-500 dark:text-gray-400">AI features</dt>
-                <dd>
-                    @if ($this->aiEnabled())
-                        <x-filament::badge color="success">Enabled</x-filament::badge>
-                    @else
-                        <x-filament::badge color="gray">Disabled</x-filament::badge>
-                    @endif
-                </dd>
-            </div>
-            <div class="flex items-center justify-between gap-3">
-                <dt class="text-sm text-gray-500 dark:text-gray-400">Cloudflare gateway</dt>
-                <dd>
-                    @if ($this->gatewayConfigured())
-                        <x-filament::badge color="success">Configured</x-filament::badge>
-                    @else
-                        <x-filament::badge color="danger">Missing</x-filament::badge>
-                    @endif
-                </dd>
-            </div>
-        </dl>
+        <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-white/10">
+            <table class="w-full text-sm">
+                <tbody>
+                    <tr class="border-b border-gray-200 last:border-0 dark:border-white/10">
+                        <td class="px-4 py-2 text-gray-500 dark:text-gray-400">AI features</td>
+                        <td class="px-4 py-2 text-right">
+                            @if ($this->aiEnabled())
+                                <x-filament::badge color="success">Enabled</x-filament::badge>
+                            @else
+                                <x-filament::badge color="gray">Disabled</x-filament::badge>
+                            @endif
+                        </td>
+                    </tr>
+                    <tr class="border-b border-gray-200 last:border-0 dark:border-white/10">
+                        <td class="px-4 py-2 text-gray-500 dark:text-gray-400">Cloudflare gateway</td>
+                        <td class="px-4 py-2 text-right">
+                            @if ($this->gatewayConfigured())
+                                <x-filament::badge color="success">Configured</x-filament::badge>
+                            @else
+                                <x-filament::badge color="danger">Missing</x-filament::badge>
+                            @endif
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </x-filament::section>
 
     <x-filament::section>
@@ -41,32 +45,36 @@
             use “Test capabilities” to confirm they reach each provider.
         </x-slot>
 
-        <dl class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div class="flex items-center justify-between gap-3">
-                <dt class="text-sm text-gray-500 dark:text-gray-400">
-                    Cloudflare account ID <code class="text-xs">CLOUDFLARE_ACCOUNT_ID</code>
-                </dt>
-                <dd>
-                    @if ($this->accountConfigured())
-                        <x-filament::badge color="success">Configured</x-filament::badge>
-                    @else
-                        <x-filament::badge color="danger">Missing</x-filament::badge>
-                    @endif
-                </dd>
-            </div>
-            <div class="flex items-center justify-between gap-3">
-                <dt class="text-sm text-gray-500 dark:text-gray-400">
-                    Cloudflare API token <code class="text-xs">CLOUDFLARE_API_TOKEN</code>
-                </dt>
-                <dd>
-                    @if ($this->tokenConfigured())
-                        <x-filament::badge color="success">Configured</x-filament::badge>
-                    @else
-                        <x-filament::badge color="danger">Missing</x-filament::badge>
-                    @endif
-                </dd>
-            </div>
-        </dl>
+        <div class="mb-4 overflow-hidden rounded-lg border border-gray-200 dark:border-white/10">
+            <table class="w-full text-sm">
+                <tbody>
+                    <tr class="border-b border-gray-200 last:border-0 dark:border-white/10">
+                        <td class="px-4 py-2 text-gray-500 dark:text-gray-400">
+                            Cloudflare account ID <code class="text-xs">CLOUDFLARE_ACCOUNT_ID</code>
+                        </td>
+                        <td class="px-4 py-2 text-right">
+                            @if ($this->accountConfigured())
+                                <x-filament::badge color="success">Configured</x-filament::badge>
+                            @else
+                                <x-filament::badge color="danger">Missing</x-filament::badge>
+                            @endif
+                        </td>
+                    </tr>
+                    <tr class="border-b border-gray-200 last:border-0 dark:border-white/10">
+                        <td class="px-4 py-2 text-gray-500 dark:text-gray-400">
+                            Cloudflare API token <code class="text-xs">CLOUDFLARE_API_TOKEN</code>
+                        </td>
+                        <td class="px-4 py-2 text-right">
+                            @if ($this->tokenConfigured())
+                                <x-filament::badge color="success">Configured</x-filament::badge>
+                            @else
+                                <x-filament::badge color="danger">Missing</x-filament::badge>
+                            @endif
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
         <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-white/10">
             <table class="w-full text-sm">
