@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\BddScenarios\Schemas;
 
 use App\Models\BddScenario;
+use App\Queries\Bdd\BddScenarioRunsQuery;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -69,13 +70,13 @@ class BddScenarioInfolist
                     ]),
 
                 Section::make('Last run detail')
-                    ->visible(fn (BddScenario $record): bool => $record->runs()->exists())
+                    ->visible(fn (BddScenario $record): bool => app(BddScenarioRunsQuery::class)->hasRuns($record))
                     ->schema([
                         TextEntry::make('last_run_steps')
                             ->hiddenLabel()
                             ->listWithLineBreaks()
                             ->state(function (BddScenario $record): array {
-                                $run = $record->runs()->latest()->first();
+                                $run = app(BddScenarioRunsQuery::class)->latest($record);
                                 if ($run === null) {
                                     return [];
                                 }

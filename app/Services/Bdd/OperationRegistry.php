@@ -165,6 +165,35 @@ class OperationRegistry
     }
 
     /**
+     * Discoverable actions paired with their current grant state — the single
+     * read the access page needs (so the Filament page touches no DB itself).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function discoverActionsWithGrants(): array
+    {
+        $granted = BddOperationGrant::query()->pluck('operation_key')->flip();
+
+        return array_map(
+            fn (OperationSpec $spec): array => $spec->toArray() + ['granted' => isset($granted[$spec->key])],
+            $this->discoverActions(),
+        );
+    }
+
+    /**
+     * The built-in (grant-free) seed/probe operations, for reference display.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function builtInSpecs(): array
+    {
+        return array_map(
+            fn (OperationSpec $spec): array => $spec->toArray(),
+            [...SeedOperations::specs(), ...ProbeOperations::specs()],
+        );
+    }
+
+    /**
      * Reflect an action's execute() into an OperationSpec: the class docblock
      * becomes the summary; each parameter is described by name + type, with
      * model-typed params flagged as $ref captures and *Id strings flagged as

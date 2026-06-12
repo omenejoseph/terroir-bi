@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Enums\BddRunStatus;
-use App\Enums\BddScenarioStatus;
-use App\Models\BddScenario;
+use App\Queries\Bdd\ListBddScenariosQuery;
 use App\Services\Bdd\ScenarioRunner;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 
 /**
  * Replay saved BDD scenarios (no AI involved — compiled plans only). Exits
@@ -21,23 +21,20 @@ class RunBddScenarios extends Command
 
     protected $description = 'Run saved BDD scenarios against a rolled-back sandbox tenant';
 
-    public function handle(ScenarioRunner $runner): int
+    public function handle(ScenarioRunner $runner, ListBddScenariosQuery $scenarios): int
     {
-        $query = BddScenario::query()->where('status', BddScenarioStatus::Ready->value);
-
         if (($slug = $this->option('scenario')) !== null) {
-            $query->where('slug', (string) $slug);
+            $found = $scenarios->findBySlug((string) $slug);
+            $list = $found !== null ? new Collection([$found]) : new Collection;
         } elseif ((bool) $this->option('all')) {
-            $query->where('is_active', true);
+            $list = $scenarios->runnable();
         } else {
             $this->error('Pass --scenario=<slug> or --all.');
 
             return self::FAILURE;
         }
 
-        $scenarios = $query->orderBy('title')->get();
-
-        if ($scenarios->isEmpty()) {
+        if ($list->isEmpty()) {
             $this->warn('No runnable scenarios matched.');
 
             return self::SUCCESS;
@@ -45,7 +42,7 @@ class RunBddScenarios extends Command
 
         $failed = 0;
 
-        foreach ($scenarios as $scenario) {
+        foreach ($list as $scenario) {
             $run = $runner->run($scenario);
 
             $line = sprintf('%-8s %s (%dms)', $run->status->value, $scenario->title, $run->duration_ms);

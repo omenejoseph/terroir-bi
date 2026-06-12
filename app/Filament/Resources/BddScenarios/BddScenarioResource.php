@@ -10,11 +10,13 @@ use App\Filament\Resources\BddScenarios\Schemas\BddScenarioForm;
 use App\Filament\Resources\BddScenarios\Schemas\BddScenarioInfolist;
 use App\Filament\Resources\BddScenarios\Tables\BddScenariosTable;
 use App\Models\BddScenario;
+use App\Queries\Bdd\ListBddScenariosQuery;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class BddScenarioResource extends Resource
@@ -28,6 +30,16 @@ class BddScenarioResource extends Resource
     protected static ?string $modelLabel = 'BDD scenario';
 
     protected static ?string $pluralModelLabel = 'BDD scenarios';
+
+    /**
+     * Reads go through a Query class — no DB query is built in the resource.
+     *
+     * @return Builder<BddScenario>
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        return app(ListBddScenariosQuery::class)->builder();
+    }
 
     public static function form(Schema $schema): Schema
     {

@@ -3,9 +3,8 @@
 namespace App\Filament\Resources\BddScenarios\Pages;
 
 use App\Enums\BddRunStatus;
-use App\Enums\BddScenarioStatus;
 use App\Filament\Resources\BddScenarios\BddScenarioResource;
-use App\Models\BddScenario;
+use App\Queries\Bdd\ListBddScenariosQuery;
 use App\Services\Bdd\CurrentOperator;
 use App\Services\Bdd\ScenarioRunner;
 use Filament\Actions\Action;
@@ -29,11 +28,7 @@ class ListBddScenarios extends ListRecords
                 ->requiresConfirmation()
                 ->modalDescription('Run every active, compiled scenario against a throwaway sandbox (always rolled back).')
                 ->action(function (): void {
-                    $scenarios = BddScenario::query()
-                        ->where('status', BddScenarioStatus::Ready->value)
-                        ->where('is_active', true)
-                        ->orderBy('title')
-                        ->get();
+                    $scenarios = app(ListBddScenariosQuery::class)->runnable();
 
                     if ($scenarios->isEmpty()) {
                         Notification::make()->title('No runnable scenarios')->warning()->send();

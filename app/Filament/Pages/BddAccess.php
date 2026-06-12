@@ -4,7 +4,6 @@ namespace App\Filament\Pages;
 
 use App\Actions\Bdd\GrantBddOperationAction;
 use App\Actions\Bdd\RevokeBddOperationAction;
-use App\Models\BddOperationGrant;
 use App\Services\Bdd\CurrentOperator;
 use App\Services\Bdd\OperationRegistry;
 use BackedEnum;
@@ -42,13 +41,7 @@ class BddAccess extends Page
      */
     public function builtIns(): array
     {
-        $registry = app(OperationRegistry::class);
-
-        return collect($registry->granted())
-            ->filter(fn ($spec) => ! $spec->requiresGrant)
-            ->map(fn ($spec) => $spec->toArray())
-            ->values()
-            ->all();
+        return app(OperationRegistry::class)->builtInSpecs();
     }
 
     /**
@@ -58,13 +51,7 @@ class BddAccess extends Page
      */
     public function actions(): array
     {
-        $registry = app(OperationRegistry::class);
-        $granted = BddOperationGrant::query()->pluck('operation_key')->flip();
-
-        return collect($registry->discoverActions())
-            ->map(fn ($spec) => $spec->toArray() + ['granted' => isset($granted[$spec->key])])
-            ->values()
-            ->all();
+        return app(OperationRegistry::class)->discoverActionsWithGrants();
     }
 
     public function grant(string $key): void
