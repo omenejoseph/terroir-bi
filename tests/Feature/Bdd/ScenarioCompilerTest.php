@@ -128,6 +128,45 @@ class ScenarioCompilerTest extends TestCase
         $this->assertNull($scenario->requested_operations);
     }
 
+    public function test_an_invalid_first_attempt_is_self_corrected_on_retry(): void
+    {
+        BddOperationGrant::create(['operation_key' => OperationRegistry::ACTION_PREFIX.CreateOrderAction::class]);
+        $action = OperationRegistry::ACTION_PREFIX.CreateOrderAction::class;
+
+        // Attempt 1: the model forgot to seed a customer → $customer is undefined.
+        $invalid = [
+            'steps' => [
+                ['keyword' => 'given', 'text' => 'stock', 'op' => 'seed.inventory_item',
+                    'args_json' => json_encode(['current_stock' => '100']), 'capture' => 'r3'],
+                ['keyword' => 'when', 'text' => 'order 24', 'op' => $action,
+                    'args_json' => json_encode(['customer' => '$customer', 'data' => ['items' => [
+                        ['inventory_item_id' => '$r3.id', 'quantity' => 24, 'unit_type' => 'bottles'],
+                    ]]]), 'capture' => 'order'],
+                ['keyword' => 'then', 'text' => 'stock 76', 'op' => 'probe.stock_of',
+                    'args_json' => json_encode(['item' => '$r3']), 'assert_json' => json_encode(['equals' => 76])],
+            ],
+            'unbound' => [],
+        ];
+        // Attempt 2 (after the error feedback): adds the seed.customer step.
+        $corrected = $this->boundOutput();
+        array_splice($corrected['steps'], 1, 0, [[
+            'keyword' => 'given', 'text' => 'a customer', 'op' => 'seed.customer', 'args_json' => '{}', 'capture' => 'customer',
+        ]]);
+        $corrected['steps'][2]['args_json'] = json_encode(['customer' => '$customer', 'data' => ['items' => [
+            ['inventory_item_id' => '$r3.id', 'quantity' => 24, 'unit_type' => 'bottles'],
+        ]]]);
+
+        BddCompilerAgent::fake([$invalid, $corrected]);
+
+        $scenario = app(SaveBddScenarioAction::class)->execute(['title' => 'ORD-001', 'gherkin' => 'Scenario: self-correct']);
+        app(ScenarioCompiler::class)->compile($scenario);
+
+        // The retry fixed the undefined reference → READY, and the plan runs green.
+        $scenario->refresh();
+        $this->assertSame(BddScenarioStatus::Ready, $scenario->status, (string) $scenario->compile_error);
+        $this->assertSame(BddRunStatus::Pass, app(ScenarioRunner::class)->run($scenario)->status);
+    }
+
     public function test_compiler_output_binding_ungranted_ops_is_caught_by_validation(): void
     {
         // The model claims it bound the action even though it is NOT granted.
