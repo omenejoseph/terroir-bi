@@ -240,9 +240,22 @@ class ScenarioRunner
             $name = $parameter->getName();
             $type = $parameter->getType();
             $typeName = $type instanceof \ReflectionNamedType ? $type->getName() : null;
+            $isOperatorId = OperationRegistry::isOperatorIdParam($typeName, $name);
 
             if (array_key_exists($name, $args)) {
                 $value = $args[$name];
+
+                // Operator-id params are the sandbox operator's — never the
+                // model's. Honour a resolved sandbox-user $ref, but fall back to
+                // the admin for a blank/placeholder value (the model sometimes
+                // emits an empty createdById, which would break the FK).
+                if ($isOperatorId) {
+                    $bound[$name] = (is_string($value) && trim($value) !== '')
+                        ? $value
+                        : (string) $sandbox->admin->getKey();
+
+                    continue;
+                }
 
                 // Guard rail: model parameters must arrive as resolved captures.
                 if ($typeName !== null && is_subclass_of($typeName, Model::class)) {
@@ -260,7 +273,7 @@ class ScenarioRunner
             }
 
             // Conventional operator id params auto-fill with the sandbox admin.
-            if ($typeName === 'string' && preg_match('/(Id|ById)$/', $name) === 1) {
+            if ($isOperatorId) {
                 $bound[$name] = (string) $sandbox->admin->getKey();
 
                 continue;

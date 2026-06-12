@@ -76,10 +76,11 @@ class OperationRegistryTest extends TestCase
 
         $this->assertNotNull($spec);
         $this->assertSame('action', $spec->kind);
-        // Customer is a model param → must be a $ref; createdById auto-fills.
+        // Customer is a model param → must be a $ref.
         $this->assertStringContainsString('$ref', $spec->parameters['customer']);
-        $this->assertStringContainsString('auto-filled', $spec->parameters['createdById']);
         $this->assertArrayHasKey('data', $spec->parameters);
+        // Operator-id params are hidden from the model (auto-filled by the runner).
+        $this->assertArrayNotHasKey('createdById', $spec->parameters);
         $this->assertStringContainsString('Create an internal order', $spec->summary);
     }
 }
