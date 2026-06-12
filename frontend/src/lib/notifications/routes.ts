@@ -21,6 +21,9 @@ export function resolveNotificationRoute(
     case "MENTION":
     case "REPLY":
       return params.order_id ? `/orders/${params.order_id}` : null;
+    case "AI_IMPORT_READY":
+    case "AI_IMPORT_FAILED":
+      return params.ai_import_id ? `/ai-imports/${params.ai_import_id}` : null;
     case "ANNOUNCEMENT":
       return null;
     default:

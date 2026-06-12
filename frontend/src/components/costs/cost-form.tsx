@@ -4,11 +4,11 @@ import * as React from "react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
-import { useCostCategories, useCreateCost } from "@/hooks/use-costs";
+import { useCostCategories, useCreateCost, useUpdateCost, useUpdateCostStatus } from "@/hooks/use-costs";
 import { useSuppliers } from "@/hooks/use-suppliers";
 import { useTranslation } from "@/i18n/context";
-import { majorToMinor } from "@/lib/money";
-import { COST_STATUSES, PAYMENT_METHODS, type CostInput, type CostStatus } from "@/lib/types";
+import { majorToMinor, minorToMajorInput } from "@/lib/money";
+import { COST_STATUSES, PAYMENT_METHODS, type Cost, type CostInput, type CostStatus } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
@@ -21,45 +21,73 @@ function today(): string {
 }
 
 export function CostForm({
+  cost,
   onSaved,
   onCancel,
 }: {
+  cost?: Cost;
   onSaved: () => void;
   onCancel: () => void;
 }) {
   const { t } = useTranslation();
   const { can } = useAuth();
   const create = useCreateCost();
+  const update = useUpdateCost();
+  const updateStatus = useUpdateCostStatus();
   const categoriesQ = useCostCategories();
   const canViewSuppliers = can("suppliers.view");
+  const editing = cost !== undefined;
 
-  const [costDate, setCostDate] = React.useState(today());
-  const [totalAmount, setTotalAmount] = React.useState("");
-  const [category, setCategory] = React.useState("");
-  const [description, setDescription] = React.useState("");
-  const [reference, setReference] = React.useState("");
-  const [status, setStatus] = React.useState<CostStatus>("PENDING");
-  const [paymentMethod, setPaymentMethod] = React.useState("");
-  const [supplierId, setSupplierId] = React.useState("");
-  const [notes, setNotes] = React.useState("");
+  const [costDate, setCostDate] = React.useState(cost ? cost.date.slice(0, 10) : today());
+  const [totalAmount, setTotalAmount] = React.useState(cost ? minorToMajorInput(cost.total_amount.minor) : "");
+  const [category, setCategory] = React.useState(cost?.category ?? "");
+  const [description, setDescription] = React.useState(cost?.description ?? "");
+  const [reference, setReference] = React.useState(cost?.reference ?? "");
+  const [status, setStatus] = React.useState<CostStatus>(cost?.status ?? "PENDING");
+  const [paymentMethod, setPaymentMethod] = React.useState(cost?.payment_method ?? "");
+  const [supplierId, setSupplierId] = React.useState(cost?.supplier?.id ?? "");
+  const [notes, setNotes] = React.useState(cost?.notes ?? "");
   const [formError, setFormError] = React.useState<string | null>(null);
+
+  const pending = create.isPending || update.isPending || updateStatus.isPending;
 
   async function handleSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setFormError(null);
-    const input: CostInput = {
-      total_amount: majorToMinor(totalAmount) ?? 0, // amounts entered in major units (€)
-      category: category.trim(),
-      ...(costDate ? { date: costDate } : {}),
-      ...(description.trim() ? { description: description.trim() } : {}),
-      ...(reference.trim() ? { reference: reference.trim() } : {}),
-      status,
-      ...(paymentMethod ? { payment_method: paymentMethod } : {}),
-      ...(supplierId ? { supplier_id: supplierId } : {}),
-      ...(notes.trim() ? { notes: notes.trim() } : {}),
-    };
     try {
-      await create.mutateAsync(input);
+      if (editing) {
+        // Update sends explicit nulls so cleared fields are persisted; status
+        // goes through its dedicated endpoint (the update route ignores it).
+        await update.mutateAsync({
+          id: cost.id,
+          input: {
+            total_amount: majorToMinor(totalAmount) ?? 0,
+            category: category.trim(),
+            date: costDate || undefined,
+            description: description.trim() || null,
+            reference: reference.trim() || null,
+            payment_method: paymentMethod || null,
+            supplier_id: supplierId || null,
+            notes: notes.trim() || null,
+          },
+        });
+        if (status !== cost.status) {
+          await updateStatus.mutateAsync({ id: cost.id, status });
+        }
+      } else {
+        const input: CostInput = {
+          total_amount: majorToMinor(totalAmount) ?? 0, // amounts entered in major units (€)
+          category: category.trim(),
+          ...(costDate ? { date: costDate } : {}),
+          ...(description.trim() ? { description: description.trim() } : {}),
+          ...(reference.trim() ? { reference: reference.trim() } : {}),
+          status,
+          ...(paymentMethod ? { payment_method: paymentMethod } : {}),
+          ...(supplierId ? { supplier_id: supplierId } : {}),
+          ...(notes.trim() ? { notes: notes.trim() } : {}),
+        };
+        await create.mutateAsync(input);
+      }
       onSaved();
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : t("costs.form.errorGeneric"));
@@ -151,9 +179,9 @@ export function CostForm({
         <Button type="button" variant="outline" onClick={onCancel}>
           {t("costs.form.cancel")}
         </Button>
-        <Button type="submit" disabled={create.isPending}>
-          {create.isPending && <Spinner />}
-          {t("costs.form.create")}
+        <Button type="submit" disabled={pending}>
+          {pending && <Spinner />}
+          {editing ? t("costs.form.save") : t("costs.form.create")}
         </Button>
       </div>
     </form>

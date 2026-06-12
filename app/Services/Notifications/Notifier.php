@@ -8,6 +8,7 @@ use App\DataTransferObjects\PushMessageData;
 use App\Enums\NotificationType;
 use App\Enums\TenantRole;
 use App\Jobs\SendWebPushNotification;
+use App\Models\AiImport;
 use App\Models\Membership;
 use App\Models\Notification;
 use App\Models\Order;
@@ -94,6 +95,32 @@ class Notifier
         $this->notifyMany($followers, NotificationType::Reply, "New comment on {$order->order_number}", $content, $this->orderData($order), $authorId);
     }
 
+    /** AI extraction finished and is ready for the uploader to review. */
+    public function aiImportReady(AiImport $import, int $lineCount): void
+    {
+        $this->notifyMany(
+            [$import->created_by_id],
+            NotificationType::AiImportReady,
+            "{$import->type->label()} ready to review",
+            $lineCount === 1 ? '1 item extracted' : "{$lineCount} items extracted",
+            $this->aiImportData($import),
+            null,
+        );
+    }
+
+    /** AI extraction failed; let the uploader know so they can retry. */
+    public function aiImportFailed(AiImport $import): void
+    {
+        $this->notifyMany(
+            [$import->created_by_id],
+            NotificationType::AiImportFailed,
+            "{$import->type->label()} couldn’t be processed",
+            $import->source_filename,
+            $this->aiImportData($import),
+            null,
+        );
+    }
+
     /**
      * @return list<string>
      */
@@ -139,5 +166,15 @@ class Notifier
     private function orderData(Order $order): array
     {
         return ['order_id' => (string) $order->getKey()];
+    }
+
+    /**
+     * Route params for an AI-import notification (web: /ai-imports/{id}).
+     *
+     * @return array<string, string>
+     */
+    private function aiImportData(AiImport $import): array
+    {
+        return ['ai_import_id' => (string) $import->getKey()];
     }
 }

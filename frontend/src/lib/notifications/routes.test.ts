@@ -17,4 +17,11 @@ describe("resolveNotificationRoute", () => {
   it("returns null for announcements (display-only)", () => {
     expect(resolveNotificationRoute("ANNOUNCEMENT", {})).toBeNull();
   });
+
+  it("routes AI import notifications to the review page using data.ai_import_id", () => {
+    for (const type of ["AI_IMPORT_READY", "AI_IMPORT_FAILED"] as const) {
+      expect(resolveNotificationRoute(type, { ai_import_id: "imp_3" })).toBe("/ai-imports/imp_3");
+    }
+    expect(resolveNotificationRoute("AI_IMPORT_READY", {})).toBeNull();
+  });
 });

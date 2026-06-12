@@ -37,6 +37,8 @@ class Supplier extends Model
         'is_active',
         'exclude_from_stats',
         'portal_token',
+        'is_ai_generated',
+        'ai_metadata',
     ];
 
     protected $attributes = [
@@ -49,6 +51,8 @@ class Supplier extends Model
         return [
             'is_active' => 'boolean',
             'exclude_from_stats' => 'boolean',
+            'is_ai_generated' => 'boolean',
+            'ai_metadata' => 'array',
         ];
     }
 

@@ -55,6 +55,8 @@ class Order extends Model
         'is_consignment',
         'consignment_closed_at',
         'last_stale_notified_at',
+        'is_ai_generated',
+        'ai_metadata',
     ];
 
     protected $attributes = [
@@ -79,6 +81,8 @@ class Order extends Model
             'backorder_date' => 'datetime',
             'consignment_closed_at' => 'datetime',
             'last_stale_notified_at' => 'datetime',
+            'is_ai_generated' => 'boolean',
+            'ai_metadata' => 'array',
         ];
     }
 

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { BarChart3, Plus, Trash2 } from "lucide-react";
+import { BarChart3, ChevronDown, Plus } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
@@ -11,8 +11,6 @@ import {
   useCostCategories,
   useCostGroupCounts,
   useCosts,
-  useDeleteCost,
-  useUpdateCostStatus,
 } from "@/hooks/use-costs";
 import { useSuppliers } from "@/hooks/use-suppliers";
 import { addMonths, endOfMonth, startOfMonth, startOfQuarter } from "@/lib/calendar";
@@ -27,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
-import { useConfirm } from "@/components/ui/confirm";
+import { CostDetailPanel } from "@/components/costs/cost-detail-panel";
 
 type Tab = "all" | CostGroup;
 
@@ -70,8 +68,7 @@ export default function CostsPage() {
   const { t } = useTranslation();
   const { can } = useAuth();
   const router = useRouter();
-  const { moneyObject, date } = useFormatters();
-  const confirm = useConfirm();
+  const { moneyObject } = useFormatters();
 
   const [tab, setTab] = React.useState<Tab>("all");
   const [category, setCategory] = React.useState("");
@@ -108,29 +105,15 @@ export default function CostsPage() {
   const analyticsQ = useCostAnalytics();
   const categoriesQ = useCostCategories();
   const suppliersQ = useSuppliers();
-  const updateStatus = useUpdateCostStatus();
-  const remove = useDeleteCost();
 
   const costs = data?.data ?? [];
   const canManage = can("finance.manage");
-  const canDelete = can("finance.delete");
   const canViewSuppliers = can("suppliers.view");
 
   const tabs = (["all", "invoices", "payments", "others"] as const).map((g) => ({
     value: g,
     label: `${t(`costs.groups.${g}`)} (${counts?.[g] ?? 0})`,
   }));
-
-  async function handleDelete(cost: Cost) {
-    const ok = await confirm({
-      title: t("costs.deleteTitle"),
-      description: t("costs.deleteBody"),
-      confirmLabel: t("costs.delete"),
-      tone: "danger",
-    });
-    if (!ok) return;
-    await remove.mutateAsync(cost.id);
-  }
 
   return (
     <div className="space-y-6">
@@ -287,78 +270,62 @@ export default function CostsPage() {
       )}
 
       {!isLoading && !isError && costs.length > 0 && (
-        <Card>
-          <CardContent className="overflow-x-auto pt-6">
-            <table className="w-full text-sm">
-              <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="py-2 pr-3 font-medium">{t("costs.colDate")}</th>
-                  <th className="py-2 pr-3 font-medium">{t("costs.colCategory")}</th>
-                  <th className="py-2 pr-3 font-medium">{t("costs.colSupplier")}</th>
-                  <th className="py-2 pr-3 text-right font-medium">{t("costs.colTotal")}</th>
-                  <th className="py-2 pr-3 font-medium">{t("costs.form.status")}</th>
-                  <th className="py-2 font-medium" />
-                </tr>
-              </thead>
-              <tbody>
-                {costs.map((cost) => (
-                  <tr key={cost.id} className="border-b border-border last:border-0">
-                    <td className="py-2.5 pr-3 text-muted-foreground">{date(cost.date)}</td>
-                    <td className="py-2.5 pr-3">
-                      <p className="font-medium">{cost.category}</p>
-                      {cost.description && (
-                        <p className="text-xs text-muted-foreground">{cost.description}</p>
-                      )}
-                    </td>
-                    <td className="py-2.5 pr-3 text-muted-foreground">
-                      {cost.supplier?.company_name ?? t("costs.noSupplier")}
-                    </td>
-                    <td className="py-2.5 pr-3 text-right tabular-nums">
-                      {moneyObject(cost.total_amount)}
-                    </td>
-                    <td className="py-2.5 pr-3">
-                      {canManage ? (
-                        <Select
-                          aria-label={t("costs.markAs")}
-                          value={cost.status}
-                          onChange={(e) =>
-                            updateStatus.mutate({ id: cost.id, status: e.target.value as CostStatus })
-                          }
-                          className="h-8 w-32"
-                        >
-                          {COST_STATUSES.map((s) => (
-                            <option key={s} value={s}>
-                              {t(`costs.status.${s}`)}
-                            </option>
-                          ))}
-                        </Select>
-                      ) : (
-                        <Badge variant={STATUS_VARIANT[cost.status]}>
-                          {t(`costs.status.${cost.status}`)}
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="py-2.5 text-right">
-                      {canDelete && (
-                        <button
-                          type="button"
-                          aria-label={t("costs.delete")}
-                          onClick={() => handleDelete(cost)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="size-4" />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+        <div className="space-y-2">
+          {costs.map((cost) => (
+            <CostCard key={cost.id} cost={cost} />
+          ))}
+        </div>
       )}
 
     </div>
+  );
+}
+
+/** A cost row that expands into its detail panel (view / edit / status / delete). */
+function CostCard({ cost }: { cost: Cost }) {
+  const { t } = useTranslation();
+  const { moneyObject, date } = useFormatters();
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <Card className="overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+      >
+        <div className="min-w-0">
+          <p className="truncate font-medium">{cost.category}</p>
+          {cost.description && (
+            <p className="truncate text-sm text-muted-foreground">{cost.description}</p>
+          )}
+          <p className="truncate text-xs text-muted-foreground">
+            {date(cost.date)}
+            {cost.supplier ? ` · ${cost.supplier.company_name}` : ""}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 text-sm">
+          <span className="font-medium tabular-nums">{moneyObject(cost.total_amount)}</span>
+          <Badge variant={STATUS_VARIANT[cost.status]}>{t(`costs.status.${cost.status}`)}</Badge>
+          <ChevronDown
+            className={`size-4 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          />
+        </div>
+      </button>
+
+      <div
+        className={`grid transition-all duration-300 ease-out ${
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="border-t border-border px-4 py-4">
+            {open && <CostDetailPanel cost={cost} onDeleted={() => setOpen(false)} />}
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }
 

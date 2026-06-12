@@ -65,6 +65,8 @@ class InventoryItem extends Model
         'auto_created_at',
         'base_product_id',
         'cost_per_unit',
+        'is_ai_generated',
+        'ai_metadata',
     ];
 
     protected $attributes = [
@@ -95,6 +97,8 @@ class InventoryItem extends Model
             'pack_size' => 'integer',
             'default_price' => MoneyCast::class,
             'cost_per_unit' => MoneyCast::class,
+            'is_ai_generated' => 'boolean',
+            'ai_metadata' => 'array',
         ];
     }
 

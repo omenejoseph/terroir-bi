@@ -54,6 +54,7 @@ export const MODULES = [
   "work_orders",
   "team",
   "settings",
+  "ai_data_entry",
 ] as const;
 export type Module = (typeof MODULES)[number];
 
@@ -937,6 +938,8 @@ export const NOTIFICATION_TYPES = [
   "ORDER_STATUS",
   "REPLY",
   "ANNOUNCEMENT",
+  "AI_IMPORT_READY",
+  "AI_IMPORT_FAILED",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -1428,4 +1431,81 @@ export interface WorkOrderStats {
   in_progress: number;
   done: number;
   overdue: number;
+}
+
+// ── AI data entry ───────────────────────────────────────────────────────────
+
+export const AI_IMPORT_TYPES = [
+  "bank_statement",
+  "invoice",
+  "inventory_list",
+  "supplier_list",
+  "cash_inflow",
+] as const;
+export type AiImportType = (typeof AI_IMPORT_TYPES)[number];
+
+export const AI_IMPORT_STATUSES = [
+  "uploaded",
+  "processing",
+  "ready",
+  "partially_committed",
+  "committed",
+  "failed",
+] as const;
+export type AiImportStatus = (typeof AI_IMPORT_STATUSES)[number];
+
+export const AI_LINE_STATUSES = ["pending", "approved", "edited", "rejected", "committed"] as const;
+export type AiLineStatus = (typeof AI_LINE_STATUSES)[number];
+
+export type AiTargetType = "cost" | "inflow" | "order" | "inventory_item" | "supplier";
+
+export interface AiImportLine {
+  id: string;
+  index: number;
+  target_type: AiTargetType;
+  target_label: string;
+  category: string | null;
+  confidence: number | null;
+  status: AiLineStatus;
+  payload: Record<string, unknown>;
+  edited_payload: Record<string, unknown> | null;
+  effective_payload: Record<string, unknown>;
+  committed_id: string | null;
+}
+
+export interface AiImport {
+  id: string;
+  type: AiImportType;
+  type_label: string;
+  status: AiImportStatus;
+  status_label: string;
+  source_filename: string | null;
+  source_mime: string | null;
+  provider: string | null;
+  model: string | null;
+  prompt_tokens: number;
+  completion_tokens: number;
+  error: string | null;
+  created_at: string | null;
+  lines_total?: number;
+  lines_pending?: number;
+  lines_committed?: number;
+  lines?: AiImportLine[];
+}
+
+export interface CreateAiImportInput {
+  type: AiImportType;
+  object_key: string;
+  filename: string;
+  mime?: string | null;
+}
+
+export interface UpdateAiImportLineInput {
+  status: AiLineStatus;
+  edited_payload?: Record<string, unknown> | null;
+}
+
+export interface CommitAiImportResult {
+  data: AiImport;
+  meta: { committed: number; failed: number; errors: Record<string, string> };
 }
