@@ -167,6 +167,25 @@ class ScenarioCompilerTest extends TestCase
         $this->assertSame(BddRunStatus::Pass, app(ScenarioRunner::class)->run($scenario)->status);
     }
 
+    public function test_toplan_accepts_object_form_and_fenced_json_for_the_json_fields(): void
+    {
+        $agent = app(BddCompilerAgent::class);
+
+        $result = $agent->toPlan(['steps' => [
+            // args as a real nested object (not a JSON string) + assert as object.
+            ['keyword' => 'given', 'text' => 'stock', 'op' => 'seed.inventory_item',
+                'args_json' => ['current_stock' => '100'], 'capture' => 'r3'],
+            // args as a ```json fenced string.
+            ['keyword' => 'then', 'text' => 'stock', 'op' => 'probe.stock_of',
+                'args_json' => "```json\n{\"item\": \"\$r3\"}\n```", 'assert_json' => ['equals' => 100]],
+        ], 'unbound' => []]);
+
+        $this->assertSame([], $result['errors']);
+        $this->assertSame(['current_stock' => '100'], $result['plan']['steps'][0]['args']);
+        $this->assertSame(['item' => '$r3'], $result['plan']['steps'][1]['args']);
+        $this->assertSame(['equals' => 100], $result['plan']['steps'][1]['assert']);
+    }
+
     public function test_compiler_output_binding_ungranted_ops_is_caught_by_validation(): void
     {
         // The model claims it bound the action even though it is NOT granted.
