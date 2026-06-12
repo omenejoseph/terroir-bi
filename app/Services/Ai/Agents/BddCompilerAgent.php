@@ -9,22 +9,29 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasStructuredOutput;
-use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Promptable;
 use Stringable;
 
 /**
  * Compiles a Gherkin BDD scenario into a deterministic execution plan bound to
- * the application's exposed (granted) operations. The agent NEVER sees tenant
- * data — its tools return only static operation metadata — and it must never
- * invent operations: a step it cannot bind goes into `unbound` so the admin
- * can grant access (fail-closed).
+ * the application's exposed (granted) operations. The model "sees" the
+ * application through the operation CATALOG inlined into the prompt — every
+ * granted seed/probe/action with its parameters — never through tenant data,
+ * and it must never invent operations: a step it cannot bind goes into
+ * `unbound` so the admin can grant access (fail-closed).
+ *
+ * Why the catalog is inlined rather than fetched via live tool-calls: structured
+ * output + an interactive tool loop is rejected by some gateway providers
+ * (Gemini returns 400 "Required value missing: contents" on the tool-result
+ * turn). Feeding the full catalog up front is provider-portable, cheaper, and
+ * gives the model the same information in one round-trip — matching the proven
+ * structured-output extractor pattern (DocumentExtractor).
  *
  * Nested free-form values (args/assert/expect_error) travel as JSON-encoded
  * strings to keep the structured-output schema strict; ScenarioCompiler
  * decodes and validates them.
  */
-class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput, HasTools
+class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
 {
     use Promptable;
 
@@ -35,8 +42,9 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput, Ha
         return <<<'TXT'
         You compile Gherkin BDD scenarios into executable JSON plans for a wine
         business management application (orders, inventory, customers,
-        consignment). You are given the catalog of available operations; use the
-        tools to list and inspect them.
+        consignment). The full catalog of available operations — every seed,
+        probe and granted action with its parameters — is provided to you in the
+        prompt. Use only what is listed there.
 
         Binding rules — follow them exactly:
         - Each Given step binds to a seed.* operation, each When step to an
@@ -114,14 +122,6 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput, Ha
     public function messages(): iterable
     {
         return [];
-    }
-
-    public function tools(): iterable
-    {
-        return [
-            app(ListOperationsTool::class),
-            app(DescribeOperationTool::class),
-        ];
     }
 
     /**
