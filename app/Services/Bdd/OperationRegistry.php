@@ -40,6 +40,17 @@ class OperationRegistry
 
     public const ACTION_PREFIX = 'action:';
 
+    /**
+     * A top-level string parameter that identifies the acting operator/user
+     * (createdById, userId, changedById, actorId, grantedById, triggeredById,
+     * authorId, performedById…). The runner auto-fills these with the sandbox
+     * admin, so the model neither sees nor supplies them.
+     */
+    public static function isOperatorIdParam(?string $typeName, string $name): bool
+    {
+        return $typeName === 'string' && preg_match('/Id$/', $name) === 1;
+    }
+
     /** Whether a key is a built-in (grant-free) seed/probe. */
     public function isBuiltIn(string $key): bool
     {
@@ -254,9 +265,11 @@ class OperationRegistry
 
             $typeName = $type instanceof ReflectionNamedType ? $type->getName() : 'mixed';
 
-            if ($typeName === 'string' && preg_match('/(Id|ById)$/', $name) === 1) {
-                $parameters[$name] = 'string user id — auto-filled with the sandbox operator when omitted';
-
+            // Operator-id params (createdById, userId, changedById, actorId…)
+            // are auto-filled with the sandbox operator at run time — hide them
+            // from the model entirely so it never supplies a (possibly blank or
+            // hallucinated) value.
+            if (self::isOperatorIdParam($typeName, $name)) {
                 continue;
             }
 

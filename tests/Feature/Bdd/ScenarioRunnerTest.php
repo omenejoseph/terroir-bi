@@ -86,6 +86,19 @@ class ScenarioRunnerTest extends TestCase
         $this->assertNotNull($reloaded->last_run_at);
     }
 
+    public function test_a_blank_operator_id_from_the_model_is_auto_filled_not_inserted_empty(): void
+    {
+        // The model emitted an empty createdById (the reported FK failure). The
+        // runner must substitute the sandbox operator, not insert "".
+        $this->grantCreateOrder();
+        $plan = $this->ord001Plan();
+        $plan['steps'][2]['args']['createdById'] = ''; // blank, as the model sent
+
+        $run = app(ScenarioRunner::class)->run($this->scenario($plan));
+
+        $this->assertSame(BddRunStatus::Pass, $run->status, json_encode($run->step_results ?? []) ?: '');
+    }
+
     public function test_an_overdraw_scenario_passes_via_expect_error(): void
     {
         $this->grantCreateOrder();
