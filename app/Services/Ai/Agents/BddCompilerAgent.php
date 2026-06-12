@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Ai\Agents;
 
 use App\Services\Bdd\OperationRegistry;
+use App\Services\Bdd\OperationSpec;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
@@ -50,10 +51,13 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
         - Each Given step binds to a seed.* operation, each When step to an
           action:* operation, each Then step to a probe.* operation with an
           assertion. And/But continue the previous keyword.
-        - ONLY use operations from the catalog. NEVER invent an operation. If a
-          step needs something that is not available, add an entry to `unbound`
-          (with the step text and the operation you believe is needed, e.g. the
-          likely action class) and still emit the steps you COULD bind.
+        - Bind ONLY to operations under "AVAILABLE OPERATIONS". seed.* and
+          probe.* are ALWAYS available — they must NEVER appear in `unbound`.
+        - If a When step needs an action that is NOT under "AVAILABLE
+          OPERATIONS", look it up under "REQUESTABLE ACTIONS" and put its EXACT
+          key in `unbound` (copy the key verbatim — never invent or guess a
+          class name, and never put a seed/probe there). Still emit every step
+          you CAN bind.
         - Entities are referenced by $capture variables: give a step a short
           snake_case `capture` name and reference it later as "$name" (the
           entity itself) or "$name.field" (an attribute, e.g. "$r3.id").
@@ -75,8 +79,7 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
     /** The user-turn prompt: the Gherkin plus the operation catalog inline. */
     public function userPrompt(string $gherkin): string
     {
-        $catalog = [];
-        foreach ($this->registry->granted() as $spec) {
+        $describe = function (OperationSpec $spec): string {
             $params = $spec->parameters === []
                 ? '(no parameters)'
                 : implode('; ', array_map(
@@ -84,11 +87,27 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
                     array_keys($spec->parameters),
                     array_values($spec->parameters),
                 ));
-            $catalog[] = "- [{$spec->kind}] {$spec->key} — {$spec->summary}\n  params: {$params}";
-        }
+
+            return "- [{$spec->kind}] {$spec->key} — {$spec->summary}\n  params: {$params}";
+        };
+
+        $available = array_map($describe, $this->registry->granted());
+
+        // Ungranted actions, by exact key (no params — they can only be
+        // REQUESTED, not bound, until granted). This is what stops the model
+        // guessing class names for the `unbound` list.
+        $requestable = array_map(
+            fn (OperationSpec $spec): string => "- {$spec->key} — {$spec->summary}",
+            $this->registry->requestableActions(),
+        );
+
+        $requestableBlock = $requestable === []
+            ? '(none — every discoverable action is already granted)'
+            : implode("\n", $requestable);
 
         return "Compile this Gherkin scenario into an execution plan.\n\n"
-            ."AVAILABLE OPERATIONS:\n".implode("\n", $catalog)."\n\n"
+            ."AVAILABLE OPERATIONS (bind steps to these):\n".implode("\n", $available)."\n\n"
+            ."REQUESTABLE ACTIONS (NOT yet granted — if a When step needs one, copy its exact key into `unbound`; never bind it):\n".$requestableBlock."\n\n"
             ."GHERKIN:\n```gherkin\n".$gherkin."\n```";
     }
 
@@ -112,7 +131,7 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
             'unbound' => $schema->array()->items(
                 $schema->object(fn (JsonSchema $s) => [
                     'step_text' => $s->string()->required(),
-                    'suggested_operation' => $s->string()->description('The operation key likely needed, e.g. action:App\\Actions\\Orders\\DeleteOrderAction.')->required(),
+                    'suggested_operation' => $s->string()->description('An EXACT key copied from REQUESTABLE ACTIONS (an action:* key). Never a seed/probe, never a guessed name.')->required(),
                     'why' => $s->string()->nullable(),
                 ])
             )->required(),

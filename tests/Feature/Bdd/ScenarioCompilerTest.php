@@ -103,6 +103,31 @@ class ScenarioCompilerTest extends TestCase
         $this->assertStringContainsString('CreateOrderAction', (string) $scenario->compile_error);
     }
 
+    public function test_builtin_or_hallucinated_unbound_entries_are_ignored_not_surfaced(): void
+    {
+        // A confused model flags a built-in seed and a made-up class as "needed".
+        // Neither is a real grantable action, so neither should park the scenario.
+        BddCompilerAgent::fake([[
+            'steps' => [
+                ['keyword' => 'given', 'text' => 'a customer', 'op' => 'seed.customer', 'args_json' => '{}', 'capture' => 'customer'],
+                ['keyword' => 'then', 'text' => 'no customers counted is wrong but valid op', 'op' => 'probe.db_count',
+                    'args_json' => json_encode(['table' => 'customers']), 'assert_json' => json_encode(['gte' => 0])],
+            ],
+            'unbound' => [
+                ['step_text' => 'a customer', 'suggested_operation' => 'seed.customer', 'why' => 'model confusion'],
+                ['step_text' => 'magic', 'suggested_operation' => 'action:App\\Actions\\Orders\\TeleportOrderAction', 'why' => 'hallucinated'],
+            ],
+        ]]);
+
+        $scenario = app(SaveBddScenarioAction::class)->execute(['title' => 'Noise', 'gherkin' => 'Scenario: noise']);
+        app(ScenarioCompiler::class)->compile($scenario);
+
+        // The noise is dropped; the bindable plan compiles READY.
+        $scenario->refresh();
+        $this->assertSame(BddScenarioStatus::Ready, $scenario->status, (string) $scenario->compile_error);
+        $this->assertNull($scenario->requested_operations);
+    }
+
     public function test_compiler_output_binding_ungranted_ops_is_caught_by_validation(): void
     {
         // The model claims it bound the action even though it is NOT granted.

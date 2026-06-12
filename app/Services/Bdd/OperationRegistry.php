@@ -119,6 +119,35 @@ class OperationRegistry
         return $specs;
     }
 
+    /**
+     * Discoverable actions that are NOT yet granted — what the compiler may
+     * REQUEST (by exact key) in `unbound`, so it never has to guess a class
+     * name. Built-ins are never here (they're always available).
+     *
+     * @return list<OperationSpec>
+     */
+    public function requestableActions(): array
+    {
+        $grantedKeys = BddOperationGrant::query()->pluck('operation_key')->flip();
+
+        return array_values(array_filter(
+            $this->discoverActions(),
+            fn (OperationSpec $spec): bool => ! isset($grantedKeys[$spec->key]),
+        ));
+    }
+
+    /** Whether a key names a real, grantable (discoverable, non-blocked) action. */
+    public function isRequestableAction(string $key): bool
+    {
+        if ($this->isBuiltIn($key) || $this->isBlocked($key) || ! str_starts_with($key, self::ACTION_PREFIX)) {
+            return false;
+        }
+
+        $class = substr($key, strlen(self::ACTION_PREFIX));
+
+        return class_exists($class) && method_exists($class, 'execute');
+    }
+
     public function describe(string $key): ?OperationSpec
     {
         foreach ($this->granted() as $spec) {
