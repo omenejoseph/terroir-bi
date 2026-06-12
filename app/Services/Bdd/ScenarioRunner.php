@@ -377,9 +377,7 @@ class ScenarioRunner
         $check = function (string $operator, mixed $expected) use ($actual): bool {
             return match ($operator) {
                 'equals' => $this->looselyEquals($actual, $expected),
-                'contains' => is_string($actual)
-                    ? str_contains($actual, (string) $expected)
-                    : (is_array($actual) && in_array($expected, $actual)),
+                'contains' => $this->contains($actual, $expected),
                 'count' => (is_countable($actual) ? count($actual) : null) === (int) $expected,
                 'gt' => is_numeric($actual) && (float) $actual > (float) $expected,
                 'gte' => is_numeric($actual) && (float) $actual >= (float) $expected,
@@ -396,12 +394,13 @@ class ScenarioRunner
                 continue;
             }
 
+            // equals_ref is just equals on a $reference; either way, resolve any
+            // $capture references embedded in the expected value (e.g. a
+            // {reference: "$order.order_number"} field inside a `contains`).
             if ($operator === 'equals_ref') {
-                $expected = is_string($expected) && str_starts_with($expected, '$')
-                    ? $this->dig($captures[explode('.', substr($expected, 1), 2)[0]] ?? null, explode('.', substr($expected, 1), 2)[1] ?? '')
-                    : $expected;
                 $operator = 'equals';
             }
+            $expected = $this->resolveRefs($expected, $captures);
 
             if (! $check($operator, $expected)) {
                 return [
@@ -414,6 +413,32 @@ class ScenarioRunner
         return ['status' => 'pass', 'detail' => 'Asserted '.json_encode($actual).'.'];
     }
 
+    /**
+     * Resolve $capture references anywhere inside an assertion's expected value
+     * (recursing into objects/lists). Unknown references are left untouched.
+     *
+     * @param  array<string, mixed>  $captures
+     */
+    private function resolveRefs(mixed $value, array $captures): mixed
+    {
+        if (is_array($value)) {
+            return array_map(fn ($v) => $this->resolveRefs($v, $captures), $value);
+        }
+
+        if (! is_string($value) || ! str_starts_with($value, '$')) {
+            return $value;
+        }
+
+        [$root, $path] = array_pad(explode('.', substr($value, 1), 2), 2, null);
+        if (! array_key_exists((string) $root, $captures)) {
+            return $value;
+        }
+
+        $resolved = $captures[(string) $root];
+
+        return $path !== null ? $this->dig($resolved, (string) $path) : $resolved;
+    }
+
     private function looselyEquals(mixed $actual, mixed $expected): bool
     {
         if (is_numeric($actual) && is_numeric($expected)) {
@@ -421,6 +446,59 @@ class ScenarioRunner
         }
 
         return $actual === $expected;
+    }
+
+    /**
+     * `contains`: substring for strings; membership for scalar-in-list; and —
+     * the common probe case — "some element of the list matches all the fields
+     * I gave". So {type: ORDER_DEDUCT, quantity: -24} matches a movement row
+     * with (at least) those fields, regardless of the row's other keys.
+     */
+    private function contains(mixed $actual, mixed $expected): bool
+    {
+        if (is_string($actual)) {
+            return str_contains($actual, (string) $expected);
+        }
+
+        if (! is_array($actual)) {
+            return false;
+        }
+
+        if (is_array($expected)) {
+            foreach ($actual as $element) {
+                if (is_array($element) && $this->matchesSubset($element, $expected)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        foreach ($actual as $element) {
+            if ($this->looselyEquals($element, $expected)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Every key in $subset is present in $row and loosely-equal (numeric-aware,
+     * and $-references already resolved by the caller's interpolation).
+     *
+     * @param  array<array-key, mixed>  $row
+     * @param  array<array-key, mixed>  $subset
+     */
+    private function matchesSubset(array $row, array $subset): bool
+    {
+        foreach ($subset as $key => $value) {
+            if (! array_key_exists($key, $row) || ! $this->looselyEquals($row[$key], $value)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

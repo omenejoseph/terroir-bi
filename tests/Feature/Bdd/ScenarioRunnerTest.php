@@ -99,6 +99,24 @@ class ScenarioRunnerTest extends TestCase
         $this->assertSame(BddRunStatus::Pass, $run->status, json_encode($run->step_results ?? []) ?: '');
     }
 
+    public function test_contains_matches_a_movement_row_by_partial_object_with_a_ref(): void
+    {
+        // The natural assertion a model writes for "an ORDER_DEDUCT of -24
+        // references the order": contains a partial object, with the reference
+        // as a $capture reference into the order.
+        $this->grantCreateOrder();
+        $plan = $this->ord001Plan();
+        $plan['steps'][4] = [
+            'keyword' => 'then', 'text' => 'an ORDER_DEDUCT of -24 references the order',
+            'op' => 'probe.movements_of', 'args' => ['item' => '$r3'],
+            'assert' => ['contains' => ['type' => 'ORDER_DEDUCT', 'quantity' => '-24', 'reference' => '$order.order_number']],
+        ];
+
+        $run = app(ScenarioRunner::class)->run($this->scenario($plan));
+
+        $this->assertSame(BddRunStatus::Pass, $run->status, json_encode($run->step_results ?? []) ?: '');
+    }
+
     public function test_an_overdraw_scenario_passes_via_expect_error(): void
     {
         $this->grantCreateOrder();

@@ -41,6 +41,22 @@ class OperationRegistry
     public const ACTION_PREFIX = 'action:';
 
     /**
+     * Shape hints for array parameters whose structure can't be reflected (a
+     * bare `array` type tells the model nothing). Keyed by "Class::param".
+     * Without these the model guesses the order-line shape and builds a custom
+     * line that deducts no stock.
+     */
+    private const ARRAY_PARAM_HINTS = [
+        'App\\Actions\\Orders\\CreateOrderAction::data' => 'object. items: list of order lines [{inventory_item_id: a captured item id like "$r3.id"; quantity: integer; '
+            .'unit_type: the item\'s sales unit ("bottles" or "cases"); unit_price?: integer MINOR units (omit to use the '
+            .'customer/catalog price); custom_description?: string for a non-product line}]. Optional: notes (string), '
+            .'is_backorder (bool — skips stock deduction), is_consignment (bool), status (RECEIVED|IN_PROCESS|READY_TO_SHIP|SHIPPED), '
+            .'shipping_cost (integer minor units). Do NOT put customer here — it is the separate customer parameter.',
+        'App\\Actions\\Orders\\AddOrderItemsAction::items' => 'list of order lines [{inventory_item_id: a captured item id like "$r3.id"; quantity: integer; '
+            .'unit_type: the item\'s sales unit ("bottles" or "cases"); unit_price?: integer minor units; custom_description?: string}].',
+    ];
+
+    /**
      * A top-level string parameter that identifies the acting operator/user
      * (createdById, userId, changedById, actorId, grantedById, triggeredById,
      * authorId, performedById…). The runner auto-fills these with the sandbox
@@ -279,6 +295,14 @@ class OperationRegistry
                     $typeName::cases(),
                 );
                 $parameters[$name] = 'enum: '.implode('|', $cases).($parameter->isOptional() ? ' (optional)' : ' (required)');
+
+                continue;
+            }
+
+            // A curated shape for array params that can't be reflected.
+            $hint = self::ARRAY_PARAM_HINTS[$class.'::'.$name] ?? null;
+            if ($hint !== null) {
+                $parameters[$name] = $hint.($parameter->isOptional() ? ' (optional)' : ' (required)');
 
                 continue;
             }
