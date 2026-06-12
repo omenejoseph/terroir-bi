@@ -64,9 +64,17 @@ class ScenarioCompiler
                 $compiled = $this->agent->toPlan($structured);
 
                 // Genuine access gap → park for one-click granting (terminal).
+                // An entry for an operation that is ALREADY granted is model
+                // noise (the action sits in the available catalog, yet the model
+                // also listed it as unbound) — ignore it, or the scenario parks
+                // asking for access it already has and loops on every recompile.
                 $realUnbound = array_values(array_filter(
                     $compiled['unbound'],
-                    fn (array $entry): bool => $this->registry->isRequestableAction((string) ($entry['suggested_operation'] ?? '')),
+                    function (array $entry): bool {
+                        $key = (string) ($entry['suggested_operation'] ?? '');
+
+                        return $this->registry->isRequestableAction($key) && ! $this->registry->isGranted($key);
+                    },
                 ));
                 if ($realUnbound !== []) {
                     return $this->needsAccess($scenario, array_values(array_unique(array_map(

@@ -28,9 +28,11 @@ use Stringable;
  * gives the model the same information in one round-trip — matching the proven
  * structured-output extractor pattern (DocumentExtractor).
  *
- * Nested free-form values (args/assert/expect_error) travel as JSON-encoded
+ * The free-form, variably-shaped values (args/assert) travel as JSON-encoded
  * strings to keep the structured-output schema strict; ScenarioCompiler
- * decodes and validates them.
+ * decodes and validates them. expect_error is the exception: it has a fixed
+ * {class, message_contains} shape, so it rides two flat string fields instead —
+ * a JSON blob there would break whenever the error message carried a quote.
  */
 class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
 {
@@ -74,8 +76,12 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
         - Action parameters named like createdById are auto-filled with the
           sandbox operator — omit them.
         - For steps that expect a failure (e.g. an order exceeding stock being
-          rejected), set expect_error_json on the When step instead of binding
-          a Then to the error.
+          rejected), set expect_error_message_contains on the When step — a
+          short, distinctive substring of the error message you expect (e.g.
+          "not enough stock"), as plain text, never JSON. This is the reliable
+          signal; prefer it. expect_error_class (the exception class name) is
+          OPTIONAL and best-effort — only set it if you are confident of the
+          exact class, and never bind a Then step to the error.
         - Assertions on probe steps: assert_json supports {"equals": x},
           {"equals_ref": "$cap.field"}, {"contains": x}, {"count": n},
           {"gt"/"gte"/"lt"/"lte": n}, {"not_null": true}, {"is_null": true},
@@ -149,7 +155,8 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
                     'args_json' => $s->string()->description('JSON object of operation arguments ("{}" when none).')->required(),
                     'capture' => $s->string()->nullable()->description('snake_case variable name to store the result under.'),
                     'assert_json' => $s->string()->nullable()->description('JSON assertion object for probe steps.'),
-                    'expect_error_json' => $s->string()->nullable()->description('JSON {"class": "...", "message_contains": "..."} when this step must fail.'),
+                    'expect_error_class' => $s->string()->nullable()->description('When this step must fail: the expected exception class name (e.g. "InsufficientStockException"); otherwise null.'),
+                    'expect_error_message_contains' => $s->string()->nullable()->description('Optional plain substring expected in the error message (NOT JSON — do not quote or escape it).'),
                 ])
             )->required(),
             'unbound' => $schema->array()->items(
@@ -165,6 +172,69 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
     public function messages(): iterable
     {
         return [];
+    }
+
+    /**
+     * Canonicalise an operation key's prefix separator. Models routinely conflate
+     * the two conventions — seeds/probes use a dot (`probe.stock_of`) while
+     * actions use a colon (`action:App\…`) — emitting `probe:stock_of` or
+     * `action.App\…`. Left as-is, the wrong separator reads as an unknown,
+     * ungranted operation and parks the whole scenario in NEEDS_ACCESS.
+     */
+    private function canonicalOp(string $op): string
+    {
+        if (preg_match('/^(seed|probe)[:.](.+)$/', $op, $m) === 1) {
+            return $m[1].'.'.$m[2];
+        }
+
+        if (preg_match('/^action[:.](.+)$/', $op, $m) === 1) {
+            return OperationRegistry::ACTION_PREFIX.$m[1];
+        }
+
+        return $op;
+    }
+
+    /**
+     * Build a step's expect_error from the two flat string fields. Keeping the
+     * class and message substring as plain strings (rather than one JSON blob)
+     * means an unescaped quote or em-dash in the error message can never corrupt
+     * the payload — the failure mode that broke overdraw scenarios at compile.
+     * A legacy expect_error_json object is still honoured if a model emits it.
+     *
+     * @param  array<string, mixed>  $raw
+     * @return array<string, string>|null
+     */
+    private function expectError(array $raw): ?array
+    {
+        $clean = static function (mixed $value): ?string {
+            if (! is_string($value)) {
+                return null;
+            }
+            $value = trim($value);
+
+            return ($value === '' || $value === 'null') ? null : $value;
+        };
+
+        $class = $clean($raw['expect_error_class'] ?? null);
+        $message = $clean($raw['expect_error_message_contains'] ?? null);
+
+        if ($class === null && $message === null) {
+            // Tolerate a model that still returns the old JSON object form.
+            $legacy = $raw['expect_error_json'] ?? null;
+            if (is_array($legacy)) {
+                $class = $clean($legacy['class'] ?? null);
+                $message = $clean($legacy['message_contains'] ?? null);
+            }
+        }
+
+        if ($class === null && $message === null) {
+            return null;
+        }
+
+        return array_filter([
+            'class' => $class,
+            'message_contains' => $message,
+        ], fn (?string $v): bool => $v !== null);
     }
 
     /**
@@ -224,11 +294,11 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
             $steps[] = array_filter([
                 'keyword' => (string) ($raw['keyword'] ?? 'given'),
                 'text' => (string) ($raw['text'] ?? ''),
-                'op' => (string) ($raw['op'] ?? ''),
+                'op' => $this->canonicalOp((string) ($raw['op'] ?? '')),
                 'args' => $decode('args_json') ?? [],
                 'capture' => isset($raw['capture']) && $raw['capture'] !== '' ? (string) $raw['capture'] : null,
                 'assert' => $decode('assert_json'),
-                'expect_error' => $decode('expect_error_json'),
+                'expect_error' => $this->expectError($raw),
             ], fn ($value) => $value !== null);
         }
 
@@ -237,7 +307,7 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
             if (is_array($entry) && isset($entry['suggested_operation'])) {
                 $unbound[] = [
                     'step_text' => (string) ($entry['step_text'] ?? ''),
-                    'suggested_operation' => (string) $entry['suggested_operation'],
+                    'suggested_operation' => $this->canonicalOp((string) $entry['suggested_operation']),
                     'why' => isset($entry['why']) ? (string) $entry['why'] : null,
                 ];
             }

@@ -128,6 +128,116 @@ class ScenarioCompilerTest extends TestCase
         $this->assertNull($scenario->requested_operations);
     }
 
+    public function test_colon_separated_seed_and_probe_ops_are_canonicalised_not_parked(): void
+    {
+        // The model conflated the action separator (action:) with the seed/probe
+        // one (.), emitting `seed:` and `probe:`. Left raw these read as unknown,
+        // ungranted ops and park the scenario in NEEDS_ACCESS (the ORD-002 bug).
+        BddCompilerAgent::fake([[
+            'steps' => [
+                ['keyword' => 'given', 'text' => 'stock', 'op' => 'seed:inventory_item',
+                    'args_json' => json_encode(['current_stock' => '10']), 'capture' => 'r3'],
+                ['keyword' => 'then', 'text' => 'stock is 10', 'op' => 'probe:stock_of',
+                    'args_json' => json_encode(['item' => '$r3']), 'assert_json' => json_encode(['equals' => 10])],
+                ['keyword' => 'then', 'text' => 'no movements', 'op' => 'probe:db_count',
+                    'args_json' => json_encode(['table' => 'stock_movements']), 'assert_json' => json_encode(['equals' => 0])],
+            ],
+            'unbound' => [],
+        ]]);
+
+        $scenario = app(SaveBddScenarioAction::class)->execute([
+            'title' => 'ORD-002 separator slip', 'gherkin' => 'Scenario: overdraw guard',
+        ]);
+        app(ScenarioCompiler::class)->compile($scenario);
+
+        $scenario->refresh();
+        $this->assertSame(BddScenarioStatus::Ready, $scenario->status, (string) $scenario->compile_error);
+        $this->assertNull($scenario->requested_operations);
+        $this->assertSame(
+            ['seed.inventory_item', 'probe.stock_of', 'probe.db_count'],
+            array_column($scenario->compiled_plan['steps'], 'op'),
+        );
+
+        // And the canonicalised plan replays green.
+        $this->assertSame(BddRunStatus::Pass, app(ScenarioRunner::class)->run($scenario)->status);
+    }
+
+    public function test_an_already_granted_action_listed_as_unbound_does_not_park_the_scenario(): void
+    {
+        // The model bound CreateOrderAction in a step AND redundantly listed it
+        // as unbound. It is already granted, so the entry is noise — the scenario
+        // must compile READY, not park asking for access it already has (which
+        // would loop on every recompile).
+        $action = OperationRegistry::ACTION_PREFIX.CreateOrderAction::class;
+        BddOperationGrant::create(['operation_key' => $action]);
+        $output = $this->boundOutput();
+        $output['unbound'] = [
+            ['step_text' => 'an order is submitted', 'suggested_operation' => $action, 'why' => null],
+        ];
+        BddCompilerAgent::fake([$output]);
+
+        $scenario = app(SaveBddScenarioAction::class)->execute([
+            'title' => 'ORD-002 redundant unbound', 'gherkin' => 'Scenario: overdraw guard',
+        ]);
+        app(ScenarioCompiler::class)->compile($scenario);
+
+        $scenario->refresh();
+        $this->assertSame(BddScenarioStatus::Ready, $scenario->status, (string) $scenario->compile_error);
+        $this->assertNull($scenario->requested_operations);
+    }
+
+    public function test_expect_error_with_a_quoted_message_survives_the_decode(): void
+    {
+        // A JSON blob broke here ("expect_error_json is not valid JSON") whenever
+        // the message carried a quote or em-dash. On flat string fields the same
+        // text rides through verbatim — no escaping, no parse step to fail.
+        $agent = app(BddCompilerAgent::class);
+
+        $result = $agent->toPlan(['steps' => [[
+            'keyword' => 'when', 'text' => 'overdraw is rejected', 'op' => 'action:App\\Actions\\Orders\\CreateOrderAction',
+            'args_json' => '{}',
+            'expect_error_class' => 'InsufficientStockException',
+            'expect_error_message_contains' => 'Not enough stock for "Plavac" — 5.000 bottles available',
+        ]], 'unbound' => []]);
+
+        $this->assertSame([], $result['errors']);
+        $this->assertSame(
+            ['class' => 'InsufficientStockException', 'message_contains' => 'Not enough stock for "Plavac" — 5.000 bottles available'],
+            $result['plan']['steps'][0]['expect_error'],
+        );
+    }
+
+    public function test_an_overdraw_scenario_compiles_and_replays_green_via_expect_error(): void
+    {
+        BddOperationGrant::create(['operation_key' => OperationRegistry::ACTION_PREFIX.CreateOrderAction::class]);
+        $action = OperationRegistry::ACTION_PREFIX.CreateOrderAction::class;
+        BddCompilerAgent::fake([[
+            'steps' => [
+                ['keyword' => 'given', 'text' => 'stock', 'op' => 'seed.inventory_item',
+                    'args_json' => json_encode(['name' => 'Plavac', 'current_stock' => '5']), 'capture' => 'r3'],
+                ['keyword' => 'given', 'text' => 'a customer', 'op' => 'seed.customer', 'args_json' => '{}', 'capture' => 'customer'],
+                ['keyword' => 'when', 'text' => 'ordering 12 is rejected', 'op' => $action,
+                    'args_json' => json_encode(['customer' => '$customer', 'data' => ['items' => [
+                        ['inventory_item_id' => '$r3.id', 'quantity' => 12, 'unit_type' => 'bottles'],
+                    ]]]),
+                    'expect_error_class' => 'InsufficientStockException',
+                    'expect_error_message_contains' => 'Not enough stock'],
+                ['keyword' => 'then', 'text' => 'stock untouched', 'op' => 'probe.stock_of',
+                    'args_json' => json_encode(['item' => '$r3']), 'assert_json' => json_encode(['equals' => 5])],
+            ],
+            'unbound' => [],
+        ]]);
+
+        $scenario = app(SaveBddScenarioAction::class)->execute([
+            'title' => 'ORD-002 overdraw', 'gherkin' => 'Scenario: overdraw guard',
+        ]);
+        app(ScenarioCompiler::class)->compile($scenario);
+
+        $scenario->refresh();
+        $this->assertSame(BddScenarioStatus::Ready, $scenario->status, (string) $scenario->compile_error);
+        $this->assertSame(BddRunStatus::Pass, app(ScenarioRunner::class)->run($scenario)->status);
+    }
+
     public function test_an_invalid_first_attempt_is_self_corrected_on_retry(): void
     {
         BddOperationGrant::create(['operation_key' => OperationRegistry::ACTION_PREFIX.CreateOrderAction::class]);

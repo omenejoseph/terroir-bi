@@ -117,6 +117,40 @@ class ScenarioRunnerTest extends TestCase
         $this->assertSame(BddRunStatus::Pass, $run->status, json_encode($run->step_results ?? []) ?: '');
     }
 
+    public function test_an_assertion_path_accepts_array_index_brackets(): void
+    {
+        // The compiler emits `[0]` bracket indexing for "the first movement";
+        // dig() must resolve it the same as the dot form `0` (was returning null,
+        // so a real ORDER_DEDUCT row read as missing and the step failed).
+        $this->grantCreateOrder();
+        $plan = $this->ord001Plan();
+        $plan['steps'][4] = [
+            'keyword' => 'then', 'text' => 'the first movement is the ORDER_DEDUCT',
+            'op' => 'probe.movements_of', 'args' => ['item' => '$r3'],
+            'assert' => ['path' => '[0]', 'contains' => [
+                'type' => 'ORDER_DEDUCT', 'quantity' => '-24', 'reference' => '$order.order_number',
+            ]],
+        ];
+
+        $run = app(ScenarioRunner::class)->run($this->scenario($plan));
+
+        $this->assertSame(BddRunStatus::Pass, $run->status, json_encode($run->step_results ?? []) ?: '');
+    }
+
+    public function test_an_entity_param_tolerates_a_dot_id_reference(): void
+    {
+        // The model passed "$customer.id" (reaching for a foreign key) where the
+        // action wants the Customer entity. Both forms must bind to the capture,
+        // not throw "must be a \$ref to a captured Customer".
+        $this->grantCreateOrder();
+        $plan = $this->ord001Plan();
+        $plan['steps'][2]['args']['customer'] = '$customer.id';
+
+        $run = app(ScenarioRunner::class)->run($this->scenario($plan));
+
+        $this->assertSame(BddRunStatus::Pass, $run->status, json_encode($run->step_results ?? []) ?: '');
+    }
+
     public function test_an_overdraw_scenario_passes_via_expect_error(): void
     {
         $this->grantCreateOrder();
@@ -137,6 +171,55 @@ class ScenarioRunnerTest extends TestCase
         $run = app(ScenarioRunner::class)->run($scenario);
 
         $this->assertSame(BddRunStatus::Pass, $run->status, json_encode($run->step_results ?? []) ?: '');
+    }
+
+    public function test_expect_error_matches_on_message_when_the_model_guessed_the_wrong_class(): void
+    {
+        // The real failure: the guard threw the right InsufficientStockException,
+        // but the model guessed a bogus class and a lower-cased message. The
+        // message substring (case-insensitive) is the semantic anchor, so the
+        // step must still pass — the right error DID happen.
+        $this->grantCreateOrder();
+        $scenario = $this->scenario(['version' => 1, 'steps' => [
+            ['keyword' => 'given', 'text' => '10 bottles in stock',
+                'op' => 'seed.inventory_item', 'args' => ['name' => 'R3 2025', 'current_stock' => '10'], 'capture' => 'r3'],
+            ['keyword' => 'given', 'text' => 'a customer', 'op' => 'seed.customer', 'args' => [], 'capture' => 'customer'],
+            ['keyword' => 'when', 'text' => 'ordering 24 bottles is rejected',
+                'op' => OperationRegistry::ACTION_PREFIX.CreateOrderAction::class,
+                'args' => ['customer' => '$customer', 'data' => [
+                    'items' => [['inventory_item_id' => '$r3.id', 'quantity' => 24, 'unit_type' => 'bottles']],
+                ]],
+                'expect_error' => [
+                    'class' => 'Spatie\\LaravelData\\Exceptions\\RequiredArgumentMissing',
+                    'message_contains' => 'not enough stock',
+                ]],
+        ]]);
+
+        $run = app(ScenarioRunner::class)->run($scenario);
+
+        $this->assertSame(BddRunStatus::Pass, $run->status, json_encode($run->step_results ?? []) ?: '');
+    }
+
+    public function test_expect_error_still_fails_on_a_genuinely_unrelated_error(): void
+    {
+        // Tolerance must not become "any error passes": an unrelated message and
+        // class still fail, so the assertion keeps its teeth.
+        $this->grantCreateOrder();
+        $scenario = $this->scenario(['version' => 1, 'steps' => [
+            ['keyword' => 'given', 'text' => '10 bottles in stock',
+                'op' => 'seed.inventory_item', 'args' => ['current_stock' => '10'], 'capture' => 'r3'],
+            ['keyword' => 'given', 'text' => 'a customer', 'op' => 'seed.customer', 'args' => [], 'capture' => 'customer'],
+            ['keyword' => 'when', 'text' => 'ordering 24 bottles is rejected',
+                'op' => OperationRegistry::ACTION_PREFIX.CreateOrderAction::class,
+                'args' => ['customer' => '$customer', 'data' => [
+                    'items' => [['inventory_item_id' => '$r3.id', 'quantity' => 24, 'unit_type' => 'bottles']],
+                ]],
+                'expect_error' => ['class' => 'ValidationException', 'message_contains' => 'invalid email address']],
+        ]]);
+
+        $run = app(ScenarioRunner::class)->run($scenario);
+
+        $this->assertSame(BddRunStatus::Fail, $run->status);
     }
 
     public function test_a_failing_assertion_reports_fail_with_step_detail(): void

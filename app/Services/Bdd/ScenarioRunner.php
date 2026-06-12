@@ -172,7 +172,7 @@ class ScenarioRunner
             $expectError = $step['expect_error'] ?? null;
 
             try {
-                $output = $this->invoke($op, $args, $sandbox, $seeds, $probes);
+                $output = $this->invoke($op, $args, is_array($rawArgs) ? $rawArgs : [], $captures, $sandbox, $seeds, $probes);
             } catch (Throwable $e) {
                 if (is_array($expectError)) {
                     return $this->matchExpectedError($e, $expectError, $stepStart);
@@ -215,9 +215,11 @@ class ScenarioRunner
     }
 
     /**
-     * @param  array<string, mixed>  $args
+     * @param  array<string, mixed>  $args  interpolated args ($refs resolved)
+     * @param  array<string, mixed>  $rawArgs  the pre-interpolation args (raw $refs)
+     * @param  array<string, mixed>  $captures
      */
-    private function invoke(string $op, array $args, SandboxContext $sandbox, SeedOperations $seeds, ProbeOperations $probes): mixed
+    private function invoke(string $op, array $args, array $rawArgs, array $captures, SandboxContext $sandbox, SeedOperations $seeds, ProbeOperations $probes): mixed
     {
         if (str_starts_with($op, 'seed.')) {
             return $seeds->execute($op, $args);
@@ -258,7 +260,14 @@ class ScenarioRunner
                 }
 
                 // Guard rail: model parameters must arrive as resolved captures.
+                // A model param always wants the ENTITY, so accept the capture in
+                // whatever form the model emitted it — "$customer" (the entity)
+                // or "$customer.id" (it reached for a foreign key it doesn't
+                // need); both recover the same captured Customer.
                 if ($typeName !== null && is_subclass_of($typeName, Model::class)) {
+                    if (! $value instanceof $typeName) {
+                        $value = $this->captureRootEntity($rawArgs[$name] ?? null, $captures, $typeName);
+                    }
                     if (! $value instanceof $typeName) {
                         throw new InvalidArgumentException("Parameter [{$name}] must be a \$ref to a captured ".class_basename($typeName).'.');
                     }
@@ -295,6 +304,26 @@ class ScenarioRunner
         }
 
         return app($class)->execute(...$bound);
+    }
+
+    /**
+     * The captured entity behind a "$root.path" reference, when its root capture
+     * is of the wanted type. Lets a model param tolerate "$customer.id" (or any
+     * "$customer.field") by recovering the captured Customer the root names.
+     *
+     * @param  array<string, mixed>  $captures
+     * @param  class-string<Model>  $typeName
+     */
+    private function captureRootEntity(mixed $rawValue, array $captures, string $typeName): ?Model
+    {
+        if (! is_string($rawValue) || ! str_starts_with($rawValue, '$')) {
+            return null;
+        }
+
+        $root = explode('.', substr($rawValue, 1), 2)[0];
+        $candidate = $captures[$root] ?? null;
+
+        return $candidate instanceof $typeName ? $candidate : null;
     }
 
     /**
@@ -338,7 +367,12 @@ class ScenarioRunner
 
     private function dig(mixed $value, string $path): mixed
     {
-        foreach (explode('.', $path) as $segment) {
+        // Accept array-index notation (`[0]`, `items[2].quantity`) alongside dot
+        // paths by normalising brackets to dots; PHP maps the numeric-string key
+        // back to the list's integer index on access.
+        $normalised = str_replace(['[', ']'], ['.', ''], $path);
+
+        foreach (array_filter(explode('.', $normalised), static fn (string $s): bool => $s !== '') as $segment) {
             if ($value instanceof Model) {
                 $value = $segment === 'id' ? $value->getKey() : $value->getAttribute($segment);
             } elseif (is_array($value)) {
@@ -453,6 +487,11 @@ class ScenarioRunner
      * the common probe case — "some element of the list matches all the fields
      * I gave". So {type: ORDER_DEDUCT, quantity: -24} matches a movement row
      * with (at least) those fields, regardless of the row's other keys.
+     *
+     * An object subset also matches a single row directly (not just a list of
+     * rows), so a plan that narrows with a path first — e.g. {path: "[0]",
+     * contains: {type: ...}} — checks the row it selected rather than silently
+     * failing because the row isn't a list.
      */
     private function contains(mixed $actual, mixed $expected): bool
     {
@@ -465,6 +504,10 @@ class ScenarioRunner
         }
 
         if (is_array($expected)) {
+            if ($this->matchesSubset($actual, $expected)) {
+                return true;
+            }
+
             foreach ($actual as $element) {
                 if (is_array($element) && $this->matchesSubset($element, $expected)) {
                     return true;
@@ -507,15 +550,24 @@ class ScenarioRunner
      */
     private function matchExpectedError(Throwable $e, array $expectError, int $stepStart): array
     {
-        $wantedClass = isset($expectError['class']) ? (string) $expectError['class'] : null;
-        $wantedMessage = isset($expectError['message_contains']) ? (string) $expectError['message_contains'] : null;
+        $wantedClass = isset($expectError['class']) && (string) $expectError['class'] !== '' ? (string) $expectError['class'] : null;
+        $wantedMessage = isset($expectError['message_contains']) && (string) $expectError['message_contains'] !== '' ? (string) $expectError['message_contains'] : null;
 
-        $classMatches = $wantedClass === null
-            || $e::class === $wantedClass
-            || class_basename($e) === class_basename($wantedClass);
-        $messageMatches = $wantedMessage === null || str_contains($e->getMessage(), $wantedMessage);
+        // The message substring is the semantic anchor: the model can infer it
+        // from the Gherkin ("…is rejected" → "not enough stock") but rarely knows
+        // the exact exception FQCN, so the class is advisory. EITHER signal
+        // confirms the right failure (case-insensitive on the message), and a
+        // bare expectation (no class, no message) accepts any thrown error.
+        $classMatches = $wantedClass !== null
+            && ($e::class === $wantedClass || class_basename($e) === class_basename($wantedClass));
+        $messageMatches = $wantedMessage !== null
+            && mb_stripos($e->getMessage(), $wantedMessage) !== false;
 
-        if ($classMatches && $messageMatches) {
+        $matched = ($wantedClass === null && $wantedMessage === null)
+            || $classMatches
+            || $messageMatches;
+
+        if ($matched) {
             return [
                 'status' => 'pass',
                 'detail' => 'Got expected error: '.class_basename($e).' — '.Str::limit($e->getMessage(), 160),
