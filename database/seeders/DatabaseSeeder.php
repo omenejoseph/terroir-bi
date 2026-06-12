@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         // App-wide defaults required for the app to function.
         $this->call(PlanSeeder::class);
+        $this->call(BddScenarioSeeder::class);
 
         // Demo tenant for local development (skipped if it already exists).
         if (! Tenant::query()->where('slug', 'demo')->exists()) {
