@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { GeneralSettings } from "@/components/settings/general-settings";
 import { TranslationsEditor } from "@/components/settings/translations-editor";
+import { PushNotificationsCard } from "@/components/settings/push-notifications-card";
 
 type SettingsTab = "general" | "translations";
 
@@ -15,16 +16,6 @@ export default function SettingsPage() {
   const { t } = useTranslation();
   const { can } = useAuth();
   const [tab, setTab] = React.useState<SettingsTab>("general");
-
-  if (!can("settings.manage")) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center text-sm text-muted-foreground">
-          {t("settings.forbidden")}
-        </CardContent>
-      </Card>
-    );
-  }
 
   const tabs = [
     { value: "general", label: t("settings.tabs.general") },
@@ -38,9 +29,22 @@ export default function SettingsPage() {
         <p className="text-sm text-muted-foreground">{t("settings.subtitle")}</p>
       </header>
 
-      <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as SettingsTab)} />
+      {/* Per-device push preference — available to every user. */}
+      <PushNotificationsCard />
 
-      {tab === "general" ? <GeneralSettings /> : <TranslationsEditor />}
+      {/* Organisation settings — admin only. */}
+      {can("settings.manage") ? (
+        <>
+          <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as SettingsTab)} />
+          {tab === "general" ? <GeneralSettings /> : <TranslationsEditor />}
+        </>
+      ) : (
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            {t("settings.forbidden")}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

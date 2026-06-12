@@ -931,7 +931,13 @@ export interface CustomerConsignmentReturnInput {
 
 // ── Notifications ─────────────────────────────────────────────────────────────
 
-export const NOTIFICATION_TYPES = ["MENTION", "NEW_ORDER", "ORDER_STATUS", "REPLY"] as const;
+export const NOTIFICATION_TYPES = [
+  "MENTION",
+  "NEW_ORDER",
+  "ORDER_STATUS",
+  "REPLY",
+  "ANNOUNCEMENT",
+] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 export interface Notification {
@@ -939,7 +945,8 @@ export interface Notification {
   type: NotificationType;
   title: string;
   body: string | null;
-  link: string | null;
+  /** Route params for the client-side resolver (e.g. { order_id }). Path-free. */
+  data: Record<string, string> | null;
   is_read: boolean;
   created_at: string | null;
 }

@@ -689,7 +689,7 @@ export function makeNotification(overrides: Partial<Notification> = {}): Notific
     type: "NEW_ORDER",
     title: "New order ORD-1001",
     body: "Acme Corporation placed an order.",
-    link: "/orders/ord_1",
+    data: { order_id: "ord_1" },
     is_read: false,
     created_at: "2026-06-01T10:05:00+00:00",
     ...overrides,

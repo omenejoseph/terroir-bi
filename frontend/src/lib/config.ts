@@ -9,6 +9,12 @@ export const API_URL =
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "Terroir BI";
 
 /**
+ * VAPID public key for Web Push (generate with `php artisan push:vapid`). Empty
+ * when push isn't configured — the UI then treats push as unsupported.
+ */
+export const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
+
+/**
  * Supported locales. Must stay in sync with the backend's
  * config('app.supported_locales'). Croatian-first, matching the API default.
  */

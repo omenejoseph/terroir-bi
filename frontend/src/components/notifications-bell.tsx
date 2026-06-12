@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 
 import { useMarkNotificationsRead, useNotifications } from "@/hooks/use-notifications";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { useTranslation } from "@/i18n/context";
+import { resolveNotificationRoute } from "@/lib/notifications/routes";
 import type { Notification } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -15,6 +17,7 @@ export function NotificationsBell() {
   const router = useRouter();
   const { data } = useNotifications();
   const markRead = useMarkNotificationsRead();
+  const push = usePushNotifications();
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
 
@@ -33,8 +36,13 @@ export function NotificationsBell() {
   function openNotification(n: Notification) {
     if (!n.is_read) markRead.mutate([n.id]);
     setOpen(false);
-    if (n.link) router.push(n.link);
+    const route = resolveNotificationRoute(n.type, n.data);
+    if (route) router.push(route);
   }
+
+  // Offer to turn on push when the browser supports it and we're not subscribed
+  // and the user hasn't denied permission.
+  const showEnablePush = push.supported && !push.isSubscribed && push.permission !== "denied";
 
   return (
     <div ref={ref} className="relative">
@@ -66,6 +74,17 @@ export function NotificationsBell() {
               </button>
             )}
           </div>
+          {showEnablePush && (
+            <button
+              type="button"
+              disabled={push.busy}
+              onClick={() => void push.enable()}
+              className="flex w-full items-center gap-2 border-b border-border bg-primary/5 px-3 py-2 text-left text-xs text-primary hover:bg-primary/10 disabled:opacity-60"
+            >
+              <Bell className="size-3.5 shrink-0" />
+              {t("notifications.enablePush")}
+            </button>
+          )}
           <ul className="max-h-80 overflow-auto">
             {notifications.length === 0 ? (
               <li className="px-3 py-6 text-center text-sm text-muted-foreground">

@@ -8,6 +8,7 @@ import { I18nProvider } from "@/i18n/context";
 import { makeQueryClient } from "@/lib/query";
 import { ConfirmProvider } from "@/components/ui/confirm";
 import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar";
+import { NotificationClickHandler } from "@/components/notification-click-handler";
 
 /**
  * App-wide providers. I18n is outermost so every component (incl. auth UI) can
@@ -22,6 +23,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ConfirmProvider>{children}</ConfirmProvider>
+          <NotificationClickHandler />
         </AuthProvider>
         <ServiceWorkerRegistrar />
       </QueryClientProvider>
