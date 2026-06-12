@@ -25,6 +25,9 @@ use Throwable;
  */
 class ScenarioCompiler
 {
+    /** Compile attempts: first pass + one self-correction with error feedback. */
+    private const MAX_ATTEMPTS = 2;
+
     public function __construct(
         private readonly AiClient $ai,
         private readonly BddCompilerAgent $agent,
@@ -41,61 +44,65 @@ class ScenarioCompiler
         ]);
 
         try {
-            $response = $this->ai->prompt(
-                $this->agent,
-                $this->agent->userPrompt($scenario->gherkin),
-                AiCapability::Text,
-                'bdd_compiler',
-            );
+            $errors = [];
+            $compiled = ['plan' => ['version' => 1, 'steps' => []], 'unbound' => [], 'errors' => []];
+            $model = null;
 
-            $structured = $response instanceof StructuredAgentResponse ? $response->toArray() : [];
-            $compiled = $this->agent->toPlan($structured);
+            // Up to two attempts: the first compiles the Gherkin; a second
+            // self-correction turn feeds the validator's complaints back so the
+            // model can fix structural slips (a missing prerequisite seed, an
+            // undefined $reference). Access decisions are terminal — never retried.
+            for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
+                $prompt = $attempt === 1
+                    ? $this->agent->userPrompt($scenario->gherkin)
+                    : $this->agent->retryPrompt($scenario->gherkin, (string) json_encode($compiled['plan']), $errors);
 
-            if ($compiled['errors'] !== []) {
-                return $this->failed($scenario, implode(' ', $compiled['errors']));
-            }
+                $response = $this->ai->prompt($this->agent, $prompt, AiCapability::Text, 'bdd_compiler');
+                $model = $response->meta->model ?? $model;
 
-            // Keep only unbound entries that name a REAL, grantable action —
-            // drop the model's noise (built-in seeds/probes it wrongly flagged,
-            // already-granted ops, or hallucinated class names). Without this a
-            // confused model could ask to "grant" seed.customer.
-            $realUnbound = array_values(array_filter(
-                $compiled['unbound'],
-                fn (array $entry): bool => $this->registry->isRequestableAction((string) ($entry['suggested_operation'] ?? '')),
-            ));
+                $structured = $response instanceof StructuredAgentResponse ? $response->toArray() : [];
+                $compiled = $this->agent->toPlan($structured);
 
-            // Genuine access gap → park for one-click granting.
-            if ($realUnbound !== []) {
-                return $this->needsAccess($scenario, array_values(array_unique(array_map(
-                    fn (array $entry): string => (string) $entry['suggested_operation'],
-                    $realUnbound,
-                ))), $realUnbound);
-            }
-
-            $validation = $this->validator->validate($compiled['plan']);
-
-            // Defense in depth: the agent bound an op that isn't actually granted.
-            if ($validation['ungranted'] !== []) {
-                return $this->needsAccess($scenario, $validation['ungranted'], array_map(
-                    fn (string $key): array => ['step_text' => '', 'suggested_operation' => $key, 'why' => 'Bound by the compiler but not granted.'],
-                    $validation['ungranted'],
+                // Genuine access gap → park for one-click granting (terminal).
+                $realUnbound = array_values(array_filter(
+                    $compiled['unbound'],
+                    fn (array $entry): bool => $this->registry->isRequestableAction((string) ($entry['suggested_operation'] ?? '')),
                 ));
+                if ($realUnbound !== []) {
+                    return $this->needsAccess($scenario, array_values(array_unique(array_map(
+                        fn (array $entry): string => (string) $entry['suggested_operation'],
+                        $realUnbound,
+                    ))), $realUnbound);
+                }
+
+                $validation = $this->validator->validate($compiled['plan']);
+
+                // Defense in depth: the agent bound an op that isn't granted (terminal).
+                if ($validation['ungranted'] !== []) {
+                    return $this->needsAccess($scenario, $validation['ungranted'], array_map(
+                        fn (string $key): array => ['step_text' => '', 'suggested_operation' => $key, 'why' => 'Bound by the compiler but not granted.'],
+                        $validation['ungranted'],
+                    ));
+                }
+
+                $errors = [...$compiled['errors'], ...$validation['errors']];
+
+                if ($errors === []) {
+                    $scenario->update([
+                        'status' => BddScenarioStatus::Ready,
+                        'compiled_plan' => $compiled['plan'],
+                        'compile_model' => $model,
+                    ]);
+
+                    return $scenario->refresh();
+                }
             }
 
-            if ($validation['errors'] !== []) {
-                return $this->failed($scenario, implode(' ', $validation['errors']));
-            }
-
-            $scenario->update([
-                'status' => BddScenarioStatus::Ready,
-                'compiled_plan' => $compiled['plan'],
-                'compile_model' => $response->meta->model ?? null,
-            ]);
+            // Both attempts produced an invalid plan.
+            return $this->failed($scenario, implode(' ', $errors));
         } catch (Throwable $e) {
             return $this->failed($scenario, $e->getMessage());
         }
-
-        return $scenario->refresh();
     }
 
     /**

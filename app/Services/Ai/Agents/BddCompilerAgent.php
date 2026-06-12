@@ -61,7 +61,14 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
         - Entities are referenced by $capture variables: give a step a short
           snake_case `capture` name and reference it later as "$name" (the
           entity itself) or "$name.field" (an attribute, e.g. "$r3.id").
-          NEVER write literal database ids.
+          NEVER write literal database ids. EVERY "$name" you reference MUST be
+          captured by an EARLIER step.
+        - Add any PREREQUISITE seeds the Gherkin leaves implicit. Actions need
+          supporting entities — e.g. creating an order requires a customer and
+          the inventory item(s) being ordered. If the scenario doesn't spell
+          them out, add the seed.* Given steps to create them first, then
+          reference their captures. (An order step always needs a $customer and
+          at least one inventory item.)
         - All money is integer minor units (€12.00 → 1200). Stock quantities in
           seeds are numeric strings in the item's storage unit.
         - Action parameters named like createdById are auto-filled with the
@@ -109,6 +116,23 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
             ."AVAILABLE OPERATIONS (bind steps to these):\n".implode("\n", $available)."\n\n"
             ."REQUESTABLE ACTIONS (NOT yet granted — if a When step needs one, copy its exact key into `unbound`; never bind it):\n".$requestableBlock."\n\n"
             ."GHERKIN:\n```gherkin\n".$gherkin."\n```";
+    }
+
+    /**
+     * A self-correction turn: re-issue the same compile with the validator's
+     * complaints about the previous attempt, so the model fixes them (most
+     * often a missing prerequisite seed or an undefined $reference).
+     *
+     * @param  list<string>  $errors
+     */
+    public function retryPrompt(string $gherkin, string $previousPlanJson, array $errors): string
+    {
+        return $this->userPrompt($gherkin)."\n\n"
+            .'YOUR PREVIOUS ATTEMPT WAS INVALID. Fix exactly these problems and '
+            .'return a corrected plan (add any missing prerequisite seed steps, '
+            ."and make sure every \$reference is captured by an earlier step):\n"
+            .'- '.implode("\n- ", $errors)."\n\n"
+            ."PREVIOUS PLAN:\n".$previousPlanJson;
     }
 
     /**
