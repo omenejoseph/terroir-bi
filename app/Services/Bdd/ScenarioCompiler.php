@@ -29,6 +29,7 @@ class ScenarioCompiler
         private readonly AiClient $ai,
         private readonly BddCompilerAgent $agent,
         private readonly PlanValidator $validator,
+        private readonly OperationRegistry $registry,
     ) {}
 
     public function compile(BddScenario $scenario): BddScenario
@@ -54,12 +55,21 @@ class ScenarioCompiler
                 return $this->failed($scenario, implode(' ', $compiled['errors']));
             }
 
-            // The agent reported steps it could not bind → ask for access.
-            if ($compiled['unbound'] !== []) {
+            // Keep only unbound entries that name a REAL, grantable action —
+            // drop the model's noise (built-in seeds/probes it wrongly flagged,
+            // already-granted ops, or hallucinated class names). Without this a
+            // confused model could ask to "grant" seed.customer.
+            $realUnbound = array_values(array_filter(
+                $compiled['unbound'],
+                fn (array $entry): bool => $this->registry->isRequestableAction((string) ($entry['suggested_operation'] ?? '')),
+            ));
+
+            // Genuine access gap → park for one-click granting.
+            if ($realUnbound !== []) {
                 return $this->needsAccess($scenario, array_values(array_unique(array_map(
                     fn (array $entry): string => (string) $entry['suggested_operation'],
-                    $compiled['unbound'],
-                ))), $compiled['unbound']);
+                    $realUnbound,
+                ))), $realUnbound);
             }
 
             $validation = $this->validator->validate($compiled['plan']);
