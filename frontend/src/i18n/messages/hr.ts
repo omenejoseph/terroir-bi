@@ -22,6 +22,13 @@ export const hr: Messages = {
     language: "Jezik",
     collapse: "Sažmi",
     expand: "Proširi",
+    dismiss: "Odbaci",
+  },
+  install: {
+    title: "Instalirajte Terroir BI",
+    description: "Dodajte aplikaciju na uređaj za brže korištenje preko cijelog zaslona.",
+    action: "Instaliraj aplikaciju",
+    iosHint: "Dodirnite gumb Dijeli, zatim „Dodaj na početni zaslon”.",
   },
   nav: {
     dashboard: "Nadzorna ploča",

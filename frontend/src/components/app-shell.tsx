@@ -31,6 +31,7 @@ import { Logo } from "@/components/logo";
 import { TenantSwitcher } from "@/components/tenant-switcher";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { NotificationsBell } from "@/components/notifications-bell";
+import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 
 interface NavItem {
   href: string;
@@ -233,7 +234,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="sticky top-0 z-20 hidden justify-end border-b border-border bg-background/70 px-4 py-2 backdrop-blur-xl md:flex sm:px-6 lg:px-8">
           <NotificationsBell />
         </div>
-        <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 sm:px-6 lg:px-8">{children}</div>
+        <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 sm:px-6 lg:px-8">
+          <PwaInstallPrompt />
+          {children}
+        </div>
       </main>
     </div>
   );
