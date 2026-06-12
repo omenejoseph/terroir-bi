@@ -37,6 +37,7 @@ final class ModuleRegistry
             Module::WorkOrders->value => [],
             Module::Team->value => ['members.view', 'members.manage', 'invitations.manage'],
             Module::Settings->value => ['settings.manage', 'translations.manage'],
+            Module::AiDataEntry->value => ['ai.use', 'ai.manage'],
         ];
     }
 
@@ -61,6 +62,7 @@ final class ModuleRegistry
             Module::WorkOrders->value => ['work-orders'],
             Module::Team->value => ['members', 'invitations'],
             Module::Settings->value => ['settings', 'translations'],
+            Module::AiDataEntry->value => ['ai-imports'],
         ];
     }
 

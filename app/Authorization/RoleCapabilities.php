@@ -42,6 +42,8 @@ final class RoleCapabilities
                 'suppliers.view',
                 'suppliers.manage',
                 'financials.view',
+                'ai.use',
+                'ai.manage',
                 // customers.delete, customers.tokens, inventory.delete, orders.delete,
                 // orders.backorder, finance.delete and suppliers.delete are ADMIN-only.
             ],
@@ -61,6 +63,8 @@ final class RoleCapabilities
                 'suppliers.view',
                 'suppliers.manage',
                 'financials.view',
+                'ai.use',
+                'ai.manage',
             ],
             TenantRole::Sales->value => [
                 'finance.view',

@@ -27,6 +27,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $due_date
  * @property string|null $supplier_id
  * @property string $created_by_id
+ * @property bool $is_ai_generated
+ * @property array<string, mixed>|null $ai_metadata
  */
 class Cost extends Model
 {
@@ -36,6 +38,7 @@ class Cost extends Model
     protected $fillable = [
         'date', 'total_amount', 'vat_amount', 'category', 'description', 'reference',
         'status', 'payment_method', 'notes', 'paid_at', 'due_date', 'supplier_id', 'created_by_id',
+        'is_ai_generated', 'ai_metadata',
     ];
 
     protected $attributes = [
@@ -52,6 +55,8 @@ class Cost extends Model
             'payment_method' => PaymentMethod::class,
             'paid_at' => 'datetime',
             'due_date' => 'datetime',
+            'is_ai_generated' => 'boolean',
+            'ai_metadata' => 'array',
         ];
     }
 

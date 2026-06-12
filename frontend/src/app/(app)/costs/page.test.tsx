@@ -114,8 +114,9 @@ describe("CostsPage", () => {
     renderWithProviders(<CostsPage />);
     const user = userEvent.setup();
     await screen.findByText("June electricity");
-    const selects = screen.getAllByLabelText("Set status");
-    await user.selectOptions(selects[0], "PAID");
+    // Expand the row to reveal its detail panel (status lives there now).
+    await user.click(screen.getAllByText("June electricity")[0]);
+    await user.selectOptions(await screen.findByLabelText("Set status"), "PAID");
 
     await waitFor(() => expect(patched).not.toBeNull());
     expect(patched).toMatchObject({ status: "PAID" });
@@ -133,12 +134,40 @@ describe("CostsPage", () => {
     renderWithProviders(<CostsPage />);
     const user = userEvent.setup();
     await screen.findByText("June electricity");
-    await user.click(screen.getAllByRole("button", { name: "Delete" })[0]);
+    // Expand the row, then delete from its detail panel.
+    await user.click(screen.getAllByText("June electricity")[0]);
+    await user.click(await screen.findByRole("button", { name: "Delete" }));
 
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Delete" }));
 
     await waitFor(() => expect(deleted).toBe(true));
+  });
+
+  it("edits a cost from its detail panel (PATCH includes fields + supplier)", async () => {
+    let patched: { description?: string | null; supplier_id?: string | null } | null = null;
+    server.use(
+      http.patch(`${API_URL}/costs/:id`, async ({ request, params }) => {
+        patched = (await request.json()) as { description?: string | null; supplier_id?: string | null };
+        return HttpResponse.json({ data: makeCost({ id: String(params.id) }) });
+      }),
+    );
+
+    renderWithProviders(<CostsPage />);
+    const user = userEvent.setup();
+    await screen.findByText("June electricity");
+    await user.click(screen.getAllByText("June electricity")[0]); // expand
+    await user.click(await screen.findByRole("button", { name: "Edit" }));
+
+    const desc = await screen.findByLabelText("Description");
+    await user.clear(desc);
+    await user.type(desc, "Updated note");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => {
+      expect(patched?.description).toBe("Updated note");
+      expect(patched?.supplier_id).toBe("sup_1"); // prefilled supplier sent on update
+    });
   });
 
   it("hides delete and status controls for a finance-view-only role and shows 403", async () => {

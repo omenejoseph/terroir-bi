@@ -14,6 +14,7 @@ import {
   Menu,
   Receipt,
   Settings,
+  Sparkles,
   TrendingUp,
   Truck,
   Users,
@@ -42,18 +43,51 @@ interface NavItem {
   module?: string;
 }
 
-const NAV: NavItem[] = [
-  { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard, module: "dashboard" },
-  { href: "/inventory", labelKey: "nav.inventory", icon: Boxes, module: "inventory" },
-  { href: "/orders", labelKey: "nav.orders", icon: ClipboardList, cap: "orders.view", module: "orders" },
-  { href: "/customers", labelKey: "nav.customers", icon: Users, module: "customers" },
-  { href: "/suppliers", labelKey: "nav.suppliers", icon: Truck, cap: "suppliers.view", module: "suppliers" },
-  { href: "/inflows", labelKey: "nav.inflows", icon: Banknote, cap: "finance.view", module: "inflows" },
-  { href: "/costs", labelKey: "nav.costs", icon: Receipt, cap: "finance.view", module: "costs" },
-  { href: "/cash-flow", labelKey: "nav.cashFlow", icon: TrendingUp, cap: "finance.view", module: "cash_flow" },
-  { href: "/work-orders", labelKey: "nav.tasks", icon: ListTodo, module: "work_orders" },
-  { href: "/team", labelKey: "nav.team", icon: UsersRound, cap: "members.view", module: "team" },
-  { href: "/settings", labelKey: "nav.settings", icon: Settings, cap: "settings.manage", module: "settings" },
+interface NavGroup {
+  /** i18n key for the section heading. */
+  labelKey: string;
+  items: NavItem[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    labelKey: "nav.groups.overview",
+    items: [{ href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard, module: "dashboard" }],
+  },
+  {
+    labelKey: "nav.groups.sales",
+    items: [
+      { href: "/orders", labelKey: "nav.orders", icon: ClipboardList, cap: "orders.view", module: "orders" },
+      { href: "/customers", labelKey: "nav.customers", icon: Users, module: "customers" },
+    ],
+  },
+  {
+    labelKey: "nav.groups.operations",
+    items: [
+      { href: "/inventory", labelKey: "nav.inventory", icon: Boxes, module: "inventory" },
+      { href: "/suppliers", labelKey: "nav.suppliers", icon: Truck, cap: "suppliers.view", module: "suppliers" },
+      { href: "/work-orders", labelKey: "nav.tasks", icon: ListTodo, module: "work_orders" },
+    ],
+  },
+  {
+    labelKey: "nav.groups.finance",
+    items: [
+      { href: "/inflows", labelKey: "nav.inflows", icon: Banknote, cap: "finance.view", module: "inflows" },
+      { href: "/costs", labelKey: "nav.costs", icon: Receipt, cap: "finance.view", module: "costs" },
+      { href: "/cash-flow", labelKey: "nav.cashFlow", icon: TrendingUp, cap: "finance.view", module: "cash_flow" },
+    ],
+  },
+  {
+    labelKey: "nav.groups.automation",
+    items: [{ href: "/ai-imports", labelKey: "nav.aiImports", icon: Sparkles, cap: "ai.use", module: "ai_data_entry" }],
+  },
+  {
+    labelKey: "nav.groups.workspace",
+    items: [
+      { href: "/team", labelKey: "nav.team", icon: UsersRound, cap: "members.view", module: "team" },
+      { href: "/settings", labelKey: "nav.settings", icon: Settings, cap: "settings.manage", module: "settings" },
+    ],
+  },
 ];
 
 // Desktop rail sizing (px).
@@ -220,9 +254,13 @@ function SidebarContent({
 }) {
   const { user, logout, can, hasModule } = useAuth();
   const { t } = useTranslation();
-  const nav = NAV.filter(
-    (item) => (!item.cap || can(item.cap)) && (!item.module || hasModule(item.module)),
-  );
+  const visible = (item: NavItem) =>
+    (!item.cap || can(item.cap)) && (!item.module || hasModule(item.module));
+  // Keep only groups that have at least one visible item.
+  const navGroups = NAV_GROUPS.map((group) => ({
+    labelKey: group.labelKey,
+    items: group.items.filter(visible),
+  })).filter((group) => group.items.length > 0);
 
   return (
     <div className="flex h-full flex-col">
@@ -249,39 +287,50 @@ function SidebarContent({
       </div>
 
       {/* Nav */}
-      <nav className={cn("min-h-0 flex-1 space-y-1 overflow-y-auto py-2", collapsed ? "px-2" : "px-3")}>
-        {nav.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              title={collapsed ? t(item.labelKey) : undefined}
-              className={cn(
-                "group relative flex items-center rounded-md text-sm font-medium transition-all duration-200 ease-out",
-                collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2",
-                active
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+      <nav className={cn("min-h-0 flex-1 overflow-y-auto py-2", collapsed ? "px-2" : "px-3")}>
+        {navGroups.map((group, gi) => (
+          <div key={group.labelKey} className="space-y-1">
+            {collapsed
+              ? gi > 0 && <div className="mx-1 my-2 border-t border-border/60" />
+              : (
+                <p className="px-3 pb-1 pt-3 text-xs font-medium uppercase tracking-wider text-muted-foreground/70">
+                  {t(group.labelKey)}
+                </p>
               )}
-            >
-              <span
-                className={cn(
-                  "absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary transition-all duration-200 ease-out",
-                  active ? "opacity-100" : "opacity-0 group-hover:opacity-40",
-                )}
-              />
-              <item.icon
-                className={cn(
-                  "size-4 shrink-0 transition-colors duration-200",
-                  active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
-                )}
-              />
-              {!collapsed && t(item.labelKey)}
-            </Link>
-          );
-        })}
+            {group.items.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  title={collapsed ? t(item.labelKey) : undefined}
+                  className={cn(
+                    "group relative flex items-center rounded-md text-sm font-medium transition-all duration-200 ease-out",
+                    collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2",
+                    active
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary transition-all duration-200 ease-out",
+                      active ? "opacity-100" : "opacity-0 group-hover:opacity-40",
+                    )}
+                  />
+                  <item.icon
+                    className={cn(
+                      "size-4 shrink-0 transition-colors duration-200",
+                      active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                    )}
+                  />
+                  {!collapsed && t(item.labelKey)}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* Footer */}

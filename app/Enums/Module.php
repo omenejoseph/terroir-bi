@@ -22,6 +22,7 @@ enum Module: string
     case WorkOrders = 'work_orders';
     case Team = 'team';
     case Settings = 'settings';
+    case AiDataEntry = 'ai_data_entry';
 
     /** Human label for the back office. */
     public function label(): string
@@ -38,6 +39,7 @@ enum Module: string
             self::WorkOrders => 'Work orders',
             self::Team => 'Team',
             self::Settings => 'Settings',
+            self::AiDataEntry => 'AI data entry',
         };
     }
 

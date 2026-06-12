@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AiImportController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\TenantSessionController;
 use App\Http\Controllers\Api\Billing\StripeWebhookController;
@@ -226,6 +227,20 @@ Route::prefix('v1')->group(function () {
         Route::middleware('can:finance.delete')->group(function () {
             Route::delete('inflows/{inflow}', [InflowController::class, 'destroy']);
             Route::delete('costs/{cost}', [CostController::class, 'destroy']);
+        });
+
+        // AI data entry — upload → async extraction → review → commit. Module
+        // gating (Module::AiDataEntry) is applied by the tenant group via the
+        // `ai-imports` path prefix in ModuleRegistry.
+        Route::middleware('can:ai.use')->group(function () {
+            Route::get('ai-imports', [AiImportController::class, 'index']);
+            Route::get('ai-imports/{aiImport}', [AiImportController::class, 'show']);
+        });
+        Route::middleware('can:ai.manage')->group(function () {
+            Route::post('ai-imports', [AiImportController::class, 'store']);
+            Route::patch('ai-imports/{aiImport}/lines/{line}', [AiImportController::class, 'updateLine']);
+            Route::post('ai-imports/{aiImport}/commit', [AiImportController::class, 'commit']);
+            Route::delete('ai-imports/{aiImport}', [AiImportController::class, 'destroy']);
         });
 
         // Customer-level consignment (rollup + FIFO sale/return across placements).

@@ -59,6 +59,20 @@ return [
             'max_bytes' => 20 * 1024 * 1024,
             'prefix' => 'costs/attachments',
         ],
+
+        // Source documents uploaded for AI data entry (bank statements, invoices,
+        // product/supplier lists). The AiImport stores the returned object key.
+        'ai_import' => [
+            'types' => [
+                'application/pdf',
+                'image/jpeg', 'image/png', 'image/webp',
+                'text/csv', 'text/plain',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ],
+            'max_bytes' => 25 * 1024 * 1024,
+            'prefix' => 'ai-imports/sources',
+        ],
     ],
 
     // MIME type → file extension (the only source of the stored object's extension).

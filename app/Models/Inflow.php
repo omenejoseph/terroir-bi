@@ -55,6 +55,8 @@ class Inflow extends Model
         'due_date',
         'received_at',
         'created_by_id',
+        'is_ai_generated',
+        'ai_metadata',
     ];
 
     protected $attributes = [
@@ -72,6 +74,8 @@ class Inflow extends Model
             'is_credit_note' => 'boolean',
             'due_date' => 'datetime',
             'received_at' => 'datetime',
+            'is_ai_generated' => 'boolean',
+            'ai_metadata' => 'array',
         ];
     }
 

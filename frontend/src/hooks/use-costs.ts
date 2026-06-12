@@ -51,6 +51,14 @@ export function useCreateCost() {
   });
 }
 
+export function useUpdateCost() {
+  const invalidate = useInvalidateCosts();
+  return useMutation({
+    mutationFn: (vars: { id: string; input: Partial<CostInput> }) => costsApi.update(vars.id, vars.input),
+    onSuccess: invalidate,
+  });
+}
+
 export function useUpdateCostStatus() {
   const invalidate = useInvalidateCosts();
   return useMutation({
