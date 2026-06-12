@@ -184,12 +184,34 @@ class BddCompilerAgent implements Agent, Conversational, HasStructuredOutput
             }
             $label = 'Step '.($index + 1);
 
+            // The *_json fields are declared as strings in the schema, but models
+            // (esp. via structured output) often return the nested object
+            // directly, or wrap the JSON in ``` fences. Accept all three.
             $decode = function (string $field) use ($raw, $label, &$errors): ?array {
                 $value = $raw[$field] ?? null;
-                if ($value === null || $value === '' || $value === 'null') {
+
+                if ($value === null || $value === '' || $value === 'null' || $value === []) {
                     return null;
                 }
-                $decoded = json_decode((string) $value, true);
+
+                // Model returned the object/array directly — use it as-is.
+                if (is_array($value)) {
+                    return $value;
+                }
+
+                if (! is_string($value)) {
+                    $errors[] = "{$label}: {$field} is not valid JSON.";
+
+                    return null;
+                }
+
+                $clean = trim($value);
+                if (str_starts_with($clean, '```')) {
+                    $clean = (string) preg_replace('/^```[a-zA-Z]*\s*|\s*```$/', '', $clean);
+                    $clean = trim($clean);
+                }
+
+                $decoded = json_decode($clean, true);
                 if (! is_array($decoded)) {
                     $errors[] = "{$label}: {$field} is not valid JSON.";
 
