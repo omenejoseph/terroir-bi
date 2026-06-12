@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\PriceController;
 use App\Http\Controllers\Api\PricingTierController;
 use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\PublicSupplierController;
+use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\SupplierController;
@@ -244,6 +245,10 @@ Route::prefix('v1')->group(function () {
         // In-app notification feed (any member).
         Route::get('notifications', [NotificationController::class, 'index']);
         Route::post('notifications/read', [NotificationController::class, 'read']);
+
+        // Web push: register/unregister this device for the authenticated user.
+        Route::post('push-subscriptions', [PushSubscriptionController::class, 'store']);
+        Route::delete('push-subscriptions', [PushSubscriptionController::class, 'destroy']);
 
         // Team task planning (any member). Static segments precede the {workOrder} wildcard.
         Route::get('work-orders/stats', [WorkOrderController::class, 'stats']);

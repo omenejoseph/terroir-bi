@@ -104,6 +104,14 @@ class User extends Authenticatable implements FilamentUser, HasName
             ->withTimestamps();
     }
 
+    /**
+     * @return HasMany<PushSubscription, $this>
+     */
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
     public function membershipFor(Tenant|string $tenant): ?Membership
     {
         $tenantId = $tenant instanceof Tenant ? $tenant->getKey() : $tenant;

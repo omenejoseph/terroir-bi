@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace App\Services\Notifications;
 
+use App\DataTransferObjects\PushMessageData;
 use App\Enums\NotificationType;
 use App\Enums\TenantRole;
+use App\Jobs\SendWebPushNotification;
 use App\Models\Membership;
 use App\Models\Notification;
 use App\Models\Order;
 
 /**
- * Persists the in-app notification feed and exposes order-event helpers. Browser
- * push / WhatsApp are best-effort transports to be layered on later; this writes
- * only the durable feed and is safe to call after an order transaction commits.
+ * Persists the in-app notification feed and fans the same event out to web push.
+ * The feed (Notification rows) is the durable source of truth; the push is a
+ * best-effort transport queued after each write. Notifications are path-free:
+ * they carry a `type` + a `data` bag of route params, and each client maps
+ * (type, data) to its own route — the server never emits client paths.
  */
 class Notifier
 {
@@ -21,8 +25,9 @@ class Notifier
 
     /**
      * @param  iterable<string|null>  $userIds
+     * @param  array<string, string>  $data
      */
-    public function notifyMany(iterable $userIds, NotificationType $type, string $title, ?string $body, ?string $link, ?string $actorId): void
+    public function notifyMany(iterable $userIds, NotificationType $type, string $title, ?string $body, array $data, ?string $actorId): void
     {
         $seen = [];
         foreach ($userIds as $userId) {
@@ -36,9 +41,16 @@ class Notifier
                 'type' => $type,
                 'title' => $title,
                 'body' => $body,
-                'link' => $link,
+                'data' => $data,
                 'actor_id' => $actorId,
             ]);
+
+            // Best-effort push to the user's devices; queued so it never blocks
+            // the caller (and needs no tenant context — subscriptions are global).
+            SendWebPushNotification::dispatch(
+                $userId,
+                new PushMessageData($title, $body, $type, $data),
+            );
         }
     }
 
@@ -52,7 +64,7 @@ class Notifier
             NotificationType::NewOrder,
             "New order {$order->order_number}",
             $order->customer?->company_name,
-            $this->link($order),
+            $this->orderData($order),
             $order->created_by_id,
         );
     }
@@ -66,7 +78,7 @@ class Notifier
             NotificationType::OrderStatus,
             "Order {$order->order_number} → {$order->status->value}",
             null,
-            $this->link($order),
+            $this->orderData($order),
             $actorId,
         );
     }
@@ -76,10 +88,10 @@ class Notifier
      */
     public function orderComment(Order $order, string $content, array $mentions, string $authorId): void
     {
-        $this->notifyMany($mentions, NotificationType::Mention, "Mentioned on {$order->order_number}", $content, $this->link($order), $authorId);
+        $this->notifyMany($mentions, NotificationType::Mention, "Mentioned on {$order->order_number}", $content, $this->orderData($order), $authorId);
 
         $followers = array_diff($this->followerIds($order), $mentions, [$authorId]);
-        $this->notifyMany($followers, NotificationType::Reply, "New comment on {$order->order_number}", $content, $this->link($order), $authorId);
+        $this->notifyMany($followers, NotificationType::Reply, "New comment on {$order->order_number}", $content, $this->orderData($order), $authorId);
     }
 
     /**
@@ -118,8 +130,14 @@ class Notifier
         return false;
     }
 
-    private function link(Order $order): string
+    /**
+     * Route params for an order notification. Clients map this to their own
+     * destination (web: /orders/{id}); the server stays path-agnostic.
+     *
+     * @return array<string, string>
+     */
+    private function orderData(Order $order): array
     {
-        return "/orders/{$order->getKey()}";
+        return ['order_id' => (string) $order->getKey()];
     }
 }

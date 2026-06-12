@@ -17,7 +17,7 @@ use Illuminate\Support\Carbon;
  * @property NotificationType $type
  * @property string $title
  * @property string|null $body
- * @property string|null $link
+ * @property array<string, string>|null $data
  * @property string|null $actor_id
  * @property bool $is_read
  * @property Carbon|null $created_at
@@ -32,7 +32,7 @@ class Notification extends Model
         'type',
         'title',
         'body',
-        'link',
+        'data',
         'actor_id',
         'is_read',
     ];
@@ -45,6 +45,7 @@ class Notification extends Model
     {
         return [
             'type' => NotificationType::class,
+            'data' => 'array',
             'is_read' => 'boolean',
         ];
     }

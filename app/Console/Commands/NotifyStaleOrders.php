@@ -43,7 +43,7 @@ class NotifyStaleOrders extends Command
                     NotificationType::OrderStatus,
                     "Order {$order->order_number} is still {$order->status->value}",
                     'Idle for over 24 hours',
-                    "/orders/{$order->getKey()}",
+                    ['order_id' => (string) $order->getKey()],
                     null,
                 );
 

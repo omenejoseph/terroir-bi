@@ -10,4 +10,5 @@ enum NotificationType: string
     case NewOrder = 'NEW_ORDER';
     case OrderStatus = 'ORDER_STATUS';
     case Reply = 'REPLY';
+    case Announcement = 'ANNOUNCEMENT';
 }

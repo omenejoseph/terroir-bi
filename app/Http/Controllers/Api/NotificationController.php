@@ -28,7 +28,7 @@ class NotificationController extends Controller
             'type' => $n->type->value,
             'title' => $n->title,
             'body' => $n->body,
-            'link' => $n->link,
+            'data' => (object) ($n->data ?? []),
             'is_read' => $n->is_read,
             'created_at' => $n->created_at?->toIso8601String(),
         ])->all();

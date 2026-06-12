@@ -43,4 +43,12 @@ return [
         'cancel_url' => env('STRIPE_CANCEL_URL', rtrim((string) env('FRONTEND_URL', 'http://localhost:3000'), '/').'/billing/cancel'),
     ],
 
+    // VAPID keys for Web Push (generate with `php artisan push:vapid`). The
+    // subject identifies the sender to push services (a mailto: or https URL).
+    'webpush' => [
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+        'subject' => env('VAPID_SUBJECT', env('APP_URL', 'http://localhost')),
+    ],
+
 ];
