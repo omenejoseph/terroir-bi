@@ -16,12 +16,15 @@ use App\Filament\Resources\PlatformAdmins\PlatformAdminResource;
 use App\Filament\Resources\Tenants\Actions\TenantBillingActions;
 use App\Filament\Resources\Tenants\Pages\CreateTenant;
 use App\Filament\Resources\Tenants\TenantResource;
+use App\Http\Middleware\SetBackOfficeLocale;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\TenantSubscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Livewire\Livewire;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\Concerns\InteractsWithTenancy;
 use Tests\TestCase;
 
@@ -139,6 +142,19 @@ class AdminResourcesTest extends TestCase
         $this->actingAs($admin)->get('/admin')
             ->assertSuccessful()
             ->assertSee('Welcome Ada');
+    }
+
+    public function test_back_office_forces_the_english_locale(): void
+    {
+        app()->setLocale('hr'); // the Croatian-first frontend default
+
+        $response = (new SetBackOfficeLocale)->handle(
+            Request::create('/admin'),
+            fn () => new Response('ok'),
+        );
+
+        $this->assertSame('en', app()->getLocale());
+        $this->assertSame('ok', $response->getContent());
     }
 
     public function test_back_office_has_a_favicon(): void

@@ -59,12 +59,12 @@ export default function SuppliersPage() {
               : t("suppliers.subtitleDefault")}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("suppliers.search")}
-            className="sm:max-w-xs"
+            className="w-full sm:w-auto sm:max-w-xs"
           />
           <Button variant="outline" onClick={() => router.push("/suppliers/orders")} className="shrink-0">
             <Truck className="size-4" />

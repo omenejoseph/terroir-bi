@@ -116,7 +116,7 @@ function InflowsView() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t("inflows.search")}
-          className="sm:max-w-xs"
+          className="w-full sm:w-auto sm:max-w-xs"
         />
       </div>
 

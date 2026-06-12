@@ -135,7 +135,7 @@ function CheckGrid() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t("inventory.check.searchPlaceholder")}
-          className="sm:max-w-xs"
+          className="w-full sm:w-auto sm:max-w-xs"
         />
         <div className="flex flex-wrap gap-1">
           {categories.map((c) => (

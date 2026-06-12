@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Demo Winery',
                 'slug' => 'demo',
                 'currency' => 'EUR',
-                'locale' => 'hr',
+                'locale' => 'en',
                 'admin' => [
                     'first_name' => 'Test',
                     'last_name' => 'User',

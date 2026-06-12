@@ -64,7 +64,7 @@ export function Combobox({
         type="button"
         id={id}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
       >
         <span className={cn("truncate", !value && "text-muted-foreground")}>
           {value || placeholder}
@@ -79,7 +79,7 @@ export function Combobox({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={placeholder}
-            className="w-full border-b border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none"
+            className="w-full border-b border-border bg-transparent px-3 py-2 text-base focus-visible:outline-none md:text-sm"
           />
           <ul className="max-h-56 overflow-auto p-1">
             {filtered.map((option) => (

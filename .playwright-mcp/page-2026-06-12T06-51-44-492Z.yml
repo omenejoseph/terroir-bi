@@ -1,0 +1,22 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - img "Terroir BI" [ref=e5]
+    - generic [ref=e6]: Prijava
+    - generic [ref=e7]: Koristite e-poštu i lozinku svog računa.
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - text: E-pošta
+        - textbox "E-pošta" [ref=e11]:
+          - /placeholder: vi@primjer.com
+      - generic [ref=e12]:
+        - text: Lozinka
+        - textbox "Lozinka" [ref=e13]:
+          - /placeholder: ••••••••
+      - button "Prijava" [ref=e14]
+    - generic [ref=e16]:
+      - img [ref=e17]
+      - generic [ref=e21]: Jezik
+      - generic [ref=e22]:
+        - button "Hrvatski" [pressed] [ref=e23]
+        - button "English" [ref=e24]

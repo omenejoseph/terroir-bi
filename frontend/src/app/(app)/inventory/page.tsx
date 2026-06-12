@@ -122,12 +122,12 @@ export default function InventoryPage() {
               : t("inventory.subtitleDefault")}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("inventory.searchPlaceholder")}
-            className="sm:max-w-xs"
+            className="w-full sm:w-auto sm:max-w-xs"
           />
           <Button
             variant="outline"

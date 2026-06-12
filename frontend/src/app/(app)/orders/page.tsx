@@ -71,12 +71,12 @@ export default function OrdersPage() {
             {meta ? t("orders.subtitleCount", { count: meta.total }) : t("orders.subtitleDefault")}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("orders.search")}
-            className="sm:max-w-xs"
+            className="w-full sm:w-auto sm:max-w-xs"
           />
           {can("financials.view") && (
             <Button variant="outline" onClick={() => router.push("/orders/analytics")} className="shrink-0">

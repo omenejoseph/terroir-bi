@@ -258,7 +258,7 @@ export default function CostsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t("costs.search")}
-          className="sm:max-w-xs"
+          className="w-full sm:w-auto sm:max-w-xs"
         />
       </div>
 

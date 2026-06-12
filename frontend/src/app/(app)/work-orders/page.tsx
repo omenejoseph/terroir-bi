@@ -109,12 +109,12 @@ export default function WorkOrdersPage() {
           <h1 className="text-2xl font-semibold tracking-tight">{t("tasks.title")}</h1>
           <p className="text-sm text-muted-foreground">{t("tasks.subtitle")}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("tasks.search")}
-            className="sm:max-w-xs"
+            className="w-full sm:w-auto sm:max-w-xs"
           />
           <Button onClick={() => setCreating((c) => !c)} className="shrink-0">
             <Plus className="size-4" />
@@ -302,7 +302,7 @@ function AssigneeField({ value, onChange }: { value: string; onChange: (v: strin
       <Label htmlFor="task_assignee" className="text-xs">
         {t("tasks.create.assignee")}
       </Label>
-      <Select id="task_assignee" value={value} onChange={(e) => onChange(e.target.value)} className="sm:max-w-xs">
+      <Select id="task_assignee" value={value} onChange={(e) => onChange(e.target.value)} className="w-full sm:w-auto sm:max-w-xs">
         <option value="">{t("tasks.create.unassigned")}</option>
         {members.map((m) => (
           <option key={m.user_id} value={m.user_id}>
