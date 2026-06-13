@@ -32,7 +32,9 @@ export const en = {
     title: "Install Terroir BI",
     description: "Add the app to your device for a faster, full-screen experience.",
     action: "Install app",
-    iosHint: "Tap the Share button, then “Add to Home Screen”.",
+    iosLead: "Add Terroir BI to your Home Screen:",
+    iosStep1: "Tap the Share button",
+    iosStep2: "Choose “Add to Home Screen”",
   },
   nav: {
     dashboard: "Dashboard",

@@ -50,4 +50,21 @@ describe("PwaInstallPrompt", () => {
     expect(screen.queryByText("Install Terroir BI")).not.toBeInTheDocument();
     expect(window.localStorage.getItem("terroir.pwa.install-dismissed")).toBe("true");
   });
+
+  it("shows the Share-sheet guide (no install button) on iOS", async () => {
+    const original = navigator.userAgent;
+    Object.defineProperty(navigator, "userAgent", {
+      value: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
+      configurable: true,
+    });
+    try {
+      renderWithProviders(<PwaInstallPrompt />);
+      // iOS gets the step-by-step guide, never a programmatic install button.
+      expect(await screen.findByText("Tap the Share button")).toBeInTheDocument();
+      expect(screen.getByText("Choose “Add to Home Screen”")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Install app" })).not.toBeInTheDocument();
+    } finally {
+      Object.defineProperty(navigator, "userAgent", { value: original, configurable: true });
+    }
+  });
 });

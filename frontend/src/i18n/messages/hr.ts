@@ -28,7 +28,9 @@ export const hr: Messages = {
     title: "Instalirajte Terroir BI",
     description: "Dodajte aplikaciju na uređaj za brže korištenje preko cijelog zaslona.",
     action: "Instaliraj aplikaciju",
-    iosHint: "Dodirnite gumb Dijeli, zatim „Dodaj na početni zaslon”.",
+    iosLead: "Dodajte Terroir BI na početni zaslon:",
+    iosStep1: "Dodirnite gumb Dijeli",
+    iosStep2: "Odaberite „Dodaj na početni zaslon”",
   },
   nav: {
     dashboard: "Nadzorna ploča",
