@@ -7,6 +7,7 @@ namespace App\Services\Bdd;
 use App\Authorization\MembershipContext;
 use App\Enums\AiCapability;
 use App\Enums\BddRunStatus;
+use App\Jobs\RunBddScenarioJob;
 use App\Models\BddScenario;
 use App\Models\BddScenarioRun;
 use App\Models\Membership;
@@ -20,6 +21,7 @@ use App\Services\Bdd\Tools\ThenTool;
 use App\Services\Bdd\Tools\WhenTool;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Laravel\Ai\Responses\AgentResponse;
 use RuntimeException;
 use Throwable;
@@ -30,6 +32,11 @@ use Throwable;
  * against a throwaway sandbox tenant. Every run calls the model — there is no
  * saved plan — and the model gets each tool result back immediately, so it
  * self-corrects argument mistakes within the run.
+ *
+ * Runs are asynchronous: queue() creates the run row in QUEUED state and
+ * dispatches RunBddScenarioJob, which calls execute(). While executing, every
+ * step streams a human-readable line to BddRunLog so the scenario page can
+ * poll a live log; the final copy is persisted on the run.
  *
  * Trust model: probes return real database state, infrastructure errors and
  * missing grants are detected IN CODE, and the full tool transcript is
@@ -59,18 +66,48 @@ class LiveScenarioRunner
         private readonly AiClient $ai,
         private readonly TenantContext $tenantContext,
         private readonly MembershipContext $membershipContext,
+        private readonly BddRunLog $liveLog,
     ) {}
 
+    /** Queue a run for background execution; the UI polls the run's live log. */
+    public function queue(BddScenario $scenario, ?string $triggeredById = null): BddScenarioRun
+    {
+        $run = $this->createRun($scenario, $triggeredById);
+
+        $this->liveLog->append((string) $run->getKey(), 'Run queued — waiting for a worker.');
+        RunBddScenarioJob::dispatch((string) $run->getKey());
+
+        return $run;
+    }
+
+    /** Create and execute a run synchronously (CLI and tests). */
     public function run(BddScenario $scenario, ?string $triggeredById = null): BddScenarioRun
     {
+        return $this->execute($this->createRun($scenario, $triggeredById));
+    }
+
+    /** Execute a QUEUED run now (normally from RunBddScenarioJob). */
+    public function execute(BddScenarioRun $run): BddScenarioRun
+    {
+        // Idempotency: a double-dispatched job must not re-run a finished run.
+        if (! $run->status->isInFlight()) {
+            return $run;
+        }
+
         $startedAt = hrtime(true);
+        $runId = (string) $run->getKey();
+        $scenario = $run->scenario()->firstOrFail();
+
+        $run->update(['status' => BddRunStatus::Running]);
+        $scenario->update(['last_run_status' => BddRunStatus::Running]);
+        $this->liveLog->append($runId, 'Run started.');
 
         if (! $scenario->isRunnable()) {
-            return $this->persist($scenario, BddRunStatus::Error, [], 'The scenario has no Gherkin to execute.', null, $startedAt, $triggeredById);
+            return $this->finalize($run, $scenario, BddRunStatus::Error, [], 'The scenario has no Gherkin to execute.', null, $startedAt);
         }
 
         if (! $this->ai->enabled()) {
-            return $this->persist($scenario, BddRunStatus::Error, [], 'AI is disabled — live runs need an enabled Text capability.', null, $startedAt, $triggeredById);
+            return $this->finalize($run, $scenario, BddRunStatus::Error, [], 'AI is disabled — live runs need an enabled Text capability.', null, $startedAt);
         }
 
         $status = BddRunStatus::Error;
@@ -97,7 +134,10 @@ class LiveScenarioRunner
             $this->membershipContext->set($membership);
 
             $context = new LiveExecutionContext($sandbox);
+            $context->onLog(fn (string $line) => $this->liveLog->append($runId, $line));
             $agent = $this->agent($context, $sandbox);
+
+            $this->liveLog->append($runId, 'Sandbox tenant created — handing the Gherkin to the model.');
 
             $prompted = true;
             /** @var AgentResponse $response */
@@ -115,6 +155,7 @@ class LiveScenarioRunner
             }
 
             $context->recordTranscript(['assistant' => (string) $response]);
+            $this->liveLog->append($runId, 'Model: '.Str::limit((string) $response, 240));
 
             $status = $context->verdict();
             $error = $context->error();
@@ -123,6 +164,7 @@ class LiveScenarioRunner
             $error = $e->getMessage();
         } finally {
             DB::rollBack();
+            $this->liveLog->append($runId, 'Sandbox rolled back.');
 
             // Restore whatever contexts were bound before the run.
             if ($previousTenant !== null) {
@@ -149,15 +191,34 @@ class LiveScenarioRunner
             $error = trim(($error ?? '').' Guard rail: sandbox tenant survived the rollback — investigate immediately.');
         }
 
-        return $this->persist(
+        return $this->finalize(
+            $run,
             $scenario,
             $status,
             $context?->stepResults() ?? [],
             $error,
             $context?->transcript(),
             $startedAt,
-            $triggeredById,
         );
+    }
+
+    /** The QUEUED run row the UI can immediately poll. */
+    private function createRun(BddScenario $scenario, ?string $triggeredById): BddScenarioRun
+    {
+        $run = BddScenarioRun::create([
+            'bdd_scenario_id' => $scenario->getKey(),
+            'status' => BddRunStatus::Queued,
+            'triggered_by_id' => $triggeredById,
+        ]);
+
+        $scenario->update([
+            'last_run_status' => BddRunStatus::Queued,
+            'last_run_at' => now(),
+        ]);
+
+        $this->liveLog->start((string) $run->getKey());
+
+        return $run;
     }
 
     /** The per-run agent: five tools sharing this run's context, inside this run's sandbox. */
@@ -173,28 +234,31 @@ class LiveScenarioRunner
     }
 
     /**
-     * Persist the run AFTER the rollback so the record survives.
+     * Persist the verdict AFTER the rollback so the record survives, including
+     * the final copy of the live log.
      *
      * @param  list<array<string, mixed>>  $stepResults
      * @param  list<array<string, mixed>>|null  $transcript
      */
-    private function persist(
+    private function finalize(
+        BddScenarioRun $run,
         BddScenario $scenario,
         BddRunStatus $status,
         array $stepResults,
         ?string $error,
         ?array $transcript,
         int $startedAt,
-        ?string $triggeredById,
     ): BddScenarioRun {
-        $run = BddScenarioRun::create([
-            'bdd_scenario_id' => $scenario->getKey(),
+        $runId = (string) $run->getKey();
+        $this->liveLog->append($runId, 'Verdict: '.$status->value.($error !== null ? ' — '.$error : ''));
+
+        $run->update([
             'status' => $status,
             'step_results' => $stepResults,
             'error' => $error,
             'transcript' => $transcript,
+            'logs' => $this->liveLog->lines($runId),
             'duration_ms' => (int) ((hrtime(true) - $startedAt) / 1_000_000),
-            'triggered_by_id' => $triggeredById,
         ]);
 
         $scenario->update([

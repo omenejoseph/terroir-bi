@@ -111,6 +111,9 @@ class LiveScenarioRunnerTest extends TestCase
         $this->assertSame(BddRunStatus::Pass, $reloaded->last_run_status);
         $this->assertNotNull($reloaded->last_run_at);
         $this->assertSame(1, AiUsageLog::query()->where('feature', 'bdd_live_run')->count());
+
+        // The streamed progress log was persisted with the verdict.
+        $this->assertStringContainsString('Verdict: PASS', implode("\n", $run->logs ?? []));
     }
 
     public function test_an_ai_judged_failure_reports_fail_with_the_observation(): void

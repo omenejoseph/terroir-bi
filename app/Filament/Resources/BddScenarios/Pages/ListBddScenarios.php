@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\BddScenarios\Pages;
 
-use App\Enums\BddRunStatus;
 use App\Filament\Resources\BddScenarios\BddScenarioResource;
 use App\Queries\Bdd\ListBddScenariosQuery;
 use App\Services\Bdd\CurrentOperator;
@@ -26,7 +25,7 @@ class ListBddScenarios extends ListRecords
                 ->icon(Heroicon::OutlinedPlay)
                 ->color('success')
                 ->requiresConfirmation()
-                ->modalDescription('An AI agent executes every active scenario live against a throwaway sandbox (always rolled back). Costs one AI call per scenario.')
+                ->modalDescription('Queues a background run for every active scenario: an AI agent executes each Gherkin live against a throwaway sandbox (always rolled back). Costs one AI call per scenario.')
                 ->action(function (): void {
                     $scenarios = app(ListBddScenariosQuery::class)->runnable();
 
@@ -37,22 +36,14 @@ class ListBddScenarios extends ListRecords
                     }
 
                     $runner = app(LiveScenarioRunner::class);
-                    $passed = 0;
-                    $failedTitles = [];
-
                     foreach ($scenarios as $scenario) {
-                        $run = $runner->run($scenario, CurrentOperator::id());
-                        if ($run->status === BddRunStatus::Pass) {
-                            $passed++;
-                        } else {
-                            $failedTitles[] = $scenario->title.' ('.$run->status->value.')';
-                        }
+                        $runner->queue($scenario, CurrentOperator::id());
                     }
 
                     Notification::make()
-                        ->title("{$passed}/{$scenarios->count()} scenarios passed")
-                        ->body($failedTitles === [] ? 'All green.' : 'Failing: '.implode('; ', $failedTitles))
-                        ->{$failedTitles === [] ? 'success' : 'danger'}()
+                        ->title($scenarios->count().' runs queued')
+                        ->body('Verdicts appear in the table as workers finish — it refreshes automatically.')
+                        ->success()
                         ->send();
                 }),
             CreateAction::make(),

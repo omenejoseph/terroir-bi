@@ -6,6 +6,7 @@ namespace App\Services\Bdd\Tools;
 
 use App\Services\Bdd\LiveExecutionContext;
 use App\Tenancy\Contracts\TenantContext;
+use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use RuntimeException;
@@ -41,10 +42,12 @@ abstract class BddTool implements Tool
         }
 
         $this->context->startStepTimer();
+        $this->context->log('▶ '.$this->name().' '.Str::limit((string) json_encode($request->toArray()), 180));
 
         try {
             $result = $this->run($request);
         } catch (\Throwable $e) {
+            $this->context->log('✖ '.$this->name().' aborted the run: '.$e->getMessage());
             $this->context->recordTranscript([
                 'tool' => $this->name(),
                 'arguments' => $request->toArray(),
@@ -54,6 +57,7 @@ abstract class BddTool implements Tool
             throw $e;
         }
 
+        $this->context->log('← '.Str::limit($result, 240));
         $this->context->recordTranscript([
             'tool' => $this->name(),
             'arguments' => $request->toArray(),
