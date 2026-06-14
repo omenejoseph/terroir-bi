@@ -62,7 +62,7 @@ final class CustomerData implements Arrayable, JsonSerializable
             'zip' => $c?->zip,
             'country' => $c?->country,
             'oib' => $c?->oib,
-            'customer_type' => $c?->customer_type,
+            'customer_type' => $c?->customer_type?->value,
             'notes' => $c?->notes,
             'is_active' => $this->isActive,
             'rebate_percent' => $this->rebatePercent,

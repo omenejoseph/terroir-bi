@@ -2,7 +2,7 @@ import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { MentionInput, type MentionMember } from "./mention-input";
-import { renderWithProviders, screen, userEvent, waitFor } from "@/test/utils";
+import { fireEvent, renderWithProviders, screen, userEvent, waitFor } from "@/test/utils";
 
 const MEMBERS: MentionMember[] = [
   { user_id: "usr_1", name: "Ada Lovelace", email: "ada@example.com" },
@@ -34,6 +34,22 @@ describe("MentionInput", () => {
 
     await user.click(screen.getByText("Ada Lovelace"));
     expect(box).toHaveValue("Hi @Ada Lovelace ");
+    await waitFor(() => expect(onMentions).toHaveBeenLastCalledWith(["usr_1"]));
+  });
+
+  it("selects on touch — a bare pointerdown inserts the mention (mobile)", async () => {
+    // On mobile the synthesized mousedown arrives after the textarea blur has
+    // already closed the dropdown, so selection must hang off pointerdown.
+    const onMentions = vi.fn();
+    renderWithProviders(<Harness onMentions={onMentions} />);
+
+    const box = screen.getByPlaceholderText("Write a comment…");
+    await userEvent.setup().type(box, "@ada");
+    const option = await screen.findByText("Ada Lovelace");
+
+    fireEvent.pointerDown(option);
+
+    expect(box).toHaveValue("@Ada Lovelace ");
     await waitFor(() => expect(onMentions).toHaveBeenLastCalledWith(["usr_1"]));
   });
 

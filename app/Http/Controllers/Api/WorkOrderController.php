@@ -30,6 +30,7 @@ class WorkOrderController extends Controller
         $tasks = $query->get([
             'status' => $request->query('status'),
             'assignee_id' => $request->query('assignee_id'),
+            'category' => $request->query('category'),
             'search' => $request->query('search'),
             'due_from' => $request->query('due_from'),
             'due_to' => $request->query('due_to'),

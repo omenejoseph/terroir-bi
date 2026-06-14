@@ -173,12 +173,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Link href="/dashboard" aria-label={APP_NAME}>
           <Logo className="size-9" />
         </Link>
-        <div className="flex items-center gap-1">
-          <NotificationsBell />
-          <Button variant="ghost" size="icon" aria-label="menu" onClick={() => setMobileOpen(true)}>
-            <Menu />
-          </Button>
-        </div>
+        <NotificationsBell />
       </header>
 
       {/* Mobile drawer */}
@@ -239,7 +234,51 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+
+      {/* Mobile bottom tab bar — primary destinations + a "More" sheet. */}
+      <MobileBottomNav pathname={pathname} onMore={() => setMobileOpen(true)} />
     </div>
+  );
+}
+
+/** App-style sticky bottom navigation for mobile: the first few destinations as
+ *  tabs, plus a "More" button that opens the full menu drawer. */
+function MobileBottomNav({ pathname, onMore }: { pathname: string; onMore: () => void }) {
+  const { can, hasModule } = useAuth();
+  const { t } = useTranslation();
+
+  const visible = (item: NavItem) =>
+    (!item.cap || can(item.cap)) && (!item.module || hasModule(item.module));
+  const primary = NAV_GROUPS.flatMap((g) => g.items).filter(visible).slice(0, 4);
+
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+
+  const cell = "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors";
+
+  return (
+    <nav
+      aria-label={t("nav.primary")}
+      className="fixed inset-x-0 bottom-0 z-30 flex items-stretch border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
+    >
+      {primary.map((item) => {
+        const active = isActive(item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={cn(cell, active ? "text-primary" : "text-muted-foreground")}
+          >
+            <item.icon className="size-5 shrink-0" />
+            <span className="max-w-full truncate px-0.5">{t(item.labelKey)}</span>
+          </Link>
+        );
+      })}
+      <button type="button" onClick={onMore} className={cn(cell, "text-muted-foreground")}>
+        <Menu className="size-5 shrink-0" />
+        <span>{t("nav.more")}</span>
+      </button>
+    </nav>
   );
 }
 
@@ -256,7 +295,7 @@ function SidebarContent({
   onToggle?: () => void;
   showClose?: boolean;
 }) {
-  const { user, logout, can, hasModule } = useAuth();
+  const { user, logout, can, hasModule, tenants } = useAuth();
   const { t } = useTranslation();
   const visible = (item: NavItem) =>
     (!item.cap || can(item.cap)) && (!item.module || hasModule(item.module));
@@ -285,10 +324,12 @@ function SidebarContent({
         )}
       </div>
 
-      {/* Org switcher */}
-      <div className={cn("pb-2", collapsed ? "px-2" : "px-3")}>
-        <TenantSwitcher compact={collapsed} />
-      </div>
+      {/* Org switcher — only when the account spans more than one organisation. */}
+      {tenants.length > 1 && (
+        <div className={cn("pb-2", collapsed ? "px-2" : "px-3")}>
+          <TenantSwitcher compact={collapsed} />
+        </div>
+      )}
 
       {/* Nav */}
       <nav className={cn("min-h-0 flex-1 overflow-y-auto py-2", collapsed ? "px-2" : "px-3")}>

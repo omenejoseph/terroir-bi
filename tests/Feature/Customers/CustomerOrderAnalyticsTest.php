@@ -87,7 +87,10 @@ class CustomerOrderAnalyticsTest extends TestCase
             // same quarter last year (8000) × (1 + 0.5)
             ->assertJsonPath('data.next_quarter_projection.minor', 12000)
             ->assertJsonPath('data.last_order_date', fn ($v) => is_string($v))
-            ->assertJsonPath('data.expected_next_order_date', fn ($v) => is_string($v));
+            ->assertJsonPath('data.expected_next_order_date', fn ($v) => is_string($v))
+            // Per-month forecast for the next 3 months (same month LY × YoY).
+            ->assertJsonCount(3, 'data.expected_next_3m')
+            ->assertJsonStructure(['data' => ['expected_next_3m' => [['month', 'last_year', 'expected']]]]);
     }
 
     public function test_never_ordered_customer_zeroes_out(): void

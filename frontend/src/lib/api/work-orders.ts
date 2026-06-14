@@ -14,6 +14,7 @@ export const workOrdersApi = {
     api.get<WorkOrder[]>("/work-orders", {
       status: query.status,
       assignee_id: query.assignee_id,
+      category: query.category,
       search: query.search,
       due_from: query.due_from,
       due_to: query.due_to,

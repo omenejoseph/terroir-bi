@@ -8,20 +8,18 @@ import { useAuth } from "@/lib/auth/context";
 import {
   useCreateCustomer,
   useCreatePricingTier,
-  useCustomerTypes,
   useDeleteCustomer,
   usePricingTiers,
   useUpdateCustomer,
 } from "@/hooks/use-customers";
 import { useTranslation } from "@/i18n/context";
-import type { Customer } from "@/lib/types";
+import { CUSTOMER_TYPES, type Customer, type CustomerType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { YesNoToggle } from "@/components/ui/yes-no-toggle";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { Combobox } from "@/components/ui/combobox";
 import { useConfirm } from "@/components/ui/confirm";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -35,7 +33,7 @@ interface FormState {
   zip: string;
   country: string;
   oib: string;
-  customer_type: string;
+  customer_type: CustomerType;
   pricing_tier_id: string;
   rebate_percent: string;
   hide_prices: boolean;
@@ -55,7 +53,7 @@ const EMPTY: FormState = {
   zip: "",
   country: "",
   oib: "",
-  customer_type: "",
+  customer_type: "WHOLESALE",
   pricing_tier_id: "",
   rebate_percent: "",
   hide_prices: false,
@@ -76,7 +74,7 @@ function toForm(customer: Customer): FormState {
     zip: customer.zip ?? "",
     country: customer.country ?? "",
     oib: customer.oib ?? "",
-    customer_type: customer.customer_type ?? "",
+    customer_type: customer.customer_type ?? "WHOLESALE",
     pricing_tier_id: customer.pricing_tier?.id ?? "",
     rebate_percent: customer.rebate_percent ?? "",
     hide_prices: customer.hide_prices,
@@ -109,7 +107,6 @@ export function CustomerForm({
   const remove = useDeleteCustomer();
   const createTier = useCreatePricingTier();
   const tiersQ = usePricingTiers();
-  const customerTypes = useCustomerTypes();
 
   const isEdit = customer !== null;
   const [form, setForm] = React.useState<FormState>(customer ? toForm(customer) : EMPTY);
@@ -144,7 +141,7 @@ export function CustomerForm({
       zip: trimmed(form.zip),
       country: trimmed(form.country),
       oib: trimmed(form.oib),
-      customer_type: trimmed(form.customer_type),
+      customer_type: form.customer_type,
       pricing_tier_id: form.pricing_tier_id || null,
       hide_prices: form.hide_prices,
       is_agency: form.is_agency,
@@ -264,15 +261,17 @@ export function CustomerForm({
               <Input id="oib" value={form.oib} onChange={(e) => set("oib", e.target.value)} />
             </Field>
             <Field id="customer_type" label={t("customers.form.customerType")} error={errors.customer_type}>
-              <Combobox
+              <Select
                 id="customer_type"
                 value={form.customer_type}
-                onChange={(v) => set("customer_type", v)}
-                options={customerTypes}
-                placeholder={t("customers.form.customerTypePlaceholder")}
-                createLabel={(value) => t("customers.form.typeCreate", { value })}
-                emptyLabel={t("customers.form.typeEmpty")}
-              />
+                onChange={(e) => set("customer_type", e.target.value as CustomerType)}
+              >
+                {CUSTOMER_TYPES.map((ct) => (
+                  <option key={ct} value={ct}>
+                    {t(`customers.type.${ct}`)}
+                  </option>
+                ))}
+              </Select>
             </Field>
           </div>
 

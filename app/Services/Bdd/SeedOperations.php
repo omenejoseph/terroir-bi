@@ -57,7 +57,7 @@ class SeedOperations
                     'company_name' => 'string (default generated)',
                     'rebate_percent' => 'number 0–100 (default 0)',
                     'exclude_from_stats' => 'bool — internal outlet flag (default false)',
-                    'customer_type' => 'string|null — e.g. "Retailer / Shop"',
+                    'customer_type' => 'enum|null — WHOLESALE | RETAIL | AGENCY | SHIPSHOP | OTHER',
                     'pricing_tier' => '$ref to a seed.pricing_tier capture (optional)',
                     'allow_single_bottle' => 'bool (default false)',
                 ],
@@ -183,7 +183,9 @@ class SeedOperations
             'email' => 'bdd-'.$this->uniq().'@sandbox.test',
             'rebate_percent' => (float) ($args['rebate_percent'] ?? 0),
             'exclude_from_stats' => (bool) ($args['exclude_from_stats'] ?? false),
-            'customer_type' => isset($args['customer_type']) ? (string) $args['customer_type'] : null,
+            'customer_type' => isset($args['customer_type'])
+                ? \App\Enums\CustomerType::tryFrom((string) $args['customer_type'])?->value
+                : null,
             'pricing_tier_id' => $tier instanceof PricingTier ? $tier->getKey() : null,
             'allow_single_bottle' => (bool) ($args['allow_single_bottle'] ?? false),
         ]);

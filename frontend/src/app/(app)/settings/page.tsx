@@ -5,22 +5,12 @@ import * as React from "react";
 import { useAuth } from "@/lib/auth/context";
 import { useTranslation } from "@/i18n/context";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs } from "@/components/ui/tabs";
 import { GeneralSettings } from "@/components/settings/general-settings";
-import { TranslationsEditor } from "@/components/settings/translations-editor";
 import { PushNotificationsCard } from "@/components/settings/push-notifications-card";
-
-type SettingsTab = "general" | "translations";
 
 export default function SettingsPage() {
   const { t } = useTranslation();
   const { can } = useAuth();
-  const [tab, setTab] = React.useState<SettingsTab>("general");
-
-  const tabs = [
-    { value: "general", label: t("settings.tabs.general") },
-    { value: "translations", label: t("settings.tabs.translations") },
-  ];
 
   return (
     <div className="space-y-6">
@@ -32,12 +22,9 @@ export default function SettingsPage() {
       {/* Per-device push preference — available to every user. */}
       <PushNotificationsCard />
 
-      {/* Organisation settings — admin only. */}
+      {/* Organisation settings — admin only. Translations are managed in the back office. */}
       {can("settings.manage") ? (
-        <>
-          <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as SettingsTab)} />
-          {tab === "general" ? <GeneralSettings /> : <TranslationsEditor />}
-        </>
+        <GeneralSettings />
       ) : (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">

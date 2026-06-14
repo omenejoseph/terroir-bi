@@ -20,7 +20,7 @@ import { CustomerOrdersSection } from "@/components/customers/customer-orders-se
 import { CustomPricingSection } from "@/components/customers/custom-pricing-section";
 import { OrderLinkSection } from "@/components/customers/order-link-section";
 
-type DetailTab = "overview" | "pricing" | "orders";
+type DetailTab = "overview" | "pricing" | "orders" | "consignment";
 
 /**
  * The full customer "360" — summary revenue cards + Overview / Custom pricing /
@@ -62,10 +62,12 @@ export function CustomerDetailPanel({
     await update.mutateAsync({ id: customer.id, input: { is_active: !customer.is_active } });
   }
 
+  const canViewOrders = can("orders.view");
   const tabs = [
     { value: "overview", label: t("customers.detailTabs.overview") },
     { value: "pricing", label: t("customers.detailTabs.pricing") },
     { value: "orders", label: t("customers.detailTabs.orders") },
+    ...(canViewOrders ? [{ value: "consignment", label: t("customers.detailTabs.consignment") }] : []),
   ];
 
   return (
@@ -148,7 +150,6 @@ export function CustomerDetailPanel({
                   </Button>
                 </div>
               )}
-              {can("orders.view") && <CustomerConsignmentSection customerId={customer.id} />}
             </div>
           )}
         </div>
@@ -160,6 +161,10 @@ export function CustomerDetailPanel({
 
       {tab === "orders" && (
         <CustomerOrdersSection customerId={customer.id} canViewFinancials={canFinancials} />
+      )}
+
+      {tab === "consignment" && canViewOrders && (
+        <CustomerConsignmentSection customerId={customer.id} />
       )}
     </div>
   );

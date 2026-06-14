@@ -1,17 +1,21 @@
 "use client";
 
 import * as React from "react";
-import { AlarmClock, AlertTriangle, Euro, ShoppingCart, Users, Wallet } from "lucide-react";
+import Link from "next/link";
 
 import { useAuth } from "@/lib/auth/context";
 import { useDashboard } from "@/hooks/use-dashboard";
 import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
+import type { DashboardPeriod } from "@/lib/dashboard-period";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { Tabs } from "@/components/ui/tabs";
-import { StatCard } from "@/components/dashboard/stat-card";
+import { PeriodSelector } from "@/components/dashboard/period-selector";
+import { ReorderRadar } from "@/components/dashboard/reorder-radar";
+import { RevenueCard } from "@/components/dashboard/revenue-card";
+import { RevenueChannels } from "@/components/dashboard/revenue-channels";
+import { OrderItemsPreview } from "@/components/orders/order-items-preview";
 import {
   ChartCard,
   DonutChart,
@@ -21,39 +25,47 @@ import {
   TopProductsChart,
 } from "@/components/dashboard/charts";
 
-const RANGES = ["7D", "30D", "90D", "1Y", "ALL"];
+/** Percentage change vs. the prior period; null when there's no comparable base. */
+function pctChange(current: number, previous: number | null): number | null {
+  if (previous == null || previous === 0) return null;
+  return Math.round(((current - previous) / previous) * 1000) / 10;
+}
 
 const STATUS_COLORS: Record<string, string> = {
-  received: "var(--color-primary)",
-  inProcess: "#d6a417",
-  readyToShip: "#3b82f6",
+  received: "#3b82f6",
+  inProcess: "#f59e0b",
+  readyToShip: "#a855f7",
   shipped: "#10b981",
 };
 
-const STATUS_VARIANT: Record<string, "default" | "secondary" | "success" | "outline"> = {
-  received: "secondary",
-  inProcess: "default",
-  readyToShip: "outline",
+const STATUS_VARIANT: Record<string, "info" | "warning" | "purple" | "success"> = {
+  received: "info",
+  inProcess: "warning",
+  readyToShip: "purple",
   shipped: "success",
 };
 
 export default function DashboardPage() {
   const { user, tenants, activeTenantId } = useAuth();
   const { t } = useTranslation();
-  const [range, setRange] = React.useState("30D");
+  const [period, setPeriod] = React.useState<DashboardPeriod>("mtd");
+  const [customRange, setCustomRange] = React.useState<{ from?: string; to?: string }>({});
 
-  const { data, isLoading } = useDashboard(range);
+  const { data, isLoading } = useDashboard({ period, from: customRange.from, to: customRange.to });
   const activeTenant = tenants.find((x) => x.tenant_id === activeTenantId);
 
   // Locale + org currency aware; money fields are integer minor units.
-  const { number: fmtNum, money, money2, moneyAxis } = useFormatters();
+  const { number: fmtNum, money2, moneyAxis } = useFormatters();
   const fmtNumber = { format: fmtNum };
 
-  const rangeTabs = RANGES.map((r) => ({ value: r, label: r === "ALL" ? t("dashboard.range.all") : r }));
+  const handlePeriodChange = (next: DashboardPeriod, from?: string, to?: string) => {
+    setPeriod(next);
+    setCustomRange(next === "custom" ? { from, to } : {});
+  };
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">
             {t("dashboard.welcome", { name: user?.first_name ?? "" })}
@@ -62,7 +74,13 @@ export default function DashboardPage() {
             {activeTenant ? activeTenant.name : t("dashboard.subtitle")}
           </p>
         </div>
-        <Tabs tabs={rangeTabs} value={range} onChange={setRange} />
+        <PeriodSelector
+          period={period}
+          customFrom={customRange.from}
+          customTo={customRange.to}
+          onChange={handlePeriodChange}
+          className="sm:items-end"
+        />
       </header>
 
       {isLoading || !data ? (
@@ -71,50 +89,43 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          {/* Summary stats */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            <StatCard
-              label={t("dashboard.stats.totalOrders")}
-              value={fmtNumber.format(data.stats.total_orders)}
-              icon={ShoppingCart}
-              accent="bg-rose-500/10 text-rose-500"
+          {/* Revenue summary */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <RevenueCard
+              label={t("dashboard.summary.today")}
+              value={money2(data.revenue_summary.today.current)}
+              comparisonValue={money2(data.revenue_summary.today.previous ?? 0)}
+              deltaPct={pctChange(data.revenue_summary.today.current, data.revenue_summary.today.previous)}
               delayMs={80}
             />
-            <StatCard
-              label={t("dashboard.stats.customers")}
-              value={fmtNumber.format(data.stats.customers)}
-              icon={Users}
-              accent="bg-violet-500/10 text-violet-500"
+            <RevenueCard
+              label={t("dashboard.summary.monthToDate")}
+              value={money2(data.revenue_summary.mtd.current)}
+              comparisonValue={money2(data.revenue_summary.mtd.previous ?? 0)}
+              deltaPct={pctChange(data.revenue_summary.mtd.current, data.revenue_summary.mtd.previous)}
               delayMs={160}
             />
-            <StatCard
-              label={t("dashboard.stats.revenue")}
-              value={money(data.stats.revenue)}
-              icon={Euro}
-              accent="bg-emerald-500/10 text-emerald-500"
+            <RevenueCard
+              label={t("dashboard.summary.yearToDate")}
+              value={money2(data.revenue_summary.ytd.current)}
+              comparisonValue={money2(data.revenue_summary.ytd.previous ?? 0)}
+              deltaPct={pctChange(data.revenue_summary.ytd.current, data.revenue_summary.ytd.previous)}
               delayMs={240}
             />
-            <StatCard
-              label={t("dashboard.stats.lowStock")}
-              value={fmtNumber.format(data.stats.low_stock)}
-              icon={AlertTriangle}
-              accent="bg-amber-500/10 text-amber-500"
+            <RevenueCard
+              label={t("dashboard.summary.total")}
+              value={money2(data.revenue_summary.total.current)}
+              caption={t("dashboard.summary.allSources")}
               delayMs={320}
             />
-            <StatCard
-              label={t("dashboard.stats.outstandingAr")}
-              value={money(data.stats.outstanding_ar)}
-              icon={Wallet}
-              accent="bg-sky-500/10 text-sky-500"
-              delayMs={400}
-            />
-            <StatCard
-              label={t("dashboard.stats.tasksOverdue")}
-              value={fmtNumber.format(data.stats.tasks_overdue)}
-              icon={AlarmClock}
-              accent="bg-orange-500/10 text-orange-500"
-              delayMs={480}
-            />
+          </div>
+
+          {/* Revenue by channel + reorder radar */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <RevenueChannels data={data.revenue_by_channel} delayMs={100} />
+            <div className="lg:col-span-2">
+              <ReorderRadar delayMs={120} />
+            </div>
           </div>
 
           {/* Orders + status */}
@@ -184,44 +195,40 @@ export default function DashboardPage() {
               style={{ animationDelay: "280ms" }}
               className="animate-fade-up border-border/60 lg:col-span-2"
             >
-              <CardContent className="space-y-3 pt-6">
-                <div className="flex items-center justify-between">
+              <CardContent className="space-y-1 pt-6">
+                <div className="flex items-center justify-between pb-2">
                   <h3 className="text-sm font-semibold">{t("dashboard.recent.title")}</h3>
-                  <button type="button" className="text-xs font-medium text-primary hover:underline">
+                  <Link href="/orders" className="text-xs font-medium text-primary hover:underline">
                     {t("dashboard.recent.viewAll")}
-                  </button>
+                  </Link>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-                      <tr>
-                        <th className="py-2 pr-3 font-medium">{t("dashboard.recent.order")}</th>
-                        <th className="py-2 pr-3 text-right font-medium">{t("dashboard.recent.items")}</th>
-                        <th className="py-2 pr-3 text-right font-medium">{t("dashboard.recent.total")}</th>
-                        <th className="py-2 pr-3 font-medium">{t("dashboard.recent.status")}</th>
-                        <th className="py-2 font-medium">{t("dashboard.recent.date")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.recent_orders.map((order) => (
-                        <tr key={order.id} className="border-b border-border last:border-0">
-                          <td className="py-2.5 pr-3">
-                            <p className="font-medium">#{order.id}</p>
-                            <p className="text-xs text-muted-foreground">{order.customer}</p>
-                          </td>
-                          <td className="py-2.5 pr-3 text-right tabular-nums">{order.items}</td>
-                          <td className="py-2.5 pr-3 text-right tabular-nums">{money2(order.total)}</td>
-                          <td className="py-2.5 pr-3">
-                            <Badge variant={STATUS_VARIANT[order.status] ?? "secondary"}>
-                              {t(`dashboard.status.${order.status}`)}
-                            </Badge>
-                          </td>
-                          <td className="py-2.5 text-muted-foreground">{order.date}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <ul className="divide-y divide-border">
+                  {data.recent_orders.map((order) => (
+                    <li key={order.id}>
+                      <Link
+                        href={`/orders/${order.id}`}
+                        className="-mx-2 flex items-start justify-between gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-muted/40"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">
+                            {order.order_number}
+                            <span className="ml-2 font-normal text-muted-foreground">{order.customer}</span>
+                          </p>
+                          <OrderItemsPreview items={order.items} className="mt-1" />
+                        </div>
+                        <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
+                          <span className="font-semibold tabular-nums">{money2(order.total)}</span>
+                          <Badge variant={STATUS_VARIANT[order.status] ?? "secondary"}>
+                            {t(`dashboard.status.${order.status}`)}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {[order.date, order.created_by].filter(Boolean).join(" · ")}
+                          </span>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
           </div>

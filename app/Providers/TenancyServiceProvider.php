@@ -6,7 +6,7 @@ namespace App\Providers;
 
 use App\Models\TranslationOverride;
 use App\Observers\TranslationOverrideObserver;
-use App\Services\Localization\TenantAwareTranslationLoader;
+use App\Services\Localization\OverrideTranslationLoader;
 use App\Services\Localization\TranslationService;
 use App\Services\Localization\TranslationServiceInterface;
 use App\Tenancy\Adapters\Stancl\StanclTenantAdapter;
@@ -32,11 +32,10 @@ class TenancyServiceProvider extends ServiceProvider
         // Translation overrides service.
         $this->app->singleton(TranslationServiceInterface::class, TranslationService::class);
 
-        // Decorate the translation loader so __() / trans() pick up DB overrides.
+        // Decorate the translation loader so __() / trans() pick up the global DB overrides.
         $this->app->extend('translation.loader', function (Loader $loader, $app) {
-            return new TenantAwareTranslationLoader(
+            return new OverrideTranslationLoader(
                 $loader,
-                $app->make(TenantContext::class),
                 $app->make(Cache::class),
             );
         });

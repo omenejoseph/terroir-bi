@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Tenancy;
 
-use App\Models\TranslationOverride;
+use App\Models\PricingTier;
 use App\Tenancy\Exceptions\CrossTenantException;
 use App\Tenancy\Exceptions\NoTenantContextException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,8 +12,8 @@ use Tests\Concerns\InteractsWithTenancy;
 use Tests\TestCase;
 
 /**
- * Exercises the tenant global scope via a tenant-owned model
- * (TranslationOverride). Users are global and intentionally not scoped.
+ * Exercises the tenant global scope via a tenant-owned model (PricingTier).
+ * Users are global and intentionally not scoped.
  */
 class TenantScopeTest extends TestCase
 {
@@ -24,25 +24,25 @@ class TenantScopeTest extends TestCase
     {
         $a = $this->createTenant();
         $this->actingAsTenant($a);
-        TranslationOverride::create(['locale' => 'hr', 'key' => 'a', 'value' => 'A']);
+        PricingTier::create(['name' => 'A']);
 
         $b = $this->createTenant();
         $this->actingAsTenant($b);
-        TranslationOverride::create(['locale' => 'hr', 'key' => 'b', 'value' => 'B']);
+        PricingTier::create(['name' => 'B']);
 
-        $this->assertSame(1, TranslationOverride::count());
-        $this->assertSame('b', TranslationOverride::firstOrFail()->key);
+        $this->assertSame(1, PricingTier::count());
+        $this->assertSame('B', PricingTier::firstOrFail()->name);
     }
 
     public function test_cross_tenant_find_returns_null(): void
     {
         $a = $this->createTenant();
         $this->actingAsTenant($a);
-        $rowA = TranslationOverride::create(['locale' => 'hr', 'key' => 'a', 'value' => 'A']);
+        $rowA = PricingTier::create(['name' => 'A']);
 
         $this->actingAsTenant($this->createTenant());
 
-        $this->assertNull(TranslationOverride::find($rowA->getKey()));
+        $this->assertNull(PricingTier::find($rowA->getKey()));
     }
 
     public function test_scope_fails_closed_when_no_tenant_is_bound(): void
@@ -51,7 +51,7 @@ class TenantScopeTest extends TestCase
 
         $this->expectException(NoTenantContextException::class);
 
-        TranslationOverride::count();
+        PricingTier::count();
     }
 
     public function test_tenant_id_is_assigned_automatically_on_create(): void
@@ -59,7 +59,7 @@ class TenantScopeTest extends TestCase
         $tenant = $this->createTenant();
         $this->actingAsTenant($tenant);
 
-        $row = TranslationOverride::create(['locale' => 'hr', 'key' => 'a', 'value' => 'A']);
+        $row = PricingTier::create(['name' => 'A']);
 
         $this->assertSame($tenant->getKey(), $row->tenant_id);
     }
@@ -70,7 +70,7 @@ class TenantScopeTest extends TestCase
 
         $this->expectException(NoTenantContextException::class);
 
-        $row = new TranslationOverride(['locale' => 'hr', 'key' => 'a', 'value' => 'A']);
+        $row = new PricingTier(['name' => 'A']);
         $row->save();
     }
 
@@ -82,7 +82,7 @@ class TenantScopeTest extends TestCase
 
         $this->expectException(CrossTenantException::class);
 
-        $row = new TranslationOverride(['locale' => 'hr', 'key' => 'a', 'value' => 'A']);
+        $row = new PricingTier(['name' => 'A']);
         $row->tenant_id = $b->getKey(); // not mass-assignable; set explicitly
         $row->save();
     }
@@ -91,12 +91,12 @@ class TenantScopeTest extends TestCase
     {
         $a = $this->createTenant();
         $this->actingAsTenant($a);
-        TranslationOverride::create(['locale' => 'hr', 'key' => 'a', 'value' => 'A']);
+        PricingTier::create(['name' => 'A']);
 
         $this->actingAsTenant($this->createTenant());
-        TranslationOverride::create(['locale' => 'hr', 'key' => 'b', 'value' => 'B']);
+        PricingTier::create(['name' => 'B']);
 
-        $this->assertSame(1, TranslationOverride::count());
-        $this->assertSame(2, TranslationOverride::withoutTenant()->count());
+        $this->assertSame(1, PricingTier::count());
+        $this->assertSame(2, PricingTier::withoutTenant()->count());
     }
 }

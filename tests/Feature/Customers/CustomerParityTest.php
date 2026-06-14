@@ -28,13 +28,13 @@ class CustomerParityTest extends TestCase
             'company_name' => 'Konoba Mare',
             'email' => 'mare@example.com',
             'oib' => '12345678901',
-            'customer_type' => 'RESTAURANT',
+            'customer_type' => 'RETAIL',
             'is_agency' => true,
             'allow_single_bottle' => true,
         ], $this->tenantHeader($tenant))
             ->assertCreated()
             ->assertJsonPath('data.oib', '12345678901')
-            ->assertJsonPath('data.customer_type', 'RESTAURANT')
+            ->assertJsonPath('data.customer_type', 'RETAIL')
             ->assertJsonPath('data.is_agency', true)
             ->assertJsonPath('data.allow_single_bottle', true)
             ->json('data.id');

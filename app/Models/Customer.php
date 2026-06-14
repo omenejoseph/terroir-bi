@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\CustomerType;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -24,7 +25,7 @@ use Illuminate\Support\Carbon;
  * @property bool $hide_prices
  * @property string|null $order_token
  * @property string|null $pricing_tier_id
- * @property string|null $customer_type
+ * @property CustomerType|null $customer_type
  * @property string|null $oib
  * @property bool $is_agency
  * @property bool $allow_single_bottle
@@ -65,6 +66,7 @@ class Customer extends Model
         'hide_prices' => false,
         'is_agency' => false,
         'allow_single_bottle' => false,
+        'customer_type' => CustomerType::Wholesale->value,
     ];
 
     protected function casts(): array
@@ -75,6 +77,7 @@ class Customer extends Model
             'hide_prices' => 'boolean',
             'is_agency' => 'boolean',
             'allow_single_bottle' => 'boolean',
+            'customer_type' => CustomerType::class,
             'rebate_percent' => 'decimal:2',
             'reorder_contacted_at' => 'datetime',
         ];

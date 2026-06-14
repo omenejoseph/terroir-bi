@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { BarChart3, ChevronDown, ClipboardCheck, Plus, TrendingDown } from "lucide-react";
+import { BarChart3, ChevronDown, ClipboardCheck, Package, Plus, TrendingDown } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
@@ -165,31 +165,7 @@ export default function InventoryPage() {
       </header>
 
       {/* Category tabs */}
-      <div className="flex flex-wrap gap-1 border-b border-border">
-        {tabs.map((tabItem) => {
-          const active = tab === tabItem.value;
-          return (
-            <button
-              key={tabItem.value}
-              type="button"
-              onClick={() => setTab(tabItem.value)}
-              aria-pressed={active}
-              className={cn(
-                "relative px-3 py-2 text-sm font-medium transition-colors",
-                active ? "text-primary" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {tabItem.label}
-              <span
-                className={cn(
-                  "absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary transition-opacity duration-200",
-                  active ? "opacity-100" : "opacity-0",
-                )}
-              />
-            </button>
-          );
-        })}
-      </div>
+      <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as CategoryTab)} />
 
       {isLoading && (
         <div className="flex items-center justify-center py-16">
@@ -245,7 +221,7 @@ export default function InventoryPage() {
 function InventoryItemCard({ item, canManage }: { item: InventoryItem; canManage: boolean }) {
   const { t } = useTranslation();
   const { can } = useAuth();
-  const { moneyObject, number } = useFormatters();
+  const { number } = useFormatters();
   const canPricing = can("pricing.view");
   const [open, setOpen] = React.useState(false);
   const [detailTab, setDetailTab] = React.useState<DetailTab>("overview");
@@ -288,22 +264,21 @@ function InventoryItemCard({ item, canManage }: { item: InventoryItem; canManage
         aria-expanded={open}
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
       >
-        <div className="min-w-0">
-          <p className="truncate font-medium">{item.name}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {item.sku}
-            {item.vintage ? ` · ${item.vintage}` : ""}
-          </p>
+        <div className="flex min-w-0 items-center gap-3">
+          <ItemThumb url={item.image_url} alt={item.name} />
+          <div className="min-w-0">
+            <p className="truncate font-medium">{item.name}</p>
+            {item.unit_size && (
+              <p className="truncate text-xs text-muted-foreground">{item.unit_size}</p>
+            )}
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-3 text-sm">
           <span className="tabular-nums">
             {stockText} {item.unit}
             {stockHint && <span className="text-muted-foreground"> ({stockHint})</span>}
           </span>
-          <span className="hidden tabular-nums text-muted-foreground sm:inline">
-            {moneyObject(item.default_price)}
-          </span>
-          <StatusBadges item={item} />
+          {!item.is_active && <Badge variant="secondary">{t("common.status.inactive")}</Badge>}
           <ChevronDown
             className={cn(
               "size-4 text-muted-foreground transition-transform duration-300",
@@ -346,14 +321,16 @@ function InventoryItemCard({ item, canManage }: { item: InventoryItem; canManage
   );
 }
 
-function StatusBadges({ item }: { item: InventoryItem }) {
-  const { t } = useTranslation();
+/** Small lead-image thumbnail for the list row; falls back to a package icon. */
+function ItemThumb({ url, alt }: { url?: string | null; alt: string }) {
   return (
-    <div className="flex flex-wrap gap-1">
-      <Badge variant={item.is_active ? "success" : "secondary"}>
-        {item.is_active ? t("common.status.active") : t("common.status.inactive")}
-      </Badge>
-      {item.is_for_sale && <Badge variant="outline">{t("common.forSale")}</Badge>}
-    </div>
+    <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt={alt} className="size-full object-cover" />
+      ) : (
+        <Package className="size-4 text-muted-foreground" aria-hidden />
+      )}
+    </span>
   );
 }

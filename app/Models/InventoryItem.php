@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * A product or material in the catalog.
@@ -152,6 +153,16 @@ class InventoryItem extends Model
     public function images(): HasMany
     {
         return $this->hasMany(InventoryImage::class);
+    }
+
+    /**
+     * The lead image (lowest sort order) — used for list thumbnails.
+     *
+     * @return HasOne<InventoryImage, $this>
+     */
+    public function firstImage(): HasOne
+    {
+        return $this->hasOne(InventoryImage::class)->orderBy('sort_order');
     }
 
     /**

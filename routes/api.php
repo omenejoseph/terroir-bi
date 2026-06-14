@@ -76,12 +76,8 @@ Route::prefix('v1')->group(function () {
         Route::get('settings', [SettingsController::class, 'show']);
         Route::patch('settings', [SettingsController::class, 'update'])->middleware('can:settings.manage');
 
-        // Localization — read for any member; writes require admin.
+        // Localization — read the global overrides; editing lives in the back office.
         Route::get('translations', [TranslationController::class, 'index']);
-        Route::middleware('can:translations.manage')->group(function () {
-            Route::put('translations', [TranslationController::class, 'upsert']);
-            Route::delete('translations', [TranslationController::class, 'destroy']);
-        });
 
         // Member management (admin).
         Route::get('members', [MemberController::class, 'index'])->middleware('can:members.view');

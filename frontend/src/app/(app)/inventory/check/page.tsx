@@ -19,6 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { Tabs } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 type Mode = "check" | "history";
@@ -39,21 +40,14 @@ export default function InventoryCheckPage() {
 
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">{t("inventory.check.title")}</h1>
-        <div className="flex rounded-md border border-border p-0.5 text-sm">
-          {(["check", "history"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMode(m)}
-              className={cn(
-                "rounded px-3 py-1 font-medium transition-colors",
-                mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-              )}
-            >
-              {t(m === "check" ? "inventory.check.tabCheck" : "inventory.check.tabHistory")}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          tabs={[
+            { value: "check", label: t("inventory.check.tabCheck") },
+            { value: "history", label: t("inventory.check.tabHistory") },
+          ]}
+          value={mode}
+          onChange={(v) => setMode(v as Mode)}
+        />
       </div>
 
       {mode === "check" ? <CheckGrid /> : <CheckHistory />}

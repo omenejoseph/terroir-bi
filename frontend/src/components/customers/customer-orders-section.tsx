@@ -12,11 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { OrderItemsPreview } from "@/components/orders/order-items-preview";
 
-const STATUS_VARIANT: Record<OrderStatus, "secondary" | "outline" | "success"> = {
-  RECEIVED: "secondary",
-  IN_PROCESS: "outline",
-  READY_TO_SHIP: "outline",
+const STATUS_VARIANT: Record<OrderStatus, "info" | "warning" | "purple" | "success"> = {
+  RECEIVED: "info",
+  IN_PROCESS: "warning",
+  READY_TO_SHIP: "purple",
   SHIPPED: "success",
 };
 
@@ -28,7 +29,7 @@ export function CustomerOrdersSection({
   canViewFinancials: boolean;
 }) {
   const { t } = useTranslation();
-  const { moneyObject, date, number } = useFormatters();
+  const { moneyObject, date, number, monthShort } = useFormatters();
   const analyticsQ = useCustomerOrderAnalytics(customerId, canViewFinancials);
   const ordersQ = useOrders({ customer_id: customerId });
 
@@ -78,6 +79,30 @@ export function CustomerOrdersSection({
         </div>
       )}
 
+      {canViewFinancials && a?.expected_next_3m && a.expected_next_3m.length > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="mb-3">
+              <h3 className="text-sm font-semibold">{t("customers.orders.next3mTitle")}</h3>
+              <p className="text-xs text-muted-foreground">{t("customers.orders.next3mSubtitle")}</p>
+            </div>
+            <ul className="divide-y divide-border">
+              {a.expected_next_3m.map((m) => (
+                <li key={m.month} className="flex items-center justify-between gap-3 py-2 text-sm">
+                  <span className="font-medium">{monthShort(`${m.month}-01`)}</span>
+                  <span className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground">
+                      {t("customers.orders.lastYearShort")} {moneyObject(m.last_year)}
+                    </span>
+                    <span className="font-semibold tabular-nums">{moneyObject(m.expected)}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardContent className="pt-6">
           <h3 className="mb-3 text-sm font-semibold">{t("customers.orders.historyTitle")}</h3>
@@ -93,21 +118,22 @@ export function CustomerOrdersSection({
                 <li key={order.id}>
                   <Link
                     href={`/orders/${order.id}`}
-                    className="flex items-center justify-between gap-3 py-2.5 transition-colors hover:text-foreground"
+                    className="-mx-2 flex items-start justify-between gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-muted/40"
                   >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{order.order_number}</p>
                       {order.created_at && (
                         <p className="truncate text-xs text-muted-foreground">
                           {date(order.created_at)}
                         </p>
                       )}
+                      <OrderItemsPreview items={order.items} className="mt-1" />
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex shrink-0 flex-col items-end gap-1">
                       <Badge variant={STATUS_VARIANT[order.status]}>
                         {t(`orders.status.${order.status}`)}
                       </Badge>
-                      <span className="text-sm font-medium tabular-nums">
+                      <span className="text-sm font-semibold tabular-nums">
                         {moneyObject(order.total_amount)}
                       </span>
                     </div>

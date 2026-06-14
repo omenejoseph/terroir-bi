@@ -33,7 +33,7 @@ final class WorkOrderData implements Arrayable, JsonSerializable
             'id' => $t->getKey(),
             'title' => $t->title,
             'description' => $t->description,
-            'category' => $t->category,
+            'category' => $t->category?->value,
             'priority' => $t->priority->value,
             'status' => $t->status->value,
             'start_date' => $t->start_date?->toIso8601String(),

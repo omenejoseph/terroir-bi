@@ -49,6 +49,64 @@ class DashboardTest extends TestCase
             ]);
     }
 
+    public function test_summary_returns_revenue_summary_and_resolves_period(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+
+        Sanctum::actingAs($admin);
+
+        $this->getJson('/api/v1/dashboard?period=mtd', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonPath('data.range', 'mtd')
+            ->assertJsonStructure([
+                'data' => [
+                    'revenue_summary' => [
+                        'today' => ['current', 'previous'],
+                        'mtd' => ['current', 'previous'],
+                        'ytd' => ['current', 'previous'],
+                        'total' => ['current'],
+                    ],
+                ],
+            ])
+            ->assertJsonPath('data.revenue_summary.total.previous', null);
+    }
+
+    public function test_summary_splits_revenue_by_customer_channel(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $wholesale = Customer::create(['company_name' => 'Big Distributor', 'email' => 'w@example.com', 'customer_type' => 'WHOLESALE']);
+        $retail = Customer::create(['company_name' => 'Corner Shop', 'email' => 'r@example.com', 'customer_type' => 'RETAIL']);
+        $wine = InventoryItem::create([
+            'name' => 'Plavac', 'sku' => 'PLV', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'sales_unit' => 'cases', 'current_stock' => '500.000', 'bottles_per_case' => 12,
+            'is_for_sale' => true, 'default_price' => 1000,
+        ]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $headers = $this->tenantHeader($tenant);
+
+        // Wholesale: 2 cases = 24000. Retail: 1 case = 12000.
+        $this->postJson('/api/v1/orders', [
+            'customer_id' => $wholesale->getKey(),
+            'items' => [['inventory_item_id' => $wine->getKey(), 'quantity' => 2, 'unit_type' => 'cases']],
+        ], $headers)->assertCreated();
+        $this->postJson('/api/v1/orders', [
+            'customer_id' => $retail->getKey(),
+            'items' => [['inventory_item_id' => $wine->getKey(), 'quantity' => 1, 'unit_type' => 'cases']],
+        ], $headers)->assertCreated();
+
+        $this->getJson('/api/v1/dashboard?period=ytd', $headers)
+            ->assertOk()
+            ->assertJsonPath('data.revenue_by_channel.wholesale', 24000)
+            ->assertJsonPath('data.revenue_by_channel.retail', 12000)
+            ->assertJsonPath('data.revenue_by_channel.agency', 0)
+            ->assertJsonPath('data.revenue_by_channel.total', 36000);
+    }
+
     public function test_summary_defaults_invalid_range(): void
     {
         $tenant = $this->createTenant();

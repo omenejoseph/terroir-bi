@@ -8,8 +8,9 @@ export interface TabItem {
 }
 
 /**
- * Controlled tab bar — a slim underline marks the active tab. Presentational and
- * token-driven; the caller owns the active value and renders the panel.
+ * Controlled tab bar — a segmented control where the active tab is a raised,
+ * filled pill (background + shadow + bolder text) so the selection reads at a
+ * glance. Presentational and token-driven; the caller owns the active value.
  */
 export function Tabs({
   tabs,
@@ -23,7 +24,10 @@ export function Tabs({
   className?: string;
 }) {
   return (
-    <div role="tablist" className={cn("flex flex-wrap gap-1 border-b border-border", className)}>
+    <div
+      role="tablist"
+      className={cn("inline-flex flex-wrap gap-1 rounded-lg bg-muted p-1", className)}
+    >
       {tabs.map((tab) => {
         const active = value === tab.value;
         return (
@@ -34,17 +38,13 @@ export function Tabs({
             aria-selected={active}
             onClick={() => onChange(tab.value)}
             className={cn(
-              "relative px-3 py-2 text-sm font-medium transition-colors",
-              active ? "text-primary" : "text-muted-foreground hover:text-foreground",
+              "rounded-md px-3 py-1.5 text-sm transition-all",
+              active
+                ? "bg-primary font-semibold text-primary-foreground shadow-sm"
+                : "font-medium text-muted-foreground hover:text-foreground",
             )}
           >
             {tab.label}
-            <span
-              className={cn(
-                "absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary transition-opacity duration-200",
-                active ? "opacity-100" : "opacity-0",
-              )}
-            />
           </button>
         );
       })}

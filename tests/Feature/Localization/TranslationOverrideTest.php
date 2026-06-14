@@ -31,19 +31,18 @@ class TranslationOverrideTest extends TestCase
         $this->assertSame('orders.missing', $this->service()->get('orders.missing', [], 'hr'));
     }
 
-    public function test_overrides_are_isolated_per_tenant(): void
+    public function test_overrides_are_global_across_tenants(): void
     {
         $a = $this->createTenant();
         $b = $this->createTenant();
 
         $this->actingAsTenant($a);
-        TranslationOverride::create(['locale' => 'hr', 'key' => 'k', 'value' => 'A value']);
+        TranslationOverride::create(['locale' => 'hr', 'key' => 'k', 'value' => 'Global value']);
+        $this->assertSame('Global value', $this->service()->get('k', [], 'hr'));
 
-        $this->actingAsTenant($a);
-        $this->assertSame('A value', $this->service()->get('k', [], 'hr'));
-
+        // The same override applies under a different tenant — translations are platform-wide.
         $this->actingAsTenant($b);
-        $this->assertSame('k', $this->service()->get('k', [], 'hr'));
+        $this->assertSame('Global value', $this->service()->get('k', [], 'hr'));
     }
 
     public function test_the_translation_loader_merges_overrides_for_json_translations(): void

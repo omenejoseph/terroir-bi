@@ -6,18 +6,15 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
 import { useMembers } from "@/hooks/use-team";
-import {
-  useCreateWorkOrder,
-  useWorkOrders,
-  useWorkOrderStats,
-} from "@/hooks/use-work-orders";
+import { useCreateWorkOrder, useWorkOrders } from "@/hooks/use-work-orders";
 import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
-import type { TaskPriority, WorkOrder } from "@/lib/types";
-import { TASK_PRIORITIES } from "@/lib/types";
+import type { TaskPriority, TaskStatus, WorkOrder, WorkOrderCategory } from "@/lib/types";
+import { TASK_PRIORITIES, TASK_STATUSES, WORK_ORDER_CATEGORIES } from "@/lib/types";
 import { addDays, addMonths, endOfWeek, startOfDay, startOfWeek } from "@/lib/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -29,19 +26,31 @@ import { WorkOrderDetailDialog } from "@/components/work-orders/work-order-detai
 
 type View = "board" | Granularity;
 
-/** Due-date horizons for the stat summary, mirroring the dashboard. */
-const STAT_RANGES = ["7D", "30D", "90D", "1Y", "ALL"];
+/** Local YYYY-MM-DD for prefilling a quick-add from a calendar day. */
+function isoDate(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
 
 export default function WorkOrdersPage() {
   const { t } = useTranslation();
+  const { can } = useAuth();
   const { date, monthYear } = useFormatters();
-  const [view, setView] = React.useState<View>("board");
+  const canViewMembers = can("members.view");
+
+  const [view, setView] = React.useState<View>("day");
   const [anchor, setAnchor] = React.useState<Date>(() => startOfDay(new Date()));
   const [selected, setSelected] = React.useState<WorkOrder | null>(null);
   const [search, setSearch] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
-  const [statsRange, setStatsRange] = React.useState("ALL");
   const [creating, setCreating] = React.useState(false);
+  const [createDate, setCreateDate] = React.useState<string | null>(null);
+
+  // Filters (applied client-side so the option lists stay complete).
+  const [filterStatus, setFilterStatus] = React.useState<TaskStatus | "">("");
+  const [filterAssignee, setFilterAssignee] = React.useState("");
+  const [filterCategory, setFilterCategory] = React.useState("");
 
   React.useEffect(() => {
     const id = setTimeout(() => setDebounced(search), 300);
@@ -49,12 +58,23 @@ export default function WorkOrdersPage() {
   }, [search]);
 
   const { data, isLoading, isError, error } = useWorkOrders(debounced ? { search: debounced } : {});
-  const statsQ = useWorkOrderStats(statsRange);
-  const rangeTabs = STAT_RANGES.map((r) => ({ value: r, label: r === "ALL" ? t("tasks.range.all") : r }));
+  const membersQ = useMembers();
+  const members = membersQ.data ?? [];
 
   const workOrders = React.useMemo(
     () => [...(data ?? [])].sort((a, b) => a.sort_order - b.sort_order),
     [data],
+  );
+
+  const filtered = React.useMemo(
+    () =>
+      workOrders.filter(
+        (w) =>
+          (!filterStatus || w.status === filterStatus) &&
+          (!filterAssignee || w.assignee?.id === filterAssignee) &&
+          (!filterCategory || w.category === filterCategory),
+      ),
+    [workOrders, filterStatus, filterAssignee, filterCategory],
   );
 
   // Keep the open dialog's work order in sync with refreshed list data.
@@ -102,6 +122,11 @@ export default function WorkOrdersPage() {
     }
   }
 
+  function addForDate(day: Date) {
+    setCreateDate(isoDate(day));
+    setCreating(true);
+  }
+
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -116,27 +141,83 @@ export default function WorkOrdersPage() {
             placeholder={t("tasks.search")}
             className="w-full sm:w-auto sm:max-w-xs"
           />
-          <Button onClick={() => setCreating((c) => !c)} className="shrink-0">
+          <Button
+            onClick={() => {
+              setCreateDate(null);
+              setCreating((c) => !c);
+            }}
+            className="shrink-0"
+          >
             <Plus className="size-4" />
             {t("tasks.create.open")}
           </Button>
         </div>
       </header>
 
-      {/* Stat summary with a due-date timeline filter. */}
-      <div className="space-y-3">
-        <Tabs tabs={rangeTabs} value={statsRange} onChange={setStatsRange} />
-        {statsQ.data && (
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-            <StatTile label={t("tasks.stats.todo")} value={statsQ.data.todo} />
-            <StatTile label={t("tasks.stats.inProgress")} value={statsQ.data.in_progress} />
-            <StatTile label={t("tasks.stats.done")} value={statsQ.data.done} />
-            <StatTile label={t("tasks.stats.overdue")} value={statsQ.data.overdue} accent />
-          </div>
+      {/* Filters: status, assignee, category. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Select
+          aria-label={t("tasks.filters.status")}
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as TaskStatus | "")}
+          className="h-9 w-auto"
+        >
+          <option value="">{t("tasks.filters.allStatuses")}</option>
+          {TASK_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {t(`tasks.status.${s}`)}
+            </option>
+          ))}
+        </Select>
+        {canViewMembers && (
+          <Select
+            aria-label={t("tasks.filters.assignee")}
+            value={filterAssignee}
+            onChange={(e) => setFilterAssignee(e.target.value)}
+            className="h-9 w-auto"
+          >
+            <option value="">{t("tasks.filters.allAssignees")}</option>
+            {members.map((m) => (
+              <option key={m.user_id} value={m.user_id}>
+                {m.name}
+              </option>
+            ))}
+          </Select>
         )}
+        <Select
+          aria-label={t("tasks.filters.category")}
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+          className="h-9 w-auto"
+        >
+          <option value="">{t("tasks.filters.allCategories")}</option>
+          {WORK_ORDER_CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {t(`tasks.category.${c}`)}
+            </option>
+          ))}
+        </Select>
       </div>
 
-      {creating && <QuickCreateRow onDone={() => setCreating(false)} />}
+      <Dialog
+        open={creating}
+        onOpenChange={(o) => {
+          if (!o) {
+            setCreating(false);
+            setCreateDate(null);
+          }
+        }}
+        title={t("tasks.create.title")}
+      >
+        <CreateWorkOrderForm
+          key={createDate ?? "new"}
+          initialDate={createDate ?? ""}
+          onDone={() => {
+            setCreating(false);
+            setCreateDate(null);
+          }}
+        />
+      </Dialog>
 
       {/* View switcher + date navigator */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -185,11 +266,13 @@ export default function WorkOrdersPage() {
         </Card>
       )}
 
-      {!isLoading && !isError && view === "board" && <WorkOrderBoard workOrders={workOrders} />}
+      {!isLoading && !isError && view === "board" && (
+        <WorkOrderBoard workOrders={filtered} allWorkOrders={workOrders} />
+      )}
 
       {!isLoading && !isError && view !== "board" && (
         <WorkOrderCalendar
-          workOrders={workOrders}
+          workOrders={filtered}
           granularity={view}
           anchor={anchor}
           onSelect={setSelected}
@@ -197,6 +280,7 @@ export default function WorkOrdersPage() {
             setAnchor(d);
             setView("day");
           }}
+          onAddForDate={addForDate}
         />
       )}
 
@@ -205,27 +289,18 @@ export default function WorkOrdersPage() {
   );
 }
 
-function StatTile({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className={`mt-1 text-2xl font-semibold tabular-nums ${accent ? "text-destructive" : ""}`}>
-          {value}
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function QuickCreateRow({ onDone }: { onDone: () => void }) {
+/** The "new work order" form, shown inside the create modal. */
+function CreateWorkOrderForm({ initialDate, onDone }: { initialDate: string; onDone: () => void }) {
   const { t } = useTranslation();
   const { can } = useAuth();
   const create = useCreateWorkOrder();
   const canViewMembers = can("members.view");
+  const membersQ = useMembers();
+  const members = membersQ.data ?? [];
 
   const [title, setTitle] = React.useState("");
-  const [dueDate, setDueDate] = React.useState("");
+  const [dueDate, setDueDate] = React.useState(initialDate);
+  const [category, setCategory] = React.useState<WorkOrderCategory | "">("");
   const [priority, setPriority] = React.useState<TaskPriority>("MEDIUM");
   const [assigneeId, setAssigneeId] = React.useState("");
 
@@ -236,80 +311,74 @@ function QuickCreateRow({ onDone }: { onDone: () => void }) {
       title: title.trim(),
       priority,
       ...(dueDate ? { due_date: dueDate } : {}),
+      ...(category ? { category } : {}),
       ...(assigneeId ? { assignee_id: assigneeId } : {}),
     });
-    setTitle("");
-    setDueDate("");
-    setPriority("MEDIUM");
-    setAssigneeId("");
     onDone();
   }
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 gap-3 sm:grid-cols-[2fr_1fr_1fr_auto] sm:items-end"
-        >
-          <div className="space-y-1">
-            <Label htmlFor="task_title" className="text-xs">
-              {t("tasks.create.titleLabel")}
-            </Label>
-            <Input id="task_title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="task_due" className="text-xs">
-              {t("tasks.create.dueDate")}
-            </Label>
-            <Input id="task_due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="task_priority" className="text-xs">
-              {t("tasks.create.priority")}
-            </Label>
-            <Select id="task_priority" value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
-              {TASK_PRIORITIES.map((p) => (
-                <option key={p} value={p}>
-                  {t(`tasks.priority.${p}`)}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-1.5">
+        <Label htmlFor="task_title">{t("tasks.create.titleLabel")}</Label>
+        {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
+        <Input id="task_title" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="task_due">{t("tasks.create.dueDate")}</Label>
+          <Input id="task_due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="task_category">{t("tasks.create.category")}</Label>
+          <Select
+            id="task_category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value as WorkOrderCategory | "")}
+          >
+            <option value="">{t("tasks.create.noCategory")}</option>
+            {WORK_ORDER_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {t(`tasks.category.${c}`)}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="task_priority">{t("tasks.create.priority")}</Label>
+          <Select id="task_priority" value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
+            {TASK_PRIORITIES.map((p) => (
+              <option key={p} value={p}>
+                {t(`tasks.priority.${p}`)}
+              </option>
+            ))}
+          </Select>
+        </div>
+        {canViewMembers && (
+          <div className="space-y-1.5">
+            <Label htmlFor="task_assignee">{t("tasks.create.assignee")}</Label>
+            <Select id="task_assignee" value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)}>
+              <option value="">{t("tasks.create.unassigned")}</option>
+              {members.map((m) => (
+                <option key={m.user_id} value={m.user_id}>
+                  {m.name}
                 </option>
               ))}
             </Select>
           </div>
-          <div className="flex gap-2">
-            <Button type="submit" disabled={create.isPending || !title.trim()}>
-              {create.isPending ? <Spinner /> : <Plus className="size-4" />}
-              {t("tasks.create.submit")}
-            </Button>
-            <Button type="button" variant="outline" onClick={onDone}>
-              {t("tasks.create.cancel")}
-            </Button>
-          </div>
-          {canViewMembers && <AssigneeField value={assigneeId} onChange={setAssigneeId} />}
-        </form>
-      </CardContent>
-    </Card>
-  );
-}
+        )}
+      </div>
 
-function AssigneeField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const { t } = useTranslation();
-  const membersQ = useMembers();
-  const members = membersQ.data ?? [];
-
-  return (
-    <div className="space-y-1 sm:col-span-4">
-      <Label htmlFor="task_assignee" className="text-xs">
-        {t("tasks.create.assignee")}
-      </Label>
-      <Select id="task_assignee" value={value} onChange={(e) => onChange(e.target.value)} className="w-full sm:w-auto sm:max-w-xs">
-        <option value="">{t("tasks.create.unassigned")}</option>
-        {members.map((m) => (
-          <option key={m.user_id} value={m.user_id}>
-            {m.name}
-          </option>
-        ))}
-      </Select>
-    </div>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="outline" onClick={onDone}>
+          {t("tasks.create.cancel")}
+        </Button>
+        <Button type="submit" disabled={create.isPending || !title.trim()}>
+          {create.isPending ? <Spinner /> : <Plus className="size-4" />}
+          {t("tasks.create.submit")}
+        </Button>
+      </div>
+    </form>
   );
 }

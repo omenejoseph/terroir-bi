@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Customers;
 
+use App\Enums\CustomerType;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -38,7 +39,7 @@ class UpdateCustomerRequest extends FormRequest
             'zip' => ['sometimes', 'nullable', 'string'],
             'country' => ['sometimes', 'nullable', 'string'],
             'oib' => ['sometimes', 'nullable', 'string', 'max:50'],
-            'customer_type' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'customer_type' => ['sometimes', 'nullable', Rule::enum(CustomerType::class)],
             'notes' => ['sometimes', 'nullable', 'string'],
             'is_active' => ['sometimes', 'boolean'],
             'rebate_percent' => ['sometimes', 'numeric', 'min:0', 'max:100'],

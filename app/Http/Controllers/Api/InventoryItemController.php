@@ -14,6 +14,7 @@ use App\Models\InventoryItem;
 use App\Queries\InventoryAnalyticsQuery;
 use App\Queries\InventoryTaxonomyQuery;
 use App\Queries\ListInventoryItemsQuery;
+use App\Services\Uploads\PresignedUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -31,7 +32,7 @@ class InventoryItemController extends Controller
         return response()->json(['data' => $query->get()]);
     }
 
-    public function index(Request $request, ListInventoryItemsQuery $query): JsonResponse
+    public function index(Request $request, ListInventoryItemsQuery $query, PresignedUploadService $uploads): JsonResponse
     {
         $paginator = $query->paginate([
             'search' => $request->query('search'),
@@ -41,9 +42,18 @@ class InventoryItemController extends Controller
             'sellable' => $request->boolean('sellable'),
         ]);
 
+        // Lead image for the list thumbnail (one query for the whole page).
+        $paginator->getCollection()->loadMissing('firstImage');
+
         return response()->json([
             'data' => array_map(
-                fn (InventoryItem $item) => InventoryItemData::fromModel($item)->toArray(),
+                function (InventoryItem $item) use ($uploads): array {
+                    $data = InventoryItemData::fromModel($item)->toArray();
+                    $key = $item->firstImage?->object_key;
+                    $data['image_url'] = $key !== null ? $uploads->readUrl($key) : null;
+
+                    return $data;
+                },
                 $paginator->items(),
             ),
             'meta' => [

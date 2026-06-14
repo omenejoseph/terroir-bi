@@ -1,27 +1,16 @@
 import { api } from "@/lib/api/client";
 
 /**
- * Tenant-managed translation overrides. GET /translations?lang=xx returns the
- * overrides for a locale. Shape is left loose because the backend keys its own
- * namespaces (auth.*, iam.*, …); we coerce to a flat key→value map so admins can
- * also override any frontend UI key by matching its dot-path.
+ * Global translation overrides (managed in the back office). GET
+ * /translations?lang=xx returns the overrides for a locale, which the frontend
+ * overlays on its bundled catalogue. Shape is left loose because the backend
+ * keys its own namespaces (auth.*, iam.*, …); we coerce to a flat key→value map.
  */
 export const translationsApi = {
   overrides: async (locale: string): Promise<Record<string, string>> => {
     const raw = await api.get<unknown>("/translations", { lang: locale });
     return flatten(raw);
   },
-
-  /** PUT /translations — set an override for a (locale, key). ADMIN only. */
-  update: (locale: string, key: string, value: string) =>
-    api.put<{ id: string; locale: string; key: string; value: string }>("/translations", {
-      locale,
-      key,
-      value,
-    }),
-
-  /** DELETE /translations — clear an override, reverting to the bundled string. */
-  remove: (locale: string, key: string) => api.delete<void>("/translations", { locale, key }),
 };
 
 /** Flatten a possibly-nested override payload into dot-path → string. */

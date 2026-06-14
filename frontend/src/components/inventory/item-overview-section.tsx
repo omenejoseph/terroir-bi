@@ -4,6 +4,7 @@ import * as React from "react";
 import { Pencil, Power } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
+import { useAuth } from "@/lib/auth/context";
 import { useUpdateInventoryItem } from "@/hooks/use-inventory";
 import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
@@ -29,9 +30,13 @@ export function ItemOverviewSection({
   canManage: boolean;
 }) {
   const { t } = useTranslation();
+  const { hasRole } = useAuth();
   const { moneyObject } = useFormatters();
   const update = useUpdateInventoryItem();
   const confirm = useConfirm();
+
+  // Editing and (de)activation are reserved for admins; other managers stay read-only here.
+  const canEdit = canManage && hasRole("ADMIN");
 
   const yesNo = (v: boolean) => (v ? t("common.yes") : t("common.no"));
   const packaged = isPackagedUnit(item.unit);
@@ -155,7 +160,7 @@ export function ItemOverviewSection({
                 </span>
               </Detail>
             </dl>
-            {canManage && (
+            {canEdit && (
               <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
                 <Button
                   variant="outline"

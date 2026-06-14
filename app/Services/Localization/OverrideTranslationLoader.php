@@ -5,23 +5,19 @@ declare(strict_types=1);
 namespace App\Services\Localization;
 
 use App\Models\TranslationOverride;
-use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Contracts\Translation\Loader;
 
 /**
  * Decorates Laravel's translation loader so JSON-style translations
- * (__('Some string')) are transparently overlaid with the current tenant's DB
- * overrides. File-group translations (trans('group.key')) pass straight through.
- *
- * Overrides are cached per tenant+locale (manual prefixing, independent of any
- * tenancy cache bootstrapper).
+ * (__('Some string')) are transparently overlaid with the global DB overrides
+ * (managed in the back office). File-group translations (trans('group.key'))
+ * pass straight through. Overrides are cached per locale.
  */
-class TenantAwareTranslationLoader implements Loader
+class OverrideTranslationLoader implements Loader
 {
     public function __construct(
         private readonly Loader $inner,
-        private readonly TenantContext $tenant,
         private readonly Cache $cache,
     ) {}
 
@@ -33,7 +29,7 @@ class TenantAwareTranslationLoader implements Loader
         $base = $this->inner->load($locale, $group, $namespace);
 
         // Only JSON translations (the '*' group) are overlaid with overrides.
-        if ($group === '*' && ($namespace === null || $namespace === '*') && $this->tenant->check()) {
+        if ($group === '*' && ($namespace === null || $namespace === '*')) {
             return array_merge($base, $this->overrides($locale));
         }
 
@@ -61,7 +57,7 @@ class TenantAwareTranslationLoader implements Loader
     private function overrides(string $locale): array
     {
         return $this->cache->rememberForever(
-            "i18n:{$this->tenant->id()}:{$locale}",
+            "i18n:overrides:{$locale}",
             fn (): array => TranslationOverride::query()
                 ->where('locale', $locale)
                 ->pluck('value', 'key')

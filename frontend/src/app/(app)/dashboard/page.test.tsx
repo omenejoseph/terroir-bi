@@ -9,24 +9,23 @@ describe("DashboardPage", () => {
     seedLocale("en");
   });
 
-  it("greets the user and renders the summary cards from the API", async () => {
+  it("greets the user and renders the revenue summary cards from the API", async () => {
     renderWithProviders(<DashboardPage />);
 
     expect(await screen.findByText("Welcome back, Ada")).toBeInTheDocument();
-    expect(await screen.findByText("Total Orders")).toBeInTheDocument();
-    expect(screen.getByText("Customers")).toBeInTheDocument();
-    expect(screen.getByText("Low Stock")).toBeInTheDocument();
-    expect(screen.getAllByText("Revenue").length).toBeGreaterThan(0);
+    expect(await screen.findByText("Month-to-date")).toBeInTheDocument();
+    expect(screen.getByText("Year-to-date")).toBeInTheDocument();
+    expect(screen.getByText("All revenue sources")).toBeInTheDocument();
   });
 
-  it("renders the outstanding A/R and overdue task stat cards", async () => {
+  it("renders the period selector and the year-over-year comparison", async () => {
     renderWithProviders(<DashboardPage />);
 
-    expect(await screen.findByText("Outstanding A/R")).toBeInTheDocument();
-    expect(screen.getByText("2.500 €")).toBeInTheDocument();
-    expect(screen.getByText("Overdue tasks")).toBeInTheDocument();
-    // tasks_overdue fixture value is 3 (low_stock is also 3, so expect both).
-    expect(screen.getAllByText("3").length).toBeGreaterThanOrEqual(2);
+    // Default period is MTD; its chip is pressed.
+    expect(await screen.findByRole("button", { name: "MTD" })).toHaveAttribute("aria-pressed", "true");
+    // Today's revenue (12.500) vs last year (10.000) → +25.0%; YTD (24.860 vs 21.000) → +18.4%.
+    expect(screen.getByText("+25.0%")).toBeInTheDocument();
+    expect(screen.getByText("+18.4%")).toBeInTheDocument();
   });
 
   it("renders the chart sections and recent orders", async () => {
@@ -37,14 +36,50 @@ describe("DashboardPage", () => {
     expect(screen.getByText("Stock Watch")).toBeInTheDocument();
     expect(screen.getByText("Recent Orders")).toBeInTheDocument();
     expect(screen.getByText("Acme Corporation")).toBeInTheDocument();
+    // Line items show in the card (not just a count).
+    expect(screen.getByText("Plavac Mali 2021")).toBeInTheDocument();
+    expect(screen.getByText("Pošip 2022")).toBeInTheDocument();
+    // The order's creator is shown alongside the date.
+    expect(screen.getByText("Jun 8 · Ada Lovelace")).toBeInTheDocument();
   });
 
-  it("switches the time range", async () => {
+  it("switches the period", async () => {
     renderWithProviders(<DashboardPage />);
     const user = userEvent.setup();
 
     await screen.findByText("Welcome back, Ada");
-    await user.click(screen.getByRole("tab", { name: "7D" }));
-    expect(screen.getByRole("tab", { name: "7D" })).toHaveAttribute("aria-selected", "true");
+    const ytd = screen.getByRole("button", { name: "YTD" });
+    await user.click(ytd);
+    expect(ytd).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("renders the revenue-by-channel breakdown", async () => {
+    renderWithProviders(<DashboardPage />);
+
+    expect(await screen.findByText("Revenue by channel")).toBeInTheDocument();
+    // Channel labels reuse the customer-type labels.
+    expect(screen.getByText("Wholesale")).toBeInTheDocument();
+    expect(screen.getByText("Retail")).toBeInTheDocument();
+    expect(screen.getByText("Shipshop")).toBeInTheDocument();
+  });
+
+  it("renders the reorder radar with flagged accounts", async () => {
+    renderWithProviders(<DashboardPage />);
+
+    expect(await screen.findByText("Reorder radar")).toBeInTheDocument();
+    expect(screen.getByText("Vinoteka Split")).toBeInTheDocument();
+    // Six flagged accounts, collapsed to five → a "Show all 6" toggle appears.
+    expect(screen.getByText("Show all 6")).toBeInTheDocument();
+  });
+
+  it("reveals the custom date range panel", async () => {
+    renderWithProviders(<DashboardPage />);
+    const user = userEvent.setup();
+
+    await screen.findByText("Welcome back, Ada");
+    await user.click(screen.getByRole("button", { name: "Custom…" }));
+    expect(screen.getByText("From")).toBeInTheDocument();
+    expect(screen.getByText("To")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Apply" })).toBeInTheDocument();
   });
 });

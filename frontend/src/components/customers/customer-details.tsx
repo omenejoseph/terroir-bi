@@ -25,7 +25,10 @@ export function CustomerDetails({ customer }: { customer: Customer }) {
           value={t("customers.rebateOff", { percent: customer.effective_rebate_percent })}
         />
         <Detail label={t("customers.form.oib")} value={customer.oib} />
-        <Detail label={t("customers.form.customerType")} value={customer.customer_type} />
+        <Detail
+          label={t("customers.form.customerType")}
+          value={customer.customer_type ? t(`customers.type.${customer.customer_type}`) : null}
+        />
         <Detail label={t("customers.detail.location")} value={location || null} />
         <Detail label={t("customers.form.hidePrices")} value={yesNo(customer.hide_prices)} />
         <Detail label={t("customers.form.isAgency")} value={yesNo(customer.is_agency ?? false)} />

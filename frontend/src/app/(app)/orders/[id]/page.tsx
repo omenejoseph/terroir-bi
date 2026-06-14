@@ -6,18 +6,14 @@ import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/context";
-import { useOrder, useUpdateOrderStatus } from "@/hooks/use-orders";
+import { useOrder } from "@/hooks/use-orders";
 import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
-import { ORDER_STATUSES, type OrderStatus } from "@/lib/types";
+import type { OrderStatus } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
-import { useConfirm } from "@/components/ui/confirm";
 import { OrderItemsSection } from "@/components/orders/order-items-section";
 import { OrderHistorySection } from "@/components/orders/order-history-section";
 import { OrderCommentsSection } from "@/components/orders/order-comments-section";
@@ -25,13 +21,15 @@ import { OrderDetailsCard } from "@/components/orders/order-details-card";
 import { OrderConsignmentSection } from "@/components/orders/order-consignment-section";
 import { OrderPaymentsSection } from "@/components/orders/order-payments-section";
 import { OrderInflowsCard } from "@/components/orders/order-inflows-card";
+import { OrderStatusUpdater } from "@/components/orders/order-status-updater";
+import { OrderCustomerCard } from "@/components/orders/order-customer-card";
 
-type DetailTab = "items" | "history" | "comments" | "consignment" | "payments";
+type DetailTab = "history" | "comments" | "consignment" | "payments";
 
-const STATUS_VARIANT: Record<OrderStatus, "secondary" | "outline" | "success"> = {
-  RECEIVED: "secondary",
-  IN_PROCESS: "outline",
-  READY_TO_SHIP: "outline",
+const STATUS_VARIANT: Record<OrderStatus, "info" | "warning" | "purple" | "success"> = {
+  RECEIVED: "info",
+  IN_PROCESS: "warning",
+  READY_TO_SHIP: "purple",
   SHIPPED: "success",
 };
 
@@ -41,38 +39,18 @@ export default function OrderDetailPage() {
   const { t } = useTranslation();
   const { can } = useAuth();
   const { moneyObject, date } = useFormatters();
-  const confirm = useConfirm();
   const canManage = can("orders.manage");
+  const canViewFinance = can("finance.view");
 
-  const [tab, setTab] = React.useState<DetailTab>("items");
+  const [tab, setTab] = React.useState<DetailTab>("history");
   const orderQ = useOrder(id);
   const order = orderQ.data;
-  const updateStatus = useUpdateOrderStatus(id ?? "");
-
-  const [nextStatus, setNextStatus] = React.useState<OrderStatus | "">("");
-  const [statusNote, setStatusNote] = React.useState("");
-
-  async function applyStatus() {
-    if (!nextStatus || !order) return;
-    const ok = await confirm({
-      title: t("orders.statusChange.confirmTitle"),
-      description: t("orders.statusChange.confirmBody", {
-        order: order.order_number,
-        status: t(`orders.status.${nextStatus}`),
-      }),
-    });
-    if (!ok) return;
-    await updateStatus.mutateAsync({ status: nextStatus, note: statusNote.trim() || null });
-    setNextStatus("");
-    setStatusNote("");
-  }
 
   const tabs = [
-    { value: "items", label: t("orders.tabs.items") },
     { value: "history", label: t("orders.tabs.history") },
     { value: "comments", label: t("orders.tabs.comments") },
     ...(order?.is_consignment ? [{ value: "consignment", label: t("orders.tabs.consignment") }] : []),
-    ...(can("finance.view") ? [{ value: "payments", label: t("orders.tabs.payments") }] : []),
+    ...(canViewFinance ? [{ value: "payments", label: t("orders.tabs.payments") }] : []),
   ];
 
   return (
@@ -97,72 +75,49 @@ export default function OrderDetailPage() {
         </Card>
       ) : (
         <>
-          <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-semibold tracking-tight">{order.order_number}</h1>
-                <Badge variant={STATUS_VARIANT[order.status]}>{t(`orders.status.${order.status}`)}</Badge>
-                {order.is_backorder && <Badge variant="outline">{t("orders.backorderBadge")}</Badge>}
-                {order.is_consignment && <Badge variant="outline">{t("orders.consignmentBadge")}</Badge>}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {order.customer?.company_name ?? t("orders.noCustomer")} · {moneyObject(order.total_amount)}
-                {order.created_at ? ` · ${date(order.created_at)}` : ""}
-              </p>
-              {order.created_by && (
-                <p className="text-xs text-muted-foreground">
-                  {t("orders.createdBy", { name: order.created_by.name })}
-                </p>
-              )}
+          <header className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight">{order.order_number}</h1>
+              <Badge variant={STATUS_VARIANT[order.status]}>{t(`orders.status.${order.status}`)}</Badge>
+              {order.is_backorder && <Badge variant="outline">{t("orders.backorderBadge")}</Badge>}
+              {order.is_consignment && <Badge variant="outline">{t("orders.consignmentBadge")}</Badge>}
             </div>
-
-            {canManage && (
-              <div className="flex flex-wrap items-end gap-2">
-                <Select
-                  value={nextStatus}
-                  onChange={(e) => setNextStatus(e.target.value as OrderStatus)}
-                  aria-label={t("orders.statusChange.label")}
-                  className="w-40"
-                >
-                  <option value="">{t("orders.statusChange.label")}</option>
-                  {ORDER_STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {t(`orders.status.${s}`)}
-                    </option>
-                  ))}
-                </Select>
-                <Input
-                  value={statusNote}
-                  onChange={(e) => setStatusNote(e.target.value)}
-                  placeholder={t("orders.statusChange.note")}
-                  className="w-44"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={applyStatus}
-                  disabled={!nextStatus || updateStatus.isPending}
-                >
-                  {updateStatus.isPending && <Spinner />}
-                  {t("orders.statusChange.action")}
-                </Button>
-              </div>
+            <p className="text-sm text-muted-foreground">
+              {order.customer?.company_name ?? t("orders.noCustomer")} ·{" "}
+              <span className="font-semibold text-foreground">{moneyObject(order.total_amount)}</span>
+              {order.created_at ? ` · ${date(order.created_at)}` : ""}
+            </p>
+            {order.created_by && (
+              <p className="text-xs text-muted-foreground">
+                {t("orders.createdBy", { name: order.created_by.name })}
+              </p>
             )}
           </header>
 
-          <OrderDetailsCard order={order} canManage={canManage} />
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Items lead, with the supporting detail tabs beneath. */}
+            <div className="space-y-6 lg:col-span-2">
+              <OrderItemsSection order={order} canManage={canManage} />
 
-          {can("finance.view") && <OrderInflowsCard orderId={order.id} />}
+              <div className="space-y-4">
+                <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as DetailTab)} />
+                {tab === "history" && <OrderHistorySection order={order} />}
+                {tab === "comments" && <OrderCommentsSection order={order} />}
+                {tab === "consignment" && order.is_consignment && (
+                  <OrderConsignmentSection order={order} canManage={canManage} />
+                )}
+                {tab === "payments" && canViewFinance && <OrderPaymentsSection orderId={order.id} />}
+              </div>
+            </div>
 
-          <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as DetailTab)} />
-
-          {tab === "items" && <OrderItemsSection order={order} canManage={canManage} />}
-          {tab === "history" && <OrderHistorySection order={order} />}
-          {tab === "comments" && <OrderCommentsSection order={order} />}
-          {tab === "consignment" && order.is_consignment && (
-            <OrderConsignmentSection order={order} canManage={canManage} />
-          )}
-          {tab === "payments" && can("finance.view") && <OrderPaymentsSection orderId={order.id} />}
+            {/* Sidebar: prominent status control, the customer, and order details. */}
+            <aside className="space-y-6">
+              <OrderStatusUpdater order={order} canManage={canManage} />
+              <OrderCustomerCard order={order} />
+              <OrderDetailsCard order={order} canManage={canManage} />
+              {canViewFinance && <OrderInflowsCard orderId={order.id} />}
+            </aside>
+          </div>
         </>
       )}
     </div>

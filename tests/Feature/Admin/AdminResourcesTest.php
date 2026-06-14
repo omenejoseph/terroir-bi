@@ -16,6 +16,9 @@ use App\Filament\Resources\PlatformAdmins\PlatformAdminResource;
 use App\Filament\Resources\Tenants\Actions\TenantBillingActions;
 use App\Filament\Resources\Tenants\Pages\CreateTenant;
 use App\Filament\Resources\Tenants\TenantResource;
+use App\Filament\Resources\TranslationOverrides\Pages\CreateTranslationOverride;
+use App\Filament\Resources\TranslationOverrides\TranslationOverrideResource;
+use App\Models\TranslationOverride;
 use App\Http\Middleware\SetBackOfficeLocale;
 use App\Models\Plan;
 use App\Models\Tenant;
@@ -38,6 +41,21 @@ class AdminResourcesTest extends TestCase
         $admin = User::factory()->create();
 
         return app(SetPlatformAdminAction::class)->execute($admin, true);
+    }
+
+    public function test_platform_admin_creates_a_global_translation_override(): void
+    {
+        $this->actingAs($this->admin());
+
+        Livewire::test(CreateTranslationOverride::class)
+            ->fillForm(['locale' => 'hr', 'key' => 'orders.title', 'value' => 'Narudžbe'])
+            ->call('create')
+            ->assertHasNoFormErrors()
+            ->assertRedirect(TranslationOverrideResource::getUrl('index'));
+
+        $override = TranslationOverride::query()->where('key', 'orders.title')->firstOrFail();
+        $this->assertSame('Narudžbe', $override->value);
+        $this->assertSame('hr', $override->locale);
     }
 
     public function test_plan_form_stores_the_price_entered_in_major_units(): void

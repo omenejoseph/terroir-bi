@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Enums\WorkOrderCategory;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string $id
  * @property string $title
  * @property string|null $description
- * @property string|null $category
+ * @property WorkOrderCategory|null $category
  * @property TaskPriority $priority
  * @property TaskStatus $status
  * @property Carbon|null $start_date
@@ -49,6 +50,7 @@ class WorkOrder extends Model
         return [
             'priority' => TaskPriority::class,
             'status' => TaskStatus::class,
+            'category' => WorkOrderCategory::class,
             'start_date' => 'datetime',
             'due_date' => 'datetime',
             'completed_at' => 'datetime',

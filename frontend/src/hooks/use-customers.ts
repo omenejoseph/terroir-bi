@@ -80,6 +80,25 @@ export function useCustomerAnalytics() {
   });
 }
 
+/** Reorder radar: accounts overdue vs. their usual ordering cadence. */
+export function useReorderRadar() {
+  return useQuery({
+    queryKey: ["customers", "reorder-radar"],
+    queryFn: () => customersApi.reorderRadar(),
+    staleTime: 60_000,
+  });
+}
+
+/** Mute/unmute a customer on the reorder radar (clears on their next order). */
+export function useMarkContacted() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; contacted: boolean }) =>
+      customersApi.markContacted(vars.id, vars.contacted),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["customers", "reorder-radar"] }),
+  });
+}
+
 export function usePricingTiers() {
   return useQuery({
     queryKey: ["pricing-tiers"],

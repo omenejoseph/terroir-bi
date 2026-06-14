@@ -23,8 +23,8 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.141 0.005 285.823);
 
-  /* Brand / primary — wine-toned to suit Terroir. Change these two lines to rebrand. */
-  --primary: oklch(0.43 0.16 16);
+  /* Brand / primary — warm neutral greige/stone. Change these two lines to rebrand. */
+  --primary: oklch(0.45 0.02 40);
   --primary-foreground: oklch(0.985 0 0);
 
   --secondary: oklch(0.967 0.001 286.375);
@@ -36,8 +36,8 @@
   --accent: oklch(0.967 0.001 286.375);
   --accent-foreground: oklch(0.21 0.006 285.885);
 
-  /* Deep alert red, aligned to the wine-toned brand (not the lighter default). */
-  --destructive: oklch(0.505 0.21 22);
+  /* Clear alert red — now that the brand is neutral, this reads as a true warning. */
+  --destructive: oklch(0.55 0.2 27);
   --destructive-foreground: oklch(0.985 0 0);
 
   --success: oklch(0.59 0.13 163);
@@ -45,7 +45,7 @@
 
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.43 0.16 16);
+  --ring: oklch(0.45 0.02 40);
 }
 
 .dark {
@@ -58,7 +58,7 @@
   --popover: oklch(0.21 0.006 285.885);
   --popover-foreground: oklch(0.985 0 0);
 
-  --primary: oklch(0.6 0.17 16);
+  --primary: oklch(0.63 0.025 40);
   --primary-foreground: oklch(0.985 0 0);
 
   --secondary: oklch(0.274 0.006 286.033);
@@ -70,7 +70,7 @@
   --accent: oklch(0.274 0.006 286.033);
   --accent-foreground: oklch(0.985 0 0);
 
-  --destructive: oklch(0.704 0.191 22.216);
+  --destructive: oklch(0.7 0.19 27);
   --destructive-foreground: oklch(0.985 0 0);
 
   --success: oklch(0.65 0.14 163);
@@ -78,7 +78,7 @@
 
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.6 0.17 16);
+  --ring: oklch(0.63 0.025 40);
 }
 
 /*

@@ -8,14 +8,23 @@ import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
 import type { TaskStatus, WorkOrder } from "@/lib/types";
 import { TASK_STATUSES } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select } from "@/components/ui/select";
 import { useConfirm } from "@/components/ui/confirm";
 import { PRIORITY_VARIANT } from "@/components/work-orders/constants";
 
 /** Kanban board grouped by status, with per-card status, reorder and delete. */
-export function WorkOrderBoard({ workOrders }: { workOrders: WorkOrder[] }) {
+export function WorkOrderBoard({
+  workOrders,
+  allWorkOrders,
+}: {
+  workOrders: WorkOrder[];
+  /** Full (unfiltered) set, so reordering preserves the order of hidden items. */
+  allWorkOrders?: WorkOrder[];
+}) {
   const { t } = useTranslation();
   const reorder = useReorderWorkOrders();
 
@@ -24,7 +33,7 @@ export function WorkOrderBoard({ workOrders }: { workOrders: WorkOrder[] }) {
     const index = column.findIndex((w) => w.id === task.id);
     const swapWith = column[index + direction];
     if (!swapWith) return;
-    const ids = workOrders.map((w) => w.id);
+    const ids = (allWorkOrders ?? workOrders).map((w) => w.id);
     const a = ids.indexOf(task.id);
     const b = ids.indexOf(swapWith.id);
     [ids[a], ids[b]] = [ids[b], ids[a]];
@@ -96,7 +105,24 @@ function WorkOrderCard({
     <Card>
       <CardContent className="space-y-2 p-3">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-sm font-medium">{task.title}</p>
+          <div className="flex min-w-0 items-start gap-2">
+            <Checkbox
+              checked={task.status === "DONE"}
+              onChange={(e) =>
+                updateStatus.mutate({ id: task.id, status: e.target.checked ? "DONE" : "TODO" })
+              }
+              aria-label={t("tasks.complete")}
+              className="mt-0.5"
+            />
+            <p
+              className={cn(
+                "text-sm font-medium",
+                task.status === "DONE" && "text-muted-foreground line-through",
+              )}
+            >
+              {task.title}
+            </p>
+          </div>
           <Badge variant={PRIORITY_VARIANT[task.priority]}>{t(`tasks.priority.${task.priority}`)}</Badge>
         </div>
 

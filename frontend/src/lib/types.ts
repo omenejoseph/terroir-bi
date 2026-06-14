@@ -136,6 +136,8 @@ export interface InventoryItem {
   is_auto_created: boolean | null;
   default_price: Money | null;
   cost_per_unit: Money | null;
+  /** Lead image (first by sort order) for list thumbnails; null when none. */
+  image_url?: string | null;
 }
 
 export interface InventoryQuery {
@@ -390,6 +392,10 @@ export interface PricingTierInput {
   rebate_percent?: number;
 }
 
+/** Customer sales channel — mirrors App\Enums\CustomerType. */
+export const CUSTOMER_TYPES = ["WHOLESALE", "RETAIL", "AGENCY", "SHIPSHOP", "OTHER"] as const;
+export type CustomerType = (typeof CUSTOMER_TYPES)[number];
+
 export interface Customer {
   id: string;
   company_name: string;
@@ -402,7 +408,7 @@ export interface Customer {
   zip: string | null;
   country: string | null;
   oib: string | null;
-  customer_type: string | null;
+  customer_type: CustomerType | null;
   notes: string | null;
   is_active: boolean;
   rebate_percent: string;
@@ -426,6 +432,8 @@ export interface CustomerOrderAnalytics {
   annual_projection: Money;
   expected_next_order_date: string | null;
   next_quarter_projection: Money;
+  /** Per-month forecast for the next 3 months: same month last year × (1 + YoY). */
+  expected_next_3m: { month: string; last_year: Money; expected: Money }[];
 }
 
 /** A customer's negotiated per-product price (overrides rebate). */
@@ -512,7 +520,7 @@ export interface CustomerInput {
   zip?: string | null;
   country?: string | null;
   oib?: string | null;
-  customer_type?: string | null;
+  customer_type?: CustomerType | null;
   pricing_tier_id?: string | null;
   rebate_percent?: number;
   hide_prices?: boolean;
@@ -581,10 +589,32 @@ export interface SeriesPoint {
   value: number;
 }
 
+/** A current-period amount and the prior period to compare it against (minor units). */
+export interface RevenueComparison {
+  current: number;
+  previous: number | null;
+}
+
 /** GET /dashboard — aggregated summary. Money fields are integer minor units. */
 export interface DashboardSummary {
   range: string;
   currency: string;
+  /** Always-on revenue cards: today / month-to-date / year-to-date / all-time total. */
+  revenue_summary: {
+    today: RevenueComparison;
+    mtd: RevenueComparison;
+    ytd: RevenueComparison;
+    total: RevenueComparison;
+  };
+  /** Selected-period revenue split by customer channel (minor units). */
+  revenue_by_channel: {
+    wholesale: number;
+    retail: number;
+    agency: number;
+    shipshop: number;
+    other: number;
+    total: number;
+  };
   stats: {
     total_orders: number;
     customers: number;
@@ -600,12 +630,34 @@ export interface DashboardSummary {
   stock_watch: StockWatchItem[];
   recent_orders: {
     id: string;
+    order_number: string;
     customer: string;
-    items: number;
+    created_by: string | null;
+    items: { name: string | null; quantity: number; unit_type: string }[];
     total: number;
     status: string;
     date: string;
   }[];
+}
+
+/** One flagged account on the reorder radar (overdue vs. its usual cadence). */
+export interface ReorderRadarRow {
+  customer_id: string;
+  company_name: string;
+  order_count: number;
+  last_order_date: string;
+  days_since_last: number;
+  median_gap_days: number;
+  overdue_ratio: number;
+  status: "due" | "overdue" | "at_risk";
+  avg_order_value: Money;
+  urgency: number;
+}
+
+/** GET /customers/reorder-radar — accounts overdue to reorder, ranked by urgency. */
+export interface ReorderRadar {
+  rows: ReorderRadarRow[];
+  counts: { due: number; overdue: number; at_risk: number };
 }
 
 /** Payload for PATCH /inventory-items/{id} — every field optional. */
@@ -1391,12 +1443,24 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 export const TASK_PRIORITIES = ["LOW", "MEDIUM", "HIGH"] as const;
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
+/** Work-order category — mirrors App\Enums\WorkOrderCategory. */
+export const WORK_ORDER_CATEGORIES = [
+  "CELLAR",
+  "VINEYARD",
+  "MAINTENANCE",
+  "ADMIN",
+  "DELIVERY",
+  "EVENT",
+  "OTHER",
+] as const;
+export type WorkOrderCategory = (typeof WORK_ORDER_CATEGORIES)[number];
+
 /** Mirrors WorkOrderData. */
 export interface WorkOrder {
   id: string;
   title: string;
   description: string | null;
-  category: string | null;
+  category: WorkOrderCategory | null;
   priority: TaskPriority;
   status: TaskStatus;
   start_date: string | null;
@@ -1409,7 +1473,7 @@ export interface WorkOrder {
 export interface WorkOrderInput {
   title: string;
   description?: string | null;
-  category?: string | null;
+  category?: WorkOrderCategory | null;
   priority?: TaskPriority;
   status?: TaskStatus;
   start_date?: string | null;
@@ -1421,6 +1485,7 @@ export interface WorkOrderInput {
 export interface WorkOrderQuery {
   status?: TaskStatus;
   assignee_id?: string;
+  category?: WorkOrderCategory;
   search?: string;
   due_from?: string;
   due_to?: string;

@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Services\Localization;
 
 use App\Models\TranslationOverride;
-use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Contracts\Translation\Translator;
 
 /**
- * Reads and writes per-tenant translation overrides, merged on top of the file
- * (and JSON) translations Laravel ships. Overrides are cached per tenant+locale.
+ * Reads global translation overrides, merged on top of the file (and JSON)
+ * translations Laravel ships. Overrides are platform-wide (managed in the back
+ * office), not per-tenant, and cached per locale.
  *
  * Merge precedence: DB override > file translation > the key itself.
  */
@@ -19,28 +19,20 @@ class TranslationService implements TranslationServiceInterface
 {
     public function __construct(
         private readonly Cache $cache,
-        private readonly TenantContext $tenant,
         private readonly Translator $translator,
     ) {}
 
     /**
-     * The override map (key => value) for the current tenant + locale.
-     *
-     * Returns an empty array when no tenant is bound (e.g. central context),
-     * so file translations continue to work outside a tenant.
+     * The override map (key => value) for a locale.
      *
      * @return array<string, string>
      */
     public function overrides(?string $locale = null): array
     {
-        if (! $this->tenant->check()) {
-            return [];
-        }
-
         $locale ??= app()->getLocale();
 
         return $this->cache->rememberForever(
-            $this->cacheKey($this->tenant->id(), $locale),
+            $this->cacheKey($locale),
             fn (): array => TranslationOverride::query()
                 ->where('locale', $locale)
                 ->pluck('value', 'key')
@@ -77,23 +69,18 @@ class TranslationService implements TranslationServiceInterface
 
     public function flush(?string $locale = null): void
     {
-        if (! $this->tenant->check()) {
-            return;
-        }
-
         $locales = $locale !== null
             ? [$locale]
             : (array) config('app.supported_locales', [config('app.locale')]);
 
         foreach ($locales as $loc) {
-            $this->cache->forget($this->cacheKey($this->tenant->id(), $loc));
+            $this->cache->forget($this->cacheKey($loc));
         }
     }
 
-    private function cacheKey(string $tenantId, string $locale): string
+    private function cacheKey(string $locale): string
     {
-        // Manual tenant prefixing — independent of any tenancy cache bootstrapper.
-        return "i18n:{$tenantId}:{$locale}";
+        return "i18n:overrides:{$locale}";
     }
 
     /**

@@ -6,6 +6,7 @@ import { LOCALE_LABELS } from "@/i18n/config";
 import { useTranslation } from "@/i18n/context";
 import type { Locale } from "@/lib/config";
 import { cn } from "@/lib/utils";
+import { Tabs } from "@/components/ui/tabs";
 
 /** Compact segmented language toggle. Persisted + sent to the API as X-Locale. */
 export function LanguageSwitcher({ className }: { className?: string }) {
@@ -15,24 +16,11 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     <div className={cn("flex items-center gap-2", className)}>
       <Languages className="size-4 text-muted-foreground" aria-hidden />
       <span className="sr-only">{t("common.language")}</span>
-      <div className="inline-flex rounded-md border border-border p-0.5">
-        {locales.map((loc: Locale) => (
-          <button
-            key={loc}
-            type="button"
-            onClick={() => setLocale(loc)}
-            aria-pressed={loc === locale}
-            className={cn(
-              "rounded-sm px-2 py-1 text-xs font-medium transition-colors",
-              loc === locale
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {LOCALE_LABELS[loc]}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        tabs={locales.map((loc: Locale) => ({ value: loc, label: LOCALE_LABELS[loc] }))}
+        value={locale}
+        onChange={(v) => setLocale(v as Locale)}
+      />
     </div>
   );
 }

@@ -37,6 +37,8 @@ import type {
   BottleAnalysis,
   RecipeLine,
   StockAnalytics,
+  ReorderRadar,
+  ReorderRadarRow,
   StockMovement,
   Supplier,
   SupplierOrder,
@@ -140,6 +142,7 @@ export function makeItem(overrides: Partial<InventoryItem> = {}): InventoryItem 
     is_auto_created: false,
     default_price: { minor: 1500, currency: "EUR", formatted: "€15.00" },
     cost_per_unit: { minor: 700, currency: "EUR", formatted: "€7.00" },
+    image_url: null,
     ...overrides,
   };
 }
@@ -487,6 +490,11 @@ export function makeCustomerOrderAnalytics(
     annual_projection: money(110000),
     expected_next_order_date: "2026-07-01T10:00:00+00:00",
     next_quarter_projection: money(30000),
+    expected_next_3m: [
+      { month: "2026-07", last_year: money(8000), expected: money(10000) },
+      { month: "2026-08", last_year: money(6000), expected: money(7500) },
+      { month: "2026-09", last_year: money(10000), expected: money(12500) },
+    ],
     ...overrides,
   };
 }
@@ -560,8 +568,22 @@ export function makeAnalytics(overrides: Partial<InventoryAnalytics> = {}): Inve
 
 export function makeDashboard(overrides: Partial<DashboardSummary> = {}): DashboardSummary {
   return {
-    range: "30D",
+    range: "mtd",
     currency: "EUR",
+    revenue_summary: {
+      today: { current: 12500, previous: 10000 },
+      mtd: { current: 480000, previous: 520000 },
+      ytd: { current: 2486000, previous: 2100000 },
+      total: { current: 9875000, previous: null },
+    },
+    revenue_by_channel: {
+      wholesale: 320000,
+      retail: 110000,
+      agency: 40000,
+      shipshop: 10000,
+      other: 0,
+      total: 480000,
+    },
     stats: {
       total_orders: 128,
       customers: 42,
@@ -587,11 +609,60 @@ export function makeDashboard(overrides: Partial<DashboardSummary> = {}): Dashbo
     top_products: [{ name: "Premium Red Blend 2024", value: 12 }],
     stock_watch: [{ name: "Capsules", stock: "6", min: "24" }],
     recent_orders: [
-      { id: "ORD-20260042", customer: "Acme Corporation", items: 5, total: 9995, status: "received", date: "Jun 8" },
+      {
+        id: "ord_1",
+        order_number: "ORD-20260042",
+        customer: "Acme Corporation",
+        created_by: "Ada Lovelace",
+        items: [
+          { name: "Plavac Mali 2021", quantity: 3, unit_type: "cases" },
+          { name: "Pošip 2022", quantity: 12, unit_type: "bottles" },
+        ],
+        total: 9995,
+        status: "received",
+        date: "Jun 8",
+      },
     ],
     ...overrides,
   };
 }
+export function makeReorderRadar(overrides: Partial<ReorderRadar> = {}): ReorderRadar {
+  const row = (
+    id: string,
+    name: string,
+    status: ReorderRadarRow["status"],
+    daysSince: number,
+    gap: number,
+    avgMinor: number,
+  ): ReorderRadarRow => ({
+    customer_id: id,
+    company_name: name,
+    order_count: 8,
+    last_order_date: "2026-04-01T00:00:00+00:00",
+    days_since_last: daysSince,
+    median_gap_days: gap,
+    overdue_ratio: Math.round((daysSince / gap) * 100) / 100,
+    status,
+    avg_order_value: money(avgMinor),
+    urgency: Math.min(daysSince / gap, 6) * avgMinor,
+  });
+
+  const rows: ReorderRadarRow[] = [
+    row("cus_1", "Vinoteka Split", "at_risk", 140, 40, 210000),
+    row("cus_2", "Konoba Bura", "at_risk", 96, 30, 88000),
+    row("cus_3", "Restoran Adriatic", "overdue", 56, 28, 64000),
+    row("cus_4", "Hotel Park", "overdue", 53, 30, 52000),
+    row("cus_5", "Acme Corporation", "due", 34, 28, 125000),
+    row("cus_6", "Caffe More", "due", 33, 30, 41000),
+  ];
+
+  return {
+    rows,
+    counts: { due: 2, overdue: 2, at_risk: 2 },
+    ...overrides,
+  };
+}
+
 export function makeOrderItem(overrides: Partial<OrderItem> = {}): OrderItem {
   return {
     id: "oi_1",

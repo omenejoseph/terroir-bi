@@ -6,6 +6,7 @@ namespace App\Http\Requests\Tasks;
 
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Enums\WorkOrderCategory;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -27,7 +28,7 @@ class StoreWorkOrderRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string'],
-            'category' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'category' => ['sometimes', 'nullable', Rule::enum(WorkOrderCategory::class)],
             'priority' => ['sometimes', Rule::enum(TaskPriority::class)],
             'status' => ['sometimes', Rule::enum(TaskStatus::class)],
             'start_date' => ['sometimes', 'nullable', 'date'],

@@ -23,6 +23,12 @@ const addDays = (d: Date, n: number) => {
   x.setDate(x.getDate() + n);
   return x;
 };
+/** Local midnight — mirrors the calendar's startOfDay used by the page anchor. */
+const startOfLocalDay = (d: Date) => {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+};
 
 /** A work order anchored around "today" so it lands in the current calendar period. */
 function scheduledToday(overrides = {}) {
@@ -43,19 +49,19 @@ describe("WorkOrdersPage", () => {
     seedLocale("en");
   });
 
+  // The default view is Day; board tests switch to the Board tab first.
+  async function openBoard(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(await screen.findByRole("tab", { name: "Board" }));
+  }
+
   it("renders the renamed Work orders heading", async () => {
     renderWithProviders(<WorkOrdersPage />);
     expect(await screen.findByRole("heading", { name: "Work orders" })).toBeInTheDocument();
   });
 
-  it("renders the stats strip", async () => {
-    renderWithProviders(<WorkOrdersPage />);
-    expect(await screen.findByText("Overdue")).toBeInTheDocument();
-    expect(screen.getByText("5")).toBeInTheDocument();
-  });
-
   it("groups work orders into status columns (board view)", async () => {
     renderWithProviders(<WorkOrdersPage />);
+    await openBoard(userEvent.setup());
     const todo = await screen.findByRole("group", { name: "To do" });
     expect(within(todo).getByText("Bottle Plavac batch")).toBeInTheDocument();
 
@@ -97,6 +103,7 @@ describe("WorkOrdersPage", () => {
 
     renderWithProviders(<WorkOrdersPage />);
     const user = userEvent.setup();
+    await openBoard(user);
     const todo = await screen.findByRole("group", { name: "To do" });
     await user.selectOptions(within(todo).getByLabelText("Move"), "DONE");
 
@@ -123,6 +130,7 @@ describe("WorkOrdersPage", () => {
 
     renderWithProviders(<WorkOrdersPage />);
     const user = userEvent.setup();
+    await openBoard(user);
     const todo = await screen.findByRole("group", { name: "To do" });
     await user.click(within(todo).getAllByRole("button", { name: "Move down" })[0]);
 
@@ -141,6 +149,7 @@ describe("WorkOrdersPage", () => {
 
     renderWithProviders(<WorkOrdersPage />);
     const user = userEvent.setup();
+    await openBoard(user);
     const todo = await screen.findByRole("group", { name: "To do" });
     await user.click(within(todo).getByRole("button", { name: "Delete" }));
 
@@ -160,7 +169,10 @@ describe("WorkOrdersPage", () => {
     renderWithProviders(<WorkOrdersPage />);
     const user = userEvent.setup();
     await user.click(await screen.findByRole("tab", { name: "Month" }));
-    expect(await screen.findByRole("button", { name: "Harvest planning" })).toBeInTheDocument();
+    // A bar spanning a week boundary renders one segment per week row, so the
+    // month grid may show several segments for the same work order.
+    const bars = await screen.findAllByRole("button", { name: "Harvest planning" });
+    expect(bars.length).toBeGreaterThan(0);
   });
 
   it("shows a bar in week view", async () => {
@@ -187,7 +199,9 @@ describe("WorkOrdersPage", () => {
 
   it("navigates day view with prev/next/today", async () => {
     server.use(http.get(`${API_URL}/work-orders`, () => HttpResponse.json({ data: [] })));
-    const today = new Date();
+    // Anchor on local midnight (as the page does) so the Zagreb-formatted label
+    // matches regardless of the time of day the suite runs.
+    const today = startOfLocalDay(new Date());
     const fmt = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "Europe/Zagreb" });
     const todayLabel = fmt.format(today);
     const tomorrowLabel = fmt.format(addDays(today, 1));
@@ -218,7 +232,8 @@ describe("WorkOrdersPage", () => {
     renderWithProviders(<WorkOrdersPage />);
     const user = userEvent.setup();
     await user.click(await screen.findByRole("tab", { name: "Month" }));
-    await user.click(await screen.findByRole("button", { name: "Harvest planning" }));
+    // The bar may span a week boundary into multiple segments; click the first.
+    await user.click((await screen.findAllByRole("button", { name: "Harvest planning" }))[0]);
 
     const dialog = await screen.findByRole("dialog");
     await user.selectOptions(within(dialog).getByLabelText("Status"), "DONE");
@@ -240,7 +255,8 @@ describe("WorkOrdersPage", () => {
     renderWithProviders(<WorkOrdersPage />);
     const user = userEvent.setup();
     await user.click(await screen.findByRole("tab", { name: "Month" }));
-    await user.click(await screen.findByRole("button", { name: "Harvest planning" }));
+    // The bar may span a week boundary into multiple segments; click the first.
+    await user.click((await screen.findAllByRole("button", { name: "Harvest planning" }))[0]);
 
     const dialog = await screen.findByRole("dialog");
     const due = within(dialog).getByLabelText("Due");
@@ -263,7 +279,8 @@ describe("WorkOrdersPage", () => {
     renderWithProviders(<WorkOrdersPage />);
     const user = userEvent.setup();
     await user.click(await screen.findByRole("tab", { name: "Month" }));
-    await user.click(await screen.findByRole("button", { name: "Harvest planning" }));
+    // The bar may span a week boundary into multiple segments; click the first.
+    await user.click((await screen.findAllByRole("button", { name: "Harvest planning" }))[0]);
 
     const dialog = await screen.findByRole("dialog");
     // Default assignee is usr_1 → unassign it.
@@ -273,25 +290,69 @@ describe("WorkOrdersPage", () => {
     expect(patched).toMatchObject({ assignee_id: null });
   });
 
-  it("filters the stat summary by a due-date range", async () => {
-    let lastRange: string | null = "unset";
+  it("filters the board by status", async () => {
+    renderWithProviders(<WorkOrdersPage />);
+    const user = userEvent.setup();
+    await openBoard(user);
+    await screen.findByText("Bottle Plavac batch"); // a TODO item
+    await user.selectOptions(screen.getByLabelText("Status"), "DONE");
+    expect(screen.getByText("Ship order")).toBeInTheDocument(); // DONE item
+    expect(screen.queryByText("Bottle Plavac batch")).not.toBeInTheDocument();
+  });
+
+  it("filters the board by category", async () => {
     server.use(
-      http.get(`${API_URL}/work-orders/stats`, ({ request }) => {
-        lastRange = new URL(request.url).searchParams.get("range");
-        return HttpResponse.json({ data: { todo: 1, in_progress: 0, done: 0, overdue: 0 } });
+      http.get(`${API_URL}/work-orders`, () =>
+        HttpResponse.json({
+          data: [
+            makeWorkOrder({ id: "wc1", title: "Rack barrels", category: "CELLAR" }),
+            makeWorkOrder({ id: "wc2", title: "Prune vines", category: "VINEYARD", sort_order: 2 }),
+          ],
+        }),
+      ),
+    );
+    renderWithProviders(<WorkOrdersPage />);
+    const user = userEvent.setup();
+    await openBoard(user);
+    await screen.findByText("Rack barrels");
+    await user.selectOptions(screen.getByLabelText("Category"), "CELLAR");
+    expect(screen.getByText("Rack barrels")).toBeInTheDocument();
+    expect(screen.queryByText("Prune vines")).not.toBeInTheDocument();
+  });
+
+  it("completes a task from the board card checkbox", async () => {
+    let patched: { status?: string } | null = null;
+    server.use(
+      http.patch(`${API_URL}/work-orders/:id/status`, async ({ request }) => {
+        patched = (await request.json()) as { status?: string };
+        return HttpResponse.json({ data: makeWorkOrder({ status: "DONE" }) });
       }),
     );
+    renderWithProviders(<WorkOrdersPage />);
+    const user = userEvent.setup();
+    await openBoard(user);
+    const todo = await screen.findByRole("group", { name: "To do" });
+    await user.click(within(todo).getByRole("checkbox", { name: "Mark complete" }));
+    await waitFor(() => expect(patched).not.toBeNull());
+    expect(patched).toMatchObject({ status: "DONE" });
+  });
 
+  it("quick-adds a work order for a day from the calendar", async () => {
     renderWithProviders(<WorkOrdersPage />);
     const user = userEvent.setup();
     await screen.findByRole("heading", { name: "Work orders" });
-    await user.click(screen.getByRole("tab", { name: "7D" }));
-    await waitFor(() => expect(lastRange).toBe("7D"));
+    await user.click(screen.getByRole("tab", { name: "Day" }));
+    await user.click(screen.getByRole("button", { name: "Add for this day" }));
+
+    // The quick-create form opens with today's date prefilled.
+    const today = startOfLocalDay(new Date());
+    const expected = isoDay(today);
+    expect((screen.getByLabelText("Due date") as HTMLInputElement).value).toBe(expected);
   });
 
   it("renders three month grids in quarter view and picking a day opens day view", async () => {
     server.use(http.get(`${API_URL}/work-orders`, () => HttpResponse.json({ data: [scheduledToday()] })));
-    const today = new Date();
+    const today = startOfLocalDay(new Date());
     const quarterStartMonth = Math.floor(today.getMonth() / 3) * 3;
     const monthFmt = new Intl.DateTimeFormat("en", { month: "short", year: "numeric", timeZone: "Europe/Zagreb" });
     const firstMonthLabel = monthFmt.format(new Date(today.getFullYear(), quarterStartMonth, 15));

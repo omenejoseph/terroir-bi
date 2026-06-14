@@ -23,13 +23,14 @@ describe("OrderDetailPage", () => {
     seedLocale("en");
   });
 
-  it("renders the order with tabs", async () => {
+  it("leads with the items and shows the detail tabs", async () => {
     renderWithProviders(<OrderDetailPage />);
     expect(await screen.findByText("ORD-1001")).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Items" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Comments" })).toBeInTheDocument();
-    // Default catalog item line.
+    // Items lead the page (no longer behind a tab).
     expect(screen.getByText(/Plavac Mali 2021/)).toBeInTheDocument();
+    // Supporting detail tabs.
+    expect(screen.getByRole("tab", { name: "History" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Comments" })).toBeInTheDocument();
   });
 
   it("shows the cash inflows cross-link card", async () => {
@@ -54,7 +55,8 @@ describe("OrderDetailPage", () => {
     const user = userEvent.setup();
     await screen.findByText("ORD-1001");
 
-    await user.selectOptions(screen.getByLabelText("Change status"), "SHIPPED");
+    // Pick the target status from the prominent status control, then apply.
+    await user.click(screen.getByRole("button", { name: "Shipped" }));
     await user.click(screen.getByRole("button", { name: "Update status" }));
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Confirm" }));

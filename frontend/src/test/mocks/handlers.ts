@@ -14,6 +14,7 @@ import {
   makeCostAnalytics,
   makeCustomer,
   makeCustomerAnalytics,
+  makeReorderRadar,
   makeMergePreview,
   makeCustomerOrderAnalytics,
   makePublicCatalog,
@@ -288,6 +289,12 @@ export const handlers = [
   http.get(url("/customers/analytics"), () =>
     HttpResponse.json({ data: makeCustomerAnalytics() }),
   ),
+  http.get(url("/customers/reorder-radar"), () =>
+    HttpResponse.json({ data: makeReorderRadar() }),
+  ),
+  http.post(url("/customers/:id/contacted"), ({ params }) =>
+    HttpResponse.json({ data: makeCustomer({ id: String(params.id) }) }),
+  ),
   http.get(url("/customers/:id/resolved-prices"), ({ request }) => {
     const ids = (new URL(request.url).searchParams.get("item_ids") ?? "").split(",").filter(Boolean);
     const data: Record<string, { minor: number; currency: string }> = {};
@@ -390,7 +397,7 @@ export const handlers = [
 
   // Dashboard summary.
   http.get(url("/dashboard"), ({ request }) => {
-    const range = new URL(request.url).searchParams.get("range") ?? "30D";
+    const range = new URL(request.url).searchParams.get("period") ?? "mtd";
     return HttpResponse.json({ data: makeDashboard({ range }) });
   }),
 

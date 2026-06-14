@@ -57,7 +57,8 @@ export function TenantSwitcher({ compact = false }: { compact?: boolean }) {
     }
   }
 
-  if (tenants.length === 0) return null;
+  // Nothing to show/switch when the account belongs to a single organisation.
+  if (tenants.length <= 1) return null;
 
   // Compact (collapsed rail): just the org avatar, which opens the picker.
   if (compact) {

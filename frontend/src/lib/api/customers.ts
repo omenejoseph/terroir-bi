@@ -12,6 +12,7 @@ import type {
   PaginationMeta,
   PricingTier,
   PricingTierInput,
+  ReorderRadar,
 } from "@/lib/types";
 
 /** Customer + pricing-tier endpoints. Mirrors routes/api.php. */
@@ -39,6 +40,13 @@ export const customersApi = {
 
   /** GET /customers/analytics — tenant-wide customer analytics. */
   analytics: () => api.get<CustomerAnalytics>("/customers/analytics"),
+
+  /** GET /customers/reorder-radar — accounts overdue vs. their usual cadence. */
+  reorderRadar: () => api.get<ReorderRadar>("/customers/reorder-radar"),
+
+  /** POST /customers/{id}/contacted — mute/unmute the account on the radar. */
+  markContacted: (id: string, contacted: boolean) =>
+    api.post<Customer>(`/customers/${id}/contacted`, { contacted }),
 
   /** GET /customers/{id}/resolved-prices — per-bottle price for each item (custom/tier/rebate/default). */
   resolvedPrices: (customerId: string, itemIds: string[]) =>

@@ -79,7 +79,7 @@ describe("Inventory check page", () => {
     renderWithProviders(<CheckPage />);
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole("button", { name: "History" }));
+    await user.click(screen.getByRole("tab", { name: "History" }));
     expect(await screen.findByText("Ada Lovelace")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "View" }));

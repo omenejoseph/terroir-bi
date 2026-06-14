@@ -17,13 +17,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
+import { OrderItemsPreview } from "@/components/orders/order-items-preview";
 
 type StatusTab = OrderStatus | "ALL";
 
-const STATUS_VARIANT: Record<OrderStatus, "secondary" | "outline" | "success"> = {
-  RECEIVED: "secondary",
-  IN_PROCESS: "outline",
-  READY_TO_SHIP: "outline",
+const STATUS_VARIANT: Record<OrderStatus, "info" | "warning" | "purple" | "success"> = {
+  RECEIVED: "info",
+  IN_PROCESS: "warning",
+  READY_TO_SHIP: "purple",
   SHIPPED: "success",
 };
 
@@ -178,22 +179,26 @@ function OrderRow({
       <button
         type="button"
         onClick={onSelect}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+        className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
       >
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate font-medium">
             {order.order_number}
             <span className="ml-2 font-normal text-muted-foreground">
               {order.customer?.company_name ?? t("orders.noCustomer")}
             </span>
           </p>
-          <p className="truncate text-xs text-muted-foreground">
-            {t("orders.itemCount", { count: order.items.length })}
-            {order.created_at ? ` · ${date(order.created_at)}` : ""}
-          </p>
+          <OrderItemsPreview items={order.items} className="mt-1.5" />
+          {(order.created_at || order.created_by) && (
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {[order.created_at ? date(order.created_at) : null, order.created_by?.name]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-2 text-sm">
-          <span className="hidden tabular-nums text-muted-foreground sm:inline">
+          <span className="hidden font-semibold tabular-nums sm:inline">
             {money(order.total_amount.minor)}
           </span>
           {order.is_backorder && <Badge variant="outline">{t("orders.backorderBadge")}</Badge>}

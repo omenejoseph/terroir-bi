@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 class ListWorkOrdersQuery
 {
     /**
-     * @param  array{status?: ?string, assignee_id?: ?string, search?: ?string, due_from?: ?string, due_to?: ?string}  $filters
+     * @param  array{status?: ?string, assignee_id?: ?string, category?: ?string, search?: ?string, due_from?: ?string, due_to?: ?string}  $filters
      * @return Collection<int, WorkOrder>
      */
     public function get(array $filters = []): Collection
@@ -25,6 +25,10 @@ class ListWorkOrdersQuery
 
         if (! empty($filters['assignee_id'])) {
             $query->where('assignee_id', $filters['assignee_id']);
+        }
+
+        if (! empty($filters['category'])) {
+            $query->where('category', $filters['category']);
         }
 
         if (! empty($filters['search'])) {

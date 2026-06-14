@@ -30,69 +30,16 @@ class TranslationApiTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_admin_can_upsert_and_read_an_override(): void
+    public function test_member_reads_the_global_overrides(): void
     {
         $tenant = $this->createTenant();
-        Sanctum::actingAs($this->createMember($tenant, [TenantRole::Admin]));
+        // Overrides are platform-wide (managed in the back office), not per tenant.
+        TranslationOverride::create(['locale' => 'hr', 'key' => 'orders.title', 'value' => 'Narudžbe']);
 
-        $this->putJson('/api/v1/translations', [
-            'locale' => 'hr',
-            'key' => 'orders.title',
-            'value' => 'Narudžbe',
-        ], $this->tenantHeader($tenant))
-            ->assertOk()
-            ->assertJsonPath('data.key', 'orders.title');
+        Sanctum::actingAs($this->createMember($tenant, [TenantRole::Team]));
 
         $this->getJson('/api/v1/translations?locale=hr', $this->tenantHeader($tenant))
             ->assertOk()
             ->assertExactJson(['data' => ['orders.title' => 'Narudžbe']]);
-    }
-
-    public function test_non_admin_member_cannot_write_overrides(): void
-    {
-        $tenant = $this->createTenant();
-        Sanctum::actingAs($this->createMember($tenant, [TenantRole::Team]));
-
-        // A team member can read…
-        $this->getJson('/api/v1/translations?locale=hr', $this->tenantHeader($tenant))->assertOk();
-
-        // …but not write.
-        $this->putJson('/api/v1/translations', [
-            'locale' => 'hr', 'key' => 'k', 'value' => 'v',
-        ], $this->tenantHeader($tenant))->assertForbidden();
-    }
-
-    public function test_overrides_do_not_leak_across_tenants(): void
-    {
-        $a = $this->createTenant();
-        $admin = $this->createMember($a, [TenantRole::Admin]);
-        $b = $this->createTenant();
-
-        Sanctum::actingAs($admin);
-        $this->putJson('/api/v1/translations', [
-            'locale' => 'hr', 'key' => 'k', 'value' => 'A',
-        ], $this->tenantHeader($a))->assertOk();
-
-        // Same admin is not a member of B.
-        $this->getJson('/api/v1/translations?locale=hr', $this->tenantHeader($b))
-            ->assertForbidden();
-    }
-
-    public function test_admin_can_delete_an_override(): void
-    {
-        $tenant = $this->createTenant();
-        $admin = $this->createMember($tenant, [TenantRole::Admin]);
-
-        $this->actingAsTenant($tenant);
-        TranslationOverride::create(['locale' => 'hr', 'key' => 'k', 'value' => 'v']);
-        $this->forgetTenant();
-
-        Sanctum::actingAs($admin);
-        $this->deleteJson('/api/v1/translations', [
-            'locale' => 'hr', 'key' => 'k',
-        ], $this->tenantHeader($tenant))->assertNoContent();
-
-        $this->actingAsTenant($tenant);
-        $this->assertSame(0, TranslationOverride::count());
     }
 }

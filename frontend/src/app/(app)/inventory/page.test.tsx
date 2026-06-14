@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import InventoryPage from "./page";
 import { API_URL } from "@/lib/config";
-import { makeItem } from "@/test/fixtures";
+import { makeItem, makeSession } from "@/test/fixtures";
 import { server } from "@/test/mocks/server";
 import {
   renderWithProviders,
@@ -35,7 +35,7 @@ describe("InventoryPage", () => {
     expect(screen.getByRole("button", { name: /Check/ })).toBeInTheDocument();
   });
 
-  it("shows the vintage and a bottle-aware stock hint in the card summary", async () => {
+  it("shows a bottle-aware stock hint in the card summary", async () => {
     server.use(
       http.get(url, () =>
         HttpResponse.json({
@@ -60,8 +60,33 @@ describe("InventoryPage", () => {
     expect((await screen.findAllByText(/60 bottles/)).length).toBeGreaterThan(0);
     // Bottle item: shows bottles-per-case.
     expect(screen.getAllByText(/12\/case/).length).toBeGreaterThan(0);
-    // Vintage appears in the summary line.
-    expect(screen.getAllByText(/· 2021/).length).toBeGreaterThan(0);
+  });
+
+  it("lets admins edit and deactivate from the overview", async () => {
+    seedAuth(); // default session is an admin
+    renderWithProviders(<InventoryPage />);
+    const user = userEvent.setup();
+
+    await user.click((await screen.findAllByText("Plavac Mali 2021"))[0]);
+    await screen.findByRole("tab", { name: "Overview" });
+    expect(await screen.findByRole("button", { name: "Edit" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Deactivate" })).toBeInTheDocument();
+  });
+
+  it("hides edit and deactivate from non-admins", async () => {
+    seedAuth();
+    server.use(
+      http.get(`${API_URL}/auth/me`, () =>
+        HttpResponse.json({ data: makeSession({ roles: ["INVENTORY"] }) }),
+      ),
+    );
+    renderWithProviders(<InventoryPage />);
+    const user = userEvent.setup();
+
+    await user.click((await screen.findAllByText("Plavac Mali 2021"))[0]);
+    await screen.findByRole("tab", { name: "Overview" });
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Deactivate" })).not.toBeInTheDocument();
   });
 
   it("filters the list via the search box (debounced, re-queries the API)", async () => {
@@ -168,7 +193,7 @@ describe("InventoryPage", () => {
     // Initial load has no category filter.
     expect(await screen.findByText("ALL")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Raw material" }));
+    await user.click(screen.getByRole("tab", { name: "Raw material" }));
 
     expect(await screen.findByText("RAW_MATERIAL")).toBeInTheDocument();
     expect(lastCategory).toBe("RAW_MATERIAL");

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 
 import { APP_NAME } from "@/lib/config";
 import { Providers } from "@/app/providers";
@@ -23,8 +24,11 @@ export const metadata: Metadata = {
   },
 };
 
+// Match the order-mgmt project's typeface.
+const inter = Inter({ subsets: ["latin"] });
+
 export const viewport: Viewport = {
-  themeColor: "#7a1f2b",
+  themeColor: "#60524d",
   width: "device-width",
   initialScale: 1,
   // Allow the standalone PWA to use the full viewport including notches.
@@ -34,7 +38,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${inter.className} antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

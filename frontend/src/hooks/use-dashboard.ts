@@ -2,14 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { dashboardApi } from "@/lib/api/dashboard";
+import { dashboardApi, type DashboardQuery } from "@/lib/api/dashboard";
 import { inventoryApi } from "@/lib/api/inventory";
 
-/** Aggregated dashboard summary for a time range. Cached a little longer — it's an aggregate. */
-export function useDashboard(range: string) {
+/** Aggregated dashboard summary for a selected period. Cached a little longer — it's an aggregate. */
+export function useDashboard(query: DashboardQuery) {
   return useQuery({
-    queryKey: ["dashboard", range],
-    queryFn: () => dashboardApi.summary(range),
+    queryKey: ["dashboard", query.period, query.from, query.to],
+    queryFn: () => dashboardApi.summary(query),
     staleTime: 60_000,
   });
 }

@@ -62,6 +62,20 @@ class CustomerOrderAnalyticsQuery
         );
         $nextQuarterProjection = (int) round($priorQuarter * max(0.0, 1 + $yoy));
 
+        // Per-month forecast for the next 3 months: each = same month last year × (1 + YoY).
+        $growth = max(0.0, 1 + $yoy);
+        $expectedNext3m = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $monthStart = $now->copy()->startOfMonth()->addMonths($i);
+            $lyStart = $monthStart->copy()->subYear();
+            $ly = $this->revenueBetween($base(), $lyStart, $lyStart->copy()->endOfMonth());
+            $expectedNext3m[] = [
+                'month' => $monthStart->format('Y-m'),
+                'last_year' => Money::fromMinor($ly, $currency)->jsonSerialize(),
+                'expected' => Money::fromMinor((int) round($ly * $growth), $currency)->jsonSerialize(),
+            ];
+        }
+
         return [
             'total_revenue' => Money::fromMinor($totalRevenue, $currency)->jsonSerialize(),
             'this_year' => Money::fromMinor($thisYear, $currency)->jsonSerialize(),
@@ -71,6 +85,7 @@ class CustomerOrderAnalyticsQuery
             'annual_projection' => Money::fromMinor($annualProjection, $currency)->jsonSerialize(),
             'expected_next_order_date' => $this->expectedNext($customer)?->toIso8601String(),
             'next_quarter_projection' => Money::fromMinor($nextQuarterProjection, $currency)->jsonSerialize(),
+            'expected_next_3m' => $expectedNext3m,
         ];
     }
 
