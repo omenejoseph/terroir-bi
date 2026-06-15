@@ -20,7 +20,7 @@
     /* Off-white canvas + the soft brand glow at the top, exactly as the
        frontend body. Cards/sidebar stay white and lift off the page. */
     .fi-body {
-        background-color: oklch(0.984 0.004 264);
+        background-color: #f9f8f6; /* Warm Alabaster — matches the frontend canvas */
         background-image: radial-gradient(
             72% 42% at 50% -8%,
             color-mix(in oklch, var(--primary-600) 9%, transparent),

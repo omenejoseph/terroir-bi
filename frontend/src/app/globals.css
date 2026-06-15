@@ -13,39 +13,46 @@
 :root {
   --radius: 0.625rem;
 
-  /* Off-white canvas so white cards/sidebar lift off the page. */
-  --background: oklch(0.984 0.004 264);
-  --foreground: oklch(0.141 0.005 285.823);
+  /* Palette: Warm Alabaster canvas; white cards lift off it. */
+  --background: #f9f8f6; /* Warm Alabaster */
+  --foreground: #3a3a3a; /* Deep Charcoal-Slate */
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
+  --card: #ffffff;
+  --card-foreground: #3a3a3a;
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
+  --popover: #ffffff;
+  --popover-foreground: #3a3a3a;
 
-  /* Brand / primary — warm neutral greige/stone. Change these two lines to rebrand. */
-  --primary: oklch(0.45 0.02 40);
-  --primary-foreground: oklch(0.985 0 0);
+  /*
+    Brand colour — the single source of truth for the app's accent. Everything
+    brand-tinted (primary, ring, the top-of-page glow) derives from --brand, so
+    rebranding is ONE line here. It can also be overridden at runtime (e.g. set
+    `--brand` on <html> from saved tenant settings) to retheme live without a
+    rebuild — the groundwork for per-tenant dynamic theming.
+  */
+  --brand: #3a3a3a; /* Deep Charcoal-Slate */
+  --primary: var(--brand);
+  --primary-foreground: #f9f8f6;
 
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --secondary: #f4f5f6; /* Cool Platinum */
+  --secondary-foreground: #3a3a3a;
 
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
+  --muted: #f4f5f6; /* Cool Platinum */
+  --muted-foreground: oklch(0.55 0.01 250); /* mid slate-grey for secondary text */
 
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
+  --accent: #f4f5f6; /* Cool Platinum */
+  --accent-foreground: #3a3a3a;
 
-  /* Clear alert red — now that the brand is neutral, this reads as a true warning. */
+  /* Clear alert red — kept outside the neutral palette so warnings still read. */
   --destructive: oklch(0.55 0.2 27);
-  --destructive-foreground: oklch(0.985 0 0);
+  --destructive-foreground: #f9f8f6;
 
   --success: oklch(0.59 0.13 163);
   --success-foreground: oklch(0.985 0 0);
 
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.45 0.02 40);
+  --border: #d8dee2; /* Soft Slate */
+  --input: #d8dee2; /* Soft Slate */
+  --ring: var(--brand);
 }
 
 .dark {
@@ -58,8 +65,9 @@
   --popover: oklch(0.21 0.006 285.885);
   --popover-foreground: oklch(0.985 0 0);
 
-  --primary: oklch(0.63 0.025 40);
-  --primary-foreground: oklch(0.985 0 0);
+  --brand: #d8dee2; /* Soft Slate — light accent for dark mode */
+  --primary: var(--brand);
+  --primary-foreground: #3a3a3a; /* dark text on the light accent */
 
   --secondary: oklch(0.274 0.006 286.033);
   --secondary-foreground: oklch(0.985 0 0);
@@ -78,7 +86,7 @@
 
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.63 0.025 40);
+  --ring: var(--brand);
 }
 
 /*

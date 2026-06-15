@@ -30,25 +30,11 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
-            // Match the frontend's design tokens (frontend/src/app/globals.css).
-            // The primary ramp is explicit so shade 600 — what Filament's filled
-            // buttons use — is EXACTLY the frontend's --primary button color
-            // (oklch(0.43 0.16 16)); a generated palette would normalise it
-            // lighter. 500 is the hover shade (frontend hovers at primary/90).
+            // Brand palette lives in config/brand.php — the single place to
+            // retheme the back office. Shade 600 (Filament's filled-button color)
+            // mirrors the frontend's --brand token (frontend/src/app/globals.css).
             ->colors([
-                'primary' => [
-                    50 => 'oklch(0.97 0.013 16)',
-                    100 => 'oklch(0.94 0.03 16)',
-                    200 => 'oklch(0.89 0.06 16)',
-                    300 => 'oklch(0.81 0.1 16)',
-                    400 => 'oklch(0.66 0.14 16)',
-                    500 => 'oklch(0.48 0.16 16)',
-                    600 => 'oklch(0.43 0.16 16)',
-                    700 => 'oklch(0.38 0.15 16)',
-                    800 => 'oklch(0.33 0.13 16)',
-                    900 => 'oklch(0.28 0.11 16)',
-                    950 => 'oklch(0.22 0.09 16)',
-                ],
+                'primary' => config('brand.primary'),
                 'gray' => Color::Zinc,
             ])
             ->brandName('Terroir BI')
