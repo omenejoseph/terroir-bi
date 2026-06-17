@@ -169,9 +169,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-card/80 px-4 py-2.5 backdrop-blur-xl md:hidden">
+      <header className="dark sticky top-0 z-30 flex items-center justify-between border-b border-border bg-[var(--sidebar)] px-4 py-2.5 text-foreground md:hidden">
         <Link href="/dashboard" aria-label={APP_NAME}>
-          <Logo className="size-9" />
+          <Logo light className="size-9" />
         </Link>
         <NotificationsBell />
       </header>
@@ -186,7 +186,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-72 transform flex-col border-r border-border bg-card/95 backdrop-blur-xl transition-transform md:hidden",
+          "dark fixed inset-y-0 left-0 z-50 flex w-72 transform flex-col border-r border-border bg-[var(--sidebar)] text-foreground transition-transform md:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -202,7 +202,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside
         style={{ width: collapsed ? RAIL : width }}
         className={cn(
-          "relative hidden shrink-0 flex-col border-r border-border bg-card/80 backdrop-blur-xl md:flex",
+          "dark relative hidden shrink-0 flex-col border-r border-border bg-[var(--sidebar)] text-foreground md:flex",
           // Pin to the viewport so the menu stays put while the page scrolls.
           "sticky top-0 h-dvh self-start",
           !dragging && "transition-[width] duration-300 ease-out",
@@ -258,7 +258,7 @@ function MobileBottomNav({ pathname, onMore }: { pathname: string; onMore: () =>
   return (
     <nav
       aria-label={t("nav.primary")}
-      className="fixed inset-x-0 bottom-0 z-30 flex items-stretch border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
+      className="dark fixed inset-x-0 bottom-0 z-30 flex items-stretch border-t border-border bg-[var(--sidebar)] pb-[env(safe-area-inset-bottom)] text-foreground md:hidden"
     >
       {primary.map((item) => {
         const active = isActive(item.href);
@@ -310,7 +310,7 @@ function SidebarContent({
       {/* Logo — centered */}
       <div className="relative flex items-center justify-center">
         <Link href="/dashboard" aria-label={APP_NAME} className="flex w-full items-center justify-center">
-          <Logo className={collapsed ? "size-10" : "h-auto w-full max-w-[136px]"} />
+          <Logo light className={collapsed ? "size-10" : "h-auto w-full max-w-[136px]"} />
         </Link>
         {showClose && (
           <Button

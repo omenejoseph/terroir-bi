@@ -53,6 +53,14 @@
   --border: #d8dee2; /* Soft Slate */
   --input: #d8dee2; /* Soft Slate */
   --ring: var(--brand);
+
+  /*
+    Nav chrome surface (sidebar + top bars). Kept as its own token so the dark
+    chrome can be retuned independently of the accent. Defined only here (not in
+    .dark) so it stays constant even though those surfaces opt into dark tokens
+    for their contents. Change this one line to recolour all the nav chrome.
+  */
+  --sidebar: #3a3a3a; /* Deep Charcoal-Slate */
 }
 
 .dark {

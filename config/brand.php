@@ -20,6 +20,10 @@ declare(strict_types=1);
 */
 
 return [
+    // Nav chrome (sidebar) surface — mirrors the frontend's --sidebar token.
+    // The top bar is intentionally left light.
+    'sidebar' => '#3a3a3a', // Deep Charcoal-Slate
+
     'primary' => [
         50 => '#f7f7f7',
         100 => '#ededed',

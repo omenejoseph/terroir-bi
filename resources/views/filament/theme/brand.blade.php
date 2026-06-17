@@ -38,24 +38,59 @@
         padding-block: 1rem;
     }
 
-    /* The frontend sidebar is an elevated translucent-white surface (bg-card/80,
-       backdrop blur, right border) that lifts off the off-white canvas. Filament's
-       desktop sidebar is transparent by default — give it the same treatment so
-       the menu bar reads as a raised white panel, not part of the page. */
+    /* Dark charcoal chrome (sidebar + top bar) framing a light content area,
+       both driven by config('brand.sidebar'). */
     .fi-sidebar {
-        background-color: color-mix(in oklch, white 82%, transparent);
-        backdrop-filter: blur(16px);
-        border-inline-end: 1px solid var(--gray-200);
+        background-color: {{ config('brand.sidebar') }};
+        border-inline-end: 1px solid color-mix(in oklch, white 12%, transparent);
     }
 
-    /*
-        Active nav item, as in the frontend sidebar: a light primary tint
-        (bg-primary/10) plus a small primary bar on the left. The item's text
-        and icon keep their normal colors — the highlight does the work, the
-        label does not recolor.
-    */
+    /* Top bar — same charcoal chrome as the sidebar; its contents read light. */
+    .fi-topbar {
+        background-color: {{ config('brand.sidebar') }};
+        border-bottom: 1px solid color-mix(in oklch, white 12%, transparent);
+    }
+
+    .fi-topbar,
+    .fi-topbar a,
+    .fi-topbar button,
+    .fi-topbar .fi-icon-btn,
+    .fi-topbar .fi-icon {
+        color: color-mix(in oklch, white 80%, transparent);
+    }
+
+    .fi-topbar a:hover,
+    .fi-topbar button:hover,
+    .fi-topbar .fi-icon-btn:hover,
+    .fi-topbar .fi-icon-btn:hover .fi-icon {
+        color: white;
+    }
+
+    /* Sidebar contents read light on the charcoal surface. */
+    .fi-sidebar-item-btn .fi-sidebar-item-label {
+        color: color-mix(in oklch, white 75%, transparent);
+    }
+
+    .fi-sidebar-item-btn .fi-icon {
+        color: color-mix(in oklch, white 55%, transparent);
+    }
+
+    .fi-sidebar-item-btn:hover {
+        background-color: color-mix(in oklch, white 8%, transparent);
+    }
+
+    .fi-sidebar-item-btn:hover .fi-sidebar-item-label,
+    .fi-sidebar-item-btn:hover .fi-icon {
+        color: white;
+    }
+
+    .fi-sidebar-group-label {
+        color: color-mix(in oklch, white 45%, transparent);
+    }
+
+    /* Active nav item: a light tint + a light left bar + light label/icon. */
     .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
-        background-color: color-mix(in oklch, var(--primary-600) 10%, transparent);
+        background-color: color-mix(in oklch, white 12%, transparent);
     }
 
     .fi-sidebar-item.fi-active > .fi-sidebar-item-btn::before {
@@ -67,14 +102,11 @@
         width: 2px;
         translate: 0 -50%;
         border-radius: 9999px;
-        background-color: var(--primary-600);
+        background-color: white;
     }
 
-    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label {
-        color: var(--gray-700);
-    }
-
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label,
     .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon {
-        color: var(--gray-400);
+        color: white;
     }
 </style>

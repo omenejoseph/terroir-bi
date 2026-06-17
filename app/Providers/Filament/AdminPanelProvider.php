@@ -38,7 +38,8 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::Zinc,
             ])
             ->brandName('Terroir BI')
-            ->brandLogo(asset('images/logo.png'))
+            // The sidebar header sits on the dark charcoal chrome — use the light mark.
+            ->brandLogo(asset('images/logo-light.png'))
             ->brandLogoHeight('8.5rem')
             // The default public/favicon.ico is empty; use the square brand logo.
             ->favicon(asset('images/logo.png'))
