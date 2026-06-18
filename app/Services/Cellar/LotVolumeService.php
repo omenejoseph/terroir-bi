@@ -63,6 +63,33 @@ class LotVolumeService
         });
     }
 
+    /**
+     * Rack: move `$volume` of a lot from one vessel to another within the same
+     * lot. The lot's total volume is unchanged; both vessels are resynced.
+     */
+    public function moveWithinLot(WineLot $lot, string $fromVesselId, Vessel $toVessel, string $volume): void
+    {
+        $volume = Quantity::normalize($volume);
+
+        DB::transaction(function () use ($lot, $fromVesselId, $toVessel, $volume): void {
+            $source = VesselLot::query()
+                ->where('wine_lot_id', $lot->getKey())
+                ->where('vessel_id', $fromVesselId)
+                ->lockForUpdate()
+                ->first();
+
+            if ($source === null || Quantity::compare((string) $source->volume, $volume) < 0) {
+                throw ValidationException::withMessages([
+                    'volume_liters' => 'The source vessel does not hold that much of this lot.',
+                ]);
+            }
+
+            $this->applyToVesselLot($source, Quantity::negate($volume));
+            $this->sync->syncMany([$fromVesselId]);
+            $this->assignToVessel($lot, $toVessel, $volume);
+        });
+    }
+
     /** Remove a lot's presence from a vessel and resync that vessel. */
     public function unassign(VesselLot $vesselLot): void
     {
@@ -124,6 +151,48 @@ class LotVolumeService
 
             $lot->current_volume = $newLotVolume;
             $lot->save();
+
+            return $lot;
+        });
+    }
+
+    /**
+     * Remove `$volume` litres from a lot, draining its vessels in order, and
+     * reduce the lot's `current_volume`. Used by bottling. Refuses to remove more
+     * than the lot holds.
+     */
+    public function drain(WineLot $lot, string $volume): WineLot
+    {
+        $volume = Quantity::normalize($volume);
+
+        return DB::transaction(function () use ($lot, $volume): WineLot {
+            /** @var WineLot $lot */
+            $lot = WineLot::query()->whereKey($lot->getKey())->lockForUpdate()->firstOrFail();
+
+            if (Quantity::compare($volume, (string) $lot->current_volume) > 0) {
+                throw ValidationException::withMessages([
+                    'volume_used' => 'Cannot bottle more than the lot holds.',
+                ]);
+            }
+
+            $remaining = $volume;
+            $affected = [];
+            foreach ($lot->vesselLots()->lockForUpdate()->get() as $vesselLot) {
+                if (Quantity::compare($remaining, '0.000') <= 0) {
+                    break;
+                }
+                $take = Quantity::compare((string) $vesselLot->volume, $remaining) <= 0
+                    ? (string) $vesselLot->volume
+                    : $remaining;
+                $this->applyToVesselLot($vesselLot, Quantity::negate($take));
+                $remaining = Quantity::sub($remaining, $take);
+                $affected[] = $vesselLot->vessel_id;
+            }
+
+            $lot->current_volume = Quantity::sub((string) $lot->current_volume, $volume);
+            $lot->save();
+
+            $this->sync->syncMany($affected);
 
             return $lot;
         });

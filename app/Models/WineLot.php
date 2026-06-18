@@ -12,6 +12,7 @@ use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * A wine lot / cuvée — the unit a cellar tracks from fermentation to bottling.
@@ -87,5 +88,71 @@ class WineLot extends Model
     public function vesselLots(): HasMany
     {
         return $this->hasMany(VesselLot::class);
+    }
+
+    /**
+     * @return HasMany<CellarAnalysis, $this>
+     */
+    public function analyses(): HasMany
+    {
+        return $this->hasMany(CellarAnalysis::class);
+    }
+
+    /**
+     * The most recent analysis, for the cellar-map SO₂ badge.
+     *
+     * @return HasOne<CellarAnalysis, $this>
+     */
+    public function latestAnalysis(): HasOne
+    {
+        return $this->hasOne(CellarAnalysis::class)->latestOfMany('date');
+    }
+
+    /**
+     * @return HasMany<CellarAddition, $this>
+     */
+    public function additions(): HasMany
+    {
+        return $this->hasMany(CellarAddition::class);
+    }
+
+    /**
+     * @return HasMany<CellarProcess, $this>
+     */
+    public function processes(): HasMany
+    {
+        return $this->hasMany(CellarProcess::class);
+    }
+
+    /**
+     * @return HasMany<CellarTastingNote, $this>
+     */
+    public function tastingNotes(): HasMany
+    {
+        return $this->hasMany(CellarTastingNote::class);
+    }
+
+    /**
+     * @return HasMany<Bottling, $this>
+     */
+    public function bottlings(): HasMany
+    {
+        return $this->hasMany(Bottling::class);
+    }
+
+    /**
+     * @return HasMany<CellarTransfer, $this>
+     */
+    public function transfersOut(): HasMany
+    {
+        return $this->hasMany(CellarTransfer::class, 'from_lot_id');
+    }
+
+    /**
+     * @return HasMany<CellarTransfer, $this>
+     */
+    public function transfersIn(): HasMany
+    {
+        return $this->hasMany(CellarTransfer::class, 'to_lot_id');
     }
 }

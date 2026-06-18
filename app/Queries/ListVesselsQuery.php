@@ -19,7 +19,7 @@ class ListVesselsQuery
      */
     public function get(array $filters = []): Collection
     {
-        $query = Vessel::query()->with(['vesselLots.wineLot']);
+        $query = Vessel::query()->with(['vesselLots.wineLot.latestAnalysis']);
 
         if (! empty($filters['room'])) {
             $query->where('room', $filters['room']);

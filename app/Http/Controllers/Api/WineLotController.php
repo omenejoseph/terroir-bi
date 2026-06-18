@@ -4,26 +4,58 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Cellar\AddCellarAdditionAction;
+use App\Actions\Cellar\AddCellarAnalysisAction;
+use App\Actions\Cellar\AddCellarProcessAction;
+use App\Actions\Cellar\AddTastingNoteAction;
 use App\Actions\Cellar\AdjustLotVolumeAction;
 use App\Actions\Cellar\AssignLotToVesselAction;
+use App\Actions\Cellar\BulkAddAnalysesAction;
+use App\Actions\Cellar\CreateBottlingAction;
+use App\Actions\Cellar\CreateTransferAction;
 use App\Actions\Cellar\CreateWineLotAction;
+use App\Actions\Cellar\DeleteBottlingAction;
+use App\Actions\Cellar\DeleteCellarAdditionAction;
+use App\Actions\Cellar\DeleteCellarAnalysisAction;
+use App\Actions\Cellar\DeleteCellarProcessAction;
+use App\Actions\Cellar\DeleteTastingNoteAction;
+use App\Actions\Cellar\DeleteTransferAction;
 use App\Actions\Cellar\UnassignLotFromVesselAction;
+use App\Actions\Cellar\UpdateCellarAnalysisAction;
 use App\Actions\Cellar\UpdateWineLotAction;
 use App\DataTransferObjects\WineLotData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cellar\AdjustLotVolumeRequest;
 use App\Http\Requests\Cellar\AssignVesselRequest;
+use App\Http\Requests\Cellar\BulkAnalysesRequest;
+use App\Http\Requests\Cellar\StoreBottlingRequest;
+use App\Http\Requests\Cellar\StoreCellarAdditionRequest;
+use App\Http\Requests\Cellar\StoreCellarAnalysisRequest;
+use App\Http\Requests\Cellar\StoreCellarProcessRequest;
+use App\Http\Requests\Cellar\StoreTastingNoteRequest;
+use App\Http\Requests\Cellar\StoreTransferRequest;
 use App\Http\Requests\Cellar\StoreWineLotRequest;
 use App\Http\Requests\Cellar\UpdateWineLotRequest;
+use App\Models\Bottling;
+use App\Models\CellarAddition;
+use App\Models\CellarAnalysis;
+use App\Models\CellarProcess;
+use App\Models\CellarTastingNote;
+use App\Models\CellarTransfer;
+use App\Models\User;
 use App\Models\Vessel;
 use App\Models\VesselLot;
 use App\Models\WineLot;
 use App\Queries\ListWineLotsQuery;
+use App\Queries\LotAnalysisTrendQuery;
+use App\Services\Cellar\LotCostService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class WineLotController extends Controller
 {
+    public function __construct(private readonly LotCostService $costs) {}
+
     public function index(Request $request, ListWineLotsQuery $query): JsonResponse
     {
         $paginator = $query->paginate([
@@ -93,13 +125,142 @@ class WineLotController extends Controller
         return response()->json(['data' => $this->present($lot)]);
     }
 
+    // --- Analyses -----------------------------------------------------------
+
+    public function analysisTrend(WineLot $wineLot, LotAnalysisTrendQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->get($wineLot)]);
+    }
+
+    public function addAnalysis(StoreCellarAnalysisRequest $request, WineLot $wineLot, AddCellarAnalysisAction $action): JsonResponse
+    {
+        $action->execute($wineLot, $request->validated(), $this->userId($request));
+
+        return response()->json(['data' => $this->present($wineLot->refresh())], 201);
+    }
+
+    public function updateAnalysis(StoreCellarAnalysisRequest $request, WineLot $wineLot, CellarAnalysis $analysis, UpdateCellarAnalysisAction $action): JsonResponse
+    {
+        abort_unless($analysis->wine_lot_id === $wineLot->getKey(), 404);
+        $action->execute($analysis, $request->validated());
+
+        return response()->json(['data' => $this->present($wineLot->refresh())]);
+    }
+
+    public function deleteAnalysis(WineLot $wineLot, CellarAnalysis $analysis, DeleteCellarAnalysisAction $action): JsonResponse
+    {
+        abort_unless($analysis->wine_lot_id === $wineLot->getKey(), 404);
+        $action->execute($analysis);
+
+        return response()->json(['data' => $this->present($wineLot->refresh())]);
+    }
+
+    public function bulkAnalyses(BulkAnalysesRequest $request, BulkAddAnalysesAction $action): JsonResponse
+    {
+        /** @var list<array<string, mixed>> $rows */
+        $rows = (array) $request->validated('analyses', []);
+        $created = $action->execute($rows, $this->userId($request));
+
+        return response()->json(['data' => ['created' => count($created)]], 201);
+    }
+
+    // --- Additions / processes / tastings -----------------------------------
+
+    public function addAddition(StoreCellarAdditionRequest $request, WineLot $wineLot, AddCellarAdditionAction $action): JsonResponse
+    {
+        $action->execute($wineLot, $request->validated(), $this->userId($request));
+
+        return response()->json(['data' => $this->present($wineLot->refresh())], 201);
+    }
+
+    public function deleteAddition(WineLot $wineLot, CellarAddition $addition, DeleteCellarAdditionAction $action): JsonResponse
+    {
+        abort_unless($addition->wine_lot_id === $wineLot->getKey(), 404);
+        $action->execute($addition);
+
+        return response()->json(['data' => $this->present($wineLot->refresh())]);
+    }
+
+    public function addProcess(StoreCellarProcessRequest $request, WineLot $wineLot, AddCellarProcessAction $action): JsonResponse
+    {
+        $action->execute($wineLot, $request->validated(), $this->userId($request));
+
+        return response()->json(['data' => $this->present($wineLot->refresh())], 201);
+    }
+
+    public function deleteProcess(WineLot $wineLot, CellarProcess $process, DeleteCellarProcessAction $action): JsonResponse
+    {
+        abort_unless($process->wine_lot_id === $wineLot->getKey(), 404);
+        $action->execute($process);
+
+        return response()->json(['data' => $this->present($wineLot->refresh())]);
+    }
+
+    public function addTasting(StoreTastingNoteRequest $request, WineLot $wineLot, AddTastingNoteAction $action): JsonResponse
+    {
+        $action->execute($wineLot, $request->validated(), $this->userId($request));
+
+        return response()->json(['data' => $this->present($wineLot->refresh())], 201);
+    }
+
+    public function deleteTasting(WineLot $wineLot, CellarTastingNote $tastingNote, DeleteTastingNoteAction $action): JsonResponse
+    {
+        abort_unless($tastingNote->wine_lot_id === $wineLot->getKey(), 404);
+        $action->execute($tastingNote);
+
+        return response()->json(['data' => $this->present($wineLot->refresh())]);
+    }
+
+    // --- Transfers / bottling ----------------------------------------------
+
+    public function addTransfer(StoreTransferRequest $request, WineLot $wineLot, CreateTransferAction $action): JsonResponse
+    {
+        $action->execute($wineLot, $request->validated(), $this->userId($request));
+
+        return response()->json(['data' => $this->present($wineLot->refresh())], 201);
+    }
+
+    public function deleteTransfer(WineLot $wineLot, CellarTransfer $transfer, DeleteTransferAction $action): JsonResponse
+    {
+        abort_unless($transfer->from_lot_id === $wineLot->getKey() || $transfer->to_lot_id === $wineLot->getKey(), 404);
+        $action->execute($transfer);
+
+        return response()->json(['data' => $this->present($wineLot->refresh())]);
+    }
+
+    public function addBottling(StoreBottlingRequest $request, WineLot $wineLot, CreateBottlingAction $action): JsonResponse
+    {
+        $action->execute($wineLot, $request->validated(), $this->userId($request));
+
+        return response()->json(['data' => $this->present($wineLot->refresh())], 201);
+    }
+
+    public function deleteBottling(WineLot $wineLot, Bottling $bottling, DeleteBottlingAction $action): JsonResponse
+    {
+        abort_unless($bottling->wine_lot_id === $wineLot->getKey(), 404);
+        $action->execute($bottling);
+
+        return response()->json(['data' => $this->present($wineLot->refresh())]);
+    }
+
     /**
      * @return array<string, mixed>
      */
     private function present(WineLot $lot): array
     {
-        $lot->loadMissing(['grapes', 'vesselLots.vessel']);
+        $lot->loadMissing([
+            'grapes', 'vesselLots.vessel', 'analyses.vessel', 'additions',
+            'processes', 'tastingNotes', 'transfersOut', 'transfersIn', 'bottlings',
+        ]);
 
-        return WineLotData::fromModel($lot, withDetail: true)->toArray();
+        return WineLotData::fromModel($lot, withDetail: true, costBreakdown: $this->costs->breakdown($lot))->toArray();
+    }
+
+    private function userId(Request $request): string
+    {
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+
+        return $user->getKey();
     }
 }

@@ -65,6 +65,11 @@ final class VesselData implements Arrayable, JsonSerializable
                         'grape_variety' => $vl->wineLot->grape_variety,
                         'vintage' => $vl->wineLot->vintage,
                         'wine_type' => $vl->wineLot->wine_type?->value,
+                        // Latest SO₂ reading for the map badge (null when no analysis yet).
+                        'free_so2' => $vl->wineLot->latestAnalysis?->free_so2 !== null
+                            ? (string) $vl->wineLot->latestAnalysis->free_so2 : null,
+                        'total_so2' => $vl->wineLot->latestAnalysis?->total_so2 !== null
+                            ? (string) $vl->wineLot->latestAnalysis->total_so2 : null,
                     ] : null,
                 ])->all();
         }
