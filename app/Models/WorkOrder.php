@@ -37,6 +37,7 @@ class WorkOrder extends Model
     protected $fillable = [
         'title', 'description', 'category', 'priority', 'status',
         'start_date', 'due_date', 'completed_at', 'sort_order', 'assignee_id', 'created_by_id',
+        'wine_lot_id', 'vessel_id',
     ];
 
     protected $attributes = [

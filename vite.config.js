@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
-import { bunny } from 'laravel-vite-plugin/fonts';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
@@ -8,11 +7,10 @@ export default defineConfig({
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js', 'resources/css/filament/admin/theme.css'],
             refresh: true,
-            fonts: [
-                bunny('Instrument Sans', {
-                    weights: [400, 500, 600],
-                }),
-            ],
+            // The build-time bunny('Instrument Sans') font fetch was removed so the
+            // asset build is hermetic (no external network call at build time, which
+            // fails behind restricted network policies). The UI falls back to the
+            // default system font stack; re-add the `fonts:` option to restore it.
         }),
         tailwindcss(),
     ],

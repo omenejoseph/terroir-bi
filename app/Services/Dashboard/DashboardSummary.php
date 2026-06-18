@@ -150,14 +150,19 @@ class DashboardSummary
         $channels = ['wholesale' => 0, 'retail' => 0, 'agency' => 0, 'shipshop' => 0, 'other' => 0];
 
         foreach ($orders as $order) {
-            $raw = $order->customer_id !== null ? $types->get($order->customer_id) : null;
+            $raw = $types->get($order->customer_id);
             $type = $raw instanceof CustomerType ? $raw : (is_string($raw) ? CustomerType::tryFrom($raw) : null);
             $channels[$type?->channelKey() ?? 'other'] += $order->total_amount->getMinorAmount();
         }
 
-        $channels['total'] = array_sum($channels);
-
-        return $channels;
+        return [
+            'wholesale' => $channels['wholesale'],
+            'retail' => $channels['retail'],
+            'agency' => $channels['agency'],
+            'shipshop' => $channels['shipshop'],
+            'other' => $channels['other'],
+            'total' => array_sum($channels),
+        ];
     }
 
     /** Sum of non-consignment order revenue (minor units) in an optional window. */
@@ -301,11 +306,15 @@ class DashboardSummary
                     'order_number' => $o->order_number,
                     'customer' => $customer instanceof Customer ? $customer->company_name : '',
                     'created_by' => $creator !== null ? trim($creator->first_name.' '.$creator->last_name) : null,
-                    'items' => $o->items->map(fn (OrderItem $it): array => [
-                        'name' => $it->inventoryItem?->name ?? $it->custom_description,
-                        'quantity' => $it->quantity,
-                        'unit_type' => $it->unit_type,
-                    ])->values()->all(),
+                    'items' => array_values($o->items->map(function (OrderItem $it): array {
+                        $product = $it->inventoryItem;
+
+                        return [
+                            'name' => $product instanceof InventoryItem ? $product->name : $it->custom_description,
+                            'quantity' => $it->quantity,
+                            'unit_type' => $it->unit_type,
+                        ];
+                    })->all()),
                     'total' => $o->total_amount->getMinorAmount(),
                     'status' => self::STATUS_KEY[$o->status->value],
                     'date' => $o->created_at?->format('M j') ?? '',

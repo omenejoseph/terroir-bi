@@ -20,6 +20,9 @@ enum Module: string
     case Costs = 'costs';
     case CashFlow = 'cash_flow';
     case WorkOrders = 'work_orders';
+    case Cellar = 'cellar';
+    case Vineyards = 'vineyards';
+    case Production = 'production';
     case Team = 'team';
     case Settings = 'settings';
     case AiDataEntry = 'ai_data_entry';
@@ -37,6 +40,9 @@ enum Module: string
             self::Costs => 'Costs',
             self::CashFlow => 'Cash flow',
             self::WorkOrders => 'Work orders',
+            self::Cellar => 'Cellar',
+            self::Vineyards => 'Vineyards',
+            self::Production => 'Production',
             self::Team => 'Team',
             self::Settings => 'Settings',
             self::AiDataEntry => 'AI data entry',
