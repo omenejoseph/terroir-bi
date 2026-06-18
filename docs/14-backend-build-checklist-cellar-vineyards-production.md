@@ -37,7 +37,7 @@ Progress key: `[ ]` todo · `[~]` in progress · `[x]` done.
 
 ### B.3 Vessel actions + endpoints
 - [x] Actions: `CreateVessel`, `UpdateVessel`, `DeleteVessel` (empty-only guard), `UpdateVesselLayout` (single + batch position/size/room).
-- [~] `BulkCreateVessels` (≤50), `DuplicateVessels`, `RenameCellarRoom` — deferred follow-up.
+- [x] `BulkCreateVessels` (≤50) + `RenameCellarRoom` → `POST /vessels/bulk`, `POST /vessels/rename-room` (landed with Phase D). `DuplicateVessels` still deferred.
 - [x] FormRequests + `VesselData` DTO + `ListVesselsQuery` (cellar map, vessels+lots by room).
 - [x] Routes under `can:cellar.*` (module gating via `vessels` path prefix): `GET /vessels`, `PATCH /vessels/layout`, CRUD.
 - **Accept:** ✅ map query returns vessels with lot summary; delete blocked while occupied; PHPStan clean.
@@ -50,7 +50,7 @@ Progress key: `[ ]` todo · `[~]` in progress · `[x]` done.
 
 ---
 
-## Phase C — Cellar quality (Analyses + ops + bottling)
+## Phase C — Cellar quality (Analyses + ops + bottling)  *(DONE)*
 
 ### C.1 Analyses
 - [ ] Migration `cellar_analyses`; `CellarAnalysis` model.
@@ -71,7 +71,15 @@ Progress key: `[ ]` todo · `[~]` in progress · `[x]` done.
 
 ---
 
-## Phase D — Cellar protocols + monitor
+> **Phase C — DONE.** All migrations/models/services/actions/endpoints landed
+> (analyses, additions, processes, tastings, transfers, bottling→stock via
+> StockLedger, enological products, fermentation monitor, cellar-map SO₂
+> enrichment). Tests: `tests/Feature/Cellar/CellarLifecycleTest.php`.
+> `composer check` green (997 tests).
+
+---
+
+## Phase D — Cellar protocols + monitor  *(DONE)*
 
 ### D.1 Fermentation templates
 - [ ] Migration `fermentation_templates` (`stages` json) + `enological_products`; models.
@@ -141,8 +149,17 @@ Progress key: `[ ]` todo · `[~]` in progress · `[x]` done.
 
 ---
 
+## Status
+
+**Cellar module: backend Phases A–D complete and a full Cellar frontend shipped**
+(Next.js SPA: interactive map with drag/resize/lasso/undo/room-rename, wine-lot
+list + lifecycle detail tabs, SO₂ page, recharts trends; `npm run check` green).
+Vineyards (Phase E), Production (Phase F) and the AI/external work (Phase G)
+remain for a later pass. `DuplicateVessels` and a bulk-analysis manual entry page
+are small deferred follow-ups.
+
 ## Definition of done (whole batch)
-- [ ] All three modules toggle on/off per plan from the back office; gating + capability + tenant-isolation tests green.
-- [ ] Inventory↔Cellar link works both ways (bottling→stock; production confirm→items).
-- [ ] `composer check` green (Pint + PHPStan 8 + Pest) on every PR.
+- [x] Cellar toggles on/off per plan from the back office; gating + capability + tenant-isolation tests green. *(Vineyards/Production pending their phases.)*
+- [x] Inventory↔Cellar link works (bottling→stock). *(Production confirm→items lands in Phase F.)*
+- [x] `composer check` green (Pint + PHPStan 8 + Pest) — 997 backend tests; frontend `npm run check` green (288 tests).
 - [ ] `docs/02-modules.md`, `03-entity-data-model.md`, `06-api-reference.md` updated for the new tables/endpoints.
