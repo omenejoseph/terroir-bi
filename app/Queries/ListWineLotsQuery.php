@@ -19,7 +19,7 @@ class ListWineLotsQuery
     public function paginate(array $filters = [], int $perPage = 25): LengthAwarePaginator
     {
         return $this->build($filters)
-            ->with(['grapes'])
+            ->with(['grapes', 'latestAnalysis', 'latestAddition'])
             ->orderByDesc('created_at')
             ->paginate($perPage);
     }

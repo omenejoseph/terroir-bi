@@ -11,6 +11,7 @@ use App\Actions\Cellar\AddTastingNoteAction;
 use App\Actions\Cellar\AdjustLotVolumeAction;
 use App\Actions\Cellar\AssignFermentationTemplateAction;
 use App\Actions\Cellar\AssignLotToVesselAction;
+use App\Actions\Cellar\BulkAddAdditionsAction;
 use App\Actions\Cellar\BulkAddAnalysesAction;
 use App\Actions\Cellar\CreateBottlingAction;
 use App\Actions\Cellar\CreateTransferAction;
@@ -21,6 +22,7 @@ use App\Actions\Cellar\DeleteCellarAnalysisAction;
 use App\Actions\Cellar\DeleteCellarProcessAction;
 use App\Actions\Cellar\DeleteTastingNoteAction;
 use App\Actions\Cellar\DeleteTransferAction;
+use App\Actions\Cellar\ExecuteBlendAction;
 use App\Actions\Cellar\GenerateWorkOrdersFromProtocolAction;
 use App\Actions\Cellar\UnassignLotFromVesselAction;
 use App\Actions\Cellar\UpdateCellarAnalysisAction;
@@ -30,7 +32,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Cellar\AdjustLotVolumeRequest;
 use App\Http\Requests\Cellar\AssignProtocolRequest;
 use App\Http\Requests\Cellar\AssignVesselRequest;
+use App\Http\Requests\Cellar\BulkAdditionsRequest;
 use App\Http\Requests\Cellar\BulkAnalysesRequest;
+use App\Http\Requests\Cellar\ExecuteBlendRequest;
 use App\Http\Requests\Cellar\StoreBottlingRequest;
 use App\Http\Requests\Cellar\StoreCellarAdditionRequest;
 use App\Http\Requests\Cellar\StoreCellarAnalysisRequest;
@@ -61,11 +65,12 @@ class WineLotController extends Controller
 
     public function index(Request $request, ListWineLotsQuery $query): JsonResponse
     {
+        $perPage = max(1, min(200, (int) $request->query('per_page', '25')));
         $paginator = $query->paginate([
             'status' => $request->query('status'),
             'search' => $request->query('search'),
             'exclude_bottled' => $request->boolean('exclude_bottled'),
-        ]);
+        ], $perPage);
 
         return response()->json([
             'data' => array_map(
@@ -165,6 +170,20 @@ class WineLotController extends Controller
         $created = $action->execute($rows, $this->userId($request));
 
         return response()->json(['data' => ['created' => count($created)]], 201);
+    }
+
+    public function bulkAdditions(BulkAdditionsRequest $request, BulkAddAdditionsAction $action): JsonResponse
+    {
+        $created = $action->execute($request->validated(), $this->userId($request));
+
+        return response()->json(['data' => ['created' => $created]], 201);
+    }
+
+    public function blend(ExecuteBlendRequest $request, ExecuteBlendAction $action): JsonResponse
+    {
+        $lot = $action->execute($request->validated(), $this->userId($request));
+
+        return response()->json(['data' => $this->present($lot)], 201);
     }
 
     // --- Additions / processes / tastings -----------------------------------

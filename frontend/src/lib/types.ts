@@ -1789,6 +1789,15 @@ export interface WineLot {
   grape_price_per_kg: Money | null;
   harvest_weight_kg: string | null;
   notes: string | null;
+  // List summaries (mirrors of the latest analysis/addition).
+  latest_analysis?: {
+    date: string;
+    ph: string | null;
+    alcohol: string | null;
+    free_so2: string | null;
+    total_so2: string | null;
+  } | null;
+  latest_addition?: { name: string; quantity: string; unit: string; date: string | null } | null;
   // Present on the detail endpoint (withDetail).
   cost_breakdown?: LotCostBreakdown | null;
   grapes?: WineLotGrapeRow[];
@@ -1821,6 +1830,7 @@ export interface WineLotQuery {
   search?: string;
   exclude_bottled?: boolean;
   page?: number;
+  per_page?: number;
 }
 
 export interface AnalysisTrendPoint {
@@ -1991,4 +2001,52 @@ export interface ProtocolGenerateResult {
   skipped: number;
   day: number;
   active_stages: string[];
+}
+
+export interface CellarCostRow {
+  id: string;
+  lot_number: string;
+  name: string;
+  vintage: string;
+  current_volume: string;
+  cost: LotCostBreakdown;
+}
+
+export interface CellarAnalytics {
+  by_vintage: { label: string; volume: number }[];
+  by_type: { label: string; volume: number }[];
+  by_grape: { label: string; volume: number }[];
+  pipeline: { status: string; count: number; volume: number }[];
+}
+
+export interface TastingReportRow {
+  id: string;
+  title: string | null;
+  date: string;
+  note: string | null;
+  notes_count: number;
+}
+
+export interface TastingReportInput {
+  title?: string | null;
+  date?: string | null;
+  note?: string | null;
+}
+
+export interface BulkAdditionsInput {
+  name: string;
+  unit: string;
+  category?: string | null;
+  cost_per_unit?: number | null;
+  enological_product_id?: string | null;
+  note?: string | null;
+  lots: { wine_lot_id: string; quantity: number }[];
+}
+
+export interface BlendInput {
+  name: string;
+  vintage?: string | null;
+  wine_type?: WineType | null;
+  destination_vessel_id: string;
+  sources: { vessel_lot_id: string; volume: number }[];
 }

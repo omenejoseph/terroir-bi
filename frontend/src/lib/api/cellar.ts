@@ -3,8 +3,12 @@ import type {
   AdditionInput,
   AnalysisInput,
   AnalysisTrendPoint,
+  BlendInput,
   BottlingInput,
+  BulkAdditionsInput,
   BulkCreateVesselsInput,
+  CellarAnalytics,
+  CellarCostRow,
   EnologicalProduct,
   EnologicalProductInput,
   FermentationAlert,
@@ -14,6 +18,8 @@ import type {
   ProcessInput,
   ProtocolGenerateResult,
   TastingNoteInput,
+  TastingReportInput,
+  TastingReportRow,
   TransferInput,
   Vessel,
   VesselInput,
@@ -58,6 +64,7 @@ export const wineLotsApi = {
       search: query.search,
       exclude_bottled: query.exclude_bottled,
       page: query.page,
+      per_page: query.per_page,
     }),
 
   get: (id: string) => api.get<WineLot>(`/wine-lots/${id}`),
@@ -116,6 +123,22 @@ export const wineLotsApi = {
     api.post<WineLot>(`/wine-lots/${id}/protocol`, { fermentation_template_id: templateId }),
   generateProtocol: (id: string) =>
     api.post<ProtocolGenerateResult>(`/wine-lots/${id}/protocol/generate`),
+
+  // Bulk additions + blend.
+  bulkAdditions: (input: BulkAdditionsInput) =>
+    api.post<{ created: number }>("/wine-lots/additions/bulk", input),
+  blend: (input: BlendInput) => api.post<WineLot>("/wine-lots/blend", input),
+};
+
+/** Cellar reports (read-only) + tastings. */
+export const cellarReportsApi = {
+  costs: () => api.get<CellarCostRow[]>("/cellar/costs"),
+  analytics: () => api.get<CellarAnalytics>("/cellar/analytics"),
+};
+
+export const tastingsApi = {
+  list: () => api.get<TastingReportRow[]>("/tasting-reports"),
+  create: (input: TastingReportInput) => api.post<TastingReportRow>("/tasting-reports", input),
 };
 
 /** Enological products (additives). */
