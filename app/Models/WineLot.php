@@ -11,6 +11,7 @@ use App\Support\Money\MoneyCast;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -72,6 +73,14 @@ class WineLot extends Model
             'grape_price_per_kg' => MoneyCast::class,
             'harvest_weight_kg' => 'decimal:3',
         ];
+    }
+
+    /**
+     * @return BelongsTo<FermentationTemplate, $this>
+     */
+    public function fermentationTemplate(): BelongsTo
+    {
+        return $this->belongsTo(FermentationTemplate::class);
     }
 
     /**

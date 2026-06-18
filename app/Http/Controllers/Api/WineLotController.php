@@ -9,6 +9,7 @@ use App\Actions\Cellar\AddCellarAnalysisAction;
 use App\Actions\Cellar\AddCellarProcessAction;
 use App\Actions\Cellar\AddTastingNoteAction;
 use App\Actions\Cellar\AdjustLotVolumeAction;
+use App\Actions\Cellar\AssignFermentationTemplateAction;
 use App\Actions\Cellar\AssignLotToVesselAction;
 use App\Actions\Cellar\BulkAddAnalysesAction;
 use App\Actions\Cellar\CreateBottlingAction;
@@ -20,12 +21,14 @@ use App\Actions\Cellar\DeleteCellarAnalysisAction;
 use App\Actions\Cellar\DeleteCellarProcessAction;
 use App\Actions\Cellar\DeleteTastingNoteAction;
 use App\Actions\Cellar\DeleteTransferAction;
+use App\Actions\Cellar\GenerateWorkOrdersFromProtocolAction;
 use App\Actions\Cellar\UnassignLotFromVesselAction;
 use App\Actions\Cellar\UpdateCellarAnalysisAction;
 use App\Actions\Cellar\UpdateWineLotAction;
 use App\DataTransferObjects\WineLotData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cellar\AdjustLotVolumeRequest;
+use App\Http\Requests\Cellar\AssignProtocolRequest;
 use App\Http\Requests\Cellar\AssignVesselRequest;
 use App\Http\Requests\Cellar\BulkAnalysesRequest;
 use App\Http\Requests\Cellar\StoreBottlingRequest;
@@ -241,6 +244,23 @@ class WineLotController extends Controller
         $action->execute($bottling);
 
         return response()->json(['data' => $this->present($wineLot->refresh())]);
+    }
+
+    // --- Fermentation protocol ---------------------------------------------
+
+    public function assignProtocol(AssignProtocolRequest $request, WineLot $wineLot, AssignFermentationTemplateAction $action): JsonResponse
+    {
+        $templateId = $request->validated('fermentation_template_id');
+        $action->execute($wineLot, $templateId !== null ? (string) $templateId : null);
+
+        return response()->json(['data' => $this->present($wineLot->refresh())]);
+    }
+
+    public function generateProtocol(WineLot $wineLot, GenerateWorkOrdersFromProtocolAction $action, Request $request): JsonResponse
+    {
+        $result = $action->execute($wineLot, $this->userId($request));
+
+        return response()->json(['data' => $result]);
     }
 
     /**

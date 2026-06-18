@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\CustomerProductOverrideController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EnologicalProductController;
 use App\Http\Controllers\Api\FermentationMonitorController;
+use App\Http\Controllers\Api\FermentationTemplateController;
 use App\Http\Controllers\Api\InflowController;
 use App\Http\Controllers\Api\InventoryCheckController;
 use App\Http\Controllers\Api\InventoryItemController;
@@ -335,9 +336,12 @@ Route::prefix('v1')->group(function () {
             Route::get('wine-lots/{wineLot}/analyses/trend', [WineLotController::class, 'analysisTrend']);
             Route::get('wine-lots/{wineLot}', [WineLotController::class, 'show']);
             Route::get('enological-products', [EnologicalProductController::class, 'index']);
+            Route::get('fermentation-templates', [FermentationTemplateController::class, 'index']);
         });
         Route::middleware('can:cellar.manage')->group(function () {
             Route::post('vessels', [VesselController::class, 'store']);
+            Route::post('vessels/bulk', [VesselController::class, 'bulkCreate']);
+            Route::post('vessels/rename-room', [VesselController::class, 'renameRoom']);
             Route::patch('vessels/layout', [VesselController::class, 'layout']);
             Route::patch('vessels/{vessel}', [VesselController::class, 'update']);
 
@@ -367,10 +371,17 @@ Route::prefix('v1')->group(function () {
             Route::post('enological-products', [EnologicalProductController::class, 'store']);
             Route::patch('enological-products/{enologicalProduct}', [EnologicalProductController::class, 'update']);
             Route::post('enological-products/{enologicalProduct}/adjust-stock', [EnologicalProductController::class, 'adjustStock']);
+
+            // Fermentation protocols.
+            Route::post('fermentation-templates', [FermentationTemplateController::class, 'store']);
+            Route::patch('fermentation-templates/{fermentationTemplate}', [FermentationTemplateController::class, 'update']);
+            Route::post('wine-lots/{wineLot}/protocol', [WineLotController::class, 'assignProtocol']);
+            Route::post('wine-lots/{wineLot}/protocol/generate', [WineLotController::class, 'generateProtocol']);
         });
         Route::middleware('can:cellar.delete')->group(function () {
             Route::delete('vessels/{vessel}', [VesselController::class, 'destroy']);
             Route::delete('enological-products/{enologicalProduct}', [EnologicalProductController::class, 'destroy']);
+            Route::delete('fermentation-templates/{fermentationTemplate}', [FermentationTemplateController::class, 'destroy']);
         });
     });
 });

@@ -56,6 +56,7 @@ final class WineLotData implements Arrayable, JsonSerializable
             'initial_volume' => (string) $lot->initial_volume,
             'current_volume' => (string) $lot->current_volume,
             'status' => $lot->status->value,
+            'fermentation_template_id' => $lot->fermentation_template_id,
             'grape_cost' => $lot->grape_cost?->jsonSerialize(),
             'grape_price_per_kg' => $lot->grape_price_per_kg?->jsonSerialize(),
             'harvest_weight_kg' => $lot->harvest_weight_kg !== null ? (string) $lot->harvest_weight_kg : null,
