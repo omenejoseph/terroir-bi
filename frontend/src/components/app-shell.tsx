@@ -8,6 +8,8 @@ import {
   Boxes,
   ChevronsLeft,
   ClipboardList,
+  Factory,
+  Grape,
   LayoutDashboard,
   ListTodo,
   LogOut,
@@ -75,6 +77,8 @@ const NAV_GROUPS: NavGroup[] = [
     labelKey: "nav.groups.cellar",
     items: [
       { href: "/cellar", labelKey: "nav.cellar", icon: Wine, cap: "cellar.view", module: "cellar" },
+      { href: "/vineyards", labelKey: "nav.vineyards", icon: Grape, cap: "vineyards.view", module: "vineyards" },
+      { href: "/production", labelKey: "nav.production", icon: Factory, cap: "production.view", module: "production" },
     ],
   },
   {

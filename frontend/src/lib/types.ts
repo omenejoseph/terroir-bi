@@ -2050,3 +2050,289 @@ export interface BlendInput {
   destination_vessel_id: string;
   sources: { vessel_lot_id: string; volume: number }[];
 }
+
+/* ---------------------------------------------------------------------------
+ * Vineyards
+ * ------------------------------------------------------------------------- */
+
+export const PARCEL_OWNERSHIPS = ["OWN", "COOPERANT"] as const;
+export type ParcelOwnership = (typeof PARCEL_OWNERSHIPS)[number];
+
+export const PHENOLOGY_STAGES = ["BUD_BREAK", "FLOWERING", "FRUIT_SET", "VERAISON", "HARVEST_READY"] as const;
+export type PhenologyStage = (typeof PHENOLOGY_STAGES)[number];
+
+export const APPLICATION_TYPES = ["SPRAY", "FERTILIZER", "HERBICIDE", "OTHER"] as const;
+export type ApplicationType = (typeof APPLICATION_TYPES)[number];
+
+export const HARVEST_ENTRY_STATUSES = ["PLANNED", "HARVESTED", "PROCESSED"] as const;
+export type HarvestEntryStatus = (typeof HARVEST_ENTRY_STATUSES)[number];
+
+export const GRAPE_CONTRACT_STATUSES = ["ACTIVE", "FULFILLED", "CANCELLED"] as const;
+export type GrapeContractStatus = (typeof GRAPE_CONTRACT_STATUSES)[number];
+
+export interface MaturitySampleRow {
+  id: string;
+  date: string;
+  brix: string | null;
+  ph: string | null;
+  total_acidity: string | null;
+  temperature: string | null;
+  note: string | null;
+}
+
+export interface PhenologyLogRow {
+  id: string;
+  date: string;
+  stage: PhenologyStage;
+  progress_percent: string | null;
+  note: string | null;
+}
+
+export interface CropEstimateRow {
+  id: string;
+  date: string;
+  cluster_count: number;
+  avg_cluster_weight: string;
+  sample_vine_count: number;
+  estimated_yield_kg: string;
+  note: string | null;
+}
+
+export interface ApplicationRow {
+  id: string;
+  date: string;
+  type: ApplicationType;
+  product: string | null;
+  dosage: string | null;
+  phi_days: number | null;
+  phi_end_date: string | null;
+  note: string | null;
+}
+
+export interface Parcel {
+  id: string;
+  name: string;
+  grape_variety: string;
+  area_hectares: string | null;
+  location: string | null;
+  elevation: number | null;
+  soil_type: string | null;
+  planting_year: number | null;
+  row_spacing: string | null;
+  vine_count: number | null;
+  rootstock: string | null;
+  training: string | null;
+  orientation: string | null;
+  slope: string | null;
+  latitude: string | null;
+  longitude: string | null;
+  geo_polygon: unknown;
+  ownership: ParcelOwnership;
+  cooperant_supplier_id: string | null;
+  is_active: boolean;
+  notes: string | null;
+  maturity_samples?: MaturitySampleRow[];
+  phenology_logs?: PhenologyLogRow[];
+  crop_estimates?: CropEstimateRow[];
+  applications?: ApplicationRow[];
+}
+
+export interface ParcelInput {
+  name: string;
+  grape_variety: string;
+  area_hectares?: number | null;
+  location?: string | null;
+  vine_count?: number | null;
+  soil_type?: string | null;
+  ownership?: ParcelOwnership;
+  cooperant_supplier_id?: string | null;
+  notes?: string | null;
+}
+
+export interface GrapeContract {
+  id: string;
+  supplier_id: string;
+  parcel_id: string | null;
+  season: string;
+  status: GrapeContractStatus;
+  grape_variety: string;
+  estimated_kg: string;
+  delivered_kg: string;
+  price_per_kg: Money;
+  min_brix: string | null;
+  max_ph: string | null;
+  delivery_window: string | null;
+  payment_terms: string | null;
+  notes: string | null;
+}
+
+export interface GrapeContractInput {
+  supplier_id: string;
+  parcel_id?: string | null;
+  season: string;
+  grape_variety: string;
+  estimated_kg: number;
+  price_per_kg: number;
+  status?: GrapeContractStatus;
+  notes?: string | null;
+}
+
+export interface GrowerPerformance {
+  contracts: number;
+  estimated_kg: number;
+  delivered_kg: number;
+  fulfillment_pct: number;
+  reliability_pct: number;
+}
+
+export interface HarvestEntryRow {
+  id: string;
+  status: HarvestEntryStatus;
+  source: string;
+  grape_variety: string | null;
+  parcel_id: string | null;
+  parcel_name: string | null;
+  contract_id: string | null;
+  planned_vessel_id: string | null;
+  wine_lot_id: string | null;
+  planned_date: string | null;
+  estimated_yield_kg: string | null;
+  actual_date: string | null;
+  actual_yield_kg: string | null;
+  actual_volume_liters: string | null;
+  brix: string | null;
+  ph: string | null;
+}
+
+export interface HarvestPlan {
+  id: string;
+  name: string;
+  season: string;
+  status: string;
+  yield_ratio: string;
+  notes: string | null;
+  entries_count: number;
+  entries?: HarvestEntryRow[];
+}
+
+export interface HarvestPlanInput {
+  name: string;
+  season: string;
+  yield_ratio?: number;
+  notes?: string | null;
+}
+
+export interface HarvestEntryInput {
+  parcel_id?: string | null;
+  contract_id?: string | null;
+  supplier_id?: string | null;
+  planned_vessel_id?: string | null;
+  grape_variety?: string | null;
+  planned_date?: string | null;
+  estimated_yield_kg?: number | null;
+}
+
+export interface RecordIntakeInput {
+  actual_yield_kg: number;
+  actual_volume_liters?: number | null;
+  grape_price_per_kg?: number | null;
+  grape_variety?: string | null;
+  vessel_id?: string | null;
+  existing_lot_id?: string | null;
+  brix?: number | null;
+  ph?: number | null;
+}
+
+export interface IntakeBooking {
+  id: string;
+  harvest_plan_id: string | null;
+  supplier_id: string | null;
+  date: string;
+  time_slot: string | null;
+  grape_variety: string | null;
+  estimated_kg: string | null;
+  grower_name: string | null;
+  status: string;
+  notes: string | null;
+}
+
+/* ----------------------------- Production -------------------------------- */
+
+export const PLAN_UNITS = ["liters", "bottles", "cases"] as const;
+export type PlanUnit = (typeof PLAN_UNITS)[number];
+
+export const PRODUCTION_PLAN_STATUSES = ["DRAFT", "CONFIRMED", "CANCELLED"] as const;
+export type ProductionPlanStatus = (typeof PRODUCTION_PLAN_STATUSES)[number];
+
+export interface ProductionPlanRow {
+  id: string;
+  base_item_id: string;
+  base_item_name: string | null;
+  new_vintage: string | null;
+  created_item_id: string | null;
+  quantity: string;
+  plan_unit: PlanUnit;
+  sort_order: number;
+}
+
+export interface ProductionPlan {
+  id: string;
+  name: string;
+  status: ProductionPlanStatus;
+  confirmed_at: string | null;
+  notes: string | null;
+  rows_count: number;
+  rows?: ProductionPlanRow[];
+}
+
+export interface ProductionPlanInput {
+  name: string;
+  notes?: string | null;
+}
+
+export interface ProductionPlanRowInput {
+  base_item_id: string;
+  quantity: number;
+  plan_unit: PlanUnit;
+  new_vintage?: string | null;
+  sort_order?: number;
+}
+
+export interface ProductionPlanUpdate {
+  name?: string;
+  notes?: string | null;
+  rows?: ProductionPlanRowInput[];
+}
+
+export interface ProductionCalcRow {
+  row_id: string;
+  base_item_id: string;
+  name: string;
+  quantity: string;
+  plan_unit: PlanUnit;
+  bottles: number;
+  new_vintage: string | null;
+  revenue: number;
+  cost: number;
+  margin_pct: number;
+}
+
+export interface ProductionCalcMaterial {
+  name: string;
+  unit: string;
+  quantity: number;
+  cost: number;
+}
+
+export interface ProductionCalculation {
+  rows: ProductionCalcRow[];
+  materials: ProductionCalcMaterial[];
+  totals: { revenue: number; cost: number; margin_pct: number };
+}
+
+export interface VintageConflict {
+  row_id: string;
+  name: string;
+  vintage: string | null;
+  existing_id: string;
+}
