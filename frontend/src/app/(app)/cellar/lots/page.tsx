@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 
@@ -19,7 +20,7 @@ import { lotStatusVariant } from "@/lib/cellar-colors";
 
 type StatusTab = WineLotStatus | "ALL";
 
-export default function WineLotsPage() {
+function WineLotsContent() {
   const { t } = useTranslation();
   const { can } = useAuth();
   const router = useRouter();
@@ -109,5 +110,13 @@ export default function WineLotsPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function WineLotsPage() {
+  return (
+    <Suspense fallback={null}>
+      <WineLotsContent />
+    </Suspense>
   );
 }
