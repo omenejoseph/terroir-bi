@@ -16,7 +16,10 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EnologicalProductController;
 use App\Http\Controllers\Api\FermentationMonitorController;
 use App\Http\Controllers\Api\FermentationTemplateController;
+use App\Http\Controllers\Api\GrapeContractController;
+use App\Http\Controllers\Api\HarvestPlanController;
 use App\Http\Controllers\Api\InflowController;
+use App\Http\Controllers\Api\IntakeBookingController;
 use App\Http\Controllers\Api\InventoryCheckController;
 use App\Http\Controllers\Api\InventoryItemController;
 use App\Http\Controllers\Api\InventoryMediaController;
@@ -29,6 +32,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderPaymentController;
 use App\Http\Controllers\Api\PriceController;
 use App\Http\Controllers\Api\PricingTierController;
+use App\Http\Controllers\Api\ProductionPlanController;
 use App\Http\Controllers\Api\PublicOrderController;
 use App\Http\Controllers\Api\PublicSupplierController;
 use App\Http\Controllers\Api\PushSubscriptionController;
@@ -40,6 +44,7 @@ use App\Http\Controllers\Api\TastingReportController;
 use App\Http\Controllers\Api\TranslationController;
 use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\VesselController;
+use App\Http\Controllers\Api\VineyardParcelController;
 use App\Http\Controllers\Api\WineLotController;
 use App\Http\Controllers\Api\WorkOrderController;
 use Illuminate\Support\Facades\Route;
@@ -390,6 +395,62 @@ Route::prefix('v1')->group(function () {
             Route::delete('vessels/{vessel}', [VesselController::class, 'destroy']);
             Route::delete('enological-products/{enologicalProduct}', [EnologicalProductController::class, 'destroy']);
             Route::delete('fermentation-templates/{fermentationTemplate}', [FermentationTemplateController::class, 'destroy']);
+        });
+
+        // Vineyards — parcels (+ agronomy), contracts, harvest plans + intake, bookings.
+        Route::middleware('can:vineyards.view')->group(function () {
+            Route::get('vineyard-parcels', [VineyardParcelController::class, 'index']);
+            Route::get('vineyard-parcels/{vineyardParcel}', [VineyardParcelController::class, 'show']);
+            Route::get('grape-contracts', [GrapeContractController::class, 'index']);
+            Route::get('grape-contracts/performance/{supplier}', [GrapeContractController::class, 'performance']);
+            Route::get('harvest-plans', [HarvestPlanController::class, 'index']);
+            Route::get('harvest-plans/{harvestPlan}', [HarvestPlanController::class, 'show']);
+            Route::get('intake-bookings', [IntakeBookingController::class, 'index']);
+        });
+        Route::middleware('can:vineyards.manage')->group(function () {
+            Route::post('vineyard-parcels', [VineyardParcelController::class, 'store']);
+            Route::patch('vineyard-parcels/{vineyardParcel}', [VineyardParcelController::class, 'update']);
+            Route::post('vineyard-parcels/{vineyardParcel}/maturity-samples', [VineyardParcelController::class, 'addMaturitySample']);
+            Route::post('vineyard-parcels/{vineyardParcel}/phenology-logs', [VineyardParcelController::class, 'addPhenologyLog']);
+            Route::post('vineyard-parcels/{vineyardParcel}/crop-estimates', [VineyardParcelController::class, 'addCropEstimate']);
+            Route::post('vineyard-parcels/{vineyardParcel}/applications', [VineyardParcelController::class, 'addApplication']);
+            Route::delete('vineyard-parcels/{vineyardParcel}/maturity-samples/{sample}', [VineyardParcelController::class, 'deleteMaturitySample']);
+            Route::delete('vineyard-parcels/{vineyardParcel}/phenology-logs/{log}', [VineyardParcelController::class, 'deletePhenologyLog']);
+            Route::delete('vineyard-parcels/{vineyardParcel}/crop-estimates/{estimate}', [VineyardParcelController::class, 'deleteCropEstimate']);
+            Route::delete('vineyard-parcels/{vineyardParcel}/applications/{application}', [VineyardParcelController::class, 'deleteApplication']);
+
+            Route::post('grape-contracts', [GrapeContractController::class, 'store']);
+            Route::patch('grape-contracts/{grapeContract}', [GrapeContractController::class, 'update']);
+
+            Route::post('harvest-plans', [HarvestPlanController::class, 'store']);
+            Route::patch('harvest-plans/{harvestPlan}', [HarvestPlanController::class, 'update']);
+            Route::post('harvest-plans/{harvestPlan}/entries', [HarvestPlanController::class, 'addEntry']);
+            Route::delete('harvest-plans/{harvestPlan}/entries/{harvestEntry}', [HarvestPlanController::class, 'removeEntry']);
+            Route::post('harvest-plans/{harvestPlan}/entries/{harvestEntry}/intake', [HarvestPlanController::class, 'recordIntake']);
+
+            Route::post('intake-bookings', [IntakeBookingController::class, 'store']);
+            Route::patch('intake-bookings/{intakeBooking}', [IntakeBookingController::class, 'update']);
+        });
+        Route::middleware('can:vineyards.delete')->group(function () {
+            Route::delete('vineyard-parcels/{vineyardParcel}', [VineyardParcelController::class, 'destroy']);
+            Route::delete('grape-contracts/{grapeContract}', [GrapeContractController::class, 'destroy']);
+            Route::delete('harvest-plans/{harvestPlan}', [HarvestPlanController::class, 'destroy']);
+            Route::delete('intake-bookings/{intakeBooking}', [IntakeBookingController::class, 'destroy']);
+        });
+
+        // Production — the planner (plans, calculate, confirm/vintage management).
+        Route::middleware('can:production.view')->group(function () {
+            Route::get('production-plans', [ProductionPlanController::class, 'index']);
+            Route::get('production-plans/{productionPlan}', [ProductionPlanController::class, 'show']);
+            Route::get('production-plans/{productionPlan}/calculate', [ProductionPlanController::class, 'calculate']);
+        });
+        Route::middleware('can:production.manage')->group(function () {
+            Route::post('production-plans', [ProductionPlanController::class, 'store']);
+            Route::patch('production-plans/{productionPlan}', [ProductionPlanController::class, 'update']);
+            Route::post('production-plans/{productionPlan}/confirm', [ProductionPlanController::class, 'confirm']);
+        });
+        Route::middleware('can:production.delete')->group(function () {
+            Route::delete('production-plans/{productionPlan}', [ProductionPlanController::class, 'destroy']);
         });
     });
 });

@@ -17,6 +17,7 @@ export class ApiError extends Error {
     public readonly status: number,
     message: string,
     public readonly errors?: Record<string, string[]>,
+    public readonly body?: unknown,
   ) {
     super(message);
     this.name = "ApiError";
@@ -87,6 +88,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<{
       response.status,
       json.message ?? `Request failed (${response.status})`,
       json.errors,
+      json,
     );
   }
 
