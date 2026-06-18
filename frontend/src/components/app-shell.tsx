@@ -19,6 +19,7 @@ import {
   Truck,
   Users,
   UsersRound,
+  Wine,
   X,
 } from "lucide-react";
 
@@ -68,6 +69,12 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/inventory", labelKey: "nav.inventory", icon: Boxes, module: "inventory" },
       { href: "/suppliers", labelKey: "nav.suppliers", icon: Truck, cap: "suppliers.view", module: "suppliers" },
       { href: "/work-orders", labelKey: "nav.tasks", icon: ListTodo, module: "work_orders" },
+    ],
+  },
+  {
+    labelKey: "nav.groups.cellar",
+    items: [
+      { href: "/cellar", labelKey: "nav.cellar", icon: Wine, cap: "cellar.view", module: "cellar" },
     ],
   },
   {

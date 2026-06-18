@@ -52,6 +52,9 @@ export const MODULES = [
   "costs",
   "cash_flow",
   "work_orders",
+  "cellar",
+  "vineyards",
+  "production",
   "team",
   "settings",
   "ai_data_entry",
@@ -1573,4 +1576,419 @@ export interface UpdateAiImportLineInput {
 export interface CommitAiImportResult {
   data: AiImport;
   meta: { committed: number; failed: number; errors: Record<string, string> };
+}
+
+/* ---------------------------------------------------------------------------
+ * Cellar — mirrors App\DataTransferObjects\{VesselData,WineLotData,
+ * EnologicalProductData,FermentationTemplateData} and the cellar enums.
+ * ------------------------------------------------------------------------- */
+
+export const VESSEL_TYPES = ["BARREL", "BARRIQUE", "TANK", "VAT", "AMPHORA"] as const;
+export type VesselType = (typeof VESSEL_TYPES)[number];
+
+export const VESSEL_STATUSES = ["AVAILABLE", "IN_USE", "MAINTENANCE", "RETIRED"] as const;
+export type VesselStatus = (typeof VESSEL_STATUSES)[number];
+
+export const WINE_LOT_STATUSES = ["FERMENTING", "AGING", "READY", "BOTTLED", "BLENDED"] as const;
+export type WineLotStatus = (typeof WINE_LOT_STATUSES)[number];
+
+export const WINE_TYPES = ["RED", "WHITE", "ROSE", "ORANGE", "SPARKLING", "DESSERT"] as const;
+export type WineType = (typeof WINE_TYPES)[number];
+
+export const CELLAR_TRANSFER_TYPES = ["RACK", "BLEND", "SPLIT"] as const;
+export type CellarTransferType = (typeof CELLAR_TRANSFER_TYPES)[number];
+
+/** The 14 measurement columns on a cellar analysis. */
+export const ANALYSIS_PARAMETERS = [
+  "ph", "total_acidity", "volatile_acidity", "alcohol", "residual_sugar",
+  "free_so2", "total_so2", "brix", "temperature", "density", "malic",
+  "lactic", "tpi", "glucose_fructose",
+] as const;
+export type AnalysisParameter = (typeof ANALYSIS_PARAMETERS)[number];
+
+export interface VesselLotSummary {
+  vessel_lot_id: string;
+  wine_lot_id: string;
+  volume: string;
+  lot: {
+    id: string;
+    lot_number: string;
+    name: string;
+    grape_variety: string;
+    vintage: string;
+    wine_type: WineType | null;
+    free_so2: string | null;
+    total_so2: string | null;
+  } | null;
+}
+
+export interface Vessel {
+  id: string;
+  name: string;
+  type: VesselType;
+  material: string | null;
+  capacity_liters: string;
+  current_volume: string;
+  location: string | null;
+  status: VesselStatus;
+  is_active: boolean;
+  is_faulty: boolean;
+  fault_note: string | null;
+  room: string;
+  position_x: number | null;
+  position_y: number | null;
+  map_width: number | null;
+  map_height: number | null;
+  rotation: number | null;
+  notes: string | null;
+  lots?: VesselLotSummary[];
+}
+
+export interface VesselInput {
+  name: string;
+  type: VesselType;
+  capacity_liters: number;
+  material?: string | null;
+  location?: string | null;
+  room?: string | null;
+  is_faulty?: boolean;
+  fault_note?: string | null;
+  notes?: string | null;
+}
+
+export interface VesselLayoutUpdate {
+  id: string;
+  position_x?: number | null;
+  position_y?: number | null;
+  map_width?: number | null;
+  map_height?: number | null;
+  rotation?: number | null;
+  room?: string | null;
+}
+
+export interface BulkCreateVesselsInput {
+  prefix?: string;
+  start_number?: number;
+  count: number;
+  type: VesselType;
+  material?: string | null;
+  capacity_liters: number;
+  room?: string | null;
+}
+
+export interface WineLotGrapeRow {
+  id: string;
+  grape_variety: string;
+  percentage: string | null;
+  price_per_kg: Money | null;
+  weight_kg: string | null;
+}
+
+export interface CellarAnalysis {
+  id: string;
+  vessel_id: string | null;
+  date: string;
+  note: string | null;
+  // Each measurement parameter is a nullable decimal string.
+  ph: string | null;
+  total_acidity: string | null;
+  volatile_acidity: string | null;
+  alcohol: string | null;
+  residual_sugar: string | null;
+  free_so2: string | null;
+  total_so2: string | null;
+  brix: string | null;
+  temperature: string | null;
+  density: string | null;
+  malic: string | null;
+  lactic: string | null;
+  tpi: string | null;
+  glucose_fructose: string | null;
+}
+
+export interface CellarAddition {
+  id: string;
+  name: string;
+  category: string | null;
+  quantity: string;
+  unit: string;
+  total_cost: Money | null;
+  note: string | null;
+  date: string | null;
+}
+
+export interface CellarProcessRow {
+  id: string;
+  kind: string;
+  vessel_id: string | null;
+  volume: string | null;
+  note: string | null;
+  date: string | null;
+}
+
+export interface TastingNote {
+  id: string;
+  date: string | null;
+  appearance: string | null;
+  nose: string | null;
+  palate: string | null;
+  overall: string | null;
+  score: number | null;
+  note: string | null;
+}
+
+export interface CellarTransferRow {
+  id: string;
+  type: CellarTransferType;
+  direction: "in" | "out";
+  from_lot_id: string;
+  to_lot_id: string;
+  volume_liters: string;
+  note: string | null;
+  date: string | null;
+}
+
+export interface BottlingRow {
+  id: string;
+  bottle_count: number;
+  bottle_volume_ml: number;
+  volume_used: string;
+  inventory_item_id: string | null;
+  note: string | null;
+  date: string | null;
+}
+
+export interface LotCostBreakdown {
+  total: number;
+  additions: number;
+  grape: number;
+  per_liter: number;
+  per_bottle_750: number;
+}
+
+export interface WineLotVesselRow {
+  vessel_lot_id: string;
+  vessel_id: string;
+  vessel_name: string | null;
+  volume: string;
+}
+
+export interface WineLot {
+  id: string;
+  lot_number: string;
+  name: string;
+  grape_variety: string;
+  vintage: string;
+  vineyard: string | null;
+  wine_type: WineType | null;
+  initial_volume: string;
+  current_volume: string;
+  status: WineLotStatus;
+  fermentation_template_id: string | null;
+  grape_cost: Money | null;
+  grape_price_per_kg: Money | null;
+  harvest_weight_kg: string | null;
+  notes: string | null;
+  // Present on the detail endpoint (withDetail).
+  cost_breakdown?: LotCostBreakdown | null;
+  grapes?: WineLotGrapeRow[];
+  vessels?: WineLotVesselRow[];
+  analyses?: CellarAnalysis[];
+  additions?: CellarAddition[];
+  processes?: CellarProcessRow[];
+  tasting_notes?: TastingNote[];
+  transfers?: CellarTransferRow[];
+  bottlings?: BottlingRow[];
+}
+
+export interface WineLotInput {
+  name: string;
+  grape_variety: string;
+  vintage: string;
+  initial_volume: number;
+  wine_type?: WineType | null;
+  vineyard?: string | null;
+  status?: WineLotStatus;
+  grape_price_per_kg?: number | null;
+  harvest_weight_kg?: number | null;
+  notes?: string | null;
+  vessel_id?: string | null;
+  grapes?: Array<{ grape_variety: string; percentage?: number | null; price_per_kg?: number | null; weight_kg?: number | null }>;
+}
+
+export interface WineLotQuery {
+  status?: WineLotStatus;
+  search?: string;
+  exclude_bottled?: boolean;
+  page?: number;
+}
+
+export interface AnalysisTrendPoint {
+  id: string;
+  date: string;
+  vessel_id: string | null;
+  vessel_name: string | null;
+  [param: string]: string | number | null;
+}
+
+export interface AnalysisInput {
+  vessel_id?: string | null;
+  date?: string | null;
+  note?: string | null;
+  ph?: number | null;
+  total_acidity?: number | null;
+  volatile_acidity?: number | null;
+  alcohol?: number | null;
+  residual_sugar?: number | null;
+  free_so2?: number | null;
+  total_so2?: number | null;
+  brix?: number | null;
+  temperature?: number | null;
+  density?: number | null;
+  malic?: number | null;
+  lactic?: number | null;
+  tpi?: number | null;
+  glucose_fructose?: number | null;
+}
+
+export interface AdditionInput {
+  name: string;
+  quantity: number;
+  unit: string;
+  category?: string | null;
+  cost_per_unit?: number | null;
+  total_cost?: number | null;
+  note?: string | null;
+  enological_product_id?: string | null;
+}
+
+export interface ProcessInput {
+  kind: string;
+  date?: string | null;
+  volume?: number | null;
+  note?: string | null;
+  vessel_id?: string | null;
+}
+
+export interface TastingNoteInput {
+  date?: string | null;
+  appearance?: string | null;
+  nose?: string | null;
+  palate?: string | null;
+  overall?: string | null;
+  score?: number | null;
+  note?: string | null;
+  vessel_id?: string | null;
+}
+
+export interface TransferInput {
+  type: CellarTransferType;
+  volume_liters: number;
+  to_lot_id: string;
+  from_vessel_id?: string | null;
+  to_vessel_id?: string | null;
+  note?: string | null;
+}
+
+export interface BottlingInput {
+  bottle_count: number;
+  bottle_volume_ml?: number;
+  date?: string | null;
+  note?: string | null;
+  inventory_item_id?: string | null;
+}
+
+export interface EnologicalProduct {
+  id: string;
+  name: string;
+  category: string;
+  unit: string;
+  current_stock: string;
+  min_stock: string | null;
+  cost_per_unit: Money | null;
+  manufacturer: string | null;
+  packaging_size: string | null;
+  so2_uplift_per_unit: string | null;
+  supplier_id: string | null;
+  is_active: boolean;
+  notes: string | null;
+}
+
+export interface EnologicalProductInput {
+  name: string;
+  category: string;
+  unit: string;
+  current_stock?: number;
+  min_stock?: number | null;
+  cost_per_unit?: number | null;
+  manufacturer?: string | null;
+  packaging_size?: string | null;
+  so2_uplift_per_unit?: number | null;
+  supplier_id?: string | null;
+  notes?: string | null;
+}
+
+export interface FermentationStageAction {
+  id?: string;
+  type?: string;
+  description?: string;
+}
+
+export interface FermentationStage {
+  id?: string;
+  name: string;
+  dayStart: number;
+  dayEnd: number;
+  tempMin?: number | null;
+  tempMax?: number | null;
+  actions?: FermentationStageAction[];
+}
+
+export interface FermentationTemplate {
+  id: string;
+  name: string;
+  wine_type: WineType | null;
+  yeast_strain: string | null;
+  target_temp_min: string | null;
+  target_temp_max: string | null;
+  punchdown_schedule: string | null;
+  maceration: string | null;
+  nutrients: string | null;
+  mlf: boolean;
+  description: string | null;
+  estimated_duration: number | null;
+  stages: FermentationStage[];
+  is_active: boolean;
+}
+
+export interface FermentationTemplateInput {
+  name: string;
+  wine_type?: WineType | null;
+  yeast_strain?: string | null;
+  target_temp_min?: number | null;
+  target_temp_max?: number | null;
+  punchdown_schedule?: string | null;
+  maceration?: string | null;
+  nutrients?: string | null;
+  mlf?: boolean;
+  description?: string | null;
+  estimated_duration?: number | null;
+  stages?: FermentationStage[];
+  is_active?: boolean;
+}
+
+export interface FermentationAlert {
+  type: string;
+  severity: "critical" | "high" | "medium" | "info";
+  lot_id: string;
+  lot_name: string;
+  message: string;
+  suggestion: string;
+}
+
+export interface ProtocolGenerateResult {
+  created: number;
+  skipped: number;
+  day: number;
+  active_stages: string[];
 }
