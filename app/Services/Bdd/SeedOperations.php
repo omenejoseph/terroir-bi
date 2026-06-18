@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Bdd;
 
+use App\Enums\CustomerType;
 use App\Enums\MembershipStatus;
 use App\Enums\StockMovementType;
 use App\Enums\TenantRole;
@@ -184,7 +185,7 @@ class SeedOperations
             'rebate_percent' => (float) ($args['rebate_percent'] ?? 0),
             'exclude_from_stats' => (bool) ($args['exclude_from_stats'] ?? false),
             'customer_type' => isset($args['customer_type'])
-                ? \App\Enums\CustomerType::tryFrom((string) $args['customer_type'])?->value
+                ? CustomerType::tryFrom((string) $args['customer_type'])?->value
                 : null,
             'pricing_tier_id' => $tier instanceof PricingTier ? $tier->getKey() : null,
             'allow_single_bottle' => (bool) ($args['allow_single_bottle'] ?? false),

@@ -15,36 +15,38 @@ Progress key: `[ ]` todo · `[~]` in progress · `[x]` done.
 ## Phase A — Module enablement *(blocks routing for B–F)*
 
 ### A.1 Register the three modules
-- [ ] `app/Enums/Module.php`: add `Cellar='cellar'`, `Vineyards='vineyards'`, `Production='production'` + `label()` cases.
-- [ ] `app/Authorization/ModuleRegistry.php`: add `capabilities()` (`cellar.*`, `vineyards.*`, `production.*`) and `pathPrefixes()` entries (see plan §1).
-- [ ] `app/Authorization/RoleCapabilities.php`: grant new caps (ADMIN=all; MANAGER=view+manage; CELLAR=cellar.* + vineyards.* + production.view).
-- **Accept:** the three modules appear as checkboxes in the Filament Plan editor; a tenant on a plan **without** a module gets `403 module_not_in_plan` on its routes; PHPStan clean. Test: `tests/Feature/Authorization/ModuleGatingTest.php`.
+- [x] `app/Enums/Module.php`: add `Cellar='cellar'`, `Vineyards='vineyards'`, `Production='production'` + `label()` cases.
+- [x] `app/Authorization/ModuleRegistry.php`: add `capabilities()` (`cellar.*`, `vineyards.*`, `production.*`) and `pathPrefixes()` entries (see plan §1).
+- [x] `app/Authorization/RoleCapabilities.php`: grant new caps (ADMIN=`*`; MANAGER=view+manage; CELLAR=cellar.* + vineyards.* + production.view).
+- **Accept:** ✅ the three modules appear as checkboxes in the Filament Plan editor (auto from `Module::cases()`); a tenant on a plan **without** a module gets `403 module_not_in_plan`; PHPStan clean. Tests: `tests/Feature/Cellar/CellarModuleGatingTest.php` (gating + capability + no-plan).
 
 ---
 
 ## Phase B — Cellar core (vessels + lots)
 
 ### B.1 Schema
-- [ ] Migrations: `vessels`, `wine_lots`, `wine_lot_grapes` (no `harvest_entry_id` FK yet — added in E), `vessel_lots`. (Columns/casts per plan §3.1.)
-- [ ] Enums: `VesselType`, `VesselStatus`, `WineLotStatus`, `WineType`, `CellarTransferType`.
-- [ ] Models: `Vessel`, `WineLot`, `WineLotGrape`, `VesselLot` (`BelongsToTenant`+`HasUlids`, relations/casts).
+- [x] Migrations: `vessels`, `wine_lots`, `wine_lot_grapes` (nullable `harvest_entry_id`, FK added in E), `vessel_lots`. (Columns/casts per plan §3.1.)
+- [x] Enums: `VesselType`, `VesselStatus`, `WineLotStatus`, `WineType`. (`CellarTransferType` lands with transfers in C.2.)
+- [x] Models: `Vessel`, `WineLot`, `WineLotGrape`, `VesselLot` (`BelongsToTenant`+`HasUlids`, relations/casts).
 
 ### B.2 Services
-- [ ] `app/Services/Cellar/LotNumberGenerator` (`LOT-YYYY-NNN`, tenant-scoped, collision-safe).
-- [ ] `app/Services/Cellar/VesselVolumeSync` (Σ vessel_lots → current_volume + status; `Quantity` math; `lockForUpdate`; orphan cleanup).
-- [ ] `app/Services/Cellar/LotVolumeService` (adjust/assign/unassign/bulk equal+fill).
-- **Accept:** unit tests prove volume = Σ vessel_lots and AVAILABLE/IN_USE derivation; no float drift.
+- [x] `app/Services/Cellar/LotNumberGenerator` (`LOT-YYYY-NNN`, tenant-scoped, collision-safe).
+- [x] `app/Services/Cellar/VesselVolumeSync` (Σ vessel_lots → current_volume + status; `Quantity` math; orphan cleanup; leaves MAINTENANCE/RETIRED).
+- [x] `app/Services/Cellar/LotVolumeService` (assign/unassign/adjust; `lockForUpdate`; capacity-guarded). Bulk equal/fill allocation deferred to a follow-up.
+- **Accept:** ✅ feature tests prove volume = Σ vessel_lots and AVAILABLE/IN_USE derivation; no float drift.
 
 ### B.3 Vessel actions + endpoints
-- [ ] Actions: `CreateVessel`, `UpdateVessel`, `DeleteVessel` (empty-only guard), `BulkCreateVessels` (≤50), `DuplicateVessels`, `UpdateVesselLayout` (single + batch position/size/room), `RenameCellarRoom`.
-- [ ] FormRequests + `VesselData` DTO + `CellarMapQuery`.
-- [ ] Routes under `module:cellar` + `can:cellar.*`: `GET /vessels`, layout mutations, CRUD.
-- **Accept:** map query groups vessels by room with lot summary; bulk create names sequentially; PHPStan clean.
+- [x] Actions: `CreateVessel`, `UpdateVessel`, `DeleteVessel` (empty-only guard), `UpdateVesselLayout` (single + batch position/size/room).
+- [~] `BulkCreateVessels` (≤50), `DuplicateVessels`, `RenameCellarRoom` — deferred follow-up.
+- [x] FormRequests + `VesselData` DTO + `ListVesselsQuery` (cellar map, vessels+lots by room).
+- [x] Routes under `can:cellar.*` (module gating via `vessels` path prefix): `GET /vessels`, `PATCH /vessels/layout`, CRUD.
+- **Accept:** ✅ map query returns vessels with lot summary; delete blocked while occupied; PHPStan clean.
 
 ### B.4 Wine lot actions + endpoints (One-Wine base)
-- [ ] Actions: `CreateWineLot` (multi-grape), `UpdateWineLot` (status; BOTTLED frees vessels via `VesselVolumeSync`), `AdjustLotVolume`, `AssignLotToVessel`, `UnassignLotFromVessel`, `BulkAssignLotToVessels`.
-- [ ] `WineLotDetailQuery` + `WineLotData` DTO; `GET /wine-lots`, `GET /wine-lots/{id}`.
-- **Accept:** lot detail returns vessels+grapes; assigning beyond capacity is rejected; tenant isolation test.
+- [x] Actions: `CreateWineLot` (multi-grape + optional starting vessel + grape cost), `UpdateWineLot` (status; BOTTLED frees vessels via `VesselVolumeSync`), `AdjustLotVolume`, `AssignLotToVessel`, `UnassignLotFromVessel`.
+- [~] `BulkAssignLotToVessels` (equal/fill) — deferred follow-up.
+- [x] `ListWineLotsQuery` + `WineLotData` DTO (detail w/ grapes + vessels); `GET /wine-lots`, `GET /wine-lots/{id}`.
+- **Accept:** ✅ lot detail returns vessels+grapes; capacity-guarded assign; lot numbers increment per tenant; bottling frees vessels. Tests: `tests/Feature/Cellar/VesselTest.php`, `WineLotTest.php`.
 
 ---
 

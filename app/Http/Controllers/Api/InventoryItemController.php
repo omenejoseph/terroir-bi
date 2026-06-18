@@ -15,6 +15,7 @@ use App\Queries\InventoryAnalyticsQuery;
 use App\Queries\InventoryTaxonomyQuery;
 use App\Queries\ListInventoryItemsQuery;
 use App\Services\Uploads\PresignedUploadService;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -43,7 +44,8 @@ class InventoryItemController extends Controller
         ]);
 
         // Lead image for the list thumbnail (one query for the whole page).
-        $paginator->getCollection()->loadMissing('firstImage');
+        // loadMissing mutates the same model instances returned by items().
+        EloquentCollection::make($paginator->items())->loadMissing('firstImage');
 
         return response()->json([
             'data' => array_map(

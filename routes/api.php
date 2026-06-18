@@ -34,6 +34,8 @@ use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\SupplierOrderController;
 use App\Http\Controllers\Api\TranslationController;
 use App\Http\Controllers\Api\UploadController;
+use App\Http\Controllers\Api\VesselController;
+use App\Http\Controllers\Api\WineLotController;
 use App\Http\Controllers\Api\WorkOrderController;
 use Illuminate\Support\Facades\Route;
 
@@ -319,6 +321,29 @@ Route::prefix('v1')->group(function () {
             Route::delete('inventory-items/{item}/tier-price/{tier}', [PriceController::class, 'destroyTierPrice']);
             Route::put('inventory-items/{item}/customer-price/{customer}', [PriceController::class, 'upsertCustomerPrice']);
             Route::delete('inventory-items/{item}/customer-price/{customer}', [PriceController::class, 'destroyCustomerPrice']);
+        });
+
+        // Cellar — vessels (incl. cellar map) and wine lots. Module gated by the
+        // `vessels` / `wine-lots` path prefixes (App\Authorization\ModuleRegistry).
+        Route::middleware('can:cellar.view')->group(function () {
+            Route::get('vessels', [VesselController::class, 'index']);
+            Route::get('vessels/{vessel}', [VesselController::class, 'show']);
+            Route::get('wine-lots', [WineLotController::class, 'index']);
+            Route::get('wine-lots/{wineLot}', [WineLotController::class, 'show']);
+        });
+        Route::middleware('can:cellar.manage')->group(function () {
+            Route::post('vessels', [VesselController::class, 'store']);
+            Route::patch('vessels/layout', [VesselController::class, 'layout']);
+            Route::patch('vessels/{vessel}', [VesselController::class, 'update']);
+
+            Route::post('wine-lots', [WineLotController::class, 'store']);
+            Route::patch('wine-lots/{wineLot}', [WineLotController::class, 'update']);
+            Route::post('wine-lots/{wineLot}/vessels', [WineLotController::class, 'assignVessel']);
+            Route::delete('wine-lots/{wineLot}/vessels/{vesselLot}', [WineLotController::class, 'unassignVessel']);
+            Route::post('wine-lots/{wineLot}/adjust-volume', [WineLotController::class, 'adjustVolume']);
+        });
+        Route::middleware('can:cellar.delete')->group(function () {
+            Route::delete('vessels/{vessel}', [VesselController::class, 'destroy']);
         });
     });
 });
