@@ -3,21 +3,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  cellarReportsApi,
   enologicalApi,
   fermentationApi,
   fermentationTemplatesApi,
+  tastingsApi,
   vesselsApi,
   wineLotsApi,
 } from "@/lib/api/cellar";
 import type {
   AdditionInput,
   AnalysisInput,
+  BlendInput,
   BottlingInput,
+  BulkAdditionsInput,
   BulkCreateVesselsInput,
   EnologicalProductInput,
   FermentationTemplateInput,
   ProcessInput,
   TastingNoteInput,
+  TastingReportInput,
   TransferInput,
   VesselInput,
   VesselLayoutUpdate,
@@ -185,6 +190,77 @@ export function useCreateEnologicalProduct() {
   return useMutation({
     mutationFn: (input: EnologicalProductInput) => enologicalApi.create(input),
     onSuccess: () => void qc.invalidateQueries({ queryKey: [...CELLAR, "enological"] }),
+  });
+}
+
+export function useUpdateEnologicalProduct() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; input: Partial<EnologicalProductInput> & { is_active?: boolean } }) =>
+      enologicalApi.update(vars.id, vars.input),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: [...CELLAR, "enological"] }),
+  });
+}
+
+export function useAdjustEnologicalStock() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; delta: number }) => enologicalApi.adjustStock(vars.id, vars.delta),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: [...CELLAR, "enological"] }),
+  });
+}
+
+export function useDeleteEnologicalProduct() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => enologicalApi.remove(id),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: [...CELLAR, "enological"] }),
+  });
+}
+
+/* --- Reports, tastings, bulk ops, blend ----------------------------------- */
+
+export function useCellarCosts() {
+  return useQuery({ queryKey: [...CELLAR, "costs"], queryFn: () => cellarReportsApi.costs() });
+}
+
+export function useCellarAnalytics() {
+  return useQuery({ queryKey: [...CELLAR, "analytics"], queryFn: () => cellarReportsApi.analytics() });
+}
+
+export function useTastingReports() {
+  return useQuery({ queryKey: [...CELLAR, "tastings"], queryFn: () => tastingsApi.list() });
+}
+
+export function useCreateTastingReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: TastingReportInput) => tastingsApi.create(input),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: [...CELLAR, "tastings"] }),
+  });
+}
+
+export function useBulkAnalyses() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (analyses: Array<AnalysisInput & { wine_lot_id: string }>) => wineLotsApi.bulkAnalyses(analyses),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: CELLAR }),
+  });
+}
+
+export function useBulkAdditions() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: BulkAdditionsInput) => wineLotsApi.bulkAdditions(input),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: CELLAR }),
+  });
+}
+
+export function useExecuteBlend() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: BlendInput) => wineLotsApi.blend(input),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: CELLAR }),
   });
 }
 

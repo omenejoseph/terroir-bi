@@ -118,6 +118,16 @@ class WineLot extends Model
     }
 
     /**
+     * The most recent addition, for the active-lots table.
+     *
+     * @return HasOne<CellarAddition, $this>
+     */
+    public function latestAddition(): HasOne
+    {
+        return $this->hasOne(CellarAddition::class)->latestOfMany('created_at');
+    }
+
+    /**
      * @return HasMany<CellarAddition, $this>
      */
     public function additions(): HasMany

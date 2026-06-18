@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { useParams } from "next/navigation";
 
 import { useAuth } from "@/lib/auth/context";
 import { useTranslation } from "@/i18n/context";
@@ -41,6 +40,7 @@ import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
 import { ParameterTrends } from "@/components/cellar/charts/parameter-trends";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { fillRatio, lotStatusVariant } from "@/lib/cellar-colors";
 
 type DetailTab =
@@ -57,7 +57,6 @@ export default function WineLotDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
   const { can } = useAuth();
-  const router = useRouter();
   const canManage = can("cellar.manage");
   const { data: lot, isLoading, isError } = useWineLot(id);
   const [tab, setTab] = React.useState<DetailTab>("overview");
@@ -86,9 +85,13 @@ export default function WineLotDetailPage() {
 
   return (
     <div className="space-y-6">
-      <button type="button" onClick={() => router.push("/cellar/lots")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="size-4" /> {t("cellar.lots")}
-      </button>
+      <Breadcrumb
+        items={[
+          { label: t("cellar.title"), href: "/cellar" },
+          { label: t("cellar.lots"), href: "/cellar/lots" },
+          { label: lot.name },
+        ]}
+      />
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>

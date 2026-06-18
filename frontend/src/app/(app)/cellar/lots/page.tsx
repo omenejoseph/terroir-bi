@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
 import { WineLotForm } from "@/components/cellar/wine-lot-form";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { CellarSubnav } from "@/components/cellar/cellar-subnav";
 import { lotStatusVariant } from "@/lib/cellar-colors";
 
 type StatusTab = WineLotStatus | "ALL";
@@ -44,6 +46,8 @@ function WineLotsContent() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: t("cellar.title"), href: "/cellar" }, { label: t("cellar.lots") }]} />
+      <CellarSubnav />
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">{t("cellar.lots")}</h1>
         {can("cellar.manage") && (

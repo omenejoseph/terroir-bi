@@ -2,14 +2,15 @@
 
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, FlaskConical } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { FlaskConical } from "lucide-react";
 
 import { wineLotsApi } from "@/lib/api/cellar";
 import { useAuth } from "@/lib/auth/context";
 import { useTranslation } from "@/i18n/context";
 import { useEnologicalProducts, useVessels, useWineLots } from "@/hooks/use-cellar";
 import type { EnologicalProduct } from "@/lib/types";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { CellarSubnav } from "@/components/cellar/cellar-subnav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,11 +29,10 @@ function dose(target: number, current: number, volumeL: number, uplift: number):
 export default function So2Page() {
   const { t } = useTranslation();
   const { can } = useAuth();
-  const router = useRouter();
   const qc = useQueryClient();
   const canManage = can("cellar.manage");
 
-  const lots = useWineLots({ exclude_bottled: true });
+  const lots = useWineLots({ exclude_bottled: true, per_page: 200 });
   const vessels = useVessels();
   const products = useEnologicalProducts({ active_only: true });
 
@@ -79,9 +79,8 @@ export default function So2Page() {
 
   return (
     <div className="space-y-6">
-      <button type="button" onClick={() => router.push("/cellar")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="size-4" /> {t("cellar.title")}
-      </button>
+      <Breadcrumb items={[{ label: t("cellar.title"), href: "/cellar" }, { label: t("cellar.so2") }]} />
+      <CellarSubnav />
 
       <header>
         <h1 className="flex items-center gap-2 text-2xl font-semibold">

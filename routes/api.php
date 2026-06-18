@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Auth\TenantSessionController;
 use App\Http\Controllers\Api\Billing\StripeWebhookController;
 use App\Http\Controllers\Api\BottleAnalysisController;
 use App\Http\Controllers\Api\CashFlowController;
+use App\Http\Controllers\Api\CellarController;
 use App\Http\Controllers\Api\ConsignmentController;
 use App\Http\Controllers\Api\CostController;
 use App\Http\Controllers\Api\CustomerConsignmentController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\SupplierOrderController;
+use App\Http\Controllers\Api\TastingReportController;
 use App\Http\Controllers\Api\TranslationController;
 use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\VesselController;
@@ -330,6 +332,9 @@ Route::prefix('v1')->group(function () {
         // `vessels` / `wine-lots` path prefixes (App\Authorization\ModuleRegistry).
         Route::middleware('can:cellar.view')->group(function () {
             Route::get('cellar/fermentation-monitor', [FermentationMonitorController::class, 'index']);
+            Route::get('cellar/costs', [CellarController::class, 'costs']);
+            Route::get('cellar/analytics', [CellarController::class, 'analytics']);
+            Route::get('tasting-reports', [TastingReportController::class, 'index']);
             Route::get('vessels', [VesselController::class, 'index']);
             Route::get('vessels/{vessel}', [VesselController::class, 'show']);
             Route::get('wine-lots', [WineLotController::class, 'index']);
@@ -353,6 +358,9 @@ Route::prefix('v1')->group(function () {
 
             // Lot lifecycle (analyses, additions, processes, tastings, transfers, bottling).
             Route::post('wine-lots/analyses/bulk', [WineLotController::class, 'bulkAnalyses']);
+            Route::post('wine-lots/additions/bulk', [WineLotController::class, 'bulkAdditions']);
+            Route::post('wine-lots/blend', [WineLotController::class, 'blend']);
+            Route::post('tasting-reports', [TastingReportController::class, 'store']);
             Route::post('wine-lots/{wineLot}/analyses', [WineLotController::class, 'addAnalysis']);
             Route::patch('wine-lots/{wineLot}/analyses/{analysis}', [WineLotController::class, 'updateAnalysis']);
             Route::delete('wine-lots/{wineLot}/analyses/{analysis}', [WineLotController::class, 'deleteAnalysis']);

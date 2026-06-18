@@ -61,6 +61,8 @@ final class WineLotData implements Arrayable, JsonSerializable
             'grape_price_per_kg' => $lot->grape_price_per_kg?->jsonSerialize(),
             'harvest_weight_kg' => $lot->harvest_weight_kg !== null ? (string) $lot->harvest_weight_kg : null,
             'notes' => $lot->notes,
+            'latest_analysis' => $this->latestAnalysis(),
+            'latest_addition' => $this->latestAddition(),
         ];
 
         if (! $this->withDetail) {
@@ -166,6 +168,47 @@ final class WineLotData implements Arrayable, JsonSerializable
         }
 
         return $row;
+    }
+
+    /**
+     * Compact latest-analysis summary for list views (null unless eager-loaded).
+     *
+     * @return array<string, mixed>|null
+     */
+    private function latestAnalysis(): ?array
+    {
+        if (! $this->lot->relationLoaded('latestAnalysis') || $this->lot->latestAnalysis === null) {
+            return null;
+        }
+        $a = $this->lot->latestAnalysis;
+
+        return [
+            'date' => $a->date->toIso8601String(),
+            'ph' => $a->ph !== null ? (string) $a->ph : null,
+            'alcohol' => $a->alcohol !== null ? (string) $a->alcohol : null,
+            'free_so2' => $a->free_so2 !== null ? (string) $a->free_so2 : null,
+            'total_so2' => $a->total_so2 !== null ? (string) $a->total_so2 : null,
+        ];
+    }
+
+    /**
+     * Compact latest-addition summary for list views (null unless eager-loaded).
+     *
+     * @return array<string, mixed>|null
+     */
+    private function latestAddition(): ?array
+    {
+        if (! $this->lot->relationLoaded('latestAddition') || $this->lot->latestAddition === null) {
+            return null;
+        }
+        $a = $this->lot->latestAddition;
+
+        return [
+            'name' => $a->name,
+            'quantity' => (string) $a->quantity,
+            'unit' => $a->unit,
+            'date' => $a->created_at?->toIso8601String(),
+        ];
     }
 
     /**
