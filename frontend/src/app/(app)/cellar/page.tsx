@@ -36,6 +36,9 @@ export default function CellarPage() {
           <p className="text-sm text-muted-foreground">{t("cellar.subtitle")}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => router.push("/cellar/so2")}>
+            {t("cellar.so2")}
+          </Button>
           <Button variant="outline" onClick={() => router.push("/cellar/lots")}>
             {t("cellar.lots")}
           </Button>

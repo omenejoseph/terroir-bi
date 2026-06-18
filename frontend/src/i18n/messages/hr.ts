@@ -68,6 +68,8 @@ export const hr: Messages = {
     bulkVessels: "Skupno dodavanje",
     editLayout: "Uredi raspored",
     doneEditing: "Gotovo",
+    renameRoom: "Preimenuj prostoriju",
+    undo: "Poništi",
     so2: "SO₂",
     monitor: "Praćenje fermentacije",
     empty: "Još nema vinskih partija.",
@@ -161,6 +163,18 @@ export const hr: Messages = {
     monitorView: {
       title: "Praćenje fermentacije",
       empty: "Nema upozorenja — sve izgleda zdravo.",
+    },
+    so2Page: {
+      title: "Upravljanje SO₂",
+      subtitle: "Planirajte doze za ciljanu razinu slobodnog SO₂ i primijenite ih kao dodatke.",
+      product: "SO₂ proizvod",
+      noProduct: "Dodajte enološki SO₂ proizvod (s koeficijentom) za planiranje doza.",
+      current: "Trenutni slobodni SO₂",
+      target: "Cilj",
+      dose: "Doza",
+      apply: "Primijeni",
+      applied: "Doza zabilježena kao dodatak.",
+      empty: "Nema aktivnih partija.",
     },
   },
   aiImports: {

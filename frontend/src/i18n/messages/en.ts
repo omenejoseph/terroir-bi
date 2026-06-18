@@ -72,6 +72,8 @@ export const en = {
     bulkVessels: "Bulk add",
     editLayout: "Edit layout",
     doneEditing: "Done",
+    renameRoom: "Rename room",
+    undo: "Undo",
     so2: "SO₂",
     monitor: "Fermentation monitor",
     empty: "No wine lots yet.",
@@ -165,6 +167,18 @@ export const en = {
     monitorView: {
       title: "Fermentation monitor",
       empty: "No alerts — everything looks healthy.",
+    },
+    so2Page: {
+      title: "SO₂ management",
+      subtitle: "Plan doses to reach a target free-SO₂ level and apply them as additions.",
+      product: "SO₂ product",
+      noProduct: "Add an SO₂ enological product (with an uplift coefficient) to plan doses.",
+      current: "Current free SO₂",
+      target: "Target",
+      dose: "Dose",
+      apply: "Apply",
+      applied: "Dose recorded as an addition.",
+      empty: "No active lots.",
     },
   },
   aiImports: {
