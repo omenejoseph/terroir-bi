@@ -56,34 +56,51 @@ export function OrderItemsSection({ order, canManage }: { order: Order; canManag
         {order.items.length === 0 ? (
           <p className="py-4 text-center text-sm text-muted-foreground">{t("orders.items.empty")}</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-border text-left text-muted-foreground">
-                <tr>
-                  <th className="py-2 pr-3 font-medium">{t("orders.items.item")}</th>
-                  <th className="py-2 pr-3 text-right font-medium">{t("orders.items.quantity")}</th>
-                  <th className="py-2 pr-3 text-right font-medium">{t("orders.items.unitPrice")}</th>
-                  {showCost && (
-                    <th className="py-2 pr-3 text-right font-medium">{t("orders.items.cost")}</th>
-                  )}
-                  <th className="py-2 pr-3 text-right font-medium">{t("orders.items.total")}</th>
-                  {canManage && <th className="py-2" />}
-                </tr>
-              </thead>
-              <tbody>
-                {order.items.map((item) => (
-                  <ItemRow
-                    key={item.id}
-                    orderId={order.id}
-                    item={item}
-                    canManage={canManage}
-                    showCost={showCost}
-                    money={moneyObject}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <>
+            {/* Desktop / tablet: a real table. */}
+            <div className="hidden overflow-x-auto sm:block">
+              <table className="w-full text-sm">
+                <thead className="border-b border-border text-left text-muted-foreground">
+                  <tr>
+                    <th className="py-2 pr-3 font-medium">{t("orders.items.item")}</th>
+                    <th className="py-2 pr-3 text-right font-medium">{t("orders.items.quantity")}</th>
+                    <th className="py-2 pr-3 text-right font-medium">{t("orders.items.unitPrice")}</th>
+                    {showCost && (
+                      <th className="py-2 pr-3 text-right font-medium">{t("orders.items.cost")}</th>
+                    )}
+                    <th className="py-2 pr-3 text-right font-medium">{t("orders.items.total")}</th>
+                    {canManage && <th className="py-2" />}
+                  </tr>
+                </thead>
+                <tbody>
+                  {order.items.map((item) => (
+                    <ItemRow
+                      key={item.id}
+                      orderId={order.id}
+                      item={item}
+                      canManage={canManage}
+                      showCost={showCost}
+                      money={moneyObject}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile: each item as a stacked label/value card — no sideways scroll. */}
+            <ul className="space-y-3 sm:hidden">
+              {order.items.map((item) => (
+                <ItemCard
+                  key={item.id}
+                  orderId={order.id}
+                  item={item}
+                  canManage={canManage}
+                  showCost={showCost}
+                  money={moneyObject}
+                />
+              ))}
+            </ul>
+          </>
         )}
 
         {canManage && (
@@ -119,19 +136,14 @@ export function OrderItemsSection({ order, canManage }: { order: Order; canManag
   );
 }
 
-function ItemRow({
-  orderId,
-  item,
-  canManage,
-  showCost,
-  money,
-}: {
-  orderId: string;
-  item: OrderItem;
-  canManage: boolean;
-  showCost: boolean;
-  money: (m: OrderItem["unit_price"] | null) => string;
-}) {
+type Money = (m: OrderItem["unit_price"] | null) => string;
+
+/**
+ * Edit state + mutations for one line item, shared by the desktop row and the
+ * mobile card so the two layouts never drift. Qty/unit and cost edit
+ * independently, mirroring the table's two inline-edit affordances.
+ */
+function useOrderItemRow(orderId: string, item: OrderItem) {
   const { t } = useTranslation();
   const confirm = useConfirm();
   const update = useUpdateOrderItem(orderId);
@@ -164,6 +176,85 @@ function ItemRow({
     await remove.mutateAsync(item.id);
   }
 
+  return {
+    editing,
+    setEditing,
+    qty,
+    setQty,
+    unit,
+    setUnit,
+    editingCost,
+    setEditingCost,
+    cost,
+    setCost,
+    saveEdit,
+    saveCost,
+    handleDelete,
+  };
+}
+
+/** The qty + unit editor, shared by both layouts. */
+function QtyEditor({
+  item,
+  qty,
+  setQty,
+  unit,
+  setUnit,
+}: {
+  item: OrderItem;
+  qty: string;
+  setQty: (v: string) => void;
+  unit: OrderItemUnit;
+  setUnit: (v: OrderItemUnit) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center justify-end gap-1">
+      <Input
+        type="number"
+        min={1}
+        value={qty}
+        onChange={(e) => setQty(e.target.value)}
+        className="h-8 w-16"
+        aria-label={t("orders.items.quantity")}
+      />
+      <Select
+        value={unit}
+        onChange={(e) => setUnit(e.target.value as OrderItemUnit)}
+        className="h-8 w-24"
+        aria-label={t("orders.items.unitType")}
+        // Catalog lines are locked to the item's sales unit.
+        disabled={item.inventory_item_id !== null}
+      >
+        {item.inventory_item_id !== null ? (
+          <option value={unit}>{t(`orders.items.unitTypes.${unit}`)}</option>
+        ) : (
+          <>
+            <option value="bottles">{t("orders.items.unitTypes.bottles")}</option>
+            <option value="cases">{t("orders.items.unitTypes.cases")}</option>
+          </>
+        )}
+      </Select>
+    </div>
+  );
+}
+
+function ItemRow({
+  orderId,
+  item,
+  canManage,
+  showCost,
+  money,
+}: {
+  orderId: string;
+  item: OrderItem;
+  canManage: boolean;
+  showCost: boolean;
+  money: Money;
+}) {
+  const { t } = useTranslation();
+  const row = useOrderItemRow(orderId, item);
+
   return (
     <tr className="border-b border-border last:border-0">
       <td className="py-2 pr-3">
@@ -171,34 +262,8 @@ function ItemRow({
         {item.sku && <span className="text-muted-foreground"> ({item.sku})</span>}
       </td>
       <td className="py-2 pr-3 text-right tabular-nums">
-        {editing ? (
-          <div className="flex items-center justify-end gap-1">
-            <Input
-              type="number"
-              min={1}
-              value={qty}
-              onChange={(e) => setQty(e.target.value)}
-              className="h-8 w-16"
-              aria-label={t("orders.items.quantity")}
-            />
-            <Select
-              value={unit}
-              onChange={(e) => setUnit(e.target.value as OrderItemUnit)}
-              className="h-8 w-24"
-              aria-label={t("orders.items.unitType")}
-              // Catalog lines are locked to the item's sales unit.
-              disabled={item.inventory_item_id !== null}
-            >
-              {item.inventory_item_id !== null ? (
-                <option value={unit}>{t(`orders.items.unitTypes.${unit}`)}</option>
-              ) : (
-                <>
-                  <option value="bottles">{t("orders.items.unitTypes.bottles")}</option>
-                  <option value="cases">{t("orders.items.unitTypes.cases")}</option>
-                </>
-              )}
-            </Select>
-          </div>
+        {row.editing ? (
+          <QtyEditor item={item} qty={row.qty} setQty={row.setQty} unit={row.unit} setUnit={row.setUnit} />
         ) : (
           <>
             {item.quantity} {t(`orders.items.unitTypes.${item.unit_type}`)}
@@ -208,18 +273,18 @@ function ItemRow({
       <td className="py-2 pr-3 text-right tabular-nums">{money(item.unit_price)}</td>
       {showCost && (
         <td className="py-2 pr-3 text-right tabular-nums">
-          {editingCost ? (
+          {row.editingCost ? (
             <div className="flex items-center justify-end gap-1">
               <Input
                 type="number"
                 min={0}
                 step="0.01"
-                value={cost}
-                onChange={(e) => setCost(e.target.value)}
+                value={row.cost}
+                onChange={(e) => row.setCost(e.target.value)}
                 className="h-8 w-20"
                 aria-label={t("orders.items.cost")}
               />
-              <Button type="button" size="icon" variant="ghost" onClick={saveCost} aria-label={t("orders.items.save")}>
+              <Button type="button" size="icon" variant="ghost" onClick={row.saveCost} aria-label={t("orders.items.save")}>
                 <Check className="size-4" />
               </Button>
             </div>
@@ -227,7 +292,7 @@ function ItemRow({
             <button
               type="button"
               className="hover:underline"
-              onClick={() => canManage && setEditingCost(true)}
+              onClick={() => canManage && row.setEditingCost(true)}
               disabled={!canManage}
             >
               {item.cost_per_unit ? money(item.cost_per_unit) : "—"}
@@ -239,18 +304,18 @@ function ItemRow({
       {canManage && (
         <td className="py-2 text-right">
           <div className="flex justify-end gap-1">
-            {editing ? (
+            {row.editing ? (
               <>
-                <Button type="button" size="icon" variant="ghost" onClick={saveEdit} aria-label={t("orders.items.save")}>
+                <Button type="button" size="icon" variant="ghost" onClick={row.saveEdit} aria-label={t("orders.items.save")}>
                   <Check className="size-4" />
                 </Button>
-                <Button type="button" size="icon" variant="ghost" onClick={() => setEditing(false)} aria-label={t("orders.items.cancel")}>
+                <Button type="button" size="icon" variant="ghost" onClick={() => row.setEditing(false)} aria-label={t("orders.items.cancel")}>
                   <X className="size-4" />
                 </Button>
               </>
             ) : (
               <>
-                <Button type="button" size="icon" variant="ghost" onClick={() => setEditing(true)} aria-label={t("orders.items.edit")}>
+                <Button type="button" size="icon" variant="ghost" onClick={() => row.setEditing(true)} aria-label={t("orders.items.edit")}>
                   <Pencil className="size-4" />
                 </Button>
                 <Button
@@ -258,7 +323,7 @@ function ItemRow({
                   size="icon"
                   variant="ghost"
                   className="text-destructive"
-                  onClick={handleDelete}
+                  onClick={row.handleDelete}
                   aria-label={t("orders.items.remove")}
                 >
                   <Trash2 className="size-4" />
@@ -269,5 +334,130 @@ function ItemRow({
         </td>
       )}
     </tr>
+  );
+}
+
+/** Mobile equivalent of ItemRow — a stacked label/value card. */
+function ItemCard({
+  orderId,
+  item,
+  canManage,
+  showCost,
+  money,
+}: {
+  orderId: string;
+  item: OrderItem;
+  canManage: boolean;
+  showCost: boolean;
+  money: Money;
+}) {
+  const { t } = useTranslation();
+  const row = useOrderItemRow(orderId, item);
+
+  return (
+    <li className="rounded-lg border border-border p-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <span className="font-medium">{item.name}</span>
+          {item.sku && <span className="text-muted-foreground"> ({item.sku})</span>}
+        </div>
+        {canManage && (
+          <div className="flex shrink-0 gap-1">
+            {row.editing ? (
+              <>
+                <Button type="button" size="icon" variant="ghost" onClick={row.saveEdit} aria-label={t("orders.items.save")}>
+                  <Check className="size-4" />
+                </Button>
+                <Button type="button" size="icon" variant="ghost" onClick={() => row.setEditing(false)} aria-label={t("orders.items.cancel")}>
+                  <X className="size-4" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button type="button" size="icon" variant="ghost" onClick={() => row.setEditing(true)} aria-label={t("orders.items.edit")}>
+                  <Pencil className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="text-destructive"
+                  onClick={row.handleDelete}
+                  aria-label={t("orders.items.remove")}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+        <div className="space-y-0.5">
+          <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+            {t("orders.items.quantity")}
+          </dt>
+          <dd className="tabular-nums">
+            {row.editing ? (
+              <QtyEditor item={item} qty={row.qty} setQty={row.setQty} unit={row.unit} setUnit={row.setUnit} />
+            ) : (
+              <>
+                {item.quantity} {t(`orders.items.unitTypes.${item.unit_type}`)}
+              </>
+            )}
+          </dd>
+        </div>
+
+        <div className="space-y-0.5">
+          <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+            {t("orders.items.unitPrice")}
+          </dt>
+          <dd className="tabular-nums">{money(item.unit_price)}</dd>
+        </div>
+
+        {showCost && (
+          <div className="space-y-0.5">
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+              {t("orders.items.cost")}
+            </dt>
+            <dd className="tabular-nums">
+              {row.editingCost ? (
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={row.cost}
+                    onChange={(e) => row.setCost(e.target.value)}
+                    className="h-8 w-20"
+                    aria-label={t("orders.items.cost")}
+                  />
+                  <Button type="button" size="icon" variant="ghost" onClick={row.saveCost} aria-label={t("orders.items.save")}>
+                    <Check className="size-4" />
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="hover:underline"
+                  onClick={() => canManage && row.setEditingCost(true)}
+                  disabled={!canManage}
+                >
+                  {item.cost_per_unit ? money(item.cost_per_unit) : "—"}
+                </button>
+              )}
+            </dd>
+          </div>
+        )}
+
+        <div className="space-y-0.5">
+          <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+            {t("orders.items.total")}
+          </dt>
+          <dd className="font-medium tabular-nums">{money(item.total)}</dd>
+        </div>
+      </dl>
+    </li>
   );
 }

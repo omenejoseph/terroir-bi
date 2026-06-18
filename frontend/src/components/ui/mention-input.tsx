@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/utils";
 
@@ -48,13 +47,10 @@ export function MentionInput({
   const [query, setQuery] = React.useState<string | null>(null);
   const [anchor, setAnchor] = React.useState(0);
   const [highlight, setHighlight] = React.useState(0);
-  const [pos, setPos] = React.useState<{
-    left: number;
-    width: number;
-    maxHeight: number;
-    top?: number;
-    bottom?: number;
-  } | null>(null);
+  const [placement, setPlacement] = React.useState<{ above: boolean; maxHeight: number }>({
+    above: false,
+    maxHeight: 280,
+  });
 
   const filtered = React.useMemo(() => {
     if (query === null) return [];
@@ -99,7 +95,8 @@ export function MentionInput({
   }
 
   function selectMember(m: MentionMember) {
-    const caret = taRef.current?.selectionStart ?? value.length;
+    const ta = taRef.current;
+    const caret = ta?.selectionStart ?? value.length;
     const before = value.slice(0, anchor);
     const after = value.slice(caret);
     const insert = `@${m.name} `;
@@ -109,6 +106,11 @@ export function MentionInput({
     onChange(next);
     setQuery(null);
     emitMentions(next);
+    // Refocus synchronously, while still inside the tap gesture. iOS Safari only
+    // keeps the keyboard up (and the field focused) for a focus() call made during
+    // a user gesture — the async caret-restore effect below runs too late on its
+    // own, so on mobile the field would otherwise blur and dismiss the keyboard.
+    ta?.focus();
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -139,45 +141,41 @@ export function MentionInput({
     if (value === "") mentioned.current.clear();
   }, [value]);
 
-  // Anchor the dropdown to the textarea via a portal so it never clips. Measure
-  // against the visual viewport (which shrinks when the mobile keyboard opens),
-  // and flip the list *above* the field when there isn't room below — otherwise
-  // a bottom-anchored comment box would render the list behind the keyboard.
-  const updatePosition = React.useCallback(() => {
+  // The dropdown is an absolutely-positioned child of the field's wrapper, so it
+  // is glued to the textarea's own edges — no viewport coordinate math, immune
+  // to the mobile keyboard shifting the visual viewport (which is what made a
+  // portaled `position: fixed` list drift a scroll away from the field on iOS).
+  // The only thing we measure is *direction*: flip the list above the field when
+  // there isn't room below it within the visible (keyboard-shrunk) viewport —
+  // otherwise a bottom-anchored comment box would render it behind the keyboard.
+  const updatePlacement = React.useCallback(() => {
     const el = taRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
     const vv = window.visualViewport;
-    const viewTop = vv?.offsetTop ?? 0;
-    const viewBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
-    const spaceBelow = viewBottom - r.bottom - 8;
-    const spaceAbove = r.top - viewTop - 8;
-    const placeAbove = spaceBelow < 160 && spaceAbove > spaceBelow;
-    const maxHeight = Math.min(280, Math.max(140, placeAbove ? spaceAbove : spaceBelow));
-    if (placeAbove) {
-      // `bottom` is in layout-viewport coords, matching getBoundingClientRect.
-      setPos({ left: r.left, width: r.width, bottom: window.innerHeight - r.top + 4, maxHeight });
-    } else {
-      setPos({ left: r.left, width: r.width, top: r.bottom + 4, maxHeight });
-    }
+    const offTop = vv?.offsetTop ?? 0;
+    const viewHeight = vv?.height ?? window.innerHeight;
+    const spaceBelow = viewHeight - (r.bottom - offTop) - 8;
+    const spaceAbove = r.top - offTop - 8;
+    const above = spaceBelow < 160 && spaceAbove > spaceBelow;
+    const maxHeight = Math.min(280, Math.max(120, above ? spaceAbove : spaceBelow));
+    setPlacement({ above, maxHeight });
   }, []);
 
   React.useLayoutEffect(() => {
     if (!open) return;
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
+    updatePlacement();
+    window.addEventListener("resize", updatePlacement);
     // The visual viewport fires these when the keyboard opens/closes or the page
-    // is pinch-zoomed; keep the dropdown pinned to the field through all of it.
-    window.visualViewport?.addEventListener("resize", updatePosition);
-    window.visualViewport?.addEventListener("scroll", updatePosition);
+    // is pinch-zoomed; re-evaluate which side has room through all of it.
+    window.visualViewport?.addEventListener("resize", updatePlacement);
+    window.visualViewport?.addEventListener("scroll", updatePlacement);
     return () => {
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
-      window.visualViewport?.removeEventListener("resize", updatePosition);
-      window.visualViewport?.removeEventListener("scroll", updatePosition);
+      window.removeEventListener("resize", updatePlacement);
+      window.visualViewport?.removeEventListener("resize", updatePlacement);
+      window.visualViewport?.removeEventListener("scroll", updatePlacement);
     };
-  }, [open, updatePosition]);
+  }, [open, updatePlacement]);
 
   return (
     <div className="relative">
@@ -192,50 +190,45 @@ export function MentionInput({
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         onBlur={() => window.setTimeout(() => setQuery(null), 100)}
-        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+        // text-base (16px) on mobile avoids iOS Safari's focus auto-zoom; text-sm from md up.
+        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
       />
-      {open &&
-        pos &&
-        createPortal(
-          <ul
-            role="listbox"
-            className="fixed z-50 overflow-auto rounded-md border border-border bg-popover p-1 shadow-md"
-            style={{
-              top: pos.top,
-              bottom: pos.bottom,
-              left: pos.left,
-              width: pos.width,
-              maxHeight: pos.maxHeight,
-            }}
-          >
-            {filtered.map((m, i) => (
-              <li key={m.user_id}>
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={i === highlight}
-                  // pointerdown fires before the textarea blur for mouse AND touch,
-                  // so the selection still lands; preventDefault keeps focus on the
-                  // textarea. (mousedown alone is synthesized too late on mobile —
-                  // the blur timer closes the dropdown before the tap registers.)
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    selectMember(m);
-                  }}
-                  onMouseEnter={() => setHighlight(i)}
-                  className={cn(
-                    "block w-full rounded-sm px-2 py-1.5 text-left text-sm",
-                    i === highlight ? "bg-accent" : "hover:bg-accent",
-                  )}
-                >
-                  <span className="font-medium">{m.name}</span>
-                  {m.email && <span className="ml-2 text-xs text-muted-foreground">{m.email}</span>}
-                </button>
-              </li>
-            ))}
-          </ul>,
-          document.body,
-        )}
+      {open && (
+        <ul
+          role="listbox"
+          className={cn(
+            "absolute inset-x-0 z-50 overflow-auto rounded-md border border-border bg-popover p-1 shadow-md",
+            placement.above ? "bottom-full mb-1" : "top-full mt-1",
+          )}
+          style={{ maxHeight: placement.maxHeight }}
+        >
+          {filtered.map((m, i) => (
+            <li key={m.user_id}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={i === highlight}
+                // pointerdown fires before the textarea blur for mouse AND touch,
+                // so the selection still lands; preventDefault keeps focus on the
+                // textarea. (mousedown alone is synthesized too late on mobile —
+                // the blur timer closes the dropdown before the tap registers.)
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  selectMember(m);
+                }}
+                onMouseEnter={() => setHighlight(i)}
+                className={cn(
+                  "block w-full rounded-sm px-2 py-1.5 text-left text-sm",
+                  i === highlight ? "bg-accent" : "hover:bg-accent",
+                )}
+              >
+                <span className="font-medium">{m.name}</span>
+                {m.email && <span className="ml-2 text-xs text-muted-foreground">{m.email}</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

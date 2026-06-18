@@ -223,8 +223,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         />
       </aside>
 
-      {/* Main content */}
-      <main className="min-w-0 flex-1 overflow-x-hidden">
+      {/* Main content. `overflow-x-clip` cuts horizontal overflow without
+          becoming a scroll container, so the sticky top bar below keeps working. */}
+      <main className="min-w-0 flex-1 overflow-x-clip">
         {/* Desktop top bar — holds the notifications bell. */}
         <div className="sticky top-0 z-20 hidden justify-end border-b border-border bg-background/70 px-4 py-2 backdrop-blur-xl md:flex sm:px-6 lg:px-8">
           <NotificationsBell />

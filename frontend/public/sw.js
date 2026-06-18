@@ -13,9 +13,13 @@
     (focus + postMessage, or open with a ?notif= param) and the app resolves the
     route. No paths live here — a future native app reuses the same payload.
 
-  No build step needed; bump CACHE_VERSION to invalidate old caches.
+  Cache busting: deploy-frontend.sh stamps the build id into __BUILD_ID__ below,
+  so every deploy ships a byte-different worker the browser detects as an update
+  — which then purges the previous deploy's cache on activate. (Left unstamped in
+  dev, where the worker isn't registered, the literal placeholder is harmless.)
 */
-const CACHE_VERSION = "terroir-v2";
+const BUILD_ID = "__BUILD_ID__";
+const CACHE_VERSION = "terroir-" + BUILD_ID;
 const APP_SHELL = "/";
 
 self.addEventListener("install", (event) => {

@@ -152,7 +152,7 @@ export function CustomerMergeDialog({
             placeholder={t("customers.merge.search")}
           />
 
-          <div className="max-h-80 overflow-y-auto rounded-md border border-border">
+          <div className="max-h-80 overflow-auto rounded-md border border-border">
             <table className="w-full text-sm">
               <thead className="sticky top-0 border-b border-border bg-card text-left text-xs uppercase text-muted-foreground">
                 <tr>

@@ -192,7 +192,7 @@ function ItemsTable({ items }: { items: Array<Record<string, unknown>> }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-border">
+    <div className="overflow-x-auto rounded-md border border-border">
       <table className="w-full text-sm">
         <thead className="bg-muted/40 text-xs text-muted-foreground">
           <tr>

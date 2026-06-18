@@ -10,6 +10,7 @@ import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { Table } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
 import { StatCard } from "@/components/dashboard/stat-card";
 
@@ -123,7 +124,7 @@ function RankTable({
         {rows.length === 0 ? (
           <p className="py-4 text-center text-sm text-muted-foreground">{empty}</p>
         ) : (
-          <table className="w-full text-sm">
+          <Table>
             <thead className="border-b border-border text-left text-muted-foreground">
               <tr>
                 {cols.map((c, i) => (
@@ -144,7 +145,7 @@ function RankTable({
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         )}
       </CardContent>
     </Card>

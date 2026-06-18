@@ -135,7 +135,19 @@
   * {
     border-color: var(--color-border);
   }
+  /*
+    Hard stop on horizontal page scroll. iOS Safari lets the viewport rubber-band
+    sideways when any descendant overflows, even though <main> clips its own
+    overflow — this root guard is the reliable backstop. `position: relative`
+    on body contains any stray absolutely-positioned children.
+  */
+  html,
   body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+  body {
+    position: relative;
     background-color: var(--color-background);
     /* Soft brand glow at the top — adds depth without distracting. */
     background-image: radial-gradient(

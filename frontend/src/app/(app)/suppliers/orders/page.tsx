@@ -192,6 +192,7 @@ function OrderRow({
       >
         <div className="overflow-hidden">
           <div className="space-y-4 border-t border-border px-4 py-4">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
@@ -210,6 +211,7 @@ function OrderRow({
                 ))}
               </tbody>
             </table>
+            </div>
 
             {canManage && (
               <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">

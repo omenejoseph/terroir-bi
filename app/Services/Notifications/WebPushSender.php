@@ -6,6 +6,7 @@ namespace App\Services\Notifications;
 
 use App\DataTransferObjects\PushMessageData;
 use App\Models\PushSubscription;
+use Illuminate\Support\Facades\Log;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
 
@@ -37,14 +38,27 @@ class WebPushSender
      */
     public function sendToUser(string $userId, PushMessageData $message): void
     {
+        $this->deliver($userId, $message);
+    }
+
+    /**
+     * Same as sendToUser, but returns a per-device report so a diagnostic caller
+     * (the `push:test` command) can show exactly what the push service said.
+     * Failures are logged here too — otherwise an APNs/VAPID rejection vanishes
+     * and "nothing gets pushed" is impossible to debug.
+     *
+     * @return list<array{endpoint: string, success: bool, expired: bool, reason: ?string, status: ?int}>
+     */
+    public function deliver(string $userId, PushMessageData $message): array
+    {
         if (! $this->isConfigured()) {
-            return;
+            return [];
         }
 
         $subscriptions = PushSubscription::query()->where('user_id', $userId)->get();
 
         if ($subscriptions->isEmpty()) {
-            return;
+            return [];
         }
 
         $webPush = $this->client();
@@ -57,17 +71,30 @@ class WebPushSender
             $webPush->queueNotification($this->toSubscription($subscription), $payload);
         }
 
+        $results = [];
         foreach ($webPush->flush() as $report) {
-            if ($report->isSuccess()) {
-                continue;
+            $endpoint = $report->getEndpoint();
+            $success = $report->isSuccess();
+            $expired = ! $success && $report->isSubscriptionExpired();
+            $status = $success ? null : $report->getResponse()?->getStatusCode();
+            $reason = $success ? null : $report->getReason();
+
+            if ($expired) {
+                // The push service says this device is gone for good → stop bothering.
+                ($byEndpoint[$endpoint] ?? null)?->delete();
+            } elseif (! $success) {
+                Log::warning('Web push delivery failed', [
+                    'user_id' => $userId,
+                    'endpoint' => $endpoint,
+                    'status' => $status,
+                    'reason' => $reason,
+                ]);
             }
 
-            // The push service says this device is gone for good → stop bothering.
-            if ($report->isSubscriptionExpired()) {
-                $stale = $byEndpoint[$report->getEndpoint()] ?? null;
-                $stale?->delete();
-            }
+            $results[] = compact('endpoint', 'success', 'expired', 'reason', 'status');
         }
+
+        return $results;
     }
 
     private function client(): WebPush

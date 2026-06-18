@@ -26,8 +26,11 @@ describe("OrderDetailPage", () => {
   it("leads with the items and shows the detail tabs", async () => {
     renderWithProviders(<OrderDetailPage />);
     expect(await screen.findByText("ORD-1001")).toBeInTheDocument();
-    // Items lead the page (no longer behind a tab).
-    expect(screen.getByText(/Plavac Mali 2021/)).toBeInTheDocument();
+    // Items lead the page (no longer behind a tab). They render in two responsive
+    // layouts: a table on sm+ and stacked cards on mobile — both are in the DOM.
+    const occurrences = screen.getAllByText(/Plavac Mali 2021/);
+    expect(occurrences.some((el) => el.closest("tr"))).toBe(true); // desktop table row
+    expect(occurrences.some((el) => el.closest("li"))).toBe(true); // mobile stacked card
     // Supporting detail tabs.
     expect(screen.getByRole("tab", { name: "History" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Comments" })).toBeInTheDocument();
@@ -133,7 +136,10 @@ describe("OrderDetailPage", () => {
 
     renderWithProviders(<OrderDetailPage />);
     const user = userEvent.setup();
-    const row = (await screen.findByText(/Plavac Mali 2021/)).closest("tr")!;
+    // The item renders in both layouts; scope to the desktop table row.
+    const row = (await screen.findAllByText(/Plavac Mali 2021/))
+      .map((el) => el.closest("tr"))
+      .find((el): el is HTMLTableRowElement => el !== null)!;
 
     await user.click(within(row).getByRole("button", { name: "Edit" }));
     // The unit Select is disabled for a catalog line.
@@ -158,7 +164,10 @@ describe("OrderDetailPage", () => {
 
     renderWithProviders(<OrderDetailPage />);
     const user = userEvent.setup();
-    const row = (await screen.findByText(/Plavac Mali 2021/)).closest("tr")!;
+    // The item renders in both layouts; scope to the desktop table row.
+    const row = (await screen.findAllByText(/Plavac Mali 2021/))
+      .map((el) => el.closest("tr"))
+      .find((el): el is HTMLTableRowElement => el !== null)!;
 
     await user.click(within(row).getByText("7,00 €")); // cost cell
     const costInput = within(row).getByLabelText("Cost/unit");
@@ -181,7 +190,10 @@ describe("OrderDetailPage", () => {
 
     renderWithProviders(<OrderDetailPage />);
     const user = userEvent.setup();
-    const row = (await screen.findByText(/Plavac Mali 2021/)).closest("tr")!;
+    // The item renders in both layouts; scope to the desktop table row.
+    const row = (await screen.findAllByText(/Plavac Mali 2021/))
+      .map((el) => el.closest("tr"))
+      .find((el): el is HTMLTableRowElement => el !== null)!;
 
     await user.click(within(row).getByRole("button", { name: "Remove" }));
     const dialog = await screen.findByRole("dialog");

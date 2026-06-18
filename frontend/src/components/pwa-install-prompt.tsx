@@ -4,16 +4,8 @@ import * as React from "react";
 import { ChevronDown, Download, SquarePlus, X } from "lucide-react";
 
 import { useTranslation } from "@/i18n/context";
+import { useInstallPrompt } from "@/hooks/use-install-prompt";
 import { Button } from "@/components/ui/button";
-
-/**
- * The browser's `beforeinstallprompt` event — not part of the standard DOM lib,
- * so we describe the shape we use.
- */
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
 
 const DISMISS_KEY = "terroir.pwa.install-dismissed";
 
@@ -37,22 +29,6 @@ function IosShareIcon({ className }: { className?: string }) {
   );
 }
 
-/** iOS Safari has no `beforeinstallprompt`; install is always manual there. */
-function isIos(): boolean {
-  if (typeof navigator === "undefined") return false;
-  return /iPad|iPhone|iPod/.test(navigator.userAgent);
-}
-
-/** Already launched as an installed PWA (so there's nothing to install). */
-function isStandalone(): boolean {
-  if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia?.("(display-mode: standalone)").matches === true ||
-    // iOS Safari exposes installed state here instead of matchMedia.
-    (navigator as unknown as { standalone?: boolean }).standalone === true
-  );
-}
-
 /**
  * Proactively invites the user to install the PWA.
  *
@@ -66,37 +42,12 @@ function isStandalone(): boolean {
  */
 export function PwaInstallPrompt() {
   const { t } = useTranslation();
-  const [deferred, setDeferred] = React.useState<BeforeInstallPromptEvent | null>(null);
-  const [iosHint, setIosHint] = React.useState(false);
+  const { available, installed, ios, promptInstall } = useInstallPrompt();
   // Assume hidden until mounted so the server/first paint never flashes a banner.
   const [dismissed, setDismissed] = React.useState(true);
 
   React.useEffect(() => {
-    if (isStandalone()) return;
-    if (window.localStorage.getItem(DISMISS_KEY) === "true") return;
-    setDismissed(false);
-
-    // iOS can't fire the install event — offer the manual hint and stop.
-    if (isIos()) {
-      setIosHint(true);
-      return;
-    }
-
-    const onBeforeInstall = (e: Event) => {
-      e.preventDefault(); // we render our own affordance instead of the infobar
-      setDeferred(e as BeforeInstallPromptEvent);
-    };
-    const onInstalled = () => {
-      setDeferred(null);
-      setDismissed(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", onBeforeInstall);
-    window.addEventListener("appinstalled", onInstalled);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", onBeforeInstall);
-      window.removeEventListener("appinstalled", onInstalled);
-    };
+    setDismissed(window.localStorage.getItem(DISMISS_KEY) === "true");
   }, []);
 
   const dismiss = React.useCallback(() => {
@@ -105,16 +56,16 @@ export function PwaInstallPrompt() {
   }, []);
 
   const install = React.useCallback(async () => {
-    if (!deferred) return;
-    await deferred.prompt();
-    await deferred.userChoice;
-    // The captured event is single-use — drop it and hide regardless of choice.
-    setDeferred(null);
+    await promptInstall();
+    // Hide regardless of choice; the Settings card remains for a later attempt.
     setDismissed(true);
-  }, [deferred]);
+  }, [promptInstall]);
+
+  // iOS shows the manual Share hint; other platforms need a captured prompt.
+  const iosHint = ios && !installed;
 
   // Nothing actionable to show: dismissed/installed, or no install path yet.
-  if (dismissed || (!deferred && !iosHint)) return null;
+  if (dismissed || installed || (!available && !iosHint)) return null;
 
   // iOS can't install programmatically — guide the user to Safari's Share button
   // with a coachmark pinned to the bottom (where that toolbar button lives),

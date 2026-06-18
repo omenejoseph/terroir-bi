@@ -143,7 +143,7 @@ export function StockTab({ item, canManage }: { item: InventoryItem; canManage: 
               {t("inventory.stock.bottlesExited")}
             </span>
           </p>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {canFinancials && (
               <>
                 <Detail label={t("inventory.stock.costOfExits")}>

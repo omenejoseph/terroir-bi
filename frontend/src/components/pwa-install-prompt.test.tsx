@@ -1,16 +1,22 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PwaInstallPrompt } from "./pwa-install-prompt";
 import { renderWithProviders, screen, seedLocale, userEvent, waitFor } from "@/test/utils";
 
-/** Build a fake `beforeinstallprompt` event with spy-able prompt/userChoice. */
-function makeInstallEvent(outcome: "accepted" | "dismissed" = "accepted") {
+/**
+ * Simulate the early-capture script in <head>: stash a fake `beforeinstallprompt`
+ * event on `window` and announce availability, exactly as production does before
+ * React hydrates. Returns the event so tests can assert on its spies.
+ */
+function offerInstall(outcome: "accepted" | "dismissed" = "accepted") {
   const event = new Event("beforeinstallprompt") as Event & {
     prompt: ReturnType<typeof vi.fn>;
     userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
   };
   event.prompt = vi.fn().mockResolvedValue(undefined);
   event.userChoice = Promise.resolve({ outcome });
+  (window as unknown as { __terroirInstallPrompt: unknown }).__terroirInstallPrompt = event;
+  window.dispatchEvent(new Event("terroir:installavailable"));
   return event;
 }
 
@@ -18,6 +24,10 @@ describe("PwaInstallPrompt", () => {
   beforeEach(() => {
     seedLocale("en");
     window.localStorage.removeItem("terroir.pwa.install-dismissed");
+  });
+
+  afterEach(() => {
+    (window as unknown as { __terroirInstallPrompt: unknown }).__terroirInstallPrompt = null;
   });
 
   it("renders nothing until the browser offers an install prompt", () => {
@@ -28,8 +38,7 @@ describe("PwaInstallPrompt", () => {
   it("shows the install banner and fires the native prompt on click", async () => {
     renderWithProviders(<PwaInstallPrompt />);
 
-    const event = makeInstallEvent();
-    window.dispatchEvent(event);
+    const event = offerInstall();
 
     const install = await screen.findByRole("button", { name: "Install app" });
     await userEvent.setup().click(install);
@@ -42,7 +51,7 @@ describe("PwaInstallPrompt", () => {
 
   it("dismisses and stays hidden (remembered per device)", async () => {
     renderWithProviders(<PwaInstallPrompt />);
-    window.dispatchEvent(makeInstallEvent());
+    offerInstall();
 
     await screen.findByText("Install Terroir BI");
     await userEvent.setup().click(screen.getByRole("button", { name: "Dismiss" }));

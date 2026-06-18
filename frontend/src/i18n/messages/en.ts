@@ -35,6 +35,10 @@ export const en = {
     iosLead: "Add Terroir BI to your Home Screen:",
     iosStep1: "Tap the Share button",
     iosStep2: "Choose “Add to Home Screen”",
+    settingsTitle: "Install app",
+    settingsDescription: "Add Terroir BI to your device for a faster, full-screen experience.",
+    installed: "Terroir BI is installed on this device.",
+    unsupported: "This browser can’t install the app. Try Chrome on Android or desktop.",
   },
   nav: {
     dashboard: "Dashboard",

@@ -66,6 +66,21 @@ fi
 echo
 
 cd "$FRONTEND_DIR"
-# `npm run deploy` = opennextjs-cloudflare build && opennextjs-cloudflare deploy.
-# NEXT_PUBLIC_* values are inlined into the bundle during the build step.
-npm run deploy
+# Build and deploy are split (vs. `npm run deploy`) so we can stamp the service
+# worker between them. NEXT_PUBLIC_* values are inlined during the build step.
+npx opennextjs-cloudflare build
+
+# Stamp a unique build id into the built service worker so every deploy ships a
+# byte-different sw.js. The browser only detects a SW update when its bytes
+# change; without this a warm mobile tab / installed PWA serves stale JS until
+# its cache is manually cleared. The id busts the SW cache name on activate.
+build_id="$(git -C "$ROOT_DIR" rev-parse --short HEAD 2>/dev/null || echo nogit)-$(date +%Y%m%d%H%M%S)"
+sw_asset="$FRONTEND_DIR/.open-next/assets/sw.js"
+if [[ -f "$sw_asset" ]] && grep -q "__BUILD_ID__" "$sw_asset"; then
+  sed -i.bak "s/__BUILD_ID__/${build_id}/g" "$sw_asset" && rm -f "$sw_asset.bak"
+  echo "==> Stamped service worker build id: $build_id"
+else
+  echo "Warning: could not stamp service worker ($sw_asset); SW updates may not be detected." >&2
+fi
+
+npx opennextjs-cloudflare deploy

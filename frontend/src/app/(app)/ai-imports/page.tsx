@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dropzone } from "@/components/ui/dropzone";
+import { Table } from "@/components/ui/table";
 import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { useConfirm } from "@/components/ui/confirm";
@@ -97,7 +98,7 @@ export default function AiImportsPage() {
           ) : !imports.data?.length ? (
             <p className="text-sm text-muted-foreground">{t("aiImports.list.empty")}</p>
           ) : (
-            <table className="w-full text-sm">
+            <Table>
               <tbody>
                 {imports.data.map((imp) => (
                   <tr key={imp.id} className="border-b border-border last:border-0">
@@ -136,7 +137,7 @@ export default function AiImportsPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </Table>
           )}
         </CardContent>
       </Card>

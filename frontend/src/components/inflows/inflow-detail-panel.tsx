@@ -72,17 +72,17 @@ export function InflowDetailPanel({ inflow, onDeleted }: { inflow: Inflow; onDel
         <div className="rounded-md border border-border p-3">
           <p className="mb-1 text-xs font-medium text-muted-foreground">{t("inflows.linkedOrder.title")}</p>
           <div className="flex items-center justify-between gap-3">
-            <div className="space-y-0.5">
-              <p className="font-medium">{inflow.order_number ?? order?.order_number}</p>
+            <div className="min-w-0 space-y-0.5">
+              <p className="truncate font-medium">{inflow.order_number ?? order?.order_number}</p>
               {order && (
-                <p className="text-xs text-muted-foreground">
+                <p className="truncate text-xs text-muted-foreground">
                   {t(`orders.status.${order.status}`)} · {moneyObject(order.total_amount)}
                 </p>
               )}
             </div>
             <Link
               href={`/orders/${inflow.order_id}`}
-              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+              className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary hover:underline"
             >
               {t("inflows.linkedOrder.viewOrder")}
               <ArrowRight className="size-4" />

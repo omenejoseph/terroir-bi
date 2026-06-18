@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/context";
 import { useTranslation } from "@/i18n/context";
 import { Card, CardContent } from "@/components/ui/card";
 import { GeneralSettings } from "@/components/settings/general-settings";
+import { InstallAppCard } from "@/components/settings/install-app-card";
 import { PushNotificationsCard } from "@/components/settings/push-notifications-card";
 
 export default function SettingsPage() {
@@ -18,6 +19,9 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-semibold tracking-tight">{t("settings.title")}</h1>
         <p className="text-sm text-muted-foreground">{t("settings.subtitle")}</p>
       </header>
+
+      {/* Per-device app install — available to every user. */}
+      <InstallAppCard />
 
       {/* Per-device push preference — available to every user. */}
       <PushNotificationsCard />

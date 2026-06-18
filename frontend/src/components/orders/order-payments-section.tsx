@@ -103,35 +103,71 @@ export function OrderPaymentsSection({ orderId }: { orderId: string }) {
           {data.payments.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("orders.payments.empty")}</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <tr>
-                    <th className="py-2 pr-3 font-medium">{t("orders.payments.colDate")}</th>
-                    <th className="py-2 pr-3 text-right font-medium">{t("orders.payments.colAmount")}</th>
-                    <th className="py-2 pr-3 font-medium">{t("orders.payments.colMethod")}</th>
-                    <th className="py-2 font-medium">{t("orders.payments.colReference")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.payments.map((payment) => (
-                    <tr key={payment.id} className="border-b border-border last:border-0">
-                      <td className="py-2.5 pr-3 text-muted-foreground">{date(payment.date)}</td>
-                      <td className="py-2.5 pr-3 text-right tabular-nums">
-                        {moneyObject(payment.amount)}
-                        {payment.is_credit_note && (
-                          <Badge variant="outline" className="ml-2">
-                            {t("orders.payments.creditNoteBadge")}
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="py-2.5 pr-3 text-muted-foreground">{payment.payment_method ?? "—"}</td>
-                      <td className="py-2.5 text-muted-foreground">{payment.reference ?? "—"}</td>
+            <>
+              {/* Desktop / tablet: a real table. */}
+              <div className="hidden overflow-x-auto sm:block">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+                    <tr>
+                      <th className="py-2 pr-3 font-medium">{t("orders.payments.colDate")}</th>
+                      <th className="py-2 pr-3 text-right font-medium">{t("orders.payments.colAmount")}</th>
+                      <th className="py-2 pr-3 font-medium">{t("orders.payments.colMethod")}</th>
+                      <th className="py-2 font-medium">{t("orders.payments.colReference")}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {data.payments.map((payment) => (
+                      <tr key={payment.id} className="border-b border-border last:border-0">
+                        <td className="py-2.5 pr-3 text-muted-foreground">{date(payment.date)}</td>
+                        <td className="py-2.5 pr-3 text-right tabular-nums">
+                          {moneyObject(payment.amount)}
+                          {payment.is_credit_note && (
+                            <Badge variant="outline" className="ml-2">
+                              {t("orders.payments.creditNoteBadge")}
+                            </Badge>
+                          )}
+                        </td>
+                        <td className="py-2.5 pr-3 text-muted-foreground">{payment.payment_method ?? "—"}</td>
+                        <td className="py-2.5 text-muted-foreground">{payment.reference ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile: each payment as a stacked label/value card. */}
+              <ul className="space-y-3 sm:hidden">
+                {data.payments.map((payment) => (
+                  <li key={payment.id} className="rounded-lg border border-border p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-sm font-medium tabular-nums">
+                        {moneyObject(payment.amount)}
+                      </span>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {payment.is_credit_note && (
+                          <Badge variant="outline">{t("orders.payments.creditNoteBadge")}</Badge>
+                        )}
+                        <span className="text-xs text-muted-foreground">{date(payment.date)}</span>
+                      </div>
+                    </div>
+                    <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                      <div className="space-y-0.5">
+                        <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                          {t("orders.payments.colMethod")}
+                        </dt>
+                        <dd className="text-muted-foreground">{payment.payment_method ?? "—"}</dd>
+                      </div>
+                      <div className="min-w-0 space-y-0.5">
+                        <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                          {t("orders.payments.colReference")}
+                        </dt>
+                        <dd className="truncate text-muted-foreground">{payment.reference ?? "—"}</dd>
+                      </div>
+                    </dl>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </CardContent>
       </Card>
