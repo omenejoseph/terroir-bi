@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { BarChart3, ChevronDown, ClipboardCheck, Package, Plus, TrendingDown } from "lucide-react";
+import { BarChart3, ChevronDown, ClipboardCheck, Copy, Pencil, Plus, TrendingDown } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
-import { useBottleAnalyses, useInventory } from "@/hooks/use-inventory";
+import { useBottleAnalyses, useDuplicateInventoryItem, useInventory } from "@/hooks/use-inventory";
 import { useInventoryDocuments, useInventoryImages } from "@/hooks/use-inventory-media";
 import { useTranslation } from "@/i18n/context";
 import { withCount } from "@/lib/labels";
@@ -22,7 +22,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
+import { ItemThumb } from "@/components/ui/item-thumb";
+import { MetaField } from "@/components/ui/meta-field";
+import { useConfirm } from "@/components/ui/confirm";
 import { cn } from "@/lib/utils";
+import { BulkEditInventory } from "@/components/inventory/bulk-edit-inventory";
 import { ItemOverviewSection } from "@/components/inventory/item-overview-section";
 import { StockTab } from "@/components/inventory/stock-tab";
 import { RecipeSection } from "@/components/inventory/recipe-section";
@@ -88,6 +92,7 @@ export default function InventoryPage() {
   const { can } = useAuth();
   const router = useRouter();
   const canManage = can("inventory.manage");
+  const [bulkEdit, setBulkEdit] = React.useState(false);
   const [tab, setTab] = React.useState<CategoryTab>("ALL");
   const [search, setSearch] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
@@ -155,6 +160,17 @@ export default function InventoryPage() {
               {t("inventory.check.trigger")}
             </Button>
           )}
+          {canManage && !bulkEdit && (
+            <Button
+              variant="outline"
+              onClick={() => setBulkEdit(true)}
+              disabled={items.length === 0}
+              className="shrink-0"
+            >
+              <Pencil className="size-4" />
+              {t("inventory.bulkEdit.trigger")}
+            </Button>
+          )}
           {can("inventory.manage") && (
             <Button onClick={() => router.push("/inventory/new")} className="shrink-0">
               <Plus className="size-4" />
@@ -164,6 +180,10 @@ export default function InventoryPage() {
         </div>
       </header>
 
+      {bulkEdit ? (
+        <BulkEditInventory items={items} onDone={() => setBulkEdit(false)} />
+      ) : (
+        <>
       {/* Category tabs */}
       <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as CategoryTab)} />
 
@@ -214,6 +234,8 @@ export default function InventoryPage() {
           ))}
         </div>
       )}
+        </>
+      )}
     </div>
   );
 }
@@ -222,71 +244,107 @@ function InventoryItemCard({ item, canManage }: { item: InventoryItem; canManage
   const { t } = useTranslation();
   const { can } = useAuth();
   const { number } = useFormatters();
+  const router = useRouter();
+  const duplicate = useDuplicateInventoryItem();
+  const confirm = useConfirm();
   const canPricing = can("pricing.view");
   const [open, setOpen] = React.useState(false);
-  const [detailTab, setDetailTab] = React.useState<DetailTab>("overview");
+  const [detailTab, setDetailTab] = React.useState<DetailTab>("stock");
+
+  async function onDuplicate() {
+    const ok = await confirm({
+      title: t("inventory.duplicate.confirmTitle"),
+      description: t("inventory.duplicate.confirmBody", { name: item.name }),
+      confirmLabel: t("inventory.details.duplicate"),
+    });
+    if (!ok) return;
+    const created = await duplicate.mutateAsync(item.id);
+    router.push(`/inventory/${created.id}`);
+  }
 
   // Counts for the tab labels — only fetched once the card is expanded.
   const analysesQ = useBottleAnalyses(open ? item.id : undefined);
   const imagesQ = useInventoryImages(item.id, { enabled: open });
   const documentsQ = useInventoryDocuments(item.id, { enabled: open });
 
+  // Tab order mirrors the prototype: Stock, Details, Recipe, Produce, Images, Docs, Pricing, Analysis.
   const tabs = [
-    { value: "overview", label: t("inventory.page.overview") },
-    ...(canPricing ? [{ value: "pricing", label: t("inventory.pricing.title") }] : []),
     { value: "stock", label: t("inventory.stock.title") },
+    { value: "overview", label: t("inventory.page.overview") },
     { value: "recipe", label: t("inventory.recipe.title") },
     { value: "produce", label: t("inventory.produce.title") },
-    { value: "analysis", label: withCount(t("inventory.analysis.title"), analysesQ.data?.length) },
     { value: "images", label: withCount(t("inventory.images.title"), imagesQ.data?.length) },
     { value: "documents", label: withCount(t("inventory.documents.title"), documentsQ.data?.length) },
+    ...(canPricing ? [{ value: "pricing", label: t("inventory.pricing.title") }] : []),
+    { value: "analysis", label: withCount(t("inventory.analysis.title"), analysesQ.data?.length) },
   ];
 
-  // Stock "what's left" with a bottle hint: cases → total bottles, bottles → per case.
+  // Stock "what's left", mirroring the prototype: present packaged goods in
+  // bottles with the *number of cases* as the hint — "912 bottles (76 cases)",
+  // not the bottles-per-case count.
   const unitLower = item.unit.trim().toLowerCase();
   const isCase = unitLower === "case" || unitLower === "cases";
-  const isBottle = unitLower === "bottle" || unitLower === "bottles";
-  const stockNum = Number(item.current_stock);
-  const stockText = Number.isFinite(stockNum) ? number(stockNum) : item.current_stock;
   const bpc = item.bottles_per_case ?? 0;
-  const stockHint =
-    isCase && bpc > 0 && Number.isFinite(stockNum)
-      ? t("inventory.summary.totalBottles", { count: number(Math.round(stockNum * bpc)) })
-      : isBottle && bpc > 0
-        ? t("inventory.summary.perCase", { count: number(bpc) })
-        : null;
+  const stockNum = Number(item.current_stock);
+  const bottles = Number.isFinite(stockNum) ? (isCase && bpc > 0 ? stockNum * bpc : stockNum) : null;
+  const stockText = bottles != null ? number(Math.round(bottles)) : item.current_stock;
+  const stockUnit = isCase ? t("inventory.summary.bottlesUnit") : item.unit;
+  const casesCount = bottles != null && bpc > 1 ? Math.floor(bottles / bpc) : 0;
+  const stockHint = casesCount > 0 ? t("inventory.summary.cases", { count: number(casesCount) }) : null;
 
   return (
     <Card className="overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        aria-expanded={open}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
-      >
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="flex w-full items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40">
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          aria-expanded={open}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+        >
           <ItemThumb url={item.image_url} alt={item.name} />
           <div className="min-w-0">
             <p className="truncate font-medium">{item.name}</p>
-            {item.unit_size && (
-              <p className="truncate text-xs text-muted-foreground">{item.unit_size}</p>
-            )}
+            {/* Same columns as the prototype's inventory table — Size · Vintage · Stock — as labelled values. */}
+            <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5">
+              {item.unit_size && (
+                <MetaField label={t("inventory.summary.sizeLabel")}>{item.unit_size}</MetaField>
+              )}
+              {item.vintage != null && (
+                <MetaField label={t("inventory.summary.vintageLabel")}>{item.vintage}</MetaField>
+              )}
+              <MetaField label={t("inventory.summary.stockLabel")}>
+                {stockText} {stockUnit}
+                {stockHint && <span className="font-normal text-muted-foreground"> ({stockHint})</span>}
+              </MetaField>
+            </div>
           </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-3 text-sm">
-          <span className="tabular-nums">
-            {stockText} {item.unit}
-            {stockHint && <span className="text-muted-foreground"> ({stockHint})</span>}
-          </span>
+        </button>
+        <div className="flex shrink-0 items-center gap-2 text-sm">
           {!item.is_active && <Badge variant="secondary">{t("common.status.inactive")}</Badge>}
-          <ChevronDown
-            className={cn(
-              "size-4 text-muted-foreground transition-transform duration-300",
-              open && "rotate-180",
-            )}
-          />
+          {canManage && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void onDuplicate()}
+              disabled={duplicate.isPending}
+            >
+              {duplicate.isPending ? <Spinner className="size-4" /> : <Copy className="size-4" />}
+              {t("inventory.details.duplicate")}
+            </Button>
+          )}
+          <button
+            type="button"
+            onClick={() => setOpen((prev) => !prev)}
+            aria-expanded={open}
+            aria-label={open ? t("inventory.details.close") : t("inventory.details.view")}
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted"
+          >
+            <ChevronDown
+              className={cn("size-4 transition-transform duration-300", open && "rotate-180")}
+            />
+          </button>
         </div>
-      </button>
+      </div>
 
       {/* Expandable dropdown panel with the tabbed detail */}
       <div
@@ -321,16 +379,3 @@ function InventoryItemCard({ item, canManage }: { item: InventoryItem; canManage
   );
 }
 
-/** Small lead-image thumbnail for the list row; falls back to a package icon. */
-function ItemThumb({ url, alt }: { url?: string | null; alt: string }) {
-  return (
-    <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
-      {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={alt} className="size-full object-cover" />
-      ) : (
-        <Package className="size-4 text-muted-foreground" aria-hidden />
-      )}
-    </span>
-  );
-}

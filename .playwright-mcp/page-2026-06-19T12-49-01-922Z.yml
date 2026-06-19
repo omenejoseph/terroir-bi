@@ -1,0 +1,423 @@
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e10] [cursor=pointer]:
+    - img [ref=e11]
+  - alert [ref=e14]
+  - generic [ref=e15]:
+    - complementary [ref=e16]:
+      - generic [ref=e17]:
+        - link "Terroir BI" [ref=e19] [cursor=pointer]:
+          - /url: /dashboard
+          - img "Terroir BI" [ref=e20]
+        - navigation [ref=e21]:
+          - generic [ref=e22]:
+            - paragraph [ref=e23]: Pregled
+            - link "Nadzorna ploča" [ref=e24] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e26]
+              - text: Nadzorna ploča
+          - generic [ref=e31]:
+            - paragraph [ref=e32]: Prodaja
+            - link "Narudžbe" [ref=e33] [cursor=pointer]:
+              - /url: /orders
+              - img [ref=e35]
+              - text: Narudžbe
+            - link "Kupci" [ref=e38] [cursor=pointer]:
+              - /url: /customers
+              - img [ref=e40]
+              - text: Kupci
+          - generic [ref=e45]:
+            - paragraph [ref=e46]: Operacije
+            - link "Zaliha" [ref=e47] [cursor=pointer]:
+              - /url: /inventory
+              - img [ref=e49]
+              - text: Zaliha
+            - link "Dobavljači" [ref=e59] [cursor=pointer]:
+              - /url: /suppliers
+              - img [ref=e61]
+              - text: Dobavljači
+            - link "Radni nalozi" [ref=e66] [cursor=pointer]:
+              - /url: /work-orders
+              - img [ref=e68]
+              - text: Radni nalozi
+          - generic [ref=e71]:
+            - paragraph [ref=e72]: Podrum
+            - link "Podrum" [ref=e73] [cursor=pointer]:
+              - /url: /cellar
+              - img [ref=e75]
+              - text: Podrum
+            - link "Vinogradi" [ref=e77] [cursor=pointer]:
+              - /url: /vineyards
+              - img [ref=e79]
+              - text: Vinogradi
+            - link "Proizvodnja" [ref=e89] [cursor=pointer]:
+              - /url: /production
+              - img [ref=e91]
+              - text: Proizvodnja
+          - generic [ref=e93]:
+            - paragraph [ref=e94]: Financije
+            - link "Priljevi" [ref=e95] [cursor=pointer]:
+              - /url: /inflows
+              - img [ref=e97]
+              - text: Priljevi
+            - link "Troškovi" [ref=e100] [cursor=pointer]:
+              - /url: /costs
+              - img [ref=e102]
+              - text: Troškovi
+            - link "Novčani tok" [ref=e105] [cursor=pointer]:
+              - /url: /cash-flow
+              - img [ref=e107]
+              - text: Novčani tok
+          - generic [ref=e110]:
+            - paragraph [ref=e111]: Automatizacija
+            - link "AI unos podataka" [ref=e112] [cursor=pointer]:
+              - /url: /ai-imports
+              - img [ref=e114]
+              - text: AI unos podataka
+          - generic [ref=e116]:
+            - paragraph [ref=e117]: Radni prostor
+            - link "Tim" [ref=e118] [cursor=pointer]:
+              - /url: /team
+              - img [ref=e120]
+              - text: Tim
+            - link "Postavke" [ref=e124] [cursor=pointer]:
+              - /url: /settings
+              - img [ref=e126]
+              - text: Postavke
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - img [ref=e131]
+            - generic [ref=e135]: Jezik
+            - tablist [ref=e136]:
+              - tab "Hrvatski" [selected] [ref=e137]
+              - tab "English" [ref=e138]
+          - generic [ref=e139]:
+            - paragraph [ref=e140]: Filip Bibić
+            - paragraph [ref=e141]: test@example.com
+          - button "Odjava" [ref=e142]:
+            - img [ref=e143]
+            - text: Odjava
+          - button "Sažmi" [ref=e146]:
+            - img [ref=e147]
+            - text: Sažmi
+      - separator [ref=e150]
+    - main [ref=e151]:
+      - generic [ref=e153]:
+        - button "Obavijesti" [ref=e154]:
+          - img [ref=e155]
+        - generic: 9+
+      - generic [ref=e160]:
+        - generic [ref=e161]:
+          - generic [ref=e162]:
+            - heading "Troškovi" [level=1] [ref=e163]
+            - paragraph [ref=e164]: Troškovi, obveze i analitika potrošnje.
+          - generic [ref=e165]:
+            - button "Analitika" [ref=e166]:
+              - img [ref=e167]
+              - text: Analitika
+            - button "Dodaj trošak" [ref=e169]:
+              - img [ref=e170]
+              - text: Dodaj trošak
+        - generic [ref=e171]:
+          - generic [ref=e173]:
+            - paragraph [ref=e174]: Ukupna potrošnja
+            - paragraph [ref=e175]: 39.100,00 €
+          - generic [ref=e177]:
+            - paragraph [ref=e178]: Neplaćeno
+            - paragraph [ref=e179]: 8.880,00 €
+        - tablist [ref=e180]:
+          - tab "Sve (42)" [selected] [ref=e181]
+          - tab "Računi (2)" [ref=e182]
+          - tab "Plaćanja (0)" [ref=e183]
+          - tab "Ostalo (40)" [ref=e184]
+        - generic [ref=e185]:
+          - combobox "Sve kategorije" [ref=e186]:
+            - option "Sve kategorije" [selected]
+            - option "Salary"
+            - option "Marketing"
+            - option "Invoice"
+            - option "Payment"
+            - option "Utilities"
+            - option "Packaging"
+            - option "Equipment"
+            - option "Logistics"
+            - option "Operations"
+            - option "Grapes"
+          - combobox "Svi statusi" [ref=e187]:
+            - option "Svi statusi" [selected]
+            - option "Na čekanju"
+            - option "Odobreno"
+            - option "Plaćeno"
+          - combobox "Svi dobavljači" [ref=e188]:
+            - option "Svi dobavljači" [selected]
+            - option "Amorim Cork"
+            - option "Demo Supplier 01"
+            - option "Demo Supplier 02"
+            - option "Demo Supplier 03"
+            - option "Demo Supplier 04"
+            - option "Demo Supplier 05"
+            - option "Demo Supplier 06"
+            - option "Demo Supplier 07"
+            - option "Demo Supplier 08"
+            - option "Demo Supplier 09"
+            - option "Demo Supplier 10"
+            - option "Demo Supplier 11"
+            - option "Demo Supplier 12"
+            - option "Demo Supplier 13"
+            - option "Demo Supplier 14"
+            - option "Demo Supplier 15"
+            - option "Demo Supplier 16"
+            - option "Demo Supplier 17"
+            - option "Demo Supplier 18"
+            - option "Demo Supplier 19"
+            - option "Demo Supplier 20"
+            - option "Demo Supplier 21"
+            - option "Demo Supplier 22"
+            - option "Demo Supplier 23"
+            - option "Demo Supplier 24"
+          - textbox "Pretraži opis, referencu…" [ref=e189]
+        - generic [ref=e190]:
+          - generic [ref=e191]:
+            - button "Danas" [ref=e192]
+            - button "Jučer" [ref=e193]
+            - button "MTD" [ref=e194]
+            - button "QTD" [ref=e195]
+            - button "YTD" [ref=e196]
+            - button "Ovaj mjesec" [ref=e197]
+            - button "Prošli mjesec" [ref=e198]
+            - button "Prošla godina" [ref=e199]
+            - button "Sve" [pressed] [ref=e200]
+            - button "Prilagođeno…" [active] [ref=e201]
+          - generic [ref=e503]:
+            - generic [ref=e504]:
+              - text: Od
+              - textbox "Od" [ref=e505]: 2026-06-19
+            - generic [ref=e506]:
+              - text: Do
+              - textbox "Do" [ref=e507]: 2026-06-19
+            - button "Primijeni" [ref=e508]
+        - generic [ref=e202]:
+          - button "Salary Payroll — Petar Marić 14. lip 2026. 3.400,00 € Plaćeno" [ref=e204]:
+            - generic [ref=e205]:
+              - paragraph [ref=e206]: Salary
+              - paragraph [ref=e207]: Payroll — Petar Marić
+              - paragraph [ref=e208]: 14. lip 2026.
+            - generic [ref=e209]:
+              - generic [ref=e210]: 3.400,00 €
+              - generic [ref=e211]: Plaćeno
+              - img [ref=e212]
+          - button "Salary Payroll — Ivana Kovač 14. lip 2026. 3.100,00 € Plaćeno" [ref=e216]:
+            - generic [ref=e217]:
+              - paragraph [ref=e218]: Salary
+              - paragraph [ref=e219]: Payroll — Ivana Kovač
+              - paragraph [ref=e220]: 14. lip 2026.
+            - generic [ref=e221]:
+              - generic [ref=e222]: 3.100,00 €
+              - generic [ref=e223]: Plaćeno
+              - img [ref=e224]
+          - button "Salary Payroll — Marko Babić 14. lip 2026. 2.800,00 € Plaćeno" [ref=e228]:
+            - generic [ref=e229]:
+              - paragraph [ref=e230]: Salary
+              - paragraph [ref=e231]: Payroll — Marko Babić
+              - paragraph [ref=e232]: 14. lip 2026.
+            - generic [ref=e233]:
+              - generic [ref=e234]: 2.800,00 €
+              - generic [ref=e235]: Plaćeno
+              - img [ref=e236]
+          - button "Salary Payroll — Ana Horvat 14. lip 2026. 2.500,00 € Plaćeno" [ref=e240]:
+            - generic [ref=e241]:
+              - paragraph [ref=e242]: Salary
+              - paragraph [ref=e243]: Payroll — Ana Horvat
+              - paragraph [ref=e244]: 14. lip 2026.
+            - generic [ref=e245]:
+              - generic [ref=e246]: 2.500,00 €
+              - generic [ref=e247]: Plaćeno
+              - img [ref=e248]
+          - button "Operations Operating expense 30 19. lip 2026. 250,00 € Plaćeno" [ref=e252]:
+            - generic [ref=e253]:
+              - paragraph [ref=e254]: Operations
+              - paragraph [ref=e255]: Operating expense 30
+              - paragraph [ref=e256]: 19. lip 2026.
+            - generic [ref=e257]:
+              - generic [ref=e258]: 250,00 €
+              - generic [ref=e259]: Plaćeno
+              - img [ref=e260]
+          - button "Operations Operating expense 29 19. lip 2026. 245,00 € Plaćeno" [ref=e264]:
+            - generic [ref=e265]:
+              - paragraph [ref=e266]: Operations
+              - paragraph [ref=e267]: Operating expense 29
+              - paragraph [ref=e268]: 19. lip 2026.
+            - generic [ref=e269]:
+              - generic [ref=e270]: 245,00 €
+              - generic [ref=e271]: Plaćeno
+              - img [ref=e272]
+          - button "Operations Operating expense 28 19. lip 2026. 240,00 € Plaćeno" [ref=e276]:
+            - generic [ref=e277]:
+              - paragraph [ref=e278]: Operations
+              - paragraph [ref=e279]: Operating expense 28
+              - paragraph [ref=e280]: 19. lip 2026.
+            - generic [ref=e281]:
+              - generic [ref=e282]: 240,00 €
+              - generic [ref=e283]: Plaćeno
+              - img [ref=e284]
+          - button "Operations Operating expense 27 19. lip 2026. 235,00 € Plaćeno" [ref=e288]:
+            - generic [ref=e289]:
+              - paragraph [ref=e290]: Operations
+              - paragraph [ref=e291]: Operating expense 27
+              - paragraph [ref=e292]: 19. lip 2026.
+            - generic [ref=e293]:
+              - generic [ref=e294]: 235,00 €
+              - generic [ref=e295]: Plaćeno
+              - img [ref=e296]
+          - button "Operations Operating expense 26 19. lip 2026. 230,00 € Plaćeno" [ref=e300]:
+            - generic [ref=e301]:
+              - paragraph [ref=e302]: Operations
+              - paragraph [ref=e303]: Operating expense 26
+              - paragraph [ref=e304]: 19. lip 2026.
+            - generic [ref=e305]:
+              - generic [ref=e306]: 230,00 €
+              - generic [ref=e307]: Plaćeno
+              - img [ref=e308]
+          - button "Operations Operating expense 25 19. lip 2026. 225,00 € Plaćeno" [ref=e312]:
+            - generic [ref=e313]:
+              - paragraph [ref=e314]: Operations
+              - paragraph [ref=e315]: Operating expense 25
+              - paragraph [ref=e316]: 19. lip 2026.
+            - generic [ref=e317]:
+              - generic [ref=e318]: 225,00 €
+              - generic [ref=e319]: Plaćeno
+              - img [ref=e320]
+          - button "Operations Operating expense 24 19. lip 2026. 220,00 € Plaćeno" [ref=e324]:
+            - generic [ref=e325]:
+              - paragraph [ref=e326]: Operations
+              - paragraph [ref=e327]: Operating expense 24
+              - paragraph [ref=e328]: 19. lip 2026.
+            - generic [ref=e329]:
+              - generic [ref=e330]: 220,00 €
+              - generic [ref=e331]: Plaćeno
+              - img [ref=e332]
+          - button "Operations Operating expense 23 19. lip 2026. 215,00 € Plaćeno" [ref=e336]:
+            - generic [ref=e337]:
+              - paragraph [ref=e338]: Operations
+              - paragraph [ref=e339]: Operating expense 23
+              - paragraph [ref=e340]: 19. lip 2026.
+            - generic [ref=e341]:
+              - generic [ref=e342]: 215,00 €
+              - generic [ref=e343]: Plaćeno
+              - img [ref=e344]
+          - button "Operations Operating expense 22 19. lip 2026. 210,00 € Plaćeno" [ref=e348]:
+            - generic [ref=e349]:
+              - paragraph [ref=e350]: Operations
+              - paragraph [ref=e351]: Operating expense 22
+              - paragraph [ref=e352]: 19. lip 2026.
+            - generic [ref=e353]:
+              - generic [ref=e354]: 210,00 €
+              - generic [ref=e355]: Plaćeno
+              - img [ref=e356]
+          - button "Operations Operating expense 21 19. lip 2026. 205,00 € Plaćeno" [ref=e360]:
+            - generic [ref=e361]:
+              - paragraph [ref=e362]: Operations
+              - paragraph [ref=e363]: Operating expense 21
+              - paragraph [ref=e364]: 19. lip 2026.
+            - generic [ref=e365]:
+              - generic [ref=e366]: 205,00 €
+              - generic [ref=e367]: Plaćeno
+              - img [ref=e368]
+          - button "Operations Operating expense 20 19. lip 2026. 200,00 € Plaćeno" [ref=e372]:
+            - generic [ref=e373]:
+              - paragraph [ref=e374]: Operations
+              - paragraph [ref=e375]: Operating expense 20
+              - paragraph [ref=e376]: 19. lip 2026.
+            - generic [ref=e377]:
+              - generic [ref=e378]: 200,00 €
+              - generic [ref=e379]: Plaćeno
+              - img [ref=e380]
+          - button "Operations Operating expense 19 19. lip 2026. 195,00 € Plaćeno" [ref=e384]:
+            - generic [ref=e385]:
+              - paragraph [ref=e386]: Operations
+              - paragraph [ref=e387]: Operating expense 19
+              - paragraph [ref=e388]: 19. lip 2026.
+            - generic [ref=e389]:
+              - generic [ref=e390]: 195,00 €
+              - generic [ref=e391]: Plaćeno
+              - img [ref=e392]
+          - button "Operations Operating expense 18 19. lip 2026. 190,00 € Plaćeno" [ref=e396]:
+            - generic [ref=e397]:
+              - paragraph [ref=e398]: Operations
+              - paragraph [ref=e399]: Operating expense 18
+              - paragraph [ref=e400]: 19. lip 2026.
+            - generic [ref=e401]:
+              - generic [ref=e402]: 190,00 €
+              - generic [ref=e403]: Plaćeno
+              - img [ref=e404]
+          - button "Operations Operating expense 17 19. lip 2026. 185,00 € Plaćeno" [ref=e408]:
+            - generic [ref=e409]:
+              - paragraph [ref=e410]: Operations
+              - paragraph [ref=e411]: Operating expense 17
+              - paragraph [ref=e412]: 19. lip 2026.
+            - generic [ref=e413]:
+              - generic [ref=e414]: 185,00 €
+              - generic [ref=e415]: Plaćeno
+              - img [ref=e416]
+          - button "Operations Operating expense 16 19. lip 2026. 180,00 € Plaćeno" [ref=e420]:
+            - generic [ref=e421]:
+              - paragraph [ref=e422]: Operations
+              - paragraph [ref=e423]: Operating expense 16
+              - paragraph [ref=e424]: 19. lip 2026.
+            - generic [ref=e425]:
+              - generic [ref=e426]: 180,00 €
+              - generic [ref=e427]: Plaćeno
+              - img [ref=e428]
+          - button "Operations Operating expense 15 19. lip 2026. 175,00 € Plaćeno" [ref=e432]:
+            - generic [ref=e433]:
+              - paragraph [ref=e434]: Operations
+              - paragraph [ref=e435]: Operating expense 15
+              - paragraph [ref=e436]: 19. lip 2026.
+            - generic [ref=e437]:
+              - generic [ref=e438]: 175,00 €
+              - generic [ref=e439]: Plaćeno
+              - img [ref=e440]
+          - button "Operations Operating expense 14 19. lip 2026. 170,00 € Plaćeno" [ref=e444]:
+            - generic [ref=e445]:
+              - paragraph [ref=e446]: Operations
+              - paragraph [ref=e447]: Operating expense 14
+              - paragraph [ref=e448]: 19. lip 2026.
+            - generic [ref=e449]:
+              - generic [ref=e450]: 170,00 €
+              - generic [ref=e451]: Plaćeno
+              - img [ref=e452]
+          - button "Operations Operating expense 13 19. lip 2026. 165,00 € Plaćeno" [ref=e456]:
+            - generic [ref=e457]:
+              - paragraph [ref=e458]: Operations
+              - paragraph [ref=e459]: Operating expense 13
+              - paragraph [ref=e460]: 19. lip 2026.
+            - generic [ref=e461]:
+              - generic [ref=e462]: 165,00 €
+              - generic [ref=e463]: Plaćeno
+              - img [ref=e464]
+          - button "Operations Operating expense 12 19. lip 2026. 160,00 € Plaćeno" [ref=e468]:
+            - generic [ref=e469]:
+              - paragraph [ref=e470]: Operations
+              - paragraph [ref=e471]: Operating expense 12
+              - paragraph [ref=e472]: 19. lip 2026.
+            - generic [ref=e473]:
+              - generic [ref=e474]: 160,00 €
+              - generic [ref=e475]: Plaćeno
+              - img [ref=e476]
+          - button "Operations Operating expense 11 19. lip 2026. 155,00 € Plaćeno" [ref=e480]:
+            - generic [ref=e481]:
+              - paragraph [ref=e482]: Operations
+              - paragraph [ref=e483]: Operating expense 11
+              - paragraph [ref=e484]: 19. lip 2026.
+            - generic [ref=e485]:
+              - generic [ref=e486]: 155,00 €
+              - generic [ref=e487]: Plaćeno
+              - img [ref=e488]
+          - button "Operations Operating expense 10 19. lip 2026. 150,00 € Plaćeno" [ref=e492]:
+            - generic [ref=e493]:
+              - paragraph [ref=e494]: Operations
+              - paragraph [ref=e495]: Operating expense 10
+              - paragraph [ref=e496]: 19. lip 2026.
+            - generic [ref=e497]:
+              - generic [ref=e498]: 150,00 €
+              - generic [ref=e499]: Plaćeno
+              - img [ref=e500]

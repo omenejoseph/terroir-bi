@@ -1,0 +1,281 @@
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e10] [cursor=pointer]:
+    - img [ref=e11]
+  - alert [ref=e14]
+  - generic [ref=e15]:
+    - complementary [ref=e16]:
+      - generic [ref=e17]:
+        - link "Terroir BI" [ref=e19] [cursor=pointer]:
+          - /url: /dashboard
+          - img "Terroir BI" [ref=e20]
+        - navigation [ref=e21]:
+          - generic [ref=e22]:
+            - paragraph [ref=e23]: Pregled
+            - link "Nadzorna ploča" [ref=e24] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e26]
+              - text: Nadzorna ploča
+          - generic [ref=e31]:
+            - paragraph [ref=e32]: Prodaja
+            - link "Narudžbe" [ref=e33] [cursor=pointer]:
+              - /url: /orders
+              - img [ref=e35]
+              - text: Narudžbe
+            - link "Kupci" [ref=e38] [cursor=pointer]:
+              - /url: /customers
+              - img [ref=e40]
+              - text: Kupci
+          - generic [ref=e45]:
+            - paragraph [ref=e46]: Operacije
+            - link "Zaliha" [ref=e47] [cursor=pointer]:
+              - /url: /inventory
+              - img [ref=e49]
+              - text: Zaliha
+            - link "Dobavljači" [ref=e59] [cursor=pointer]:
+              - /url: /suppliers
+              - img [ref=e61]
+              - text: Dobavljači
+            - link "Radni nalozi" [ref=e66] [cursor=pointer]:
+              - /url: /work-orders
+              - img [ref=e68]
+              - text: Radni nalozi
+          - generic [ref=e71]:
+            - paragraph [ref=e72]: Podrum
+            - link "Podrum" [ref=e73] [cursor=pointer]:
+              - /url: /cellar
+              - img [ref=e75]
+              - text: Podrum
+            - link "Vinogradi" [ref=e77] [cursor=pointer]:
+              - /url: /vineyards
+              - img [ref=e79]
+              - text: Vinogradi
+            - link "Proizvodnja" [ref=e89] [cursor=pointer]:
+              - /url: /production
+              - img [ref=e91]
+              - text: Proizvodnja
+          - generic [ref=e93]:
+            - paragraph [ref=e94]: Financije
+            - link "Priljevi" [ref=e95] [cursor=pointer]:
+              - /url: /inflows
+              - img [ref=e97]
+              - text: Priljevi
+            - link "Troškovi" [ref=e100] [cursor=pointer]:
+              - /url: /costs
+              - img [ref=e102]
+              - text: Troškovi
+            - link "Novčani tok" [ref=e105] [cursor=pointer]:
+              - /url: /cash-flow
+              - img [ref=e107]
+              - text: Novčani tok
+          - generic [ref=e110]:
+            - paragraph [ref=e111]: Automatizacija
+            - link "AI unos podataka" [ref=e112] [cursor=pointer]:
+              - /url: /ai-imports
+              - img [ref=e114]
+              - text: AI unos podataka
+          - generic [ref=e116]:
+            - paragraph [ref=e117]: Radni prostor
+            - link "Tim" [ref=e118] [cursor=pointer]:
+              - /url: /team
+              - img [ref=e120]
+              - text: Tim
+            - link "Postavke" [ref=e124] [cursor=pointer]:
+              - /url: /settings
+              - img [ref=e126]
+              - text: Postavke
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - img [ref=e131]
+            - generic [ref=e135]: Jezik
+            - tablist [ref=e136]:
+              - tab "Hrvatski" [selected] [ref=e137]
+              - tab "English" [ref=e138]
+          - generic [ref=e139]:
+            - paragraph [ref=e140]: Filip Bibić
+            - paragraph [ref=e141]: test@example.com
+          - button "Odjava" [ref=e142]:
+            - img [ref=e143]
+            - text: Odjava
+          - button "Sažmi" [ref=e146]:
+            - img [ref=e147]
+            - text: Sažmi
+      - separator [ref=e150]
+    - main [ref=e151]:
+      - generic [ref=e153]:
+        - button "Obavijesti" [ref=e154]:
+          - img [ref=e155]
+        - generic: 9+
+      - generic [ref=e158]:
+        - generic [ref=e159]:
+          - img [ref=e160]
+          - generic [ref=e163]:
+            - paragraph [ref=e164]: Instalirajte Terroir BI
+            - paragraph [ref=e165]: Dodajte aplikaciju na uređaj za brže korištenje preko cijelog zaslona.
+          - button "Instaliraj aplikaciju" [ref=e166]
+          - button "Odbaci" [ref=e167]:
+            - img [ref=e168]
+        - generic [ref=e266]:
+          - generic [ref=e267]:
+            - generic [ref=e268]:
+              - heading "Troškovi" [level=1] [ref=e269]
+              - paragraph [ref=e270]: Troškovi, obveze i analitika potrošnje.
+            - generic [ref=e271]:
+              - button "Analitika" [ref=e272]:
+                - img [ref=e273]
+                - text: Analitika
+              - button "Dodaj trošak" [ref=e275]:
+                - img [ref=e276]
+                - text: Dodaj trošak
+          - generic [ref=e277]:
+            - generic [ref=e279]:
+              - paragraph [ref=e280]: Ukupna potrošnja
+              - paragraph [ref=e281]: 23.775,00 €
+            - generic [ref=e283]:
+              - paragraph [ref=e284]: Neplaćeno
+              - paragraph [ref=e285]: 10.680,00 €
+          - tablist [ref=e286]:
+            - tab "Sve (9)" [selected] [ref=e287]
+            - tab "Računi (2)" [ref=e288]
+            - tab "Plaćanja (0)" [ref=e289]
+            - tab "Ostalo (7)" [ref=e290]
+          - generic [ref=e291]:
+            - combobox "Sve kategorije" [ref=e292]:
+              - option "Sve kategorije" [selected]
+              - option "Invoice"
+              - option "Payment"
+              - option "Equipment"
+              - option "Grapes"
+              - option "Marketing"
+              - option "Packaging"
+              - option "Utilities"
+            - combobox "Svi statusi" [ref=e293]:
+              - option "Svi statusi" [selected]
+              - option "Na čekanju"
+              - option "Odobreno"
+              - option "Plaćeno"
+            - combobox "Svi dobavljači" [ref=e294]:
+              - option "Svi dobavljači" [selected]
+              - option "Amorim Cork"
+              - option "Enartis Adriatic"
+              - option "OPG Korčula Pošip (cooperant grower)"
+              - option "Vetropack Straža d.d."
+            - combobox "Razdoblje" [ref=e295]:
+              - option "Sve vrijeme" [selected]
+              - option "Ovaj mjesec"
+              - option "Prošli mjesec"
+              - option "Ovo tromjesečje"
+              - option "Ova godina"
+              - option "Prošla godina"
+              - option "Prilagođeno"
+            - textbox "Pretraži opis, referencu…" [ref=e296]
+          - generic [ref=e297]:
+            - button "Grapes Pošip grape delivery (cooperant) 19. lip 2026. · OPG Korčula Pošip (cooperant grower) 8.800,00 € Plaćeno" [ref=e299]:
+              - generic [ref=e300]:
+                - paragraph [ref=e301]: Grapes
+                - paragraph [ref=e302]: Pošip grape delivery (cooperant)
+                - paragraph [ref=e303]: 19. lip 2026. · OPG Korčula Pošip (cooperant grower)
+              - generic [ref=e304]:
+                - generic [ref=e305]: 8.800,00 €
+                - generic [ref=e306]: Plaćeno
+                - img [ref=e307]
+            - button "Packaging Cork delivery 19. lip 2026. · Amorim Cork 1.800,00 € Odobreno" [ref=e311]:
+              - generic [ref=e312]:
+                - paragraph [ref=e313]: Packaging
+                - paragraph [ref=e314]: Cork delivery
+                - paragraph [ref=e315]: 19. lip 2026. · Amorim Cork
+              - generic [ref=e316]:
+                - generic [ref=e317]: 1.800,00 €
+                - generic [ref=e318]: Odobreno
+                - img [ref=e319]
+            - button "Invoice Lab services invoice (unpaid) 19. lip 2026. · Enartis Adriatic 600,00 € Na čekanju" [ref=e323]:
+              - generic [ref=e324]:
+                - paragraph [ref=e325]: Invoice
+                - paragraph [ref=e326]: Lab services invoice (unpaid)
+                - paragraph [ref=e327]: 19. lip 2026. · Enartis Adriatic
+              - generic [ref=e328]:
+                - generic [ref=e329]: 600,00 €
+                - generic [ref=e330]: Na čekanju
+                - img [ref=e331]
+            - button "Invoice Supplier invoice — glass (paid) 19. lip 2026. · Vetropack Straža d.d. 1.500,00 € Plaćeno" [ref=e335]:
+              - generic [ref=e336]:
+                - paragraph [ref=e337]: Invoice
+                - paragraph [ref=e338]: Supplier invoice — glass (paid)
+                - paragraph [ref=e339]: 19. lip 2026. · Vetropack Straža d.d.
+              - generic [ref=e340]:
+                - generic [ref=e341]: 1.500,00 €
+                - generic [ref=e342]: Plaćeno
+                - img [ref=e343]
+            - button "Equipment Bottling line service 19. lip 2026. 950,00 € Plaćeno" [ref=e347]:
+              - generic [ref=e348]:
+                - paragraph [ref=e349]: Equipment
+                - paragraph [ref=e350]: Bottling line service
+                - paragraph [ref=e351]: 19. lip 2026.
+              - generic [ref=e352]:
+                - generic [ref=e353]: 950,00 €
+                - generic [ref=e354]: Plaćeno
+                - img [ref=e355]
+            - button "Packaging Glass delivery — landed cost 19. lip 2026. · Vetropack Straža d.d. 3.280,00 € Na čekanju" [ref=e359]:
+              - generic [ref=e360]:
+                - paragraph [ref=e361]: Packaging
+                - paragraph [ref=e362]: Glass delivery — landed cost
+                - paragraph [ref=e363]: 19. lip 2026. · Vetropack Straža d.d.
+              - generic [ref=e364]:
+                - generic [ref=e365]: 3.280,00 €
+                - generic [ref=e366]: Na čekanju
+                - img [ref=e367]
+            - button "Marketing Vinart Grand Tasting — booth & travel 19. lip 2026. 3.200,00 € Odobreno" [ref=e371]:
+              - generic [ref=e372]:
+                - paragraph [ref=e373]: Marketing
+                - paragraph [ref=e374]: Vinart Grand Tasting — booth & travel
+                - paragraph [ref=e375]: 19. lip 2026.
+              - generic [ref=e376]:
+                - generic [ref=e377]: 3.200,00 €
+                - generic [ref=e378]: Odobreno
+                - img [ref=e379]
+            - button "Utilities Cellar electricity — Q1 19. lip 2026. 1.845,00 € Plaćeno" [ref=e383]:
+              - generic [ref=e384]:
+                - paragraph [ref=e385]: Utilities
+                - paragraph [ref=e386]: Cellar electricity — Q1
+                - paragraph [ref=e387]: 19. lip 2026.
+              - generic [ref=e388]:
+                - generic [ref=e389]: 1.845,00 €
+                - generic [ref=e390]: Plaćeno
+                - img [ref=e391]
+            - generic [ref=e394]:
+              - button "Packaging 19. lip 2026. · Amorim Cork 1.800,00 € Na čekanju" [expanded] [active] [ref=e395]:
+                - generic [ref=e396]:
+                  - paragraph [ref=e397]: Packaging
+                  - paragraph [ref=e398]: 19. lip 2026. · Amorim Cork
+                - generic [ref=e399]:
+                  - generic [ref=e400]: 1.800,00 €
+                  - generic [ref=e401]: Na čekanju
+                  - img [ref=e402]
+              - generic [ref=e407]:
+                - generic [ref=e408]:
+                  - generic [ref=e409]:
+                    - generic [ref=e410]: Kategorija
+                    - generic [ref=e411]: Packaging
+                  - generic [ref=e412]:
+                    - generic [ref=e413]: Dobavljač
+                    - generic [ref=e414]: Amorim Cork
+                - generic [ref=e415]:
+                  - paragraph [ref=e416]: Stavke
+                  - list [ref=e417]:
+                    - listitem [ref=e418]:
+                      - generic [ref=e419]: Natural cork 44mm
+                      - generic [ref=e420]: 10.000 × 0,18 €
+                      - generic [ref=e421]: 1.800,00 €
+                - generic [ref=e422]:
+                  - generic [ref=e423]:
+                    - text: Status
+                    - combobox "Postavi status" [ref=e424]:
+                      - option "Na čekanju" [selected]
+                      - option "Odobreno"
+                      - option "Plaćeno"
+                  - generic [ref=e425]:
+                    - button "Uredi" [ref=e426]:
+                      - img [ref=e427]
+                      - text: Uredi
+                    - button "Obriši" [ref=e430]:
+                      - img [ref=e431]
+                      - text: Obriši

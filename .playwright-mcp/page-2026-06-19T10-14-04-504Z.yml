@@ -1,0 +1,252 @@
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e638] [cursor=pointer]:
+    - img [ref=e639]
+  - alert [ref=e642]
+  - generic [ref=e643]:
+    - complementary [ref=e644]:
+      - generic [ref=e645]:
+        - link "Terroir BI" [ref=e647] [cursor=pointer]:
+          - /url: /dashboard
+          - img "Terroir BI" [ref=e648]
+        - navigation [ref=e649]:
+          - generic [ref=e650]:
+            - paragraph [ref=e651]: Pregled
+            - link "Nadzorna ploča" [ref=e652] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e654]
+              - text: Nadzorna ploča
+          - generic [ref=e659]:
+            - paragraph [ref=e660]: Prodaja
+            - link "Narudžbe" [ref=e661] [cursor=pointer]:
+              - /url: /orders
+              - img [ref=e663]
+              - text: Narudžbe
+            - link "Kupci" [ref=e666] [cursor=pointer]:
+              - /url: /customers
+              - img [ref=e668]
+              - text: Kupci
+          - generic [ref=e673]:
+            - paragraph [ref=e674]: Operacije
+            - link "Zaliha" [ref=e675] [cursor=pointer]:
+              - /url: /inventory
+              - img [ref=e677]
+              - text: Zaliha
+            - link "Dobavljači" [ref=e687] [cursor=pointer]:
+              - /url: /suppliers
+              - img [ref=e689]
+              - text: Dobavljači
+            - link "Radni nalozi" [ref=e694] [cursor=pointer]:
+              - /url: /work-orders
+              - img [ref=e696]
+              - text: Radni nalozi
+          - generic [ref=e699]:
+            - paragraph [ref=e700]: Podrum
+            - link "Podrum" [ref=e701] [cursor=pointer]:
+              - /url: /cellar
+              - img [ref=e703]
+              - text: Podrum
+            - link "Vinogradi" [ref=e705] [cursor=pointer]:
+              - /url: /vineyards
+              - img [ref=e707]
+              - text: Vinogradi
+            - link "Proizvodnja" [ref=e717] [cursor=pointer]:
+              - /url: /production
+              - img [ref=e719]
+              - text: Proizvodnja
+          - generic [ref=e721]:
+            - paragraph [ref=e722]: Financije
+            - link "Priljevi" [ref=e723] [cursor=pointer]:
+              - /url: /inflows
+              - img [ref=e725]
+              - text: Priljevi
+            - link "Troškovi" [ref=e728] [cursor=pointer]:
+              - /url: /costs
+              - img [ref=e730]
+              - text: Troškovi
+            - link "Novčani tok" [ref=e733] [cursor=pointer]:
+              - /url: /cash-flow
+              - img [ref=e735]
+              - text: Novčani tok
+          - generic [ref=e738]:
+            - paragraph [ref=e739]: Automatizacija
+            - link "AI unos podataka" [ref=e740] [cursor=pointer]:
+              - /url: /ai-imports
+              - img [ref=e742]
+              - text: AI unos podataka
+          - generic [ref=e744]:
+            - paragraph [ref=e745]: Radni prostor
+            - link "Tim" [ref=e746] [cursor=pointer]:
+              - /url: /team
+              - img [ref=e748]
+              - text: Tim
+            - link "Postavke" [ref=e752] [cursor=pointer]:
+              - /url: /settings
+              - img [ref=e754]
+              - text: Postavke
+        - generic [ref=e757]:
+          - generic [ref=e758]:
+            - img [ref=e759]
+            - generic [ref=e763]: Jezik
+            - tablist [ref=e764]:
+              - tab "Hrvatski" [selected] [ref=e765]
+              - tab "English" [ref=e766]
+          - generic [ref=e767]:
+            - paragraph [ref=e768]: Filip Bibić
+            - paragraph [ref=e769]: test@example.com
+          - button "Odjava" [ref=e770]:
+            - img [ref=e771]
+            - text: Odjava
+          - button "Sažmi" [ref=e774]:
+            - img [ref=e775]
+            - text: Sažmi
+      - separator [ref=e778]
+    - main [ref=e5]:
+      - generic [ref=e7]:
+        - button "Obavijesti" [ref=e8]:
+          - img [ref=e9]
+        - generic: 9+
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - heading "Narudžbe" [level=1] [ref=e17]
+            - paragraph [ref=e18]: 66 narudžbi
+          - generic [ref=e19]:
+            - textbox "Pretraži broj narudžbe ili kupca…" [ref=e20]
+            - button "Analitika" [ref=e21]:
+              - img [ref=e22]
+              - text: Analitika
+            - button "Nova narudžba" [ref=e24]:
+              - img [ref=e25]
+              - text: Nova narudžba
+        - tablist [ref=e26]:
+          - tab "Narudžbe" [ref=e27]
+          - tab "Prognoza" [active] [selected] [ref=e28]
+        - generic [ref=e779]:
+          - generic [ref=e780]:
+            - tablist [ref=e781]:
+              - tab "Pregled" [selected] [ref=e782]
+              - tab "Proizvodi (19)" [ref=e783]
+              - tab "Kupci (42)" [ref=e784]
+            - button "Osvježi" [ref=e785]:
+              - img [ref=e786]
+              - text: Osvježi
+          - generic [ref=e791]:
+            - generic [ref=e792]:
+              - generic [ref=e794]:
+                - generic [ref=e795]:
+                  - paragraph [ref=e796]:
+                    - text: Ovaj mjesec dosad
+                    - generic "Prihod zabilježen dosad ovaj mjesec. 'Projekcija' skalira isti mjesec prošle godine faktorom rasta g/g." [ref=e797]:
+                      - img "Prihod zabilježen dosad ovaj mjesec. 'Projekcija' skalira isti mjesec prošle godine faktorom rasta g/g." [ref=e798]
+                      - tooltip "Prihod zabilježen dosad ovaj mjesec. 'Projekcija' skalira isti mjesec prošle godine faktorom rasta g/g.":
+                        - generic: Prihod zabilježen dosad ovaj mjesec. 'Projekcija' skalira isti mjesec prošle godine faktorom rasta g/g.
+                  - img [ref=e801]
+                - paragraph [ref=e806]: 11.114,20 €
+                - paragraph [ref=e807]: "Projekcija: 3.878,18 €"
+                - paragraph [ref=e808]: "Prošle godine: 200,00 €"
+              - generic [ref=e810]:
+                - generic [ref=e811]:
+                  - paragraph [ref=e812]:
+                    - text: Rast g/g (zadnja 3 mjeseca)
+                    - generic "Prihod zadnja 3 mjeseca ÷ ista 3 mjeseca prije godinu dana. Pokreće sve projekcije po istom mjesecu prošle godine." [ref=e813]:
+                      - img "Prihod zadnja 3 mjeseca ÷ ista 3 mjeseca prije godinu dana. Pokreće sve projekcije po istom mjesecu prošle godine." [ref=e814]
+                      - tooltip "Prihod zadnja 3 mjeseca ÷ ista 3 mjeseca prije godinu dana. Pokreće sve projekcije po istom mjesecu prošle godine.":
+                        - generic: Prihod zadnja 3 mjeseca ÷ ista 3 mjeseca prije godinu dana. Pokreće sve projekcije po istom mjesecu prošle godine.
+                  - img [ref=e817]
+                - paragraph [ref=e820]: +1839%
+                - paragraph [ref=e821]: Faktor skaliranja za projekcije po istom mjesecu prošle godine
+              - generic [ref=e823]:
+                - generic [ref=e824]:
+                  - paragraph [ref=e825]:
+                    - text: Godišnja projekcija 2026
+                    - generic "Prihod od početka godine plus preostali mjeseci projicirani iz prošle godine × faktor rasta g/g." [ref=e826]:
+                      - img "Prihod od početka godine plus preostali mjeseci projicirani iz prošle godine × faktor rasta g/g." [ref=e827]
+                      - tooltip "Prihod od početka godine plus preostali mjeseci projicirani iz prošle godine × faktor rasta g/g.":
+                        - generic: Prihod od početka godine plus preostali mjeseci projicirani iz prošle godine × faktor rasta g/g.
+                  - img [ref=e830]
+                - paragraph [ref=e834]: 26.526,02 €
+                - paragraph [ref=e835]: "Od poč. godine: 15.473,20 € (58%) · Preostalo: 11.052,82 €"
+                - paragraph [ref=e836]: Neki mjeseci nemaju prošlogodišnju povijest — projekcija je djelomična
+              - generic [ref=e838]:
+                - generic [ref=e839]:
+                  - paragraph [ref=e840]:
+                    - text: Zadnjih 12 mjeseci
+                    - generic "Ukupan prihod, boce, narudžbe i kupci u zadnjih 12 mjeseci (bez konsignacije, bez internih računa)." [ref=e841]:
+                      - img "Ukupan prihod, boce, narudžbe i kupci u zadnjih 12 mjeseci (bez konsignacije, bez internih računa)." [ref=e842]
+                      - tooltip "Ukupan prihod, boce, narudžbe i kupci u zadnjih 12 mjeseci (bez konsignacije, bez internih računa).":
+                        - generic: Ukupan prihod, boce, narudžbe i kupci u zadnjih 12 mjeseci (bez konsignacije, bez internih računa).
+                  - img [ref=e845]
+                - paragraph [ref=e850]: 16.043,20 €
+                - paragraph [ref=e851]: 968 boca · 59 narudžbi · 42 kupaca
+            - generic [ref=e853]:
+              - heading "Prihod — zadnjih 12 mjeseci + prognoza za 3" [level=3] [ref=e856]
+              - img [ref=e859]:
+                - generic [ref=e863]:
+                  - generic [ref=e865]: Jul 25
+                  - generic [ref=e867]: Aug 25
+                  - generic [ref=e869]: Sept 25
+                  - generic [ref=e871]: Oct 25
+                  - generic [ref=e873]: Nov 25
+                  - generic [ref=e875]: Dec 25
+                  - generic [ref=e877]: Jan 26
+                  - generic [ref=e879]: Feb 26
+                  - generic [ref=e881]: Mar 26
+                  - generic [ref=e883]: Apr 26
+                  - generic [ref=e885]: May 26
+                  - generic [ref=e887]: Jun 26
+                  - generic [ref=e889]: Jun 26
+                  - generic [ref=e891]: Jul 26
+                  - generic [ref=e893]: Aug 26
+                - generic [ref=e895]:
+                  - generic [ref=e897]: "0"
+                  - generic [ref=e899]: 3k
+                  - generic [ref=e901]: 6k
+                  - generic [ref=e903]: 9k
+                  - generic [ref=e905]: 12k
+            - generic [ref=e916]:
+              - generic [ref=e918]:
+                - paragraph [ref=e919]: Zadnja 3 mjeseca
+                - paragraph [ref=e920]: 12.617,20 €
+                - paragraph [ref=e921]: 764 boca · 26 narudžbi · 19 kupaca
+              - generic [ref=e923]:
+                - paragraph [ref=e924]: Zadnjih 6 mjeseci
+                - paragraph [ref=e925]: 15.653,20 €
+                - paragraph [ref=e926]: 950 boca · 56 narudžbi · 42 kupaca
+              - generic [ref=e928]:
+                - paragraph [ref=e929]: Zadnjih 12 mjeseci
+                - paragraph [ref=e930]: 16.043,20 €
+                - paragraph [ref=e931]: 968 boca · 59 narudžbi · 42 kupaca
+            - generic [ref=e933]:
+              - heading "Godišnja projekcija po kategoriji" [level=3] [ref=e936]
+              - generic [ref=e937]:
+                - generic [ref=e938]:
+                  - generic [ref=e939]:
+                    - generic [ref=e940]:
+                      - text: Wine
+                      - generic [ref=e941]: · 18 proizvoda
+                    - generic [ref=e942]: 1.119 boca
+                  - paragraph [ref=e946]: "Od poč. godine: 770 (69%) · Preostalo: 349djel. PG"
+                - generic [ref=e947]:
+                  - generic [ref=e948]:
+                    - generic [ref=e949]:
+                      - text: —
+                      - generic [ref=e950]: · 1 proizvoda
+                    - generic [ref=e951]: 401 boca
+                  - paragraph [ref=e955]: "Od poč. godine: 168 (42%) · Preostalo: 233djel. PG"
+            - generic [ref=e957]:
+              - heading "Prognoza prihoda za sljedeća 3 mjeseca" [level=3] [ref=e960]
+              - generic [ref=e961]:
+                - generic [ref=e962]:
+                  - paragraph [ref=e963]: Jun 26
+                  - paragraph [ref=e964]: 3.878,18 €
+                  - paragraph [ref=e965]: "Prošle godine: 200,00 €"
+                - generic [ref=e966]:
+                  - paragraph [ref=e967]: Jul 26
+                  - paragraph [ref=e968]: —
+                  - paragraph [ref=e969]: Nema povijesti
+                - generic [ref=e970]:
+                  - paragraph [ref=e971]: Aug 26
+                  - paragraph [ref=e972]: —
+                  - paragraph [ref=e973]: Nema povijesti
+              - paragraph [ref=e974]: Prazni mjeseci znače da nema odgovarajuće povijesti — ne izmišljamo brojke.
+  - generic [ref=e975]: "0"

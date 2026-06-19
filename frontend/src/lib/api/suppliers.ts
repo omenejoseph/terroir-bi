@@ -23,6 +23,8 @@ export const suppliersApi = {
     api.getPage<Supplier[]>("/suppliers", {
       search: query.search,
       is_active: query.is_active,
+      page: query.page,
+      per_page: query.per_page,
     }),
 
   /** GET /suppliers/{id} — includes the price list. */

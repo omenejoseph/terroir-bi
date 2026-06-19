@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { StockTab } from "./stock-tab";
 import { API_URL } from "@/lib/config";
-import { makeItem, makeSession, makeStockAnalytics } from "@/test/fixtures";
+import { makeItem, makeMovement, makeSession, makeStockAnalytics } from "@/test/fixtures";
 import { server } from "@/test/mocks/server";
 import {
   renderWithProviders,
@@ -95,6 +95,28 @@ describe("StockTab", () => {
       note: "Breakage",
       is_reconciliation: false,
     });
+  });
+
+  it("lets a manager mark a manual movement as a correction after the fact", async () => {
+    let body: Record<string, unknown> | null = null;
+    let patchedId: string | null = null;
+    server.use(
+      http.patch(`${API_URL}/stock-movements/:id/reconciliation`, async ({ request, params }) => {
+        patchedId = String(params.id);
+        body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ data: makeMovement({ is_reconciliation: true }) });
+      }),
+    );
+
+    renderWithProviders(<StockTab item={makeItem()} canManage />);
+    const user = userEvent.setup();
+    // The movement history shows who recorded each entry.
+    expect(await screen.findByText("Ada Lovelace")).toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: "Mark as correction" }));
+
+    await waitFor(() => expect(body).not.toBeNull());
+    expect(patchedId).toBe("mv_1");
+    expect(body).toMatchObject({ is_reconciliation: true });
   });
 
   it("shows the exit-by-channel breakdown", async () => {

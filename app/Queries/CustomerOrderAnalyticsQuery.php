@@ -76,6 +76,17 @@ class CustomerOrderAnalyticsQuery
             ];
         }
 
+        // Trailing 12-month revenue history for the trend chart.
+        $monthlyRevenue = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $monthStart = $now->copy()->startOfMonth()->subMonths($i);
+            $rev = $this->revenueBetween($base(), $monthStart, $monthStart->copy()->endOfMonth());
+            $monthlyRevenue[] = [
+                'month' => $monthStart->format('Y-m'),
+                'revenue' => Money::fromMinor($rev, $currency)->jsonSerialize(),
+            ];
+        }
+
         return [
             'total_revenue' => Money::fromMinor($totalRevenue, $currency)->jsonSerialize(),
             'this_year' => Money::fromMinor($thisYear, $currency)->jsonSerialize(),
@@ -86,6 +97,7 @@ class CustomerOrderAnalyticsQuery
             'expected_next_order_date' => $this->expectedNext($customer)?->toIso8601String(),
             'next_quarter_projection' => Money::fromMinor($nextQuarterProjection, $currency)->jsonSerialize(),
             'expected_next_3m' => $expectedNext3m,
+            'monthly_revenue' => $monthlyRevenue,
         ];
     }
 

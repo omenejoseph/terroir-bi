@@ -20,6 +20,12 @@ describe("OrdersPage", () => {
     expect(screen.getByText("ORD-1002")).toBeInTheDocument();
   });
 
+  it("shows each line item's bottle size in the preview", async () => {
+    renderWithProviders(<OrdersPage />);
+    await screen.findByText("ORD-1001");
+    expect((await screen.findAllByText("(750ml)")).length).toBeGreaterThan(0);
+  });
+
   it("filters by status tab", async () => {
     let lastStatus: string | null = "unset";
     server.use(

@@ -7,12 +7,14 @@ import { BarChart3, ChevronDown, GitMerge, Plus } from "lucide-react";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
 import { useCustomers } from "@/hooks/use-customers";
+import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
 import type { Customer, CustomerQuery } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { MetaField } from "@/components/ui/meta-field";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
 import { CustomerDetailPanel } from "@/components/customers/customer-detail-panel";
@@ -140,6 +142,7 @@ export default function CustomersPage() {
 
 function CustomerCard({ customer }: { customer: Customer }) {
   const { t } = useTranslation();
+  const { number, money2 } = useFormatters();
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -150,18 +153,34 @@ function CustomerCard({ customer }: { customer: Customer }) {
         aria-expanded={open}
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
       >
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate font-medium">{customer.company_name}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {customer.contact_name ? `${customer.contact_name} · ` : ""}
-            {customer.email}
-          </p>
+          {(customer.contact_name || customer.email) && (
+            <p className="truncate text-xs text-muted-foreground">
+              {customer.contact_name ? `${customer.contact_name} · ` : ""}
+              {customer.email}
+            </p>
+          )}
+          {/* Key fields as labelled values, consistent with the other list cards. */}
+          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5">
+            <MetaField label={t("customers.card.tier")}>
+              {customer.pricing_tier?.name ?? t("customers.noTier")}
+            </MetaField>
+            <MetaField label={t("customers.card.rebate")}>
+              {t("customers.rebateOff", { percent: customer.effective_rebate_percent })}
+            </MetaField>
+            {customer.order_count != null && (
+              <MetaField label={t("customers.card.orders")}>{number(customer.order_count)}</MetaField>
+            )}
+            {customer.revenue_minor != null && (
+              <MetaField label={t("customers.card.revenue")}>{money2(customer.revenue_minor)}</MetaField>
+            )}
+          </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2 text-sm">
-          <Badge variant="outline">{customer.pricing_tier?.name ?? t("customers.noTier")}</Badge>
-          <span className="hidden tabular-nums text-muted-foreground sm:inline">
-            {t("customers.rebateOff", { percent: customer.effective_rebate_percent })}
-          </span>
+        <div className="flex shrink-0 items-center gap-2 self-center text-sm">
+          {customer.exclude_from_stats && (
+            <Badge variant="outline">{t("customers.statsExcludedBadge")}</Badge>
+          )}
           <Badge variant={customer.is_active ? "success" : "secondary"}>
             {customer.is_active ? t("common.status.active") : t("common.status.inactive")}
           </Badge>

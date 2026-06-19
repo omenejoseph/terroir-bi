@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/context";
-import { useBottleAnalyses, useInventoryItem } from "@/hooks/use-inventory";
+import { useBottleAnalyses, useInventoryItem, useRecipe } from "@/hooks/use-inventory";
 import { useInventoryDocuments, useInventoryImages } from "@/hooks/use-inventory-media";
 import { useTranslation } from "@/i18n/context";
 import { withCount } from "@/lib/labels";
@@ -48,12 +48,13 @@ export default function InventoryItemPage() {
   const analysesQ = useBottleAnalyses(id);
   const imagesQ = useInventoryImages(id ?? "", { enabled: !!id });
   const documentsQ = useInventoryDocuments(id ?? "", { enabled: !!id });
+  const recipeQ = useRecipe(id);
 
   const tabs = [
     { value: "overview", label: t("inventory.page.overview") },
     ...(canPricing ? [{ value: "pricing", label: t("inventory.pricing.title") }] : []),
     { value: "stock", label: t("inventory.stock.title") },
-    { value: "recipe", label: t("inventory.recipe.title") },
+    { value: "recipe", label: withCount(t("inventory.recipe.title"), recipeQ.data?.length) },
     { value: "produce", label: t("inventory.produce.title") },
     { value: "analysis", label: withCount(t("inventory.analysis.title"), analysesQ.data?.length) },
     { value: "images", label: withCount(t("inventory.images.title"), imagesQ.data?.length) },

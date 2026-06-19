@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { ordersApi } from "@/lib/api/orders";
 import type {
@@ -28,11 +28,24 @@ export function useOrder(id: string | undefined) {
   });
 }
 
-export function useOrderAnalytics(params: { period?: string; from?: string; to?: string }, enabled = true) {
+export function useOrderAnalytics(
+  params: { period?: string; from?: string; to?: string; customers_page?: number; products_page?: number },
+  enabled = true,
+) {
   return useQuery({
     queryKey: ["orders", "analytics", params],
     queryFn: () => ordersApi.analytics(params),
     enabled,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useDemandForecast(enabled = true) {
+  return useQuery({
+    queryKey: ["orders", "forecast"],
+    queryFn: () => ordersApi.forecast(),
+    enabled,
+    staleTime: 60_000,
   });
 }
 

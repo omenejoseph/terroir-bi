@@ -11,8 +11,8 @@ import {
 import { useAuth } from "@/lib/auth/context";
 import { useMembers } from "@/hooks/use-team";
 import { useTranslation } from "@/i18n/context";
-import type { TaskStatus, WorkOrder } from "@/lib/types";
-import { TASK_STATUSES } from "@/lib/types";
+import type { TaskStatus, WorkOrder, WorkOrderCategory } from "@/lib/types";
+import { TASK_STATUSES, WORK_ORDER_CATEGORIES } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -102,6 +102,27 @@ export function WorkOrderDetailDialog({
             {TASK_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {t(`tasks.status.${s}`)}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div className="space-y-1">
+          <Label htmlFor="wo_detail_category">{t("tasks.create.category")}</Label>
+          <Select
+            id="wo_detail_category"
+            value={workOrder.category ?? ""}
+            onChange={(e) =>
+              update.mutate({
+                id: workOrder.id,
+                input: { category: (e.target.value || null) as WorkOrderCategory | null },
+              })
+            }
+          >
+            <option value="">{t("tasks.create.noCategory")}</option>
+            {WORK_ORDER_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {t(`tasks.category.${c}`)}
               </option>
             ))}
           </Select>

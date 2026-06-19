@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Queries;
 
 use App\Enums\StockMovementType;
+use App\Models\Customer;
 use App\Models\InventoryItem;
 use App\Models\OrderItem;
 use App\Models\StockMovement;
@@ -58,7 +59,7 @@ class InventoryItemStockAnalyticsQuery
                 'selling_per_bottle' => $selling?->jsonSerialize(),
             ],
             'realized' => $this->realized($item, $bpc, $stockBottles, $costPerBottle, $selling, $currency),
-            'exits' => $this->exits($item, $toBottles, $from, $to, $days, $stockBottles, $costPerBottle, $currency),
+            'exits' => $this->exits($item, $toBottles, $bpc, $from, $to, $days, $stockBottles, $costPerBottle, $currency),
             'channels' => $this->channels($item, $toBottles, $from, $to),
         ];
     }
@@ -78,10 +79,13 @@ class InventoryItemStockAnalyticsQuery
     ): array {
         $from = Carbon::now()->subYear();
 
+        $excluded = Customer::statsExcludedIds();
         $base = fn (): Builder => OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('order_items.inventory_item_id', $item->getKey())
             ->where('orders.is_consignment', false)
+            ->whereNotIn('orders.customer_id', $excluded)
+            ->where('order_items.unit_price', '!=', 0)
             ->where('orders.created_at', '>=', $from);
 
         $revenue = (int) $base()->sum('order_items.total');
@@ -135,6 +139,7 @@ class InventoryItemStockAnalyticsQuery
     private function exits(
         InventoryItem $item,
         callable $toBottles,
+        int $bpc,
         Carbon $from,
         Carbon $to,
         int $days,
@@ -142,20 +147,47 @@ class InventoryItemStockAnalyticsQuery
         ?Money $costPerBottle,
         string $currency,
     ): array {
-        $exitedRaw = (float) StockMovement::query()
+        $exitMovements = StockMovement::query()
             ->where('inventory_item_id', $item->getKey())
             ->where('quantity', '<', 0)
             ->whereBetween('created_at', [$from, $to])
-            ->sum('quantity');
-        $bottlesExited = (int) round($toBottles(abs($exitedRaw)));
+            ->get(['quantity', 'created_at']);
 
-        $saleLines = fn (): Builder => OrderItem::query()
+        $bottlesExited = (int) round(
+            $exitMovements->sum(fn (StockMovement $m): float => $toBottles(abs((float) $m->quantity))),
+        );
+        $movementsCount = $exitMovements->count();
+
+        // Daily spark series of bottles exited across the window (for the sparkline).
+        $buckets = min(max(1, $days), 90);
+        $spark = array_fill(0, $buckets, 0.0);
+        foreach ($exitMovements as $m) {
+            $offset = (int) $from->diffInDays($m->created_at);
+            $idx = (int) min($buckets - 1, max(0, floor($offset / max(1, $days) * $buckets)));
+            $spark[$idx] += $toBottles(abs((float) $m->quantity));
+        }
+        $spark = array_map(fn (float $v): int => (int) round($v), $spark);
+
+        // Sale lines for the period, optionally restricted by the customer's
+        // exclude-from-stats flag (Internal/POS). The main revenue/margin use
+        // external sales only; the Internal/POS slice is broken out separately.
+        $saleLines = fn (?bool $internal = null): Builder => OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('order_items.inventory_item_id', $item->getKey())
             ->where('orders.is_consignment', false)
-            ->whereBetween('orders.created_at', [$from, $to]);
-        $revenue = (int) $saleLines()->sum('order_items.total');
-        $saleCogs = (int) $saleLines()->whereNotNull('order_items.cost_per_unit')
+            ->whereBetween('orders.created_at', [$from, $to])
+            ->when($internal !== null, fn (Builder $q) => $q
+                ->join('customers', 'customers.id', '=', 'orders.customer_id')
+                ->where('customers.exclude_from_stats', $internal));
+
+        $revenue = (int) $saleLines(false)->sum('order_items.total');
+        $saleCogs = (int) $saleLines(false)->whereNotNull('order_items.cost_per_unit')
+            ->sum(DB::raw('order_items.cost_per_unit * order_items.quantity'));
+
+        // Internal / POS slice (exclude-from-stats customers) — excluded from margin.
+        $internalBottles = $this->toBottlesSum($saleLines(true), $bpc);
+        $internalRevenue = (int) $saleLines(true)->sum('order_items.total');
+        $internalCost = (int) $saleLines(true)->whereNotNull('order_items.cost_per_unit')
             ->sum(DB::raw('order_items.cost_per_unit * order_items.quantity'));
 
         $velocity = $bottlesExited / max(1, $days);
@@ -163,6 +195,8 @@ class InventoryItemStockAnalyticsQuery
 
         return [
             'bottles_exited' => $bottlesExited,
+            'movements_count' => $movementsCount,
+            'spark' => $spark,
             'cost_of_exits' => $costPerBottle !== null
                 ? Money::fromMinor($bottlesExited * $costPerBottle->getMinorAmount(), $currency)->jsonSerialize()
                 : null,
@@ -172,6 +206,13 @@ class InventoryItemStockAnalyticsQuery
                 : null,
             'velocity_per_day' => number_format($velocity, 2, '.', ''),
             'days_of_stock_left' => $daysLeft,
+            'internal' => $internalBottles > 0
+                ? [
+                    'bottles' => $internalBottles,
+                    'cost' => Money::fromMinor($internalCost, $currency)->jsonSerialize(),
+                    'revenue' => Money::fromMinor($internalRevenue, $currency)->jsonSerialize(),
+                ]
+                : null,
         ];
     }
 

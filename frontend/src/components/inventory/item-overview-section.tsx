@@ -1,11 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Pencil, Power } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Copy, Pencil, Power } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
-import { useUpdateInventoryItem } from "@/hooks/use-inventory";
+import { useDuplicateInventoryItem, useUpdateInventoryItem } from "@/hooks/use-inventory";
 import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
 import type { InventoryItem } from "@/lib/types";
@@ -32,8 +33,21 @@ export function ItemOverviewSection({
   const { t } = useTranslation();
   const { hasRole } = useAuth();
   const { moneyObject } = useFormatters();
+  const router = useRouter();
   const update = useUpdateInventoryItem();
+  const duplicate = useDuplicateInventoryItem();
   const confirm = useConfirm();
+
+  async function onDuplicate() {
+    const ok = await confirm({
+      title: t("inventory.duplicate.confirmTitle"),
+      description: t("inventory.duplicate.confirmBody", { name: item.name }),
+      confirmLabel: t("inventory.details.duplicate"),
+    });
+    if (!ok) return;
+    const created = await duplicate.mutateAsync(item.id);
+    router.push(`/inventory/${created.id}`);
+  }
 
   // Editing and (de)activation are reserved for admins; other managers stay read-only here.
   const canEdit = canManage && hasRole("ADMIN");
@@ -179,6 +193,10 @@ export function ItemOverviewSection({
                 <Button variant="outline" size="sm" onClick={startEdit}>
                   <Pencil className="size-4" />
                   {t("inventory.details.edit")}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => void onDuplicate()} disabled={duplicate.isPending}>
+                  {duplicate.isPending ? <Spinner className="size-4" /> : <Copy className="size-4" />}
+                  {t("inventory.details.duplicate")}
                 </Button>
               </div>
             )}

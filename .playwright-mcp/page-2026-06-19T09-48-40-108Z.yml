@@ -1,0 +1,546 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e10] [cursor=pointer]:
+    - img [ref=e11]
+  - alert [ref=e14]
+  - generic [ref=e15]:
+    - complementary [ref=e16]:
+      - generic [ref=e17]:
+        - link "Terroir BI" [ref=e19] [cursor=pointer]:
+          - /url: /dashboard
+          - img "Terroir BI" [ref=e20]
+        - navigation [ref=e21]:
+          - generic [ref=e22]:
+            - paragraph [ref=e23]: Pregled
+            - link "Nadzorna ploča" [ref=e24] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e26]
+              - text: Nadzorna ploča
+          - generic [ref=e31]:
+            - paragraph [ref=e32]: Prodaja
+            - link "Narudžbe" [ref=e33] [cursor=pointer]:
+              - /url: /orders
+              - img [ref=e35]
+              - text: Narudžbe
+            - link "Kupci" [ref=e38] [cursor=pointer]:
+              - /url: /customers
+              - img [ref=e40]
+              - text: Kupci
+          - generic [ref=e45]:
+            - paragraph [ref=e46]: Operacije
+            - link "Zaliha" [ref=e47] [cursor=pointer]:
+              - /url: /inventory
+              - img [ref=e49]
+              - text: Zaliha
+            - link "Dobavljači" [ref=e59] [cursor=pointer]:
+              - /url: /suppliers
+              - img [ref=e61]
+              - text: Dobavljači
+            - link "Radni nalozi" [ref=e66] [cursor=pointer]:
+              - /url: /work-orders
+              - img [ref=e68]
+              - text: Radni nalozi
+          - generic [ref=e71]:
+            - paragraph [ref=e72]: Podrum
+            - link "Podrum" [ref=e73] [cursor=pointer]:
+              - /url: /cellar
+              - img [ref=e75]
+              - text: Podrum
+            - link "Vinogradi" [ref=e77] [cursor=pointer]:
+              - /url: /vineyards
+              - img [ref=e79]
+              - text: Vinogradi
+            - link "Proizvodnja" [ref=e89] [cursor=pointer]:
+              - /url: /production
+              - img [ref=e91]
+              - text: Proizvodnja
+          - generic [ref=e93]:
+            - paragraph [ref=e94]: Financije
+            - link "Priljevi" [ref=e95] [cursor=pointer]:
+              - /url: /inflows
+              - img [ref=e97]
+              - text: Priljevi
+            - link "Troškovi" [ref=e100] [cursor=pointer]:
+              - /url: /costs
+              - img [ref=e102]
+              - text: Troškovi
+            - link "Novčani tok" [ref=e105] [cursor=pointer]:
+              - /url: /cash-flow
+              - img [ref=e107]
+              - text: Novčani tok
+          - generic [ref=e110]:
+            - paragraph [ref=e111]: Automatizacija
+            - link "AI unos podataka" [ref=e112] [cursor=pointer]:
+              - /url: /ai-imports
+              - img [ref=e114]
+              - text: AI unos podataka
+          - generic [ref=e116]:
+            - paragraph [ref=e117]: Radni prostor
+            - link "Tim" [ref=e118] [cursor=pointer]:
+              - /url: /team
+              - img [ref=e120]
+              - text: Tim
+            - link "Postavke" [ref=e124] [cursor=pointer]:
+              - /url: /settings
+              - img [ref=e126]
+              - text: Postavke
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - img [ref=e131]
+            - generic [ref=e135]: Jezik
+            - tablist [ref=e136]:
+              - tab "Hrvatski" [selected] [ref=e137]
+              - tab "English" [ref=e138]
+          - generic [ref=e139]:
+            - paragraph [ref=e140]: Filip Bibić
+            - paragraph [ref=e141]: test@example.com
+          - button "Odjava" [ref=e142]:
+            - img [ref=e143]
+            - text: Odjava
+          - button "Sažmi" [ref=e146]:
+            - img [ref=e147]
+            - text: Sažmi
+      - separator [ref=e150]
+    - main [ref=e151]:
+      - generic [ref=e153]:
+        - button "Obavijesti" [ref=e154]:
+          - img [ref=e155]
+        - generic: 9+
+      - generic [ref=e160]:
+        - generic [ref=e161]:
+          - heading "Dobrodošli natrag, Filip" [level=1] [ref=e162]
+          - paragraph [ref=e163]: Demo Winery
+        - generic [ref=e164]:
+          - generic [ref=e166]:
+            - paragraph [ref=e167]:
+              - text: Danas
+              - generic "Prihod od narudžbi u ovom razdoblju (bez konsignacije i internih računa), u usporedbi s istim razdobljem prošle godine." [ref=e168]:
+                - img "Prihod od narudžbi u ovom razdoblju (bez konsignacije i internih računa), u usporedbi s istim razdobljem prošle godine." [ref=e169]
+                - tooltip "Prihod od narudžbi u ovom razdoblju (bez konsignacije i internih računa), u usporedbi s istim razdobljem prošle godine.":
+                  - generic: Prihod od narudžbi u ovom razdoblju (bez konsignacije i internih računa), u usporedbi s istim razdobljem prošle godine.
+            - paragraph [ref=e171]: 10.994,20 €
+            - generic [ref=e172]:
+              - generic [ref=e173]:
+                - img [ref=e174]
+                - text: +5397.1%
+              - generic [ref=e176]: vs 200,00 €
+          - generic [ref=e178]:
+            - paragraph [ref=e179]:
+              - text: Od početka mjeseca
+              - generic "Prihod od narudžbi u ovom razdoblju (bez konsignacije i internih računa), u usporedbi s istim razdobljem prošle godine." [ref=e180]:
+                - img "Prihod od narudžbi u ovom razdoblju (bez konsignacije i internih računa), u usporedbi s istim razdobljem prošle godine." [ref=e181]
+                - tooltip "Prihod od narudžbi u ovom razdoblju (bez konsignacije i internih računa), u usporedbi s istim razdobljem prošle godine.":
+                  - generic: Prihod od narudžbi u ovom razdoblju (bez konsignacije i internih računa), u usporedbi s istim razdobljem prošle godine.
+            - paragraph [ref=e183]: 11.114,20 €
+            - generic [ref=e184]:
+              - generic [ref=e185]:
+                - img [ref=e186]
+                - text: +5457.1%
+              - generic [ref=e188]: vs 200,00 €
+          - generic [ref=e190]:
+            - paragraph [ref=e191]:
+              - text: Od početka godine
+              - generic "Prihod od narudžbi u ovom razdoblju (bez konsignacije i internih računa), u usporedbi s istim razdobljem prošle godine." [ref=e192]:
+                - img "Prihod od narudžbi u ovom razdoblju (bez konsignacije i internih računa), u usporedbi s istim razdobljem prošle godine." [ref=e193]
+                - tooltip "Prihod od narudžbi u ovom razdoblju (bez konsignacije i internih računa), u usporedbi s istim razdobljem prošle godine.":
+                  - generic: Prihod od narudžbi u ovom razdoblju (bez konsignacije i internih računa), u usporedbi s istim razdobljem prošle godine.
+            - paragraph [ref=e195]: 15.473,20 €
+            - generic [ref=e196]:
+              - generic [ref=e197]:
+                - img [ref=e198]
+                - text: +4891.4%
+              - generic [ref=e200]: vs 310,00 €
+          - generic [ref=e202]:
+            - paragraph [ref=e203]:
+              - text: Ukupno
+              - generic "Ukupan prihod od narudžbi bez konsignacije kroz sve prodajne kanale." [ref=e204]:
+                - img "Ukupan prihod od narudžbi bez konsignacije kroz sve prodajne kanale." [ref=e205]
+                - tooltip "Ukupan prihod od narudžbi bez konsignacije kroz sve prodajne kanale.":
+                  - generic: Ukupan prihod od narudžbi bez konsignacije kroz sve prodajne kanale.
+            - paragraph [ref=e207]: 16.423,20 €
+            - paragraph [ref=e208]: Svi izvori prihoda
+        - generic [ref=e210]:
+          - generic [ref=e211]:
+            - button "Danas" [ref=e212]
+            - button "Jučer" [ref=e213]
+            - button "MTD" [pressed] [ref=e214]
+            - button "QTD" [ref=e215]
+            - button "YTD" [ref=e216]
+            - button "Ovaj mjesec" [ref=e217]
+            - button "Prošli mjesec" [ref=e218]
+            - button "Prošla godina" [ref=e219]
+            - button "Sve" [ref=e220]
+            - button "Prilagođeno…" [ref=e221]
+          - paragraph [ref=e222]: 1. lip → 19. lip 2026.
+        - generic [ref=e224]:
+          - heading "Ključni pokazatelji" [level=3] [ref=e227]
+          - generic [ref=e228]:
+            - generic [ref=e229]:
+              - paragraph [ref=e230]:
+                - text: Izravna prodaja %
+                - generic "Udio prihoda iz izravne (maloprodajne) prodaje. Cilj >50%. Izravna prodaja zadržava punu maržu — dajte prednost rastu kušaonice i maloprodaje." [ref=e231]:
+                  - img "Udio prihoda iz izravne (maloprodajne) prodaje. Cilj >50%. Izravna prodaja zadržava punu maržu — dajte prednost rastu kušaonice i maloprodaje." [ref=e232]
+                  - tooltip "Udio prihoda iz izravne (maloprodajne) prodaje. Cilj >50%. Izravna prodaja zadržava punu maržu — dajte prednost rastu kušaonice i maloprodaje.":
+                    - generic: Udio prihoda iz izravne (maloprodajne) prodaje.
+                    - generic: Cilj >50%. Izravna prodaja zadržava punu maržu — dajte prednost rastu kušaonice i maloprodaje.
+              - paragraph [ref=e234]: 25,8%
+              - paragraph [ref=e235]: ">50%"
+            - generic [ref=e236]:
+              - paragraph [ref=e237]:
+                - text: Operativna marža
+                - 'generic "Ukupni prihod umanjen za sve troškove, kao postotak prihoda. Zdrav raspon: 20-35% za vinarije s naglaskom na izravnu prodaju, >15% za veleprodajne." [ref=e238]':
+                  - 'img "Ukupni prihod umanjen za sve troškove, kao postotak prihoda. Zdrav raspon: 20-35% za vinarije s naglaskom na izravnu prodaju, >15% za veleprodajne." [ref=e239]'
+                  - 'tooltip "Ukupni prihod umanjen za sve troškove, kao postotak prihoda. Zdrav raspon: 20-35% za vinarije s naglaskom na izravnu prodaju, >15% za veleprodajne."':
+                    - generic: Ukupni prihod umanjen za sve troškove, kao postotak prihoda.
+                    - generic: "Zdrav raspon: 20-35% za vinarije s naglaskom na izravnu prodaju, >15% za veleprodajne."
+              - paragraph [ref=e241]: −251,8%
+              - paragraph [ref=e242]: 20-35%
+            - generic [ref=e243]:
+              - paragraph [ref=e244]:
+                - text: Trošak osoblja %
+                - generic "Ukupni troškovi plaća kao postotak prihoda. Držite ispod 25%. Iznad 35% upućuje na višak osoblja ili manjak prihoda." [ref=e245]:
+                  - img "Ukupni troškovi plaća kao postotak prihoda. Držite ispod 25%. Iznad 35% upućuje na višak osoblja ili manjak prihoda." [ref=e246]
+                  - tooltip "Ukupni troškovi plaća kao postotak prihoda. Držite ispod 25%. Iznad 35% upućuje na višak osoblja ili manjak prihoda.":
+                    - generic: Ukupni troškovi plaća kao postotak prihoda.
+                    - generic: Držite ispod 25%. Iznad 35% upućuje na višak osoblja ili manjak prihoda.
+              - paragraph [ref=e248]: 106,2%
+              - paragraph [ref=e249]: <25%
+            - generic [ref=e250]:
+              - paragraph [ref=e251]:
+                - text: Trošak marketinga %
+                - generic "Marketinška potrošnja kao postotak prihoda. Cilj 10-15%. Iznad 20% može značiti neučinkovite kampanje ili slab povrat." [ref=e252]:
+                  - img "Marketinška potrošnja kao postotak prihoda. Cilj 10-15%. Iznad 20% može značiti neučinkovite kampanje ili slab povrat." [ref=e253]
+                  - tooltip "Marketinška potrošnja kao postotak prihoda. Cilj 10-15%. Iznad 20% može značiti neučinkovite kampanje ili slab povrat.":
+                    - generic: Marketinška potrošnja kao postotak prihoda.
+                    - generic: Cilj 10-15%. Iznad 20% može značiti neučinkovite kampanje ili slab povrat.
+              - paragraph [ref=e255]: 28,8%
+              - paragraph [ref=e256]: 10-15%
+            - generic [ref=e257]:
+              - paragraph [ref=e258]:
+                - text: COGS %
+                - generic "Trošak prodane robe (zabilježeni trošak proizvoda × kol.) za narudžbe koje su stvarno otpremljene u razdoblju, kao postotak prihoda. Cilj 30-40%. Samo grožđe obično čini 40-45% COGS-a." [ref=e259]:
+                  - img "Trošak prodane robe (zabilježeni trošak proizvoda × kol.) za narudžbe koje su stvarno otpremljene u razdoblju, kao postotak prihoda. Cilj 30-40%. Samo grožđe obično čini 40-45% COGS-a." [ref=e260]
+                  - tooltip "Trošak prodane robe (zabilježeni trošak proizvoda × kol.) za narudžbe koje su stvarno otpremljene u razdoblju, kao postotak prihoda. Cilj 30-40%. Samo grožđe obično čini 40-45% COGS-a.":
+                    - generic: Trošak prodane robe (zabilježeni trošak proizvoda × kol.) za narudžbe koje su stvarno otpremljene u razdoblju, kao postotak prihoda.
+                    - generic: Cilj 30-40%. Samo grožđe obično čini 40-45% COGS-a.
+              - paragraph [ref=e262]: 26%
+              - paragraph [ref=e263]: 2.884,50 €
+              - paragraph [ref=e264]: <40%
+            - generic [ref=e265]:
+              - paragraph [ref=e266]:
+                - text: Prihod / zaposleniku
+                - generic "Ukupni prihod podijeljen brojem zaposlenih. Mjeri produktivnost. Pratite trend — rast znači da skalirate prihod bez dodavanja osoblja." [ref=e267]:
+                  - img "Ukupni prihod podijeljen brojem zaposlenih. Mjeri produktivnost. Pratite trend — rast znači da skalirate prihod bez dodavanja osoblja." [ref=e268]
+                  - tooltip "Ukupni prihod podijeljen brojem zaposlenih. Mjeri produktivnost. Pratite trend — rast znači da skalirate prihod bez dodavanja osoblja.":
+                    - generic: Ukupni prihod podijeljen brojem zaposlenih. Mjeri produktivnost.
+                    - generic: Pratite trend — rast znači da skalirate prihod bez dodavanja osoblja.
+              - paragraph [ref=e270]: 2.778,55 €
+              - paragraph [ref=e271]: Trend
+            - generic [ref=e272]:
+              - paragraph [ref=e273]:
+                - text: Prosj. vrijednost narudžbe
+                - generic "Veleprodajni prihod podijeljen brojem narudžbi. Pratite trend — rast vrijednosti narudžbe znači da upselling i pakiranje funkcioniraju." [ref=e274]:
+                  - img "Veleprodajni prihod podijeljen brojem narudžbi. Pratite trend — rast vrijednosti narudžbe znači da upselling i pakiranje funkcioniraju." [ref=e275]
+                  - tooltip "Veleprodajni prihod podijeljen brojem narudžbi. Pratite trend — rast vrijednosti narudžbe znači da upselling i pakiranje funkcioniraju.":
+                    - generic: Veleprodajni prihod podijeljen brojem narudžbi.
+                    - generic: Pratite trend — rast vrijednosti narudžbe znači da upselling i pakiranje funkcioniraju.
+              - paragraph [ref=e277]: 598,80 €
+              - paragraph [ref=e278]: Trend
+            - generic [ref=e279]:
+              - paragraph [ref=e280]:
+                - text: Obrt zaliha
+                - generic "Broj prodanih boca u razdoblju podijeljen brojem boca na zalihi. Cilj >1× po kvartalu. Niski obrt znači prevelike ili sporo pokretne zalihe." [ref=e281]:
+                  - img "Broj prodanih boca u razdoblju podijeljen brojem boca na zalihi. Cilj >1× po kvartalu. Niski obrt znači prevelike ili sporo pokretne zalihe." [ref=e282]
+                  - tooltip "Broj prodanih boca u razdoblju podijeljen brojem boca na zalihi. Cilj >1× po kvartalu. Niski obrt znači prevelike ili sporo pokretne zalihe.":
+                    - generic: Broj prodanih boca u razdoblju podijeljen brojem boca na zalihi.
+                    - generic: Cilj >1× po kvartalu. Niski obrt znači prevelike ili sporo pokretne zalihe.
+              - paragraph [ref=e284]: 0×
+              - paragraph [ref=e285]: ">1× kvartalno"
+        - generic [ref=e286]:
+          - generic [ref=e287]:
+            - generic [ref=e289]: Prihod po kanalu
+            - generic [ref=e290]:
+              - generic [ref=e291]:
+                - generic [ref=e292]:
+                  - generic [ref=e293]: Ukupno
+                  - generic [ref=e294]:
+                    - generic [ref=e295]:
+                      - img [ref=e296]
+                      - text: +13792.8%
+                    - generic [ref=e298]: 11.114,20 €
+                - paragraph [ref=e299]: Svi izvori prihoda
+              - generic [ref=e301]:
+                - generic [ref=e302]:
+                  - text: Veleprodaja
+                  - generic [ref=e304]: 59%
+                - generic [ref=e305]:
+                  - generic [ref=e306]:
+                    - img [ref=e307]
+                    - text: +8133.5%
+                  - generic [ref=e309]: 6.586,80 €
+              - generic [ref=e313]:
+                - generic [ref=e314]:
+                  - text: Maloprodaja
+                  - generic [ref=e316]: 26%
+                - generic [ref=e317]:
+                  - generic [ref=e318]: —
+                  - generic [ref=e319]: 2.868,40 €
+              - generic [ref=e322]:
+                - generic [ref=e323]:
+                  - generic [ref=e324]:
+                    - text: Agencija
+                    - generic [ref=e326]: 11%
+                  - generic [ref=e327]:
+                    - generic [ref=e328]: —
+                    - generic [ref=e329]: 1.278,00 €
+                - paragraph [ref=e332]: Samo plaćeno
+              - generic [ref=e333]:
+                - generic [ref=e334]:
+                  - generic [ref=e335]:
+                    - text: Shipshop
+                    - generic [ref=e337]: 1%
+                  - generic [ref=e338]:
+                    - generic [ref=e339]: —
+                    - generic [ref=e340]: 96,00 €
+                - paragraph [ref=e343]: Konsignacija
+              - generic [ref=e345]:
+                - generic [ref=e346]:
+                  - text: Ostalo
+                  - generic [ref=e348]: 3%
+                - generic [ref=e349]:
+                  - generic [ref=e350]: —
+                  - generic [ref=e351]: 285,00 €
+          - generic [ref=e355]:
+            - generic [ref=e356]:
+              - generic [ref=e357]:
+                - img [ref=e359]
+                - generic [ref=e366]:
+                  - paragraph [ref=e367]: Radar ponovne narudžbe
+                  - paragraph [ref=e368]: Kupci koji kasne u odnosu na svoj uobičajeni ritam naručivanja
+              - generic [ref=e369]:
+                - generic [ref=e370]: 1 Na redu
+                - generic [ref=e371]: 1 Kasni
+                - generic [ref=e372]: 1 Rizik
+            - list [ref=e374]:
+              - listitem [ref=e375]:
+                - link "Galija Wines Zadnja narudžba prije 80 d · obično svakih 40 d" [ref=e377] [cursor=pointer]:
+                  - /url: /customers/01kvfkzavsedrkwqrxdpvwfxpk
+                  - paragraph [ref=e378]: Galija Wines
+                  - paragraph [ref=e379]: Zadnja narudžba prije 80 d · obično svakih 40 d
+                - generic [ref=e380]:
+                  - text: Kasni
+                  - paragraph [ref=e381]: ~216,00 €/narudžbi
+                - button "Kontaktirano" [ref=e382]:
+                  - img [ref=e383]
+                  - generic [ref=e385]: Kontaktirano
+              - listitem [ref=e386]:
+                - link "Agora Gourmet Zadnja narudžba prije 100 d · obično svakih 32 d" [ref=e388] [cursor=pointer]:
+                  - /url: /customers/01kvfkzat18q819t0kst1c54z8
+                  - paragraph [ref=e389]: Agora Gourmet
+                  - paragraph [ref=e390]: Zadnja narudžba prije 100 d · obično svakih 32 d
+                - generic [ref=e391]:
+                  - text: Rizik
+                  - paragraph [ref=e392]: ~84,00 €/narudžbi
+                - button "Kontaktirano" [ref=e393]:
+                  - img [ref=e394]
+                  - generic [ref=e396]: Kontaktirano
+              - listitem [ref=e397]:
+                - link "Konoba More Zadnja narudžba prije 42 d · obično svakih 28 d" [ref=e399] [cursor=pointer]:
+                  - /url: /customers/01kvfkzatx4sppyc4gpc7qx35j
+                  - paragraph [ref=e400]: Konoba More
+                  - paragraph [ref=e401]: Zadnja narudžba prije 42 d · obično svakih 28 d
+                - generic [ref=e402]:
+                  - text: Na redu
+                  - paragraph [ref=e403]: ~96,00 €/narudžbi
+                - button "Kontaktirano" [ref=e404]:
+                  - img [ref=e405]
+                  - generic [ref=e407]: Kontaktirano
+        - generic [ref=e408]:
+          - generic [ref=e410]:
+            - generic [ref=e412]:
+              - heading "Narudžbe" [level=3] [ref=e413]
+              - paragraph [ref=e414]: Narudžbe kroz razdoblje
+            - img [ref=e418]:
+              - generic [ref=e420]:
+                - generic [ref=e422]: Jun 4
+                - generic [ref=e424]: Jun 6
+                - generic [ref=e426]: Jun 8
+                - generic [ref=e428]: Jun 10
+                - generic [ref=e430]: Jun 13
+                - generic [ref=e432]: Jun 16
+                - generic [ref=e434]: Jun 19
+              - generic [ref=e436]:
+                - generic [ref=e438]: "0"
+                - generic [ref=e440]: "3"
+                - generic [ref=e442]: "6"
+                - generic [ref=e444]: "9"
+                - generic [ref=e446]: "12"
+          - generic [ref=e454]:
+            - heading "Status narudžbi" [level=3] [ref=e457]
+            - generic [ref=e458]:
+              - img [ref=e461]:
+                - generic [ref=e463]:
+                  - img [ref=e465]
+                  - img [ref=e467]
+                  - img [ref=e469]
+                  - img [ref=e471]
+              - generic:
+                - generic: "11"
+                - generic: Narudžbe
+            - list [ref=e472]:
+              - listitem [ref=e473]:
+                - generic [ref=e474]: Zaprimljeno
+                - generic [ref=e476]: "2"
+              - listitem [ref=e477]:
+                - generic [ref=e478]: U obradi
+                - generic [ref=e480]: "1"
+              - listitem [ref=e481]:
+                - generic [ref=e482]: Spremno za otpremu
+                - generic [ref=e484]: "1"
+              - listitem [ref=e485]:
+                - generic [ref=e486]: Otpremljeno
+                - generic [ref=e488]: "7"
+        - generic [ref=e489]:
+          - generic [ref=e491]:
+            - generic [ref=e493]:
+              - heading "Prihod" [level=3] [ref=e494]
+              - paragraph [ref=e495]: Postavite jediničnu cijenu na stavkama zalihe za prikaz marže
+            - img [ref=e499]:
+              - generic [ref=e501]:
+                - generic [ref=e503]: Jun 4
+                - generic [ref=e505]: Jun 7
+                - generic [ref=e507]: Jun 10
+                - generic [ref=e509]: Jun 13
+                - generic [ref=e511]: Jun 16
+                - generic [ref=e513]: Jun 19
+              - generic [ref=e515]:
+                - generic [ref=e517]: 0 €
+                - generic [ref=e519]: 3 tis. €
+                - generic [ref=e521]: 6 tis. €
+                - generic [ref=e523]: 9 tis. €
+                - generic [ref=e525]: 12 tis. €
+          - generic [ref=e533]:
+            - heading "Najprodavaniji proizvodi" [level=3] [ref=e536]
+            - img [ref=e540]:
+              - generic [ref=e542]:
+                - generic [ref=e544]: "50000"
+                - generic [ref=e546]: "200000"
+              - generic [ref=e548]:
+                - generic [ref=e550]: BIBICh Bilo
+                - generic [ref=e552]: BIBICh Debit
+                - generic [ref=e554]: BIBICh R5Riser…
+                - generic [ref=e556]: BIBICh Crno
+                - generic [ref=e558]: BIBICh R6Riser…
+        - generic [ref=e572]:
+          - generic [ref=e574]:
+            - heading "Praćenje zalihe" [level=3] [ref=e577]
+            - img [ref=e581]:
+              - generic [ref=e583]:
+                - generic [ref=e585]: "0"
+                - generic [ref=e587]: "150"
+                - generic [ref=e589]: "300"
+                - generic [ref=e591]: "600"
+              - generic [ref=e593]:
+                - generic [ref=e595]: BIBICh AmbraPr…
+                - generic [ref=e597]: BIBIChSangreal…
+                - generic [ref=e599]: BIBIChSangreal…
+                - generic [ref=e601]: BIBICh Bas deB…
+                - generic [ref=e603]: BIBICh R5Riser…
+                - generic [ref=e605]: BIBICh BrutRosé
+          - generic [ref=e622]:
+            - generic [ref=e623]:
+              - heading "Nedavne narudžbe" [level=3] [ref=e624]
+              - link "Prikaži sve" [ref=e625] [cursor=pointer]:
+                - /url: /orders
+            - list [ref=e626]:
+              - listitem [ref=e627]:
+                - link "TREND-001Trend · Wholesale 120,00 € Otpremljeno Jun 19 · Filip Bibić" [ref=e628] [cursor=pointer]:
+                  - /url: /orders/01kvfkzbztpbynczx55h0r6awq
+                  - paragraph [ref=e630]: TREND-001Trend · Wholesale
+                  - generic [ref=e631]:
+                    - generic [ref=e632]: 120,00 €
+                    - generic [ref=e633]: Otpremljeno
+                    - generic [ref=e634]: Jun 19 · Filip Bibić
+              - listitem [ref=e635]:
+                - link "TREND-002Trend · Retail 40,00 € Otpremljeno Jun 19 · Filip Bibić" [ref=e636] [cursor=pointer]:
+                  - /url: /orders/01kvfkzbztpbynczx55h0r6awr
+                  - paragraph [ref=e638]: TREND-002Trend · Retail
+                  - generic [ref=e639]:
+                    - generic [ref=e640]: 40,00 €
+                    - generic [ref=e641]: Otpremljeno
+                    - generic [ref=e642]: Jun 19 · Filip Bibić
+              - listitem [ref=e643]:
+                - link "ORD-00001Konzum d.d. 120 BIBICh Debit 60 BIBICh Plavina 24 BIBICh R6 Riserva 30# BIBICh Bilo +1 više 4.681,80 € Otpremljeno Jun 19 · Filip Bibić" [ref=e644] [cursor=pointer]:
+                  - /url: /orders/01kvfkzap7fsnkkaznz0mv9vs5
+                  - generic [ref=e645]:
+                    - paragraph [ref=e646]: ORD-00001Konzum d.d.
+                    - list [ref=e647]:
+                      - listitem [ref=e648]:
+                        - generic "120 boca" [ref=e649]: "120"
+                        - generic [ref=e650]: ×
+                        - generic [ref=e651]: BIBICh Debit
+                      - listitem [ref=e652]:
+                        - generic "60 boca" [ref=e653]: "60"
+                        - generic [ref=e654]: ×
+                        - generic [ref=e655]: BIBICh Plavina
+                      - listitem [ref=e656]:
+                        - generic "24 boca" [ref=e657]: "24"
+                        - generic [ref=e658]: ×
+                        - generic [ref=e659]: BIBICh R6 Riserva
+                      - listitem [ref=e660]:
+                        - generic "30 gajbi" [ref=e661]: 30#
+                        - generic [ref=e662]: ×
+                        - generic [ref=e663]: BIBICh Bilo
+                      - listitem [ref=e664]: +1 više
+                  - generic [ref=e665]:
+                    - generic [ref=e666]: 4.681,80 €
+                    - generic [ref=e667]: Otpremljeno
+                    - generic [ref=e668]: Jun 19 · Filip Bibić
+              - listitem [ref=e669]:
+                - link "ORD-00002Restaurant Noel 12 BIBICh R6 Riserva 18 BIBICh Babić 12 BIBICh Brut 2 BIBICh Ambra Prošek 1.034,40 € U obradi Jun 19 · Filip Bibić" [ref=e670] [cursor=pointer]:
+                  - /url: /orders/01kvfkzaqgy21k654br76a9at1
+                  - generic [ref=e671]:
+                    - paragraph [ref=e672]: ORD-00002Restaurant Noel
+                    - list [ref=e673]:
+                      - listitem [ref=e674]:
+                        - generic "12 boca" [ref=e675]: "12"
+                        - generic [ref=e676]: ×
+                        - generic [ref=e677]: BIBICh R6 Riserva
+                      - listitem [ref=e678]:
+                        - generic "18 boca" [ref=e679]: "18"
+                        - generic [ref=e680]: ×
+                        - generic [ref=e681]: BIBICh Babić
+                      - listitem [ref=e682]:
+                        - generic "12 boca" [ref=e683]: "12"
+                        - generic [ref=e684]: ×
+                        - generic [ref=e685]: BIBICh Brut
+                      - listitem [ref=e686]:
+                        - generic "2 boca" [ref=e687]: "2"
+                        - generic [ref=e688]: ×
+                        - generic [ref=e689]: BIBICh Ambra Prošek
+                  - generic [ref=e690]:
+                    - generic [ref=e691]: 1.034,40 €
+                    - generic [ref=e692]: U obradi
+                    - generic [ref=e693]: Jun 19 · Filip Bibić
+              - listitem [ref=e694]:
+                - link "ORD-00003Vinoteka Bornstein 24 BIBICh Pošip 24 BIBICh Think Pink Rosé 8# BIBICh Crno 1.704,00 € Zaprimljeno Jun 19 · Filip Bibić" [ref=e695] [cursor=pointer]:
+                  - /url: /orders/01kvfkzaqywvwt8xfcf0g119s0
+                  - generic [ref=e696]:
+                    - paragraph [ref=e697]: ORD-00003Vinoteka Bornstein
+                    - list [ref=e698]:
+                      - listitem [ref=e699]:
+                        - generic "24 boca" [ref=e700]: "24"
+                        - generic [ref=e701]: ×
+                        - generic [ref=e702]: BIBICh Pošip
+                      - listitem [ref=e703]:
+                        - generic "24 boca" [ref=e704]: "24"
+                        - generic [ref=e705]: ×
+                        - generic [ref=e706]: BIBICh Think Pink Rosé
+                      - listitem [ref=e707]:
+                        - generic "8 gajbi" [ref=e708]: 8#
+                        - generic [ref=e709]: ×
+                        - generic [ref=e710]: BIBICh Crno
+                  - generic [ref=e711]:
+                    - generic [ref=e712]: 1.704,00 €
+                    - generic [ref=e713]: Zaprimljeno
+                    - generic [ref=e714]: Jun 19 · Filip Bibić
+  - generic [ref=e715]: BIBICh Ambra Pr…

@@ -34,6 +34,12 @@ class UpdateCostRequest extends FormRequest
             'notes' => ['sometimes', 'nullable', 'string'],
             'due_date' => ['sometimes', 'nullable', 'date'],
             'supplier_id' => ['sometimes', 'nullable', 'string', Rule::exists('suppliers', 'id')->where('tenant_id', $tenantId)],
+            'items' => ['sometimes', 'array'],
+            'items.*.description' => ['required', 'string', 'max:255'],
+            'items.*.unit_price' => ['required', 'integer', 'min:0'],
+            'items.*.quantity' => ['sometimes', 'numeric', 'min:0'],
+            'items.*.category' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'items.*.inventory_item_id' => ['sometimes', 'nullable', 'string', Rule::exists('inventory_items', 'id')->where('tenant_id', $tenantId)],
         ];
     }
 }

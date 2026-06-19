@@ -51,10 +51,14 @@ class SupplierController extends Controller
 
     public function index(Request $request, ListSuppliersQuery $query): JsonResponse
     {
+        $perPage = $request->has('per_page')
+            ? min(500, max(1, (int) $request->query('per_page')))
+            : 25;
+
         $paginator = $query->paginate([
             'search' => $request->query('search'),
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : null,
-        ]);
+        ], $perPage);
 
         return response()->json([
             'data' => array_map(fn (Supplier $s) => SupplierData::fromModel($s)->toArray(), $paginator->items()),

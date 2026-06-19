@@ -24,9 +24,10 @@ final class CustomerData implements Arrayable, JsonSerializable
         public readonly bool $hidePrices,
         public readonly bool $hasOrderToken,
         public readonly ?Customer $model = null,
+        public readonly bool $showRevenue = false,
     ) {}
 
-    public static function fromModel(Customer $customer): self
+    public static function fromModel(Customer $customer, bool $showRevenue = false): self
     {
         return new self(
             id: $customer->getKey(),
@@ -39,6 +40,7 @@ final class CustomerData implements Arrayable, JsonSerializable
             hidePrices: $customer->hide_prices,
             hasOrderToken: $customer->order_token !== null,
             model: $customer,
+            showRevenue: $showRevenue,
         );
     }
 
@@ -75,6 +77,12 @@ final class CustomerData implements Arrayable, JsonSerializable
             'has_order_token' => $this->hasOrderToken,
             'pricing_tier' => $tier !== null
                 ? ['id' => $tier->getKey(), 'name' => $tier->name, 'rebate_percent' => (string) $tier->rebate_percent]
+                : null,
+            // Aggregates loaded by ListCustomersQuery (null elsewhere). Revenue is
+            // minor-only and gated behind financials visibility.
+            'order_count' => $c?->getAttribute('order_count') !== null ? (int) $c->getAttribute('order_count') : null,
+            'revenue_minor' => $this->showRevenue && $c?->getAttribute('revenue_minor') !== null
+                ? (int) $c->getAttribute('revenue_minor')
                 : null,
         ];
     }

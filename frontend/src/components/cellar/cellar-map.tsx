@@ -123,6 +123,7 @@ export function CellarMap() {
 
   function onTilePointerDown(e: React.PointerEvent, v: Vessel) {
     if (!edit || !canManage) {
+      e.stopPropagation();
       setInspectId(v.id);
       return;
     }

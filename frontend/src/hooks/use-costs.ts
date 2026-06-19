@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { costsApi } from "@/lib/api/costs";
+import { putToBucket, uploadsApi } from "@/lib/api/uploads";
 import type { CostInput, CostQuery, CostStatus } from "@/lib/types";
 
 export function useCosts(query: CostQuery = {}) {
@@ -72,6 +73,45 @@ export function useDeleteCost() {
   const invalidate = useInvalidateCosts();
   return useMutation({
     mutationFn: (id: string) => costsApi.delete(id),
+    onSuccess: invalidate,
+  });
+}
+
+/** Attachments with presigned read URLs (fetched lazily when the tab opens). */
+export function useCostAttachments(costId: string, enabled = true) {
+  return useQuery({
+    queryKey: ["costs", "attachments", costId],
+    queryFn: () => costsApi.attachments(costId),
+    enabled,
+  });
+}
+
+/** Upload a file: presign (cost_attachment) → PUT to bucket → link to the cost. */
+export function useAddCostAttachment(costId: string) {
+  const invalidate = useInvalidateCosts();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const presign = await uploadsApi.presign({
+        purpose: "cost_attachment",
+        filename: file.name,
+        content_type: file.type || "application/octet-stream",
+        size: file.size,
+      });
+      await putToBucket(presign, file);
+      return costsApi.addAttachment(costId, {
+        key: presign.key,
+        filename: file.name,
+        content_type: presign.content_type,
+      });
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteCostAttachment(costId: string) {
+  const invalidate = useInvalidateCosts();
+  return useMutation({
+    mutationFn: (attachmentId: string) => costsApi.deleteAttachment(costId, attachmentId),
     onSuccess: invalidate,
   });
 }

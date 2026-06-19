@@ -14,8 +14,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { VineyardsSubnav } from "@/components/vineyards/vineyards-subnav";
+import { PARCEL_OWNERSHIPS, type ParcelOwnership } from "@/lib/types";
 
 export default function VineyardsPage() {
   const { t } = useTranslation();
@@ -85,6 +87,16 @@ export default function VineyardsPage() {
                   grape_variety: String(f.get("grape_variety") ?? ""),
                   area_hectares: f.get("area") ? Number(f.get("area")) : null,
                   vine_count: f.get("vines") ? Number(f.get("vines")) : null,
+                  ownership: (String(f.get("ownership") ?? "OWN") || "OWN") as ParcelOwnership,
+                  location: String(f.get("location") ?? "") || null,
+                  soil_type: String(f.get("soil_type") ?? "") || null,
+                  elevation: f.get("elevation") ? Number(f.get("elevation")) : null,
+                  planting_year: f.get("planting_year") ? Number(f.get("planting_year")) : null,
+                  row_spacing: f.get("row_spacing") ? Number(f.get("row_spacing")) : null,
+                  rootstock: String(f.get("rootstock") ?? "") || null,
+                  training: String(f.get("training") ?? "") || null,
+                  orientation: String(f.get("orientation") ?? "") || null,
+                  slope: f.get("slope") ? Number(f.get("slope")) : null,
                 });
                 setOpen(false);
                 router.push(`/vineyards/parcels/${parcel.id}`);
@@ -110,6 +122,27 @@ export default function VineyardsPage() {
                 <Label>{t("vineyards.parcels.vines")}</Label>
                 <Input name="vines" type="number" />
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div>
+                <Label>{t("vineyards.parcels.ownership")}</Label>
+                <Select name="ownership" defaultValue="OWN">
+                  {PARCEL_OWNERSHIPS.map((o) => (
+                    <option key={o} value={o}>
+                      {t(`vineyards.ownershipType.${o}`)}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div><Label>{t("vineyards.parcels.location")}</Label><Input name="location" /></div>
+              <div><Label>{t("vineyards.parcels.soilType")}</Label><Input name="soil_type" /></div>
+              <div><Label>{t("vineyards.parcels.elevation")}</Label><Input name="elevation" type="number" /></div>
+              <div><Label>{t("vineyards.parcels.plantingYear")}</Label><Input name="planting_year" type="number" /></div>
+              <div><Label>{t("vineyards.parcels.rowSpacing")}</Label><Input name="row_spacing" type="number" step="0.01" /></div>
+              <div><Label>{t("vineyards.parcels.rootstock")}</Label><Input name="rootstock" /></div>
+              <div><Label>{t("vineyards.parcels.training")}</Label><Input name="training" /></div>
+              <div><Label>{t("vineyards.parcels.orientation")}</Label><Input name="orientation" /></div>
+              <div><Label>{t("vineyards.parcels.slope")}</Label><Input name="slope" type="number" step="0.1" /></div>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex justify-end gap-2">

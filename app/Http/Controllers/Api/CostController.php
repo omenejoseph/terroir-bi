@@ -8,6 +8,7 @@ use App\Actions\Costs\CreateCostAction;
 use App\Actions\Costs\UpdateCostAction;
 use App\Actions\Costs\UpdateCostStatusAction;
 use App\DataTransferObjects\CostData;
+use App\Enums\CostCategory;
 use App\Enums\CostStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Costs\AddCostAttachmentRequest;
@@ -61,10 +62,11 @@ class CostController extends Controller
     public function categories(): JsonResponse
     {
         $existing = Cost::query()->distinct()->orderBy('category')->pluck('category')->all();
-        // Invoice + Payment are always offered so the tabs can always be populated.
+        // Canonical categories (incl. the computation-critical Salary/Marketing and
+        // the Invoice/Payment tab drivers) are always offered, so every tenant — even
+        // a brand-new one with no costs — can record them and the dashboard ratios work.
         $categories = array_values(array_unique([
-            ListCostsQuery::INVOICE_CATEGORY,
-            ListCostsQuery::PAYMENT_CATEGORY,
+            ...CostCategory::defaults(),
             ...$existing,
         ]));
 
@@ -100,7 +102,7 @@ class CostController extends Controller
 
     public function show(Cost $cost): JsonResponse
     {
-        $cost->loadMissing(['supplier', 'items', 'attachments']);
+        $cost->loadMissing(['supplier', 'items', 'attachments', 'createdBy']);
 
         return response()->json(['data' => CostData::fromModel($cost)->toArray()]);
     }
@@ -114,14 +116,19 @@ class CostController extends Controller
 
         $cost = $action->execute($data, $items, $this->userId($request));
 
-        return response()->json(['data' => CostData::fromModel($cost->load(['supplier', 'items']))->toArray()], 201);
+        return response()->json(['data' => CostData::fromModel($cost->load(['supplier', 'items', 'createdBy']))->toArray()], 201);
     }
 
     public function update(UpdateCostRequest $request, Cost $cost, UpdateCostAction $action): JsonResponse
     {
-        $cost = $action->execute($cost, $request->validated());
+        $validated = $request->validated();
+        /** @var list<array<string, mixed>>|null $items */
+        $items = $request->has('items') ? (array) ($validated['items'] ?? []) : null;
+        unset($validated['items']);
 
-        return response()->json(['data' => CostData::fromModel($cost->load('supplier'))->toArray()]);
+        $cost = $action->execute($cost, $validated, $items);
+
+        return response()->json(['data' => CostData::fromModel($cost->load(['supplier', 'items', 'createdBy']))->toArray()]);
     }
 
     public function updateStatus(UpdateCostStatusRequest $request, Cost $cost, UpdateCostStatusAction $action): JsonResponse
@@ -136,6 +143,20 @@ class CostController extends Controller
         $cost->delete();
 
         return response()->json(status: 204);
+    }
+
+    /** Attachments with a short-lived presigned read URL for view/download. */
+    public function listAttachments(Cost $cost, PresignedUploadService $uploads): JsonResponse
+    {
+        $data = $cost->attachments()->orderBy('id')->get()->map(fn (CostAttachment $a) => [
+            'id' => $a->getKey(),
+            'filename' => $a->filename,
+            'content_type' => $a->content_type,
+            'size_bytes' => $a->size_bytes,
+            'url' => $uploads->readUrl($a->object_key),
+        ]);
+
+        return response()->json(['data' => $data]);
     }
 
     public function addAttachment(AddCostAttachmentRequest $request, Cost $cost, PresignedUploadService $uploads): JsonResponse

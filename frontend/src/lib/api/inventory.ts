@@ -4,6 +4,7 @@ import type {
   AttachDocumentInput,
   InventoryDocument,
   InventoryImage,
+  InventoryBulkEdit,
   InventoryItem,
   InventoryItemInput,
   InventoryItemUpdate,
@@ -72,12 +73,28 @@ export const inventoryApi = {
   update: (id: string, input: InventoryItemUpdate) =>
     api.patch<InventoryItem>(`/inventory-items/${id}`, input),
 
+  /** POST /inventory-items/bulk-update — apply per-row edits to many items. */
+  bulkUpdate: (items: InventoryBulkEdit[]) =>
+    api.post<{ updated: number }>("/inventory-items/bulk-update", { items }),
+
+  /** POST /inventory-items/{id}/duplicate — clone an item (new SKU, zero stock). */
+  duplicate: (id: string) => api.post<InventoryItem>(`/inventory-items/${id}/duplicate`, {}),
+
   /** POST /inventory-items/{id}/stock — records a signed movement, returns the item. */
   adjustStock: (id: string, input: StockAdjustmentInput) =>
     api.post<InventoryItem>(`/inventory-items/${id}/stock`, input),
 
   /** GET /inventory-items/{id}/movements — ledger entries, newest first. */
   movements: (id: string) => api.get<StockMovement[]>(`/inventory-items/${id}/movements`),
+
+  /**
+   * PATCH /stock-movements/{id}/reconciliation — flip a movement's correction
+   * tag after the fact. Pure tag flip; never touches current stock.
+   */
+  setMovementReconciliation: (movementId: string, isReconciliation: boolean) =>
+    api.patch<StockMovement>(`/stock-movements/${movementId}/reconciliation`, {
+      is_reconciliation: isReconciliation,
+    }),
 
   /** GET /inventory-items/{id}/stock-analytics — per-item stock dashboard for a period. */
   stockAnalytics: (id: string, period: string) =>

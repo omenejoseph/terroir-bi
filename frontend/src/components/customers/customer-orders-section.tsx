@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { ChartCard, RevenueChart } from "@/components/dashboard/charts";
 import { OrderItemsPreview } from "@/components/orders/order-items-preview";
 
 const STATUS_VARIANT: Record<OrderStatus, "info" | "warning" | "purple" | "success"> = {
@@ -29,7 +30,7 @@ export function CustomerOrdersSection({
   canViewFinancials: boolean;
 }) {
   const { t } = useTranslation();
-  const { moneyObject, date, number, monthShort } = useFormatters();
+  const { moneyObject, money2, moneyAxis, date, number, monthShort } = useFormatters();
   const analyticsQ = useCustomerOrderAnalytics(customerId, canViewFinancials);
   const ordersQ = useOrders({ customer_id: customerId });
 
@@ -78,6 +79,21 @@ export function CustomerOrdersSection({
           />
         </div>
       )}
+
+      {canViewFinancials &&
+        a?.monthly_revenue &&
+        a.monthly_revenue.some((m) => m.revenue.minor > 0) && (
+          <ChartCard title={t("customers.orders.revenueTrend")}>
+            <RevenueChart
+              data={a.monthly_revenue.map((m) => ({
+                label: monthShort(`${m.month}-01`),
+                value: m.revenue.minor,
+              }))}
+              formatValue={money2}
+              formatAxis={moneyAxis}
+            />
+          </ChartCard>
+        )}
 
       {canViewFinancials && a?.expected_next_3m && a.expected_next_3m.length > 0 && (
         <Card>

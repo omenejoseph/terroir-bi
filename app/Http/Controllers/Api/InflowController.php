@@ -27,12 +27,16 @@ class InflowController extends Controller
 {
     public function index(Request $request, ListInflowsQuery $query): JsonResponse
     {
-        $paginator = $query->paginate([
+        $filters = [
             'status' => $request->query('status'),
             'customer_id' => $request->query('customer_id'),
             'order_id' => $request->query('order_id'),
             'search' => $request->query('search'),
-        ]);
+            'date_from' => $request->query('date_from'),
+            'date_to' => $request->query('date_to'),
+        ];
+
+        $paginator = $query->paginate($filters);
 
         return response()->json([
             'data' => array_map(fn (Inflow $i) => InflowData::fromModel($i)->toArray(), $paginator->items()),
@@ -41,6 +45,8 @@ class InflowController extends Controller
                 'last_page' => $paginator->lastPage(),
                 'per_page' => $paginator->perPage(),
                 'total' => $paginator->total(),
+                // Invoiced / Collected / Pending over the full filtered set.
+                'summary' => $query->summary($filters),
             ],
         ]);
     }

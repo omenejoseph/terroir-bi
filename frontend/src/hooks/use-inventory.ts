@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { inventoryApi } from "@/lib/api/inventory";
 import type {
   BottleAnalysisInput,
+  InventoryBulkEdit,
   InventoryCheckInput,
   InventoryItemInput,
   InventoryItemUpdate,
@@ -50,6 +51,22 @@ export function useStockMovements(id: string | undefined) {
     queryKey: ["inventory", "movements", id],
     queryFn: () => inventoryApi.movements(id!),
     enabled: !!id,
+  });
+}
+
+/**
+ * Retroactively (un)mark a movement as an inventory-count correction. A pure
+ * tag flip — stock is untouched — but it changes whether the movement counts as
+ * a real exit, so refresh the item's analytics alongside its ledger.
+ */
+export function useSetMovementReconciliation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { movementId: string; isReconciliation: boolean }) =>
+      inventoryApi.setMovementReconciliation(vars.movementId, vars.isReconciliation),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    },
   });
 }
 
@@ -234,6 +251,28 @@ export function useUpdateInventoryItem() {
   return useMutation({
     mutationFn: (vars: { id: string; input: InventoryItemUpdate }) =>
       inventoryApi.update(vars.id, vars.input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    },
+  });
+}
+
+/** Apply per-row edits to many items at once (bulk-edit grid). */
+export function useBulkUpdateInventoryItems() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (items: InventoryBulkEdit[]) => inventoryApi.bulkUpdate(items),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    },
+  });
+}
+
+/** Clone an item; returns the new item so the caller can navigate to it. */
+export function useDuplicateInventoryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => inventoryApi.duplicate(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["inventory"] });
     },

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Customers\CreateCustomerAction;
 use App\Actions\Customers\OrderTokenAction;
 use App\Actions\Customers\UpdateCustomerAction;
+use App\Authorization\MembershipContext;
 use App\DataTransferObjects\CustomerData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customers\MergeCustomersRequest;
@@ -26,6 +27,8 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
+    public function __construct(private readonly MembershipContext $membership) {}
+
     public function insights(Customer $customer, CustomerInsightsQuery $query): JsonResponse
     {
         return response()->json(['data' => $query->get($customer)]);
@@ -103,9 +106,11 @@ class CustomerController extends Controller
             'pricing_tier_id' => $request->query('pricing_tier_id'),
         ]);
 
+        $showRevenue = $this->membership->canSeeFinancials();
+
         return response()->json([
             'data' => array_map(
-                fn (Customer $c) => CustomerData::fromModel($c)->toArray(),
+                fn (Customer $c) => CustomerData::fromModel($c, $showRevenue)->toArray(),
                 $paginator->items(),
             ),
             'meta' => [

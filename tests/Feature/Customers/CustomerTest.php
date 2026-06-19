@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Customers;
 
+use App\Enums\OrderStatus;
 use App\Enums\TenantRole;
 use App\Models\Customer;
+use App\Models\Order;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\InteractsWithTenancy;
@@ -30,6 +32,30 @@ class CustomerTest extends TestCase
             ->assertCreated()
             ->assertJsonPath('data.company_name', 'Konoba More')
             ->assertJsonPath('data.effective_rebate_percent', '10.00');
+    }
+
+    public function test_customer_list_exposes_order_count_and_revenue_excluding_consignment(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $customer = Customer::create(['company_name' => 'Konoba', 'email' => 'k@example.com']);
+        Order::create([
+            'order_number' => 'ORD-1', 'status' => OrderStatus::Received, 'total_amount' => 50000,
+            'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false,
+        ]);
+        // Consignment placements are not sales — excluded from count + revenue.
+        Order::create([
+            'order_number' => 'ORD-2', 'status' => OrderStatus::Received, 'total_amount' => 30000,
+            'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => true,
+        ]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $this->getJson('/api/v1/customers', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonPath('data.0.order_count', 1)
+            ->assertJsonPath('data.0.revenue_minor', 50000);
     }
 
     public function test_quick_create_customer(): void

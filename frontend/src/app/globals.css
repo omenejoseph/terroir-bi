@@ -1,6 +1,15 @@
 @import "tailwindcss";
 
 /*
+  Dark mode is class-based (driven by the `.dark` token block below), not the OS.
+  Without this, Tailwind v4's `dark:` utilities default to `prefers-color-scheme`,
+  so a dark-mode OS would paint dark-variant colors (e.g. amber-400 text) onto the
+  app's always-light surfaces — illegible. Pinning `dark:` to the `.dark` class
+  keeps utilities in sync with the theme tokens.
+*/
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
   ============================================================================
   DESIGN TOKENS — the single source of truth for the app's look & feel.
   ============================================================================
@@ -140,10 +149,16 @@
     sideways when any descendant overflows, even though <main> clips its own
     overflow — this root guard is the reliable backstop. `position: relative`
     on body contains any stray absolutely-positioned children.
+
+    Use `overflow-x: clip` (not `hidden`): `hidden` forces the other axis to
+    compute to `auto`, turning <html>/<body> into a scroll container — which
+    breaks `position: sticky` on the sidebar (the menu scrolls away with the
+    page). `clip` stops horizontal overflow without creating a scroll container,
+    so the sidebar stays pinned.
   */
   html,
   body {
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100%;
   }
   body {

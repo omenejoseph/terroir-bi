@@ -110,11 +110,13 @@ export function CustomerDetailPanel({
         </div>
       )}
 
+      {/* Self-service order link sits above the tabs, just under the summary cards. */}
+      {can("customers.tokens") && <OrderLinkSection customer={customer} />}
+
       <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as DetailTab)} />
 
       {tab === "overview" && (
         <div className="space-y-4">
-          {can("customers.tokens") && <OrderLinkSection customer={customer} />}
           {editing ? (
             <CustomerForm
               customer={customer}

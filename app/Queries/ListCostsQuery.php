@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Queries;
 
+use App\Enums\CostCategory;
 use App\Enums\CostStatus;
 use App\Models\Cost;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -12,9 +13,9 @@ use Illuminate\Database\Eloquent\Builder;
 class ListCostsQuery
 {
     /** Reserved categories that drive the All / Invoices / Payments / Others tabs. */
-    public const INVOICE_CATEGORY = 'Invoice';
+    public const INVOICE_CATEGORY = CostCategory::Invoice->value;
 
-    public const PAYMENT_CATEGORY = 'Payment';
+    public const PAYMENT_CATEGORY = CostCategory::Payment->value;
 
     /**
      * @param  array<string, mixed>  $filters
@@ -22,7 +23,7 @@ class ListCostsQuery
      */
     public function paginate(array $filters = [], int $perPage = 25): LengthAwarePaginator
     {
-        return $this->build($filters)->with('supplier')->orderByDesc('date')->paginate($perPage);
+        return $this->build($filters)->with(['supplier', 'items', 'attachments', 'createdBy'])->orderByDesc('id')->paginate($perPage);
     }
 
     /**

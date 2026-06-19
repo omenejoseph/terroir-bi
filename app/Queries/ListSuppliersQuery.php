@@ -17,7 +17,8 @@ class ListSuppliersQuery
     public function paginate(array $filters = [], int $perPage = 25): LengthAwarePaginator
     {
         return $this->build($filters)
-            ->withCount(['priceItems', 'priceChanges'])
+            ->withCount(['priceItems', 'priceChanges', 'costs'])
+            ->withSum('costs as costs_total', 'total_amount')
             ->orderBy('company_name')
             ->paginate($perPage);
     }

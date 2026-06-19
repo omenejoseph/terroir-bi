@@ -28,6 +28,15 @@ describe("CustomersPage (list)", () => {
     expect(screen.getByText("Vinoteka Zagreb")).toBeInTheDocument();
   });
 
+  it("shows order count and revenue on each card", async () => {
+    renderWithProviders(<CustomersPage />);
+    await screen.findByText("Acme Corporation");
+    expect((await screen.findAllByText("Orders")).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Revenue").length).toBeGreaterThan(0);
+    // revenue_minor 125000 → 1,250 (any thousands separator).
+    expect(screen.getAllByText(/1[.,\s]250/).length).toBeGreaterThan(0);
+  });
+
   it("navigates to the create page from the Add button", async () => {
     renderWithProviders(<CustomersPage />);
     const user = userEvent.setup();

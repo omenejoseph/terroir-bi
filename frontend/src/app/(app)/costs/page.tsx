@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BarChart3, ChevronDown, Plus } from "lucide-react";
 
@@ -13,7 +14,7 @@ import {
   useCosts,
 } from "@/hooks/use-costs";
 import { useSuppliers } from "@/hooks/use-suppliers";
-import { addMonths, endOfMonth, startOfMonth, startOfQuarter } from "@/lib/calendar";
+import { type DashboardPeriod, resolvePeriodWindow, toISODate } from "@/lib/dashboard-period";
 import { useFormatters } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
 import type { Cost, CostGroup, CostQuery, CostStatus } from "@/lib/types";
@@ -21,11 +22,14 @@ import { COST_STATUSES } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { MetaField } from "@/components/ui/meta-field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
 import { CostDetailPanel } from "@/components/costs/cost-detail-panel";
+import { PeriodSelector } from "@/components/dashboard/period-selector";
 
 type Tab = "all" | CostGroup;
 
@@ -34,35 +38,6 @@ const STATUS_VARIANT: Record<CostStatus, "default" | "secondary" | "success"> = 
   APPROVED: "default",
   PAID: "success",
 };
-
-const COST_PERIODS = ["all", "thisMonth", "lastMonth", "thisQuarter", "thisYear", "lastYear", "custom"] as const;
-type CostPeriod = (typeof COST_PERIODS)[number];
-
-const iso = (d: Date): string =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-
-/** A preset period → an inclusive { from, to } date range (empty = no bound). */
-function periodRange(p: CostPeriod, now = new Date()): { from?: string; to?: string } {
-  switch (p) {
-    case "thisMonth":
-      return { from: iso(startOfMonth(now)), to: iso(endOfMonth(now)) };
-    case "lastMonth": {
-      const lm = addMonths(now, -1);
-      return { from: iso(startOfMonth(lm)), to: iso(endOfMonth(lm)) };
-    }
-    case "thisQuarter":
-      return { from: iso(startOfQuarter(now)), to: iso(now) };
-    case "thisYear":
-      return { from: iso(new Date(now.getFullYear(), 0, 1)), to: iso(now) };
-    case "lastYear":
-      return {
-        from: iso(new Date(now.getFullYear() - 1, 0, 1)),
-        to: iso(new Date(now.getFullYear() - 1, 11, 31)),
-      };
-    default:
-      return {};
-  }
-}
 
 export default function CostsPage() {
   const { t } = useTranslation();
@@ -74,9 +49,8 @@ export default function CostsPage() {
   const [category, setCategory] = React.useState("");
   const [status, setStatus] = React.useState<CostStatus | "">("");
   const [supplierId, setSupplierId] = React.useState("");
-  const [period, setPeriod] = React.useState<CostPeriod>("all");
-  const [customFrom, setCustomFrom] = React.useState("");
-  const [customTo, setCustomTo] = React.useState("");
+  const [period, setPeriod] = React.useState<DashboardPeriod>("all");
+  const [customRange, setCustomRange] = React.useState<{ from?: string; to?: string }>({});
   const [search, setSearch] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
 
@@ -85,8 +59,11 @@ export default function CostsPage() {
     return () => clearTimeout(id);
   }, [search]);
 
-  const range =
-    period === "custom" ? { from: customFrom || undefined, to: customTo || undefined } : periodRange(period);
+  const window = resolvePeriodWindow(period, customRange.from, customRange.to);
+  const range = {
+    from: window.since ? toISODate(window.since) : undefined,
+    to: window.until ? toISODate(window.until) : undefined,
+  };
 
   // Filters shared by the list + the tab counts (counts omit the tab group itself).
   const filters: CostQuery = {
@@ -104,7 +81,7 @@ export default function CostsPage() {
   const counts = countsQ.data;
   const analyticsQ = useCostAnalytics();
   const categoriesQ = useCostCategories();
-  const suppliersQ = useSuppliers();
+  const suppliersQ = useSuppliers({ per_page: 200 });
 
   const costs = data?.data ?? [];
   const canManage = can("finance.manage");
@@ -136,25 +113,32 @@ export default function CostsPage() {
         </div>
       </header>
 
-      {/* Analytics strip */}
+      {/* Summary strip — invoiced / paid / unpaid split (mirrors the prototype). */}
       {analyticsQ.data && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">{t("costs.totalSpend")}</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums">
-                {moneyObject(analyticsQ.data.total_spend)}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">{t("costs.unpaid")}</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums">
-                {moneyObject(analyticsQ.data.unpaid)}
-              </p>
-            </CardContent>
-          </Card>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <SummaryCard
+            label={t("costs.summary.invoiced")}
+            value={moneyObject(analyticsQ.data.invoiced.total)}
+            sub={t("costs.summary.invoicedSub", {
+              count: analyticsQ.data.invoiced.count,
+              vat: moneyObject(analyticsQ.data.invoiced.vat),
+            })}
+          />
+          <SummaryCard
+            label={t("costs.summary.paid")}
+            value={moneyObject(analyticsQ.data.paid.total)}
+            valueClass="text-emerald-700 dark:text-emerald-400"
+            sub={t("costs.summary.paidSub", { count: analyticsQ.data.paid.count })}
+          />
+          <SummaryCard
+            label={t("costs.summary.unpaid")}
+            value={moneyObject(analyticsQ.data.unpaid_invoices.total)}
+            valueClass={analyticsQ.data.unpaid_invoices.total.minor > 0 ? "text-amber-600 dark:text-amber-400" : undefined}
+            sub={t("costs.summary.unpaidSub", {
+              count: analyticsQ.data.unpaid_invoices.count,
+              overdue: analyticsQ.data.unpaid_invoices.overdue,
+            })}
+          />
         </div>
       )}
 
@@ -205,38 +189,6 @@ export default function CostsPage() {
           </Select>
         )}
 
-        <Select
-          aria-label={t("costs.period.label")}
-          value={period}
-          onChange={(e) => setPeriod(e.target.value as CostPeriod)}
-          className="sm:w-40"
-        >
-          {COST_PERIODS.map((p) => (
-            <option key={p} value={p}>
-              {t(`costs.period.${p}`)}
-            </option>
-          ))}
-        </Select>
-
-        {period === "custom" && (
-          <>
-            <Input
-              type="date"
-              aria-label={t("costs.period.from")}
-              value={customFrom}
-              onChange={(e) => setCustomFrom(e.target.value)}
-              className="sm:w-40"
-            />
-            <Input
-              type="date"
-              aria-label={t("costs.period.to")}
-              value={customTo}
-              onChange={(e) => setCustomTo(e.target.value)}
-              className="sm:w-40"
-            />
-          </>
-        )}
-
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -244,6 +196,17 @@ export default function CostsPage() {
           className="w-full sm:w-auto sm:max-w-xs"
         />
       </div>
+
+      {/* Period filter — same chip + custom-range selector as the dashboard. */}
+      <PeriodSelector
+        period={period}
+        customFrom={customRange.from}
+        customTo={customRange.to}
+        onChange={(next, from, to) => {
+          setPeriod(next);
+          setCustomRange({ from, to });
+        }}
+      />
 
       {isLoading && (
         <div className="flex items-center justify-center py-16">
@@ -286,33 +249,59 @@ function CostCard({ cost }: { cost: Cost }) {
   const { t } = useTranslation();
   const { moneyObject, date } = useFormatters();
   const [open, setOpen] = React.useState(false);
+  const dash = "—";
+  const overdue =
+    cost.status !== "PAID" && cost.due_date != null && new Date(cost.due_date) < new Date(new Date().toDateString());
 
   return (
     <Card className="overflow-hidden">
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen((prev) => !prev)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((prev) => !prev);
+          }
+        }}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+        className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
       >
-        <div className="min-w-0">
-          <p className="truncate font-medium">{cost.category}</p>
-          {cost.description && (
-            <p className="truncate text-sm text-muted-foreground">{cost.description}</p>
-          )}
-          <p className="truncate text-xs text-muted-foreground">
-            {date(cost.date)}
-            {cost.supplier ? ` · ${cost.supplier.company_name}` : ""}
-          </p>
+        <div className="min-w-0 flex-1">
+          {/* Labelled columns mirroring the prototype: Type · Date · Description · Supplier · Amount · Due. */}
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <MetaField label={t("costs.field.type")}>{cost.category}</MetaField>
+            <MetaField label={t("costs.field.date")}>{date(cost.date)}</MetaField>
+            <MetaField label={t("costs.field.description")}>{cost.description || dash}</MetaField>
+            <MetaField label={t("costs.field.supplier")}>
+              {cost.supplier ? (
+                <Link
+                  href={`/suppliers/${cost.supplier.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="hover:underline"
+                >
+                  {cost.supplier.company_name}
+                </Link>
+              ) : (
+                dash
+              )}
+            </MetaField>
+            <MetaField label={t("costs.field.amount")}>{moneyObject(cost.total_amount)}</MetaField>
+            <MetaField label={t("costs.field.due")}>
+              <span className={overdue ? "text-red-600 dark:text-red-400" : undefined}>
+                {cost.due_date ? date(cost.due_date) : dash}
+              </span>
+            </MetaField>
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-2 text-sm">
-          <span className="font-medium tabular-nums">{moneyObject(cost.total_amount)}</span>
           <Badge variant={STATUS_VARIANT[cost.status]}>{t(`costs.status.${cost.status}`)}</Badge>
           <ChevronDown
             className={`size-4 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`}
           />
         </div>
-      </button>
+      </div>
 
       <div
         className={`grid transition-all duration-300 ease-out ${
@@ -325,6 +314,19 @@ function CostCard({ cost }: { cost: Cost }) {
           </div>
         </div>
       </div>
+    </Card>
+  );
+}
+
+/** A summary tile for the invoiced / paid / unpaid strip. */
+function SummaryCard({ label, value, sub, valueClass }: { label: string; value: string; sub: string; valueClass?: string }) {
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className={cn("mt-1 text-2xl font-semibold tabular-nums", valueClass)}>{value}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{sub}</p>
+      </CardContent>
     </Card>
   );
 }

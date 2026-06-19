@@ -1,19 +1,16 @@
 "use client";
 
 import * as React from "react";
-import {
-  CalendarClock,
-  Coins,
-  Gauge,
-  Percent,
-  Tag,
-  TrendingDown,
-  Wallet,
-} from "lucide-react";
 
 import { useAuth } from "@/lib/auth/context";
-import { useAdjustStock, useStockAnalytics, useStockMovements } from "@/hooks/use-inventory";
+import {
+  useAdjustStock,
+  useSetMovementReconciliation,
+  useStockAnalytics,
+  useStockMovements,
+} from "@/hooks/use-inventory";
 import { useFormatters } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n/context";
 import {
   MANUAL_STOCK_MOVEMENTS,
@@ -31,7 +28,25 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
-import { StatCard } from "@/components/dashboard/stat-card";
+import { Sparkline } from "@/components/dashboard/charts";
+import { VintageCoverageWidget } from "@/components/inventory/vintage-coverage";
+
+/** Bar/dot colour per exit channel (movement type) for the breakdown graph. */
+const CHANNEL_DOT: Record<string, string> = {
+  sales: "bg-emerald-500",
+  production: "bg-blue-500",
+  manual: "bg-zinc-400",
+};
+
+/** Pill colour per movement type in the history table. */
+const TYPE_VARIANT: Record<StockMovementType, "success" | "info" | "warning" | "purple" | "secondary"> = {
+  MANUAL_IN: "success",
+  PRODUCTION_IN: "purple",
+  ORDER_DEDUCT: "info",
+  PRODUCTION_OUT: "purple",
+  MANUAL_OUT: "warning",
+  ADJUSTMENT: "secondary",
+};
 
 export function StockTab({ item, canManage }: { item: InventoryItem; canManage: boolean }) {
   const { t } = useTranslation();
@@ -44,6 +59,21 @@ export function StockTab({ item, canManage }: { item: InventoryItem; canManage: 
   const a = analyticsQ.data;
 
   const periodTabs = STOCK_PERIODS.map((p) => ({ value: p, label: t(`inventory.stock.period.${p}`) }));
+
+  // Derived figures the prototype shows (computed from the analytics already loaded).
+  const cur =
+    a?.current.cost_per_bottle?.currency ?? a?.current.selling_per_bottle?.currency ?? "EUR";
+  const stockB = a?.current.stock_bottles ?? 0;
+  const costM = a?.current.cost_per_bottle?.minor ?? null;
+  const sellM = a?.current.selling_per_bottle?.minor ?? null;
+  const meanM = a?.realized.mean_price?.minor ?? null;
+  const productionValue = costM != null ? { minor: costM * stockB, currency: cur } : null;
+  const listMarginPct =
+    sellM != null && sellM > 0 && costM != null ? ((sellM - costM) / sellM) * 100 : null;
+  const listProfit = sellM != null && costM != null ? { minor: sellM - costM, currency: cur } : null;
+  const potentialProfit =
+    meanM != null && costM != null ? { minor: (meanM - costM) * stockB, currency: cur } : null;
+  const totalExited = (a?.channels ?? []).reduce((s, c) => s + c.bottles, 0);
   const perBottle = (m: Parameters<typeof moneyObject>[0]) => `${moneyObject(m)}${t("inventory.stock.perBottle")}`;
   const dash = "—";
 
@@ -51,81 +81,106 @@ export function StockTab({ item, canManage }: { item: InventoryItem; canManage: 
     <div className="space-y-4">
       {/* Current stock */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="grid gap-4 sm:grid-cols-[auto_1fr]">
-            <div>
-              <p className="text-sm text-muted-foreground">{t("inventory.stock.currentTitle")}</p>
-              <p className="text-3xl font-semibold tabular-nums">
+        <CardContent className="space-y-4 pt-6">
+          <div>
+            <p className="text-sm text-muted-foreground">{t("inventory.stock.currentTitle")}</p>
+            {/* Single inline row, mirroring the prototype: value · unit · (cases) · Min. */}
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span className="text-4xl font-bold tabular-nums">
                 {a ? number(a.current.stock_bottles) : "…"}
-                <span className="ml-1 text-base font-normal text-muted-foreground">{item.unit}</span>
-              </p>
+              </span>
+              <span className="text-xl font-medium text-muted-foreground">{item.unit}</span>
               {a && a.current.bottles_per_case > 1 && (
-                <p className="text-xs text-muted-foreground">
+                <span className="text-base font-semibold">
                   {t("inventory.stock.cases", {
                     count: number(Math.floor(a.current.stock_bottles / a.current.bottles_per_case)),
                   })}
-                </p>
+                </span>
               )}
               {a?.current.min_stock_bottles != null && (
-                <p className="mt-1 text-xs text-muted-foreground">
+                <span className="ml-4 text-base font-medium text-muted-foreground">
                   {t("inventory.stock.min", { count: number(a.current.min_stock_bottles) })}
-                </p>
+                </span>
               )}
             </div>
-            {canFinancials && (
-              <div className="grid grid-cols-2 gap-3 self-center text-sm">
-                <Detail label={t("inventory.stock.costBasis")}>
-                  {a?.current.cost_per_bottle ? perBottle(a.current.cost_per_bottle) : dash}
-                </Detail>
-                <Detail label={t("inventory.stock.selling")}>
-                  {a?.current.selling_per_bottle ? perBottle(a.current.selling_per_bottle) : dash}
-                </Detail>
-              </div>
-            )}
           </div>
+
+          {canFinancials && (
+            <>
+              {/* Cost basis */}
+              <div className="border-t border-border pt-4">
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("inventory.stock.costBasis")}
+                </p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+                  <Stat
+                    label={t("inventory.stock.costPerBottle")}
+                    value={a?.current.cost_per_bottle ? perBottle(a.current.cost_per_bottle) : dash}
+                  />
+                  <Stat
+                    label={t("inventory.stock.productionValue")}
+                    value={productionValue ? moneyObject(productionValue) : dash}
+                  />
+                </div>
+              </div>
+
+              {/* Selling — list vs realized */}
+              <div className="border-t border-border pt-4">
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("inventory.stock.selling")}
+                </p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+                  <Stat
+                    label={t("inventory.stock.marginList")}
+                    value={
+                      listMarginPct != null && listProfit
+                        ? `${number(Number(listMarginPct.toFixed(1)))}% · ${perBottle(listProfit)}`
+                        : dash
+                    }
+                    tone={listProfit ? (listProfit.minor >= 0 ? "pos" : "neg") : undefined}
+                  />
+                  <Stat
+                    label={t("inventory.stock.margin12m")}
+                    value={
+                      a?.realized.margin_percent != null
+                        ? `${number(Number(a.realized.margin_percent))}% · ${perBottle(a.realized.margin_amount)}`
+                        : dash
+                    }
+                    tone={
+                      a?.realized.margin_percent != null
+                        ? Number(a.realized.margin_percent) >= 0
+                          ? "pos"
+                          : "neg"
+                        : undefined
+                    }
+                  />
+                  <Stat
+                    label={t("inventory.stock.meanPrice12m")}
+                    value={a?.realized.mean_price ? perBottle(a.realized.mean_price) : dash}
+                  />
+                  <Stat
+                    label={t("inventory.stock.meanRebate")}
+                    value={
+                      a?.realized.rebate_percent != null
+                        ? `${number(Number(a.realized.rebate_percent))}% · ${perBottle(a.realized.rebate_amount)}`
+                        : dash
+                    }
+                    tone="warn"
+                  />
+                  <Stat
+                    label={t("inventory.stock.salesValue")}
+                    value={a ? moneyObject(a.realized.sales_value) : dash}
+                  />
+                  <Stat
+                    label={t("inventory.stock.potentialProfit")}
+                    value={potentialProfit ? moneyObject(potentialProfit) : dash}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
-
-      {/* Realized metrics (12m) */}
-      {canFinancials && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label={t("inventory.stock.margin12m")}
-            value={
-              a?.realized.margin_percent != null
-                ? `${number(Number(a.realized.margin_percent))}% · ${perBottle(a.realized.margin_amount)}`
-                : dash
-            }
-            icon={Percent}
-            accent="bg-emerald-500/10 text-emerald-500"
-          />
-          <StatCard
-            label={t("inventory.stock.meanPrice12m")}
-            value={a?.realized.mean_price ? perBottle(a.realized.mean_price) : dash}
-            icon={Tag}
-            accent="bg-sky-500/10 text-sky-500"
-            delayMs={50}
-          />
-          <StatCard
-            label={t("inventory.stock.meanRebate")}
-            value={
-              a?.realized.rebate_percent != null
-                ? `${number(Number(a.realized.rebate_percent))}% · ${perBottle(a.realized.rebate_amount)}`
-                : dash
-            }
-            icon={TrendingDown}
-            accent="bg-amber-500/10 text-amber-500"
-            delayMs={100}
-          />
-          <StatCard
-            label={t("inventory.stock.salesValue")}
-            value={a ? moneyObject(a.realized.sales_value) : dash}
-            icon={Wallet}
-            accent="bg-violet-500/10 text-violet-500"
-            delayMs={150}
-          />
-        </div>
-      )}
 
       {/* Period selector */}
       <Tabs tabs={periodTabs} value={period} onChange={(v) => setPeriod(v as StockPeriod)} />
@@ -133,15 +188,23 @@ export function StockTab({ item, canManage }: { item: InventoryItem; canManage: 
       {/* Warehouse exits */}
       <Card>
         <CardContent className="space-y-4 pt-6">
-          <div>
-            <h3 className="text-sm font-semibold">{t("inventory.stock.exitsTitle")}</h3>
-            <p className="text-xs text-muted-foreground">{t("inventory.stock.exitsSubtitle")}</p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold">{t("inventory.stock.exitsTitle")}</h3>
+              <p className="text-xs text-muted-foreground">{t("inventory.stock.exitsSubtitle")}</p>
+            </div>
+            {a && a.exits.spark.some((v) => v > 0) && <Sparkline data={a.exits.spark} />}
           </div>
           <p className="text-3xl font-semibold tabular-nums">
             {a ? number(a.exits.bottles_exited) : "…"}
             <span className="ml-1 text-base font-normal text-muted-foreground">
               {t("inventory.stock.bottlesExited")}
             </span>
+            {a && a.exits.movements_count > 0 && (
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                · {t("inventory.stock.movements", { count: number(a.exits.movements_count) })}
+              </span>
+            )}
           </p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {canFinancials && (
@@ -168,6 +231,15 @@ export function StockTab({ item, canManage }: { item: InventoryItem; canManage: 
               {a?.exits.days_of_stock_left != null ? number(a.exits.days_of_stock_left) : dash}
             </Detail>
           </div>
+          {canFinancials && a?.exits.internal && (
+            <p className="text-xs text-muted-foreground">
+              {t("inventory.stock.internalNote", {
+                bottles: number(a.exits.internal.bottles),
+                cost: moneyObject(a.exits.internal.cost),
+                revenue: moneyObject(a.exits.internal.revenue),
+              })}
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -181,21 +253,45 @@ export function StockTab({ item, canManage }: { item: InventoryItem; canManage: 
           {!a || a.channels.length === 0 ? (
             <p className="py-2 text-sm text-muted-foreground">{t("inventory.stock.noExits")}</p>
           ) : (
-            <ul className="divide-y divide-border">
-              {a.channels.map((c) => (
-                <li key={c.channel} className="flex items-center justify-between py-2 text-sm">
-                  <span>{t(`inventory.stock.channel.${c.channel}`)}</span>
-                  <span className="tabular-nums">{number(c.bottles)}</span>
-                </li>
-              ))}
-            </ul>
+            <div className="space-y-3">
+              {a.channels.map((c) => {
+                const share = totalExited > 0 ? Math.round((c.bottles / totalExited) * 100) : 0;
+                return (
+                  <div key={c.channel} className="space-y-1">
+                    <div className="flex items-center justify-between gap-2 text-sm">
+                      <span className="flex items-center gap-2">
+                        <span className={cn("size-2.5 rounded-full", CHANNEL_DOT[c.channel] ?? CHANNEL_DOT.manual)} />
+                        {t(`inventory.stock.channel.${c.channel}`)}
+                      </span>
+                      <span className="flex items-baseline gap-2 tabular-nums">
+                        <span className="font-medium">{number(c.bottles)}</span>
+                        <span className="text-xs text-muted-foreground">({share}%)</span>
+                      </span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={cn("h-full rounded-full", CHANNEL_DOT[c.channel] ?? CHANNEL_DOT.manual)}
+                        style={{ width: `${share}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="flex items-center justify-between border-t border-border pt-2 text-sm font-semibold">
+                <span>{t("inventory.stock.totalExited")}</span>
+                <span className="tabular-nums">{number(totalExited)}</span>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
 
+      {/* Vintage transition (multi-vintage wines only) — under exit by channel */}
+      {a?.vintage_coverage && <VintageCoverageWidget data={a.vintage_coverage} />}
+
       {canManage && <QuickStockEntry item={item} />}
 
-      <MovementHistory itemId={item.id} />
+      <MovementHistory itemId={item.id} canManage={canManage} />
     </div>
   );
 }
@@ -205,6 +301,32 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
     <div className="space-y-0.5">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="font-medium tabular-nums">{children}</p>
+    </div>
+  );
+}
+
+/** Compact label/value stat for the Cost basis / Selling grids (mirrors the prototype). */
+function Stat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: React.ReactNode;
+  tone?: "pos" | "neg" | "warn";
+}) {
+  const color =
+    tone === "pos"
+      ? "text-success"
+      : tone === "neg"
+        ? "text-destructive"
+        : tone === "warn"
+          ? "text-amber-600 dark:text-amber-400"
+          : "";
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className={cn("text-sm font-semibold tabular-nums", color)}>{value}</p>
     </div>
   );
 }
@@ -293,10 +415,17 @@ function QuickStockEntry({ item }: { item: InventoryItem }) {
   );
 }
 
-function MovementHistory({ itemId }: { itemId: string }) {
+// Only operator-entered manual movements can be reclassified after the fact;
+// system rows (orders, production) are not re-taggable. Mirrors the prototype.
+function isTaggable(type: StockMovementType): boolean {
+  return type === "MANUAL_IN" || type === "MANUAL_OUT";
+}
+
+function MovementHistory({ itemId, canManage }: { itemId: string; canManage: boolean }) {
   const { t } = useTranslation();
   const { dateTime } = useFormatters();
   const movementsQ = useStockMovements(itemId);
+  const reconcile = useSetMovementReconciliation();
   const movements = movementsQ.data ?? [];
 
   return (
@@ -316,10 +445,12 @@ function MovementHistory({ itemId }: { itemId: string }) {
             <table className="w-full text-sm">
               <thead className="border-b border-border text-left text-muted-foreground">
                 <tr>
+                  <th className="py-2 pr-3 font-medium">{t("inventory.movements.colDate")}</th>
                   <th className="py-2 pr-3 font-medium">{t("inventory.movements.colType")}</th>
                   <th className="py-2 pr-3 text-right font-medium">{t("inventory.movements.colQuantity")}</th>
+                  <th className="py-2 pr-3 font-medium">{t("inventory.movements.colNote")}</th>
                   <th className="py-2 pr-3 font-medium">{t("inventory.movements.colReference")}</th>
-                  <th className="py-2 font-medium">{t("inventory.movements.colDate")}</th>
+                  <th className="py-2 font-medium">{t("inventory.movements.colBy")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -327,9 +458,14 @@ function MovementHistory({ itemId }: { itemId: string }) {
                   const positive = !String(m.quantity).startsWith("-");
                   return (
                     <tr key={m.id} className="border-b border-border last:border-0">
+                      <td className="py-2 pr-3 text-muted-foreground whitespace-nowrap">
+                        {m.created_at ? dateTime(m.created_at) : "—"}
+                      </td>
                       <td className="py-2 pr-3">
                         <span className="flex flex-wrap items-center gap-1.5">
-                          {t(`inventory.movements.label.${m.type}`)}
+                          <Badge variant={TYPE_VARIANT[m.type] ?? "secondary"}>
+                            {t(`inventory.movements.label.${m.type}`)}
+                          </Badge>
                           {m.is_reconciliation && (
                             <Badge variant="outline">{t("inventory.stock.reconciliationShort")}</Badge>
                           )}
@@ -339,9 +475,29 @@ function MovementHistory({ itemId }: { itemId: string }) {
                         {positive ? "+" : ""}
                         {m.quantity}
                       </td>
-                      <td className="py-2 pr-3 text-muted-foreground">{m.note ?? m.reference ?? "—"}</td>
+                      <td className="py-2 pr-3 text-muted-foreground">{m.note ?? "—"}</td>
+                      <td className="py-2 pr-3 text-muted-foreground">{m.reference ?? "—"}</td>
                       <td className="py-2 text-muted-foreground">
-                        {m.created_at ? dateTime(m.created_at) : "—"}
+                        <div className="flex flex-col gap-0.5">
+                          <span>{m.created_by?.name ?? "—"}</span>
+                          {canManage && isTaggable(m.type) && (
+                            <button
+                              type="button"
+                              disabled={reconcile.isPending}
+                              onClick={() =>
+                                reconcile.mutate({
+                                  movementId: m.id,
+                                  isReconciliation: !m.is_reconciliation,
+                                })
+                              }
+                              className="text-left text-xs text-muted-foreground underline-offset-2 hover:underline disabled:opacity-50"
+                            >
+                              {m.is_reconciliation
+                                ? t("inventory.stock.unmarkCorrection")
+                                : t("inventory.stock.markCorrection")}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

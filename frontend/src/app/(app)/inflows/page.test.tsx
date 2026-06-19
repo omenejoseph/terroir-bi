@@ -29,6 +29,15 @@ describe("InflowsPage", () => {
     expect(screen.getAllByText("500,00 €").length).toBeGreaterThan(0);
   });
 
+  it("shows the Invoiced / Collected / Pending summary bar with overdue", async () => {
+    renderWithProviders(<InflowsPage />);
+    expect(await screen.findByText("Invoiced")).toBeInTheDocument();
+    expect(screen.getByText("Collected")).toBeInTheDocument();
+    // Pending appears both as a summary card and a status tab — assert at least one.
+    expect(screen.getAllByText("Pending").length).toBeGreaterThan(0);
+    expect(screen.getByText(/1 overdue/)).toBeInTheDocument();
+  });
+
   it("links each inflow to its tied order from the expanded card", async () => {
     renderWithProviders(<InflowsPage />);
     const user = userEvent.setup();
@@ -52,7 +61,7 @@ describe("InflowsPage", () => {
     );
 
     renderWithProviders(<InflowsPage />);
-    expect(await screen.findByText(/Showing cash inflows for order/)).toBeInTheDocument();
+    expect(await screen.findByText(/Showing inflows for order/)).toBeInTheDocument();
     await waitFor(() => expect(lastOrder).toBe("ord_1"));
   });
 
@@ -105,7 +114,7 @@ describe("InflowsPage", () => {
   it("routes to the dedicated new-money-in page", async () => {
     renderWithProviders(<InflowsPage />);
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: /Add cash inflow/ }));
+    await user.click(await screen.findByRole("button", { name: /Add inflow/ }));
     expect(mockRouter.push).toHaveBeenCalledWith("/inflows/new");
   });
 
@@ -156,7 +165,7 @@ describe("InflowsPage", () => {
     );
 
     renderWithProviders(<InflowsPage />);
-    expect(await screen.findByText("You don't have permission to view cash inflow.")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Add cash inflow/ })).not.toBeInTheDocument();
+    expect(await screen.findByText("You don't have permission to view inflow.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Add inflow/ })).not.toBeInTheDocument();
   });
 });

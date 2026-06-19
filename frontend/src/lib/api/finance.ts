@@ -1,10 +1,14 @@
 import { api } from "@/lib/api/client";
-import type { ArAging, CashFlow, OrderPayments, RecordPaymentInput } from "@/lib/types";
+import type { ArAging, CashFlow, CashFlowAnalysis, OrderPayments, RecordPaymentInput } from "@/lib/types";
 
 /** Cash-flow, A/R aging and order-payment endpoints. Mirrors routes/api.php. */
 export const financeApi = {
   /** GET /cash-flow — historical + forecast + pending balances. */
   cashFlow: () => api.get<CashFlow>("/cash-flow"),
+
+  /** GET /cash-flow/analysis — date-ranged cash-flow KPIs, series, tables. */
+  cashFlowAnalysis: (range: { from?: string; to?: string } = {}) =>
+    api.get<CashFlowAnalysis>("/cash-flow/analysis", { from: range.from, to: range.to }),
 
   /** GET /inflows/aging — A/R aging buckets + by-customer breakdown. */
   arAging: () => api.get<ArAging>("/inflows/aging"),

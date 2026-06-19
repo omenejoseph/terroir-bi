@@ -16,11 +16,12 @@ describe("InflowAnalyticsPage", () => {
   it("renders the summary cards and charts", async () => {
     renderWithProviders(<InflowAnalyticsPage />);
 
-    expect(await screen.findByText("Cash Inflow Analytics")).toBeInTheDocument();
+    expect(await screen.findByText("Inflow Analytics")).toBeInTheDocument();
     expect(screen.getAllByText("Invoiced").length).toBeGreaterThan(0);
     expect(screen.getByText("Collected")).toBeInTheDocument();
     expect(screen.getByText("Net Cash Flow")).toBeInTheDocument();
     expect(screen.getByText("+60,00 €")).toBeInTheDocument(); // net 6000 with + sign
+    expect(screen.getByText("+400.0%")).toBeInTheDocument(); // net cash flow trend (change: 400)
     expect(screen.getByText("Inflow Trends")).toBeInTheDocument();
     expect(screen.getByText("Customer Revenue")).toBeInTheDocument();
     expect(screen.getByText("Konoba")).toBeInTheDocument(); // a customer-revenue row
@@ -38,7 +39,7 @@ describe("InflowAnalyticsPage", () => {
 
     renderWithProviders(<InflowAnalyticsPage />);
     const user = userEvent.setup();
-    await screen.findByText("Cash Inflow Analytics");
+    await screen.findByText("Inflow Analytics");
 
     await user.click(screen.getByRole("button", { name: "Last Year" }));
     await waitFor(() => {

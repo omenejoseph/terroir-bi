@@ -3,6 +3,7 @@ import type {
   ArAging,
   AuthSession,
   CashFlow,
+  CashFlowAnalysis,
   ConsignmentSummary,
   Cost,
   CostAnalytics,
@@ -182,6 +183,7 @@ export function makeMovement(overrides: Partial<StockMovement> = {}): StockMovem
     note: null,
     is_reconciliation: false,
     created_at: "2026-06-01T10:00:00+00:00",
+    created_by: { id: "usr_1", name: "Ada Lovelace" },
     ...overrides,
   };
 }
@@ -305,6 +307,9 @@ export function makeStockAnalytics(overrides: Partial<StockAnalytics> = {}): Sto
     },
     exits: {
       bottles_exited: 130,
+      movements_count: 7,
+      spark: [4, 9, 2, 12, 6, 0, 8],
+      internal: null,
       cost_of_exits: null,
       revenue_realized: money(299850),
       mean_margin_percent: "100.0",
@@ -316,6 +321,7 @@ export function makeStockAnalytics(overrides: Partial<StockAnalytics> = {}): Sto
       { channel: "manual", bottles: 20 },
       { channel: "production", bottles: 10 },
     ],
+    vintage_coverage: null,
     ...overrides,
   };
 }
@@ -413,6 +419,8 @@ export function makeCustomer(overrides: Partial<Customer> = {}): Customer {
     reorder_contacted_at: null,
     has_order_token: false,
     pricing_tier: { id: "tier_1", name: "Wholesale", rebate_percent: "10.00" },
+    order_count: 8,
+    revenue_minor: 125000,
     ...overrides,
   };
 }
@@ -495,6 +503,11 @@ export function makeCustomerOrderAnalytics(
       { month: "2026-08", last_year: money(6000), expected: money(7500) },
       { month: "2026-09", last_year: money(10000), expected: money(12500) },
     ],
+    monthly_revenue: [
+      { month: "2026-04", revenue: money(9000) },
+      { month: "2026-05", revenue: money(12000) },
+      { month: "2026-06", revenue: money(8000) },
+    ],
     ...overrides,
   };
 }
@@ -540,12 +553,22 @@ export function makeAnalytics(overrides: Partial<InventoryAnalytics> = {}): Inve
         mean_price: money(1999),
         off_target_percent: "33.3",
       },
+      internal: {
+        units_exited: 20,
+        cost_of_exits: money(8000),
+        revenue_realized: money(30000),
+      },
       blended: {
         units_exited: 130,
         cost_of_exits: null,
         revenue_realized: money(199900),
         velocity_per_day: "1.4",
       },
+      channels: [
+        { key: "sales", units: 100, revenue: money(199900), margin_percent: "100.0", share_percent: "76.9" },
+        { key: "production", units: 20, revenue: null, margin_percent: null, share_percent: "15.4" },
+        { key: "manual", units: 10, revenue: null, margin_percent: null, share_percent: "7.7" },
+      ],
     },
     movements_12m: [
       { month: "2026-05", in: 0, out: 10 },
@@ -577,12 +600,23 @@ export function makeDashboard(overrides: Partial<DashboardSummary> = {}): Dashbo
       total: { current: 9875000, previous: null },
     },
     revenue_by_channel: {
-      wholesale: 320000,
-      retail: 110000,
-      agency: 40000,
-      shipshop: 10000,
-      other: 0,
-      total: 480000,
+      wholesale: { current: 320000, previous: 280000 },
+      retail: { current: 110000, previous: 90000 },
+      agency: { current: 40000, previous: 52000 },
+      shipshop: { current: 10000, previous: 10000 },
+      other: { current: 0, previous: 0 },
+      total: { current: 480000, previous: 432000 },
+    },
+    key_ratios: {
+      dtc_revenue_pct: 22.9,
+      operating_margin_pct: 41.2,
+      employee_cost_pct: 12.5,
+      marketing_cost_pct: 8.3,
+      cogs_pct: 28.4,
+      cogs_amount: money(136320),
+      revenue_per_employee: money(960000),
+      avg_order_value: money(37500),
+      inventory_turnover: 1.4,
     },
     stats: {
       total_orders: 128,
@@ -669,12 +703,17 @@ export function makeOrderItem(overrides: Partial<OrderItem> = {}): OrderItem {
     inventory_item_id: "itm_1",
     name: "Plavac Mali 2021",
     sku: "PM-2021",
+    group: "Wine",
+    unit_size: "750ml",
+    bottles_per_case: 6,
+    image_url: null,
     quantity: 6,
     unit_type: "bottles",
     unit_price: money(1500),
     total: money(9000),
     custom_description: null,
     cost_per_unit: money(700),
+    profit: money(4800), // total 9000 − cost 700×6
     ...overrides,
   };
 }
@@ -718,6 +757,15 @@ export function makeOrder(overrides: Partial<Order> = {}): Order {
     items: [makeOrderItem()],
     status_history: [makeOrderStatusEntry()],
     comments: [],
+    profitability: {
+      revenue: money(9000),
+      cogs: money(4200),
+      logistics: null,
+      gross_profit: money(4800),
+      margin_percent: "53.33",
+      complete: true,
+      missing_cost_items: [],
+    },
     ...overrides,
   };
 }
@@ -797,12 +845,12 @@ export function makeInflowAnalytics(overrides: Partial<InflowAnalytics> = {}): I
     invoiced: { total: money(16000), count: 2 },
     collected: { total: money(10000), count: 1 },
     pending: { total: money(6000), count: 1 },
-    net_cash_flow: { net: money(6000), inflows: money(10000), costs: money(4000) },
+    net_cash_flow: { net: money(6000), inflows: money(10000), costs: money(4000), previous: money(-2000), change: 400 },
     avg_days_to_collect: { days: 5, count: 1 },
     avg_inflow: { avg: money(8000) },
     by_category: [
-      { name: "Invoice", total: money(16000) },
-      { name: "Grant", total: money(5000) },
+      { name: "Invoice", total: money(16000), count: 2 },
+      { name: "Grant", total: money(5000), count: 1 },
     ],
     by_customer: [{ customer_id: "cus_1", company_name: "Konoba", total: money(16000) }],
     over_time: [
@@ -872,6 +920,7 @@ export function makeCost(overrides: Partial<Cost> = {}): Cost {
     paid_at: null,
     due_date: "2026-06-30T00:00:00+00:00",
     supplier: { id: "sup_1", company_name: "Vinogradar d.o.o." },
+    created_by: null,
     ...overrides,
   };
 }
@@ -881,9 +930,9 @@ export function makeCostAnalytics(overrides: Partial<CostAnalytics> = {}): CostA
     period: { from: "2026-05-01T00:00:00+00:00", to: "2026-06-01T00:00:00+00:00" },
     total_spend: money(70000),
     unpaid: money(50000),
-    invoiced: { total: money(60000), count: 4 },
-    paid: { total: money(20000), count: 1 },
-    unpaid_invoices: { total: money(40000), count: 3 },
+    invoiced: { total: money(60000), count: 4, vat: money(8000), overdue: 0 },
+    paid: { total: money(20000), count: 1, vat: money(0), overdue: 0 },
+    unpaid_invoices: { total: money(40000), count: 3, vat: money(6000), overdue: 2 },
     avg_invoice: { avg: money(15000), max: money(30000) },
     avg_days_to_pay: { days: 12.5, count: 1 },
     gross_margin: { percent: "73.1", revenue: money(260000) },
@@ -905,8 +954,8 @@ export function makeCostAnalytics(overrides: Partial<CostAnalytics> = {}): CostA
       { status: "PAID", count: 1, total: money(20000) },
     ],
     by_category: [
-      { name: "Glass", total: money(50000) },
-      { name: "Corks", total: money(20000) },
+      { name: "Glass", total: money(50000), count: 3, change: 100 },
+      { name: "Corks", total: money(20000), count: 2, change: -15.4 },
     ],
     by_supplier: [{ supplier_id: "sup_1", company_name: "Vinogradar d.o.o.", total: money(50000) }],
     over_time: [
@@ -1055,6 +1104,64 @@ export function makeCashFlow(overrides: Partial<CashFlow> = {}): CashFlow {
       avg_monthly_net: money(43000),
       revenue_growth_percent: "4.00",
     },
+    ...overrides,
+  };
+}
+
+export function makeCashFlowAnalysis(overrides: Partial<CashFlowAnalysis> = {}): CashFlowAnalysis {
+  return {
+    period: { from: "2026-01-01T00:00:00+00:00", to: "2026-06-30T00:00:00+00:00" },
+    cash_in: { total: money(120000), count: 8, previous: money(90000), change: 33.3 },
+    cash_out: { total: money(70000), count: 12, previous: money(80000), change: -12.5 },
+    net: { total: money(50000), previous: money(10000), change: 400 },
+    burn_rate_monthly: money(11667),
+    outstanding_receivables: { total: money(42000), count: 3 },
+    outstanding_payables: { total: money(18000), count: 2 },
+    net_working_capital: money(24000),
+    payment_discipline: {
+      avg_days_to_collect: 12,
+      collected_on_time_percent: 80,
+      avg_days_to_pay: 9,
+      paid_on_time_percent: 95,
+    },
+    over_time: [
+      { period: "2026-05", cash_in: money(50000), cash_out: money(30000), net: money(20000), cumulative_net: money(20000) },
+      { period: "2026-06", cash_in: money(70000), cash_out: money(40000), net: money(30000), cumulative_net: money(50000) },
+    ],
+    by_category: [
+      { category: "Wine sales", cash_in: money(120000), cash_out: money(0) },
+      { category: "Operations", cash_in: money(0), cash_out: money(45000) },
+    ],
+    top_outflow_categories: [
+      { category: "Operations", amount: money(45000), count: 8 },
+      { category: "Glass", amount: money(25000), count: 4 },
+    ],
+    top_receivables: [
+      {
+        id: "inf_r1",
+        counterparty: "Konzum",
+        description: "Wholesale order",
+        amount: money(20000),
+        date: "2026-05-10T00:00:00+00:00",
+        due_date: "2026-06-01T00:00:00+00:00",
+        is_overdue: true,
+        days_outstanding: 18,
+        reference: "AR-INV-2026-040",
+      },
+    ],
+    top_payables: [
+      {
+        id: "cost_p1",
+        counterparty: "Staklo d.o.o.",
+        description: "Bottles",
+        amount: money(12000),
+        date: "2026-05-12T00:00:00+00:00",
+        due_date: null,
+        is_overdue: false,
+        days_outstanding: 30,
+        reference: "PO-2026-012",
+      },
+    ],
     ...overrides,
   };
 }

@@ -106,6 +106,11 @@ export default function ContractsPage() {
                   grape_variety: String(f.get("variety") ?? ""),
                   estimated_kg: Number(f.get("estimated")),
                   price_per_kg: majorToMinor(String(f.get("price") ?? "0")) ?? 0,
+                  min_brix: f.get("min_brix") ? Number(f.get("min_brix")) : null,
+                  max_ph: f.get("max_ph") ? Number(f.get("max_ph")) : null,
+                  delivery_window: String(f.get("delivery_window") ?? "") || null,
+                  payment_terms: String(f.get("payment_terms") ?? "") || null,
+                  notes: String(f.get("notes") ?? "") || null,
                 });
                 setOpen(false);
               } catch (err) {
@@ -127,7 +132,12 @@ export default function ContractsPage() {
               <div><Label>{t("vineyards.contracts.variety")}</Label><Input name="variety" required /></div>
               <div><Label>{t("vineyards.contracts.estimated")}</Label><Input name="estimated" type="number" step="0.001" required /></div>
               <div><Label>{t("vineyards.contracts.price")}</Label><Input name="price" type="number" step="0.01" required /></div>
+              <div><Label>{t("vineyards.contracts.minBrix")}</Label><Input name="min_brix" type="number" step="0.1" /></div>
+              <div><Label>{t("vineyards.contracts.maxPh")}</Label><Input name="max_ph" type="number" step="0.01" /></div>
+              <div><Label>{t("vineyards.contracts.deliveryWindow")}</Label><Input name="delivery_window" /></div>
+              <div><Label>{t("vineyards.contracts.paymentTerms")}</Label><Input name="payment_terms" /></div>
             </div>
+            <div><Label>{t("vineyards.contracts.notes")}</Label><Input name="notes" /></div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setOpen(false)}>{t("vineyards.actions.cancel")}</Button>

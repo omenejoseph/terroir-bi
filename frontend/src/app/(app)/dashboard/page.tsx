@@ -15,6 +15,7 @@ import { PeriodSelector } from "@/components/dashboard/period-selector";
 import { ReorderRadar } from "@/components/dashboard/reorder-radar";
 import { RevenueCard } from "@/components/dashboard/revenue-card";
 import { RevenueChannels } from "@/components/dashboard/revenue-channels";
+import { KeyRatios } from "@/components/dashboard/key-ratios";
 import { OrderItemsPreview } from "@/components/orders/order-items-preview";
 import {
   ChartCard,
@@ -51,7 +52,7 @@ export default function DashboardPage() {
   const [period, setPeriod] = React.useState<DashboardPeriod>("mtd");
   const [customRange, setCustomRange] = React.useState<{ from?: string; to?: string }>({});
 
-  const { data, isLoading } = useDashboard({ period, from: customRange.from, to: customRange.to });
+  const { data, isLoading, isFetching } = useDashboard({ period, from: customRange.from, to: customRange.to });
   const activeTenant = tenants.find((x) => x.tenant_id === activeTenantId);
 
   // Locale + org currency aware; money fields are integer minor units.
@@ -65,22 +66,13 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {t("dashboard.welcome", { name: user?.first_name ?? "" })}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {activeTenant ? activeTenant.name : t("dashboard.subtitle")}
-          </p>
-        </div>
-        <PeriodSelector
-          period={period}
-          customFrom={customRange.from}
-          customTo={customRange.to}
-          onChange={handlePeriodChange}
-          className="sm:items-end"
-        />
+      <header className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t("dashboard.welcome", { name: user?.first_name ?? "" })}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {activeTenant ? activeTenant.name : t("dashboard.subtitle")}
+        </p>
       </header>
 
       {isLoading || !data ? (
@@ -96,6 +88,7 @@ export default function DashboardPage() {
               value={money2(data.revenue_summary.today.current)}
               comparisonValue={money2(data.revenue_summary.today.previous ?? 0)}
               deltaPct={pctChange(data.revenue_summary.today.current, data.revenue_summary.today.previous)}
+              hint={t("dashboard.summary.periodHint")}
               delayMs={80}
             />
             <RevenueCard
@@ -103,6 +96,7 @@ export default function DashboardPage() {
               value={money2(data.revenue_summary.mtd.current)}
               comparisonValue={money2(data.revenue_summary.mtd.previous ?? 0)}
               deltaPct={pctChange(data.revenue_summary.mtd.current, data.revenue_summary.mtd.previous)}
+              hint={t("dashboard.summary.periodHint")}
               delayMs={160}
             />
             <RevenueCard
@@ -110,15 +104,32 @@ export default function DashboardPage() {
               value={money2(data.revenue_summary.ytd.current)}
               comparisonValue={money2(data.revenue_summary.ytd.previous ?? 0)}
               deltaPct={pctChange(data.revenue_summary.ytd.current, data.revenue_summary.ytd.previous)}
+              hint={t("dashboard.summary.periodHint")}
               delayMs={240}
             />
             <RevenueCard
               label={t("dashboard.summary.total")}
               value={money2(data.revenue_summary.total.current)}
               caption={t("dashboard.summary.allSources")}
+              hint={t("dashboard.summary.totalHint")}
               delayMs={320}
             />
           </div>
+
+          {/* Period filter — applies to everything below; the summary cards above
+              are always-on (today / MTD / YTD / total) and don't move with it. */}
+          <div className="flex flex-wrap items-start justify-between gap-2 border-t border-border/60 pt-4">
+            <PeriodSelector
+              period={period}
+              customFrom={customRange.from}
+              customTo={customRange.to}
+              onChange={handlePeriodChange}
+            />
+            {isFetching && <Spinner className="size-3.5 text-muted-foreground" />}
+          </div>
+
+          {/* Key financial ratios */}
+          <KeyRatios data={data.key_ratios} delayMs={90} />
 
           {/* Revenue by channel + reorder radar */}
           <div className="grid gap-4 lg:grid-cols-3">

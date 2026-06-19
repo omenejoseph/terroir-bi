@@ -112,7 +112,7 @@ export function ReorderRadar({ delayMs = 0 }: { delayMs?: number }) {
                 <Link href={`/customers/${r.customer_id}`} className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium hover:underline">{r.company_name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {t("dashboard.reorderRadar.lastOrder", { days: r.days_since_last })}
+                    {t("dashboard.reorderRadar.lastOrder", { days: Math.round(r.days_since_last) })}
                     {" · "}
                     {t("dashboard.reorderRadar.usuallyEvery", { days: Math.round(r.median_gap_days) })}
                   </p>

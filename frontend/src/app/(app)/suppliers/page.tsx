@@ -13,8 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { MetaField } from "@/components/ui/meta-field";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs } from "@/components/ui/tabs";
+import { useFormatters } from "@/lib/format";
 import { SupplierDetailPanel } from "@/components/suppliers/supplier-detail-panel";
 import { SupplierMergeDialog } from "@/components/suppliers/supplier-merge-dialog";
 
@@ -130,7 +132,9 @@ export default function SuppliersPage() {
 
 function SupplierCard({ supplier }: { supplier: Supplier }) {
   const { t } = useTranslation();
+  const { money, number } = useFormatters();
   const [open, setOpen] = React.useState(false);
+  const dash = "—";
 
   return (
     <Card className="overflow-hidden">
@@ -140,19 +144,18 @@ function SupplierCard({ supplier }: { supplier: Supplier }) {
         aria-expanded={open}
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
       >
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate font-medium">{supplier.company_name}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {supplier.contact_name ? `${supplier.contact_name} · ` : ""}
-            {supplier.email ?? supplier.tax_id ?? ""}
-          </p>
+          {/* Labelled metadata mirroring the prototype's table columns. */}
+          <div className="mt-1.5 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <MetaField label={t("suppliers.field.contact")}>{supplier.contact_name || dash}</MetaField>
+            <MetaField label={t("suppliers.field.email")}>{supplier.email || dash}</MetaField>
+            <MetaField label={t("suppliers.field.city")}>{supplier.city || dash}</MetaField>
+            <MetaField label={t("suppliers.field.priceItems")}>{number(supplier.price_items_count ?? 0)}</MetaField>
+            <MetaField label={t("suppliers.field.costs")}>{money(supplier.costs_total ?? 0)}</MetaField>
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-2 text-sm">
-          {supplier.price_items_count != null && (
-            <Badge variant="outline">
-              {t("suppliers.priceItemsCount", { count: supplier.price_items_count })}
-            </Badge>
-          )}
           <Badge variant={supplier.is_active ? "success" : "secondary"}>
             {supplier.is_active ? t("common.status.active") : t("common.status.inactive")}
           </Badge>

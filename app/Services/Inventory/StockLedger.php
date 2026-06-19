@@ -35,6 +35,9 @@ class StockLedger
                 'reference' => $reference,
                 'note' => $note,
                 'is_reconciliation' => $isReconciliation,
+                // Stamp the acting user (null for system/seed/cron writes). record()
+                // is the single sink, so every movement path is covered here.
+                'created_by_id' => auth()->id(),
             ]);
 
             $item->current_stock = Quantity::add((string) $item->current_stock, $signedQuantity);

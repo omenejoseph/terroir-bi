@@ -11,7 +11,7 @@ import { useTranslation } from "@/i18n/context";
 import type { SpendProduct } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { DashboardBodySkeleton } from "@/components/skeletons";
-import { ChartCard, DailyBarChart, Sparkline } from "@/components/dashboard/charts";
+import { ChartCard, DailyAreaChart, Sparkline } from "@/components/dashboard/charts";
 import {
   presetRange,
   SpendRangeSelector,
@@ -122,7 +122,7 @@ export default function InventorySpendPage() {
             title={t("inventory.spend.daily.title")}
             subtitle={t("inventory.spend.daily.total", { count: number(data.summary.units_exited) })}
           >
-            <DailyBarChart data={dailyData} formatValue={(n) => number(n)} />
+            <DailyAreaChart data={dailyData} formatValue={(n) => number(n)} />
           </ChartCard>
 
           {/* Runout forecast */}

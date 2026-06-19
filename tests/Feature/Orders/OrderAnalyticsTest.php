@@ -73,8 +73,89 @@ class OrderAnalyticsTest extends TestCase
             ->assertJsonPath('data.gross_profit.minor', 14400)
             ->assertJsonPath('data.margin_percent', '60.00')
             ->assertJsonPath('data.order_count', 1)
-            ->assertJsonPath('data.top_products.0.name', 'Plavac')
-            ->assertJsonPath('data.top_products.0.revenue.minor', 24000);
+            ->assertJsonPath('data.top_products.data.0.name', 'Plavac')
+            ->assertJsonPath('data.top_products.data.0.revenue.minor', 24000);
+    }
+
+    public function test_analytics_extended_sections_numbers(): void
+    {
+        $this->createOrder(2, 'cases'); // rev 24000, cogs 9600, profit 14400, margin 60%, 24 bottles
+
+        Sanctum::actingAs($this->admin);
+        $res = $this->getJson('/api/v1/orders/analytics?period=all', $this->headers())->assertOk();
+
+        $res->assertJsonPath('data.bottles_sold', 24)
+            ->assertJsonPath('data.total_lines', 1)
+            ->assertJsonPath('data.avg_margin_pct_per_order', '60.00')
+            ->assertJsonPath('data.items_with_unknown_cost', 0)
+            ->assertJsonPath('data.revenue_without_cost.minor', 0);
+
+        // Previous period (nothing before) → zeroed.
+        $res->assertJsonPath('data.previous.revenue.minor', 0)
+            ->assertJsonPath('data.previous.order_count', 0);
+
+        // Paginated rankings keep correct meta + summary.
+        $res->assertJsonPath('data.top_customers.meta.total', 1)
+            ->assertJsonPath('data.top_customers.meta.current_page', 1)
+            ->assertJsonPath('data.top_customers.data.0.company_name', 'Konoba')
+            ->assertJsonPath('data.top_customers.data.0.gross_profit.minor', 14400)
+            ->assertJsonPath('data.top_customers.data.0.orders_count', 1)
+            ->assertJsonPath('data.top_products.meta.total', 1)
+            ->assertJsonPath('data.top_products.data.0.quantity', 24);
+
+        // Channel: Konoba defaults to the Wholesale customer type.
+        $res->assertJsonPath('data.channels.0.key', 'wholesale')
+            ->assertJsonPath('data.channels.0.revenue.minor', 24000)
+            ->assertJsonPath('data.channels.0.revenue_share_pct', '100.0')
+            ->assertJsonPath('data.channels.0.bottles', 24);
+
+        // Price realization: sold at list (1000/btl × 24 = 24000) → no leakage.
+        $res->assertJsonPath('data.price_realization.totals.list_revenue.minor', 24000)
+            ->assertJsonPath('data.price_realization.totals.realized_revenue.minor', 24000)
+            ->assertJsonPath('data.price_realization.totals.leakage.minor', 0)
+            ->assertJsonPath('data.price_realization.totals.realization_pct', '100.0');
+
+        // Margin histogram: a 60% order lands in the "50%+" bucket.
+        $histogram = $res->json('data.histogram');
+        $top = collect(is_array($histogram) ? $histogram : [])->firstWhere('label', '50%+');
+        $this->assertSame(1, $top['orders']);
+    }
+
+    public function test_lines_without_cost_are_surfaced(): void
+    {
+        Sanctum::actingAs($this->admin);
+        $this->actingAsTenant($this->tenant);
+        // A new release with a price but no cost recorded yet.
+        $uncosted = InventoryItem::create([
+            'name' => 'New Release', 'sku' => 'NEW', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'sales_unit' => 'bottles', 'current_stock' => '100.000', 'bottles_per_case' => 6,
+            'is_for_sale' => true, 'default_price' => 2000, // cost_per_unit omitted
+        ]);
+        $this->postJson('/api/v1/orders', [
+            'customer_id' => $this->customer->getKey(),
+            'is_consignment' => false,
+            'items' => [['inventory_item_id' => $uncosted->getKey(), 'quantity' => 6, 'unit_type' => 'bottles']],
+        ], $this->headers())->assertCreated();
+
+        $this->getJson('/api/v1/orders/analytics?period=all', $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.items_with_unknown_cost', 1)
+            ->assertJsonPath('data.lines_without_cost.0.product_name', 'New Release')
+            ->assertJsonPath('data.lines_without_cost.0.line_revenue.minor', 12000) // 2000 × 6
+            ->assertJsonPath('data.revenue_without_cost.minor', 12000);
+    }
+
+    public function test_low_margin_order_is_flagged(): void
+    {
+        $id = $this->createOrder(1, 'cases'); // rev 12000
+        $itemId = Order::query()->whereKey($id)->firstOrFail()->items()->firstOrFail()->getKey();
+        // Bump the snapshot cost so the order's margin drops under 20%.
+        $this->patchJson("/api/v1/order-items/{$itemId}/cost", ['cost_per_unit' => 11000], $this->headers())->assertOk();
+
+        Sanctum::actingAs($this->admin);
+        $this->getJson('/api/v1/orders/analytics?period=all', $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.low_margin_orders.0.order_number', Order::query()->whereKey($id)->value('order_number'));
     }
 
     public function test_consignment_sell_through_is_reported_separately(): void

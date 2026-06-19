@@ -22,7 +22,7 @@ class ListOrdersQuery
     public function paginate(array $filters = [], int $perPage = 25): LengthAwarePaginator
     {
         return $this->build($filters)
-            ->with(['customer', 'createdBy', 'items'])
+            ->with(['customer', 'createdBy', 'items.inventoryItem'])
             ->orderByDesc('created_at')
             ->paginate($perPage);
     }

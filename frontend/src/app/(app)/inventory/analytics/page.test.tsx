@@ -17,7 +17,9 @@ describe("Inventory analytics page", () => {
     // Summary.
     expect(screen.getByText("Total Products")).toBeInTheDocument();
     expect(screen.getByText("Sale Value")).toBeInTheDocument();
-    expect(screen.getByText("4.498,50 €")).toBeInTheDocument(); // 150 × €29.99
+    // Sale Value now renders 2dp like every money figure (was 0dp), so the same
+    // amount can appear more than once.
+    expect(screen.getAllByText("4.498,50 €").length).toBeGreaterThan(0); // 150 × €29.99
     expect(screen.getByText("Margin: 100%")).toBeInTheDocument();
 
     // Warehouse exit portfolio.

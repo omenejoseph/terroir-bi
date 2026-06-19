@@ -10,6 +10,9 @@ import {
   Gauge,
   HandCoins,
   Hourglass,
+  Minus,
+  TrendingDown,
+  TrendingUp,
   Wallet,
 } from "lucide-react";
 
@@ -100,6 +103,13 @@ export default function InflowAnalyticsPage() {
   const eur = (minor: number) => Math.round(minor / 100);
   const signed = (m: Money) => `${m.minor >= 0 ? "+" : ""}${moneyObject(m)}`;
 
+  // Category-distribution total (sum across all categories) drives the donut centre + subtitle.
+  const categoryTotalMinor = data?.by_category.reduce((s, c) => s + c.total.minor, 0) ?? 0;
+  const categoryTotal: Money = {
+    minor: categoryTotalMinor,
+    currency: data?.invoiced.total.currency ?? "EUR",
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-3">
@@ -167,7 +177,17 @@ export default function InflowAnalyticsPage() {
             />
             <StatCard
               label={t("inflows.analytics.cards.netCashFlow")}
-              value={<Sub main={signed(data.net_cash_flow.net)} sub={t("inflows.analytics.costsValue", { value: moneyObject(data.net_cash_flow.costs) })} />}
+              value={
+                <Sub
+                  main={
+                    <span className="flex items-center gap-2">
+                      {signed(data.net_cash_flow.net)}
+                      <TrendPill change={data.net_cash_flow.change} />
+                    </span>
+                  }
+                  sub={t("inflows.analytics.costsValue", { value: moneyObject(data.net_cash_flow.costs) })}
+                />
+              }
               icon={Wallet}
               accent="bg-violet-500/10 text-violet-500"
               delayMs={120}
@@ -237,15 +257,49 @@ export default function InflowAnalyticsPage() {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <ChartCard title={t("inflows.analytics.charts.category")}>
+            <ChartCard
+              title={t("inflows.analytics.charts.category")}
+              subtitle={
+                data.by_category.length > 0
+                  ? t("inflows.analytics.charts.categorySubtitle", {
+                      total: moneyObject(categoryTotal),
+                      count: data.by_category.length,
+                    })
+                  : undefined
+              }
+            >
               {data.by_category.length === 0 ? (
                 <Empty label={t("inflows.analytics.noData")} />
               ) : (
-                <DonutChart
-                  data={data.by_category.map((c, i) => ({ key: c.name, value: c.total.minor, color: DONUT_COLORS[i % DONUT_COLORS.length] }))}
-                  centerValue={moneyObject(data.invoiced.total)}
-                  centerLabel={t("inflows.analytics.cards.invoiced")}
-                />
+                <>
+                  <DonutChart
+                    data={data.by_category.map((c, i) => ({ key: c.name, value: c.total.minor, color: DONUT_COLORS[i % DONUT_COLORS.length] }))}
+                  />
+                  {/* Legend — each category with its inflow count, share, and amount. */}
+                  <ul className="mt-3 space-y-1.5">
+                    {data.by_category.map((c, i) => {
+                      const pct = categoryTotalMinor > 0 ? (c.total.minor / categoryTotalMinor) * 100 : 0;
+                      return (
+                        <li key={c.name} className="flex items-center gap-2 text-xs">
+                          <span
+                            className="size-2.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length] }}
+                          />
+                          <span className="min-w-0 flex-1 truncate">
+                            {c.name}
+                            <span className="ml-1.5 text-muted-foreground">
+                              {t("inflows.analytics.nInflows", { count: c.count })}
+                            </span>
+                          </span>
+                          <span className="shrink-0 tabular-nums text-muted-foreground">{pct.toFixed(1)}%</span>
+                          <span className="w-20 shrink-0 text-right font-medium tabular-nums text-emerald-600">
+                            {moneyObject(c.total)}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
               )}
             </ChartCard>
 
@@ -280,6 +334,27 @@ function Sub({ main, sub }: { main: React.ReactNode; sub: string }) {
 
 function Empty({ label }: { label: string }) {
   return <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">{label}</div>;
+}
+
+/** Period-over-period trend for net cash flow (up is good: green ↑, red ↓). */
+function TrendPill({ change }: { change: number | null }) {
+  if (change === null) return null;
+  if (Math.abs(change) < 1) {
+    return (
+      <span className="flex items-center gap-0.5 text-xs font-normal text-muted-foreground">
+        <Minus className="size-3" />
+        0%
+      </span>
+    );
+  }
+  const up = change > 0;
+  return (
+    <span className={cn("flex items-center gap-0.5 text-xs font-medium", up ? "text-emerald-600" : "text-destructive")}>
+      {up ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+      {up ? "+" : ""}
+      {change.toFixed(1)}%
+    </span>
+  );
 }
 
 function BarList({ rows }: { rows: { label: string; value: number; display: string }[] }) {

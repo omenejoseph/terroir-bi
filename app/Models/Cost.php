@@ -83,4 +83,12 @@ class Cost extends Model
     {
         return $this->hasMany(CostAttachment::class);
     }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_id');
+    }
 }

@@ -35,7 +35,21 @@ describe("InventoryPage", () => {
     expect(screen.getByRole("button", { name: /Check/ })).toBeInTheDocument();
   });
 
-  it("shows a bottle-aware stock hint in the card summary", async () => {
+  it("enters bulk-edit mode with an inline-editable grid", async () => {
+    seedAuth(); // bulk edit is gated by inventory.manage (admin by default)
+    renderWithProviders(<InventoryPage />);
+    const user = userEvent.setup();
+
+    await screen.findAllByText("Plavac Mali 2021");
+    await user.click(screen.getByRole("button", { name: /Bulk edit/ }));
+
+    // Each item's name becomes an editable input pre-filled with its current value.
+    const nameInputs = await screen.findAllByLabelText("Name");
+    expect(nameInputs.length).toBeGreaterThan(0);
+    expect((nameInputs[0] as HTMLInputElement).value).toBe("Plavac Mali 2021");
+  });
+
+  it("shows the number of cases (not bottles-per-case) as the stock hint", async () => {
     server.use(
       http.get(url, () =>
         HttpResponse.json({
@@ -56,10 +70,13 @@ describe("InventoryPage", () => {
 
     renderWithProviders(<InventoryPage />);
 
-    // Case item: 5 cases × 12 = 60 bottles.
-    expect((await screen.findAllByText(/60 bottles/)).length).toBeGreaterThan(0);
-    // Bottle item: shows bottles-per-case.
-    expect(screen.getAllByText(/12\/case/).length).toBeGreaterThan(0);
+    // Both resolve to 60 bottles = 5 cases; the hint is the CASE COUNT (mirrors
+    // the prototype), never the bottles-per-case ("12/case").
+    expect((await screen.findAllByText(/5 cases/)).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/12\/case/)).not.toBeInTheDocument();
+    // The card surfaces the prototype table's columns as labelled values.
+    expect(screen.getAllByText("Vintage").length).toBeGreaterThan(0);
+    expect(screen.getByText("2021")).toBeInTheDocument();
   });
 
   it("lets admins edit and deactivate from the overview", async () => {
@@ -68,7 +85,7 @@ describe("InventoryPage", () => {
     const user = userEvent.setup();
 
     await user.click((await screen.findAllByText("Plavac Mali 2021"))[0]);
-    await screen.findByRole("tab", { name: "Overview" });
+    await user.click(await screen.findByRole("tab", { name: "Overview" }));
     expect(await screen.findByRole("button", { name: "Edit" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Deactivate" })).toBeInTheDocument();
   });
@@ -84,7 +101,7 @@ describe("InventoryPage", () => {
     const user = userEvent.setup();
 
     await user.click((await screen.findAllByText("Plavac Mali 2021"))[0]);
-    await screen.findByRole("tab", { name: "Overview" });
+    await user.click(await screen.findByRole("tab", { name: "Overview" }));
     expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Deactivate" })).not.toBeInTheDocument();
   });

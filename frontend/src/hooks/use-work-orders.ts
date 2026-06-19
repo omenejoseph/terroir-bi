@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { workOrdersApi } from "@/lib/api/work-orders";
-import type { TaskStatus, WorkOrderInput, WorkOrderQuery } from "@/lib/types";
+import type { TaskStatus, WorkOrder, WorkOrderInput, WorkOrderQuery } from "@/lib/types";
 
 export function useWorkOrders(query: WorkOrderQuery = {}) {
   return useQuery({
@@ -45,11 +45,44 @@ export function useUpdateWorkOrder() {
 }
 
 export function useUpdateWorkOrderStatus() {
-  const invalidate = useInvalidateTasks();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (vars: { id: string; status: TaskStatus }) =>
       workOrdersApi.updateStatus(vars.id, vars.status),
-    onSuccess: invalidate,
+
+    // Optimistic: flip the checkbox immediately, before the server responds.
+    onMutate: async (vars) => {
+      // Stop in-flight list refetches from clobbering our optimistic value.
+      await queryClient.cancelQueries({ queryKey: ["work-orders"] });
+
+      // Snapshot + patch every active work-orders *list* query (board, list,
+      // each calendar view, filtered searches). The list queries cache a plain
+      // WorkOrder[]; the stats query (["work-orders","stats",range]) caches an
+      // object, so Array.isArray skips it.
+      const snapshots = queryClient.getQueriesData<WorkOrder[]>({
+        queryKey: ["work-orders"],
+      });
+      for (const [key, cached] of snapshots) {
+        if (!Array.isArray(cached)) continue;
+        queryClient.setQueryData(
+          key,
+          cached.map((w) => (w.id === vars.id ? { ...w, status: vars.status } : w)),
+        );
+      }
+      return { snapshots };
+    },
+
+    // Server rejected: roll back every query we touched -> checkbox un-checks itself.
+    onError: (_err, _vars, ctx) => {
+      ctx?.snapshots.forEach(([key, data]) => queryClient.setQueryData(key, data));
+    },
+
+    // Reconcile with the server (status, completed_at, stats counters, dashboard)
+    // after both success and rollback.
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["work-orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 }
 

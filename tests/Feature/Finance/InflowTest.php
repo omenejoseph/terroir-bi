@@ -135,9 +135,73 @@ class InflowTest extends TestCase
             ->assertJsonPath('data.net_cash_flow.inflows.minor', 10000)   // collected
             ->assertJsonPath('data.net_cash_flow.costs.minor', 4000)
             ->assertJsonPath('data.net_cash_flow.net.minor', 6000)         // 10000 − 4000
+            ->assertJsonPath('data.net_cash_flow.previous.minor', 0)       // no prior-window activity
+            ->assertJsonPath('data.net_cash_flow.change', null)            // previous 0 → no trend
             ->assertJsonPath('data.avg_days_to_collect.days', 5)
             ->assertJsonPath('data.avg_inflow.avg.minor', 8000)
-            ->assertJsonCount(1, 'data.by_customer');
+            ->assertJsonCount(1, 'data.by_customer')
+            // By-category carries the inflow count for the distribution legend.
+            ->assertJsonPath('data.by_category.0.name', 'Invoice')
+            ->assertJsonPath('data.by_category.0.total.minor', 16000)
+            ->assertJsonPath('data.by_category.0.count', 2);
+    }
+
+    public function test_index_filters_by_date_range_and_summary_follows(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        Inflow::create(['date' => '2026-06-15', 'amount' => 10000, 'status' => 'RECEIVED', 'created_by_id' => $this->admin->getKey()]);
+        Inflow::create(['date' => '2026-05-15', 'amount' => 4000, 'status' => 'RECEIVED', 'created_by_id' => $this->admin->getKey()]);
+        $this->forgetTenant();
+
+        // Only the June inflow falls inside the window — list + summary both narrow.
+        $this->getJson('/api/v1/inflows?date_from=2026-06-01&date_to=2026-06-30', $this->headers())
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.amount.minor', 10000)
+            ->assertJsonPath('meta.summary.invoiced.total.minor', 10000)
+            ->assertJsonPath('meta.summary.invoiced.count', 1);
+    }
+
+    public function test_index_returns_invoiced_collected_pending_summary(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        // Collected, pending (not yet due), and pending-overdue; one credit note excluded.
+        // Relative due dates keep the overdue assertion stable regardless of run date.
+        Inflow::create(['date' => now()->subDays(20), 'amount' => 10000, 'status' => 'RECEIVED', 'received_at' => now()->subDays(15), 'created_by_id' => $this->admin->getKey()]);
+        Inflow::create(['date' => now()->subDays(10), 'amount' => 6000, 'status' => 'PENDING', 'due_date' => now()->addDays(30), 'created_by_id' => $this->admin->getKey()]);
+        Inflow::create(['date' => now()->subDays(10), 'amount' => 3000, 'status' => 'PENDING', 'due_date' => now()->subDays(5), 'created_by_id' => $this->admin->getKey()]);
+        Inflow::create(['date' => now()->subDays(8), 'amount' => 2000, 'status' => 'RECEIVED', 'is_credit_note' => true, 'created_by_id' => $this->admin->getKey()]);
+        $this->forgetTenant();
+
+        $this->getJson('/api/v1/inflows', $this->headers())
+            ->assertOk()
+            // Invoiced = all non-credit-note (10000 + 6000 + 3000).
+            ->assertJsonPath('meta.summary.invoiced.total.minor', 19000)
+            ->assertJsonPath('meta.summary.invoiced.count', 3)
+            ->assertJsonPath('meta.summary.collected.total.minor', 10000)
+            ->assertJsonPath('meta.summary.collected.count', 1)
+            ->assertJsonPath('meta.summary.pending.total.minor', 9000)
+            ->assertJsonPath('meta.summary.pending.count', 2)
+            ->assertJsonPath('meta.summary.pending.overdue', 1);
+    }
+
+    public function test_net_cash_flow_trend_compares_against_the_preceding_window(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        // Prior window (May): collected 4.000, costs 2.000 → net +2.000.
+        Inflow::create(['date' => '2026-05-10', 'amount' => 4000, 'status' => 'RECEIVED', 'received_at' => '2026-05-10', 'created_by_id' => $this->admin->getKey()]);
+        Cost::create(['date' => '2026-05-12', 'total_amount' => 2000, 'category' => 'Glass', 'created_by_id' => $this->admin->getKey()]);
+        // Current window (June): collected 10.000, costs 4.000 → net +6.000.
+        Inflow::create(['date' => '2026-06-10', 'amount' => 10000, 'status' => 'RECEIVED', 'received_at' => '2026-06-10', 'created_by_id' => $this->admin->getKey()]);
+        Cost::create(['date' => '2026-06-12', 'total_amount' => 4000, 'category' => 'Glass', 'created_by_id' => $this->admin->getKey()]);
+        $this->forgetTenant();
+
+        // change = (6000 − 2000) / |2000| × 100 = 200%.
+        $this->getJson('/api/v1/inflows/analytics?from=2026-06-01&to=2026-06-30', $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.net_cash_flow.net.minor', 6000)
+            ->assertJsonPath('data.net_cash_flow.previous.minor', 2000)
+            ->assertJsonPath('data.net_cash_flow.change', 200);
     }
 
     public function test_analytics_endpoint_requires_finance_visibility(): void

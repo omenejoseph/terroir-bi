@@ -10,9 +10,11 @@ use App\Models\Inflow;
 use App\Models\Supplier;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Uploads\Contracts\ObjectStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\InteractsWithTenancy;
+use Tests\Support\FakeObjectStore;
 use Tests\TestCase;
 
 class CostTest extends TestCase
@@ -43,6 +45,18 @@ class CostTest extends TestCase
         return $this->tenantHeader($this->tenant);
     }
 
+    public function test_categories_endpoint_offers_canonical_categories_to_a_fresh_tenant(): void
+    {
+        // No costs created yet — the canonical set must still be offered so the
+        // operator can record Salary/Marketing/Invoice and the dashboard ratios work.
+        $this->getJson('/api/v1/costs/categories', $this->headers())
+            ->assertOk()
+            ->assertJsonFragment(['Salary'])
+            ->assertJsonFragment(['Marketing'])
+            ->assertJsonFragment(['Invoice'])
+            ->assertJsonFragment(['Payment']);
+    }
+
     public function test_create_cost_with_items_and_status_lifecycle(): void
     {
         $id = $this->postJson('/api/v1/costs', [
@@ -68,6 +82,89 @@ class CostTest extends TestCase
         $this->getJson('/api/v1/costs/categories', $this->headers())
             ->assertOk()
             ->assertJsonFragment(['Glass']);
+    }
+
+    public function test_attach_list_and_delete_a_cost_attachment(): void
+    {
+        $store = new FakeObjectStore;
+        $this->app->instance(ObjectStore::class, $store);
+
+        $costId = $this->postJson('/api/v1/costs', ['total_amount' => 1000, 'category' => 'Invoice'], $this->headers())
+            ->assertCreated()->json('data.id');
+
+        // Presign → simulate the bucket upload → attach.
+        $key = $this->postJson('/api/v1/uploads/presign', [
+            'purpose' => 'cost_attachment',
+            'filename' => 'invoice.pdf',
+            'content_type' => 'application/pdf',
+            'size' => 2048,
+        ], $this->headers())->assertOk()->json('data.key');
+        $store->store($key, 2048);
+
+        $attachmentId = $this->postJson("/api/v1/costs/{$costId}/attachments", [
+            'key' => $key,
+            'filename' => 'Invoice.pdf',
+            'content_type' => 'application/pdf',
+        ], $this->headers())
+            ->assertCreated()
+            ->assertJsonPath('data.filename', 'Invoice.pdf')
+            ->assertJsonPath('data.url', fn ($v) => is_string($v) && $v !== '')
+            ->json('data.id');
+
+        // List returns the attachment with a read URL.
+        $this->getJson("/api/v1/costs/{$costId}/attachments", $this->headers())
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.filename', 'Invoice.pdf')
+            ->assertJsonPath('data.0.size_bytes', 2048)
+            ->assertJsonPath('data.0.url', fn ($v) => is_string($v) && $v !== '');
+
+        // Delete removes it.
+        $this->deleteJson("/api/v1/costs/{$costId}/attachments/{$attachmentId}", [], $this->headers())
+            ->assertNoContent();
+        $this->getJson("/api/v1/costs/{$costId}/attachments", $this->headers())
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_vat_amount_is_persisted_and_editable(): void
+    {
+        // Gross 282,50 € incl. 25% PDV → VAT 56,50 €, Net 226,00 € (the detail cards' breakdown).
+        $id = $this->postJson('/api/v1/costs', [
+            'total_amount' => 28250, 'vat_amount' => 5650, 'category' => 'Invoice',
+        ], $this->headers())
+            ->assertCreated()
+            ->assertJsonPath('data.total_amount.minor', 28250)
+            ->assertJsonPath('data.vat_amount.minor', 5650)
+            ->json('data.id');
+
+        // Editing the VAT updates it; clearing it (null) is honoured.
+        $this->patchJson("/api/v1/costs/{$id}", [
+            'total_amount' => 28250, 'vat_amount' => null, 'category' => 'Invoice',
+        ], $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.vat_amount', null);
+    }
+
+    public function test_updating_a_cost_replaces_its_line_items(): void
+    {
+        $id = $this->postJson('/api/v1/costs', [
+            'total_amount' => 3000, 'category' => 'Glass',
+            'items' => [['description' => 'Old bottles', 'unit_price' => 100, 'quantity' => 30]],
+        ], $this->headers())->assertCreated()->json('data.id');
+
+        // Update with a new set of items → the old ones are replaced.
+        $this->patchJson("/api/v1/costs/{$id}", [
+            'total_amount' => 5000, 'category' => 'Glass',
+            'items' => [
+                ['description' => 'New bottles', 'unit_price' => 200, 'quantity' => 20],
+                ['description' => 'Corks', 'unit_price' => 50, 'quantity' => 20],
+            ],
+        ], $this->headers())
+            ->assertOk()
+            ->assertJsonCount(2, 'data.items')
+            ->assertJsonPath('data.items.0.description', 'New bottles')
+            ->assertJsonPath('data.items.0.total.minor', 4000); // 200 × 20
     }
 
     public function test_group_filters_and_counts_split_by_category(): void
@@ -141,6 +238,28 @@ class CostTest extends TestCase
             ->assertJsonPath('data.total_spend.minor', 7000)
             ->assertJsonPath('data.unpaid.minor', 5000) // only the PENDING one
             ->assertJsonCount(2, 'data.by_category');
+    }
+
+    public function test_by_category_reports_count_and_period_over_period_change(): void
+    {
+        // Prior window (mid-May, inside the 30 days preceding June): Glass 2.000.
+        $this->postJson('/api/v1/costs', ['total_amount' => 2000, 'category' => 'Glass', 'date' => '2026-05-15'], $this->headers())->assertCreated();
+        // Current window (June): Glass grows to 5.000 (+150%), Corks is brand-new (+100%).
+        $this->postJson('/api/v1/costs', ['total_amount' => 5000, 'category' => 'Glass', 'date' => '2026-06-10'], $this->headers())->assertCreated();
+        $this->postJson('/api/v1/costs', ['total_amount' => 2000, 'category' => 'Corks', 'date' => '2026-06-12'], $this->headers())->assertCreated();
+        $this->postJson('/api/v1/costs', ['total_amount' => 1000, 'category' => 'Corks', 'date' => '2026-06-20'], $this->headers())->assertCreated();
+
+        $this->getJson('/api/v1/costs/analytics?from=2026-06-01&to=2026-06-30', $this->headers())
+            ->assertOk()
+            // Sorted by total desc: Glass (5.000) then Corks (3.000).
+            ->assertJsonPath('data.by_category.0.name', 'Glass')
+            ->assertJsonPath('data.by_category.0.total.minor', 5000)
+            ->assertJsonPath('data.by_category.0.count', 1)
+            ->assertJsonPath('data.by_category.0.change', 150)
+            ->assertJsonPath('data.by_category.1.name', 'Corks')
+            ->assertJsonPath('data.by_category.1.total.minor', 3000)
+            ->assertJsonPath('data.by_category.1.count', 2)
+            ->assertJsonPath('data.by_category.1.change', 100);
     }
 
     public function test_payment_method_is_validated_against_the_enum(): void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Queries;
 
+use App\Models\Customer;
 use App\Models\InventoryItem;
 use App\Models\OrderItem;
 use App\Models\StockMovement;
@@ -105,11 +106,15 @@ class InventoryAnalyticsQuery
         $blendedCost = (int) round((float) $movements()
             ->whereNotNull('inventory_items.cost_per_unit')->sum(DB::raw(self::MOVE_COST)));
 
-        // Realized sales (order lines, non-consignment) in the window.
+        // Realized sales (order lines, non-consignment, excluding stats-excluded
+        // customers and gratis lines) in the window.
+        $excluded = Customer::statsExcludedIds();
         $lines = fn () => OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->join('inventory_items', 'inventory_items.id', '=', 'order_items.inventory_item_id')
             ->where('orders.is_consignment', false)
+            ->whereNotIn('orders.customer_id', $excluded)
+            ->where('order_items.unit_price', '!=', 0)
             ->where('orders.created_at', '>=', $from);
 
         $revenue = (int) $lines()->sum('order_items.total');
@@ -119,7 +124,47 @@ class InventoryAnalyticsQuery
         $listValue = (int) round((float) $lines()->whereNotNull('inventory_items.default_price')
             ->sum(DB::raw(self::LINE_LIST_VALUE)));
 
+        // Internal / own-channel exits = sales to stats-excluded customers (POS,
+        // tasting room, restaurant) over the same window.
+        $internalLines = fn () => OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->join('inventory_items', 'inventory_items.id', '=', 'order_items.inventory_item_id')
+            ->where('orders.is_consignment', false)
+            ->whereIn('orders.customer_id', $excluded === [] ? ['__none__'] : $excluded)
+            ->where('order_items.unit_price', '!=', 0)
+            ->where('orders.created_at', '>=', $from);
+        $internalRevenue = (int) $internalLines()->sum('order_items.total');
+        $internalCogs = (int) $internalLines()->whereNotNull('order_items.cost_per_unit')
+            ->sum(DB::raw('order_items.cost_per_unit * order_items.quantity'));
+        $internalBottles = (int) round((float) $internalLines()->sum(DB::raw(self::LINE_BOTTLES)));
+
+        // Exit-by-channel breakdown (warehouse-exit movements classified by type).
+        $channelExpr = "CASE WHEN stock_movements.type = 'ORDER_DEDUCT' THEN 'sales' WHEN stock_movements.type = 'PRODUCTION_OUT' THEN 'production' ELSE 'manual' END";
+        $channelRows = $movements()
+            ->selectRaw("$channelExpr as channel, SUM(".self::MOVE_BOTTLES.') as units')
+            ->groupByRaw($channelExpr)
+            ->get();
+
         $money = fn (int $minor): mixed => Money::fromMinor($minor, $currency)->jsonSerialize();
+
+        $channels = [];
+        foreach ($channelRows as $row) {
+            $units = (int) round((float) $row->getAttribute('units'));
+            if ($units <= 0) {
+                continue;
+            }
+            $isSales = $row->getAttribute('channel') === 'sales';
+            $channels[] = [
+                'key' => (string) $row->getAttribute('channel'),
+                'units' => $units,
+                'revenue' => $isSales && $revenue > 0 ? $money($revenue) : null,
+                'margin_percent' => $isSales && $revenue > 0
+                    ? number_format(($revenue - $cogs) / $revenue * 100, 1, '.', '') : null,
+                'share_percent' => $blendedUnits > 0
+                    ? number_format($units / $blendedUnits * 100, 1, '.', '') : '0.0',
+            ];
+        }
+        usort($channels, fn (array $a, array $b) => $b['units'] <=> $a['units']);
 
         return [
             'period_days' => $days,
@@ -133,12 +178,18 @@ class InventoryAnalyticsQuery
                 'off_target_percent' => $listValue > 0
                     ? number_format(($listValue - $revenue) / $listValue * 100, 1, '.', '') : null,
             ],
+            'internal' => $internalBottles > 0 ? [
+                'units_exited' => $internalBottles,
+                'cost_of_exits' => $internalCogs > 0 ? $money($internalCogs) : null,
+                'revenue_realized' => $internalRevenue > 0 ? $money($internalRevenue) : null,
+            ] : null,
             'blended' => [
                 'units_exited' => $blendedUnits,
                 'cost_of_exits' => $blendedUnits > 0 && $blendedCost > 0 ? $money($blendedCost) : null,
                 'revenue_realized' => $revenue > 0 ? $money($revenue) : null,
                 'velocity_per_day' => number_format($blendedUnits / max(1, $days), 1, '.', ''),
             ],
+            'channels' => $channels,
         ];
     }
 

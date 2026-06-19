@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Dashboard;
 
+use App\Enums\CostStatus;
+use App\Enums\OrderStatus;
 use App\Enums\TenantRole;
+use App\Models\Cost;
 use App\Models\Customer;
 use App\Models\InventoryItem;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\WorkOrder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -72,6 +77,33 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.revenue_summary.total.previous', null);
     }
 
+    public function test_revenue_summary_year_over_year_comparisons_populate(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $customer = Customer::create(['company_name' => 'Co', 'email' => 'co@example.com', 'customer_type' => 'WHOLESALE']);
+
+        // Today (this year) and exactly one year ago today. The latter falls inside
+        // last year's today / month-to-date / year-to-date windows, so all three
+        // comparisons resolve (instead of "—").
+        Order::create(['order_number' => 'TY', 'status' => OrderStatus::Received->value, 'total_amount' => 16000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        $ly = Order::create(['order_number' => 'LY', 'status' => OrderStatus::Received->value, 'total_amount' => 20000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        $ly->created_at = now()->subYear();
+        $ly->save();
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $this->getJson('/api/v1/dashboard?period=mtd', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonPath('data.revenue_summary.today.current', 16000)
+            ->assertJsonPath('data.revenue_summary.today.previous', 20000)
+            ->assertJsonPath('data.revenue_summary.mtd.current', 16000)
+            ->assertJsonPath('data.revenue_summary.mtd.previous', 20000)
+            ->assertJsonPath('data.revenue_summary.ytd.current', 16000)
+            ->assertJsonPath('data.revenue_summary.ytd.previous', 20000);
+    }
+
     public function test_summary_splits_revenue_by_customer_channel(): void
     {
         $tenant = $this->createTenant();
@@ -101,10 +133,139 @@ class DashboardTest extends TestCase
 
         $this->getJson('/api/v1/dashboard?period=ytd', $headers)
             ->assertOk()
-            ->assertJsonPath('data.revenue_by_channel.wholesale', 24000)
-            ->assertJsonPath('data.revenue_by_channel.retail', 12000)
-            ->assertJsonPath('data.revenue_by_channel.agency', 0)
-            ->assertJsonPath('data.revenue_by_channel.total', 36000);
+            ->assertJsonPath('data.revenue_by_channel.wholesale.current', 24000)
+            ->assertJsonPath('data.revenue_by_channel.retail.current', 12000)
+            ->assertJsonPath('data.revenue_by_channel.agency.current', 0)
+            ->assertJsonPath('data.revenue_by_channel.total.current', 36000)
+            // Key ratios: DTC = retail/total (12000/36000), AOV = wholesale/order count (24000/2).
+            ->assertJsonPath('data.key_ratios.dtc_revenue_pct', 33.3)
+            ->assertJsonPath('data.key_ratios.avg_order_value.minor', 12000);
+    }
+
+    public function test_channel_trend_and_cost_ratios_populate(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $wholesale = Customer::create(['company_name' => 'Distributor', 'email' => 'd@example.com', 'customer_type' => 'WHOLESALE']);
+
+        // Current-window order (now) + prior-window order (~45 days ago) → trend.
+        Order::create(['order_number' => 'O-CUR', 'status' => OrderStatus::Received->value, 'total_amount' => 24000, 'customer_id' => $wholesale->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        $prev = Order::create(['order_number' => 'O-PREV', 'status' => OrderStatus::Received->value, 'total_amount' => 10000, 'customer_id' => $wholesale->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        $prev->created_at = now()->subDays(45);
+        $prev->save();
+
+        // Costs in the current window → cost ratios.
+        Cost::create(['category' => 'salary', 'description' => 'Payroll', 'total_amount' => 5000, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
+        Cost::create(['category' => 'marketing', 'description' => 'Ads', 'total_amount' => 2000, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))
+            ->assertOk()
+            // Trend: 24000 in the current 30d window, 10000 in the prior 30d window.
+            ->assertJsonPath('data.revenue_by_channel.wholesale.current', 24000)
+            ->assertJsonPath('data.revenue_by_channel.wholesale.previous', 10000)
+            // Cost ratios over current revenue (24000): salary 5000 → 20.8%, marketing 2000 → 8.3%.
+            ->assertJsonPath('data.key_ratios.employee_cost_pct', 20.8)
+            ->assertJsonPath('data.key_ratios.marketing_cost_pct', 8.3)
+            ->assertJsonPath('data.key_ratios.revenue_per_employee.minor', 24000); // 1 distinct salary line
+    }
+
+    public function test_key_ratios_are_computed_correctly_end_to_end(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+
+        $wholesale = Customer::create(['company_name' => 'Distributor', 'email' => 'w@example.com', 'customer_type' => 'WHOLESALE']);
+        $retail = Customer::create(['company_name' => 'Shop', 'email' => 'r@example.com', 'customer_type' => 'RETAIL']);
+        $wine = InventoryItem::create([
+            'name' => 'Wine', 'sku' => 'W', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'bottles_per_case' => 6, 'current_stock' => '100.000', 'cost_per_unit' => 500,
+            'default_price' => 1000, 'is_for_sale' => true, 'is_active' => true,
+        ]);
+
+        // Two shipped orders this period: wholesale 20,000 (20 btl) + retail 10,000 (10 btl).
+        foreach ([[$wholesale, 'WO', 20000, 20], [$retail, 'RO', 10000, 10]] as [$customer, $no, $total, $qty]) {
+            $order = Order::create(['order_number' => $no, 'status' => OrderStatus::Shipped->value, 'total_amount' => $total, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+            OrderItem::create(['order_id' => $order->getKey(), 'inventory_item_id' => $wine->getKey(), 'quantity' => $qty, 'unit_type' => 'bottles', 'unit_price' => 1000, 'total' => $total, 'cost_per_unit' => 500]);
+        }
+
+        // Costs this period: salary 4,000 + marketing 2,000 + operations 500 = 6,500.
+        Cost::create(['category' => 'Salary', 'description' => 'Payroll', 'total_amount' => 4000, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
+        Cost::create(['category' => 'Marketing', 'description' => 'Ads', 'total_amount' => 2000, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
+        Cost::create(['category' => 'Operations', 'description' => 'Misc', 'total_amount' => 500, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))
+            ->assertOk()
+            // revenue 30,000 · DTC = retail 10,000 → 33.3%
+            ->assertJsonPath('data.key_ratios.dtc_revenue_pct', 33.3)
+            // operating margin = (30,000 − 6,500) / 30,000 → 78.3%
+            ->assertJsonPath('data.key_ratios.operating_margin_pct', 78.3)
+            // employee 4,000 / 30,000 → 13.3% · marketing 2,000 / 30,000 → 6.7%
+            ->assertJsonPath('data.key_ratios.employee_cost_pct', 13.3)
+            ->assertJsonPath('data.key_ratios.marketing_cost_pct', 6.7)
+            // COGS = 500×20 + 500×10 = 15,000 → 50% of revenue
+            ->assertJsonPath('data.key_ratios.cogs_pct', 50)
+            ->assertJsonPath('data.key_ratios.cogs_amount.minor', 15000)
+            // headcount = 1 salary line → revenue / 1 = 30,000
+            ->assertJsonPath('data.key_ratios.revenue_per_employee.minor', 30000)
+            // wholesale revenue 20,000 / 2 orders = 10,000
+            ->assertJsonPath('data.key_ratios.avg_order_value.minor', 10000)
+            // bottles sold 30 / stock on hand 100 → 0.3×
+            ->assertJsonPath('data.key_ratios.inventory_turnover', 0.3);
+    }
+
+    public function test_top_products_sums_line_revenue(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $customer = Customer::create(['company_name' => 'Co', 'email' => 'c@example.com', 'customer_type' => 'WHOLESALE']);
+        $item = InventoryItem::create(['name' => 'Plavac', 'sku' => 'PLV', 'category' => 'FINISHED', 'unit' => 'bottles', 'current_stock' => '50.000']);
+
+        // Two order lines of the same item: 7,000 + 5,000 = 12,000 of revenue.
+        foreach ([7000, 5000] as $i => $total) {
+            $order = Order::create(['order_number' => "TP{$i}", 'status' => OrderStatus::Received->value, 'total_amount' => $total, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+            OrderItem::create(['order_id' => $order->getKey(), 'inventory_item_id' => $item->getKey(), 'quantity' => 10, 'unit_type' => 'bottles', 'unit_price' => 700, 'total' => $total]);
+        }
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonPath('data.top_products.0.name', 'Plavac')
+            ->assertJsonPath('data.top_products.0.value', 12000);
+    }
+
+    public function test_orders_and_revenue_series_sum_to_totals(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $customer = Customer::create(['company_name' => 'Co', 'email' => 'c@example.com', 'customer_type' => 'WHOLESALE']);
+
+        // Three orders inside the 30-day window (well clear of the bucket edges).
+        foreach ([[0, 10000], [3, 6000], [7, 4000]] as [$days, $total]) {
+            $order = Order::create(['order_number' => "S{$days}", 'status' => OrderStatus::Received->value, 'total_amount' => $total, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+            if ($days > 0) {
+                $order->created_at = now()->subDays($days);
+                $order->save();
+            }
+        }
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $data = $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))->assertOk()->json('data');
+
+        // The bucketed series must add up to the headline totals (no orders lost/double-counted).
+        $this->assertSame($data['stats']['total_orders'], array_sum(array_column($data['orders'], 'value')));
+        $this->assertSame($data['stats']['revenue'], array_sum(array_column($data['revenue'], 'value')));
+        $this->assertSame(3, $data['stats']['total_orders']);
+        $this->assertSame(20000, $data['stats']['revenue']);
     }
 
     public function test_summary_defaults_invalid_range(): void

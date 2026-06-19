@@ -69,8 +69,9 @@ describe("ProductionPage", () => {
     renderWithProviders(<ProductionPage />);
     const user = userEvent.setup();
 
-    // The plan and its row load.
+    // The plan card loads; expand it to reveal the editor.
     await waitFor(() => expect(screen.getByText("Spring bottling")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: /Spring bottling/ }));
     await screen.findByDisplayValue("100");
 
     // Calculate pulls revenue/cost/margin.

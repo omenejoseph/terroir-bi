@@ -18,6 +18,7 @@ import {
   FileText,
   Gauge,
   Receipt,
+  TrendingDown,
   TrendingUp,
   Wallet,
 } from "lucide-react";
@@ -294,19 +295,62 @@ export default function CostAnalyticsPage() {
 
           {/* Category Distribution + Top Suppliers */}
           <div className="grid gap-4 lg:grid-cols-2">
-            <ChartCard title={t("costs.analytics.charts.category")}>
+            <ChartCard
+              title={t("costs.analytics.charts.category")}
+              subtitle={
+                data.by_category.length > 0
+                  ? t("costs.analytics.charts.categorySubtitle", {
+                      total: moneyObject(data.total_spend),
+                      count: data.by_category.length,
+                    })
+                  : undefined
+              }
+            >
               {data.by_category.length === 0 ? (
                 <Empty label={t("costs.analytics.noData")} />
               ) : (
-                <DonutChart
-                  data={data.by_category.map((c, i) => ({
-                    key: c.name,
-                    value: c.total.minor,
-                    color: DONUT_COLORS[i % DONUT_COLORS.length],
-                  }))}
-                  centerValue={moneyObject(data.total_spend)}
-                  centerLabel={t("costs.analytics.charts.totalSpend")}
-                />
+                <>
+                  <DonutChart
+                    data={data.by_category.map((c, i) => ({
+                      key: c.name,
+                      value: c.total.minor,
+                      color: DONUT_COLORS[i % DONUT_COLORS.length],
+                    }))}
+                  />
+                  {/* Legend — each category with its period-over-period change, share, and amount. */}
+                  <ul className="mt-3 space-y-1.5">
+                    {data.by_category.map((c, i) => {
+                      const pct = data.total_spend.minor > 0 ? (c.total.minor / data.total_spend.minor) * 100 : 0;
+                      const up = c.change > 0;
+                      const showChange = Math.abs(c.change) >= 1;
+                      return (
+                        <li key={c.name} className="flex items-center gap-2 text-xs">
+                          <span
+                            className="size-2.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length] }}
+                          />
+                          <span className="flex-1 truncate">{c.name}</span>
+                          {showChange && (
+                            <span
+                              className={cn(
+                                "flex shrink-0 items-center gap-0.5 font-medium tabular-nums",
+                                up ? "text-destructive" : "text-emerald-600",
+                              )}
+                            >
+                              {up ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+                              {up ? "+" : ""}
+                              {c.change.toFixed(0)}%
+                            </span>
+                          )}
+                          <span className="shrink-0 tabular-nums text-muted-foreground">{pct.toFixed(1)}%</span>
+                          <span className="w-20 shrink-0 text-right font-medium tabular-nums">
+                            {moneyObject(c.total)}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
               )}
             </ChartCard>
 

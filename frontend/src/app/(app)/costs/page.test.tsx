@@ -29,11 +29,16 @@ describe("CostsPage", () => {
     expect(screen.getAllByText("120,00 €").length).toBeGreaterThan(0);
   });
 
-  it("renders the analytics strip totals", async () => {
+  it("renders the invoiced / paid / unpaid summary strip", async () => {
     renderWithProviders(<CostsPage />);
-    // total_spend 700,00 €, unpaid 500,00 € from makeCostAnalytics.
-    expect(await screen.findByText("700,00 €")).toBeInTheDocument();
-    expect(screen.getByText("500,00 €")).toBeInTheDocument();
+    // invoiced 600,00 €, paid 200,00 €, unpaid 400,00 € from makeCostAnalytics.
+    expect(await screen.findByText("Invoiced")).toBeInTheDocument();
+    expect(screen.getByText("600,00 €")).toBeInTheDocument();
+    expect(screen.getByText("200,00 €")).toBeInTheDocument();
+    expect(screen.getByText("400,00 €")).toBeInTheDocument();
+    // Sub-lines: invoice count + VAT, and overdue count.
+    expect(screen.getByText("4 invoices · PDV 80,00 €")).toBeInTheDocument();
+    expect(screen.getByText("3 unpaid · 2 overdue")).toBeInTheDocument();
   });
 
   it("filters by group tab and status dropdown", async () => {
@@ -80,8 +85,8 @@ describe("CostsPage", () => {
     await user.selectOptions(screen.getByLabelText("All Categories"), "Glass");
     await waitFor(() => expect(params.at(-1)?.category).toBe("Glass"));
 
-    // A preset period sends a date range.
-    await user.selectOptions(screen.getByLabelText("Period"), "thisMonth");
+    // A preset period chip sends a date range.
+    await user.click(screen.getByRole("button", { name: "MTD" }));
     await waitFor(() => {
       expect(params.at(-1)?.from).toBeTruthy();
       expect(params.at(-1)?.to).toBeTruthy();

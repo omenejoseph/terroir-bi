@@ -304,7 +304,15 @@ export interface InventoryAnalytics {
   portfolio_exits: {
     period_days: number;
     external: InventoryExitMetrics;
+    internal: InventoryExitMetrics | null;
     blended: InventoryExitMetrics;
+    channels: {
+      key: string;
+      units: number;
+      revenue: Money | null;
+      margin_percent: string | null;
+      share_percent: string;
+    }[];
   };
   movements_12m: { month: string; in: number; out: number }[];
   top_products: { name: string; value: number }[];
@@ -423,6 +431,10 @@ export interface Customer {
   reorder_contacted_at: string | null;
   has_order_token: boolean;
   pricing_tier: { id: string; name: string; rebate_percent: string } | null;
+  /** Non-consignment order count; present on the list, null elsewhere. */
+  order_count?: number | null;
+  /** Lifetime non-consignment revenue in minor units; only when financials are visible. */
+  revenue_minor?: number | null;
 }
 
 /** GET /customers/{id}/order-analytics — forward-looking revenue metrics. */
@@ -437,6 +449,8 @@ export interface CustomerOrderAnalytics {
   next_quarter_projection: Money;
   /** Per-month forecast for the next 3 months: same month last year × (1 + YoY). */
   expected_next_3m: { month: string; last_year: Money; expected: Money }[];
+  /** Trailing 12-month revenue history for the trend chart. */
+  monthly_revenue: { month: string; revenue: Money }[];
 }
 
 /** A customer's negotiated per-product price (overrides rebate). */
@@ -609,14 +623,26 @@ export interface DashboardSummary {
     ytd: RevenueComparison;
     total: RevenueComparison;
   };
-  /** Selected-period revenue split by customer channel (minor units). */
+  /** Selected-period revenue split by customer channel (minor units), each vs the prior window. */
   revenue_by_channel: {
-    wholesale: number;
-    retail: number;
-    agency: number;
-    shipshop: number;
-    other: number;
-    total: number;
+    wholesale: RevenueComparison;
+    retail: RevenueComparison;
+    agency: RevenueComparison;
+    shipshop: RevenueComparison;
+    other: RevenueComparison;
+    total: RevenueComparison;
+  };
+  /** Headline financial ratios for the selected period; null when input data is missing. */
+  key_ratios: {
+    dtc_revenue_pct: number | null;
+    operating_margin_pct: number | null;
+    employee_cost_pct: number | null;
+    marketing_cost_pct: number | null;
+    cogs_pct: number | null;
+    cogs_amount: Money | null;
+    revenue_per_employee: Money | null;
+    avg_order_value: Money | null;
+    inventory_turnover: number | null;
   };
   stats: {
     total_orders: number;
@@ -666,6 +692,17 @@ export interface ReorderRadar {
 /** Payload for PATCH /inventory-items/{id} — every field optional. */
 export type InventoryItemUpdate = Partial<InventoryItemInput>;
 
+/** One row of the bulk-edit grid. `id` + only the fields that changed. Money minor units. */
+export interface InventoryBulkEdit {
+  id: string;
+  name?: string;
+  min_stock?: number | null;
+  default_price?: number | null;
+  cost_per_unit?: number | null;
+  is_active?: boolean;
+  is_for_sale?: boolean;
+}
+
 /**
  * Stock movement types — mirrors App\Enums\StockMovementType. Only the manual
  * ones are user-selectable; production and order movements are system-driven.
@@ -712,13 +749,42 @@ export interface StockAnalytics {
   };
   exits: {
     bottles_exited: number;
+    movements_count: number;
+    /** Daily bottles-exited series over the period, for the sparkline. */
+    spark: number[];
     cost_of_exits: Money | null;
     revenue_realized: Money | null;
     mean_margin_percent: string | null;
     velocity_per_day: string;
     days_of_stock_left: number | null;
+    /** Internal/POS (exclude-from-stats) slice, broken out and excluded from margin. */
+    internal: { bottles: number; cost: Money; revenue: Money } | null;
   };
   channels: { channel: string; bottles: number }[];
+  vintage_coverage: VintageCoverage | null;
+}
+
+export interface VintageCoverageRow {
+  inventory_item_id: string;
+  vintage: string | null;
+  stock_bottles: number;
+  velocity_per_day: number;
+  days_left: number | null;
+  is_current: boolean;
+}
+
+export interface VintageCoverage {
+  wine_name: string;
+  display_unit: string;
+  vintages: VintageCoverageRow[];
+  total_stock_bottles: number;
+  blended_velocity_per_day: number;
+  combined_days_left: number | null;
+  selling_vintage: string | null;
+  successor_vintage: string | null;
+  selling_days_left: number | null;
+  gap_risk: boolean;
+  window_days: number;
 }
 
 /** A stock ledger entry (GET /inventory-items/{id}/movements). */
@@ -731,6 +797,8 @@ export interface StockMovement {
   note: string | null;
   is_reconciliation: boolean;
   created_at: string | null;
+  /** The user who recorded the movement; null for system/seed writes. */
+  created_by: { id: string; name: string } | null;
 }
 
 /**
@@ -820,6 +888,14 @@ export interface OrderItem {
   inventory_item_id: string | null;
   name: string;
   sku: string | null;
+  /** Inventory group of the linked item (e.g. "Wine", "Water"); used to group the items table. */
+  group?: string | null;
+  /** Bottle format of the linked inventory item, e.g. "750ml"; null for custom lines. The vintage is already part of `name`. */
+  unit_size?: string | null;
+  /** Bottles per case of the linked item — used to expand case quantities to bottles. */
+  bottles_per_case?: number | null;
+  /** Lead image of the linked inventory item; null for custom lines or items without an image. */
+  image_url?: string | null;
   quantity: number;
   unit_type: OrderItemUnit;
   unit_price: Money;
@@ -827,6 +903,8 @@ export interface OrderItem {
   custom_description: string | null;
   /** Only present when the viewer has financials.view. */
   cost_per_unit?: Money | null;
+  /** Line profit (total − cost × qty); only when financials are visible, null if cost unknown. */
+  profit?: Money | null;
 }
 
 export interface OrderStatusEntry {
@@ -841,6 +919,23 @@ export interface OrderComment {
   content: string;
   author: { id: string; name: string } | null;
   created_at: string | null;
+}
+
+/**
+ * Order-level profitability. Only present when the viewer may see financials,
+ * and null for consignment orders (their P&L lives in the consignment summary).
+ */
+export interface OrderProfitability {
+  revenue: Money;
+  cogs: Money;
+  /** Freight deducted from profit — only set when we pay shipping. */
+  logistics: Money | null;
+  gross_profit: Money;
+  margin_percent: string;
+  /** False when one or more lines have no recorded cost. */
+  complete: boolean;
+  /** Names of lines missing a cost, for the "set costs for …" hint. */
+  missing_cost_items: string[];
 }
 
 export interface Order {
@@ -861,6 +956,8 @@ export interface Order {
   items: OrderItem[];
   status_history: OrderStatusEntry[];
   comments: OrderComment[];
+  /** Present only when the viewer may see financials; null for consignment. */
+  profitability?: OrderProfitability | null;
 }
 
 /** One line in POST /orders or POST /orders/{id}/items. */
@@ -895,6 +992,56 @@ export interface OrderQuery {
 }
 
 /** GET /orders/analytics — money fields are Money objects. */
+export interface AnalyticsPage<T> {
+  data: T[];
+  meta: { current_page: number; per_page: number; total: number; last_page: number };
+}
+
+export interface AnalyticsCustomerRow {
+  customer_id: string;
+  company_name: string | null;
+  orders_count: number;
+  revenue: Money;
+  cogs: Money;
+  gross_profit: Money;
+  margin_percent: string | null;
+}
+
+export interface AnalyticsProductRow {
+  inventory_item_id: string;
+  name: string | null;
+  vintage: string | null;
+  quantity: number;
+  revenue: Money;
+  cogs: Money;
+  gross_profit: Money;
+  margin_percent: string | null;
+}
+
+export interface AnalyticsChannelRow {
+  key: string;
+  revenue: Money;
+  cogs: Money;
+  gross_profit: Money;
+  margin_percent: string | null;
+  orders_count: number;
+  bottles: number;
+  revenue_share_pct: string;
+}
+
+export interface PriceRealizationRow {
+  inventory_item_id: string;
+  name: string | null;
+  vintage: string | null;
+  bottles: number;
+  list_price: Money;
+  realized_per_bottle: Money;
+  list_revenue: Money;
+  realized_revenue: Money;
+  leakage: Money;
+  realization_pct: string | null;
+}
+
 export interface OrderAnalytics {
   period: { from: string; to: string };
   revenue: Money;
@@ -905,15 +1052,147 @@ export interface OrderAnalytics {
   avg_order_value: Money;
   items_with_unknown_cost: number;
   consignment_revenue: Money;
-  top_customers: { customer_id: string; company_name: string | null; revenue: Money }[];
-  top_products: { inventory_item_id: string; name: string | null; quantity: number; revenue: Money }[];
+  bottles_sold: number;
+  total_lines: number;
+  revenue_without_cost: Money;
+  avg_gp_per_order: Money;
+  avg_margin_pct_per_order: string | null;
+  previous: {
+    revenue: Money;
+    cogs: Money;
+    gross_profit: Money;
+    margin_percent: string;
+    order_count: number;
+  };
+  series: { date: string; label: string; revenue: Money; cogs: Money; gross_profit: Money; margin_percent: string | null }[];
+  granularity: "day" | "week";
+  top_customers: AnalyticsPage<AnalyticsCustomerRow>;
+  top_products: AnalyticsPage<AnalyticsProductRow>;
+  channels: AnalyticsChannelRow[];
+  price_realization: {
+    rows: PriceRealizationRow[];
+    totals: { list_revenue: Money; realized_revenue: Money; leakage: Money; realization_pct: string | null };
+  };
+  histogram: { label: string; min: number | null; orders: number; revenue: Money }[];
   low_margin_orders: {
     order_id: string;
     order_number: string;
+    customer_name: string | null;
+    date: string;
     revenue: Money;
-    cogs: Money;
+    gross_profit: Money;
     margin_percent: string;
   }[];
+  lines_without_cost: {
+    order_id: string;
+    order_number: string;
+    customer_name: string | null;
+    date: string;
+    product_name: string | null;
+    quantity: number;
+    unit_type: string;
+    line_revenue: Money;
+  }[];
+}
+
+// ── Demand forecast (orders module) ─────────────────────────────────────────
+
+export interface ForecastWindow {
+  order_count: number;
+  customers: number;
+  bottles: number;
+  revenue: Money;
+}
+
+export interface ForecastVolumeWindow {
+  bottles: number;
+  orders: number;
+  customers: number;
+}
+
+export interface ForecastAnnualBottles {
+  ytd_bottles: number;
+  projected_remaining_bottles: number;
+  projected_total_bottles: number;
+  has_history_gap: boolean;
+}
+
+export interface ForecastProduct {
+  id: string;
+  name: string;
+  sku: string;
+  vintage: string | null;
+  group: string | null;
+  subcategory: string | null;
+  unit: string;
+  current_stock: number;
+  bottles_per_case: number;
+  last3m: ForecastVolumeWindow;
+  last6m: ForecastVolumeWindow;
+  last12m: ForecastVolumeWindow;
+  last_sold_date: string | null;
+  biggest_month: { month: string; bottles: number } | null;
+  expected_next_3m: { month: string; last_year_bottles: number; expected: number | null }[];
+  history_12m: { month: string; bottles: number }[];
+  annual_projection: ForecastAnnualBottles;
+  total_produced: number;
+  sold: number;
+  to_be_sold: number;
+  remaining: number;
+}
+
+export interface ForecastCustomer {
+  id: string;
+  name: string | null;
+  order_count: number;
+  total_value: Money;
+  revenue_last_12m: Money;
+  revenue_ytd: Money;
+  median_gap_days: number | null;
+  days_since_last_order: number | null;
+  last_order_date: string | null;
+  expected_by_date: string | null;
+}
+
+export interface ForecastCategorySub {
+  subcategory: string | null;
+  products: number;
+  last3m_bottles: number;
+  last6m_bottles: number;
+  last12m_bottles: number;
+  ytd_bottles: number;
+  projected_remaining_bottles: number;
+  projected_total_bottles: number;
+  has_history_gap: boolean;
+}
+
+export interface ForecastCategory extends Omit<ForecastCategorySub, "subcategory"> {
+  group: string;
+  subcategories: ForecastCategorySub[];
+}
+
+export interface DemandForecast {
+  generated_at: string;
+  totals: { last3m: ForecastWindow; last6m: ForecastWindow; last12m: ForecastWindow };
+  current_month: {
+    key: string;
+    revenue_so_far: Money;
+    projected_full_month: Money | null;
+    last_year_same_month: Money | null;
+  };
+  yoy_factor: number | null;
+  revenue_forecast_next_3m: { month: string; last_year_revenue: Money | null; expected: Money | null }[];
+  revenue_history_12m: { month: string; revenue: Money; last_year: Money }[];
+  annual_revenue_projection: {
+    year: number;
+    ytd: Money;
+    projected_remaining: Money;
+    projected_total: Money;
+    has_history_gap: boolean;
+  };
+  category_breakdown: ForecastCategory[];
+  products: ForecastProduct[];
+  customers: ForecastCustomer[];
 }
 
 // ── Consignment ───────────────────────────────────────────────────────────────
@@ -1047,13 +1326,20 @@ export interface InflowAnalytics {
   invoiced: { total: Money; count: number };
   collected: { total: Money; count: number };
   pending: { total: Money; count: number };
-  net_cash_flow: { net: Money; inflows: Money; costs: Money };
+  net_cash_flow: { net: Money; inflows: Money; costs: Money; previous: Money; change: number | null };
   avg_days_to_collect: { days: number | null; count: number };
   avg_inflow: { avg: Money };
-  by_category: { name: string; total: Money }[];
+  by_category: { name: string; total: Money; count: number }[];
   by_customer: { customer_id: string; company_name: string | null; total: Money }[];
   over_time: { month: string; total: Money }[];
   cash_flow: { month: string; inflows: Money; costs: Money; net: Money }[];
+}
+
+/** Index summary bar — Invoiced / Collected / Pending over the full filtered set. */
+export interface InflowListSummary {
+  invoiced: { total: Money; count: number };
+  collected: { total: Money; count: number };
+  pending: { total: Money; count: number; overdue: number };
 }
 
 /** A single edited field within an inflow change-history entry. */
@@ -1115,6 +1401,8 @@ export interface InflowQuery {
   customer_id?: string;
   order_id?: string;
   search?: string;
+  date_from?: string;
+  date_to?: string;
   page?: number;
 }
 
@@ -1164,6 +1452,7 @@ export interface Cost {
   paid_at: string | null;
   due_date: string | null;
   supplier: { id: string; company_name: string } | null;
+  created_by: { id: string; name: string } | null;
   items?: CostItem[];
   attachments?: { id: string; filename: string; content_type: string; size_bytes: number }[];
 }
@@ -1217,14 +1506,14 @@ export interface CostAnalytics {
   period: { from: string; to: string };
   total_spend: Money;
   unpaid: Money;
-  invoiced: { total: Money; count: number };
-  paid: { total: Money; count: number };
-  unpaid_invoices: { total: Money; count: number };
+  invoiced: { total: Money; count: number; vat: Money; overdue: number };
+  paid: { total: Money; count: number; vat: Money; overdue: number };
+  unpaid_invoices: { total: Money; count: number; vat: Money; overdue: number };
   avg_invoice: { avg: Money; max: Money };
   avg_days_to_pay: { days: number | null; count: number };
   gross_margin: { percent: string | null; revenue: Money };
   by_status: { status: string; count: number; total: Money }[];
-  by_category: { name: string; total: Money }[];
+  by_category: { name: string; total: Money; count: number; change: number }[];
   by_supplier: { supplier_id: string; company_name: string | null; total: Money }[];
   over_time: { month: string; total: Money }[];
   yoy: {
@@ -1313,6 +1602,8 @@ export interface Supplier {
   has_portal_token?: boolean;
   price_items_count: number | null;
   price_changes_count?: number | null;
+  costs_count?: number | null;
+  costs_total?: number | null;
   price_items?: SupplierPriceItem[];
 }
 
@@ -1350,6 +1641,7 @@ export interface SupplierQuery {
   search?: string;
   is_active?: boolean;
   page?: number;
+  per_page?: number;
 }
 
 /** POST /suppliers/{id}/price-items — unit_price is integer minor units. */
@@ -1437,6 +1729,50 @@ export interface CashFlow {
     avg_monthly_net: Money;
     revenue_growth_percent: string;
   };
+}
+
+/** An actual-cash-movement KPI with a period-over-period trend. */
+export interface CashFlowMovement {
+  total: Money;
+  count: number;
+  previous: Money;
+  change: number | null;
+}
+
+/** One outstanding receivable / payable row in the cash-flow analysis tables. */
+export interface CashFlowOutstandingEntry {
+  id: string;
+  counterparty: string | null;
+  description: string | null;
+  amount: Money;
+  date: string;
+  due_date: string | null;
+  is_overdue: boolean;
+  days_outstanding: number;
+  reference: string | null;
+}
+
+/** GET /cash-flow/analysis — Cash Flow Analysis for a date range. */
+export interface CashFlowAnalysis {
+  period: { from: string; to: string };
+  cash_in: CashFlowMovement;
+  cash_out: CashFlowMovement;
+  net: { total: Money; previous: Money; change: number | null };
+  burn_rate_monthly: Money;
+  outstanding_receivables: { total: Money; count: number };
+  outstanding_payables: { total: Money; count: number };
+  net_working_capital: Money;
+  payment_discipline: {
+    avg_days_to_collect: number | null;
+    collected_on_time_percent: number | null;
+    avg_days_to_pay: number | null;
+    paid_on_time_percent: number | null;
+  };
+  over_time: { period: string; cash_in: Money; cash_out: Money; net: Money; cumulative_net: Money }[];
+  by_category: { category: string; cash_in: Money; cash_out: Money }[];
+  top_outflow_categories: { category: string; amount: Money; count: number }[];
+  top_receivables: CashFlowOutstandingEntry[];
+  top_payables: CashFlowOutstandingEntry[];
 }
 
 // ── Tasks / work orders (Phase 6) ─────────────────────────────────────────────
@@ -2144,6 +2480,13 @@ export interface ParcelInput {
   location?: string | null;
   vine_count?: number | null;
   soil_type?: string | null;
+  elevation?: number | null;
+  planting_year?: number | null;
+  row_spacing?: number | null;
+  rootstock?: string | null;
+  training?: string | null;
+  orientation?: string | null;
+  slope?: number | null;
   ownership?: ParcelOwnership;
   cooperant_supplier_id?: string | null;
   notes?: string | null;
@@ -2174,6 +2517,10 @@ export interface GrapeContractInput {
   estimated_kg: number;
   price_per_kg: number;
   status?: GrapeContractStatus;
+  min_brix?: number | null;
+  max_ph?: number | null;
+  delivery_window?: string | null;
+  payment_terms?: string | null;
   notes?: string | null;
 }
 

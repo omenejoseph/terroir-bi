@@ -22,6 +22,17 @@ import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 
+/** One agronomy field in the parcel "Site details" card; hidden when empty. */
+function SiteDetail({ label, value }: { label: string; value: React.ReactNode }) {
+  if (value == null || value === "") return null;
+  return (
+    <div className="space-y-0.5">
+      <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
+      <dd className="font-medium">{value}</dd>
+    </div>
+  );
+}
+
 export default function ParcelDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
@@ -62,6 +73,53 @@ export default function ParcelDetailPage() {
         </div>
         <Badge variant="secondary">{t(`vineyards.ownershipType.${parcel.ownership}`)}</Badge>
       </header>
+
+      {[
+        parcel.location,
+        parcel.soil_type,
+        parcel.elevation,
+        parcel.planting_year,
+        parcel.row_spacing,
+        parcel.rootstock,
+        parcel.training,
+        parcel.orientation,
+        parcel.slope,
+        parcel.latitude,
+      ].some((v) => v != null && v !== "") && (
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="mb-3 text-sm font-semibold">{t("vineyards.parcels.site")}</h3>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 lg:grid-cols-4">
+              <SiteDetail label={t("vineyards.parcels.location")} value={parcel.location} />
+              <SiteDetail label={t("vineyards.parcels.soilType")} value={parcel.soil_type} />
+              <SiteDetail
+                label={t("vineyards.parcels.elevation")}
+                value={parcel.elevation != null ? `${parcel.elevation} m` : null}
+              />
+              <SiteDetail label={t("vineyards.parcels.plantingYear")} value={parcel.planting_year} />
+              <SiteDetail
+                label={t("vineyards.parcels.rowSpacing")}
+                value={parcel.row_spacing != null ? `${parcel.row_spacing} m` : null}
+              />
+              <SiteDetail label={t("vineyards.parcels.rootstock")} value={parcel.rootstock} />
+              <SiteDetail label={t("vineyards.parcels.training")} value={parcel.training} />
+              <SiteDetail label={t("vineyards.parcels.orientation")} value={parcel.orientation} />
+              <SiteDetail
+                label={t("vineyards.parcels.slope")}
+                value={parcel.slope != null ? `${parcel.slope}%` : null}
+              />
+              <SiteDetail
+                label={t("vineyards.parcels.coordinates")}
+                value={
+                  parcel.latitude && parcel.longitude
+                    ? `${parcel.latitude}, ${parcel.longitude}`
+                    : null
+                }
+              />
+            </dl>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Maturity */}

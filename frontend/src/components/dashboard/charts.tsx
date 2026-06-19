@@ -6,6 +6,7 @@ import {
   AreaChart,
   Bar,
   BarChart,
+  CartesianGrid,
   Cell,
   Line,
   LineChart,
@@ -216,8 +217,8 @@ export function StockWatchChart({
   );
 }
 
-/** Single-series daily bars (e.g. units exited per day). */
-export function DailyBarChart({
+/** Single-series daily area/line (e.g. units exited per day). */
+export function DailyAreaChart({
   data,
   formatValue,
 }: {
@@ -227,12 +228,26 @@ export function DailyBarChart({
   return (
     <div className="h-[220px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
-          <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} minTickGap={4} />
+        <AreaChart data={data} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
+          <defs>
+            <linearGradient id="dailyArea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.3} />
+              <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0.03} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+          <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} minTickGap={20} interval="preserveStartEnd" />
           <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} width={32} allowDecimals={false} />
-          <Tooltip content={<TooltipBox formatValue={formatValue} />} cursor={{ fill: "var(--color-muted)" }} />
-          <Bar dataKey="value" fill="var(--color-primary)" radius={[3, 3, 0, 0]} animationDuration={ANIM} />
-        </BarChart>
+          <Tooltip content={<TooltipBox formatValue={formatValue} />} />
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke="var(--color-primary)"
+            strokeWidth={2}
+            fill="url(#dailyArea)"
+            animationDuration={ANIM}
+          />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );
@@ -263,7 +278,7 @@ export function Sparkline({ data }: { data: number[] }) {
 }
 
 /** Grouped In/Out bars over months (stock movement timeseries). */
-export function MovementsBarChart({
+export function MovementsLineChart({
   data,
 }: {
   data: { month: string; in: number; out: number }[];
@@ -271,13 +286,14 @@ export function MovementsBarChart({
   return (
     <div className="h-[260px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
+        <LineChart data={data} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
           <XAxis dataKey="month" tick={AXIS_TICK} axisLine={false} tickLine={false} minTickGap={6} />
           <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} width={32} allowDecimals={false} />
-          <Tooltip cursor={{ fill: "var(--color-muted)" }} />
-          <Bar dataKey="in" name="In" fill="#10b981" radius={[3, 3, 0, 0]} animationDuration={ANIM} />
-          <Bar dataKey="out" name="Out" fill="var(--color-destructive)" radius={[3, 3, 0, 0]} animationDuration={ANIM} />
-        </BarChart>
+          <Tooltip />
+          <Line type="monotone" dataKey="in" name="In" stroke="#10b981" strokeWidth={2} dot={false} animationDuration={ANIM} />
+          <Line type="monotone" dataKey="out" name="Out" stroke="var(--color-destructive)" strokeWidth={2} dot={false} animationDuration={ANIM} />
+        </LineChart>
       </ResponsiveContainer>
     </div>
   );
@@ -289,8 +305,8 @@ export function DonutChart({
   centerLabel,
 }: {
   data: { key: string; value: number; color: string }[];
-  centerValue: React.ReactNode;
-  centerLabel: string;
+  centerValue?: React.ReactNode;
+  centerLabel?: string;
 }) {
   return (
     <div className="relative h-[200px] w-full">
@@ -312,10 +328,12 @@ export function DonutChart({
           </Pie>
         </PieChart>
       </ResponsiveContainer>
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-semibold tabular-nums">{centerValue}</span>
-        <span className="text-xs text-muted-foreground">{centerLabel}</span>
-      </div>
+      {centerValue != null && (
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-xl font-semibold tabular-nums">{centerValue}</span>
+          {centerLabel && <span className="text-xs text-muted-foreground">{centerLabel}</span>}
+        </div>
+      )}
     </div>
   );
 }

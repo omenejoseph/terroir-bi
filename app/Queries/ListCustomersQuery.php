@@ -29,7 +29,16 @@ class ListCustomersQuery
      */
     public function build(array $filters): Builder
     {
-        $query = Customer::query()->with('pricingTier');
+        // Order count + revenue per customer for the list card (non-consignment
+        // only, matching the analytics queries). Revenue is exposed minor-only;
+        // the controller gates it behind financials visibility.
+        $query = Customer::query()
+            ->with('pricingTier')
+            ->withCount(['orders as order_count' => fn (Builder $q) => $q->where('is_consignment', false)])
+            ->withSum(
+                ['orders as revenue_minor' => fn (Builder $q) => $q->where('is_consignment', false)],
+                'total_amount',
+            );
 
         if (! empty($filters['search'])) {
             $term = '%'.$filters['search'].'%';

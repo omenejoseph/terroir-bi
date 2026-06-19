@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Queries;
 
+use App\Enums\CostCategory;
 use App\Enums\InflowStatus;
 use App\Models\Cost;
 use App\Models\Customer;
@@ -21,7 +22,7 @@ use Illuminate\Support\Collection;
  */
 class InflowAnalyticsQuery
 {
-    public const INVOICE_CATEGORY = 'Invoice';
+    public const INVOICE_CATEGORY = CostCategory::Invoice->value;
 
     public function __construct(private readonly TenantContext $tenant) {}
 
@@ -32,7 +33,11 @@ class InflowAnalyticsQuery
     {
         $currency = $this->currency();
 
+        // Exclude inflows from stats-excluded customers (customer-less inflows
+        // still count); consignment cash is never recorded as an inflow.
+        $excluded = Customer::statsExcludedIds();
         $inflows = Inflow::query()->whereBetween('date', [$from, $to])
+            ->where(fn ($q) => $q->whereNull('customer_id')->orWhereNotIn('customer_id', $excluded))
             ->get(['date', 'amount', 'category', 'status', 'customer_id', 'is_credit_note', 'received_at']);
 
         $costsTotal = (int) Cost::query()->whereBetween('date', [$from, $to])
@@ -41,6 +46,11 @@ class InflowAnalyticsQuery
         // Cash in = received inflows (credit notes count negative).
         $cashIn = (int) $inflows->where('status', InflowStatus::Received)
             ->sum(fn (Inflow $i) => $i->signedMinor());
+        $net = $cashIn - $costsTotal;
+
+        // Net cash flow for the preceding equal-length window → period-over-period trend.
+        $prevNet = $this->previousNet($from, $to, $excluded);
+        $change = $prevNet !== 0 ? round(($net - $prevNet) / abs($prevNet) * 100, 1) : null;
 
         return [
             'period' => ['from' => $from->toIso8601String(), 'to' => $to->toIso8601String()],
@@ -48,9 +58,11 @@ class InflowAnalyticsQuery
             'collected' => $this->card($inflows, InflowStatus::Received, $currency),
             'pending' => $this->card($inflows, InflowStatus::Pending, $currency),
             'net_cash_flow' => [
-                'net' => Money::fromMinor($cashIn - $costsTotal, $currency)->jsonSerialize(),
+                'net' => Money::fromMinor($net, $currency)->jsonSerialize(),
                 'inflows' => Money::fromMinor($cashIn, $currency)->jsonSerialize(),
                 'costs' => Money::fromMinor($costsTotal, $currency)->jsonSerialize(),
+                'previous' => Money::fromMinor($prevNet, $currency)->jsonSerialize(),
+                'change' => $change,
             ],
             'avg_days_to_collect' => $this->avgDaysToCollect($inflows),
             'avg_inflow' => $this->avgInflow($inflows, $currency),
@@ -79,6 +91,31 @@ class InflowAnalyticsQuery
             'total' => Money::fromMinor((int) $rows->sum(fn (Inflow $i) => $i->amount->getMinorAmount()), $currency)->jsonSerialize(),
             'count' => $rows->count(),
         ];
+    }
+
+    /**
+     * Net cash flow (received inflows − costs) for the equal-length window
+     * immediately preceding [$from, $to]. Powers the trend on the net card.
+     *
+     * @param  list<string>  $excluded  stats-excluded customer ids
+     */
+    private function previousNet(Carbon $from, Carbon $to, array $excluded): int
+    {
+        // Window ends one second before $from so a row dated exactly at $from
+        // (which belongs to the current period) is not double-counted here.
+        $prevTo = $from->copy()->subSecond();
+        $prevFrom = $prevTo->copy()->subSeconds((int) $from->diffInSeconds($to));
+
+        $prevCashIn = (int) Inflow::query()->whereBetween('date', [$prevFrom, $prevTo])
+            ->where('status', InflowStatus::Received)
+            ->where(fn ($q) => $q->whereNull('customer_id')->orWhereNotIn('customer_id', $excluded))
+            ->get(['amount', 'is_credit_note'])
+            ->sum(fn (Inflow $i) => $i->signedMinor());
+
+        $prevCosts = (int) Cost::query()->whereBetween('date', [$prevFrom, $prevTo])
+            ->get(['total_amount'])->sum(fn (Cost $c) => $c->total_amount->getMinorAmount());
+
+        return $prevCashIn - $prevCosts;
     }
 
     /**
@@ -120,6 +157,7 @@ class InflowAnalyticsQuery
             ->map(fn ($group, $name) => [
                 'name' => (string) $name,
                 'total' => Money::fromMinor((int) $group->sum(fn (Inflow $i) => $i->amount->getMinorAmount()), $currency)->jsonSerialize(),
+                'count' => $group->count(),
             ])->sortByDesc(fn (array $r) => $r['total']['minor'])->values()->all());
     }
 

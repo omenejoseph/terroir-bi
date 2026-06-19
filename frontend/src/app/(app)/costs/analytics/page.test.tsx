@@ -27,7 +27,11 @@ describe("CostAnalyticsPage", () => {
     // Charts + top costs.
     expect(screen.getByText("Year over Year")).toBeInTheDocument();
     expect(screen.getByText("Top Costs")).toBeInTheDocument();
-    expect(screen.getByText("Glass")).toBeInTheDocument(); // a top-cost row
+    // "Glass" now appears in both the category legend and the top-cost row.
+    expect(screen.getAllByText("Glass").length).toBeGreaterThan(0);
+    // Category distribution legend: subtitle + the per-category change pill.
+    expect(screen.getByText(/total across 2 categories/)).toBeInTheDocument();
+    expect(screen.getByText("+100%")).toBeInTheDocument(); // Glass change
   });
 
   it("sends a date range when a preset is chosen", async () => {

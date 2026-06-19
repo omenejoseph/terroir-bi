@@ -4,22 +4,28 @@ import type {
   InflowAnalytics,
   InflowChange,
   InflowInput,
+  InflowListSummary,
   InflowQuery,
   InflowStatus,
   PaginationMeta,
 } from "@/lib/types";
 
+/** Pagination meta for the inflow list, carrying the Invoiced/Collected/Pending summary. */
+export type InflowListMeta = PaginationMeta & { summary?: InflowListSummary };
+
 /** Money-in (inflow / A-R payment) endpoints. Mirrors routes/api.php. */
 export const inflowsApi = {
   /** GET /inflows — paginated, filterable. */
-  list: (query: InflowQuery = {}): Promise<{ data: Inflow[]; meta?: PaginationMeta }> =>
+  list: (query: InflowQuery = {}): Promise<{ data: Inflow[]; meta?: InflowListMeta }> =>
     api.getPage<Inflow[]>("/inflows", {
       status: query.status,
       customer_id: query.customer_id,
       order_id: query.order_id,
       search: query.search,
+      date_from: query.date_from,
+      date_to: query.date_to,
       page: query.page,
-    }),
+    }) as Promise<{ data: Inflow[]; meta?: InflowListMeta }>,
 
   /** GET /inflows/{id}. */
   get: (id: string) => api.get<Inflow>(`/inflows/${id}`),

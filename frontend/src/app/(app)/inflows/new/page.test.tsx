@@ -33,7 +33,7 @@ describe("NewInflowPage", () => {
     await user.click(screen.getByLabelText("Category"));
     await user.type(screen.getByPlaceholderText("e.g. Order payment, Grant…"), "Order payment");
     await user.click(screen.getByText('Create "Order payment"'));
-    await user.click(screen.getByRole("button", { name: "Save cash inflow" }));
+    await user.click(screen.getByRole("button", { name: "Save inflow" }));
 
     await waitFor(() => expect(posted).not.toBeNull());
     expect(posted).toMatchObject({

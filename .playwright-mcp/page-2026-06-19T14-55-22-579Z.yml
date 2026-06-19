@@ -1,0 +1,329 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e10] [cursor=pointer]:
+    - img [ref=e11]
+  - alert [ref=e14]
+  - generic [ref=e15]:
+    - complementary [ref=e16]:
+      - generic [ref=e17]:
+        - link "Terroir BI" [ref=e19] [cursor=pointer]:
+          - /url: /dashboard
+          - img "Terroir BI" [ref=e20]
+        - navigation [ref=e21]:
+          - generic [ref=e22]:
+            - paragraph [ref=e23]: Pregled
+            - link "Nadzorna ploča" [ref=e24] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e26]
+              - text: Nadzorna ploča
+          - generic [ref=e31]:
+            - paragraph [ref=e32]: Prodaja
+            - link "Narudžbe" [ref=e33] [cursor=pointer]:
+              - /url: /orders
+              - img [ref=e35]
+              - text: Narudžbe
+            - link "Kupci" [ref=e38] [cursor=pointer]:
+              - /url: /customers
+              - img [ref=e40]
+              - text: Kupci
+          - generic [ref=e45]:
+            - paragraph [ref=e46]: Operacije
+            - link "Zaliha" [ref=e47] [cursor=pointer]:
+              - /url: /inventory
+              - img [ref=e49]
+              - text: Zaliha
+            - link "Dobavljači" [ref=e59] [cursor=pointer]:
+              - /url: /suppliers
+              - img [ref=e61]
+              - text: Dobavljači
+            - link "Radni nalozi" [ref=e66] [cursor=pointer]:
+              - /url: /work-orders
+              - img [ref=e68]
+              - text: Radni nalozi
+          - generic [ref=e71]:
+            - paragraph [ref=e72]: Podrum
+            - link "Podrum" [ref=e73] [cursor=pointer]:
+              - /url: /cellar
+              - img [ref=e75]
+              - text: Podrum
+            - link "Vinogradi" [ref=e77] [cursor=pointer]:
+              - /url: /vineyards
+              - img [ref=e79]
+              - text: Vinogradi
+            - link "Proizvodnja" [ref=e89] [cursor=pointer]:
+              - /url: /production
+              - img [ref=e91]
+              - text: Proizvodnja
+          - generic [ref=e93]:
+            - paragraph [ref=e94]: Financije
+            - link "Priljevi" [ref=e95] [cursor=pointer]:
+              - /url: /inflows
+              - img [ref=e97]
+              - text: Priljevi
+            - link "Troškovi" [ref=e100] [cursor=pointer]:
+              - /url: /costs
+              - img [ref=e102]
+              - text: Troškovi
+            - link "Novčani tok" [ref=e105] [cursor=pointer]:
+              - /url: /cash-flow
+              - img [ref=e107]
+              - text: Novčani tok
+          - generic [ref=e110]:
+            - paragraph [ref=e111]: Automatizacija
+            - link "AI unos podataka" [ref=e112] [cursor=pointer]:
+              - /url: /ai-imports
+              - img [ref=e114]
+              - text: AI unos podataka
+          - generic [ref=e116]:
+            - paragraph [ref=e117]: Radni prostor
+            - link "Tim" [ref=e118] [cursor=pointer]:
+              - /url: /team
+              - img [ref=e120]
+              - text: Tim
+            - link "Postavke" [ref=e124] [cursor=pointer]:
+              - /url: /settings
+              - img [ref=e126]
+              - text: Postavke
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - img [ref=e131]
+            - generic [ref=e135]: Jezik
+            - tablist [ref=e136]:
+              - tab "Hrvatski" [selected] [ref=e137]
+              - tab "English" [ref=e138]
+          - generic [ref=e139]:
+            - paragraph [ref=e140]: Filip Bibić
+            - paragraph [ref=e141]: test@example.com
+          - button "Odjava" [ref=e142]:
+            - img [ref=e143]
+            - text: Odjava
+          - button "Sažmi" [ref=e146]:
+            - img [ref=e147]
+            - text: Sažmi
+      - separator [ref=e150]
+    - main [ref=e151]:
+      - generic [ref=e153]:
+        - button "Obavijesti" [ref=e154]:
+          - img [ref=e155]
+        - generic: 9+
+      - generic [ref=e160]:
+        - generic [ref=e161]:
+          - generic [ref=e162]:
+            - heading "Troškovi" [level=1] [ref=e163]
+            - paragraph [ref=e164]: Troškovi, obveze i analitika potrošnje.
+          - generic [ref=e165]:
+            - button "Analitika" [ref=e166]:
+              - img [ref=e167]
+              - text: Analitika
+            - button "Dodaj trošak" [ref=e169]:
+              - img [ref=e170]
+              - text: Dodaj trošak
+        - generic [ref=e171]:
+          - generic [ref=e173]:
+            - paragraph [ref=e174]: Fakturirano
+            - paragraph [ref=e175]: 2.100,00 €
+            - paragraph [ref=e176]: 2 računa · PDV 0,00 €
+          - generic [ref=e178]:
+            - paragraph [ref=e179]: Plaćeno
+            - paragraph [ref=e180]: 1.500,00 €
+            - paragraph [ref=e181]: 1 plaćeno
+          - generic [ref=e183]:
+            - paragraph [ref=e184]: Neplaćeno
+            - paragraph [ref=e185]: 600,00 €
+            - paragraph [ref=e186]: 1 neplaćeno · 0 dospjelo
+        - tablist [ref=e187]:
+          - tab "Sve (42)" [ref=e188]
+          - tab "Računi (2)" [selected] [ref=e189]
+          - tab "Plaćanja (0)" [ref=e190]
+          - tab "Ostalo (40)" [ref=e191]
+        - generic [ref=e192]:
+          - combobox "Sve kategorije" [ref=e193]:
+            - option "Sve kategorije" [selected]
+            - option "Salary"
+            - option "Marketing"
+            - option "Invoice"
+            - option "Payment"
+            - option "Utilities"
+            - option "Packaging"
+            - option "Equipment"
+            - option "Logistics"
+            - option "Operations"
+            - option "Grapes"
+          - combobox "Svi statusi" [ref=e194]:
+            - option "Svi statusi" [selected]
+            - option "Na čekanju"
+            - option "Odobreno"
+            - option "Plaćeno"
+          - combobox "Svi dobavljači" [ref=e195]:
+            - option "Svi dobavljači" [selected]
+            - option "Amorim Cork"
+            - option "Demo Supplier 01"
+            - option "Demo Supplier 02"
+            - option "Demo Supplier 03"
+            - option "Demo Supplier 04"
+            - option "Demo Supplier 05"
+            - option "Demo Supplier 06"
+            - option "Demo Supplier 07"
+            - option "Demo Supplier 08"
+            - option "Demo Supplier 09"
+            - option "Demo Supplier 10"
+            - option "Demo Supplier 11"
+            - option "Demo Supplier 12"
+            - option "Demo Supplier 13"
+            - option "Demo Supplier 14"
+            - option "Demo Supplier 15"
+            - option "Demo Supplier 16"
+            - option "Demo Supplier 17"
+            - option "Demo Supplier 18"
+            - option "Demo Supplier 19"
+            - option "Demo Supplier 20"
+            - option "Demo Supplier 21"
+            - option "Demo Supplier 22"
+            - option "Demo Supplier 23"
+            - option "Demo Supplier 24"
+          - textbox "Pretraži opis, referencu…" [ref=e196]
+        - generic [ref=e198]:
+          - button "Danas" [ref=e199]
+          - button "Jučer" [ref=e200]
+          - button "MTD" [ref=e201]
+          - button "QTD" [ref=e202]
+          - button "YTD" [ref=e203]
+          - button "Ovaj mjesec" [ref=e204]
+          - button "Prošli mjesec" [ref=e205]
+          - button "Prošla godina" [ref=e206]
+          - button "Sve" [pressed] [ref=e207]
+          - button "Prilagođeno…" [ref=e208]
+        - generic [ref=e209]:
+          - generic [ref=e210]:
+            - button "Vrsta Invoice Datum 19. lip 2026. Opis Lab services invoice (unpaid) Dobavljač Enartis Adriatic Iznos (s PDV-om) 600,00 € Dospijeće 1. srp 2026. Na čekanju" [expanded] [ref=e211]:
+              - generic [ref=e213]:
+                - generic [ref=e214]:
+                  - generic [ref=e215]: Vrsta
+                  - generic [ref=e216]: Invoice
+                - generic [ref=e217]:
+                  - generic [ref=e218]: Datum
+                  - generic [ref=e219]: 19. lip 2026.
+                - generic [ref=e220]:
+                  - generic [ref=e221]: Opis
+                  - generic [ref=e222]: Lab services invoice (unpaid)
+                - generic [ref=e223]:
+                  - generic [ref=e224]: Dobavljač
+                  - generic [ref=e225]: Enartis Adriatic
+                - generic [ref=e226]:
+                  - generic [ref=e227]: Iznos (s PDV-om)
+                  - generic [ref=e228]: 600,00 €
+                - generic [ref=e229]:
+                  - generic [ref=e230]: Dospijeće
+                  - generic [ref=e231]: 1. srp 2026.
+              - generic [ref=e232]:
+                - generic [ref=e233]: Na čekanju
+                - img [ref=e234]
+            - generic [ref=e296]:
+              - generic [ref=e297]:
+                - text: Dobavljač
+                - combobox "Dobavljač" [ref=e298]:
+                  - option "Odaberi dobavljača" [selected]
+                  - option "Amorim Cork"
+                  - option "Demo Supplier 01"
+                  - option "Demo Supplier 02"
+                  - option "Demo Supplier 03"
+                  - option "Demo Supplier 04"
+                  - option "Demo Supplier 05"
+                  - option "Demo Supplier 06"
+                  - option "Demo Supplier 07"
+                  - option "Demo Supplier 08"
+                  - option "Demo Supplier 09"
+                  - option "Demo Supplier 10"
+                  - option "Demo Supplier 11"
+                  - option "Demo Supplier 12"
+                  - option "Demo Supplier 13"
+                  - option "Demo Supplier 14"
+                  - option "Demo Supplier 15"
+                  - option "Demo Supplier 16"
+                  - option "Demo Supplier 17"
+                  - option "Demo Supplier 18"
+                  - option "Demo Supplier 19"
+                  - option "Demo Supplier 20"
+                  - option "Demo Supplier 21"
+                  - option "Demo Supplier 22"
+                  - option "Demo Supplier 23"
+                  - option "Demo Supplier 24"
+              - generic [ref=e299]:
+                - generic [ref=e300]:
+                  - generic [ref=e301]: Stavke
+                  - button "Dodaj prilagođenu stavku" [ref=e303]:
+                    - img [ref=e304]
+                    - text: Dodaj prilagođenu stavku
+                - list [ref=e305]:
+                  - listitem [ref=e306]:
+                    - generic [ref=e307]: Opis
+                    - generic [ref=e308]: Kol.
+                    - generic [ref=e309]: Jedinična cijena
+                    - generic [ref=e310]: Ukupno
+                  - listitem [ref=e312]:
+                    - textbox "Opis" [ref=e313]: Analyses
+                    - spinbutton "Kol." [ref=e314]: "1"
+                    - spinbutton "Jedinična cijena" [ref=e315]: "600"
+                    - generic [ref=e316]: "600.00"
+                    - button "Ukloni stavku" [ref=e317]:
+                      - img [ref=e318]
+              - generic [ref=e321]:
+                - generic [ref=e322]:
+                  - text: Datum
+                  - textbox "Datum" [ref=e323]: 2026-06-19
+                - generic [ref=e324]:
+                  - text: Status
+                  - combobox "Status" [ref=e325]:
+                    - option "Na čekanju" [selected]
+                    - option "Odobreno"
+                    - option "Plaćeno"
+                - generic [ref=e326]:
+                  - text: Kategorija
+                  - button "Kategorija" [ref=e328]:
+                    - generic [ref=e329]: Invoice
+                    - img [ref=e330]
+                - generic [ref=e333]:
+                  - text: Način plaćanja
+                  - combobox "Način plaćanja" [ref=e334]:
+                    - option "Odaberi način plaćanja" [selected]
+                    - option "Gotovina"
+                    - option "Bankovni prijenos"
+                    - option "Kartica"
+                    - option "Ostalo"
+              - generic [ref=e335]:
+                - text: Opis
+                - textbox "Opis" [ref=e336]: Lab services invoice (unpaid)
+              - generic [ref=e337]:
+                - text: Referenca
+                - textbox "Referenca" [ref=e338]: LAB-INV-0077
+              - generic [ref=e339]:
+                - text: Bilješke
+                - textbox "Bilješke" [ref=e340]
+              - generic [ref=e341]:
+                - generic [ref=e342]: Ukupni iznos
+                - generic [ref=e343]: 600.00 EUR
+              - generic [ref=e344]:
+                - button "Odustani" [ref=e345]
+                - button "Spremi promjene" [ref=e346]
+          - button "Vrsta Invoice Datum 19. lip 2026. Opis Supplier invoice — glass (paid) Dobavljač Vetropack Straža d.d. Iznos (s PDV-om) 1.500,00 € Dospijeće 15. lip 2026. Plaćeno" [ref=e238]:
+            - generic [ref=e240]:
+              - generic [ref=e241]:
+                - generic [ref=e242]: Vrsta
+                - generic [ref=e243]: Invoice
+              - generic [ref=e244]:
+                - generic [ref=e245]: Datum
+                - generic [ref=e246]: 19. lip 2026.
+              - generic [ref=e247]:
+                - generic [ref=e248]: Opis
+                - generic [ref=e249]: Supplier invoice — glass (paid)
+              - generic [ref=e250]:
+                - generic [ref=e251]: Dobavljač
+                - generic [ref=e252]: Vetropack Straža d.d.
+              - generic [ref=e253]:
+                - generic [ref=e254]: Iznos (s PDV-om)
+                - generic [ref=e255]: 1.500,00 €
+              - generic [ref=e256]:
+                - generic [ref=e257]: Dospijeće
+                - generic [ref=e258]: 15. lip 2026.
+            - generic [ref=e259]:
+              - generic [ref=e260]: Plaćeno
+              - img [ref=e261]

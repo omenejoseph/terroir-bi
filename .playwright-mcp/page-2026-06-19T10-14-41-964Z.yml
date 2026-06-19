@@ -1,0 +1,798 @@
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e638] [cursor=pointer]:
+    - img [ref=e639]
+  - alert [ref=e642]
+  - generic [ref=e643]:
+    - complementary [ref=e644]:
+      - generic [ref=e645]:
+        - link "Terroir BI" [ref=e647] [cursor=pointer]:
+          - /url: /dashboard
+          - img "Terroir BI" [ref=e648]
+        - navigation [ref=e649]:
+          - generic [ref=e650]:
+            - paragraph [ref=e651]: Pregled
+            - link "Nadzorna ploča" [ref=e652] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e654]
+              - text: Nadzorna ploča
+          - generic [ref=e659]:
+            - paragraph [ref=e660]: Prodaja
+            - link "Narudžbe" [ref=e661] [cursor=pointer]:
+              - /url: /orders
+              - img [ref=e663]
+              - text: Narudžbe
+            - link "Kupci" [ref=e666] [cursor=pointer]:
+              - /url: /customers
+              - img [ref=e668]
+              - text: Kupci
+          - generic [ref=e673]:
+            - paragraph [ref=e674]: Operacije
+            - link "Zaliha" [ref=e675] [cursor=pointer]:
+              - /url: /inventory
+              - img [ref=e677]
+              - text: Zaliha
+            - link "Dobavljači" [ref=e687] [cursor=pointer]:
+              - /url: /suppliers
+              - img [ref=e689]
+              - text: Dobavljači
+            - link "Radni nalozi" [ref=e694] [cursor=pointer]:
+              - /url: /work-orders
+              - img [ref=e696]
+              - text: Radni nalozi
+          - generic [ref=e699]:
+            - paragraph [ref=e700]: Podrum
+            - link "Podrum" [ref=e701] [cursor=pointer]:
+              - /url: /cellar
+              - img [ref=e703]
+              - text: Podrum
+            - link "Vinogradi" [ref=e705] [cursor=pointer]:
+              - /url: /vineyards
+              - img [ref=e707]
+              - text: Vinogradi
+            - link "Proizvodnja" [ref=e717] [cursor=pointer]:
+              - /url: /production
+              - img [ref=e719]
+              - text: Proizvodnja
+          - generic [ref=e721]:
+            - paragraph [ref=e722]: Financije
+            - link "Priljevi" [ref=e723] [cursor=pointer]:
+              - /url: /inflows
+              - img [ref=e725]
+              - text: Priljevi
+            - link "Troškovi" [ref=e728] [cursor=pointer]:
+              - /url: /costs
+              - img [ref=e730]
+              - text: Troškovi
+            - link "Novčani tok" [ref=e733] [cursor=pointer]:
+              - /url: /cash-flow
+              - img [ref=e735]
+              - text: Novčani tok
+          - generic [ref=e738]:
+            - paragraph [ref=e739]: Automatizacija
+            - link "AI unos podataka" [ref=e740] [cursor=pointer]:
+              - /url: /ai-imports
+              - img [ref=e742]
+              - text: AI unos podataka
+          - generic [ref=e744]:
+            - paragraph [ref=e745]: Radni prostor
+            - link "Tim" [ref=e746] [cursor=pointer]:
+              - /url: /team
+              - img [ref=e748]
+              - text: Tim
+            - link "Postavke" [ref=e752] [cursor=pointer]:
+              - /url: /settings
+              - img [ref=e754]
+              - text: Postavke
+        - generic [ref=e757]:
+          - generic [ref=e758]:
+            - img [ref=e759]
+            - generic [ref=e763]: Jezik
+            - tablist [ref=e764]:
+              - tab "Hrvatski" [selected] [ref=e765]
+              - tab "English" [ref=e766]
+          - generic [ref=e767]:
+            - paragraph [ref=e768]: Filip Bibić
+            - paragraph [ref=e769]: test@example.com
+          - button "Odjava" [ref=e770]:
+            - img [ref=e771]
+            - text: Odjava
+          - button "Sažmi" [ref=e774]:
+            - img [ref=e775]
+            - text: Sažmi
+      - separator [ref=e778]
+    - main [ref=e5]:
+      - generic [ref=e7]:
+        - button "Obavijesti" [ref=e8]:
+          - img [ref=e9]
+        - generic: 9+
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - heading "Narudžbe" [level=1] [ref=e17]
+            - paragraph [ref=e18]: 66 narudžbi
+          - generic [ref=e19]:
+            - textbox "Pretraži broj narudžbe ili kupca…" [ref=e20]
+            - button "Analitika" [ref=e21]:
+              - img [ref=e22]
+              - text: Analitika
+            - button "Nova narudžba" [ref=e24]:
+              - img [ref=e25]
+              - text: Nova narudžba
+        - tablist [ref=e26]:
+          - tab "Narudžbe" [ref=e27]
+          - tab "Prognoza" [selected] [ref=e28]
+        - generic [ref=e779]:
+          - generic [ref=e780]:
+            - tablist [ref=e781]:
+              - tab "Pregled" [ref=e782]
+              - tab "Proizvodi (19)" [active] [selected] [ref=e783]
+              - tab "Kupci (42)" [ref=e784]
+            - button "Osvježi" [ref=e785]:
+              - img [ref=e786]
+              - text: Osvježi
+          - table [ref=e1011]:
+            - rowgroup [ref=e1012]:
+              - row "Proizvod Trend 12 mj 3 mj 6 mj 12 mj Prodanost Godišnja projekcija Očekivano sljedeća 3 mj (boce)" [ref=e1013]:
+                - columnheader "Proizvod" [ref=e1014]
+                - columnheader "Trend 12 mj" [ref=e1015]
+                - columnheader "3 mj" [ref=e1016]
+                - columnheader "6 mj" [ref=e1017]
+                - columnheader "12 mj" [ref=e1018]
+                - columnheader "Prodanost" [ref=e1019]
+                - columnheader "Godišnja projekcija" [ref=e1020]
+                - columnheader "Očekivano sljedeća 3 mj (boce)" [ref=e1021]
+            - rowgroup [ref=e1022]:
+              - 'row "BIBICh Debit WINE-DEBIT · Wine Zadnja prodaja: 19. lip 2026. 168 2o · 2c 186 5o · 3c 192 6o · 3c 10% otpremljeno · 0% naručeno · 90% na polici 302 boca Od poč. godine 186djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1023]':
+                - 'cell "BIBICh Debit WINE-DEBIT · Wine Zadnja prodaja: 19. lip 2026." [ref=e1024]':
+                  - paragraph [ref=e1025]: BIBICh Debit
+                  - paragraph [ref=e1026]: WINE-DEBIT · Wine
+                  - paragraph [ref=e1027]: "Zadnja prodaja: 19. lip 2026."
+                - cell [ref=e1028]:
+                  - img [ref=e1032]
+                - cell "168 2o · 2c" [ref=e1035]:
+                  - text: "168"
+                  - generic [ref=e1036]: 2o · 2c
+                - cell "186 5o · 3c" [ref=e1037]:
+                  - text: "186"
+                  - generic [ref=e1038]: 5o · 3c
+                - cell "192 6o · 3c" [ref=e1039]:
+                  - text: "192"
+                  - generic [ref=e1040]: 6o · 3c
+                - cell "10% otpremljeno · 0% naručeno · 90% na polici" [ref=e1041]:
+                  - paragraph [ref=e1045]: 10% otpremljeno · 0% naručeno · 90% na polici
+                - cell "302 boca Od poč. godine 186djel. PG" [ref=e1046]:
+                  - paragraph [ref=e1047]: 302 boca
+                  - paragraph [ref=e1050]: Od poč. godine 186djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1051]':
+                  - generic [ref=e1052]:
+                    - generic [ref=e1053]:
+                      - paragraph [ref=e1054]: Jun 26
+                      - paragraph [ref=e1055]: —
+                      - paragraph [ref=e1056]: "PG: 0"
+                    - generic [ref=e1057]:
+                      - paragraph [ref=e1058]: Jul 26
+                      - paragraph [ref=e1059]: —
+                      - paragraph [ref=e1060]: "PG: 0"
+                    - generic [ref=e1061]:
+                      - paragraph [ref=e1062]: Aug 26
+                      - paragraph [ref=e1063]: —
+                      - paragraph [ref=e1064]: "PG: 0"
+              - 'row "Demo Reserve (filler) DMO-WINE Zadnja prodaja: 20. tra 2026. 48 8o · 8c 180 30o · 30c 180 30o · 30c 4% otpremljeno · 0% naručeno · 96% na polici 401 boca Od poč. godine 168djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1065]':
+                - 'cell "Demo Reserve (filler) DMO-WINE Zadnja prodaja: 20. tra 2026." [ref=e1066]':
+                  - paragraph [ref=e1067]: Demo Reserve (filler)
+                  - paragraph [ref=e1068]: DMO-WINE
+                  - paragraph [ref=e1069]: "Zadnja prodaja: 20. tra 2026."
+                - cell [ref=e1070]:
+                  - img [ref=e1074]
+                - cell "48 8o · 8c" [ref=e1077]:
+                  - text: "48"
+                  - generic [ref=e1078]: 8o · 8c
+                - cell "180 30o · 30c" [ref=e1079]:
+                  - text: "180"
+                  - generic [ref=e1080]: 30o · 30c
+                - cell "180 30o · 30c" [ref=e1081]:
+                  - text: "180"
+                  - generic [ref=e1082]: 30o · 30c
+                - cell "4% otpremljeno · 0% naručeno · 96% na polici" [ref=e1083]:
+                  - paragraph [ref=e1087]: 4% otpremljeno · 0% naručeno · 96% na polici
+                - cell "401 boca Od poč. godine 168djel. PG" [ref=e1088]:
+                  - paragraph [ref=e1089]: 401 boca
+                  - paragraph [ref=e1092]: Od poč. godine 168djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1093]':
+                  - generic [ref=e1094]:
+                    - generic [ref=e1095]:
+                      - paragraph [ref=e1096]: Jun 26
+                      - paragraph [ref=e1097]: —
+                      - paragraph [ref=e1098]: "PG: 0"
+                    - generic [ref=e1099]:
+                      - paragraph [ref=e1100]: Jul 26
+                      - paragraph [ref=e1101]: —
+                      - paragraph [ref=e1102]: "PG: 0"
+                    - generic [ref=e1103]:
+                      - paragraph [ref=e1104]: Aug 26
+                      - paragraph [ref=e1105]: —
+                      - paragraph [ref=e1106]: "PG: 0"
+              - 'row "BIBICh Bilo WINE-BILO · Wine Zadnja prodaja: 19. lip 2026. 180 1o · 1c 180 1o · 1c 180 1o · 1c 15% otpremljeno · 0% naručeno · 85% na polici 180 boca Od poč. godine 180djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1107]':
+                - 'cell "BIBICh Bilo WINE-BILO · Wine Zadnja prodaja: 19. lip 2026." [ref=e1108]':
+                  - paragraph [ref=e1109]: BIBICh Bilo
+                  - paragraph [ref=e1110]: WINE-BILO · Wine
+                  - paragraph [ref=e1111]: "Zadnja prodaja: 19. lip 2026."
+                - cell [ref=e1112]:
+                  - img [ref=e1116]
+                - cell "180 1o · 1c" [ref=e1119]:
+                  - text: "180"
+                  - generic [ref=e1120]: 1o · 1c
+                - cell "180 1o · 1c" [ref=e1121]:
+                  - text: "180"
+                  - generic [ref=e1122]: 1o · 1c
+                - cell "180 1o · 1c" [ref=e1123]:
+                  - text: "180"
+                  - generic [ref=e1124]: 1o · 1c
+                - cell "15% otpremljeno · 0% naručeno · 85% na polici" [ref=e1125]:
+                  - paragraph [ref=e1129]: 15% otpremljeno · 0% naručeno · 85% na polici
+                - cell "180 boca Od poč. godine 180djel. PG" [ref=e1130]:
+                  - paragraph [ref=e1131]: 180 boca
+                  - paragraph [ref=e1134]: Od poč. godine 180djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1135]':
+                  - generic [ref=e1136]:
+                    - generic [ref=e1137]:
+                      - paragraph [ref=e1138]: Jun 26
+                      - paragraph [ref=e1139]: —
+                      - paragraph [ref=e1140]: "PG: 0"
+                    - generic [ref=e1141]:
+                      - paragraph [ref=e1142]: Jul 26
+                      - paragraph [ref=e1143]: —
+                      - paragraph [ref=e1144]: "PG: 0"
+                    - generic [ref=e1145]:
+                      - paragraph [ref=e1146]: Aug 26
+                      - paragraph [ref=e1147]: —
+                      - paragraph [ref=e1148]: "PG: 0"
+              - 'row "BIBICh Plavina WINE-PLAVINA · Wine Zadnja prodaja: 19. lip 2026. 72 2o · 2c 96 4o · 2c 108 5o · 2c 13% otpremljeno · 0% naručeno · 87% na polici 329 boca Od poč. godine 96djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1149]':
+                - 'cell "BIBICh Plavina WINE-PLAVINA · Wine Zadnja prodaja: 19. lip 2026." [ref=e1150]':
+                  - paragraph [ref=e1151]: BIBICh Plavina
+                  - paragraph [ref=e1152]: WINE-PLAVINA · Wine
+                  - paragraph [ref=e1153]: "Zadnja prodaja: 19. lip 2026."
+                - cell [ref=e1154]:
+                  - img [ref=e1158]
+                - cell "72 2o · 2c" [ref=e1161]:
+                  - text: "72"
+                  - generic [ref=e1162]: 2o · 2c
+                - cell "96 4o · 2c" [ref=e1163]:
+                  - text: "96"
+                  - generic [ref=e1164]: 4o · 2c
+                - cell "108 5o · 2c" [ref=e1165]:
+                  - text: "108"
+                  - generic [ref=e1166]: 5o · 2c
+                - cell "13% otpremljeno · 0% naručeno · 87% na polici" [ref=e1167]:
+                  - paragraph [ref=e1171]: 13% otpremljeno · 0% naručeno · 87% na polici
+                - cell "329 boca Od poč. godine 96djel. PG" [ref=e1172]:
+                  - paragraph [ref=e1173]: 329 boca
+                  - paragraph [ref=e1176]: Od poč. godine 96djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1177]':
+                  - generic [ref=e1178]:
+                    - generic [ref=e1179]:
+                      - paragraph [ref=e1180]: Jun 26
+                      - paragraph [ref=e1181]: —
+                      - paragraph [ref=e1182]: "PG: 0"
+                    - generic [ref=e1183]:
+                      - paragraph [ref=e1184]: Jul 26
+                      - paragraph [ref=e1185]: —
+                      - paragraph [ref=e1186]: "PG: 0"
+                    - generic [ref=e1187]:
+                      - paragraph [ref=e1188]: Aug 26
+                      - paragraph [ref=e1189]: —
+                      - paragraph [ref=e1190]: "PG: 0"
+              - 'row "BIBICh Pošip WINE-POSIP · Wine Zadnja prodaja: 19. lip 2026. 72 4o · 3c 84 6o · 3c 84 6o · 3c 6% otpremljeno · 2% naručeno · 91% na polici 84 boca Od poč. godine 84djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1191]':
+                - 'cell "BIBICh Pošip WINE-POSIP · Wine Zadnja prodaja: 19. lip 2026." [ref=e1192]':
+                  - paragraph [ref=e1193]: BIBICh Pošip
+                  - paragraph [ref=e1194]: WINE-POSIP · Wine
+                  - paragraph [ref=e1195]: "Zadnja prodaja: 19. lip 2026."
+                - cell [ref=e1196]:
+                  - img [ref=e1200]
+                - cell "72 4o · 3c" [ref=e1203]:
+                  - text: "72"
+                  - generic [ref=e1204]: 4o · 3c
+                - cell "84 6o · 3c" [ref=e1205]:
+                  - text: "84"
+                  - generic [ref=e1206]: 6o · 3c
+                - cell "84 6o · 3c" [ref=e1207]:
+                  - text: "84"
+                  - generic [ref=e1208]: 6o · 3c
+                - cell "6% otpremljeno · 2% naručeno · 91% na polici" [ref=e1209]:
+                  - paragraph [ref=e1214]: 6% otpremljeno · 2% naručeno · 91% na polici
+                - cell "84 boca Od poč. godine 84djel. PG" [ref=e1215]:
+                  - paragraph [ref=e1216]: 84 boca
+                  - paragraph [ref=e1219]: Od poč. godine 84djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1220]':
+                  - generic [ref=e1221]:
+                    - generic [ref=e1222]:
+                      - paragraph [ref=e1223]: Jun 26
+                      - paragraph [ref=e1224]: —
+                      - paragraph [ref=e1225]: "PG: 0"
+                    - generic [ref=e1226]:
+                      - paragraph [ref=e1227]: Jul 26
+                      - paragraph [ref=e1228]: —
+                      - paragraph [ref=e1229]: "PG: 0"
+                    - generic [ref=e1230]:
+                      - paragraph [ref=e1231]: Aug 26
+                      - paragraph [ref=e1232]: —
+                      - paragraph [ref=e1233]: "PG: 0"
+              - 'row "BIBICh Crno WINE-CRNO · Wine Zadnja prodaja: 19. lip 2026. 60 2o · 2c 60 2o · 2c 60 2o · 2c 2% otpremljeno · 7% naručeno · 91% na polici 60 boca Od poč. godine 60djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1234]':
+                - 'cell "BIBICh Crno WINE-CRNO · Wine Zadnja prodaja: 19. lip 2026." [ref=e1235]':
+                  - paragraph [ref=e1236]: BIBICh Crno
+                  - paragraph [ref=e1237]: WINE-CRNO · Wine
+                  - paragraph [ref=e1238]: "Zadnja prodaja: 19. lip 2026."
+                - cell [ref=e1239]:
+                  - img [ref=e1243]
+                - cell "60 2o · 2c" [ref=e1246]:
+                  - text: "60"
+                  - generic [ref=e1247]: 2o · 2c
+                - cell "60 2o · 2c" [ref=e1248]:
+                  - text: "60"
+                  - generic [ref=e1249]: 2o · 2c
+                - cell "60 2o · 2c" [ref=e1250]:
+                  - text: "60"
+                  - generic [ref=e1251]: 2o · 2c
+                - cell "2% otpremljeno · 7% naručeno · 91% na polici" [ref=e1252]:
+                  - paragraph [ref=e1257]: 2% otpremljeno · 7% naručeno · 91% na polici
+                - cell "60 boca Od poč. godine 60djel. PG" [ref=e1258]:
+                  - paragraph [ref=e1259]: 60 boca
+                  - paragraph [ref=e1262]: Od poč. godine 60djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1263]':
+                  - generic [ref=e1264]:
+                    - generic [ref=e1265]:
+                      - paragraph [ref=e1266]: Jun 26
+                      - paragraph [ref=e1267]: —
+                      - paragraph [ref=e1268]: "PG: 0"
+                    - generic [ref=e1269]:
+                      - paragraph [ref=e1270]: Jul 26
+                      - paragraph [ref=e1271]: —
+                      - paragraph [ref=e1272]: "PG: 0"
+                    - generic [ref=e1273]:
+                      - paragraph [ref=e1274]: Aug 26
+                      - paragraph [ref=e1275]: —
+                      - paragraph [ref=e1276]: "PG: 0"
+              - 'row "BIBICh R5 Riserva WINE-R5 · Wine Zadnja prodaja: 19. lip 2026. 60 1o · 1c 60 1o · 1c 60 1o · 1c 0% otpremljeno · 11% naručeno · 89% na polici 60 boca Od poč. godine 60djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1277]':
+                - 'cell "BIBICh R5 Riserva WINE-R5 · Wine Zadnja prodaja: 19. lip 2026." [ref=e1278]':
+                  - paragraph [ref=e1279]: BIBICh R5 Riserva
+                  - paragraph [ref=e1280]: WINE-R5 · Wine
+                  - paragraph [ref=e1281]: "Zadnja prodaja: 19. lip 2026."
+                - cell [ref=e1282]:
+                  - img [ref=e1286]
+                - cell "60 1o · 1c" [ref=e1289]:
+                  - text: "60"
+                  - generic [ref=e1290]: 1o · 1c
+                - cell "60 1o · 1c" [ref=e1291]:
+                  - text: "60"
+                  - generic [ref=e1292]: 1o · 1c
+                - cell "60 1o · 1c" [ref=e1293]:
+                  - text: "60"
+                  - generic [ref=e1294]: 1o · 1c
+                - cell "0% otpremljeno · 11% naručeno · 89% na polici" [ref=e1295]:
+                  - paragraph [ref=e1299]: 0% otpremljeno · 11% naručeno · 89% na polici
+                - cell "60 boca Od poč. godine 60djel. PG" [ref=e1300]:
+                  - paragraph [ref=e1301]: 60 boca
+                  - paragraph [ref=e1304]: Od poč. godine 60djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1305]':
+                  - generic [ref=e1306]:
+                    - generic [ref=e1307]:
+                      - paragraph [ref=e1308]: Jun 26
+                      - paragraph [ref=e1309]: —
+                      - paragraph [ref=e1310]: "PG: 0"
+                    - generic [ref=e1311]:
+                      - paragraph [ref=e1312]: Jul 26
+                      - paragraph [ref=e1313]: —
+                      - paragraph [ref=e1314]: "PG: 0"
+                    - generic [ref=e1315]:
+                      - paragraph [ref=e1316]: Aug 26
+                      - paragraph [ref=e1317]: —
+                      - paragraph [ref=e1318]: "PG: 0"
+              - 'row "BIBICh R6 Riserva WINE-R6 · Wine Zadnja prodaja: 19. lip 2026. 36 2o · 2c 36 2o · 2c 36 2o · 2c 2% otpremljeno · 1% naručeno · 97% na polici 36 boca Od poč. godine 36djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1319]':
+                - 'cell "BIBICh R6 Riserva WINE-R6 · Wine Zadnja prodaja: 19. lip 2026." [ref=e1320]':
+                  - paragraph [ref=e1321]: BIBICh R6 Riserva
+                  - paragraph [ref=e1322]: WINE-R6 · Wine
+                  - paragraph [ref=e1323]: "Zadnja prodaja: 19. lip 2026."
+                - cell [ref=e1324]:
+                  - img [ref=e1328]
+                - cell "36 2o · 2c" [ref=e1331]:
+                  - text: "36"
+                  - generic [ref=e1332]: 2o · 2c
+                - cell "36 2o · 2c" [ref=e1333]:
+                  - text: "36"
+                  - generic [ref=e1334]: 2o · 2c
+                - cell "36 2o · 2c" [ref=e1335]:
+                  - text: "36"
+                  - generic [ref=e1336]: 2o · 2c
+                - cell "2% otpremljeno · 1% naručeno · 97% na polici" [ref=e1337]:
+                  - paragraph [ref=e1342]: 2% otpremljeno · 1% naručeno · 97% na polici
+                - cell "36 boca Od poč. godine 36djel. PG" [ref=e1343]:
+                  - paragraph [ref=e1344]: 36 boca
+                  - paragraph [ref=e1347]: Od poč. godine 36djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1348]':
+                  - generic [ref=e1349]:
+                    - generic [ref=e1350]:
+                      - paragraph [ref=e1351]: Jun 26
+                      - paragraph [ref=e1352]: —
+                      - paragraph [ref=e1353]: "PG: 0"
+                    - generic [ref=e1354]:
+                      - paragraph [ref=e1355]: Jul 26
+                      - paragraph [ref=e1356]: —
+                      - paragraph [ref=e1357]: "PG: 0"
+                    - generic [ref=e1358]:
+                      - paragraph [ref=e1359]: Aug 26
+                      - paragraph [ref=e1360]: —
+                      - paragraph [ref=e1361]: "PG: 0"
+              - 'row "BIBICh Think Pink Rosé WINE-THINK_PINK · Wine Zadnja prodaja: 19. lip 2026. 27 2o · 2c 27 2o · 2c 27 2o · 2c 0% otpremljeno · 3% naručeno · 97% na polici 27 boca Od poč. godine 27djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1362]':
+                - 'cell "BIBICh Think Pink Rosé WINE-THINK_PINK · Wine Zadnja prodaja: 19. lip 2026." [ref=e1363]':
+                  - paragraph [ref=e1364]: BIBICh Think Pink Rosé
+                  - paragraph [ref=e1365]: WINE-THINK_PINK · Wine
+                  - paragraph [ref=e1366]: "Zadnja prodaja: 19. lip 2026."
+                - cell [ref=e1367]:
+                  - img [ref=e1371]
+                - cell "27 2o · 2c" [ref=e1374]:
+                  - text: "27"
+                  - generic [ref=e1375]: 2o · 2c
+                - cell "27 2o · 2c" [ref=e1376]:
+                  - text: "27"
+                  - generic [ref=e1377]: 2o · 2c
+                - cell "27 2o · 2c" [ref=e1378]:
+                  - text: "27"
+                  - generic [ref=e1379]: 2o · 2c
+                - cell "0% otpremljeno · 3% naručeno · 97% na polici" [ref=e1380]:
+                  - paragraph [ref=e1385]: 0% otpremljeno · 3% naručeno · 97% na polici
+                - cell "27 boca Od poč. godine 27djel. PG" [ref=e1386]:
+                  - paragraph [ref=e1387]: 27 boca
+                  - paragraph [ref=e1390]: Od poč. godine 27djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1391]':
+                  - generic [ref=e1392]:
+                    - generic [ref=e1393]:
+                      - paragraph [ref=e1394]: Jun 26
+                      - paragraph [ref=e1395]: —
+                      - paragraph [ref=e1396]: "PG: 0"
+                    - generic [ref=e1397]:
+                      - paragraph [ref=e1398]: Jul 26
+                      - paragraph [ref=e1399]: —
+                      - paragraph [ref=e1400]: "PG: 0"
+                    - generic [ref=e1401]:
+                      - paragraph [ref=e1402]: Aug 26
+                      - paragraph [ref=e1403]: —
+                      - paragraph [ref=e1404]: "PG: 0"
+              - 'row "BIBICh Babić WINE-BABIC · Wine Zadnja prodaja: 19. lip 2026. 18 1o · 1c 18 1o · 1c 18 1o · 1c 0% otpremljeno · 2% naručeno · 98% na polici 18 boca Od poč. godine 18djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1405]':
+                - 'cell "BIBICh Babić WINE-BABIC · Wine Zadnja prodaja: 19. lip 2026." [ref=e1406]':
+                  - paragraph [ref=e1407]: BIBICh Babić
+                  - paragraph [ref=e1408]: WINE-BABIC · Wine
+                  - paragraph [ref=e1409]: "Zadnja prodaja: 19. lip 2026."
+                - cell [ref=e1410]:
+                  - img [ref=e1414]
+                - cell "18 1o · 1c" [ref=e1417]:
+                  - text: "18"
+                  - generic [ref=e1418]: 1o · 1c
+                - cell "18 1o · 1c" [ref=e1419]:
+                  - text: "18"
+                  - generic [ref=e1420]: 1o · 1c
+                - cell "18 1o · 1c" [ref=e1421]:
+                  - text: "18"
+                  - generic [ref=e1422]: 1o · 1c
+                - cell "0% otpremljeno · 2% naručeno · 98% na polici" [ref=e1423]:
+                  - paragraph [ref=e1427]: 0% otpremljeno · 2% naručeno · 98% na polici
+                - cell "18 boca Od poč. godine 18djel. PG" [ref=e1428]:
+                  - paragraph [ref=e1429]: 18 boca
+                  - paragraph [ref=e1432]: Od poč. godine 18djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1433]':
+                  - generic [ref=e1434]:
+                    - generic [ref=e1435]:
+                      - paragraph [ref=e1436]: Jun 26
+                      - paragraph [ref=e1437]: —
+                      - paragraph [ref=e1438]: "PG: 0"
+                    - generic [ref=e1439]:
+                      - paragraph [ref=e1440]: Jul 26
+                      - paragraph [ref=e1441]: —
+                      - paragraph [ref=e1442]: "PG: 0"
+                    - generic [ref=e1443]:
+                      - paragraph [ref=e1444]: Aug 26
+                      - paragraph [ref=e1445]: —
+                      - paragraph [ref=e1446]: "PG: 0"
+              - 'row "BIBICh Brut WINE-BRUT · Wine Zadnja prodaja: 19. lip 2026. 18 2o · 2c 18 2o · 2c 18 2o · 2c 1% otpremljeno · 2% naručeno · 97% na polici 18 boca Od poč. godine 18djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1447]':
+                - 'cell "BIBICh Brut WINE-BRUT · Wine Zadnja prodaja: 19. lip 2026." [ref=e1448]':
+                  - paragraph [ref=e1449]: BIBICh Brut
+                  - paragraph [ref=e1450]: WINE-BRUT · Wine
+                  - paragraph [ref=e1451]: "Zadnja prodaja: 19. lip 2026."
+                - cell [ref=e1452]:
+                  - img [ref=e1456]
+                - cell "18 2o · 2c" [ref=e1459]:
+                  - text: "18"
+                  - generic [ref=e1460]: 2o · 2c
+                - cell "18 2o · 2c" [ref=e1461]:
+                  - text: "18"
+                  - generic [ref=e1462]: 2o · 2c
+                - cell "18 2o · 2c" [ref=e1463]:
+                  - text: "18"
+                  - generic [ref=e1464]: 2o · 2c
+                - cell "1% otpremljeno · 2% naručeno · 97% na polici" [ref=e1465]:
+                  - paragraph [ref=e1470]: 1% otpremljeno · 2% naručeno · 97% na polici
+                - cell "18 boca Od poč. godine 18djel. PG" [ref=e1471]:
+                  - paragraph [ref=e1472]: 18 boca
+                  - paragraph [ref=e1475]: Od poč. godine 18djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1476]':
+                  - generic [ref=e1477]:
+                    - generic [ref=e1478]:
+                      - paragraph [ref=e1479]: Jun 26
+                      - paragraph [ref=e1480]: —
+                      - paragraph [ref=e1481]: "PG: 0"
+                    - generic [ref=e1482]:
+                      - paragraph [ref=e1483]: Jul 26
+                      - paragraph [ref=e1484]: —
+                      - paragraph [ref=e1485]: "PG: 0"
+                    - generic [ref=e1486]:
+                      - paragraph [ref=e1487]: Aug 26
+                      - paragraph [ref=e1488]: —
+                      - paragraph [ref=e1489]: "PG: 0"
+              - 'row "BIBICh Ambra Prošek WINE-AMBRA · Wine Zadnja prodaja: 19. lip 2026. 3 2o · 2c 3 2o · 2c 3 2o · 2c 0% otpremljeno · 1% naručeno · 99% na polici 3 boca Od poč. godine 3djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1490]':
+                - 'cell "BIBICh Ambra Prošek WINE-AMBRA · Wine Zadnja prodaja: 19. lip 2026." [ref=e1491]':
+                  - paragraph [ref=e1492]: BIBICh Ambra Prošek
+                  - paragraph [ref=e1493]: WINE-AMBRA · Wine
+                  - paragraph [ref=e1494]: "Zadnja prodaja: 19. lip 2026."
+                - cell [ref=e1495]:
+                  - img [ref=e1499]
+                - cell "3 2o · 2c" [ref=e1502]:
+                  - text: "3"
+                  - generic [ref=e1503]: 2o · 2c
+                - cell "3 2o · 2c" [ref=e1504]:
+                  - text: "3"
+                  - generic [ref=e1505]: 2o · 2c
+                - cell "3 2o · 2c" [ref=e1506]:
+                  - text: "3"
+                  - generic [ref=e1507]: 2o · 2c
+                - cell "0% otpremljeno · 1% naručeno · 99% na polici" [ref=e1508]:
+                  - paragraph [ref=e1512]: 0% otpremljeno · 1% naručeno · 99% na polici
+                - cell "3 boca Od poč. godine 3djel. PG" [ref=e1513]:
+                  - paragraph [ref=e1514]: 3 boca
+                  - paragraph [ref=e1517]: Od poč. godine 3djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1518]':
+                  - generic [ref=e1519]:
+                    - generic [ref=e1520]:
+                      - paragraph [ref=e1521]: Jun 26
+                      - paragraph [ref=e1522]: —
+                      - paragraph [ref=e1523]: "PG: 0"
+                    - generic [ref=e1524]:
+                      - paragraph [ref=e1525]: Jul 26
+                      - paragraph [ref=e1526]: —
+                      - paragraph [ref=e1527]: "PG: 0"
+                    - generic [ref=e1528]:
+                      - paragraph [ref=e1529]: Aug 26
+                      - paragraph [ref=e1530]: —
+                      - paragraph [ref=e1531]: "PG: 0"
+              - 'row "BIBICh Bas de Bas WINE-BAS_DE_BAS · Wine Zadnja prodaja: 19. lip 2026. 2 1o · 1c 2 1o · 1c 2 1o · 1c 0% otpremljeno · 0% naručeno · 100% na polici 2 boca Od poč. godine 2djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1532]':
+                - 'cell "BIBICh Bas de Bas WINE-BAS_DE_BAS · Wine Zadnja prodaja: 19. lip 2026." [ref=e1533]':
+                  - paragraph [ref=e1534]: BIBICh Bas de Bas
+                  - paragraph [ref=e1535]: WINE-BAS_DE_BAS · Wine
+                  - paragraph [ref=e1536]: "Zadnja prodaja: 19. lip 2026."
+                - cell [ref=e1537]:
+                  - img [ref=e1541]
+                - cell "2 1o · 1c" [ref=e1544]:
+                  - text: "2"
+                  - generic [ref=e1545]: 1o · 1c
+                - cell "2 1o · 1c" [ref=e1546]:
+                  - text: "2"
+                  - generic [ref=e1547]: 1o · 1c
+                - cell "2 1o · 1c" [ref=e1548]:
+                  - text: "2"
+                  - generic [ref=e1549]: 1o · 1c
+                - cell "0% otpremljeno · 0% naručeno · 100% na polici" [ref=e1550]:
+                  - paragraph [ref=e1554]: 0% otpremljeno · 0% naručeno · 100% na polici
+                - cell "2 boca Od poč. godine 2djel. PG" [ref=e1555]:
+                  - paragraph [ref=e1556]: 2 boca
+                  - paragraph [ref=e1559]: Od poč. godine 2djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1560]':
+                  - generic [ref=e1561]:
+                    - generic [ref=e1562]:
+                      - paragraph [ref=e1563]: Jun 26
+                      - paragraph [ref=e1564]: —
+                      - paragraph [ref=e1565]: "PG: 0"
+                    - generic [ref=e1566]:
+                      - paragraph [ref=e1567]: Jul 26
+                      - paragraph [ref=e1568]: —
+                      - paragraph [ref=e1569]: "PG: 0"
+                    - generic [ref=e1570]:
+                      - paragraph [ref=e1571]: Aug 26
+                      - paragraph [ref=e1572]: —
+                      - paragraph [ref=e1573]: "PG: 0"
+              - 'row "BIBICh Bas de Fain WINE-BAS_DE_FAIN · Wine — 0 0o · 0c 0 0o · 0c 0 0o · 0c 0% otpremljeno · 0% naručeno · 100% na polici 0 boca Od poč. godine 0djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1574]':
+                - cell "BIBICh Bas de Fain WINE-BAS_DE_FAIN · Wine" [ref=e1575]:
+                  - paragraph [ref=e1576]: BIBICh Bas de Fain
+                  - paragraph [ref=e1577]: WINE-BAS_DE_FAIN · Wine
+                - cell "—" [ref=e1578]
+                - cell "0 0o · 0c" [ref=e1579]:
+                  - text: "0"
+                  - generic [ref=e1580]: 0o · 0c
+                - cell "0 0o · 0c" [ref=e1581]:
+                  - text: "0"
+                  - generic [ref=e1582]: 0o · 0c
+                - cell "0 0o · 0c" [ref=e1583]:
+                  - text: "0"
+                  - generic [ref=e1584]: 0o · 0c
+                - cell "0% otpremljeno · 0% naručeno · 100% na polici" [ref=e1585]:
+                  - paragraph [ref=e1588]: 0% otpremljeno · 0% naručeno · 100% na polici
+                - cell "0 boca Od poč. godine 0djel. PG" [ref=e1589]:
+                  - paragraph [ref=e1590]: 0 boca
+                  - paragraph [ref=e1592]: Od poč. godine 0djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1593]':
+                  - generic [ref=e1594]:
+                    - generic [ref=e1595]:
+                      - paragraph [ref=e1596]: Jun 26
+                      - paragraph [ref=e1597]: —
+                      - paragraph [ref=e1598]: "PG: 0"
+                    - generic [ref=e1599]:
+                      - paragraph [ref=e1600]: Jul 26
+                      - paragraph [ref=e1601]: —
+                      - paragraph [ref=e1602]: "PG: 0"
+                    - generic [ref=e1603]:
+                      - paragraph [ref=e1604]: Aug 26
+                      - paragraph [ref=e1605]: —
+                      - paragraph [ref=e1606]: "PG: 0"
+              - 'row "BIBICh Brut Rosé WINE-BRUT_ROSE · Wine — 0 0o · 0c 0 0o · 0c 0 0o · 0c 0% otpremljeno · 0% naručeno · 100% na polici 0 boca Od poč. godine 0djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1607]':
+                - cell "BIBICh Brut Rosé WINE-BRUT_ROSE · Wine" [ref=e1608]:
+                  - paragraph [ref=e1609]: BIBICh Brut Rosé
+                  - paragraph [ref=e1610]: WINE-BRUT_ROSE · Wine
+                - cell "—" [ref=e1611]
+                - cell "0 0o · 0c" [ref=e1612]:
+                  - text: "0"
+                  - generic [ref=e1613]: 0o · 0c
+                - cell "0 0o · 0c" [ref=e1614]:
+                  - text: "0"
+                  - generic [ref=e1615]: 0o · 0c
+                - cell "0 0o · 0c" [ref=e1616]:
+                  - text: "0"
+                  - generic [ref=e1617]: 0o · 0c
+                - cell "0% otpremljeno · 0% naručeno · 100% na polici" [ref=e1618]:
+                  - paragraph [ref=e1621]: 0% otpremljeno · 0% naručeno · 100% na polici
+                - cell "0 boca Od poč. godine 0djel. PG" [ref=e1622]:
+                  - paragraph [ref=e1623]: 0 boca
+                  - paragraph [ref=e1625]: Od poč. godine 0djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1626]':
+                  - generic [ref=e1627]:
+                    - generic [ref=e1628]:
+                      - paragraph [ref=e1629]: Jun 26
+                      - paragraph [ref=e1630]: —
+                      - paragraph [ref=e1631]: "PG: 0"
+                    - generic [ref=e1632]:
+                      - paragraph [ref=e1633]: Jul 26
+                      - paragraph [ref=e1634]: —
+                      - paragraph [ref=e1635]: "PG: 0"
+                    - generic [ref=e1636]:
+                      - paragraph [ref=e1637]: Aug 26
+                      - paragraph [ref=e1638]: —
+                      - paragraph [ref=e1639]: "PG: 0"
+              - 'row "BIBICh Estate Cuvée (bottled) WINE-CUVEE · Wine — 0 0o · 0c 0 0o · 0c 0 0o · 0c 0% otpremljeno · 0% naručeno · 100% na polici 0 boca Od poč. godine 0djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1640]':
+                - cell "BIBICh Estate Cuvée (bottled) WINE-CUVEE · Wine" [ref=e1641]:
+                  - paragraph [ref=e1642]: BIBICh Estate Cuvée (bottled)
+                  - paragraph [ref=e1643]: WINE-CUVEE · Wine
+                - cell "—" [ref=e1644]
+                - cell "0 0o · 0c" [ref=e1645]:
+                  - text: "0"
+                  - generic [ref=e1646]: 0o · 0c
+                - cell "0 0o · 0c" [ref=e1647]:
+                  - text: "0"
+                  - generic [ref=e1648]: 0o · 0c
+                - cell "0 0o · 0c" [ref=e1649]:
+                  - text: "0"
+                  - generic [ref=e1650]: 0o · 0c
+                - cell "0% otpremljeno · 0% naručeno · 100% na polici" [ref=e1651]:
+                  - paragraph [ref=e1654]: 0% otpremljeno · 0% naručeno · 100% na polici
+                - cell "0 boca Od poč. godine 0djel. PG" [ref=e1655]:
+                  - paragraph [ref=e1656]: 0 boca
+                  - paragraph [ref=e1658]: Od poč. godine 0djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1659]':
+                  - generic [ref=e1660]:
+                    - generic [ref=e1661]:
+                      - paragraph [ref=e1662]: Jun 26
+                      - paragraph [ref=e1663]: —
+                      - paragraph [ref=e1664]: "PG: 0"
+                    - generic [ref=e1665]:
+                      - paragraph [ref=e1666]: Jul 26
+                      - paragraph [ref=e1667]: —
+                      - paragraph [ref=e1668]: "PG: 0"
+                    - generic [ref=e1669]:
+                      - paragraph [ref=e1670]: Aug 26
+                      - paragraph [ref=e1671]: —
+                      - paragraph [ref=e1672]: "PG: 0"
+              - 'row "BIBICh Lasin WINE-LASIN · Wine — 0 0o · 0c 0 0o · 0c 0 0o · 0c 0% otpremljeno · 0% naručeno · 100% na polici 0 boca Od poč. godine 0djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1673]':
+                - cell "BIBICh Lasin WINE-LASIN · Wine" [ref=e1674]:
+                  - paragraph [ref=e1675]: BIBICh Lasin
+                  - paragraph [ref=e1676]: WINE-LASIN · Wine
+                - cell "—" [ref=e1677]
+                - cell "0 0o · 0c" [ref=e1678]:
+                  - text: "0"
+                  - generic [ref=e1679]: 0o · 0c
+                - cell "0 0o · 0c" [ref=e1680]:
+                  - text: "0"
+                  - generic [ref=e1681]: 0o · 0c
+                - cell "0 0o · 0c" [ref=e1682]:
+                  - text: "0"
+                  - generic [ref=e1683]: 0o · 0c
+                - cell "0% otpremljeno · 0% naručeno · 100% na polici" [ref=e1684]:
+                  - paragraph [ref=e1687]: 0% otpremljeno · 0% naručeno · 100% na polici
+                - cell "0 boca Od poč. godine 0djel. PG" [ref=e1688]:
+                  - paragraph [ref=e1689]: 0 boca
+                  - paragraph [ref=e1691]: Od poč. godine 0djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1692]':
+                  - generic [ref=e1693]:
+                    - generic [ref=e1694]:
+                      - paragraph [ref=e1695]: Jun 26
+                      - paragraph [ref=e1696]: —
+                      - paragraph [ref=e1697]: "PG: 0"
+                    - generic [ref=e1698]:
+                      - paragraph [ref=e1699]: Jul 26
+                      - paragraph [ref=e1700]: —
+                      - paragraph [ref=e1701]: "PG: 0"
+                    - generic [ref=e1702]:
+                      - paragraph [ref=e1703]: Aug 26
+                      - paragraph [ref=e1704]: —
+                      - paragraph [ref=e1705]: "PG: 0"
+              - 'row "BIBICh Sangreal Merlot WINE-SANGREAL_MERLOT · Wine — 0 0o · 0c 0 0o · 0c 0 0o · 0c 0% otpremljeno · 0% naručeno · 100% na polici 0 boca Od poč. godine 0djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1706]':
+                - cell "BIBICh Sangreal Merlot WINE-SANGREAL_MERLOT · Wine" [ref=e1707]:
+                  - paragraph [ref=e1708]: BIBICh Sangreal Merlot
+                  - paragraph [ref=e1709]: WINE-SANGREAL_MERLOT · Wine
+                - cell "—" [ref=e1710]
+                - cell "0 0o · 0c" [ref=e1711]:
+                  - text: "0"
+                  - generic [ref=e1712]: 0o · 0c
+                - cell "0 0o · 0c" [ref=e1713]:
+                  - text: "0"
+                  - generic [ref=e1714]: 0o · 0c
+                - cell "0 0o · 0c" [ref=e1715]:
+                  - text: "0"
+                  - generic [ref=e1716]: 0o · 0c
+                - cell "0% otpremljeno · 0% naručeno · 100% na polici" [ref=e1717]:
+                  - paragraph [ref=e1720]: 0% otpremljeno · 0% naručeno · 100% na polici
+                - cell "0 boca Od poč. godine 0djel. PG" [ref=e1721]:
+                  - paragraph [ref=e1722]: 0 boca
+                  - paragraph [ref=e1724]: Od poč. godine 0djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1725]':
+                  - generic [ref=e1726]:
+                    - generic [ref=e1727]:
+                      - paragraph [ref=e1728]: Jun 26
+                      - paragraph [ref=e1729]: —
+                      - paragraph [ref=e1730]: "PG: 0"
+                    - generic [ref=e1731]:
+                      - paragraph [ref=e1732]: Jul 26
+                      - paragraph [ref=e1733]: —
+                      - paragraph [ref=e1734]: "PG: 0"
+                    - generic [ref=e1735]:
+                      - paragraph [ref=e1736]: Aug 26
+                      - paragraph [ref=e1737]: —
+                      - paragraph [ref=e1738]: "PG: 0"
+              - 'row "BIBICh Sangreal Shiraz WINE-SANGREAL_SHIRAZ · Wine — 0 0o · 0c 0 0o · 0c 0 0o · 0c 0% otpremljeno · 0% naručeno · 100% na polici 0 boca Od poč. godine 0djel. PG Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1739]':
+                - cell "BIBICh Sangreal Shiraz WINE-SANGREAL_SHIRAZ · Wine" [ref=e1740]:
+                  - paragraph [ref=e1741]: BIBICh Sangreal Shiraz
+                  - paragraph [ref=e1742]: WINE-SANGREAL_SHIRAZ · Wine
+                - cell "—" [ref=e1743]
+                - cell "0 0o · 0c" [ref=e1744]:
+                  - text: "0"
+                  - generic [ref=e1745]: 0o · 0c
+                - cell "0 0o · 0c" [ref=e1746]:
+                  - text: "0"
+                  - generic [ref=e1747]: 0o · 0c
+                - cell "0 0o · 0c" [ref=e1748]:
+                  - text: "0"
+                  - generic [ref=e1749]: 0o · 0c
+                - cell "0% otpremljeno · 0% naručeno · 100% na polici" [ref=e1750]:
+                  - paragraph [ref=e1753]: 0% otpremljeno · 0% naručeno · 100% na polici
+                - cell "0 boca Od poč. godine 0djel. PG" [ref=e1754]:
+                  - paragraph [ref=e1755]: 0 boca
+                  - paragraph [ref=e1757]: Od poč. godine 0djel. PG
+                - 'cell "Jun 26 — PG: 0 Jul 26 — PG: 0 Aug 26 — PG: 0" [ref=e1758]':
+                  - generic [ref=e1759]:
+                    - generic [ref=e1760]:
+                      - paragraph [ref=e1761]: Jun 26
+                      - paragraph [ref=e1762]: —
+                      - paragraph [ref=e1763]: "PG: 0"
+                    - generic [ref=e1764]:
+                      - paragraph [ref=e1765]: Jul 26
+                      - paragraph [ref=e1766]: —
+                      - paragraph [ref=e1767]: "PG: 0"
+                    - generic [ref=e1768]:
+                      - paragraph [ref=e1769]: Aug 26
+                      - paragraph [ref=e1770]: —
+                      - paragraph [ref=e1771]: "PG: 0"
+  - generic [ref=e975]: "0"

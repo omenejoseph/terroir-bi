@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $note
  * @property string|null $reference
  * @property bool $is_reconciliation
+ * @property string|null $created_by_id
  * @property Carbon|null $created_at
  */
 class StockMovement extends Model
@@ -36,6 +37,7 @@ class StockMovement extends Model
         'note',
         'reference',
         'is_reconciliation',
+        'created_by_id',
     ];
 
     protected $attributes = [
@@ -57,5 +59,15 @@ class StockMovement extends Model
     public function inventoryItem(): BelongsTo
     {
         return $this->belongsTo(InventoryItem::class);
+    }
+
+    /**
+     * The user who recorded the movement (null for system/seed writes).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_id');
     }
 }

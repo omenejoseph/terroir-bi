@@ -15,6 +15,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { useConfirm } from "@/components/ui/confirm";
 import { SupplierForm } from "@/components/suppliers/supplier-form";
+import { SupplierOrdersSection } from "@/components/suppliers/supplier-orders-section";
 import { SupplierPriceHistorySection } from "@/components/suppliers/supplier-price-history-section";
 import { SupplierPriceListSection } from "@/components/suppliers/supplier-price-list-section";
 import { SupplierPortalSection } from "@/components/suppliers/supplier-portal-section";
@@ -43,7 +44,7 @@ export function SupplierDetailPanel({
   const canManage = can("suppliers.manage");
   const canFinance = can("finance.view");
   const [editing, setEditing] = React.useState(false);
-  const [tab, setTab] = React.useState<"details" | "price-list" | "history">("details");
+  const [tab, setTab] = React.useState<"details" | "price-list" | "history" | "orders">("details");
 
   async function toggleActive() {
     const deactivating = supplier.is_active;
@@ -100,6 +101,8 @@ export function SupplierDetailPanel({
         />
       </div>
 
+      {canManage && <SupplierPortalSection supplier={supplier} />}
+
       <Tabs
         tabs={[
           { value: "details", label: t("suppliers.detailTabs.details") },
@@ -111,13 +114,16 @@ export function SupplierDetailPanel({
             value: "history",
             label: withCount(t("suppliers.detailTabs.history"), supplier.price_changes_count ?? undefined),
           },
+          { value: "orders", label: t("suppliers.detailTabs.orders") },
         ]}
         value={tab}
-        onChange={(v) => setTab(v as "details" | "price-list" | "history")}
+        onChange={(v) => setTab(v as "details" | "price-list" | "history" | "orders")}
       />
 
       {tab === "price-list" ? (
         <SupplierPriceListSection supplierId={supplier.id} />
+      ) : tab === "orders" ? (
+        <SupplierOrdersSection supplierId={supplier.id} />
       ) : tab === "history" ? (
         <SupplierPriceHistorySection supplierId={supplier.id} />
       ) : editing ? (
@@ -127,7 +133,6 @@ export function SupplierDetailPanel({
           onCancel={() => setEditing(false)}
         />
       ) : (
-        <>
         <div className="space-y-4">
           <SupplierDetails supplier={supplier} />
           <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
@@ -169,9 +174,6 @@ export function SupplierDetailPanel({
             )}
           </div>
         </div>
-
-        {canManage && <SupplierPortalSection supplier={supplier} />}
-        </>
       )}
     </div>
   );

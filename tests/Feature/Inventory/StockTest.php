@@ -121,7 +121,10 @@ class StockTest extends TestCase
             ->assertJsonCount(2, 'data')
             ->assertJsonPath('data.0.reference', 'SECOND')
             ->assertJsonPath('data.0.type', 'MANUAL_OUT')
-            ->assertJsonPath('data.1.reference', 'FIRST');
+            ->assertJsonPath('data.1.reference', 'FIRST')
+            // The acting user is stamped on each movement and surfaced for the "By" column.
+            ->assertJsonPath('data.0.created_by.id', $admin->getKey())
+            ->assertJsonPath('data.0.created_by.name', trim($admin->first_name.' '.$admin->last_name));
     }
 
     public function test_recipe_is_returned_with_input_details(): void

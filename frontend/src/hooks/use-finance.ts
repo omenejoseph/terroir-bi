@@ -19,6 +19,13 @@ export function useArAging() {
   });
 }
 
+export function useCashFlowAnalysis(range: { from?: string; to?: string } = {}) {
+  return useQuery({
+    queryKey: ["cash-flow", "analysis", range],
+    queryFn: () => financeApi.cashFlowAnalysis(range),
+  });
+}
+
 export function useOrderPayments(orderId: string | undefined) {
   return useQuery({
     queryKey: ["orders", orderId, "payments"],

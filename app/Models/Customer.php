@@ -108,6 +108,22 @@ class Customer extends Model
     }
 
     /**
+     * IDs of customers flagged out of business stats (internal/staff/tasting-room
+     * accounts). Analytics use this to exclude their orders. Tenant-scoped.
+     *
+     * @return list<string>
+     */
+    public static function statsExcludedIds(): array
+    {
+        return array_values(
+            self::query()->where('exclude_from_stats', true)
+                ->pluck('id')
+                ->map(fn (mixed $id): string => (string) $id)
+                ->all()
+        );
+    }
+
+    /**
      * The rebate that actually applies: a customer-level rebate overrides the
      * tier's; otherwise the tier's default applies (pricing engine §5.3).
      */

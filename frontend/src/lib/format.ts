@@ -40,11 +40,6 @@ export function useFormatters() {
   return React.useMemo(() => {
     const num = new Intl.NumberFormat(locale);
     const curLocale = moneyLocale(currency, locale);
-    const cur0 = new Intl.NumberFormat(curLocale, {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 0,
-    });
     const cur2 = new Intl.NumberFormat(curLocale, { style: "currency", currency });
     const curCompact = new Intl.NumberFormat(curLocale, {
       style: "currency",
@@ -67,9 +62,9 @@ export function useFormatters() {
       timeZone,
       /** Plain number in the active locale. */
       number: (n: number) => num.format(n),
-      /** Minor units → currency, no fractional part (e.g. totals). */
-      money: (minor: number) => cur0.format(minor / 100),
-      /** Minor units → currency with decimals. */
+      /** Minor units → currency, always 2 decimals (matches the prototype). */
+      money: (minor: number) => cur2.format(minor / 100),
+      /** Minor units → currency with decimals (alias of money; kept for callers). */
       money2: (minor: number) => cur2.format(minor / 100),
       /** Minor units → compact currency for chart axes (e.g. €15K). */
       moneyAxis: (minor: number) => curCompact.format(minor / 100),

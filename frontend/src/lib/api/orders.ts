@@ -3,6 +3,7 @@ import type {
   ConsignmentReturnInput,
   ConsignmentSaleInput,
   ConsignmentSummary,
+  DemandForecast,
   Order,
   OrderAnalytics,
   OrderComment,
@@ -64,8 +65,12 @@ export const ordersApi = {
     api.patch<Order>(`/orders/${id}/backorder`, { backorder_date: backorderDate }),
 
   /** GET /orders/analytics — requires financials.view. */
-  analytics: (params: { period?: string; from?: string; to?: string } = {}) =>
-    api.get<OrderAnalytics>("/orders/analytics", params),
+  analytics: (
+    params: { period?: string; from?: string; to?: string; customers_page?: number; products_page?: number } = {},
+  ) => api.get<OrderAnalytics>("/orders/analytics", params),
+
+  /** GET /orders/forecast — demand forecast; requires financials.view. */
+  forecast: () => api.get<DemandForecast>("/orders/forecast"),
 
   // Comments
   addComment: (id: string, input: { content: string; mentions?: string[] }) =>

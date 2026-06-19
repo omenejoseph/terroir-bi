@@ -44,6 +44,9 @@ final class CostData implements Arrayable, JsonSerializable
             'paid_at' => $c->paid_at?->toIso8601String(),
             'due_date' => $c->due_date?->toIso8601String(),
             'supplier' => $supplier !== null ? ['id' => $supplier->getKey(), 'company_name' => $supplier->company_name] : null,
+            'created_by' => $c->relationLoaded('createdBy') && $c->createdBy !== null
+                ? ['id' => $c->createdBy->getKey(), 'name' => trim($c->createdBy->first_name.' '.$c->createdBy->last_name)]
+                : null,
         ];
 
         if ($c->relationLoaded('items')) {

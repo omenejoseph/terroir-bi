@@ -9,6 +9,7 @@ import {
   makeInventoryCheckDetail,
   makeArAging,
   makeCashFlow,
+  makeCashFlowAnalysis,
   makeConsignmentSummary,
   makeCost,
   makeCostAnalytics,
@@ -195,28 +196,60 @@ export const handlers = [
   ),
 
   // Orders — sub-resources first (static before :id).
-  http.get(url("/orders/analytics"), () =>
-    HttpResponse.json({
+  http.get(url("/orders/analytics"), () => {
+    const m = (minor: number) => ({ minor, currency: "EUR", formatted: `€${(minor / 100).toFixed(2)}` });
+    return HttpResponse.json({
       data: {
         period: { from: "2026-05-01", to: "2026-06-01" },
-        revenue: { minor: 900000, currency: "EUR", formatted: "€9,000.00" },
-        cogs: { minor: 400000, currency: "EUR", formatted: "€4,000.00" },
-        gross_profit: { minor: 500000, currency: "EUR", formatted: "€5,000.00" },
+        revenue: m(900000),
+        cogs: m(400000),
+        gross_profit: m(500000),
         margin_percent: "55.56",
         order_count: 12,
-        avg_order_value: { minor: 75000, currency: "EUR", formatted: "€750.00" },
+        avg_order_value: m(75000),
         items_with_unknown_cost: 0,
-        consignment_revenue: { minor: 0, currency: "EUR", formatted: "€0.00" },
-        top_customers: [
-          { customer_id: "cus_1", company_name: "Acme Corporation", revenue: { minor: 600000, currency: "EUR", formatted: "€6,000.00" } },
+        consignment_revenue: m(0),
+        bottles_sold: 480,
+        total_lines: 20,
+        revenue_without_cost: m(0),
+        avg_gp_per_order: m(41666),
+        avg_margin_pct_per_order: "55.00",
+        previous: { revenue: m(800000), cogs: m(360000), gross_profit: m(440000), margin_percent: "55.00", order_count: 10 },
+        series: [
+          { date: "2026-05-01", label: "May 1", revenue: m(450000), cogs: m(200000), gross_profit: m(250000), margin_percent: "55.56" },
+          { date: "2026-05-15", label: "May 15", revenue: m(450000), cogs: m(200000), gross_profit: m(250000), margin_percent: "55.56" },
         ],
-        top_products: [
-          { inventory_item_id: "itm_1", name: "Plavac Mali 2021", quantity: 40, revenue: { minor: 600000, currency: "EUR", formatted: "€6,000.00" } },
+        granularity: "day",
+        top_customers: {
+          data: [
+            { customer_id: "cus_1", company_name: "Acme Corporation", orders_count: 4, revenue: m(600000), cogs: m(250000), gross_profit: m(350000), margin_percent: "58.33" },
+          ],
+          meta: { current_page: 1, per_page: 10, total: 1, last_page: 1 },
+        },
+        top_products: {
+          data: [
+            { inventory_item_id: "itm_1", name: "Plavac Mali 2021", vintage: "2021", quantity: 40, revenue: m(600000), cogs: m(250000), gross_profit: m(350000), margin_percent: "58.33" },
+          ],
+          meta: { current_page: 1, per_page: 10, total: 1, last_page: 1 },
+        },
+        channels: [
+          { key: "wholesale", revenue: m(600000), cogs: m(250000), gross_profit: m(350000), margin_percent: "58.33", orders_count: 8, bottles: 360, revenue_share_pct: "66.7" },
+        ],
+        price_realization: {
+          rows: [
+            { inventory_item_id: "itm_1", name: "Plavac Mali 2021", vintage: "2021", bottles: 40, list_price: m(1500), realized_per_bottle: m(1500), list_revenue: m(600000), realized_revenue: m(600000), leakage: m(0), realization_pct: "100.0" },
+          ],
+          totals: { list_revenue: m(600000), realized_revenue: m(600000), leakage: m(0), realization_pct: "100.0" },
+        },
+        histogram: [
+          { label: "<0%", min: null, orders: 0, revenue: m(0) },
+          { label: "50%+", min: 50, orders: 12, revenue: m(900000) },
         ],
         low_margin_orders: [],
+        lines_without_cost: [],
       },
-    }),
-  ),
+    });
+  }),
   http.get(url("/orders/:id/consignment"), () => HttpResponse.json({ data: makeConsignmentSummary() })),
   http.post(url("/orders/:id/consignment/sale"), () => HttpResponse.json({ data: makeConsignmentSummary() })),
   http.post(url("/orders/:id/consignment/return"), () => HttpResponse.json({ data: makeConsignmentSummary() })),
@@ -449,6 +482,7 @@ export const handlers = [
   // ── Finance: A/R aging + cash flow ──────────────────────────────────────────
   http.get(url("/inflows/aging"), () => HttpResponse.json({ data: makeArAging() })),
   http.get(url("/inflows/analytics"), () => HttpResponse.json({ data: makeInflowAnalytics() })),
+  http.get(url("/cash-flow/analysis"), () => HttpResponse.json({ data: makeCashFlowAnalysis() })),
   http.get(url("/cash-flow"), () => HttpResponse.json({ data: makeCashFlow() })),
 
   // ── Inflows (money in) — static /aging is registered above. ─────────────────
@@ -481,7 +515,17 @@ export const handlers = [
         (i) => (i.reference ?? "").toLowerCase().includes(search) || (i.notes ?? "").toLowerCase().includes(search),
       );
     }
-    return HttpResponse.json({ data: all, meta: pageMeta(all.length) });
+    return HttpResponse.json({
+      data: all,
+      meta: {
+        ...pageMeta(all.length),
+        summary: {
+          invoiced: { total: money(70000), count: 2 },
+          collected: { total: money(50000), count: 1 },
+          pending: { total: money(20000), count: 1, overdue: 1 },
+        },
+      },
+    });
   }),
 
   // ── Suppliers ───────────────────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n/context";
 import { Card } from "@/components/ui/card";
+import { InfoHint } from "@/components/ui/info-hint";
 
 /**
  * Revenue summary tile: a label, a prominent amount, and either a comparison row
@@ -18,6 +19,7 @@ export function RevenueCard({
   comparisonValue,
   deltaPct,
   caption,
+  hint,
   delayMs = 0,
 }: {
   label: string;
@@ -25,6 +27,7 @@ export function RevenueCard({
   comparisonValue?: string;
   deltaPct?: number | null;
   caption?: string;
+  hint?: string;
   delayMs?: number;
 }) {
   const { t } = useTranslation();
@@ -41,7 +44,10 @@ export function RevenueCard({
       )}
     >
       <div className="p-5">
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="flex items-center gap-1 text-sm text-muted-foreground">
+          {label}
+          {hint && <InfoHint text={hint} />}
+        </p>
         <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
         {showComparison ? (
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">

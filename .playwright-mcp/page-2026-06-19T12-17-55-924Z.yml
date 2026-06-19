@@ -1,0 +1,306 @@
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e10] [cursor=pointer]:
+    - img [ref=e11]
+  - alert [ref=e14]
+  - generic [ref=e15]:
+    - complementary [ref=e16]:
+      - generic [ref=e17]:
+        - link "Terroir BI" [ref=e19] [cursor=pointer]:
+          - /url: /dashboard
+          - img "Terroir BI" [ref=e20]
+        - navigation [ref=e21]:
+          - generic [ref=e22]:
+            - paragraph [ref=e23]: Pregled
+            - link "Nadzorna ploča" [ref=e24] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e26]
+              - text: Nadzorna ploča
+          - generic [ref=e31]:
+            - paragraph [ref=e32]: Prodaja
+            - link "Narudžbe" [ref=e33] [cursor=pointer]:
+              - /url: /orders
+              - img [ref=e35]
+              - text: Narudžbe
+            - link "Kupci" [ref=e38] [cursor=pointer]:
+              - /url: /customers
+              - img [ref=e40]
+              - text: Kupci
+          - generic [ref=e45]:
+            - paragraph [ref=e46]: Operacije
+            - link "Zaliha" [ref=e47] [cursor=pointer]:
+              - /url: /inventory
+              - img [ref=e49]
+              - text: Zaliha
+            - link "Dobavljači" [ref=e59] [cursor=pointer]:
+              - /url: /suppliers
+              - img [ref=e61]
+              - text: Dobavljači
+            - link "Radni nalozi" [ref=e66] [cursor=pointer]:
+              - /url: /work-orders
+              - img [ref=e68]
+              - text: Radni nalozi
+          - generic [ref=e71]:
+            - paragraph [ref=e72]: Podrum
+            - link "Podrum" [ref=e73] [cursor=pointer]:
+              - /url: /cellar
+              - img [ref=e75]
+              - text: Podrum
+            - link "Vinogradi" [ref=e77] [cursor=pointer]:
+              - /url: /vineyards
+              - img [ref=e79]
+              - text: Vinogradi
+            - link "Proizvodnja" [ref=e89] [cursor=pointer]:
+              - /url: /production
+              - img [ref=e91]
+              - text: Proizvodnja
+          - generic [ref=e93]:
+            - paragraph [ref=e94]: Financije
+            - link "Priljevi" [ref=e95] [cursor=pointer]:
+              - /url: /inflows
+              - img [ref=e97]
+              - text: Priljevi
+            - link "Troškovi" [ref=e100] [cursor=pointer]:
+              - /url: /costs
+              - img [ref=e102]
+              - text: Troškovi
+            - link "Novčani tok" [ref=e105] [cursor=pointer]:
+              - /url: /cash-flow
+              - img [ref=e107]
+              - text: Novčani tok
+          - generic [ref=e110]:
+            - paragraph [ref=e111]: Automatizacija
+            - link "AI unos podataka" [ref=e112] [cursor=pointer]:
+              - /url: /ai-imports
+              - img [ref=e114]
+              - text: AI unos podataka
+          - generic [ref=e116]:
+            - paragraph [ref=e117]: Radni prostor
+            - link "Tim" [ref=e118] [cursor=pointer]:
+              - /url: /team
+              - img [ref=e120]
+              - text: Tim
+            - link "Postavke" [ref=e124] [cursor=pointer]:
+              - /url: /settings
+              - img [ref=e126]
+              - text: Postavke
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - img [ref=e131]
+            - generic [ref=e135]: Jezik
+            - tablist [ref=e136]:
+              - tab "Hrvatski" [selected] [ref=e137]
+              - tab "English" [ref=e138]
+          - generic [ref=e139]:
+            - paragraph [ref=e140]: Filip Bibić
+            - paragraph [ref=e141]: test@example.com
+          - button "Odjava" [ref=e142]:
+            - img [ref=e143]
+            - text: Odjava
+          - button "Sažmi" [ref=e146]:
+            - img [ref=e147]
+            - text: Sažmi
+      - separator [ref=e150]
+    - main [ref=e151]:
+      - generic [ref=e153]:
+        - button "Obavijesti" [ref=e154]:
+          - img [ref=e155]
+        - generic: 9+
+      - generic [ref=e160]:
+        - generic [ref=e161]:
+          - generic [ref=e162]:
+            - heading "Proizvodnja" [level=1] [ref=e163]:
+              - img [ref=e164]
+              - text: Proizvodnja
+            - paragraph [ref=e166]: Planirajte punjenja, vidite marže i rotirajte berbe.
+          - button "Novi plan" [ref=e167]:
+            - img [ref=e168]
+            - text: Novi plan
+        - generic [ref=e170]:
+          - button "2026 Bottling Plan Proizvodi (4) Skica" [expanded] [active] [ref=e171]:
+            - generic [ref=e172]:
+              - paragraph [ref=e173]: 2026 Bottling Plan
+              - paragraph [ref=e174]: Proizvodi (4)
+            - generic [ref=e175]:
+              - generic [ref=e176]: Skica
+              - img [ref=e177]
+          - generic [ref=e182]:
+            - table [ref=e183]:
+              - rowgroup [ref=e184]:
+                - row "Proizvod Količina Jedinica Nova berba" [ref=e185]:
+                  - columnheader "Proizvod" [ref=e186]
+                  - columnheader "Količina" [ref=e187]
+                  - columnheader "Jedinica" [ref=e188]
+                  - columnheader "Nova berba" [ref=e189]
+                  - columnheader [ref=e190]
+              - rowgroup [ref=e191]:
+                - row "BIBICh Debit (2023) 12000 Boce 2024" [ref=e192]:
+                  - cell "BIBICh Debit (2023)" [ref=e193]:
+                    - combobox [ref=e194]:
+                      - option "—"
+                      - option "BIBICh Ambra Prošek (2017)"
+                      - option "BIBICh Ambra Prošek (2016)"
+                      - option "BIBICh Babić (2020)"
+                      - option "BIBICh Babić (2019)"
+                      - option "BIBICh Bas de Bas (2020)"
+                      - option "BIBICh Bas de Bas (2019)"
+                      - option "BIBICh Bas de Fain (2021)"
+                      - option "BIBICh Bas de Fain (2020)"
+                      - option "BIBICh Bilo (2022)"
+                      - option "BIBICh Bilo (2021)"
+                      - option "BIBICh Brut (NV)"
+                      - option "BIBICh Brut Rosé (NV)"
+                      - option "BIBICh Crno (2021)"
+                      - option "BIBICh Crno (2020)"
+                      - option "BIBICh Debit (2023)" [selected]
+                      - option "BIBICh Debit (2022)"
+                      - option "BIBICh Estate Cuvée (bottled) (2021)"
+                      - option "BIBICh Lasin (2020)"
+                      - option "BIBICh Lasin (2019)"
+                      - option "BIBICh Plavina (2021)"
+                      - option "BIBICh Plavina (2020)"
+                      - option "BIBICh Pošip (2022)"
+                      - option "BIBICh Pošip (2021)"
+                      - option "BIBICh R5 Riserva (2019)"
+                      - option "BIBICh R5 Riserva (2018)"
+                  - cell "12000" [ref=e195]:
+                    - spinbutton [ref=e196]: "12000"
+                  - cell "Boce" [ref=e197]:
+                    - combobox [ref=e198]:
+                      - option "Litre"
+                      - option "Boce" [selected]
+                      - option "Gajbe"
+                  - cell "2024" [ref=e199]:
+                    - textbox [ref=e200]: "2024"
+                  - cell [ref=e201]:
+                    - button [ref=e202]:
+                      - img [ref=e203]
+                - row "BIBICh Pošip (2022) 6000 Boce 2023" [ref=e206]:
+                  - cell "BIBICh Pošip (2022)" [ref=e207]:
+                    - combobox [ref=e208]:
+                      - option "—"
+                      - option "BIBICh Ambra Prošek (2017)"
+                      - option "BIBICh Ambra Prošek (2016)"
+                      - option "BIBICh Babić (2020)"
+                      - option "BIBICh Babić (2019)"
+                      - option "BIBICh Bas de Bas (2020)"
+                      - option "BIBICh Bas de Bas (2019)"
+                      - option "BIBICh Bas de Fain (2021)"
+                      - option "BIBICh Bas de Fain (2020)"
+                      - option "BIBICh Bilo (2022)"
+                      - option "BIBICh Bilo (2021)"
+                      - option "BIBICh Brut (NV)"
+                      - option "BIBICh Brut Rosé (NV)"
+                      - option "BIBICh Crno (2021)"
+                      - option "BIBICh Crno (2020)"
+                      - option "BIBICh Debit (2023)"
+                      - option "BIBICh Debit (2022)"
+                      - option "BIBICh Estate Cuvée (bottled) (2021)"
+                      - option "BIBICh Lasin (2020)"
+                      - option "BIBICh Lasin (2019)"
+                      - option "BIBICh Plavina (2021)"
+                      - option "BIBICh Plavina (2020)"
+                      - option "BIBICh Pošip (2022)" [selected]
+                      - option "BIBICh Pošip (2021)"
+                      - option "BIBICh R5 Riserva (2019)"
+                      - option "BIBICh R5 Riserva (2018)"
+                  - cell "6000" [ref=e209]:
+                    - spinbutton [ref=e210]: "6000"
+                  - cell "Boce" [ref=e211]:
+                    - combobox [ref=e212]:
+                      - option "Litre"
+                      - option "Boce" [selected]
+                      - option "Gajbe"
+                  - cell "2023" [ref=e213]:
+                    - textbox [ref=e214]: "2023"
+                  - cell [ref=e215]:
+                    - button [ref=e216]:
+                      - img [ref=e217]
+                - row "BIBICh Babić (2020) 4500 Boce 2021" [ref=e220]:
+                  - cell "BIBICh Babić (2020)" [ref=e221]:
+                    - combobox [ref=e222]:
+                      - option "—"
+                      - option "BIBICh Ambra Prošek (2017)"
+                      - option "BIBICh Ambra Prošek (2016)"
+                      - option "BIBICh Babić (2020)" [selected]
+                      - option "BIBICh Babić (2019)"
+                      - option "BIBICh Bas de Bas (2020)"
+                      - option "BIBICh Bas de Bas (2019)"
+                      - option "BIBICh Bas de Fain (2021)"
+                      - option "BIBICh Bas de Fain (2020)"
+                      - option "BIBICh Bilo (2022)"
+                      - option "BIBICh Bilo (2021)"
+                      - option "BIBICh Brut (NV)"
+                      - option "BIBICh Brut Rosé (NV)"
+                      - option "BIBICh Crno (2021)"
+                      - option "BIBICh Crno (2020)"
+                      - option "BIBICh Debit (2023)"
+                      - option "BIBICh Debit (2022)"
+                      - option "BIBICh Estate Cuvée (bottled) (2021)"
+                      - option "BIBICh Lasin (2020)"
+                      - option "BIBICh Lasin (2019)"
+                      - option "BIBICh Plavina (2021)"
+                      - option "BIBICh Plavina (2020)"
+                      - option "BIBICh Pošip (2022)"
+                      - option "BIBICh Pošip (2021)"
+                      - option "BIBICh R5 Riserva (2019)"
+                      - option "BIBICh R5 Riserva (2018)"
+                  - cell "4500" [ref=e223]:
+                    - spinbutton [ref=e224]: "4500"
+                  - cell "Boce" [ref=e225]:
+                    - combobox [ref=e226]:
+                      - option "Litre"
+                      - option "Boce" [selected]
+                      - option "Gajbe"
+                  - cell "2021" [ref=e227]:
+                    - textbox [ref=e228]: "2021"
+                  - cell [ref=e229]:
+                    - button [ref=e230]:
+                      - img [ref=e231]
+                - row "— 3000 Boce 2023" [ref=e234]:
+                  - cell "—" [ref=e235]:
+                    - combobox [ref=e236]:
+                      - option "—" [selected]
+                      - option "BIBICh Ambra Prošek (2017)"
+                      - option "BIBICh Ambra Prošek (2016)"
+                      - option "BIBICh Babić (2020)"
+                      - option "BIBICh Babić (2019)"
+                      - option "BIBICh Bas de Bas (2020)"
+                      - option "BIBICh Bas de Bas (2019)"
+                      - option "BIBICh Bas de Fain (2021)"
+                      - option "BIBICh Bas de Fain (2020)"
+                      - option "BIBICh Bilo (2022)"
+                      - option "BIBICh Bilo (2021)"
+                      - option "BIBICh Brut (NV)"
+                      - option "BIBICh Brut Rosé (NV)"
+                      - option "BIBICh Crno (2021)"
+                      - option "BIBICh Crno (2020)"
+                      - option "BIBICh Debit (2023)"
+                      - option "BIBICh Debit (2022)"
+                      - option "BIBICh Estate Cuvée (bottled) (2021)"
+                      - option "BIBICh Lasin (2020)"
+                      - option "BIBICh Lasin (2019)"
+                      - option "BIBICh Plavina (2021)"
+                      - option "BIBICh Plavina (2020)"
+                      - option "BIBICh Pošip (2022)"
+                      - option "BIBICh Pošip (2021)"
+                      - option "BIBICh R5 Riserva (2019)"
+                      - option "BIBICh R5 Riserva (2018)"
+                  - cell "3000" [ref=e237]:
+                    - spinbutton [ref=e238]: "3000"
+                  - cell "Boce" [ref=e239]:
+                    - combobox [ref=e240]:
+                      - option "Litre"
+                      - option "Boce" [selected]
+                      - option "Gajbe"
+                  - cell "2023" [ref=e241]:
+                    - textbox [ref=e242]: "2023"
+                  - cell [ref=e243]:
+                    - button [ref=e244]:
+                      - img [ref=e245]
+            - generic [ref=e248]:
+              - button "Dodaj proizvod" [ref=e249]:
+                - img [ref=e250]
+                - text: Dodaj proizvod
+              - button "Spremi" [ref=e251]
+              - button "Izračunaj" [ref=e252]
+              - button "Potvrdi plan" [ref=e253]

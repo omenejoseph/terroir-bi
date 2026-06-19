@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DataTransferObjects;
 
 use App\Models\StockMovement;
+use App\Models\User;
 use Illuminate\Contracts\Support\Arrayable;
 use JsonSerializable;
 
@@ -24,6 +25,8 @@ final class StockMovementData implements Arrayable, JsonSerializable
         public readonly ?string $note,
         public readonly bool $isReconciliation,
         public readonly ?string $createdAt,
+        /** @var array{id: string, name: string}|null */
+        public readonly ?array $createdBy,
     ) {}
 
     public static function fromModel(StockMovement $movement): self
@@ -37,7 +40,20 @@ final class StockMovementData implements Arrayable, JsonSerializable
             note: $movement->note,
             isReconciliation: $movement->is_reconciliation,
             createdAt: $movement->created_at?->toIso8601String(),
+            createdBy: self::user($movement->createdBy),
         );
+    }
+
+    /**
+     * @return array{id: string, name: string}|null
+     */
+    private static function user(?User $user): ?array
+    {
+        if ($user === null) {
+            return null;
+        }
+
+        return ['id' => $user->getKey(), 'name' => trim($user->first_name.' '.$user->last_name)];
     }
 
     /**
@@ -54,6 +70,7 @@ final class StockMovementData implements Arrayable, JsonSerializable
             'note' => $this->note,
             'is_reconciliation' => $this->isReconciliation,
             'created_at' => $this->createdAt,
+            'created_by' => $this->createdBy,
         ];
     }
 

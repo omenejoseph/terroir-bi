@@ -22,21 +22,25 @@ use App\Models\RecipeItem;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Queries\InventoryItemStockAnalyticsQuery;
+use App\Queries\VintageCoverageQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class StockController extends Controller
 {
     /** Per-item stock analytics (current, realized 12m, exits + channels for a period). */
-    public function stockAnalytics(Request $request, InventoryItem $item, InventoryItemStockAnalyticsQuery $query): JsonResponse
+    public function stockAnalytics(Request $request, InventoryItem $item, InventoryItemStockAnalyticsQuery $query, VintageCoverageQuery $vintage): JsonResponse
     {
-        return response()->json(['data' => $query->get($item, (string) $request->query('period', '30d'))]);
+        $data = $query->get($item, (string) $request->query('period', '30d'));
+        $data['vintage_coverage'] = $vintage->get($item);
+
+        return response()->json(['data' => $data]);
     }
 
     /** Recent ledger entries for an item, newest first. ULIDs sort by creation. */
     public function movements(InventoryItem $item): JsonResponse
     {
-        $movements = $item->stockMovements()->orderByDesc('id')->limit(100)->get();
+        $movements = $item->stockMovements()->with('createdBy')->orderByDesc('id')->limit(100)->get();
 
         return response()->json([
             'data' => $movements

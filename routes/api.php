@@ -126,8 +126,10 @@ Route::prefix('v1')->group(function () {
         Route::middleware('can:inventory.manage')->group(function () {
             // Static segment before the {item} wildcard so it isn't treated as an id.
             Route::post('inventory-items/check', [StockController::class, 'check']);
+            Route::post('inventory-items/bulk-update', [InventoryItemController::class, 'bulkUpdate']);
             Route::post('inventory-items', [InventoryItemController::class, 'store']);
             Route::patch('inventory-items/{item}', [InventoryItemController::class, 'update']);
+            Route::post('inventory-items/{item}/duplicate', [InventoryItemController::class, 'duplicate']);
             Route::post('inventory-items/{item}/stock', [StockController::class, 'adjust']);
             Route::post('inventory-items/{item}/produce', [StockController::class, 'produce']);
             Route::put('inventory-items/{item}/recipe', [StockController::class, 'setRecipe']);
@@ -218,7 +220,9 @@ Route::prefix('v1')->group(function () {
             Route::get('costs/group-counts', [CostController::class, 'groupCounts']);
             Route::get('costs/analytics', [CostController::class, 'analytics']);
             Route::get('costs', [CostController::class, 'index']);
+            Route::get('costs/{cost}/attachments', [CostController::class, 'listAttachments']);
             Route::get('costs/{cost}', [CostController::class, 'show']);
+            Route::get('cash-flow/analysis', [CashFlowController::class, 'analysis']); // static before index
             Route::get('cash-flow', [CashFlowController::class, 'index']);
         });
         Route::middleware('can:finance.manage')->group(function () {
@@ -287,6 +291,7 @@ Route::prefix('v1')->group(function () {
         Route::middleware('can:orders.view')->group(function () {
             // Static segment before the {order} wildcard; analytics needs financial visibility.
             Route::get('orders/analytics', [OrderController::class, 'analytics'])->middleware('can:financials.view');
+            Route::get('orders/forecast', [OrderController::class, 'forecast'])->middleware('can:financials.view');
             Route::get('orders', [OrderController::class, 'index']);
             Route::get('orders/{order}', [OrderController::class, 'show']);
             Route::get('orders/{order}/consignment', [ConsignmentController::class, 'summary']);

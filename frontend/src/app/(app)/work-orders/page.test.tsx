@@ -1,4 +1,4 @@
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import WorkOrdersPage from "./page";
@@ -335,6 +335,38 @@ describe("WorkOrdersPage", () => {
     await user.click(within(todo).getByRole("checkbox", { name: "Mark complete" }));
     await waitFor(() => expect(patched).not.toBeNull());
     expect(patched).toMatchObject({ status: "DONE" });
+  });
+
+  it("optimistically moves the card on check, then rolls back when the server rejects", async () => {
+    server.use(
+      http.patch(`${API_URL}/work-orders/:id/status`, async () => {
+        // Delay so the optimistic state is observable before the failure lands.
+        await delay(50);
+        return new HttpResponse(null, { status: 500 });
+      }),
+    );
+    renderWithProviders(<WorkOrdersPage />);
+    const user = userEvent.setup();
+    await openBoard(user);
+
+    const todo = await screen.findByRole("group", { name: "To do" });
+    expect(within(todo).getByText("Bottle Plavac batch")).toBeInTheDocument();
+
+    await user.click(within(todo).getByRole("checkbox", { name: "Mark complete" }));
+
+    // Optimistic: the card jumps to the Done column immediately (no server wait).
+    const done = screen.getByRole("group", { name: "Done" });
+    await waitFor(() => expect(within(done).getByText("Bottle Plavac batch")).toBeInTheDocument());
+
+    // Rejected: it snaps back to To do (checkbox un-checks itself).
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole("group", { name: "To do" })).getByText("Bottle Plavac batch"),
+      ).toBeInTheDocument(),
+    );
+    expect(
+      within(screen.getByRole("group", { name: "Done" })).queryByText("Bottle Plavac batch"),
+    ).not.toBeInTheDocument();
   });
 
   it("quick-adds a work order for a day from the calendar", async () => {

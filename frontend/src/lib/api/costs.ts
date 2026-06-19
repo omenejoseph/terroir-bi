@@ -54,4 +54,18 @@ export const costsApi = {
 
   /** DELETE /costs/{id} — requires finance.delete. */
   delete: (id: string) => api.delete<void>(`/costs/${id}`),
+
+  /** GET /costs/{id}/attachments — attachments with presigned read URLs. */
+  attachments: (id: string) =>
+    api.get<{ id: string; filename: string; content_type: string; size_bytes: number; url: string }[]>(
+      `/costs/${id}/attachments`,
+    ),
+
+  /** POST /costs/{id}/attachments — link a bucket object (key) to the cost. */
+  addAttachment: (id: string, input: { key: string; filename: string; content_type: string }) =>
+    api.post<{ id: string; filename: string; url: string }>(`/costs/${id}/attachments`, input),
+
+  /** DELETE /costs/{id}/attachments/{attachmentId} — requires finance.manage. */
+  deleteAttachment: (id: string, attachmentId: string) =>
+    api.delete<void>(`/costs/${id}/attachments/${attachmentId}`),
 };

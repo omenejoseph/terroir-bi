@@ -13,11 +13,14 @@ describe("OrderAnalyticsPage", () => {
     seedLocale("en");
   });
 
-  it("renders KPI cards", async () => {
+  it("renders KPI cards and profitability sections", async () => {
     renderWithProviders(<OrderAnalyticsPage />);
-    expect(await screen.findByText("Gross profit")).toBeInTheDocument();
-    expect(screen.getByText("Avg order value")).toBeInTheDocument();
+    // "Gross profit" appears as a KPI label and as table column headers.
+    expect((await screen.findAllByText("Gross profit")).length).toBeGreaterThan(0);
+    expect(screen.getByText("Bottles sold")).toBeInTheDocument();
     expect(screen.getByText("Top customers")).toBeInTheDocument();
+    expect(screen.getByText("Channel profitability")).toBeInTheDocument();
+    expect(screen.getByText("Price realization")).toBeInTheDocument();
     expect(screen.getByText("Low-margin orders")).toBeInTheDocument();
   });
 

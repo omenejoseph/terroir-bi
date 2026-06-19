@@ -27,7 +27,7 @@ class SupplierOrderController extends Controller
         $supplierId = $request->query('supplier_id');
 
         $paginator = SupplierOrder::query()
-            ->with('supplier')
+            ->with(['supplier', 'items'])
             ->when(is_string($status) && $status !== '', fn (Builder $q) => $q->where('status', SupplierOrderStatus::from((string) $status)))
             ->when(is_string($supplierId) && $supplierId !== '', fn (Builder $q) => $q->where('supplier_id', $supplierId))
             ->orderByDesc('created_at')

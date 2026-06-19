@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Inventory\BulkUpdateInventoryItemsAction;
 use App\Actions\Inventory\CreateInventoryItemAction;
+use App\Actions\Inventory\DuplicateInventoryItemAction;
 use App\Actions\Inventory\UpdateInventoryItemAction;
 use App\DataTransferObjects\InventoryItemData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Inventory\BulkUpdateInventoryItemsRequest;
 use App\Http\Requests\Inventory\StoreInventoryItemRequest;
 use App\Http\Requests\Inventory\UpdateInventoryItemRequest;
 use App\Models\InventoryItem;
@@ -87,6 +90,23 @@ class InventoryItemController extends Controller
         $data = $action->execute($item, $request->validated());
 
         return response()->json(['data' => $data->toArray()]);
+    }
+
+    /** Apply per-row edits to many items at once (bulk-edit grid). */
+    public function bulkUpdate(BulkUpdateInventoryItemsRequest $request, BulkUpdateInventoryItemsAction $action): JsonResponse
+    {
+        /** @var list<array<string, mixed>> $items */
+        $items = $request->validated()['items'];
+
+        return response()->json(['data' => ['updated' => $action->execute($items)]]);
+    }
+
+    /** Clone an item (new SKU, " (Copy)" name, zero stock, recipe copied). */
+    public function duplicate(InventoryItem $item, DuplicateInventoryItemAction $action): JsonResponse
+    {
+        $data = $action->execute($item);
+
+        return response()->json(['data' => $data->toArray()], 201);
     }
 
     public function destroy(InventoryItem $item): JsonResponse

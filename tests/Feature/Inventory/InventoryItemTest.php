@@ -225,4 +225,52 @@ class InventoryItemTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.cost_per_unit', null);
     }
+
+    public function test_duplicate_clones_item_with_new_sku_zero_stock_and_recipe(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Team]);
+        $this->actingAsTenant($tenant);
+        $input = InventoryItem::create(['name' => 'Juice', 'sku' => 'JU-1', 'category' => 'RAW_MATERIAL', 'unit' => 'liter', 'current_stock' => '50']);
+        $output = InventoryItem::create(['name' => 'Cuvée', 'sku' => 'CV-1', 'category' => 'FINISHED', 'unit' => 'bottles', 'sales_unit' => 'bottles', 'bottles_per_case' => 6, 'current_stock' => '120', 'default_price' => 2500]);
+        $output->recipe()->create(['input_id' => $input->getKey(), 'quantity' => '0.750']);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $newId = $this->postJson("/api/v1/inventory-items/{$output->getKey()}/duplicate", [], $this->tenantHeader($tenant))
+            ->assertCreated()
+            ->assertJsonPath('data.name', 'Cuvée (Copy)')
+            ->assertJsonPath('data.sku', 'CV-1-COPY')
+            ->assertJsonPath('data.current_stock', '0.000')          // stock never copied
+            ->assertJsonPath('data.default_price.minor', 2500)        // other fields copied
+            ->json('data.id');
+
+        $this->assertDatabaseHas('recipe_items', ['output_id' => $newId, 'input_id' => $input->getKey()]);
+
+        // A second duplicate bumps the suffix rather than colliding on the SKU.
+        $this->postJson("/api/v1/inventory-items/{$output->getKey()}/duplicate", [], $this->tenantHeader($tenant))
+            ->assertCreated()
+            ->assertJsonPath('data.sku', 'CV-1-COPY-2');
+    }
+
+    public function test_bulk_update_applies_edits_to_many_items(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Team]);
+        $this->actingAsTenant($tenant);
+        $a = InventoryItem::create(['name' => 'A', 'sku' => 'A', 'category' => 'FINISHED', 'unit' => 'bottles', 'is_active' => true, 'default_price' => 1000]);
+        $b = InventoryItem::create(['name' => 'B', 'sku' => 'B', 'category' => 'FINISHED', 'unit' => 'bottles', 'is_active' => true, 'is_for_sale' => false]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $this->postJson('/api/v1/inventory-items/bulk-update', ['items' => [
+            ['id' => $a->getKey(), 'name' => 'A renamed', 'default_price' => 1500, 'is_active' => false],
+            ['id' => $b->getKey(), 'is_for_sale' => true],
+        ]], $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonPath('data.updated', 2);
+
+        $this->assertDatabaseHas('inventory_items', ['id' => $a->getKey(), 'name' => 'A renamed', 'default_price' => 1500, 'is_active' => false]);
+        $this->assertDatabaseHas('inventory_items', ['id' => $b->getKey(), 'is_for_sale' => true]);
+    }
 }

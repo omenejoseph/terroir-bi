@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Factory, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Factory, Plus, Trash2 } from "lucide-react";
 
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/context";
 import { useTranslation } from "@/i18n/context";
 import { useFormatters } from "@/lib/format";
+import { withCount } from "@/lib/labels";
 import { useInventory } from "@/hooks/use-inventory";
 import {
   useConfirmProductionPlan,
@@ -16,7 +17,13 @@ import {
   useProductionPlans,
   useUpdateProductionPlan,
 } from "@/hooks/use-production";
-import { PLAN_UNITS, type PlanUnit, type ProductionPlanRowInput, type VintageConflict } from "@/lib/types";
+import {
+  PLAN_UNITS,
+  type PlanUnit,
+  type ProductionPlan,
+  type ProductionPlanRowInput,
+  type VintageConflict,
+} from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 
 export default function ProductionPage() {
   const { t } = useTranslation();
@@ -31,12 +39,8 @@ export default function ProductionPage() {
   const canManage = can("production.manage");
   const plans = useProductionPlans();
   const createPlan = useCreateProductionPlan();
-  const [selected, setSelected] = React.useState<string | null>(null);
+  const [showForm, setShowForm] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (!selected && (plans.data ?? []).length > 0) setSelected(plans.data![0].id);
-  }, [plans.data, selected]);
 
   return (
     <div className="space-y-6">
@@ -48,33 +52,47 @@ export default function ProductionPage() {
           <p className="text-sm text-muted-foreground">{t("production.subtitle")}</p>
         </div>
         {canManage && (
-          <form
-            className="flex items-end gap-2"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setError(null);
-              const f = new FormData(e.currentTarget);
-              try {
-                const plan = await createPlan.mutateAsync({ name: String(f.get("name") ?? "") });
-                setSelected(plan.id);
-                e.currentTarget.reset();
-              } catch (err) {
-                setError(err instanceof ApiError ? err.message : "Error");
-              }
-            }}
-          >
-            <div>
-              <Label>{t("production.planName")}</Label>
-              <Input name="name" required className="w-48" />
-            </div>
-            <Button type="submit" size="sm" disabled={createPlan.isPending}>
-              <Plus className="size-4" />
-              {t("production.addPlan")}
-            </Button>
-          </form>
+          <Button onClick={() => setShowForm((prev) => !prev)}>
+            <Plus className="size-4" />
+            {t("production.addPlan")}
+          </Button>
         )}
       </header>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {canManage && showForm && (
+        <Card>
+          <CardContent className="p-4">
+            <form
+              className="flex items-end gap-2"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setError(null);
+                const f = new FormData(e.currentTarget);
+                try {
+                  await createPlan.mutateAsync({ name: String(f.get("name") ?? "") });
+                  e.currentTarget.reset();
+                  setShowForm(false);
+                } catch (err) {
+                  setError(err instanceof ApiError ? err.message : "Error");
+                }
+              }}
+            >
+              <div className="flex-1">
+                <Label>{t("production.planName")}</Label>
+                <Input name="name" required autoFocus />
+              </div>
+              <Button type="submit" size="sm" disabled={createPlan.isPending}>
+                <Plus className="size-4" />
+                {t("production.addPlan")}
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowForm(false)}>
+                {t("production.cancel")}
+              </Button>
+            </form>
+            {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+          </CardContent>
+        </Card>
+      )}
 
       {plans.isLoading ? (
         <div className="flex h-32 items-center justify-center">
@@ -85,26 +103,62 @@ export default function ProductionPage() {
           <CardContent className="p-6 text-sm text-muted-foreground">{t("production.empty")}</CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            {(plans.data ?? []).map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setSelected(p.id)}
-                className={`rounded-md border px-3 py-1.5 text-sm ${selected === p.id ? "border-primary bg-primary/10 font-medium" : "border-border text-muted-foreground"}`}
-              >
-                {p.name}{" "}
-                <Badge variant={p.status === "CONFIRMED" ? "success" : "secondary"} className="ml-1">
-                  {t(`production.planStatus.${p.status}`)}
-                </Badge>
-              </button>
-            ))}
-          </div>
-          {selected && <PlanPanel planId={selected} canManage={canManage} />}
+        <div className="space-y-2">
+          {(plans.data ?? []).map((p) => (
+            <PlanCard key={p.id} plan={p} canManage={canManage} />
+          ))}
         </div>
       )}
     </div>
+  );
+}
+
+/** Collapsible card per plan: header summary + an expandable panel with the editor. */
+function PlanCard({ plan, canManage }: { plan: ProductionPlan; canManage: boolean }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <Card className="overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+      >
+        <div className="min-w-0">
+          <p className="truncate font-medium">{plan.name}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {withCount(t("production.rows"), plan.rows_count)}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3 text-sm">
+          <Badge variant={plan.status === "CONFIRMED" ? "success" : "secondary"}>
+            {t(`production.planStatus.${plan.status}`)}
+          </Badge>
+          <ChevronDown
+            className={cn(
+              "size-4 text-muted-foreground transition-transform duration-300",
+              open && "rotate-180",
+            )}
+          />
+        </div>
+      </button>
+
+      {/* Expandable panel with the plan editor */}
+      <div
+        className={cn(
+          "grid transition-all duration-300 ease-out",
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="border-t border-border px-4 py-4">
+            {open && <PlanPanel planId={plan.id} canManage={canManage} />}
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }
 
@@ -176,15 +230,7 @@ function PlanPanel({ planId, canManage }: { planId: string; canManage: boolean }
   };
 
   return (
-    <Card>
-      <CardContent className="space-y-4 p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">{t("production.rows")}</h3>
-          <Badge variant={plan.status === "CONFIRMED" ? "success" : "secondary"}>
-            {t(`production.planStatus.${plan.status}`)}
-          </Badge>
-        </div>
-
+    <div className="space-y-4">
         <table className="w-full text-sm">
           <thead className="border-b border-border text-left text-xs text-muted-foreground">
             <tr>
@@ -320,8 +366,7 @@ function PlanPanel({ planId, canManage }: { planId: string; canManage: boolean }
         )}
 
         {showCalc && <CalcPanel />}
-      </CardContent>
-    </Card>
+    </div>
   );
 
   function CalcPanel() {

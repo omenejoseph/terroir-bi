@@ -15,7 +15,8 @@ describe("DashboardPage", () => {
     expect(await screen.findByText("Welcome back, Ada")).toBeInTheDocument();
     expect(await screen.findByText("Month-to-date")).toBeInTheDocument();
     expect(screen.getByText("Year-to-date")).toBeInTheDocument();
-    expect(screen.getByText("All revenue sources")).toBeInTheDocument();
+    // Shown by both the always-on total card and the revenue-by-channel total.
+    expect(screen.getAllByText("All revenue sources").length).toBeGreaterThan(0);
   });
 
   it("renders the period selector and the year-over-year comparison", async () => {

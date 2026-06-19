@@ -30,9 +30,11 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
+use App\Queries\DemandForecastQuery;
 use App\Queries\ListOrdersQuery;
 use App\Queries\OrderAnalyticsQuery;
 use App\Services\Finance\OrderPaymentSummary;
+use App\Services\Uploads\PresignedUploadService;
 use App\Support\Period;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,6 +44,7 @@ class OrderController extends Controller
     public function __construct(
         private readonly MembershipContext $membership,
         private readonly OrderPaymentSummary $payments,
+        private readonly PresignedUploadService $uploads,
     ) {}
 
     public function analytics(Request $request, OrderAnalyticsQuery $query): JsonResponse
@@ -52,7 +55,16 @@ class OrderController extends Controller
             $request->query('to') !== null ? (string) $request->query('to') : null,
         );
 
-        return response()->json(['data' => $query->get($from, $to)]);
+        $customersPage = max(1, (int) $request->query('customers_page', '1'));
+        $productsPage = max(1, (int) $request->query('products_page', '1'));
+
+        return response()->json(['data' => $query->get($from, $to, $customersPage, $productsPage)]);
+    }
+
+    /** Demand forecast: revenue/volume projections, per-product & per-customer. */
+    public function forecast(DemandForecastQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->get()]);
     }
 
     public function index(Request $request, ListOrdersQuery $query): JsonResponse
@@ -176,13 +188,36 @@ class OrderController extends Controller
 
     private function present(Order $order, bool $withPayments = true): mixed
     {
-        $order->loadMissing(['customer', 'createdBy', 'items.inventoryItem', 'statusHistories.changedBy', 'orderNotes.author']);
+        $order->loadMissing(['customer', 'createdBy', 'items.inventoryItem.firstImage', 'statusHistories.changedBy', 'orderNotes.author']);
 
         $payment = $withPayments && $this->membership->can('finance.view')
             ? $this->payments->for($order)
             : null;
 
-        return OrderData::fromModel($order, $this->membership->canSeeFinancials(), $payment)->toArray();
+        return OrderData::fromModel(
+            $order,
+            $this->membership->canSeeFinancials(),
+            $payment,
+            $this->itemImageUrls($order),
+        )->toArray();
+    }
+
+    /**
+     * Presigned lead-image URL per order-item id, mirroring the inventory list
+     * thumbnail. Null for custom lines or catalog items without an image.
+     * `firstImage` is eager-loaded in present(), so this adds no extra queries.
+     *
+     * @return array<string, string|null>
+     */
+    private function itemImageUrls(Order $order): array
+    {
+        $urls = [];
+        foreach ($order->items as $item) {
+            $key = $item->inventoryItem?->firstImage?->object_key;
+            $urls[$item->getKey()] = $key !== null ? $this->uploads->readUrl($key) : null;
+        }
+
+        return $urls;
     }
 
     private function userId(Request $request): string

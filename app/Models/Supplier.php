@@ -79,4 +79,12 @@ class Supplier extends Model
     {
         return $this->hasMany(SupplierPriceChange::class);
     }
+
+    /**
+     * @return HasMany<Cost, $this>
+     */
+    public function costs(): HasMany
+    {
+        return $this->hasMany(Cost::class);
+    }
 }

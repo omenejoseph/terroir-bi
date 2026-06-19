@@ -46,6 +46,8 @@ final class SupplierData implements Arrayable, JsonSerializable
             'has_portal_token' => $s->portal_token !== null,
             'price_items_count' => $s->getAttribute('price_items_count'),
             'price_changes_count' => $s->getAttribute('price_changes_count'),
+            'costs_count' => $s->getAttribute('costs_count') !== null ? (int) $s->getAttribute('costs_count') : null,
+            'costs_total' => $s->getAttribute('costs_total') !== null ? (int) $s->getAttribute('costs_total') : null,
         ];
 
         if ($s->relationLoaded('priceItems')) {

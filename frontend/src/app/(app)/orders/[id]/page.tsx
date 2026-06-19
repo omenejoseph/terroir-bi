@@ -18,9 +18,11 @@ import { OrderItemsSection } from "@/components/orders/order-items-section";
 import { OrderHistorySection } from "@/components/orders/order-history-section";
 import { OrderCommentsSection } from "@/components/orders/order-comments-section";
 import { OrderDetailsCard } from "@/components/orders/order-details-card";
+import { EditableOrderNote } from "@/components/orders/editable-order-note";
 import { OrderConsignmentSection } from "@/components/orders/order-consignment-section";
 import { OrderPaymentsSection } from "@/components/orders/order-payments-section";
 import { OrderInflowsCard } from "@/components/orders/order-inflows-card";
+import { OrderProfitabilityCard } from "@/components/orders/order-profitability-card";
 import { OrderStatusUpdater } from "@/components/orders/order-status-updater";
 import { OrderCustomerCard } from "@/components/orders/order-customer-card";
 
@@ -99,6 +101,8 @@ export default function OrderDetailPage() {
             <div className="space-y-6 lg:col-span-2">
               <OrderItemsSection order={order} canManage={canManage} />
 
+              <EditableOrderNote orderId={order.id} note={order.notes} canManage={canManage} />
+
               <div className="space-y-4">
                 <Tabs tabs={tabs} value={tab} onChange={(v) => setTab(v as DetailTab)} />
                 {tab === "history" && <OrderHistorySection order={order} />}
@@ -113,6 +117,7 @@ export default function OrderDetailPage() {
             {/* Sidebar: prominent status control, the customer, and order details. */}
             <aside className="space-y-6">
               <OrderStatusUpdater order={order} canManage={canManage} />
+              <OrderProfitabilityCard order={order} />
               <OrderCustomerCard order={order} />
               <OrderDetailsCard order={order} canManage={canManage} />
               {canViewFinance && <OrderInflowsCard orderId={order.id} />}

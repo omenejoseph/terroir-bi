@@ -4,7 +4,7 @@ import * as React from "react";
 import { Pencil } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/context";
-import { useUpdateBackorder, useUpdateNotes, useUpdateShipping } from "@/hooks/use-orders";
+import { useUpdateBackorder, useUpdateShipping } from "@/hooks/use-orders";
 import { useFormatters } from "@/lib/format";
 import { majorToMinor, minorToMajorInput } from "@/lib/money";
 import { useTranslation } from "@/i18n/context";
@@ -23,21 +23,18 @@ export function OrderDetailsCard({ order, canManage }: { order: Order; canManage
   const canBackorder = can("orders.backorder");
 
   const updateShipping = useUpdateShipping(order.id);
-  const updateNotes = useUpdateNotes(order.id);
   const updateBackorder = useUpdateBackorder(order.id);
 
   const [editing, setEditing] = React.useState(false);
   // Shipping is shown/edited in major units (€); converted to minor on save.
   const [shipping, setShipping] = React.useState(minorToMajorInput(order.shipping_cost?.minor));
   const [paidByUs, setPaidByUs] = React.useState(order.shipping_paid_by_us);
-  const [notes, setNotes] = React.useState(order.notes ?? "");
   const [backorderDate, setBackorderDate] = React.useState(order.backorder_date?.slice(0, 10) ?? "");
   const [saving, setSaving] = React.useState(false);
 
   function start() {
     setShipping(minorToMajorInput(order.shipping_cost?.minor));
     setPaidByUs(order.shipping_paid_by_us);
-    setNotes(order.notes ?? "");
     setBackorderDate(order.backorder_date?.slice(0, 10) ?? "");
     setEditing(true);
   }
@@ -49,7 +46,6 @@ export function OrderDetailsCard({ order, canManage }: { order: Order; canManage
         shipping_cost: majorToMinor(shipping),
         shipping_paid_by_us: paidByUs,
       });
-      await updateNotes.mutateAsync(notes.trim() || null);
       if (canBackorder) {
         await updateBackorder.mutateAsync(backorderDate || null);
       }
@@ -91,10 +87,6 @@ export function OrderDetailsCard({ order, canManage }: { order: Order; canManage
                 {t("orders.details.shippingPaidByUs")}
               </label>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="d-notes">{t("orders.details.notes")}</Label>
-              <Input id="d-notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
-            </div>
             {canBackorder && (
               <div className="space-y-1.5">
                 <Label htmlFor="d-backorder">{t("orders.details.backorder")}</Label>
@@ -125,7 +117,6 @@ export function OrderDetailsCard({ order, canManage }: { order: Order; canManage
             <Detail label={t("orders.details.backorder")}>
               {order.backorder_date ? date(order.backorder_date) : t("orders.details.none")}
             </Detail>
-            <Detail label={t("orders.details.notes")}>{order.notes || t("orders.details.none")}</Detail>
           </dl>
         )}
       </CardContent>

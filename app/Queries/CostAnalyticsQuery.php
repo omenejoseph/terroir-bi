@@ -6,6 +6,7 @@ namespace App\Queries;
 
 use App\Enums\CostStatus;
 use App\Models\Cost;
+use App\Models\Customer;
 use App\Models\Inflow;
 use App\Models\Order;
 use App\Models\Supplier;
@@ -32,18 +33,27 @@ class CostAnalyticsQuery
         $currency = $this->currency();
 
         $costs = Cost::query()->whereBetween('date', [$from, $to])
-            ->get(['id', 'date', 'total_amount', 'category', 'status', 'supplier_id', 'paid_at']);
+            ->get(['id', 'date', 'total_amount', 'vat_amount', 'category', 'status', 'supplier_id', 'paid_at', 'due_date']);
+
+        // Preceding equal-length window — drives the per-category period-over-period change.
+        $prevFrom = $from->copy()->subSeconds((int) $from->diffInSeconds($to));
+        $prevCosts = Cost::query()->whereBetween('date', [$prevFrom, $from])
+            ->get(['total_amount', 'category']);
 
         $total = $costs->sum(fn (Cost $c) => $c->total_amount->getMinorAmount());
         $unpaid = $costs->where('status', '!=', CostStatus::Paid)
             ->sum(fn (Cost $c) => $c->total_amount->getMinorAmount());
 
+        $excluded = Customer::statsExcludedIds();
         $orders = Order::query()->where('is_consignment', false)
+            ->whereNotIn('customer_id', $excluded)
             ->whereBetween('created_at', [$from, $to])
             ->get(['created_at', 'total_amount']);
 
-        // Revenue (for gross margin) comes from inflows in the same period.
+        // Revenue (for gross margin) comes from inflows in the same period,
+        // excluding stats-excluded customers (customer-less inflows still count).
         $revenue = (int) Inflow::query()->whereBetween('date', [$from, $to])
+            ->where(fn ($q) => $q->whereNull('customer_id')->orWhereNotIn('customer_id', $excluded))
             ->get(['amount'])->sum(fn (Inflow $i) => $i->amount->getMinorAmount());
 
         return [
@@ -60,7 +70,7 @@ class CostAnalyticsQuery
                 'revenue' => Money::fromMinor($revenue, $currency)->jsonSerialize(),
             ],
             'by_status' => $this->byStatus($costs, $currency),
-            'by_category' => $this->grouped($costs, fn (Cost $c) => $c->category, $currency),
+            'by_category' => $this->byCategory($costs, $prevCosts, $currency),
             'by_supplier' => $this->bySupplier($costs, $currency),
             'over_time' => $this->monthly(array_values($costs->map(fn (Cost $c) => [$c->date, $c->total_amount->getMinorAmount()])->all()), $currency),
             'yoy' => $this->yearOverYear($to->year, $currency),
@@ -87,6 +97,9 @@ class CostAnalyticsQuery
         return [
             'total' => Money::fromMinor((int) $rows->sum(fn (Cost $c) => $c->total_amount->getMinorAmount()), $currency)->jsonSerialize(),
             'count' => $rows->count(),
+            'vat' => Money::fromMinor((int) $rows->sum(fn (Cost $c) => $c->vat_amount?->getMinorAmount() ?? 0), $currency)->jsonSerialize(),
+            'overdue' => $rows->filter(fn (Cost $c) => $c->status !== CostStatus::Paid
+                && $c->due_date !== null && $c->due_date->lt(Carbon::today()))->count(),
         ];
     }
 
@@ -201,17 +214,34 @@ class CostAnalyticsQuery
     }
 
     /**
+     * Spend grouped by category, with the line count and the period-over-period
+     * change (%) vs the preceding equal-length window. A category with no prior
+     * spend reports +100% (brand-new), matching the prototype's distribution.
+     *
      * @param  Collection<int, Cost>  $costs
-     * @param  callable(Cost): string  $key
+     * @param  Collection<int, Cost>  $prevCosts
      * @return list<array<string, mixed>>
      */
-    private function grouped($costs, callable $key, string $currency): array
+    private function byCategory($costs, $prevCosts, string $currency): array
     {
-        return array_values($costs->groupBy($key)
-            ->map(fn ($group, $name) => [
-                'name' => (string) $name,
-                'total' => Money::fromMinor((int) $group->sum(fn (Cost $c) => $c->total_amount->getMinorAmount()), $currency)->jsonSerialize(),
-            ])->sortByDesc(fn (array $r) => $r['total']['minor'])->values()->all());
+        $prevMap = [];
+        foreach ($prevCosts as $c) {
+            $prevMap[$c->category] = ($prevMap[$c->category] ?? 0) + $c->total_amount->getMinorAmount();
+        }
+
+        return array_values($costs->groupBy(fn (Cost $c) => $c->category)
+            ->map(function ($group, $name) use ($prevMap, $currency): array {
+                $curr = (int) $group->sum(fn (Cost $c) => $c->total_amount->getMinorAmount());
+                $prev = (int) ($prevMap[(string) $name] ?? 0);
+                $change = $prev > 0 ? ($curr - $prev) / $prev * 100 : ($curr > 0 ? 100.0 : 0.0);
+
+                return [
+                    'name' => (string) $name,
+                    'total' => Money::fromMinor($curr, $currency)->jsonSerialize(),
+                    'count' => $group->count(),
+                    'change' => round($change, 1),
+                ];
+            })->sortByDesc(fn (array $r) => $r['total']['minor'])->values()->all());
     }
 
     /**
