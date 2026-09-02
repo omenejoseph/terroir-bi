@@ -115,6 +115,7 @@ export function WorkOrderCalendar({
             intervals={intervals}
             onPickDate={onPickDate}
             onSelect={onSelect}
+            onAddForDate={onAddForDate}
           />
         )}
 
@@ -387,12 +388,14 @@ function QuarterView({
   intervals,
   onPickDate,
   onSelect,
+  onAddForDate,
 }: {
   anchor: Date;
   byId: Map<string, WorkOrder>;
   intervals: Interval[];
   onPickDate: (date: Date) => void;
   onSelect: (wo: WorkOrder) => void;
+  onAddForDate?: (date: Date) => void;
 }) {
   const { t } = useTranslation();
   const { date: fmtDate, monthShort } = useFormatters();
@@ -427,27 +430,42 @@ function QuarterView({
                   .filter((iv) => iv.from <= day && day <= iv.to)
                   .map((iv) => byId.get(iv.id)?.status)
                   .filter((s): s is TaskStatus => !!s);
+                const canAdd = onAddForDate && isTodayOrFuture(day);
                 return (
-                  <button
-                    key={day.toISOString()}
-                    type="button"
-                    aria-label={fmtDate(day)}
-                    onClick={() => onPickDate(day)}
-                    className={cn(
-                      "flex aspect-square flex-col items-center justify-center rounded text-[10px] tabular-nums hover:bg-muted/60",
-                      muted && "text-muted-foreground/40",
-                      isToday(day) && "ring-1 ring-primary",
+                  <div key={day.toISOString()} className="group/qd relative">
+                    <button
+                      type="button"
+                      aria-label={fmtDate(day)}
+                      onClick={() => onPickDate(day)}
+                      className={cn(
+                        "flex aspect-square w-full flex-col items-center justify-center rounded text-[10px] tabular-nums hover:bg-muted/60",
+                        muted && "text-muted-foreground/40",
+                        isToday(day) && "ring-1 ring-primary",
+                      )}
+                    >
+                      <span>{day.getDate()}</span>
+                      {statuses.length > 0 && (
+                        <span className="mt-0.5 flex gap-0.5">
+                          {statuses.slice(0, 3).map((s, i) => (
+                            <span key={i} className={cn("size-1 rounded-full", STATUS_DOT[s])} />
+                          ))}
+                        </span>
+                      )}
+                    </button>
+                    {canAdd && (
+                      <button
+                        type="button"
+                        aria-label={t("tasks.addForDay", { date: day.getDate() })}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddForDate(day);
+                        }}
+                        className="absolute right-0 top-0 rounded bg-background/80 p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/qd:opacity-100"
+                      >
+                        <Plus className="size-2.5" />
+                      </button>
                     )}
-                  >
-                    <span>{day.getDate()}</span>
-                    {statuses.length > 0 && (
-                      <span className="mt-0.5 flex gap-0.5">
-                        {statuses.slice(0, 3).map((s, i) => (
-                          <span key={i} className={cn("size-1 rounded-full", STATUS_DOT[s])} />
-                        ))}
-                      </span>
-                    )}
-                  </button>
+                  </div>
                 );
               })}
           </div>
