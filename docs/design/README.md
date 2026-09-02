@@ -44,6 +44,32 @@ Notable corrections these tokens forced over the initial placeholder:
 - Foreground is **`#0a0a0a`**; the neutral ramp is `#737373` / `#525252`.
 - Component radius is **8px**, not 14px.
 
+## Renders
+
+`renders/**/*.png` are 2x exports made by hand from Figma, filed by section and
+named `<screen>--<node-id>.png`; `renders/index.json` maps each back to its
+section, screen and node. They were exported with Figma's own filenames and
+renamed programmatically — there is no need to rename by hand.
+
+Where a render and a `frames/*.xml` capture disagree, **the render wins**: the
+XML was captured 2026-09-02 and the design has moved since.
+
+### Geometry drift observed 2026-09-02 → export
+
+| Screen | Node | Cached height | Rendered height |
+|---|---|---|---|
+| Edit Customer | `231:9592` | 933 | **1288** |
+| Individual Order | `453:4938` | 1024 | **1404** |
+
+Both grew, so those two frames gained content after the capture. Re-capture
+their metadata before working on them, or measure from the render.
+
+### Which "Inventory Check"?
+
+The export is `271:12639` (the original, 1369×1497). The canvas also holds
+`388:1592` "Inventory Check — rethought" (1369×1219), which the screen plan
+prefers. Confirm with the designer which is current before building it.
+
 ## Known deviations
 
 **Icons.** The design's own layer names call out Lucide (`lucide/ticket-check`,

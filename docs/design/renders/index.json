@@ -1,0 +1,122 @@
+[
+  {
+    "section": "Customers",
+    "screen": "Analytics",
+    "node": "230:4717",
+    "file": "renders/customers/analytics--230-4717.png",
+    "render_px": "2738x3036",
+    "at_1x": "1369x1518"
+  },
+  {
+    "section": "INVENTORY",
+    "screen": "Analytics",
+    "node": "382:1592",
+    "file": "renders/inventory/analytics--382-1592.png",
+    "render_px": "2738x1930",
+    "at_1x": "1369x965"
+  },
+  {
+    "section": "INVENTORY",
+    "screen": "Bulk Edit",
+    "node": "270:9646",
+    "file": "renders/inventory/bulk-edit--270-9646.png",
+    "render_px": "2738x1866",
+    "at_1x": "1369x933"
+  },
+  {
+    "section": "Forms",
+    "screen": "Create Order",
+    "node": "335:4233",
+    "file": "renders/forms/create-order--335-4233.png",
+    "render_px": "960x1696",
+    "at_1x": "480x848"
+  },
+  {
+    "section": "Customers",
+    "screen": "Customers",
+    "node": "230:2395",
+    "file": "renders/customers/customers--230-2395.png",
+    "render_px": "2738x1866",
+    "at_1x": "1369x933"
+  },
+  {
+    "section": "Customers",
+    "screen": "Edit Customer",
+    "node": "231:9592",
+    "file": "renders/customers/edit-customer--231-9592.png",
+    "render_px": "2738x2576",
+    "at_1x": "1369x1288"
+  },
+  {
+    "section": "Customers",
+    "screen": "Individual Customer - Overview",
+    "node": "231:9336",
+    "file": "renders/customers/individual-customer-overview--231-9336.png",
+    "render_px": "2738x4092",
+    "at_1x": "1369x2046"
+  },
+  {
+    "section": "ORDERS",
+    "screen": "Individual Order",
+    "node": "453:4938",
+    "file": "renders/orders/individual-order--453-4938.png",
+    "render_px": "2738x2808",
+    "at_1x": "1369x1404"
+  },
+  {
+    "section": "INVENTORY",
+    "screen": "Inventory Check",
+    "node": "271:12639",
+    "file": "renders/inventory/inventory-check--271-12639.png",
+    "render_px": "2738x2994",
+    "at_1x": "1369x1497"
+  },
+  {
+    "section": "WORK ORDERS",
+    "screen": "Main View",
+    "node": "267:1781",
+    "file": "renders/work-orders/main-view--267-1781.png",
+    "render_px": "2738x1866",
+    "at_1x": "1369x933"
+  },
+  {
+    "section": "Forms",
+    "screen": "New Item \u2014 Advanced open",
+    "node": "322:704",
+    "file": "renders/forms/new-item-advanced-open--322-704.png",
+    "render_px": "960x2708",
+    "at_1x": "480x1354"
+  },
+  {
+    "section": "Forms",
+    "screen": "New Item",
+    "node": "317:468",
+    "file": "renders/forms/new-item--317-468.png",
+    "render_px": "960x1414",
+    "at_1x": "480x707"
+  },
+  {
+    "section": "ORDERS",
+    "screen": "ORDERS - List",
+    "node": "455:1577",
+    "file": "renders/orders/orders-list--455-1577.png",
+    "render_px": "2738x2840",
+    "at_1x": "1369x1420"
+  },
+  {
+    "section": "Forms",
+    "screen": "Order \u2014 View",
+    "node": "376:1592",
+    "file": "renders/forms/order-view--376-1592.png",
+    "render_px": "960x2788",
+    "at_1x": "480x1394"
+  },
+  {
+    "section": "INVENTORY",
+    "screen": "Product Detail",
+    "node": "449:1577",
+    "file": "renders/inventory/product-detail--449-1577.png",
+    "render_px": "2738x3854",
+    "at_1x": "1369x1927"
+  }
+]
