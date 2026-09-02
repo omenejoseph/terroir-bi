@@ -94,14 +94,19 @@ Nothing after this phase should invent a primitive. Everything later composes.
 
 | Piece | Status |
 |---|---|
-| `PageHeader`, `TabNav`, `AttentionBand`, `LevelBar`, `PeriodTabs`, `ProgressBar` | ✅ built |
+| `PageHeader`, `Tabs`, `AttentionBand`, `LevelBar`, `ProgressBar`, `SectionHeader`, `MetaStrip`, `Separator` | ✅ built |
 | `Button`, `Card`, `Input`, `Label`, `Badge`, `InputError`, `StatCard`, `FlashMessages` | ✅ built |
 | **`SidePanel` drawer** — 480px, header/body/footer, "Advanced" disclosure | ✅ built, proven with New Item |
 | **`DataTable`** — grouped rows, group subtotal band, sticky header | ⚠️ inlined in Inventory; extract |
-| **Global ⌘K search** in the topbar (`389:1592` header) | ❌ not built |
+| **Global ⌘K search** in the topbar (`389:1592` header) | ⚠️ `Kbd` built; the field is not |
 | **Collapsed `NavRail`** — the second nav state (`208:5577`) | ❌ not built |
-| Form controls: `FormField`, `Select`, `Textarea`, `Toggle` | ✅ built |
+| Form controls: `FormField`, `FieldRow`, `FormSection`, `Select`, `Textarea`, `Switch`, `SwitchRow`, `Checkbox` | ✅ built |
 | Form controls: combobox, date picker | ❌ not built |
+
+Components are derived from the design's own vocabulary rather than invented —
+see [`design/COMPONENTS.md`](design/COMPONENTS.md), which counts every
+`<instance>` and repeated frame name across all 54 cached frames and maps them
+to Vue.
 
 **DoD:** every piece rendered in isolation and visually diffed against its
 Figma node; `SidePanel` demonstrated with one real form end to end (New Item);

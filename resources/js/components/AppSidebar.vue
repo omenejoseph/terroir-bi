@@ -3,6 +3,8 @@ import { computed, ref } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { ChevronDown, ChevronsUpDown } from 'lucide-vue-next';
 
+import Avatar from '@/components/ui/Avatar.vue';
+import Separator from '@/components/ui/Separator.vue';
 import { useAuth } from '@/composables/useAuth';
 import { cn } from '@/lib/cn';
 import { navigationFor, shortcutsFor, type NavItem } from '@/lib/navigation';
@@ -125,7 +127,7 @@ const rowClass = (item: NavItem) =>
             </section>
 
             <div v-if="overview.length && shortcuts.length" class="py-2">
-                <div class="h-px bg-sidebar-border" />
+                <Separator class="bg-sidebar-border" />
             </div>
 
             <!-- Shortcuts -->
@@ -156,7 +158,7 @@ const rowClass = (item: NavItem) =>
                 </ul>
             </section>
 
-            <div class="py-2"><div class="h-px bg-sidebar-border" /></div>
+            <div class="py-2"><Separator class="bg-sidebar-border" /></div>
 
             <!-- Categories -->
             <section v-for="category in categories" :key="category.label" class="pb-3">
@@ -202,11 +204,7 @@ const rowClass = (item: NavItem) =>
                 as="button"
                 class="flex w-full items-center gap-2.5 rounded-lg p-2 text-left transition-colors hover:bg-sidebar-active"
             >
-                <span
-                    class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-2xs font-semibold text-primary-foreground ring-1 ring-sidebar-border"
-                >
-                    {{ initials || '—' }}
-                </span>
+                <Avatar :name="user?.name" />
                 <span class="min-w-0 flex-1">
                     <span class="block truncate text-13 font-semibold text-foreground">{{ user?.name }}</span>
                     <span class="block truncate text-2xs text-muted-foreground">

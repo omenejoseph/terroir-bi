@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import { AlertTriangle, PackageCheck, TrendingDown, TrendingUp } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -10,12 +10,13 @@ import Card from '@/components/ui/Card.vue';
 import CardContent from '@/components/ui/CardContent.vue';
 import CardHeader from '@/components/ui/CardHeader.vue';
 import CardTitle from '@/components/ui/CardTitle.vue';
-import PeriodTabs from '@/components/ui/PeriodTabs.vue';
+import Tabs from '@/components/ui/Tabs.vue';
 import ProgressBar from '@/components/ui/ProgressBar.vue';
 import StatCard from '@/components/ui/StatCard.vue';
 import { formatMoney, formatNumber, formatQuantity } from '@/lib/money';
 import type { DashboardFilters, DashboardSummary } from '@/types/dashboard';
 import type { SharedProps } from '@/types';
+import type { TabItem } from '@/types/ui';
 
 /**
  * Dashboard, following the TERROIR design (Figma 208:5577): title row with the
@@ -30,6 +31,20 @@ import type { SharedProps } from '@/types';
 const props = defineProps<{ summary: DashboardSummary; filters: DashboardFilters }>();
 
 const page = usePage<SharedProps>();
+
+/** The design's period strip (Figma 208:5577); values are tokens the server accepts. */
+const PERIOD_TABS: TabItem[] = [
+    { value: 'today', label: 'Today' },
+    { value: 'yesterday', label: 'Yesterday' },
+    { value: 'week', label: 'This Week' },
+    { value: 'mtd', label: 'This Month' },
+    { value: 'qtd', label: 'This Quarter' },
+    { value: 'ytd', label: 'Year to Date' },
+];
+
+function selectPeriod(period: string): void {
+    router.get('/dashboard', { period }, { preserveState: true, preserveScroll: true });
+}
 
 const money = (minor: number) => formatMoney(minor, props.summary.currency, page.props.locale);
 const count = (value: number) => formatNumber(value, page.props.locale);
@@ -99,7 +114,12 @@ const stats = computed(() => [
                 </div>
             </div>
 
-            <PeriodTabs :current="filters.period ?? summary.range" />
+            <Tabs
+                :items="PERIOD_TABS"
+                :current="filters.period ?? summary.range"
+                variant="segmented"
+                @select="selectPeriod"
+            />
 
             <!-- Alert band -->
             <div v-if="alerts.length" class="flex flex-wrap gap-2">

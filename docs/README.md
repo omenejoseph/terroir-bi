@@ -31,6 +31,7 @@ rules.
 | 12 | [`16-inertia-frontend-migration.md`](16-inertia-frontend-migration.md) | 🆕 **Frontend migration** — replacing the decoupled Next.js SPA with an Inertia (Vue 3 + TS) frontend served by Laravel |
 | 13 | [`design/`](design/) | 🆕 **Design cache** — tokens + screen inventory extracted from the TERROIR Figma file, plus known deviations and design↔backend gaps |
 | 14 | [`17-frontend-screen-plan.md`](17-frontend-screen-plan.md) | 🆕 **Screen plan** — the 42 real screens phased into a build order, with a definition of done per screen and per phase |
+| 15 | [`design/COMPONENTS.md`](design/COMPONENTS.md) | 🆕 **Component map** — the design's own reusable vocabulary (derived by counting instances across all frames) mapped to Vue components |
 | 08 | [`openapi/openapi.yaml`](openapi/openapi.yaml) | Machine-readable OpenAPI 3.1 spec — the **target** contract (import into Postman/Swagger/codegen) |
 | 08a | [`openapi/live.yaml`](openapi/live.yaml) | OpenAPI 3.1 spec of the **currently implemented** API (kept in lock-step with the code) |
 

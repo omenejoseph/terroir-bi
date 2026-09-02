@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { cn } from '@/lib/cn';
 
-/** The pill switch from the design's "Available for sale" row (Figma 322:704). */
+/** Figma component `Switch` (16 instances across 4 sections). */
 const props = defineProps<{ modelValue: boolean; id?: string; label?: string }>();
 
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>();

@@ -27,13 +27,13 @@ const fields = computed(() => [
     {
         label: 'Default price',
         value: props.item.default_price
-            ? formatMoney(props.item.default_price.amount, props.item.default_price.currency, page.props.locale)
+            ? formatMoney(props.item.default_price.minor, props.item.default_price.currency, page.props.locale)
             : '—',
     },
     {
         label: 'Cost per unit',
         value: props.item.cost_per_unit
-            ? formatMoney(props.item.cost_per_unit.amount, props.item.cost_per_unit.currency, page.props.locale)
+            ? formatMoney(props.item.cost_per_unit.minor, props.item.cost_per_unit.currency, page.props.locale)
             : '—',
     },
 ]);

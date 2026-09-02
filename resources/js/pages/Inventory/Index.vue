@@ -10,13 +10,13 @@ import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import LevelBar from '@/components/ui/LevelBar.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
-import TabNav from '@/components/ui/TabNav.vue';
+import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { cn } from '@/lib/cn';
 import { formatMoney, formatQuantity } from '@/lib/money';
 import type { InventoryFilters, InventoryItem } from '@/types/inventory';
 import type { Paginated, SharedProps } from '@/types';
-import type { AttentionItem, Tab } from '@/types/ui';
+import type { AttentionItem, TabItem } from '@/types/ui';
 
 /**
  * Inventory list, following Figma 389:1592: page header with the two primary
@@ -59,7 +59,7 @@ function reload(overrides: Record<string, unknown>): void {
     );
 }
 
-const MODULE_TABS: Tab[] = [
+const MODULE_TABS: TabItem[] = [
     { label: 'Inventory', href: '/inventory' },
     { label: 'Analytics', href: null },
     { label: 'Inventory Spend', href: null },
@@ -67,12 +67,12 @@ const MODULE_TABS: Tab[] = [
 ];
 
 /** Mirrors the InventoryCategory enum; the design shows exactly these three. */
-const CATEGORIES = [
-    { value: null, label: 'All' },
+const CATEGORY_TABS: TabItem[] = [
+    { value: '', label: 'All' },
     { value: 'FINISHED', label: 'Finished' },
     { value: 'SEMI_FINISHED', label: 'Semi-Finished' },
     { value: 'RAW_MATERIAL', label: 'Raw Materials' },
-] as const;
+];
 
 /**
  * The design groups rows by product group with a count and a subtotal. Grouping
@@ -93,7 +93,7 @@ const groups = computed(() => {
         rows,
         onHand: rows.reduce((sum, r) => sum + (Number.parseFloat(r.current_stock) || 0), 0),
         value: rows.reduce(
-            (sum, r) => sum + (r.default_price ? r.default_price.amount * (Number.parseFloat(r.current_stock) || 0) : 0),
+            (sum, r) => sum + (r.default_price ? r.default_price.minor * (Number.parseFloat(r.current_stock) || 0) : 0),
             0,
         ),
         currency: rows.find((r) => r.default_price)?.default_price?.currency ?? null,
@@ -124,7 +124,7 @@ function flags(item: InventoryItem): string[] {
                 </template>
             </PageHeader>
 
-            <TabNav :tabs="MODULE_TABS" current="Inventory" />
+            <Tabs :items="MODULE_TABS" current="Inventory" />
 
             <AttentionBand :items="attention" />
 
@@ -143,24 +143,12 @@ function flags(item: InventoryItem): string[] {
                     />
                 </div>
 
-                <div class="flex flex-wrap items-center gap-1 rounded-lg bg-muted p-1">
-                    <button
-                        v-for="category in CATEGORIES"
-                        :key="category.label"
-                        type="button"
-                        :class="
-                            cn(
-                                'rounded-md px-3 py-1.5 text-13 transition-colors',
-                                (filters.category ?? null) === category.value
-                                    ? 'bg-background text-foreground shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground',
-                            )
-                        "
-                        @click="reload({ category: category.value ?? undefined })"
-                    >
-                        {{ category.label }}
-                    </button>
-                </div>
+                <Tabs
+                    :items="CATEGORY_TABS"
+                    :current="filters.category ?? ''"
+                    variant="segmented"
+                    @select="reload({ category: $event || undefined })"
+                />
 
                 <span class="ml-auto text-13 text-muted-foreground">{{ items.meta.total }} products</span>
             </div>

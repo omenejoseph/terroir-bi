@@ -1,8 +1,16 @@
 /** Mirrors App\DataTransferObjects\InventoryItemData plus the presenter's image_url. */
 
+/**
+ * Mirrors App\Support\Money\Money::jsonSerialize().
+ *
+ * `minor` is the integer amount in minor units and is the ONLY field to compute
+ * with. `formatted` is the server's major-unit string, kept for debugging; the
+ * client formats from `minor` so the viewer's locale decides separators.
+ */
 export interface MoneyValue {
-    amount: number;
+    minor: number;
     currency: string;
+    formatted: string;
 }
 
 export interface InventoryItem {

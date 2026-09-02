@@ -4,12 +4,14 @@ import { useForm } from '@inertiajs/vue3';
 
 import Button from '@/components/ui/Button.vue';
 import Disclosure from '@/components/ui/Disclosure.vue';
+import FieldRow from '@/components/ui/FieldRow.vue';
 import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
 import Select from '@/components/ui/Select.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
+import Separator from '@/components/ui/Separator.vue';
+import SwitchRow from '@/components/ui/SwitchRow.vue';
 import Textarea from '@/components/ui/Textarea.vue';
-import Toggle from '@/components/ui/Toggle.vue';
 
 /**
  * Create an inventory item (Figma `317:468`, and `322:704` with Advanced open).
@@ -123,24 +125,23 @@ function submit(): void {
                 <Input :id="id" v-model="form.sku" :invalid="invalid" placeholder="VT-PM-22" />
             </FormField>
 
-            <!-- Two-column row: 208 + 16 + 208 in the design -->
-            <div class="grid grid-cols-2 gap-4">
+            <FieldRow>
                 <FormField v-slot="{ id, invalid }" label="Type" required :error="form.errors.category">
                     <Select :id="id" v-model="form.category" :invalid="invalid" :options="TYPES" />
                 </FormField>
                 <FormField v-slot="{ id, invalid }" label="Category" :error="form.errors.group">
                     <Input :id="id" v-model="form.group" :invalid="invalid" placeholder="Wine" />
                 </FormField>
-            </div>
+            </FieldRow>
 
-            <div class="grid grid-cols-2 gap-4">
+            <FieldRow>
                 <FormField v-slot="{ id, invalid }" label="Unit size" :error="form.errors.unit_size">
                     <Input :id="id" v-model="form.unit_size" :invalid="invalid" placeholder="750 ml" />
                 </FormField>
                 <FormField v-slot="{ id, invalid }" label="Unit" :error="form.errors.unit">
                     <Select :id="id" v-model="form.unit" :invalid="invalid" :options="UNITS" />
                 </FormField>
-            </div>
+            </FieldRow>
 
             <FormField
                 v-slot="{ id, invalid }"
@@ -151,7 +152,7 @@ function submit(): void {
                 <Input :id="id" v-model="form.default_price" :invalid="invalid" placeholder="0,00 €" />
             </FormField>
 
-            <div class="h-px bg-border" />
+            <Separator />
 
             <Disclosure title="Advanced" :summary="advancedSummary">
                 <FormField v-slot="{ id, invalid }" label="Subcategory" :error="form.errors.subcategory">
@@ -180,15 +181,11 @@ function submit(): void {
                     <Input :id="id" v-model="form.cost_per_unit" :invalid="invalid" placeholder="0,00 €" />
                 </FormField>
 
-                <div class="flex items-start justify-between gap-4">
-                    <span class="min-w-0">
-                        <span class="block text-sm leading-5 font-medium text-foreground">Available for sale</span>
-                        <span class="mt-0.5 block text-xs text-muted-foreground">
-                            Shows in the customer order form. Needs a price set.
-                        </span>
-                    </span>
-                    <Toggle v-model="form.is_for_sale" label="Available for sale" />
-                </div>
+                <SwitchRow
+                    v-model="form.is_for_sale"
+                    label="Available for sale"
+                    hint="Shows in the customer order form. Needs a price set."
+                />
 
                 <FormField
                     v-if="isPackaged"

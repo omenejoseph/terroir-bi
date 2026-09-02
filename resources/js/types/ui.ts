@@ -12,8 +12,14 @@ export interface AttentionItem {
     count: number;
 }
 
-/** A tab in a module's sub-navigation; `href: null` renders disabled. */
-export interface Tab {
+/**
+ * One tab in a `Tabs` strip.
+ *
+ * `href` navigates, `value` emits `select`, and neither means the destination is
+ * designed but not built yet — it renders disabled rather than as a dead link.
+ */
+export interface TabItem {
     label: string;
-    href: string | null;
+    href?: string | null;
+    value?: string;
 }
