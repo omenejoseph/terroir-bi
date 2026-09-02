@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Actions\Inventory\AdjustStockAction;
+use App\Actions\Inventory\BulkUpdateInventoryItemsAction;
 use App\Actions\Inventory\CreateInventoryItemAction;
 use App\Actions\Inventory\DeleteInventoryItemAction;
 use App\Actions\Inventory\UpdateInventoryItemAction;
 use App\Enums\StockMovementType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\AdjustStockRequest;
+use App\Http\Requests\Inventory\BulkUpdateInventoryItemsRequest;
 use App\Http\Requests\Inventory\StoreInventoryItemRequest;
 use App\Http\Requests\Inventory\UpdateInventoryItemRequest;
 use App\Models\InventoryItem;
+use App\Queries\InventoryAnalyticsQuery;
 use App\Queries\InventoryAttentionQuery;
 use App\Queries\InventoryItemStockAnalyticsQuery;
 use App\Queries\InventoryTaxonomyQuery;
@@ -86,6 +89,41 @@ class InventoryController extends Controller
             'vintageCoverage' => $vintage->get($item),
             'filters' => ['period' => $period],
         ]);
+    }
+
+    /**
+     * Inventory analytics (Figma 382:1592) — the same InventoryAnalyticsQuery
+     * that backs the API's analytics endpoint and the dashboard's stock tiles.
+     */
+    public function analytics(InventoryAnalyticsQuery $query): Response
+    {
+        return Inertia::render('Inventory/Analytics', [
+            'analytics' => $query->get(),
+        ]);
+    }
+
+    /**
+     * Bulk edit (Figma 270:9646) — the inventory list in an editable mode
+     * rather than a separate route, which is how the design frames it.
+     *
+     * The design also shows the Stock column as editable. It is NOT editable
+     * here: stock is derived from the movement ledger, so writing it directly
+     * would leave the running balance and movement history disagreeing with the
+     * item. Reconciling a physical count is what the Inventory Check screen is
+     * for, and it records proper reconciliation movements.
+     */
+    public function bulkUpdate(
+        BulkUpdateInventoryItemsRequest $request,
+        BulkUpdateInventoryItemsAction $action,
+    ): RedirectResponse {
+        /** @var list<array<string, mixed>> $items */
+        $items = $request->validated()['items'];
+
+        $updated = $action->execute($items);
+
+        return back()->with('success', trans_choice(':count item updated|:count items updated', $updated, [
+            'count' => $updated,
+        ]));
     }
 
     /**

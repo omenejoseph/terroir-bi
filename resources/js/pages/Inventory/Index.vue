@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { Search } from 'lucide-vue-next';
+import { PencilLine, Search, Upload, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
+import BulkEditTable from '@/components/inventory/BulkEditTable.vue';
 import NewItemPanel from '@/components/inventory/NewItemPanel.vue';
 import AttentionBand from '@/components/ui/AttentionBand.vue';
 import Badge from '@/components/ui/Badge.vue';
@@ -42,6 +43,13 @@ const search = ref(props.filters.search ?? '');
 /* The design opens New Item as a drawer over the list, not as its own page. */
 const newItemOpen = ref(false);
 
+/*
+  Bulk edit is a MODE of this page rather than a route (Figma 270:9646): the
+  header, tabs and filters stay put and only the table becomes editable.
+*/
+const bulkEditing = ref(false);
+const bulkTable = ref<InstanceType<typeof BulkEditTable> | null>(null);
+
 /* Debounced server-side search; `preserveState` keeps focus and the typed value
    through the partial reload, `replace` stops one history entry per keystroke. */
 let timer: ReturnType<typeof setTimeout> | undefined;
@@ -61,7 +69,7 @@ function reload(overrides: Record<string, unknown>): void {
 
 const MODULE_TABS: TabItem[] = [
     { label: 'Inventory', href: '/inventory' },
-    { label: 'Analytics', href: null },
+    { label: 'Analytics', href: '/inventory-analytics' },
     { label: 'Inventory Spend', href: null },
     { label: 'Inventory Check', href: null },
 ];
@@ -119,8 +127,26 @@ function flags(item: InventoryItem): string[] {
         <div class="space-y-5">
             <PageHeader title="Inventory">
                 <template #actions>
-                    <Button v-if="can('inventory.manage')" variant="outline" size="sm">Bulk Import</Button>
-                    <Button v-if="can('inventory.manage')" size="sm" @click="newItemOpen = true">New Item</Button>
+                    <template v-if="bulkEditing">
+                        <Button variant="outline" size="sm" @click="bulkEditing = false">
+                            <X class="size-4" :stroke-width="1.5" />
+                            Cancel
+                        </Button>
+                        <Button
+                            size="sm"
+                            :disabled="!bulkTable?.dirtyCount"
+                            @click="bulkTable?.save()"
+                        >
+                            Save Changes<template v-if="bulkTable?.dirtyCount"> ({{ bulkTable.dirtyCount }})</template>
+                        </Button>
+                    </template>
+                    <template v-else>
+                        <Button v-if="can('inventory.manage')" variant="outline" size="sm">
+                            <Upload class="size-4" :stroke-width="1.5" />
+                            Bulk Import
+                        </Button>
+                        <Button v-if="can('inventory.manage')" size="sm" @click="newItemOpen = true">New Item</Button>
+                    </template>
                 </template>
             </PageHeader>
 
@@ -150,11 +176,30 @@ function flags(item: InventoryItem): string[] {
                     @select="reload({ category: $event || undefined })"
                 />
 
-                <span class="ml-auto text-13 text-muted-foreground">{{ items.meta.total }} products</span>
+                <div class="ml-auto flex items-center gap-3">
+                    <Button
+                        v-if="can('inventory.manage') && !bulkEditing"
+                        variant="outline"
+                        size="sm"
+                        @click="bulkEditing = true"
+                    >
+                        <PencilLine class="size-4" :stroke-width="1.5" />
+                        Bulk edit
+                    </Button>
+                    <span class="text-13 text-muted-foreground">{{ items.meta.total }} products</span>
+                </div>
             </div>
 
+            <BulkEditTable
+                v-if="bulkEditing"
+                ref="bulkTable"
+                :items="items.data"
+                :locale="page.props.locale"
+                @cancel="bulkEditing = false"
+            />
+
             <!-- The table scrolls inside its own container so the page never does. -->
-            <div class="overflow-x-auto rounded-lg border border-border bg-card">
+            <div v-else class="overflow-x-auto rounded-lg border border-border bg-card">
                 <table class="w-full min-w-[56rem] text-sm">
                     <thead class="border-b border-border text-left text-13 text-muted-foreground">
                         <tr>
@@ -237,7 +282,7 @@ function flags(item: InventoryItem): string[] {
                 </table>
             </div>
 
-            <div v-if="items.meta.last_page > 1" class="flex items-center justify-between text-sm">
+            <div v-if="items.meta.last_page > 1 && !bulkEditing" class="flex items-center justify-between text-sm">
                 <span class="text-muted-foreground">
                     Page {{ items.meta.current_page }} of {{ items.meta.last_page }}
                 </span>

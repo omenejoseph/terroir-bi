@@ -65,3 +65,24 @@ export function formatMovementDate(iso: string | null, locale: string): string {
         minute: '2-digit',
     }).format(date);
 }
+
+/** App\Enums\InventoryCategory → the design's wording. */
+const CATEGORIES: Record<string, string> = {
+    FINISHED: 'Finished',
+    SEMI_FINISHED: 'Semi-finished',
+    RAW_MATERIAL: 'Raw materials',
+};
+
+export function categoryLabel(category: string): string {
+    return CATEGORIES[category] ?? category;
+}
+
+/** "2026-08" → "Aug 26", the compact axis label the design uses. */
+export function formatMonth(month: string, locale: string): string {
+    const [year, m] = month.split('-');
+    const date = new Date(Number(year), Number(m) - 1, 1);
+
+    if (Number.isNaN(date.getTime())) return month;
+
+    return new Intl.DateTimeFormat(locale, { month: 'short', year: '2-digit' }).format(date);
+}

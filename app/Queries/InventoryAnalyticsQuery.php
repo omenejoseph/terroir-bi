@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Queries;
 
+use App\Enums\InventoryCategory;
 use App\Models\Customer;
 use App\Models\InventoryItem;
 use App\Models\OrderItem;
@@ -76,6 +77,22 @@ class InventoryAnalyticsQuery
             'for_sale' => InventoryItem::query()->where('is_for_sale', true)->count(),
             'by_category' => $byCategory,
             'priced_count' => InventoryItem::query()->where('default_price', '>', 0)->count(),
+            // Finished goods only: summing stock across categories would add
+            // bottles to kilograms. The design's headline tile counts bottles.
+            'finished_units' => (int) round((float) InventoryItem::query()
+                ->where('is_active', true)
+                ->where('category', InventoryCategory::Finished->value)
+                ->sum('current_stock')),
+            'finished_products' => InventoryItem::query()
+                ->where('is_active', true)
+                ->where('category', InventoryCategory::Finished->value)
+                ->count(),
+            // How many active items carry a unit cost — drives the design's
+            // "no value per product" warning when nothing is costed.
+            'costed_count' => InventoryItem::query()
+                ->where('is_active', true)
+                ->whereNotNull('cost_per_unit')
+                ->count(),
             'sale_value' => Money::fromMinor($saleValue, $currency)->jsonSerialize(),
             'production_value' => Money::fromMinor($production, $currency)->jsonSerialize(),
             'margin_percent' => $saleValue > 0

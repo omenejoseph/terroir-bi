@@ -261,6 +261,77 @@ class WebInventoryTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_bulk_update_writes_only_the_fields_sent(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1');
+        $item->update(['min_stock' => '5']);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->patch('/inventory-bulk', [
+                'items' => [['id' => $item->getKey(), 'name' => 'Cork Natural']],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->actingAsTenant($tenant);
+        $item->refresh();
+        self::assertSame('Cork Natural', $item->name);
+        // min_stock was not in the payload, so it must be untouched.
+        self::assertSame('5.000', (string) $item->min_stock);
+        $this->forgetTenant();
+    }
+
+    public function test_bulk_update_requires_the_manage_capability(): void
+    {
+        $tenant = $this->createTenant();
+        $member = $this->createMember($tenant, [TenantRole::Sales]);
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        $this->actingAs($member)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->patch('/inventory-bulk', ['items' => [['id' => $item->getKey(), 'name' => 'X']]])
+            ->assertForbidden();
+    }
+
+    public function test_analytics_page_renders(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory-analytics')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Inventory/Analytics')
+                ->has('analytics.summary.finished_units')
+                ->has('analytics.summary.costed_count')
+                ->has('analytics.movements_12m')
+                ->has('analytics.portfolio_exits.channels')
+                ->has('analytics.value.categories'));
+    }
+
+    public function test_analytics_requires_the_view_capability(): void
+    {
+        $tenant = $this->createTenant();
+        $member = $this->createMember($tenant, [TenantRole::Hospitality]);
+
+        $this->actingAs($member)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory-analytics')
+            ->assertForbidden();
+    }
+
     public function test_shared_props_expose_resolved_capabilities(): void
     {
         [$tenant, $admin] = $this->tenantAndAdmin();

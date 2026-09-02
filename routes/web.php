@@ -44,6 +44,7 @@ Route::middleware('tenant.web')->group(function () {
 
     Route::middleware('can:inventory.view')->group(function () {
         Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
+        Route::get('inventory-analytics', [InventoryController::class, 'analytics'])->name('inventory.analytics');
         Route::get('inventory/{item}', [InventoryController::class, 'show'])->name('inventory.show');
     });
 
@@ -52,6 +53,7 @@ Route::middleware('tenant.web')->group(function () {
         Route::patch('inventory/{item}', [InventoryController::class, 'update'])->name('inventory.update');
         Route::post('inventory/{item}/stock', [InventoryController::class, 'adjustStock'])
             ->name('inventory.stock.adjust');
+        Route::patch('inventory-bulk', [InventoryController::class, 'bulkUpdate'])->name('inventory.bulk-update');
     });
 
     Route::delete('inventory/{item}', [InventoryController::class, 'destroy'])

@@ -66,3 +66,52 @@ export interface StockMovement {
     /** Running stock after this movement, derived by ItemMovementsQuery. */
     balance: string;
 }
+
+/** Mirrors App\Queries\InventoryAnalyticsQuery::get(). */
+export interface InventoryAnalyticsSummary {
+    total_active: number;
+    low_stock: number;
+    out_of_stock: number;
+    for_sale: number;
+    priced_count: number;
+    finished_units: number;
+    finished_products: number;
+    costed_count: number;
+    sale_value: MoneyValue;
+    production_value: MoneyValue;
+    margin_percent: string | null;
+    by_category: Record<string, number> | { category: string; count: number }[];
+}
+
+export interface PortfolioChannel {
+    key: string;
+    units: number;
+    revenue: MoneyValue | null;
+    margin_percent: string | null;
+    share_percent: string;
+}
+
+export interface PortfolioExits {
+    period_days: number;
+    external: {
+        units_exited: number;
+        cost_of_exits: MoneyValue | null;
+        revenue_realized: MoneyValue | null;
+        mean_margin_percent: string | null;
+    };
+    channels: PortfolioChannel[];
+}
+
+export interface InventoryAnalytics {
+    summary: InventoryAnalyticsSummary;
+    portfolio_exits: PortfolioExits;
+    movements_12m: { month: string; in: number; out: number }[];
+    top_products: { name: string; value: number }[];
+    by_group: { group: string | null; count: number }[];
+    stock_levels: { name: string; stock: string }[];
+    value: { total: number; currency: string; categories: { category: string; value: number }[] };
+    low_stock: {
+        below: { name: string; stock: string; min: string }[];
+        approaching: { name: string; stock: string; min: string }[];
+    };
+}

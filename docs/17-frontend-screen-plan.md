@@ -125,10 +125,10 @@ Backend is complete for the list and detail; the analytics screens need work.
 | Product Detail | `449:1577` | L | ✅ **done** — stock tab; the other 7 tabs render disabled |
 | Item — View (drawer) | `378:1592` | M | Drawer form of the same entity |
 | New Item (drawer) | `317:468` / `322:704` | M | ✅ **done** — delivered by Phase 1 |
-| Bulk Edit | `270:9646` | M | `BulkUpdateInventoryItemsAction` exists |
+| Bulk Edit | `270:9646` | M | ✅ **done** — a mode of the list, not a route |
 | Inventory Check | `388:1592` | L | Prefer the "rethought" node over `271:12639` |
 | Inventory Spend | `386:1673` | M | `InventorySpendController` exists |
-| Analytics | `382:1592` | M | `InventoryAnalyticsQuery` exists |
+| Analytics | `382:1592` | M | ✅ **done** |
 
 **DoD:** all eight meet the nine criteria; `inventory` leaves `PENDING_MODULES`;
 the Inventory `TabNav` has no disabled tabs left.
