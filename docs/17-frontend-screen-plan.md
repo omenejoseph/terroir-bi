@@ -7,6 +7,58 @@ Companion documents: [`16-inertia-frontend-migration.md`](16-inertia-frontend-mi
 (architecture) and [`design/`](design/) (the cached Figma tokens and screen
 inventory, plus the gap register).
 
+---
+
+## Where we are
+
+**11 of 42 screens done. Phases 0–2 complete; Phase 3 (Orders) is next.**
+
+| Phase | Screens | Status |
+|---|---|---|
+| 0 · Foundation | — | ✅ **Done** |
+| 1 · Shared vocabulary | — | ✅ **Done for what Phase 2 needed**; 4 pieces deferred (below) |
+| 2 · Inventory | 8 / 8 | ✅ **Done** |
+| 3 · Orders | 0 / 4 | ⏭️ **Next** |
+| 4 · Customers | 0 / 6 | Pending |
+| 5 · Work Orders | 0 / 6 | Pending |
+| 6 · Dashboard completion | partial | Blocked on backend |
+| 7 · Retire React frontend | — | Last |
+
+### Screens shipped
+
+| Screen | Node | Verified against |
+|---|---|---|
+| ExpandedNav | `547:1568` | design context |
+| Dashboard | `208:5577` | design context |
+| Inventory list | `389:1592` | design context |
+| Product Detail | `449:1577` | render |
+| Item — View (drawer) | `378:1592` | ⚠️ cached structure only |
+| New Item (+ Advanced) | `317:468` / `322:704` | render |
+| Bulk Edit | `270:9646` | render |
+| Inventory Check | `271:12639` | render |
+| Inventory Spend | `386:1673` | ⚠️ cached structure only |
+| Analytics | `382:1592` | render |
+
+### Deferred from Phase 1
+
+None of these blocked Phase 2, so they were left until a screen needs them:
+
+- **`DataTable` extraction** — table markup is still inline per screen. Extract when a third list screen wants it (Orders is the third).
+- **Global ⌘K search field** — `Kbd` exists; the field and its behaviour do not.
+- **Collapsed `NavRail`** — the design's second nav state.
+- **Combobox / date picker** — first needed by Orders (customer picker) and Customers.
+
+### Open questions
+
+1. **Which Inventory Check is current?** The build follows the exported original
+   `271:12639`; the canvas also holds `388:1592` "Inventory Check — rethought".
+2. **Two screens need renders.** `378:1592` and `386:1673` were built from the
+   cached layer tree and copy, so their structure and wording are right but
+   their appearance was never diffed. Both want exporting.
+3. **Channel taxonomy** — see the gap register in [`design/README.md`](design/README.md).
+
+---
+
 ## Scope
 
 The Figma Desktop canvas (`32:2`) holds **52 frames**. Nine are designer
@@ -88,7 +140,7 @@ resolution, the shared service extractions, and the design tokens.
 **Exit criteria — met:** session login/logout/tenant switch working; tokens
 mirrored from Figma; `ExpandedNav` built from `547:1568`; 1153 tests green.
 
-## Phase 1 — Shared vocabulary ⏳ PARTLY DONE
+## Phase 1 — Shared vocabulary ✅ DONE (4 pieces deferred)
 
 Nothing after this phase should invent a primitive. Everything later composes.
 
@@ -97,11 +149,11 @@ Nothing after this phase should invent a primitive. Everything later composes.
 | `PageHeader`, `Tabs`, `AttentionBand`, `LevelBar`, `ProgressBar`, `SectionHeader`, `MetaStrip`, `Separator` | ✅ built |
 | `Button`, `Card`, `Input`, `Label`, `Badge`, `InputError`, `StatCard`, `FlashMessages` | ✅ built |
 | **`SidePanel` drawer** — 480px, header/body/footer, "Advanced" disclosure | ✅ built, proven with New Item |
-| **`DataTable`** — grouped rows, group subtotal band, sticky header | ⚠️ inlined in Inventory; extract |
+| **`DataTable`** — grouped rows, group subtotal band, sticky header | ⏳ deferred — extract when Orders needs a third list |
 | **Global ⌘K search** in the topbar (`389:1592` header) | ⚠️ `Kbd` built; the field is not |
-| **Collapsed `NavRail`** — the second nav state (`208:5577`) | ❌ not built |
+| **Collapsed `NavRail`** — the second nav state (`208:5577`) | ⏳ deferred |
 | Form controls: `FormField`, `FieldRow`, `FormSection`, `Select`, `Textarea`, `Switch`, `SwitchRow`, `Checkbox` | ✅ built |
-| Form controls: combobox, date picker | ❌ not built |
+| Form controls: combobox, date picker | ⏳ deferred — first needed by Orders |
 
 Components are derived from the design's own vocabulary rather than invented —
 see [`design/COMPONENTS.md`](design/COMPONENTS.md), which counts every
@@ -115,7 +167,7 @@ Figma node; `SidePanel` demonstrated with one real form end to end (New Item);
 **Figma budget: 2 calls** — `317:468` (New Item, the simplest drawer) and
 `322:704` (its Advanced-open state). Every other drawer is a body swap.
 
-## Phase 2 — Inventory
+## Phase 2 — Inventory ✅ DONE
 
 Backend is complete for the list and detail; the analytics screens need work.
 
@@ -123,7 +175,7 @@ Backend is complete for the list and detail; the analytics screens need work.
 |---|---|---|---|
 | Inventory (list) | `389:1592` | — | ✅ **done** |
 | Product Detail | `449:1577` | L | ✅ **done** — stock tab; the other 7 tabs render disabled |
-| Item — View (drawer) | `378:1592` | M | ⏳ only screen left in this phase |
+| Item — View (drawer) | `378:1592` | M | ✅ **done** — built from cached structure; **needs a render diff** |
 | New Item (drawer) | `317:468` / `322:704` | M | ✅ **done** — delivered by Phase 1 |
 | Bulk Edit | `270:9646` | M | ✅ **done** — a mode of the list, not a route |
 | Inventory Check | `271:12639` | L | ✅ **done** — built from the exported original; the `388:1592` "rethought" variant is still undecided |
@@ -133,13 +185,13 @@ Backend is complete for the list and detail; the analytics screens need work.
 **DoD:** all eight meet the nine criteria; `inventory` leaves `PENDING_MODULES`;
 the Inventory tab strip has no disabled tabs left.
 
-**Status: 7 of 8 done.** All four module tabs (Inventory, Analytics, Spend,
-Check) are live and linked. Remaining: the Item — View drawer (`378:1592`).
+**Status: 8 of 8 done.** All four module tabs (Inventory, Analytics, Spend,
+Check) are live and cross-linked, plus the New Item and Item — View drawers.
 
 **Figma budget: 4 calls** — Product Detail, Bulk Edit, Inventory Check, Analytics.
 Spend and the drawers derive from patterns already extracted.
 
-## Phase 3 — Orders
+## Phase 3 — Orders ⏭️ NEXT
 
 Smallest page count, high business value, backend largely in place
 (`OrderController`, `OrderCommentController`, `OrderPaymentController`).

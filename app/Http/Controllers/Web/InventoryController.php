@@ -52,6 +52,7 @@ class InventoryController extends Controller
         InventoryItemPresenter $presenter,
         InventoryTaxonomyQuery $taxonomy,
         InventoryAttentionQuery $attention,
+        ItemMovementsQuery $movements,
     ): Response {
         $filters = InventoryItemFilters::fromRequest($request);
 
@@ -64,6 +65,20 @@ class InventoryController extends Controller
             // Only fetched when the filter bar asks for it — the taxonomy is a
             // distinct-scan and most visits never open the category picker.
             'taxonomy' => Inertia::optional(fn () => $taxonomy->get()),
+            // The Item — View drawer (Figma 378:1592) pulls the open item's
+            // recent ledger entries via a partial reload, so the list itself
+            // never pays for movements nobody looked at.
+            'itemMovements' => Inertia::optional(function () use ($request, $movements): array {
+                $id = $request->query('item');
+
+                if (! is_string($id) || $id === '') {
+                    return [];
+                }
+
+                $item = InventoryItem::query()->find($id);
+
+                return $item === null ? [] : $movements->get($item, 5);
+            }),
         ]);
     }
 

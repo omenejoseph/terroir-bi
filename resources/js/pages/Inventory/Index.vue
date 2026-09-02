@@ -5,6 +5,7 @@ import { PencilLine, Search, Upload, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import BulkEditTable from '@/components/inventory/BulkEditTable.vue';
+import ItemViewPanel from '@/components/inventory/ItemViewPanel.vue';
 import NewItemPanel from '@/components/inventory/NewItemPanel.vue';
 import AttentionBand from '@/components/ui/AttentionBand.vue';
 import Badge from '@/components/ui/Badge.vue';
@@ -17,6 +18,7 @@ import { cn } from '@/lib/cn';
 import { formatMoney, formatQuantity } from '@/lib/money';
 import type { InventoryFilters, InventoryItem } from '@/types/inventory';
 import type { Paginated, SharedProps } from '@/types';
+import type { StockMovement } from '@/types/stock';
 import type { AttentionItem, TabItem } from '@/types/ui';
 
 /**
@@ -33,6 +35,8 @@ const props = defineProps<{
     items: Paginated<InventoryItem>;
     filters: InventoryFilters;
     attention: AttentionItem[];
+    /** Only present while the Item — View drawer has asked for them. */
+    itemMovements?: StockMovement[];
 }>();
 
 const page = usePage<SharedProps>();
@@ -48,6 +52,9 @@ const newItemOpen = ref(false);
   header, tabs and filters stay put and only the table becomes editable.
 */
 const bulkEditing = ref(false);
+
+/* Clicking a row opens the design's Item — View drawer rather than navigating. */
+const viewing = ref<InventoryItem | null>(null);
 const bulkTable = ref<InstanceType<typeof BulkEditTable> | null>(null);
 
 /* Debounced server-side search; `preserveState` keeps focus and the typed value
@@ -231,7 +238,7 @@ function flags(item: InventoryItem): string[] {
                             v-for="item in group.rows"
                             :key="item.id"
                             class="cursor-pointer hover:bg-accent/50"
-                            @click="router.visit(`/inventory/${item.id}`)"
+                            @click="viewing = item"
                         >
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
@@ -308,5 +315,6 @@ function flags(item: InventoryItem): string[] {
         </div>
 
         <NewItemPanel :open="newItemOpen" @close="newItemOpen = false" />
+        <ItemViewPanel :item="viewing" :movements="itemMovements ?? []" @close="viewing = null" />
     </AppLayout>
 </template>

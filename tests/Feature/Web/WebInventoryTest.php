@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Auth\ActiveTenantSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Inertia;
 use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Concerns\InteractsWithTenancy;
@@ -85,6 +86,39 @@ class WebInventoryTest extends TestCase
                 ->has('items.data', 1)
                 ->where('items.data.0.name', 'Cork')
                 ->where('filters.search', 'Cork'));
+    }
+
+    public function test_item_movements_are_only_sent_when_the_drawer_asks(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        // A plain visit must not pay for movements nobody opened.
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory')
+            ->assertInertia(fn (AssertableInertia $page) => $page->missing('itemMovements'));
+
+        // The drawer's partial reload asks for them by item. A partial request
+        // answers with the raw page object, so it is read as JSON rather than
+        // through assertInertia (which expects a full page response).
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory?item='.$item->getKey(), [
+                'X-Inertia' => 'true',
+                // A wrong version makes Inertia answer 409 rather than the page.
+                'X-Inertia-Version' => (string) Inertia::getVersion(),
+                'X-Inertia-Partial-Component' => 'Inventory/Index',
+                'X-Inertia-Partial-Data' => 'itemMovements',
+            ])
+            ->assertOk();
+
+        $props = $response->json('props');
+        self::assertIsArray($props);
+        self::assertArrayHasKey('itemMovements', $props);
     }
 
     public function test_taxonomy_is_only_sent_when_requested(): void
