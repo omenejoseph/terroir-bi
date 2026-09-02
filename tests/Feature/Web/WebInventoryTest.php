@@ -165,6 +165,102 @@ class WebInventoryTest extends TestCase
                 ->where('filters.category', $category));
     }
 
+    public function test_show_carries_stock_analytics_and_movements(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory/'.$item->getKey())
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Inventory/Show')
+                ->where('item.sku', 'CORK-1')
+                ->has('analytics.current')
+                ->has('analytics.exits.spark')
+                ->has('analytics.realized')
+                ->has('analytics.channels')
+                ->has('movements')
+                ->where('filters.period', '30d'));
+    }
+
+    /**
+     * Every tab in the design's exit-period strip (Figma 449:1577) must resolve
+     * to a real window in InventoryItemStockAnalyticsQuery.
+     *
+     * @return list<array{0: string}>
+     */
+    public static function designStockPeriods(): array
+    {
+        return [['today'], ['mtd'], ['ytd'], ['30d'], ['90d']];
+    }
+
+    #[DataProvider('designStockPeriods')]
+    public function test_each_design_stock_period_resolves(string $period): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory/'.$item->getKey().'?period='.$period)
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('filters.period', $period));
+    }
+
+    public function test_quick_stock_entry_records_a_movement_with_running_balance(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1'); // starts at 10
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/inventory/'.$item->getKey().'/stock', [
+                'type' => 'MANUAL_OUT',
+                'quantity' => '-4',
+                'note' => 'Broken case',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->actingAsTenant($tenant);
+        self::assertSame('6.000', (string) $item->refresh()->current_stock);
+        $this->forgetTenant();
+
+        // The balance column is derived, and must land on the post-movement stock.
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory/'.$item->getKey())
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('movements', 1)
+                ->where('movements.0.balance', '6')
+                ->where('movements.0.note', 'Broken case'));
+    }
+
+    public function test_quick_stock_entry_requires_the_manage_capability(): void
+    {
+        $tenant = $this->createTenant();
+        $member = $this->createMember($tenant, [TenantRole::Sales]);
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        $this->actingAs($member)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/inventory/'.$item->getKey().'/stock', ['type' => 'MANUAL_IN', 'quantity' => '1'])
+            ->assertForbidden();
+    }
+
     public function test_shared_props_expose_resolved_capabilities(): void
     {
         [$tenant, $admin] = $this->tenantAndAdmin();

@@ -122,7 +122,7 @@ Backend is complete for the list and detail; the analytics screens need work.
 | Screen | Node | Size | Notes |
 |---|---|---|---|
 | Inventory (list) | `389:1592` | — | ✅ **done** |
-| Product Detail | `449:1577` | L | 1927px tall — the richest detail page in the file |
+| Product Detail | `449:1577` | L | ✅ **done** — stock tab; the other 7 tabs render disabled |
 | Item — View (drawer) | `378:1592` | M | Drawer form of the same entity |
 | New Item (drawer) | `317:468` / `322:704` | M | ✅ **done** — delivered by Phase 1 |
 | Bulk Edit | `270:9646` | M | `BulkUpdateInventoryItemsAction` exists |

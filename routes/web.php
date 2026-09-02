@@ -50,6 +50,8 @@ Route::middleware('tenant.web')->group(function () {
     Route::middleware('can:inventory.manage')->group(function () {
         Route::post('inventory', [InventoryController::class, 'store'])->name('inventory.store');
         Route::patch('inventory/{item}', [InventoryController::class, 'update'])->name('inventory.update');
+        Route::post('inventory/{item}/stock', [InventoryController::class, 'adjustStock'])
+            ->name('inventory.stock.adjust');
     });
 
     Route::delete('inventory/{item}', [InventoryController::class, 'destroy'])

@@ -22,6 +22,7 @@ use App\Models\RecipeItem;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Queries\InventoryItemStockAnalyticsQuery;
+use App\Queries\ItemMovementsQuery;
 use App\Queries\VintageCoverageQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -37,16 +38,10 @@ class StockController extends Controller
         return response()->json(['data' => $data]);
     }
 
-    /** Recent ledger entries for an item, newest first. ULIDs sort by creation. */
-    public function movements(InventoryItem $item): JsonResponse
+    /** Recent ledger entries for an item, newest first, with running balances. */
+    public function movements(InventoryItem $item, ItemMovementsQuery $query): JsonResponse
     {
-        $movements = $item->stockMovements()->with('createdBy')->orderByDesc('id')->limit(100)->get();
-
-        return response()->json([
-            'data' => $movements
-                ->map(fn (StockMovement $movement) => StockMovementData::fromModel($movement)->toArray())
-                ->all(),
-        ]);
+        return response()->json(['data' => $query->get($item)]);
     }
 
     /** The item's recipe (bill of materials), with input display fields resolved. */

@@ -106,9 +106,28 @@ Inventory (`389:1592`) adds three more:
 | Design element | Missing backing data |
 |---|---|
 | "Free to sell" column | Order lines do not reserve stock, so there is nothing to subtract |
-| "Cover" column ("About 16 months") | No exit-rate / consumption model |
 | "Level" bar captioned "of N max" | Only `min_stock` exists. The bar reads against the MINIMUM instead, and turns red below it — reusing `min_stock` as a maximum would invert the bar's meaning |
 | "Reserved by open orders" chip | Same reservation gap as "Free to sell" |
+
+### Correction: "Cover" is NOT a gap
+
+An earlier revision listed Cover (and by implication velocity, realised margin
+and exit-by-channel) as missing. That was wrong.
+`InventoryItemStockAnalyticsQuery` already returns `days_of_stock_left`,
+`velocity_per_day`, `cost_of_exits`, `revenue_realized`,
+`mean_margin_percent`, a daily `spark` series, trailing-12-month `realized`
+figures and `channels`. Product Detail (`449:1577`) is almost entirely backed.
+
+### But "Exit by channel" is on a different axis
+
+The design's card breaks exits down by **customer sales channel** — Internal /
+POS, Distributor / Importer, Retailer / Shop. The query breaks them down by
+**movement type**, yielding `sales` / `production` / `manual`. Both are called
+"channel" and neither is wrong, but they answer different questions.
+
+Showing the design's version needs sales-channel attribution carried from the
+order (and its customer) onto the stock movement. Until then the card renders
+the movement-type axis with honest labels.
 
 `revenue_by_channel` returns `wholesale / retail / agency / shipshop / other`;
 the design shows `Wholesale / Accommodation / Agencies`. The channel taxonomy

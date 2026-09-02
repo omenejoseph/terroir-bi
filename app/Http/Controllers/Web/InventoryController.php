@@ -4,16 +4,22 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Actions\Inventory\AdjustStockAction;
 use App\Actions\Inventory\CreateInventoryItemAction;
 use App\Actions\Inventory\DeleteInventoryItemAction;
 use App\Actions\Inventory\UpdateInventoryItemAction;
+use App\Enums\StockMovementType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Inventory\AdjustStockRequest;
 use App\Http\Requests\Inventory\StoreInventoryItemRequest;
 use App\Http\Requests\Inventory\UpdateInventoryItemRequest;
 use App\Models\InventoryItem;
 use App\Queries\InventoryAttentionQuery;
+use App\Queries\InventoryItemStockAnalyticsQuery;
 use App\Queries\InventoryTaxonomyQuery;
+use App\Queries\ItemMovementsQuery;
 use App\Queries\ListInventoryItemsQuery;
+use App\Queries\VintageCoverageQuery;
 use App\Services\Inventory\InventoryItemPresenter;
 use App\Support\InventoryItemFilters;
 use Illuminate\Http\RedirectResponse;
@@ -52,13 +58,55 @@ class InventoryController extends Controller
         ]);
     }
 
-    public function show(InventoryItem $item, InventoryItemPresenter $presenter): Response
-    {
+    /**
+     * Product Detail (Figma 449:1577).
+     *
+     * Reads through exactly the services the API's stock endpoints use, so the
+     * page and `GET /api/v1/.../stock-analytics` cannot report different
+     * figures for the same item.
+     */
+    public function show(
+        Request $request,
+        InventoryItem $item,
+        InventoryItemPresenter $presenter,
+        InventoryItemStockAnalyticsQuery $analytics,
+        ItemMovementsQuery $movements,
+        VintageCoverageQuery $vintage,
+    ): Response {
         $item->loadMissing('firstImage');
+
+        $period = $request->query('period');
+        $period = is_string($period) && $period !== '' ? $period : '30d';
 
         return Inertia::render('Inventory/Show', [
             'item' => $presenter->item($item),
+            'analytics' => $analytics->get($item, $period),
+            'movements' => $movements->get($item),
+            // Null unless the wine has sibling vintages to transition between.
+            'vintageCoverage' => $vintage->get($item),
+            'filters' => ['period' => $period],
         ]);
+    }
+
+    /**
+     * Quick stock entry (Figma 449:1577) — the same AdjustStockAction the API's
+     * adjust endpoint calls, so a correction means the same thing either way.
+     */
+    public function adjustStock(
+        AdjustStockRequest $request,
+        InventoryItem $item,
+        AdjustStockAction $action,
+    ): RedirectResponse {
+        $action->execute(
+            $item,
+            StockMovementType::from($request->string('type')->value()),
+            (string) $request->validated('quantity'),
+            $request->has('reference') ? $request->string('reference')->value() : null,
+            $request->has('note') ? $request->string('note')->value() : null,
+            $request->boolean('is_reconciliation'),
+        );
+
+        return back()->with('success', __('Stock movement recorded.'));
     }
 
     public function store(StoreInventoryItemRequest $request, CreateInventoryItemAction $action): RedirectResponse
