@@ -287,6 +287,64 @@ class WebCustomersTest extends TestCase
         $this->assertCount(2, $response->json('props.orderHistory.data'));
     }
 
+    /**
+     * "Products bought" has its own window. `lifetime` means no bounds — not a
+     * long range, which would still hide a first order older than it.
+     */
+    public function test_products_bought_honours_its_own_range(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $product = $this->makeProduct();
+
+        $recent = $this->makeOrder($customer, $admin);
+        $recent->items()->create([
+            'inventory_item_id' => $product->getKey(),
+            'quantity' => 6,
+            'unit_type' => 'bottles',
+            'unit_price' => Money::fromMinor(2000, 'EUR'),
+            'total' => Money::fromMinor(12000, 'EUR'),
+        ]);
+
+        $old = $this->makeOrder($customer, $admin);
+        $old->items()->create([
+            'inventory_item_id' => $product->getKey(),
+            'quantity' => 4,
+            'unit_type' => 'bottles',
+            'unit_price' => Money::fromMinor(2000, 'EUR'),
+            'total' => Money::fromMinor(8000, 'EUR'),
+        ]);
+        $old->forceFill(['created_at' => now()->subYears(2)])->saveQuietly();
+        $this->forgetTenant();
+
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+        $url = '/customers/'.$customer->getKey();
+
+        // Lifetime sees both orders' lines.
+        $this->actingAs($admin)->withSession($session)->get($url)
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('products.total_units', 10)
+                ->where('productRange.preset', 'lifetime'));
+
+        // This year sees only the recent one.
+        $this->actingAs($admin)->withSession($session)->get($url.'?products_range=year')
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('products.total_units', 6)
+                ->where('productRange.preset', 'year'));
+
+        // An explicit window around the old order sees only that.
+        $from = now()->subYears(2)->subMonth()->toDateString();
+        $to = now()->subYears(2)->addMonth()->toDateString();
+
+        $this->actingAs($admin)->withSession($session)
+            ->get($url."?products_range=custom&products_from={$from}&products_to={$to}")
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('products.total_units', 4)
+                ->where('productRange.preset', 'custom'));
+    }
+
     public function test_store_creates_a_customer_and_redirects_to_it(): void
     {
         [$tenant, $admin] = $this->tenantAndAdmin();

@@ -172,6 +172,58 @@ class WebOrdersTest extends TestCase
                 ->where('filters.period', 'today'));
     }
 
+    /**
+     * The design's "Custom" tab. An explicit range beats the preset, so the two
+     * controls cannot describe the window at once.
+     */
+    public function test_an_explicit_date_range_overrides_the_period_preset(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer();
+        $recent = $this->makeOrder($customer, $admin);
+        $old = $this->makeOrder($customer, $admin);
+        $old->forceFill(['created_at' => now()->subMonths(6)])->saveQuietly();
+        $this->forgetTenant();
+
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+        $from = now()->subMonths(7)->toDateString();
+        $to = now()->subMonths(5)->toDateString();
+
+        // `period=today` would exclude the old order; the range includes only it.
+        $this->actingAs($admin)->withSession($session)
+            ->get("/orders?period=today&from={$from}&to={$to}")
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('orders.data', 1)
+                ->where('orders.data.0.id', $old->getKey())
+                ->where('filters.from', $from)
+                ->where('filters.to', $to));
+
+        unset($recent);
+    }
+
+    /** A hand-edited range must not reach the date parser as anything but a date. */
+    public function test_a_malformed_date_range_is_dropped_rather_than_parsed(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $this->makeOrder($this->makeCustomer(), $admin);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/orders?from=yesterday&to=next+tuesday')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('filters.from', null)
+                ->where('filters.to', null)
+                // Falls back to the default YTD window, which holds the order.
+                ->has('orders.data', 1));
+    }
+
     public function test_a_member_without_shipped_visibility_never_sees_shipped_orders(): void
     {
         $tenant = $this->createTenant();

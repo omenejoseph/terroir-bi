@@ -140,6 +140,14 @@ Customers (`230:2395`, `230:4717`, `231:9336`) adds five:
 | "Price ladder" and "Concentration" cards | Both need per-category revenue-per-bottle and a concentration measure; the products query supplies volume and share, so those two cards are folded into "Products bought" rather than fabricated |
 | "Next 3 months" forecast card | `CustomerOrderAnalyticsQuery` supplies `expected_next_3m`, but only where a prior year exists to compare against; the design's card is the empty state for exactly that case and is deferred with the forecast work |
 
+Three controls the design draws but never specifies were built in the app's own
+vocabulary rather than guessed at: the **combobox** behind "Search product by
+name, SKU or vintage…" (`335:4233`), and the **calendar** behind the Orders
+"Custom" period tab, the "Date range" toolbar filter (`455:1577`) and the
+customer detail's "Products bought" range (`231:9336`). The canvas has a
+`SelectPopup` (`267:6332`) whose geometry the combobox follows — 32px options,
+12px labels, a 16px check on the selected one — but no calendar of any kind.
+
 Two Customers elements are built beyond what the design specifies, because the
 backing existed and the affordance would otherwise be a dead button. **Merge**
 (the selection bar) opens a drawer that asks which record survives — a merge

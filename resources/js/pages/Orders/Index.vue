@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { CalendarDays, ChevronRight, Columns3, Download, Plus, Search } from 'lucide-vue-next';
+import { ChevronRight, Columns3, Download, Plus, Search } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import CreateOrderPanel from '@/components/orders/CreateOrderPanel.vue';
 import OrderViewPanel from '@/components/orders/OrderViewPanel.vue';
 import PipelineCard from '@/components/orders/PipelineCard.vue';
 import Button from '@/components/ui/Button.vue';
+import DateRangePicker from '@/components/ui/DateRangePicker.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import StatusChips from '@/components/ui/StatusChips.vue';
 import Tabs from '@/components/ui/Tabs.vue';
@@ -15,7 +16,7 @@ import { useAuth } from '@/composables/useAuth';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { Paginated, SharedProps } from '@/types';
 import type { Order, OrderFilters, OrderPipeline, OrderStatusCounts } from '@/types/orders';
-import type { TabItem } from '@/types/ui';
+import type { DateRange, TabItem } from '@/types/ui';
 
 /**
  * Orders list, following Figma 455:1577: page header with the two primary
@@ -66,6 +67,8 @@ function reload(overrides: Record<string, unknown>): void {
             search: props.filters.search ?? undefined,
             status: props.filters.status ?? undefined,
             period: props.filters.period ?? undefined,
+            from: props.filters.from ?? undefined,
+            to: props.filters.to ?? undefined,
             ...overrides,
         },
         { preserveState: true, preserveScroll: true, replace: true, only: ['orders', 'filters', 'statusCounts', 'pipeline'] },
@@ -81,6 +84,25 @@ const PERIOD_TABS: TabItem[] = [
     { value: 'qtd', label: 'This Quarter' },
     { value: 'ytd', label: 'Year to Date' },
 ];
+
+/*
+  The period strip and the custom range are one control with two faces: picking
+  a preset clears the range, and applying a range clears the preset, so the
+  window is never described by both at once.
+*/
+const customRange = computed<DateRange>(() => ({ from: props.filters.from, to: props.filters.to }));
+
+function selectPeriod(value: string): void {
+    reload({ period: value, from: undefined, to: undefined });
+}
+
+function selectRange(range: DateRange): void {
+    reload({
+        period: undefined,
+        from: range.from ?? undefined,
+        to: range.to ?? undefined,
+    });
+}
 
 /** The pipeline's fulfilment stages filter the table; the money stages do not. */
 const FILTERABLE_STAGES = props.statusCounts.statuses.map((s) => s.key);
@@ -184,18 +206,14 @@ const pages = computed(() => {
             <div class="flex flex-wrap items-center gap-2">
                 <Tabs
                     :items="PERIOD_TABS"
-                    :current="filters.period ?? 'ytd'"
-                    @select="reload({ period: $event })"
+                    :current="filters.from === null ? (filters.period ?? 'ytd') : ''"
+                    @select="selectPeriod"
                 />
-                <!-- @todo Custom range. Needs the date-range picker that Phase 1
-                     deferred; until then the presets above are the whole control. -->
-                <button
-                    type="button"
-                    class="inline-flex h-6 items-center gap-1.5 px-3 text-xs text-muted-foreground hover:text-foreground"
-                >
-                    <CalendarDays class="size-3.5" :stroke-width="1.5" />
-                    Custom
-                </button>
+                <DateRangePicker
+                    :model-value="customRange"
+                    label="Custom"
+                    @update:model-value="selectRange"
+                />
             </div>
 
             <PipelineCard
@@ -223,12 +241,22 @@ const pages = computed(() => {
                         />
                     </div>
 
-                    <!-- @todo Channel / Date range / Rep filters. None has a
-                         backing field yet: channel would come from the customer
-                         type, rep from an order owner the schema has no column
-                         for. Rendered so the toolbar matches 455:1577. -->
+                    <!-- The design's third toolbar filter is the same date
+                         range as the strip above, so it drives the same state
+                         rather than being a second, competing window. -->
+                    <DateRangePicker
+                        :model-value="customRange"
+                        label="Date range"
+                        @update:model-value="selectRange"
+                    />
+
+                    <!-- @todo Channel / Rep filters. Neither has a backing
+                         field: channel would have to be inferred from the
+                         customer's type (a different axis), and there is no
+                         order-owner column for Rep. Rendered so the toolbar
+                         matches 455:1577. -->
                     <button
-                        v-for="label in ['Channel', 'Date range', 'Rep']"
+                        v-for="label in ['Channel', 'Rep']"
                         :key="label"
                         type="button"
                         class="inline-flex h-[30px] shrink-0 items-center gap-1 border border-border bg-card px-2.5 text-xs text-foreground hover:border-foreground/40"

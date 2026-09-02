@@ -23,3 +23,24 @@ export interface TabItem {
     href?: string | null;
     value?: string;
 }
+
+/**
+ * One option in a `Combobox`.
+ *
+ * `keywords` are matched but not shown — a product should be findable by SKU
+ * or vintage without either being printed in its label.
+ */
+export interface ComboboxOption {
+    value: string;
+    label: string;
+    /** Shown greyed after the label; also matched. */
+    description?: string;
+    keywords?: string[];
+    disabled?: boolean;
+}
+
+/** An inclusive date range, as `YYYY-MM-DD` strings. Either end may be open. */
+export interface DateRange {
+    from: string | null;
+    to: string | null;
+}

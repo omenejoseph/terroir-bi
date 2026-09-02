@@ -8,6 +8,7 @@ import CustomerAttentionBand from '@/components/customers/CustomerAttentionBand.
 import CustomerFormPanel from '@/components/customers/CustomerFormPanel.vue';
 import OrderRhythm from '@/components/customers/OrderRhythm.vue';
 import BarChart from '@/components/ui/BarChart.vue';
+import DateRangePicker from '@/components/ui/DateRangePicker.vue';
 import Button from '@/components/ui/Button.vue';
 import SectionHeader from '@/components/ui/SectionHeader.vue';
 import StackedBar from '@/components/ui/StackedBar.vue';
@@ -28,7 +29,7 @@ import type {
 import type { MoneyValue } from '@/types/inventory';
 import type { Order } from '@/types/orders';
 import type { Paginated, SharedProps } from '@/types';
-import type { TabItem } from '@/types/ui';
+import type { DateRange, TabItem } from '@/types/ui';
 
 /**
  * One customer (Figma 231:9336), with the four tabs the design gives them.
@@ -52,6 +53,7 @@ const props = defineProps<{
     insights: CustomerInsights | null;
     orderAnalytics: CustomerOrderAnalytics | null;
     products: CustomerProducts;
+    productRange: { preset: string; from: string | null; to: string | null };
     pricing?: CustomerPricing;
     orderHistory?: Paginated<Order>;
     consignment?: Record<string, unknown>;
@@ -170,6 +172,42 @@ const revenueTrend = computed(() =>
         values: [point.revenue.minor / 100],
     })),
 );
+
+/*
+  "Products bought" has its own window (Figma 231:9336). It reloads only that
+  card's data, so changing the range does not re-run the rhythm strip and the
+  revenue trend, which do not depend on it.
+*/
+const PRODUCT_RANGE_TABS: TabItem[] = [
+    { value: 'lifetime', label: 'Lifetime' },
+    { value: 'year', label: 'This year' },
+    { value: 'month', label: 'This month' },
+];
+
+const productCustomRange = computed<DateRange>(() => ({
+    from: props.productRange.preset === 'custom' ? props.productRange.from : null,
+    to: props.productRange.preset === 'custom' ? props.productRange.to : null,
+}));
+
+function reloadProducts(params: Record<string, string | undefined>): void {
+    router.get(
+        `/customers/${props.customer.id}`,
+        { tab: props.tab, ...params },
+        { preserveState: true, preserveScroll: true, replace: true, only: ['products', 'productRange'] },
+    );
+}
+
+function selectProductRange(preset: string): void {
+    reloadProducts({ products_range: preset, products_from: undefined, products_to: undefined });
+}
+
+function selectProductCustomRange(range: DateRange): void {
+    reloadProducts({
+        products_range: range.from === null ? 'lifetime' : 'custom',
+        products_from: range.from ?? undefined,
+        products_to: range.to ?? undefined,
+    });
+}
 
 /** Products bought, grouped the way the design groups them: by product group. */
 const productGroups = computed(() => {
@@ -339,11 +377,23 @@ const orderStatusLabel: Record<string, string> = {
                 </div>
 
                 <div class="border border-border bg-card">
-                    <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-border px-6 py-4">
+                    <div class="flex flex-col gap-3 border-b border-border px-6 py-4">
                         <SectionHeader
                             title="Products bought"
                             :description="`${formatNumber(products.total_units, locale)} bottles · ${formatNumber(products.product_count, locale)} products`"
                         />
+                        <div class="flex flex-wrap items-center gap-2">
+                            <Tabs
+                                :items="PRODUCT_RANGE_TABS"
+                                :current="productRange.preset === 'custom' ? '' : productRange.preset"
+                                @select="selectProductRange"
+                            />
+                            <DateRangePicker
+                                :model-value="productCustomRange"
+                                label="Custom"
+                                @update:model-value="selectProductCustomRange"
+                            />
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -412,7 +462,14 @@ const orderStatusLabel: Record<string, string> = {
 
                                 <tr v-if="products.rows.length === 0">
                                     <td colspan="5" class="px-6 py-12 text-center text-muted-foreground">
-                                        This customer has not ordered anything yet.
+                                        <!-- A filtered empty is not the same as an empty
+                                             customer, and saying so sends people to fix
+                                             the wrong thing. -->
+                                        {{
+                                            productRange.preset === 'lifetime'
+                                                ? 'This customer has not ordered anything yet.'
+                                                : 'Nothing bought in this range.'
+                                        }}
                                     </td>
                                 </tr>
                             </tbody>

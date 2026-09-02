@@ -31,8 +31,10 @@ use App\Services\Orders\CustomerConsignmentService;
 use App\Services\Orders\OrderPresenter;
 use App\Services\Pricing\PricingService;
 use App\Support\CustomerFilters;
+use App\Support\Period;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -101,6 +103,10 @@ class CustomerController extends Controller
     ): Response {
         $financials = $this->membership->canSeeFinancials();
 
+        // "Products bought" has its own range (Figma 231:9336: Lifetime / This
+        // year / This month / Custom), independent of anything else on the page.
+        [$productsFrom, $productsTo] = $this->productWindow($request);
+
         return Inertia::render('Customers/Show', [
             'customer' => $presenter->detail($customer),
             'tab' => $this->tab($request),
@@ -112,7 +118,12 @@ class CustomerController extends Controller
             // without financial visibility.
             'insights' => $financials ? $insights->get($customer) : null,
             'orderAnalytics' => $financials ? $orderAnalytics->get($customer) : null,
-            'products' => $products->get($customer),
+            'products' => $products->get($customer, $productsFrom, $productsTo),
+            'productRange' => [
+                'preset' => $this->productPreset($request),
+                'from' => $productsFrom?->toDateString(),
+                'to' => $productsTo?->toDateString(),
+            ],
 
             // Pricing tab: what this customer actually pays for each sellable
             // item, and which rule decided it. Resolution is PricingService's,
@@ -254,6 +265,44 @@ class CustomerController extends Controller
             // which is what the design's "Pricing (0)" reports.
             'override_count' => $customPrices->count(),
         ];
+    }
+
+    /**
+     * The window for "Products bought". `lifetime` is the default and means no
+     * bounds at all — not a very long range, which would still exclude a first
+     * order older than it.
+     *
+     * @return array{0: ?Carbon, 1: ?Carbon}
+     */
+    private function productWindow(Request $request): array
+    {
+        $preset = $this->productPreset($request);
+
+        if ($preset === 'custom') {
+            $from = $request->query('products_from');
+            $to = $request->query('products_to');
+
+            return [
+                is_string($from) && $from !== '' ? Carbon::parse($from)->startOfDay() : null,
+                is_string($to) && $to !== '' ? Carbon::parse($to)->endOfDay() : null,
+            ];
+        }
+
+        if ($preset === 'lifetime') {
+            return [null, null];
+        }
+
+        [$from, $to] = Period::resolve($preset === 'year' ? 'ytd' : 'this_month');
+
+        return [$from, $to];
+    }
+
+    private function productPreset(Request $request): string
+    {
+        $preset = $request->query('products_range');
+        $allowed = ['lifetime', 'year', 'month', 'custom'];
+
+        return is_string($preset) && in_array($preset, $allowed, true) ? $preset : 'lifetime';
     }
 
     /** The four tabs the design gives a customer. Anything else is Overview. */

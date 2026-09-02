@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 final class OrderFilters
 {
     /**
-     * @return array{status: ?string, search: ?string, customer_id: ?string, period: ?string}
+     * @return array{status: ?string, search: ?string, customer_id: ?string, period: ?string, from: ?string, to: ?string}
      */
     public static function fromRequest(Request $request): array
     {
@@ -26,11 +26,28 @@ final class OrderFilters
             'search' => self::str($request->query('search')),
             'customer_id' => self::str($request->query('customer_id')),
             'period' => self::str($request->query('period')),
+            // An explicit range beats the preset — the design's "Custom" tab.
+            // Period::resolve applies that precedence; both are carried so the
+            // page can show which control is driving the window.
+            'from' => self::date($request->query('from')),
+            'to' => self::date($request->query('to')),
         ];
     }
 
     private static function str(mixed $value): ?string
     {
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * Only `YYYY-MM-DD` is accepted. Anything else is dropped rather than
+     * passed to a date parser, so a hand-edited query string cannot turn into
+     * a surprising window.
+     */
+    private static function date(mixed $value): ?string
+    {
+        $value = self::str($value);
+
+        return $value !== null && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1 ? $value : null;
     }
 }

@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { router, useForm, usePage } from '@inertiajs/vue3';
 
 import Button from '@/components/ui/Button.vue';
+import Combobox from '@/components/ui/Combobox.vue';
 import Disclosure from '@/components/ui/Disclosure.vue';
 import FieldRow from '@/components/ui/FieldRow.vue';
 import FormField from '@/components/ui/FormField.vue';
@@ -141,7 +142,11 @@ async function lookUp(): Promise<void> {
 }
 
 const TIER_OPTIONS = computed(() =>
-    tiers.value.map((tier) => ({ value: tier.id, label: `${tier.name} · ${tier.rebate_percent}%` })),
+    tiers.value.map((tier) => ({
+        value: tier.id,
+        label: tier.name,
+        description: `${tier.rebate_percent}%`,
+    })),
 );
 
 const settingsSummary = computed(() =>
@@ -285,11 +290,14 @@ function submit(): void {
                 <FieldRow>
                     <FormField label="Pricing tier" :error="form.errors.pricing_tier_id">
                         <template #default="{ id }">
-                            <Select
+                            <Combobox
                                 :id="id"
-                                v-model="form.pricing_tier_id"
+                                :model-value="form.pricing_tier_id === '' ? null : form.pricing_tier_id"
                                 placeholder="No tier"
+                                empty-text="No tier matches."
+                                clearable
                                 :options="TIER_OPTIONS"
+                                @update:model-value="form.pricing_tier_id = $event ?? ''"
                             />
                         </template>
                     </FormField>

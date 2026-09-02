@@ -129,4 +129,7 @@ export interface OrderFilters {
     search: string | null;
     customer_id: string | null;
     period: string | null;
+    /** `YYYY-MM-DD`. Set by the Custom tab and beats `period` when present. */
+    from: string | null;
+    to: string | null;
 }

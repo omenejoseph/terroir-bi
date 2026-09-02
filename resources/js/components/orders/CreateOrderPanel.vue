@@ -5,6 +5,7 @@ import { Camera, FileText, Plus, Trash2 } from 'lucide-vue-next';
 
 import QuantityStepper from '@/components/orders/QuantityStepper.vue';
 import Button from '@/components/ui/Button.vue';
+import Combobox from '@/components/ui/Combobox.vue';
 import Disclosure from '@/components/ui/Disclosure.vue';
 import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
@@ -14,6 +15,7 @@ import SwitchRow from '@/components/ui/SwitchRow.vue';
 import Textarea from '@/components/ui/Textarea.vue';
 import { formatMoney } from '@/lib/money';
 import type { MoneyValue } from '@/types/inventory';
+import type { ComboboxOption } from '@/types/ui';
 import type { SharedProps } from '@/types';
 
 /**
@@ -175,19 +177,28 @@ const canSubmit = computed(
         ),
 );
 
-const PRODUCT_OPTIONS = computed(() =>
+/*
+  The design's placeholder — "Search product by name, SKU or vintage…" — is a
+  promise about what matches. SKU and vintage go in `keywords` so they are
+  searchable without cluttering every label with them.
+*/
+const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
     products.value
         .filter((p) => !lines.value.some((line) => line.inventory_item_id === p.id))
         .map((p) => ({
             value: p.id,
-            label: [p.name, p.vintage, p.unit_size].filter(Boolean).join(' · '),
+            label: [p.name, p.vintage].filter(Boolean).join(' '),
+            description: p.unit_size ?? undefined,
+            keywords: [p.sku, p.vintage === null ? '' : String(p.vintage)].filter(Boolean) as string[],
         })),
 );
 
-const CUSTOMER_OPTIONS = computed(() =>
+const CUSTOMER_OPTIONS = computed<ComboboxOption[]>(() =>
     customers.value.map((c) => ({
         value: c.id,
-        label: [c.company_name, c.city].filter(Boolean).join(' · '),
+        label: c.company_name,
+        description: c.city ?? undefined,
+        keywords: [c.city, c.customer_type].filter(Boolean) as string[],
     })),
 );
 
@@ -248,13 +259,15 @@ function submit(): void {
             <FormField label="Customer" required :error="form.errors.customer_id">
                 <template #default="{ id, invalid }">
                     <div class="flex items-center gap-2">
-                        <Select
+                        <Combobox
                             :id="id"
-                            v-model="form.customer_id"
+                            :model-value="form.customer_id === '' ? null : form.customer_id"
                             :invalid="invalid"
                             placeholder="Select a customer…"
+                            empty-text="No customer matches."
                             :options="CUSTOMER_OPTIONS"
                             class="flex-1"
+                            @update:model-value="form.customer_id = $event ?? ''"
                         />
                         <!-- @todo New customer inline. The design opens the
                              Customer — Create drawer from here; that drawer
@@ -373,12 +386,12 @@ function submit(): void {
                     </div>
                 </div>
 
-                <Select
-                    v-model="picked"
+                <Combobox
+                    :model-value="picked === '' ? null : picked"
                     placeholder="Search product by name, SKU or vintage…"
+                    empty-text="No product matches."
                     :options="PRODUCT_OPTIONS"
-                    aria-label="Add a product"
-                    @update:model-value="addProduct"
+                    @update:model-value="$event && addProduct($event)"
                 />
 
                 <p v-if="form.errors.items" class="text-xs text-destructive" role="alert">{{ form.errors.items }}</p>

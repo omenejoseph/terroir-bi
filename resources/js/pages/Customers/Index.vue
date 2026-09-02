@@ -24,6 +24,7 @@ import Checkbox from '@/components/ui/Checkbox.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
+import { usePopover } from '@/composables/usePopover';
 import { CUSTOMER_TYPES, customerTypeLabel } from '@/lib/customers';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { Customer, CustomerFilters, PricingTierSummary } from '@/types/customers';
@@ -57,7 +58,20 @@ const selected = ref<string[]>([]);
 const formOpen = ref(false);
 const editing = ref<Customer | null>(null);
 const mergeOpen = ref(false);
+
+/*
+  One popover at a time, with proper dismissal: the three filter menus share an
+  anchor so a click anywhere outside the filter row closes whichever is open.
+  Without this a menu stays open until you pick something, which on a filter
+  row means you cannot back out of a decision.
+*/
+const filterRow = ref<HTMLElement | null>(null);
+const { open: filterOpen, close: closeFilter, show: showFilter } = usePopover(filterRow);
 const openFilter = ref<'status' | 'tier' | 'type' | null>(null);
+
+watch(filterOpen, (isOpen) => {
+    if (!isOpen) openFilter.value = null;
+});
 
 let timer: ReturnType<typeof setTimeout> | undefined;
 
@@ -87,7 +101,14 @@ const MODULE_TABS: TabItem[] = [
 
 /** Tiers are only fetched when the Tier filter is first opened. */
 function toggleFilter(which: 'status' | 'tier' | 'type'): void {
-    openFilter.value = openFilter.value === which ? null : which;
+    if (openFilter.value === which) {
+        closeFilter();
+
+        return;
+    }
+
+    openFilter.value = which;
+    showFilter();
 
     if (which === 'tier' && props.tiers === undefined) {
         router.reload({ only: ['tiers'] });
@@ -95,7 +116,7 @@ function toggleFilter(which: 'status' | 'tier' | 'type'): void {
 }
 
 function setFilter(key: string, value: unknown): void {
-    openFilter.value = null;
+    closeFilter();
     reload({ [key]: value ?? undefined });
 }
 
@@ -179,7 +200,7 @@ function create(): void {
             <Tabs :items="MODULE_TABS" current="Customers" />
 
             <!-- Filter row -->
-            <div class="flex flex-wrap items-center gap-2">
+            <div ref="filterRow" class="flex flex-wrap items-center gap-2">
                 <div class="relative w-full max-w-[280px]">
                     <Search
                         class="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground"
@@ -215,7 +236,7 @@ function create(): void {
                         </template>
                     </button>
                     <div
-                        v-if="openFilter === 'status'"
+                        v-if="filterOpen && openFilter === 'status'"
                         class="absolute top-9 left-0 z-20 min-w-40 border border-border bg-card p-1 shadow-lg"
                     >
                         <button
@@ -249,7 +270,7 @@ function create(): void {
                         Tier
                     </button>
                     <div
-                        v-if="openFilter === 'tier'"
+                        v-if="filterOpen && openFilter === 'tier'"
                         class="absolute top-9 left-0 z-20 max-h-64 min-w-48 overflow-y-auto border border-border bg-card p-1 shadow-lg"
                     >
                         <button
@@ -292,7 +313,7 @@ function create(): void {
                         </template>
                     </button>
                     <div
-                        v-if="openFilter === 'type'"
+                        v-if="filterOpen && openFilter === 'type'"
                         class="absolute top-9 left-0 z-20 min-w-44 border border-border bg-card p-1 shadow-lg"
                     >
                         <button

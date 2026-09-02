@@ -69,9 +69,9 @@ the drift.
 None of these blocked Phase 2, so they were left until a screen needs them:
 
 - **`DataTable` extraction** — still inline per screen, now across six tables. Customers was meant to force it and did not: the two customer tables are plain, but Inventory groups and bands, Orders stacks line items per row, and the customer detail's "Products bought" groups again. What they actually share is the chrome — the bordered card, the header band, the horizontal scroll container, the empty row — not the cells. **Extract that shell (not a column API) at Phase 5**, and leave the cells to each screen.
-- **Global ⌘K search field** — `Kbd` exists; the field and its behaviour do not.
+- **Global ⌘K search field** — `Kbd` exists; the field and its behaviour do not. `Combobox` is now most of what it needs.
 - **Collapsed `NavRail`** — the design's second nav state.
-- **Combobox / date picker** — still open, and now overdue. Orders uses a native `Select` for its customer and product pickers and Customers uses one for its tier picker; none type-to-filter as the design's "Search product by name, SKU or vintage…" implies, and a winery with a few hundred SKUs will feel it. The date picker is still missing, so the Orders period strip's "Custom" tab and the Customers "Products bought" range are both `@todo`. **Build this before Phase 5.**
+- ~~**Combobox / date picker**~~ — ✅ **built**, ahead of Phase 5. `Combobox` is a type-to-filter select matching on hidden `keywords`, so a product is findable by SKU or vintage without either cluttering its label; it is adopted by the Orders customer and product pickers and the Customers tier picker. `Calendar` + `DateRangePicker` complete three controls the design draws but never specifies: the Orders period strip's "Custom" tab, the Orders toolbar's "Date range" filter (which now drives the same window rather than competing with it), and the customer detail's "Products bought" range. Short fixed enum lists (customer type, unit, order status) deliberately keep the native `Select` — five options need no filtering and the native control is better on touch.
 
 ### Open questions
 

@@ -60,7 +60,14 @@ class OrderController extends Controller
         OrderFormOptions $options,
     ): Response {
         $filters = OrderFilters::fromRequest($request);
-        [$from, $to] = Period::resolve($filters['period'] ?? 'ytd');
+
+        // An explicit from/to (the "Custom" tab) wins over the preset, which is
+        // exactly what Period::resolve already does with its two arguments.
+        [$from, $to] = Period::resolve(
+            $filters['period'] ?? 'ytd',
+            $filters['from'],
+            $filters['to'],
+        );
 
         // hide_shipped is a membership rule, not a user filter: a member without
         // can_see_shipped_orders must not be able to reach shipped orders by
