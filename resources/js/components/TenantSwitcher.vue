@@ -46,7 +46,7 @@ function select(tenantId: string): void {
     <div v-if="page.props.tenant" class="relative">
         <button
             type="button"
-            class="rounded-md border border-input px-3 py-1.5 text-sm font-medium hover:bg-accent disabled:opacity-50"
+            class="rounded-lg border border-input px-3 py-1.5 text-sm font-medium hover:bg-accent disabled:opacity-50"
             :aria-expanded="open"
             aria-haspopup="listbox"
             :disabled="switching"
@@ -57,7 +57,7 @@ function select(tenantId: string): void {
 
         <ul
             v-if="open"
-            class="absolute right-0 z-30 mt-2 min-w-52 overflow-hidden rounded-md border border-border bg-popover py-1 shadow-lg"
+            class="absolute right-0 z-30 mt-2 min-w-52 overflow-hidden rounded-lg border border-border bg-popover py-1 shadow-lg"
             role="listbox"
         >
             <li v-for="membership in page.props.tenants" :key="membership.tenant_id">

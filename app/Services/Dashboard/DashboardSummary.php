@@ -386,6 +386,8 @@ class DashboardSummary
         return match ($period) {
             'today' => [$now->copy()->startOfDay(), $now->copy(), 'today'],
             'yesterday' => [$now->copy()->subDay()->startOfDay(), $now->copy()->subDay()->endOfDay(), 'yesterday'],
+            // 'week' backs the design's "This Week" tab (Figma 208:5577).
+            'week' => [$now->copy()->startOfWeek(), $now->copy(), 'week'],
             'mtd' => [$now->copy()->startOfMonth(), $now->copy(), 'mtd'],
             'qtd' => [$now->copy()->startOfQuarter(), $now->copy(), 'qtd'],
             'ytd' => [$now->copy()->startOfYear(), $now->copy(), 'ytd'],

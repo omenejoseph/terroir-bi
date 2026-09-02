@@ -15,13 +15,13 @@ const page = usePage<SharedProps>();
     <div v-if="page.props.flash.success || page.props.flash.error" class="space-y-2" aria-live="polite">
         <p
             v-if="page.props.flash.success"
-            class="rounded-md border border-success/30 bg-success/10 px-4 py-3 text-sm text-foreground"
+            class="rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm text-foreground"
         >
             {{ page.props.flash.success }}
         </p>
         <p
             v-if="page.props.flash.error"
-            class="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-foreground"
+            class="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-foreground"
             role="alert"
         >
             {{ page.props.flash.error }}

@@ -70,8 +70,8 @@ export interface DashboardSummary {
     range: string;
     currency: string;
     revenue_summary: Record<string, RevenuePoint>;
-    revenue_by_channel: unknown;
-    key_ratios: unknown;
+    revenue_by_channel: Record<string, RevenuePoint>;
+    key_ratios: Record<string, unknown>;
     stats: DashboardStats;
     orders: SeriesPoint[];
     revenue: SeriesPoint[];

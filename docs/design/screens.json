@@ -1,0 +1,370 @@
+{
+  "_source": {
+    "file": "8sj4JnUBwmvwOK5VPrFLHJ (TERROIR (Copy))",
+    "node": "32:2 (Desktop canvas)",
+    "tool": "figma mcp get_metadata",
+    "captured": "2026-09-02"
+  },
+  "sections": [
+    {
+      "id": "143:5847",
+      "name": "Dashboard",
+      "w": 5880.0,
+      "h": 2402.0,
+      "screens": [
+        {
+          "id": "143:3508",
+          "name": "Manage Shortcuts",
+          "w": 1369.0,
+          "h": 933.0
+        },
+        {
+          "id": "143:5013",
+          "name": "Form \u2022 Create Order",
+          "w": 1369.0,
+          "h": 933.0
+        },
+        {
+          "id": "146:9605",
+          "name": "Form \u2022 New customer",
+          "w": 1369.0,
+          "h": 933.0
+        },
+        {
+          "id": "208:5577",
+          "name": "Dashboard",
+          "w": 1369.0,
+          "h": 1354.0
+        },
+        {
+          "id": "408:1577",
+          "name": "Note \u00b7 Dashboard",
+          "w": 1369.0,
+          "h": 120.0
+        },
+        {
+          "id": "547:1568",
+          "name": "ExpandedNav",
+          "w": 240.0,
+          "h": 1372.0
+        }
+      ]
+    },
+    {
+      "id": "146:10335",
+      "name": "Customers",
+      "w": 8922.0,
+      "h": 2402.0,
+      "screens": [
+        {
+          "id": "230:2395",
+          "name": "Customers",
+          "w": 1369.0,
+          "h": 933.0
+        },
+        {
+          "id": "230:4717",
+          "name": "Analytics",
+          "w": 1369.0,
+          "h": 1518.0
+        },
+        {
+          "id": "361:2157",
+          "name": "Restoran Mediteran - Order History",
+          "w": 1369.0,
+          "h": 1142.0
+        },
+        {
+          "id": "361:4355",
+          "name": "Restoran Mediteran - Order History",
+          "w": 1369.0,
+          "h": 1170.0
+        },
+        {
+          "id": "231:9592",
+          "name": "Edit Customer",
+          "w": 1369.0,
+          "h": 933.0
+        },
+        {
+          "id": "408:1599",
+          "name": "Notes",
+          "w": 1369.0,
+          "h": 120.0
+        },
+        {
+          "id": "408:1607",
+          "name": "Note \u00b7 Customer overview",
+          "w": 1369.0,
+          "h": 138.0
+        },
+        {
+          "id": "231:9336",
+          "name": "Individual Customer - Overview",
+          "w": 1369.0,
+          "h": 2046.0
+        },
+        {
+          "id": "231:9558",
+          "name": "Card",
+          "w": 538.0,
+          "h": 172.0
+        }
+      ]
+    },
+    {
+      "id": "267:6816",
+      "name": "WORK ORDERS",
+      "w": 3022.0,
+      "h": 4259.0,
+      "screens": [
+        {
+          "id": "267:1781",
+          "name": "Main View",
+          "w": 1369.0,
+          "h": 933.0
+        },
+        {
+          "id": "267:2411",
+          "name": "New Task",
+          "w": 1369.0,
+          "h": 933.0
+        },
+        {
+          "id": "267:3164",
+          "name": "Existing Task",
+          "w": 1369.0,
+          "h": 933.0
+        },
+        {
+          "id": "267:4000",
+          "name": "Filters: Due Soon",
+          "w": 1369.0,
+          "h": 933.0
+        },
+        {
+          "id": "267:4526",
+          "name": "Recent Activity",
+          "w": 1369.0,
+          "h": 933.0
+        },
+        {
+          "id": "267:5804",
+          "name": "Assign quickly",
+          "w": 1369.0,
+          "h": 933.0
+        },
+        {
+          "id": "267:6361",
+          "name": "Search",
+          "w": 1369.0,
+          "h": 933.0
+        }
+      ]
+    },
+    {
+      "id": "271:13256",
+      "name": "INVENTORY",
+      "w": 10291.0,
+      "h": 2614.0,
+      "screens": [
+        {
+          "id": "270:9646",
+          "name": "Bulk Edit",
+          "w": 1369.0,
+          "h": 933.0
+        },
+        {
+          "id": "270:10206",
+          "name": "New Item",
+          "w": 1369.0,
+          "h": 933.0
+        },
+        {
+          "id": "271:12639",
+          "name": "Inventory Check",
+          "w": 1369.0,
+          "h": 1497.0
+        },
+        {
+          "id": "386:1673",
+          "name": "Inventory Spend",
+          "w": 1369.0,
+          "h": 1099.0
+        },
+        {
+          "id": "388:1592",
+          "name": "Inventory Check \u2014 rethought",
+          "w": 1369.0,
+          "h": 1219.0
+        },
+        {
+          "id": "382:1592",
+          "name": "Analytics",
+          "w": 1369.0,
+          "h": 965.0
+        },
+        {
+          "id": "408:1623",
+          "name": "Note \u00b7 Analytics",
+          "w": 1369.0,
+          "h": 120.0
+        },
+        {
+          "id": "408:1631",
+          "name": "Note \u00b7 Inventory Spend",
+          "w": 1369.0,
+          "h": 120.0
+        },
+        {
+          "id": "449:1577",
+          "name": "Product Detail",
+          "w": 1369.0,
+          "h": 1927.0
+        },
+        {
+          "id": "389:1592",
+          "name": "Inventory",
+          "w": 1369.0,
+          "h": 1211.0
+        },
+        {
+          "id": "408:1641",
+          "name": "Frame",
+          "w": 1333.0,
+          "h": 50.0
+        }
+      ]
+    },
+    {
+      "id": "323:2304",
+      "name": "Forms",
+      "w": 5200.0,
+      "h": 3135.0,
+      "screens": [
+        {
+          "id": "316:80",
+          "name": "Customer \u2014 Create",
+          "w": 480.0,
+          "h": 1278.0
+        },
+        {
+          "id": "316:695",
+          "name": "Customer \u2014 Edit",
+          "w": 480.0,
+          "h": 1278.0
+        },
+        {
+          "id": "317:369",
+          "name": "New Task",
+          "w": 480.0,
+          "h": 707.0
+        },
+        {
+          "id": "317:468",
+          "name": "New Item",
+          "w": 480.0,
+          "h": 707.0
+        },
+        {
+          "id": "321:618",
+          "name": "New Task \u2014 Advanced open",
+          "w": 480.0,
+          "h": 994.0
+        },
+        {
+          "id": "322:704",
+          "name": "New Item \u2014 Advanced open",
+          "w": 480.0,
+          "h": 1354.0
+        },
+        {
+          "id": "322:848",
+          "name": "Customer \u2014 Create \u2014 Advanced open",
+          "w": 480.0,
+          "h": 1615.0
+        },
+        {
+          "id": "324:862",
+          "name": "View Task \u2014 Add details open",
+          "w": 480.0,
+          "h": 1208.0
+        },
+        {
+          "id": "325:982",
+          "name": "View Task \u2014 Actions menu",
+          "w": 480.0,
+          "h": 791.0
+        },
+        {
+          "id": "335:4233",
+          "name": "Create Order",
+          "w": 480.0,
+          "h": 848.0
+        },
+        {
+          "id": "335:4331",
+          "name": "Create Order \u2014 Advanced open",
+          "w": 480.0,
+          "h": 1149.0
+        },
+        {
+          "id": "318:402",
+          "name": "View Task",
+          "w": 480.0,
+          "h": 958.0
+        },
+        {
+          "id": "378:1592",
+          "name": "Item \u2014 View",
+          "w": 480.0,
+          "h": 1544.0
+        },
+        {
+          "id": "408:1655",
+          "name": "Note \u00b7 Create order",
+          "w": 480.0,
+          "h": 102.0
+        },
+        {
+          "id": "408:1677",
+          "name": "Note \u00b7 Product panel \u2014 new",
+          "w": 480.0,
+          "h": 152.0
+        },
+        {
+          "id": "376:1592",
+          "name": "Order \u2014 View",
+          "w": 480.0,
+          "h": 1394.0
+        },
+        {
+          "id": "408:1669",
+          "name": "Note \u00b7 Order panel \u2014 new",
+          "w": 480.0,
+          "h": 152.0
+        }
+      ]
+    },
+    {
+      "id": "351:3755",
+      "name": "ORDERS",
+      "w": 2964.0,
+      "h": 2614.0,
+      "screens": [
+        {
+          "id": "455:1577",
+          "name": "ORDERS - List",
+          "w": 1369.0,
+          "h": 1420.0
+        },
+        {
+          "id": "453:4938",
+          "name": "Individual Order",
+          "w": 1369.0,
+          "h": 1024.0
+        }
+      ]
+    }
+  ]
+}

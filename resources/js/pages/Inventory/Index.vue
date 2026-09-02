@@ -53,7 +53,7 @@ function price(item: InventoryItem): string {
             </div>
 
             <!-- The table scrolls inside its own container so the page never does. -->
-            <div class="overflow-x-auto rounded-xl border border-border bg-card">
+            <div class="overflow-x-auto rounded-lg border border-border bg-card">
                 <table class="w-full min-w-[48rem] text-sm">
                     <thead class="border-b border-border text-left text-muted-foreground">
                         <tr>

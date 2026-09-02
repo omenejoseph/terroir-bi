@@ -9,119 +9,132 @@
 /*
   Dark mode is class-based (driven by the `.dark` token block below), not the OS.
   Without this, Tailwind v4's `dark:` utilities default to `prefers-color-scheme`,
-  so a dark-mode OS would paint dark-variant colors onto the app's always-light
-  surfaces — illegible. Pinning `dark:` to the `.dark` class keeps utilities in
+  so a dark-mode OS would paint dark-variant colors onto surfaces the design
+  intends to stay light. Pinning `dark:` to the `.dark` class keeps utilities in
   sync with the theme tokens.
 */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
   ============================================================================
-  DESIGN TOKENS — the single source of truth for the app's look & feel.
+  DESIGN TOKENS — mirrored from the TERROIR Figma file.
   ============================================================================
-  Every UI primitive (button, card, input, badge…) references these variables
-  instead of hard-coded colors. To restyle the whole app, edit values HERE —
-  you should not need to touch any component file.
+  Source: file 8sj4JnUBwmvwOK5VPrFLHJ, node 208:5577, via the Figma MCP
+  `get_variable_defs` tool. The captured values are also checked in at
+  docs/design/tokens.json — that file is the record; this block is its
+  application. If you change a value here, change it there too, and only ever
+  because Figma changed.
 
-  PROVENANCE: these values are carried over from the outgoing Next.js app
-  (frontend/src/app/globals.css) so the Inertia app has a coherent look while
-  the port is in progress. They are a PLACEHOLDER. The TERROIR Figma file is the
-  authority: once the Figma connector is available, replace this block wholesale
-  with the file's published variables (get_variable_defs) and treat any
-  divergence as a bug. Nothing below this block hard-codes a colour, so that
-  swap is a one-file change.
+  Every UI primitive references these variables rather than a literal colour, so
+  the whole app re-themes from this block alone.
+
+  NOTE: Figma's `family/sans` variable says "Inter", but every text node in the
+  design actually renders Figtree. The rendered value wins here; see
+  docs/design/README.md.
 */
 
 :root {
-    --radius: 0.625rem;
+    /* Figma: rounded-lg 8, radius-lg 10. 8px is the component radius. */
+    --radius: 0.5rem;
 
-    /* Palette: Warm Alabaster canvas; white cards lift off it. */
-    --background: #f9f8f6; /* Warm Alabaster */
-    --foreground: #3a3a3a; /* Deep Charcoal-Slate */
+    --background: #ffffff;
+    --foreground: #0a0a0a;
 
     --card: #ffffff;
-    --card-foreground: #3a3a3a;
+    --card-foreground: #0a0a0a;
 
     --popover: #ffffff;
-    --popover-foreground: #3a3a3a;
+    --popover-foreground: #0a0a0a;
 
     /*
-      Brand colour — the single source of truth for the app's accent. Everything
-      brand-tinted (primary, ring, the top-of-page glow) derives from --brand, so
-      rebranding is ONE line here. It can also be overridden at runtime (e.g. set
-      `--brand` on <html> from saved tenant settings) to retheme live without a
-      rebuild — the groundwork for per-tenant dynamic theming.
+      Brand accent. Everything brand-tinted derives from --brand, so rebranding
+      is one line. It can also be overridden at runtime (e.g. set `--brand` on
+      <html> from saved tenant settings) to retheme live without a rebuild.
     */
-    --brand: #3a3a3a; /* Deep Charcoal-Slate */
+    --brand: #171717;
     --primary: var(--brand);
-    --primary-foreground: #f9f8f6;
+    --primary-foreground: #fafafa;
 
-    --secondary: #f4f5f6; /* Cool Platinum */
-    --secondary-foreground: #3a3a3a;
+    --secondary: #f5f5f5;
+    --secondary-foreground: #0a0a0a;
 
-    --muted: #f4f5f6; /* Cool Platinum */
-    --muted-foreground: oklch(0.55 0.01 250); /* mid slate-grey for secondary text */
+    --muted: #f5f5f5;
+    --muted-foreground: #737373;
 
-    --accent: #f4f5f6; /* Cool Platinum */
-    --accent-foreground: #3a3a3a;
+    --accent: #f5f5f5;
+    --accent-foreground: #0a0a0a;
 
-    /* Clear alert red — kept outside the neutral palette so warnings still read. */
-    --destructive: oklch(0.55 0.2 27);
-    --destructive-foreground: #f9f8f6;
+    --destructive: #e7000b;
+    --destructive-foreground: #fafafa;
 
-    --success: oklch(0.59 0.13 163);
-    --success-foreground: oklch(0.985 0 0);
+    /* Not in the Figma variable set — no success colour is defined there yet.
+       Kept tonally neutral against the palette until the designer supplies one. */
+    --success: #15803d;
+    --success-foreground: #fafafa;
 
-    --border: #d8dee2; /* Soft Slate */
-    --input: #d8dee2; /* Soft Slate */
+    --border: #e5e5e5;
+    --input: #e5e5e5;
     --ring: var(--brand);
 
     /*
-      Nav chrome surface (sidebar + top bars). Kept as its own token so the dark
-      chrome can be retuned independently of the accent. Defined only here (not in
-      .dark) so it stays constant even though those surfaces opt into dark tokens
-      for their contents.
+      Nav chrome. The design uses a LIGHT sidebar (#fafafa) separated from the
+      canvas by a 1px #e5e5e5 rule — not a dark rail.
     */
-    --sidebar: #3a3a3a; /* Deep Charcoal-Slate */
+    --sidebar: #fafafa;
+    --sidebar-foreground: #0a0a0a;
+    --sidebar-border: #e5e5e5;
+    /* Active nav row: 60%-opacity neutral wash plus a 2px left indicator. */
+    --sidebar-active: rgb(245 245 245 / 0.6);
+
+    --neutral-500: #737373;
+    --neutral-600: #525252;
 }
 
 .dark {
-    --background: oklch(0.141 0.005 285.823);
-    --foreground: oklch(0.985 0 0);
+    --background: #0a0a0a;
+    --foreground: #fafafa;
 
-    --card: oklch(0.21 0.006 285.885);
-    --card-foreground: oklch(0.985 0 0);
+    --card: #171717;
+    --card-foreground: #fafafa;
 
-    --popover: oklch(0.21 0.006 285.885);
-    --popover-foreground: oklch(0.985 0 0);
+    --popover: #171717;
+    --popover-foreground: #fafafa;
 
-    --brand: #d8dee2; /* Soft Slate — light accent for dark mode */
+    --brand: #fafafa;
     --primary: var(--brand);
-    --primary-foreground: #3a3a3a; /* dark text on the light accent */
+    --primary-foreground: #171717;
 
-    --secondary: oklch(0.274 0.006 286.033);
-    --secondary-foreground: oklch(0.985 0 0);
+    --secondary: #262626;
+    --secondary-foreground: #fafafa;
 
-    --muted: oklch(0.274 0.006 286.033);
-    --muted-foreground: oklch(0.705 0.015 286.067);
+    --muted: #262626;
+    --muted-foreground: #a3a3a3;
 
-    --accent: oklch(0.274 0.006 286.033);
-    --accent-foreground: oklch(0.985 0 0);
+    --accent: #262626;
+    --accent-foreground: #fafafa;
 
-    --destructive: oklch(0.7 0.19 27);
-    --destructive-foreground: oklch(0.985 0 0);
+    --destructive: #ff6467;
+    --destructive-foreground: #0a0a0a;
 
-    --success: oklch(0.65 0.14 163);
-    --success-foreground: oklch(0.141 0.005 285.823);
+    --success: #4ade80;
+    --success-foreground: #0a0a0a;
 
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
+    --border: #262626;
+    --input: #333333;
     --ring: var(--brand);
+
+    --sidebar: #171717;
+    --sidebar-foreground: #fafafa;
+    --sidebar-border: #262626;
+    --sidebar-active: rgb(38 38 38 / 0.6);
+
+    --neutral-500: #a3a3a3;
+    --neutral-600: #d4d4d4;
 }
 
 /*
   Map the tokens above into Tailwind's theme so utilities like `bg-primary`,
-  `text-muted-foreground`, and `rounded-lg` resolve to them. This is the bridge
+  `text-muted-foreground` and `rounded-lg` resolve to them. This is the bridge
   between "design tokens" and "what components actually type".
 */
 @theme inline {
@@ -147,11 +160,29 @@
     --color-input: var(--input);
     --color-ring: var(--ring);
     --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-active: var(--sidebar-active);
+
+    /* Figma type ramp (size/leading pairs observed in the design). */
+    --text-2xs: 0.6875rem;      /* 11px — avatar initials, sub-labels */
+    --text-2xs--line-height: 0.859375rem;
+    --text-xs: 0.75rem;         /* 12px — size/xs */
+    --text-xs--line-height: 1rem;
+    --text-13: 0.8125rem;       /* 13px — nav category + wordmark */
+    --text-13--line-height: 1.21875rem;
+    --text-sm: 0.875rem;        /* 14px — size/sm, nav items, body */
+    --text-sm--line-height: 1.3125rem;
+    --text-lg: 1.125rem;        /* 18px — size/lg */
+    --text-xl: 1.25rem;         /* 20px — size/xl */
+    --text-3xl: 1.875rem;       /* 30px — size/3xl */
+
+    --font-sans: 'Figtree', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) + 4px);
+    --radius-xl: calc(var(--radius) + 2px);
 }
 
 @layer base {
@@ -159,9 +190,9 @@
         border-color: var(--color-border);
     }
     /*
-      Hard stop on horizontal page scroll. iOS Safari lets the viewport rubber-band
-      sideways when any descendant overflows — this root guard is the reliable
-      backstop.
+      Hard stop on horizontal page scroll. iOS Safari lets the viewport
+      rubber-band sideways when any descendant overflows — this root guard is the
+      reliable backstop.
 
       Use `overflow-x: clip` (not `hidden`): `hidden` forces the other axis to
       compute to `auto`, turning <html>/<body> into a scroll container — which
@@ -176,56 +207,10 @@
     body {
         position: relative;
         background-color: var(--color-background);
-        /* Soft brand glow at the top — adds depth without distracting. */
-        background-image: radial-gradient(
-            72% 42% at 50% -8%,
-            color-mix(in oklch, var(--color-primary) 9%, transparent),
-            transparent 70%
-        );
-        background-attachment: fixed;
-        background-repeat: no-repeat;
         color: var(--color-foreground);
+        font-family: var(--font-sans);
         font-feature-settings: 'rlig' 1, 'calt' 1;
-    }
-}
-
-/*
-  Motion tokens — registered here so they're available as `animate-*` utilities
-  (e.g. animate-fade-up). Centralizing them means timing/easing is tuned in one
-  place, like the colour tokens above.
-*/
-@theme {
-    --animate-fade-up: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
-    --animate-fade-in: fade-in 0.5s ease-out both;
-    --animate-scale-in: scale-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-
-    @keyframes fade-up {
-        from {
-            opacity: 0;
-            transform: translateY(14px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    @keyframes fade-in {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
-    }
-    @keyframes scale-in {
-        from {
-            opacity: 0;
-            transform: scale(0.96);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
+        -webkit-font-smoothing: antialiased;
     }
 }
 

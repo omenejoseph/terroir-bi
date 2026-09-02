@@ -41,7 +41,7 @@ const SIZES: Record<Size, string> = {
 
 const classes = computed(() =>
     cn(
-        'inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition-colors',
+        'inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-nowrap transition-colors',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         'disabled:pointer-events-none disabled:opacity-50',
         VARIANTS[props.variant],

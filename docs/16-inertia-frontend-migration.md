@@ -70,15 +70,21 @@ delete rule) — are now consumed identically by
 token (`bg-primary`, `border-input`, `rounded-lg`); no component hard-codes a
 colour, so re-theming is a one-file change.
 
-The current values are **carried over from the outgoing Next.js app as a
-placeholder**. The TERROIR Figma file is the authority — once the Figma
-connector is available, replace that token block with the file's published
-variables and treat any divergence from the design as a bug.
+The values are mirrored from the TERROIR Figma file and cached in
+[`docs/design/`](design/) — read that folder before reaching for Figma, and see
+it for known deviations (icons, typeface) and the list of design elements the
+backend cannot yet supply.
 
 ## Status
 
 Ported: session auth, tenant switching, dashboard, inventory (index/show/
 create/update/delete).
+
+Design-accurate: tokens, typography, the 240px `ExpandedNav` sidebar
+(grouped collapsible categories, per Figma `547:1568`), the app shell, and the
+dashboard's title row / period tabs / alert band. The sidebar lists every
+destination the design specifies; those not yet served render disabled rather
+than as dead links (`href: null` in `resources/js/lib/navigation.ts`).
 
 Pending (still served by `frontend/`): orders, customers, suppliers, costs,
 inflows, cash-flow, cellar, vineyards, production, work-orders, ai-imports,
