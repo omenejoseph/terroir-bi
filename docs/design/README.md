@@ -67,6 +67,15 @@ invented numbers:
 | "Reorder pipeline" | No reorder-pipeline query |
 | "DTC Revenue" | No direct-to-consumer channel |
 
+Inventory (`389:1592`) adds three more:
+
+| Design element | Missing backing data |
+|---|---|
+| "Free to sell" column | Order lines do not reserve stock, so there is nothing to subtract |
+| "Cover" column ("About 16 months") | No exit-rate / consumption model |
+| "Level" bar captioned "of N max" | Only `min_stock` exists. The bar reads against the MINIMUM instead, and turns red below it — reusing `min_stock` as a maximum would invert the bar's meaning |
+| "Reserved by open orders" chip | Same reservation gap as "Free to sell" |
+
 `revenue_by_channel` returns `wholesale / retail / agency / shipshop / other`;
 the design shows `Wholesale / Accommodation / Agencies`. The channel taxonomy
 needs reconciling before that card can be exact.

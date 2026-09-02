@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\Auth\ActiveTenantSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Concerns\InteractsWithTenancy;
 use Tests\TestCase;
 
@@ -63,6 +64,7 @@ class WebInventoryTest extends TestCase
                 ->has('items.data', 2)
                 ->where('items.meta.total', 2)
                 ->has('items.data.0.image_url')
+                ->has('attention')
                 ->where('filters.search', null));
     }
 
@@ -110,6 +112,57 @@ class WebInventoryTest extends TestCase
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('Inventory/Show')
                 ->where('item.sku', 'CORK-1'));
+    }
+
+    public function test_attention_band_counts_data_quality_conditions(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        // No min_stock and no cost_per_unit, and it has never moved.
+        $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory')
+            ->assertInertia(function (AssertableInertia $page) {
+                $keys = collect($page->toArray()['props']['attention'])->pluck('key')->all();
+
+                self::assertContains('no_min_stock', $keys);
+                self::assertContains('no_cost_per_unit', $keys);
+                self::assertContains('no_movement_90d', $keys);
+            });
+    }
+
+    /**
+     * The design's category tabs (Figma 389:1592) map to InventoryCategory.
+     *
+     * @return list<array{0: string}>
+     */
+    public static function designCategories(): array
+    {
+        return [['FINISHED'], ['SEMI_FINISHED'], ['RAW_MATERIAL']];
+    }
+
+    #[DataProvider('designCategories')]
+    public function test_each_design_category_tab_filters(string $category): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $this->makeItem('Cork', 'CORK-1');   // RAW_MATERIAL
+        $this->forgetTenant();
+
+        $expected = $category === 'RAW_MATERIAL' ? 1 : 0;
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory?category='.$category)
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('items.data', $expected)
+                ->where('filters.category', $category));
     }
 
     public function test_shared_props_expose_resolved_capabilities(): void

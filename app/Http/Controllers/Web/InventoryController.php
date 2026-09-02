@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreInventoryItemRequest;
 use App\Http\Requests\Inventory\UpdateInventoryItemRequest;
 use App\Models\InventoryItem;
+use App\Queries\InventoryAttentionQuery;
 use App\Queries\InventoryTaxonomyQuery;
 use App\Queries\ListInventoryItemsQuery;
 use App\Services\Inventory\InventoryItemPresenter;
@@ -35,12 +36,16 @@ class InventoryController extends Controller
         ListInventoryItemsQuery $query,
         InventoryItemPresenter $presenter,
         InventoryTaxonomyQuery $taxonomy,
+        InventoryAttentionQuery $attention,
     ): Response {
         $filters = InventoryItemFilters::fromRequest($request);
 
         return Inertia::render('Inventory/Index', [
             'items' => $presenter->page($query->paginate($filters)),
             'filters' => $filters,
+            // The "Needs attention" band (Figma 389:1592). Counts span the whole
+            // tenant, not the filtered page, so they stay stable as you filter.
+            'attention' => $attention->get(),
             // Only fetched when the filter bar asks for it — the taxonomy is a
             // distinct-scan and most visits never open the category picker.
             'taxonomy' => Inertia::optional(fn () => $taxonomy->get()),
