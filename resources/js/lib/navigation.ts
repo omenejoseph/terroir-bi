@@ -69,7 +69,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
     {
         label: 'Sales',
         items: [
-            { label: 'Orders', href: null, icon: ShoppingCart, capability: 'orders.view' },
+            { label: 'Orders', href: '/orders', icon: ShoppingCart, capability: 'orders.view' },
             { label: 'Customers', href: null, icon: Users, capability: 'customers.view' },
             { label: 'Work Orders', href: null, icon: ClipboardList, capability: 'production.view' },
             { label: 'Wine Club', href: null, icon: Wine, capability: 'customers.view' },
@@ -135,7 +135,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
  */
 export const SHORTCUTS: NavItem[] = [
     { label: 'Cash System', href: null, icon: Coins },
-    { label: 'Orders', href: null, icon: ShoppingCart },
+    { label: 'Orders', href: '/orders', icon: ShoppingCart },
     { label: 'Harvest', href: null, icon: Grape },
     { label: 'Inventory', href: '/inventory', icon: Boxes, capability: 'inventory.view' },
 ];

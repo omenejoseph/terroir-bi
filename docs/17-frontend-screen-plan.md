@@ -11,15 +11,15 @@ inventory, plus the gap register).
 
 ## Where we are
 
-**11 of 42 screens done. Phases 0–2 complete; Phase 3 (Orders) is next.**
+**14 of 42 screens done. Phases 0–3 complete; Phase 4 (Customers) is next.**
 
 | Phase | Screens | Status |
 |---|---|---|
 | 0 · Foundation | — | ✅ **Done** |
 | 1 · Shared vocabulary | — | ✅ **Done for what Phase 2 needed**; 4 pieces deferred (below) |
 | 2 · Inventory | 8 / 8 | ✅ **Done** |
-| 3 · Orders | 0 / 4 | ⏭️ **Next** |
-| 4 · Customers | 0 / 6 | Pending |
+| 3 · Orders | 4 / 4 | ✅ **Done** |
+| 4 · Customers | 0 / 6 | ⏭️ **Next** |
 | 5 · Work Orders | 0 / 6 | Pending |
 | 6 · Dashboard completion | partial | Blocked on backend |
 | 7 · Retire React frontend | — | Last |
@@ -38,6 +38,9 @@ inventory, plus the gap register).
 | Inventory Check | `271:12639` | render |
 | Inventory Spend | `386:1673` | render |
 | Analytics | `382:1592` | render |
+| Orders list | `455:1577` | render |
+| Order — View (drawer) | `376:1592` / `453:4938` | render |
+| Create Order (+ Advanced) | `335:4233` / `335:4331` | render + frame XML |
 
 ### Fidelity corrections applied across every built screen
 
@@ -59,10 +62,10 @@ the drift.
 
 None of these blocked Phase 2, so they were left until a screen needs them:
 
-- **`DataTable` extraction** — table markup is still inline per screen. Extract when a third list screen wants it (Orders is the third).
+- **`DataTable` extraction** — still inline per screen. Orders was the third list and did not force it: its rows carry stacked line items and a two-line cell, so the shared abstraction would have had to be a slot-per-cell wrapper worth less than the markup it replaced. Revisit at Customers (`230:2395`), whose table is closer to Inventory's.
 - **Global ⌘K search field** — `Kbd` exists; the field and its behaviour do not.
 - **Collapsed `NavRail`** — the design's second nav state.
-- **Combobox / date picker** — first needed by Orders (customer picker) and Customers.
+- **Combobox / date picker** — Orders uses the native `Select` for its customer and product pickers, which works but does not type-to-filter as the design's "Search product by name, SKU or vintage…" implies. The date picker is still missing and the Orders period strip's "Custom" tab is a `@todo` because of it.
 
 ### Open questions
 
@@ -215,25 +218,44 @@ Check) are live and cross-linked, plus the New Item and Item — View drawers.
 **Figma budget: 4 calls** — Product Detail, Bulk Edit, Inventory Check, Analytics.
 Spend and the drawers derive from patterns already extracted.
 
-## Phase 3 — Orders ⏭️ NEXT
+## Phase 3 — Orders ✅ DONE
 
-Smallest page count, high business value, backend largely in place
-(`OrderController`, `OrderCommentController`, `OrderPaymentController`).
+| Screen | Node | Size | Status |
+|---|---|---|---|
+| ORDERS — List | `455:1577` | M | ✅ **done** — render-diffed |
+| Individual Order | `453:4938` | L | ✅ **done** — this frame is the Order — View drawer shown *in context* over the list, not a separate page |
+| Order — View (drawer) | `376:1592` | M | ✅ **done** — render-diffed |
+| Create Order (drawer) + Advanced | `335:4233` / `335:4331` | M | ✅ **done** |
 
-| Screen | Node | Size |
-|---|---|---|
-| ORDERS — List | `455:1577` | M |
-| Individual Order | `453:4938` | L |
-| Order — View (drawer) | `376:1592` | M |
-| Create Order (drawer) + Advanced | `335:4233` / `335:4331` | M |
+**Status: 4 of 4.** `453:4938` turned out to be the same drawer as `376:1592`
+over the list rather than a fourth build, so the phase is three surfaces.
 
-**DoD:** the nine criteria; order status transitions covered by tests; the
-public token order page (`routes/api.php`) left on the API untouched — it is
-unauthenticated and must not move to session auth.
+What the backend gained, all shared with the API rather than duplicated:
 
-**Figma budget: 3 calls.**
+- `OrderPresenter` — list and detail presentation, financial gating, presigned
+  line thumbnails. `Api\OrderController` was refactored onto it, so the JSON
+  API and the Vue drawer cannot disagree about an order.
+- `OrderPipelineQuery` — the order-to-cash card, six stages in one pass.
+- `OrderStatusCountsQuery` — the chip row; counts ignore the status filter so
+  the chips do not collapse to the set you already selected.
+- `OrderFormOptions` — the Create drawer's two pickers.
+- `OrderFilters`, `OrderStatus::label()`, and `from`/`to` bounds on
+  `ListOrdersQuery`.
 
-## Phase 4 — Customers
+Two rules the web layer adds and tests cover: `hide_shipped` is applied
+server-side on every read (a member without the flag cannot reach a shipped
+order by editing `?status=`), and the drawer's detail is an `Inertia::optional`
+prop, so the list never pays for lines, timelines and comment threads nobody
+opened.
+
+The unauthenticated public token order page stayed on `routes/api.php`, as
+planned — it resolves its tenant from the token, not the session.
+
+**Design divergences** (all in the gap register): the pipeline's stage
+vocabulary, the Channel/Date range/Rep filters, bulk actions and columns, the
+profitability rebate split, and comment reactions.
+
+## Phase 4 — Customers ⏭️ NEXT
 
 | Screen | Node | Size |
 |---|---|---|

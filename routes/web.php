@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Auth\TenantSwitchController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InventoryController;
+use App\Http\Controllers\Web\OrderController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -64,4 +65,29 @@ Route::middleware('tenant.web')->group(function () {
     Route::delete('inventory/{item}', [InventoryController::class, 'destroy'])
         ->middleware('can:inventory.delete')
         ->name('inventory.destroy');
+
+    /*
+      Orders. The gates mirror routes/api.php exactly: viewing and commenting
+      need orders.view, every write needs orders.manage, deletion is admin-only
+      via orders.delete. The unauthenticated public token order page stays on
+      the API — it resolves its tenant from the token, not from the session.
+    */
+    Route::middleware('can:orders.view')->group(function () {
+        Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+        // Participation, not management: any order viewer may comment.
+        Route::post('orders/{order}/comments', [OrderController::class, 'storeComment'])
+            ->name('orders.comments.store');
+    });
+
+    Route::middleware('can:orders.manage')->group(function () {
+        Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+        Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])
+            ->name('orders.status.update');
+        Route::patch('orders/{order}/notes', [OrderController::class, 'updateNotes'])
+            ->name('orders.notes.update');
+    });
+
+    Route::delete('orders/{order}', [OrderController::class, 'destroy'])
+        ->middleware('can:orders.delete')
+        ->name('orders.destroy');
 });

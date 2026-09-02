@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ListOrdersQuery
 {
     /**
-     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string}  $filters
+     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string, from?: ?string, to?: ?string}  $filters
      * @return LengthAwarePaginator<int, Order>
      */
     public function paginate(array $filters = [], int $perPage = 25): LengthAwarePaginator
@@ -28,7 +28,7 @@ class ListOrdersQuery
     }
 
     /**
-     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string}  $filters
+     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string, from?: ?string, to?: ?string}  $filters
      * @return Builder<Order>
      */
     public function build(array $filters): Builder
@@ -37,6 +37,17 @@ class ListOrdersQuery
 
         if (! empty($filters['customer_id'])) {
             $query->where('customer_id', $filters['customer_id']);
+        }
+
+        // The Orders list's period tabs (Figma 455:1577) narrow the table as
+        // well as the pipeline card, so the bounds belong on the shared query
+        // rather than only on the page that draws the card.
+        if (! empty($filters['from'])) {
+            $query->where('created_at', '>=', $filters['from']);
+        }
+
+        if (! empty($filters['to'])) {
+            $query->where('created_at', '<=', $filters['to']);
         }
 
         if (! empty($filters['status'])) {

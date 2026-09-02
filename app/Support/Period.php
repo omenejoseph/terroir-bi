@@ -32,6 +32,9 @@ final class Period
             'last_7', '7d' => [$now->copy()->subDays(7)->startOfDay(), $now->copy()->endOfDay()],
             'last_30', '30d' => [$now->copy()->subDays(30)->startOfDay(), $now->copy()->endOfDay()],
             'last_90', '90d' => [$now->copy()->subDays(90)->startOfDay(), $now->copy()->endOfDay()],
+            // The Orders list offers a calendar week ("This Week", 455:1577), which
+            // is not the same as the rolling last_7 above.
+            'week', 'this_week' => [$now->copy()->startOfWeek(), $now->copy()->endOfDay()],
             '1y', 'last_12' => [$now->copy()->subDays(365)->startOfDay(), $now->copy()->endOfDay()],
             'mtd', 'this_month' => [$now->copy()->startOfMonth(), $now->copy()->endOfDay()],
             'qtd' => [$now->copy()->startOfQuarter(), $now->copy()->endOfDay()],

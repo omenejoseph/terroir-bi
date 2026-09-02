@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\DataTransferObjects;
 
+use App\Models\Customer;
 use App\Models\InventoryItem;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -56,9 +57,7 @@ final class OrderData implements Arrayable, JsonSerializable
             'status' => $order->status->value,
             'total_amount' => $order->total_amount->jsonSerialize(),
             'notes' => $order->notes,
-            'customer' => $customer !== null
-                ? ['id' => $customer->getKey(), 'company_name' => $customer->company_name]
-                : null,
+            'customer' => $customer !== null ? $this->customer($customer) : null,
             'created_by' => $this->user($order->createdBy),
             'is_backorder' => $order->is_backorder,
             'backorder_date' => $order->backorder_date?->toIso8601String(),
@@ -128,6 +127,28 @@ final class OrderData implements Arrayable, JsonSerializable
         }
 
         return $row;
+    }
+
+    /**
+     * The customer as the Order — View drawer shows them (Figma 376:1592): the
+     * identity chips in the header ("Restaurant · Zadar", "Rebate 18%") and the
+     * Customer panel's contact rows. These are attributes of the customer the
+     * order was placed for, not financials, so they are not gated.
+     *
+     * @return array<string, mixed>
+     */
+    private function customer(Customer $customer): array
+    {
+        return [
+            'id' => $customer->getKey(),
+            'company_name' => $customer->company_name,
+            'contact_name' => $customer->contact_name,
+            'email' => $customer->email,
+            'phone' => $customer->phone,
+            'city' => $customer->city,
+            'customer_type' => $customer->customer_type,
+            'rebate_percent' => $customer->rebate_percent,
+        ];
     }
 
     private function itemName(OrderItem $item): string

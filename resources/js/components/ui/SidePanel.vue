@@ -14,9 +14,10 @@ import { X } from 'lucide-vue-next';
  * over the page behind them; giving each a URL would contradict the design and
  * lose the caller's list state.
  */
-const props = withDefaults(defineProps<{ open: boolean; title: string; describedBy?: string }>(), {
-    open: false,
-});
+const props = withDefaults(
+    defineProps<{ open: boolean; title: string; subtitle?: string; describedBy?: string }>(),
+    { open: false },
+);
 
 const emit = defineEmits<{ close: [] }>();
 
@@ -64,7 +65,17 @@ watch(
             document.addEventListener('keydown', onKeydown);
             document.body.style.overflow = 'hidden';
             await Promise.resolve();
-            panel.value?.querySelector<HTMLElement>('input, select, textarea, button')?.focus();
+            /*
+              Prefer the first control in the BODY. A read drawer's first
+              focusable element is the header's overflow menu, and landing
+              there says "you are on a menu" when the reader opened a record.
+              A form drawer still gets its first field. If the body has no
+              control, focus the panel itself so the Escape/Tab trap still owns
+              the keyboard.
+            */
+            const body = panel.value?.querySelector<HTMLElement>('[data-panel-body]');
+            const first = body?.querySelector<HTMLElement>('input, select, textarea, button');
+            (first ?? panel.value)?.focus();
         } else {
             document.removeEventListener('keydown', onKeydown);
             document.body.style.overflow = '';
@@ -100,26 +111,52 @@ onBeforeUnmount(() => {
             <div
                 v-if="open"
                 ref="panel"
-                class="fixed inset-y-0 right-0 z-50 flex w-full max-w-[480px] flex-col bg-card shadow-2xl"
+                class="fixed inset-y-0 right-0 z-50 flex w-full max-w-[480px] flex-col bg-card shadow-2xl focus:outline-none"
+                tabindex="-1"
                 role="dialog"
                 aria-modal="true"
                 :aria-label="title"
                 :aria-describedby="describedBy"
             >
-                <!-- Header: 64px, title 24px in, close at the right edge -->
-                <div class="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border px-6">
-                    <h2 class="truncate text-xl font-semibold text-foreground">{{ title }}</h2>
-                    <button
-                        type="button"
-                        class="-mr-2 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                        aria-label="Close"
-                        @click="emit('close')"
-                    >
-                        <X class="size-5" :stroke-width="1.5" />
-                    </button>
+                <!--
+                  Header: 64px with a 20px title (317:468), or 78px with an 18px
+                  title over a 12px subtitle when the panel names a record rather
+                  than an action (376:1592, "Restoran Mediteran / #VT-20260035 ·
+                  20 Jun 2026"). Close sits at the right edge in both.
+                -->
+                <div
+                    class="flex shrink-0 items-center justify-between gap-3 border-b border-border px-6"
+                    :class="subtitle ? 'h-[78px]' : 'h-16'"
+                >
+                    <div class="min-w-0">
+                        <h2
+                            class="truncate font-semibold text-foreground"
+                            :class="subtitle ? 'text-lg' : 'text-xl'"
+                        >
+                            {{ title }}
+                        </h2>
+                        <p v-if="subtitle" class="truncate text-xs text-muted-foreground">{{ subtitle }}</p>
+                    </div>
+                    <div class="flex shrink-0 items-center gap-1">
+                        <slot name="header-actions" />
+                        <button
+                            type="button"
+                            class="-mr-2 p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                            aria-label="Close"
+                            @click="emit('close')"
+                        >
+                            <X class="size-5" :stroke-width="1.5" />
+                        </button>
+                    </div>
                 </div>
 
-                <div class="min-h-0 flex-1 overflow-y-auto p-6">
+                <!-- Optional band between the header and the body: the Order —
+                     View drawer puts its identity chips and provenance line here. -->
+                <div v-if="$slots.meta" class="shrink-0 border-b border-border px-6 py-3">
+                    <slot name="meta" />
+                </div>
+
+                <div data-panel-body class="min-h-0 flex-1 overflow-y-auto p-6">
                     <slot />
                 </div>
 

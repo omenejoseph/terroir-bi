@@ -120,6 +120,23 @@ Inventory (`389:1592`) adds three more:
 | "Level" bar captioned "of N max" | Only `min_stock` exists. The bar reads against the MINIMUM instead, and turns red below it — reusing `min_stock` as a maximum would invert the bar's meaning |
 | "Reserved by open orders" chip | Same reservation gap as "Free to sell" |
 
+Orders (`455:1577`, `376:1592`, `335:4233`) adds five:
+
+| Design element | Missing backing data |
+|---|---|
+| Pipeline stages "Draft / Confirmed / Picking-packed / Delivered" | `OrderStatus` is Received / In Process / Ready to Ship / Shipped. The card keeps the design's shape and shows those four plus Invoiced and Paid (derived from inflows) — relabelling real statuses to a fulfilment vocabulary the system does not track would report something the data does not mean. See `App\Queries\OrderPipelineQuery` |
+| Toolbar filters "Channel / Date range / Rep" | Channel would have to be inferred from the customer's type (a different axis), and there is no order-owner column for Rep. Rendered, with a `@todo` |
+| "Bulk actions" and "Columns" | No multi-select or column-preference layer on orders |
+| Profitability's "Rebate · 18%" and "Net revenue" rows | Line totals are stored with the rebate already applied and the gross figure is not kept, so the three-line split cannot be reconstructed without assuming the arithmetic. Shown as Revenue / COGS / Gross profit / Margin |
+| Comment reactions (emoji counts) | No reactions table |
+
+Two Orders elements are deliberately built differently rather than omitted.
+The **Create Order** drawer shows list prices with a caption saying the
+customer's tier and rebate are applied on submit — `OrderLineWriter` is the
+only thing that may price a line, and quoting a number it will not honour
+would be worse than admitting the estimate. The **"Import screenshot"** button
+is rendered with a `@todo`: it is a whole OCR feature, not a missing column.
+
 ### Correction: "Cover" is NOT a gap
 
 An earlier revision listed Cover (and by implication velocity, realised margin

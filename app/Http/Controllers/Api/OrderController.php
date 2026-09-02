@@ -15,7 +15,6 @@ use App\Actions\Orders\UpdateOrderNotesAction;
 use App\Actions\Orders\UpdateOrderShippingAction;
 use App\Actions\Orders\UpdateOrderStatusAction;
 use App\Authorization\MembershipContext;
-use App\DataTransferObjects\OrderData;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\AddOrderItemsRequest;
@@ -33,8 +32,7 @@ use App\Models\User;
 use App\Queries\DemandForecastQuery;
 use App\Queries\ListOrdersQuery;
 use App\Queries\OrderAnalyticsQuery;
-use App\Services\Finance\OrderPaymentSummary;
-use App\Services\Uploads\PresignedUploadService;
+use App\Services\Orders\OrderPresenter;
 use App\Support\Period;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -43,8 +41,7 @@ class OrderController extends Controller
 {
     public function __construct(
         private readonly MembershipContext $membership,
-        private readonly OrderPaymentSummary $payments,
-        private readonly PresignedUploadService $uploads,
+        private readonly OrderPresenter $presenter,
     ) {}
 
     public function analytics(Request $request, OrderAnalyticsQuery $query): JsonResponse
@@ -76,18 +73,7 @@ class OrderController extends Controller
             'hide_shipped' => ! $this->membership->canSeeShippedOrders(),
         ]);
 
-        return response()->json([
-            'data' => array_map(
-                fn (Order $order) => $this->present($order, withPayments: false),
-                $paginator->items(),
-            ),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-            ],
-        ]);
+        return response()->json($this->presenter->page($paginator));
     }
 
     public function show(Order $order): JsonResponse
@@ -186,38 +172,12 @@ class OrderController extends Controller
         return response()->json(status: 204);
     }
 
-    private function present(Order $order, bool $withPayments = true): mixed
-    {
-        $order->loadMissing(['customer', 'createdBy', 'items.inventoryItem.firstImage', 'statusHistories.changedBy', 'orderNotes.author']);
-
-        $payment = $withPayments && $this->membership->can('finance.view')
-            ? $this->payments->for($order)
-            : null;
-
-        return OrderData::fromModel(
-            $order,
-            $this->membership->canSeeFinancials(),
-            $payment,
-            $this->itemImageUrls($order),
-        )->toArray();
-    }
-
     /**
-     * Presigned lead-image URL per order-item id, mirroring the inventory list
-     * thumbnail. Null for custom lines or catalog items without an image.
-     * `firstImage` is eager-loaded in present(), so this adds no extra queries.
-     *
-     * @return array<string, string|null>
+     * @return array<string, mixed>
      */
-    private function itemImageUrls(Order $order): array
+    private function present(Order $order): array
     {
-        $urls = [];
-        foreach ($order->items as $item) {
-            $key = $item->inventoryItem?->firstImage?->object_key;
-            $urls[$item->getKey()] = $key !== null ? $this->uploads->readUrl($key) : null;
-        }
-
-        return $urls;
+        return $this->presenter->detail($order);
     }
 
     private function userId(Request $request): string
