@@ -44,8 +44,8 @@ const value = computed(() => props.analytics.value);
 const MODULE_TABS: TabItem[] = [
     { label: 'Inventory', href: '/inventory' },
     { label: 'Analytics', href: '/inventory-analytics' },
-    { label: 'Inventory Spend', href: null },
-    { label: 'Inventory Check', href: null },
+    { label: 'Inventory Spend', href: '/inventory-spend' },
+    { label: 'Inventory Check', href: '/inventory-check' },
 ];
 
 /**

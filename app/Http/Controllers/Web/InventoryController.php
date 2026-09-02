@@ -5,26 +5,32 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Actions\Inventory\AdjustStockAction;
+use App\Actions\Inventory\ApplyInventoryCheckAction;
 use App\Actions\Inventory\BulkUpdateInventoryItemsAction;
 use App\Actions\Inventory\CreateInventoryItemAction;
 use App\Actions\Inventory\DeleteInventoryItemAction;
 use App\Actions\Inventory\UpdateInventoryItemAction;
+use App\DataTransferObjects\InventoryCheckData;
 use App\Enums\StockMovementType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\AdjustStockRequest;
 use App\Http\Requests\Inventory\BulkUpdateInventoryItemsRequest;
+use App\Http\Requests\Inventory\InventoryCheckRequest;
 use App\Http\Requests\Inventory\StoreInventoryItemRequest;
 use App\Http\Requests\Inventory\UpdateInventoryItemRequest;
+use App\Models\InventoryCheck;
 use App\Models\InventoryItem;
 use App\Queries\InventoryAnalyticsQuery;
 use App\Queries\InventoryAttentionQuery;
 use App\Queries\InventoryItemStockAnalyticsQuery;
+use App\Queries\InventorySpendQuery;
 use App\Queries\InventoryTaxonomyQuery;
 use App\Queries\ItemMovementsQuery;
 use App\Queries\ListInventoryItemsQuery;
 use App\Queries\VintageCoverageQuery;
 use App\Services\Inventory\InventoryItemPresenter;
 use App\Support\InventoryItemFilters;
+use App\Support\Period;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -99,6 +105,87 @@ class InventoryController extends Controller
     {
         return Inertia::render('Inventory/Analytics', [
             'analytics' => $query->get(),
+        ]);
+    }
+
+    /**
+     * Inventory check (Figma 271:12639) — the count sheet, grouped the way the
+     * design groups it: a card per category, then bands per group/subcategory.
+     */
+    public function check(InventoryItemPresenter $presenter): Response
+    {
+        $items = InventoryItem::query()
+            ->where('is_active', true)
+            ->orderBy('category')
+            ->orderBy('group')
+            ->orderBy('subcategory')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('Inventory/Check', [
+            'items' => $items->map(fn (InventoryItem $item) => $presenter->item($item))->values()->all(),
+            // Past stocktakes for the design's "History" affordance.
+            'history' => InventoryCheck::query()
+                ->with('performedBy')
+                ->orderByDesc('created_at')
+                ->limit(10)
+                ->get()
+                ->map(fn (InventoryCheck $check) => InventoryCheckData::fromModel($check)->toArray())
+                ->all(),
+        ]);
+    }
+
+    /**
+     * Apply the count sheet. The action writes reconciliation ADJUSTMENT
+     * movements against the server's live stock, so a stale sheet cannot
+     * overwrite a number that moved while it was open.
+     */
+    public function applyCheck(InventoryCheckRequest $request, ApplyInventoryCheckAction $action): RedirectResponse
+    {
+        /** @var list<array{item_id: string, physical_count: string}> $counts */
+        $counts = $request->validated()['items'];
+
+        $results = $action->execute($counts, $request->user());
+        $adjusted = count(array_filter($results, fn (array $r) => $r['difference'] !== '0'));
+
+        return back()->with(
+            'success',
+            $adjusted === 0
+                ? __('Count matched the system — nothing to adjust.')
+                : trans_choice(':count item adjusted|:count items adjusted', $adjusted, ['count' => $adjusted]),
+        );
+    }
+
+    /**
+     * Inventory spend (Figma 386:1673) — capital tied up against what actually
+     * left, per product. Same InventorySpendQuery as the API endpoint.
+     */
+    public function spend(Request $request, InventorySpendQuery $query, InventoryAnalyticsQuery $analytics): Response
+    {
+        $preset = $request->query('preset');
+        $from = $request->query('from');
+        $to = $request->query('to');
+
+        // The design frames this window as "90 days"; an explicit range wins.
+        [$start, $end] = Period::resolve(
+            is_string($preset) && $preset !== '' ? $preset : '90d',
+            is_string($from) ? $from : null,
+            is_string($to) ? $to : null,
+        );
+
+        // "Capital tied up" and "sitting untouched" are portfolio figures, not
+        // window figures, so they come from the analytics query — resolved once,
+        // since it is an expensive multi-aggregate read.
+        $portfolio = $analytics->get();
+
+        return Inertia::render('Inventory/Spend', [
+            'spend' => $query->get($start, $end),
+            'portfolio' => [
+                'value' => $portfolio['value'],
+                'summary' => $portfolio['summary'],
+            ],
+            'filters' => ['preset' => is_string($preset) && $preset !== '' ? $preset : '90d'],
         ]);
     }
 

@@ -332,6 +332,100 @@ class WebInventoryTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_spend_page_renders(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory-spend')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Inventory/Spend')
+                ->has('spend.summary')
+                ->has('spend.daily')
+                ->has('spend.per_product')
+                ->has('portfolio.value')
+                ->where('spend.period.days', 91)
+                ->where('filters.preset', '90d'));
+    }
+
+    public function test_spend_requires_the_financials_capability(): void
+    {
+        $tenant = $this->createTenant();
+        // CELLAR can see inventory but not money.
+        $member = $this->createMember($tenant, [TenantRole::Cellar]);
+
+        $this->actingAs($member)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory-spend')
+            ->assertForbidden();
+    }
+
+    public function test_check_page_lists_active_items(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory-check')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Inventory/Check')
+                ->has('items', 1)
+                ->has('history'));
+    }
+
+    public function test_applying_a_check_writes_a_reconciliation_movement(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1'); // system stock 10
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/inventory-check', [
+                'items' => [['item_id' => $item->getKey(), 'physical_count' => '7']],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->actingAsTenant($tenant);
+        self::assertSame('7.000', (string) $item->refresh()->current_stock);
+
+        // The adjustment must be flagged as a reconciliation so it is excluded
+        // from velocity and cover.
+        $movement = $item->stockMovements()->latest('id')->first();
+        self::assertNotNull($movement);
+        self::assertTrue($movement->is_reconciliation);
+        self::assertSame('-3.000', (string) $movement->quantity);
+        $this->forgetTenant();
+    }
+
+    public function test_applying_a_check_requires_the_manage_capability(): void
+    {
+        $tenant = $this->createTenant();
+        $member = $this->createMember($tenant, [TenantRole::Sales]);
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        $this->actingAs($member)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/inventory-check', ['items' => [['item_id' => $item->getKey(), 'physical_count' => '1']]])
+            ->assertForbidden();
+    }
+
     public function test_shared_props_expose_resolved_capabilities(): void
     {
         [$tenant, $admin] = $this->tenantAndAdmin();

@@ -70,8 +70,8 @@ function reload(overrides: Record<string, unknown>): void {
 const MODULE_TABS: TabItem[] = [
     { label: 'Inventory', href: '/inventory' },
     { label: 'Analytics', href: '/inventory-analytics' },
-    { label: 'Inventory Spend', href: null },
-    { label: 'Inventory Check', href: null },
+    { label: 'Inventory Spend', href: '/inventory-spend' },
+    { label: 'Inventory Check', href: '/inventory-check' },
 ];
 
 /** Mirrors the InventoryCategory enum; the design shows exactly these three. */

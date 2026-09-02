@@ -123,15 +123,18 @@ Backend is complete for the list and detail; the analytics screens need work.
 |---|---|---|---|
 | Inventory (list) | `389:1592` | — | ✅ **done** |
 | Product Detail | `449:1577` | L | ✅ **done** — stock tab; the other 7 tabs render disabled |
-| Item — View (drawer) | `378:1592` | M | Drawer form of the same entity |
+| Item — View (drawer) | `378:1592` | M | ⏳ only screen left in this phase |
 | New Item (drawer) | `317:468` / `322:704` | M | ✅ **done** — delivered by Phase 1 |
 | Bulk Edit | `270:9646` | M | ✅ **done** — a mode of the list, not a route |
-| Inventory Check | `388:1592` | L | Prefer the "rethought" node over `271:12639` |
-| Inventory Spend | `386:1673` | M | `InventorySpendController` exists |
+| Inventory Check | `271:12639` | L | ✅ **done** — built from the exported original; the `388:1592` "rethought" variant is still undecided |
+| Inventory Spend | `386:1673` | M | ✅ **done** — built from cached structure; **no render was exported**, so it needs a visual diff |
 | Analytics | `382:1592` | M | ✅ **done** |
 
 **DoD:** all eight meet the nine criteria; `inventory` leaves `PENDING_MODULES`;
-the Inventory `TabNav` has no disabled tabs left.
+the Inventory tab strip has no disabled tabs left.
+
+**Status: 7 of 8 done.** All four module tabs (Inventory, Analytics, Spend,
+Check) are live and linked. Remaining: the Item — View drawer (`378:1592`).
 
 **Figma budget: 4 calls** — Product Detail, Bulk Edit, Inventory Check, Analytics.
 Spend and the drawers derive from patterns already extracted.

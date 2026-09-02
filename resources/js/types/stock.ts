@@ -115,3 +115,38 @@ export interface InventoryAnalytics {
         approaching: { name: string; stock: string; min: string }[];
     };
 }
+
+/** Mirrors App\Queries\InventorySpendQuery::get(). */
+export interface SpendSummary {
+    units_exited: number;
+    movements: number;
+    cost_value: MoneyValue;
+    revenue: MoneyValue;
+    distinct_skus: number;
+}
+
+export interface SpendProduct {
+    id: string;
+    name: string;
+    sku: string;
+    vintage: string | null;
+    group: string | null;
+    subcategory: string | null;
+    on_hand: number;
+    units_exited: number;
+    prev_units_exited: number;
+    velocity_per_day: string;
+    days_left: number | null;
+    cost_of_exits: MoneyValue | null;
+    revenue: MoneyValue | null;
+    daily?: { date: string; units: number }[];
+}
+
+export interface InventorySpend {
+    period: { from: string; to: string; days: number };
+    previous_period: { from: string; to: string; days: number };
+    summary: SpendSummary;
+    previous: SpendSummary;
+    daily: { date: string; units: number }[];
+    per_product: SpendProduct[];
+}

@@ -86,3 +86,44 @@ export function formatMonth(month: string, locale: string): string {
 
     return new Intl.DateTimeFormat(locale, { month: 'short', year: '2-digit' }).format(date);
 }
+
+/**
+ * The "Signal" column on Inventory Spend (Figma 386:1673).
+ *
+ * The design writes editorial commentary per row ("Largest holding, nothing
+ * out", "Holding 255× its 90-day movement"). These are derived from the data
+ * rather than authored, so a row only ever carries a claim that is true of it.
+ */
+export function spendSignal(row: {
+    on_hand: number;
+    units_exited: number;
+    days_left: number | null;
+}): { text: string; tone: 'warn' | 'muted' } {
+    if (row.units_exited === 0) {
+        return row.on_hand > 0
+            ? { text: 'No exits recorded', tone: 'warn' }
+            : { text: 'No stock, no exits', tone: 'muted' };
+    }
+
+    const ratio = row.on_hand / row.units_exited;
+
+    if (ratio >= 50) {
+        return { text: `Holding ${Math.round(ratio)}× its movement`, tone: 'warn' };
+    }
+
+    if (row.days_left !== null && row.days_left > 365) {
+        return { text: 'Beyond forecast horizon', tone: 'warn' };
+    }
+
+    return { text: 'Usable exit rate', tone: 'muted' };
+}
+
+/** Cover in words, as the design phrases it. */
+export function coverPhrase(daysLeft: number | null, unitsExited: number): string {
+    if (unitsExited === 0) return 'No exits recorded';
+    if (daysLeft === null) return '—';
+    if (daysLeft > 365) return 'Beyond forecast horizon';
+    if (daysLeft > 60) return `About ${Math.round(daysLeft / 30)} months`;
+
+    return `${Math.round(daysLeft)} days`;
+}
