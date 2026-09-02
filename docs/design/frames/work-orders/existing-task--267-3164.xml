@@ -1,0 +1,681 @@
+    <frame id="267:3164" name="Existing Task" x="1553" y="1165" width="1369" height="933">
+      <frame id="267:3167" name="App" x="0" y="0" width="1369" height="933">
+        <frame id="267:3168" name="NavRail" x="0" y="0" width="56" height="933">
+          <frame id="267:3169" name="Container" x="11.5" y="0" width="32" height="48">
+            <frame id="267:3170" name="Container" x="0" y="8" width="32" height="32">
+              <frame id="267:3171" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+          </frame>
+          <frame id="267:3181" name="Navigation" x="7.5" y="48" width="40" height="837">
+            <frame id="267:3182" name="PreviewCardTrigger" x="0" y="8" width="40" height="40">
+              <frame id="267:3183" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="267:3188" name="PreviewCardTrigger" x="0" y="52" width="40" height="40">
+              <frame id="267:3189" name="ShortcutsFlyout" x="0" y="0" width="40" height="40">
+                <frame id="267:3190" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+            </frame>
+            <frame id="267:3193" name="PreviewCardTrigger" x="0" y="96" width="40" height="40">
+              <frame id="267:3194" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="267:3198" name="PreviewCardTrigger" x="0" y="140" width="40" height="40">
+              <frame id="267:3199" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="267:3204" name="PreviewCardTrigger" x="0" y="184" width="40" height="40">
+              <frame id="267:3205" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="267:3210" name="PreviewCardTrigger" x="0" y="228" width="40" height="40">
+              <frame id="267:3211" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="267:3224" name="PreviewCardTrigger" x="0" y="272" width="40" height="40">
+              <frame id="267:3225" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="267:3229" name="PreviewCardTrigger" x="0" y="316" width="40" height="40">
+              <frame id="267:3230" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="267:3235" name="PreviewCardTrigger" x="0" y="360" width="40" height="40">
+              <frame id="267:3236" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+          </frame>
+          <frame id="267:3239" name="Container" x="7.5" y="885" width="40" height="48">
+            <frame id="267:3240" name="Button" x="0" y="4.5" width="40" height="40">
+              <frame id="267:3241" name="AvatarRoot" x="4" y="4" width="32" height="32">
+                <frame id="267:3242" name="AvatarFallback" x="0" y="0" width="32" height="32">
+                  <text id="267:3243" name="FD" x="8" y="8" width="16" height="16" />
+                </frame>
+                <frame id="267:3245" name="Text" x="0" y="0" width="32" height="32" />
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+        <frame id="267:3246" name="Container" x="56" y="0" width="1313" height="933">
+          <frame id="267:3247" name="Header" x="0" y="0" width="1313" height="48">
+            <frame id="267:3248" name="Button" x="16" y="7.5" width="32" height="32">
+              <frame id="267:3249" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+            <frame id="267:3252" name="Separator" x="60" y="0" width="1" height="20" />
+            <frame id="267:3280" name="Container:align" x="73" y="7.5" width="1224" height="32">
+              <frame id="267:3253" name="Container" x="832" y="0" width="392" height="32">
+                <frame id="267:3254" name="Container" x="0" y="0" width="288" height="32">
+                  <frame id="267:3255" name="Icon" x="10" y="9" width="14" height="14" />
+                  <frame id="267:3258" name="FieldControl" x="0" y="0" width="288" height="32">
+                    <text id="267:3259" name="Search orders, SKUs, partners…" x="33" y="9" width="214" height="14" />
+                  </frame>
+                  <frame id="267:3260" name="Kbd" x="255.7734375" y="6" width="25" height="20">
+                    <text id="267:3261" name="⌘K" x="5" y="2" width="15" height="16" />
+                  </frame>
+                </frame>
+                <frame id="267:3263" name="Container" x="296" y="0" width="96" height="32">
+                  <frame id="267:3264" name="Button" x="0" y="0" width="32" height="32">
+                    <frame id="267:3265" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="267:3269" name="Button" x="32" y="0" width="32" height="32">
+                    <frame id="267:3270" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="267:3275" name="Button" x="64" y="0" width="32" height="32">
+                    <frame id="267:3276" name="Icon" x="8" y="8" width="16" height="16" />
+                    <frame id="267:3279" name="App" x="19" y="7" width="6" height="6" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="267:3281" name="Main Content" x="0" y="48" width="1313" height="885">
+            <frame id="267:3793" name="Container:margin" x="0" y="0" width="1313" height="604.328125">
+              <frame id="267:3283" name="WorkOrdersPage" x="16.5" y="0" width="1280" height="604.328125">
+                <frame id="267:3284" name="Container" x="32" y="24" width="1216" height="46">
+                  <frame id="267:3285" name="Container" x="0" y="0" width="118.7421875" height="46">
+                    <frame id="267:3286" name="Heading 1" x="0" y="0" width="118.7421875" height="28">
+                      <text id="267:3287" name="Work Orders" x="0" y="0" width="114" height="28" />
+                    </frame>
+                    <frame id="267:3289" name="Paragraph" x="0" y="28" width="118.7421875" height="18">
+                      <text id="267:3290" name="3 boards · 17 tasks" x="0" y="2" width="98" height="16" />
+                    </frame>
+                  </frame>
+                  <frame id="267:3293" name="Container" x="803" y="0" width="413" height="28">
+                    <frame id="267:3294" name="Button" x="0" y="0" width="106" height="28">
+                      <text id="267:3295" name="Recent Activity" x="11" y="6" width="84" height="16" />
+                    </frame>
+                    <frame id="267:3297" name="Button" x="114" y="0" width="91" height="28">
+                      <frame id="267:3298" name="Icon" x="11" y="7" width="14" height="14" />
+                      <text id="267:3300" name="Favorited" x="29" y="6" width="51" height="16" />
+                    </frame>
+                    <frame id="267:3302" name="Button" x="213" y="0" width="100" height="28">
+                      <frame id="267:3303" name="Icon" x="11" y="7" width="14" height="14" />
+                      <text id="267:3306" name="New Board" x="29" y="6" width="60" height="16" />
+                    </frame>
+                    <frame id="267:3308" name="Button" x="321" y="0" width="92" height="28">
+                      <frame id="267:3309" name="Icon" x="11" y="7" width="14" height="14" />
+                      <text id="267:3312" name="New Task" x="29" y="6" width="52" height="16" />
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="267:3789" name="Container:margin" x="32" y="70" width="1216" height="47.328125">
+                  <frame id="267:3314" name="Container" x="0" y="16" width="1216" height="31.328125">
+                    <frame id="267:3315" name="Button" x="0" y="-0.3359375" width="161" height="30">
+                      <frame id="267:3316" name="Icon" x="12" y="9" width="12" height="12" />
+                      <text id="267:3318" name="Cellar Operations" x="30" y="7" width="95" height="16" />
+                      <frame id="267:3320" name="Text" x="131" y="6" width="18" height="18">
+                        <text id="267:3321" name="7" x="6" y="2" width="6" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="267:3323" name="Button" x="165" y="-0.3359375" width="180" height="30">
+                      <text id="267:3324" name="Vineyard &amp; Maintenance" x="12" y="7" width="132" height="16" />
+                      <frame id="267:3326" name="Text" x="150" y="6" width="18" height="18">
+                        <text id="267:3327" name="6" x="6" y="2" width="6" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="267:3329" name="Button" x="349" y="-0.3359375" width="159" height="30">
+                      <text id="267:3330" name="Events &amp; Hospitality" x="12" y="7" width="110" height="16" />
+                      <frame id="267:3332" name="Text" x="128" y="6" width="19" height="18">
+                        <text id="267:3333" name="4" x="6" y="2" width="7" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="267:3335" name="Button" x="512" y="0.6640625" width="100" height="28">
+                      <frame id="267:3336" name="Icon" x="11" y="7" width="14" height="14" />
+                      <text id="267:3339" name="New board" x="29" y="6" width="60" height="16" />
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="267:3341" name="Container" x="32" y="117.328125" width="1216" height="44">
+                  <frame id="267:3342" name="Container" x="0" y="12" width="208" height="32">
+                    <frame id="267:3343" name="Icon" x="10" y="9" width="14" height="14" />
+                    <frame id="267:3346" name="FieldControl" x="0" y="0" width="208" height="32">
+                      <text id="267:3347" name="Search work orders…" x="33" y="9" width="146" height="14" />
+                    </frame>
+                  </frame>
+                  <frame id="267:3348" name="Separator" x="216" y="12" width="1" height="24" />
+                  <frame id="267:3349" name="Button" x="225" y="14" width="73" height="28">
+                    <text id="267:3350" name="Due soon" x="11" y="6" width="51" height="16" />
+                  </frame>
+                  <frame id="267:3352" name="Button" x="306" y="14" width="71" height="28">
+                    <text id="267:3353" name="My Tasks" x="11" y="6" width="49" height="16" />
+                  </frame>
+                  <frame id="267:3355" name="Button" x="385" y="14" width="75" height="28">
+                    <text id="267:3356" name="Recurring" x="11" y="6" width="53" height="16" />
+                  </frame>
+                </frame>
+                <frame id="267:3791" name="Container:margin" x="32" y="161.328125" width="1216" height="419">
+                  <frame id="267:3358" name="Container" x="0" y="16" width="1216" height="403">
+                    <frame id="267:3359" name="KanbanColumn" x="0" y="0" width="272" height="379">
+                      <frame id="267:3360" name="Container" x="8" y="8" width="256" height="32">
+                        <frame id="267:3361" name="Icon" x="4" y="5" width="14" height="14" />
+                        <frame id="267:3368" name="Text" x="24" y="4" width="174" height="16">
+                          <text id="267:3369" name="This Week" x="0" y="0" width="56" height="16" />
+                        </frame>
+                        <frame id="267:3371" name="Text" x="204" y="2.5" width="18" height="19">
+                          <text id="267:3372" name="2" x="6" y="2" width="6" height="15" />
+                        </frame>
+                        <frame id="267:3374" name="Button" x="228" y="0" width="24" height="24">
+                          <frame id="267:3375" name="Icon" x="5" y="5" width="14" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="267:3379" name="Container" x="8" y="40" width="256" height="295">
+                        <frame id="267:3380" name="KanbanCard" x="0" y="0" width="256" height="140">
+                          <frame id="267:3381" name="Container" x="13" y="13" width="230" height="24">
+                            <frame id="267:3387" name="Button:margin" x="0" y="0" width="16" height="18">
+                              <frame id="267:3382" name="Button" x="0" y="2" width="16" height="16" />
+                            </frame>
+                            <frame id="267:3383" name="Paragraph" x="24" y="0" width="178" height="17">
+                              <text id="267:3384" name="Filter and rack Malvazija 2024" x="0" y="0" width="161" height="17" />
+                            </frame>
+                            <frame id="267:3386" name="Container" x="210" y="0" width="20" height="24" />
+                          </frame>
+                          <frame id="267:3415" name="Container:margin" x="13" y="37" width="230" height="27">
+                            <frame id="267:3388" name="Container" x="0" y="8" width="230" height="19">
+                              <frame id="267:3389" name="Text" x="0" y="0" width="49" height="19">
+                                <text id="267:3390" name="CELLAR" x="6" y="2" width="37" height="15" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="267:3416" name="Container:margin" x="13" y="64" width="230" height="23">
+                            <frame id="267:3392" name="Container" x="0" y="8" width="230" height="15">
+                              <frame id="267:3393" name="Icon" x="0" y="1.5" width="12" height="12" />
+                              <frame id="267:3398" name="Text" x="16" y="0" width="72" height="15">
+                                <text id="267:3399" name="12 Aug – 14 Aug" x="0" y="0" width="72" height="15" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="267:3417" name="Container:margin" x="13" y="87" width="230" height="40">
+                            <frame id="267:3401" name="Container" x="0" y="8" width="230" height="32">
+                              <frame id="267:3402" name="Container" x="0" y="8.5" width="55.4296875" height="15">
+                                <frame id="267:3403" name="Icon" x="0" y="1.5" width="12" height="12" />
+                                <frame id="267:3406" name="Text" x="16" y="0" width="39.4296875" height="15">
+                                  <text id="267:3407" name="Tank A-2" x="0" y="0" width="40" height="15" />
+                                </frame>
+                              </frame>
+                              <frame id="267:3409" name="Container" x="206" y="0" width="24" height="32">
+                                <frame id="267:3411" name="SelectValue" x="0" y="4" width="24" height="24">
+                                  <text id="267:3413" name="MB" x="4" y="5" width="16" height="14" />
+                                </frame>
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="267:3418" name="KanbanCard" x="0" y="146" width="256" height="149">
+                          <frame id="267:3419" name="Container" x="14" y="13" width="229" height="33">
+                            <frame id="267:3425" name="Button:margin" x="0" y="0" width="16" height="18">
+                              <frame id="267:3420" name="Button" x="0" y="2" width="16" height="16" />
+                            </frame>
+                            <frame id="267:3421" name="Paragraph" x="24" y="0" width="177" height="33">
+                              <text id="267:3422" name="Barrique cleaning — Plavac batch" x="0" y="0" width="177" height="33" />
+                            </frame>
+                            <frame id="267:3424" name="Container" x="209" y="0" width="20" height="24" />
+                          </frame>
+                          <frame id="267:3456" name="Container:margin" x="14" y="46" width="229" height="27">
+                            <frame id="267:3426" name="Container" x="0" y="8" width="229" height="19">
+                              <frame id="267:3427" name="Text" x="0" y="0" width="49" height="19">
+                                <text id="267:3428" name="CELLAR" x="6" y="2" width="37" height="15" />
+                              </frame>
+                              <frame id="267:3430" name="Text" x="53" y="0" width="38" height="19">
+                                <text id="267:3431" name="HIGH" x="6" y="2" width="26" height="15" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="267:3457" name="Container:margin" x="14" y="73" width="229" height="23">
+                            <frame id="267:3433" name="Container" x="0" y="8" width="229" height="15">
+                              <frame id="267:3434" name="Icon" x="0" y="1.5" width="12" height="12" />
+                              <frame id="267:3439" name="Text" x="16" y="0" width="72" height="15">
+                                <text id="267:3440" name="12 Aug – 13 Aug" x="0" y="0" width="72" height="15" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="267:3458" name="Container:margin" x="14" y="96" width="229" height="40">
+                            <frame id="267:3442" name="Container" x="0" y="8" width="229" height="32">
+                              <frame id="267:3443" name="Container" x="0" y="8.5" width="62.296875" height="15">
+                                <frame id="267:3444" name="Icon" x="0" y="1.5" width="12" height="12" />
+                                <frame id="267:3447" name="Text" x="16" y="0" width="46.296875" height="15">
+                                  <text id="267:3448" name="Barrel 042" x="0" y="0" width="47" height="15" />
+                                </frame>
+                              </frame>
+                              <frame id="267:3450" name="Container" x="205" y="0" width="24" height="32">
+                                <frame id="267:3452" name="SelectValue" x="0" y="4" width="24" height="24">
+                                  <text id="267:3454" name="TH" x="4.5" y="5" width="15" height="14" />
+                                </frame>
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="267:3465" name="Button:margin" x="8" y="335" width="256" height="36">
+                        <frame id="267:3459" name="Button" x="0" y="8" width="256" height="28">
+                          <frame id="267:3460" name="Icon" x="4" y="7" width="14" height="14" />
+                          <text id="267:3463" name="Add a card" x="24" y="6" width="58" height="16" />
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="267:3466" name="KanbanColumn" x="284" y="0" width="272" height="379">
+                      <frame id="267:3467" name="Container" x="8" y="8" width="256" height="32">
+                        <frame id="267:3468" name="Icon" x="4" y="5" width="14" height="14" />
+                        <frame id="267:3475" name="Text" x="24" y="4" width="174" height="16">
+                          <text id="267:3476" name="To Do" x="0" y="0" width="32" height="16" />
+                        </frame>
+                        <frame id="267:3478" name="Text" x="204" y="2.5" width="18" height="19">
+                          <text id="267:3479" name="2" x="6" y="2" width="6" height="15" />
+                        </frame>
+                        <frame id="267:3481" name="Button" x="228" y="0" width="24" height="24">
+                          <frame id="267:3482" name="Icon" x="5" y="5" width="14" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="267:3486" name="Container" x="8" y="40" width="256" height="286">
+                        <frame id="267:3487" name="KanbanCard" x="0" y="0" width="256" height="140">
+                          <frame id="267:3488" name="Container" x="13" y="13" width="230" height="24">
+                            <frame id="267:3494" name="Button:margin" x="0" y="0" width="16" height="18">
+                              <frame id="267:3489" name="Button" x="0" y="2" width="16" height="16" />
+                            </frame>
+                            <frame id="267:3490" name="Paragraph" x="24" y="0" width="178" height="17">
+                              <text id="267:3491" name="Sulfite addition — Teran 2025" x="0" y="0" width="163" height="17" />
+                            </frame>
+                            <frame id="267:3493" name="Container" x="210" y="0" width="20" height="24" />
+                          </frame>
+                          <frame id="267:3523" name="Container:margin" x="13" y="37" width="230" height="27">
+                            <frame id="267:3495" name="Container" x="0" y="8" width="230" height="19">
+                              <frame id="267:3496" name="Text" x="0" y="0" width="49" height="19">
+                                <text id="267:3497" name="CELLAR" x="6" y="2" width="37" height="15" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="267:3524" name="Container:margin" x="13" y="64" width="230" height="23">
+                            <frame id="267:3499" name="Container" x="0" y="8" width="230" height="15">
+                              <frame id="267:3500" name="Icon" x="0" y="1.5" width="12" height="12" />
+                              <frame id="267:3505" name="Text" x="16" y="0" width="73" height="15">
+                                <text id="267:3506" name="18 Aug – 18 Aug" x="0" y="0" width="73" height="15" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="267:3525" name="Container:margin" x="13" y="87" width="230" height="40">
+                            <frame id="267:3508" name="Container" x="0" y="8" width="230" height="32">
+                              <frame id="267:3509" name="Container" x="0" y="8.5" width="53.9765625" height="15">
+                                <frame id="267:3510" name="Icon" x="0" y="1.5" width="12" height="12" />
+                                <frame id="267:3513" name="Text" x="16" y="0" width="37.9765625" height="15">
+                                  <text id="267:3514" name="Tank A-1" x="0" y="0" width="38" height="15" />
+                                </frame>
+                              </frame>
+                              <frame id="267:3516" name="Container" x="206" y="0" width="24" height="32">
+                                <frame id="267:3518" name="SelectValue" x="0" y="4" width="24" height="24">
+                                  <frame id="267:3519" name="KanbanCard" x="0" y="0" width="24" height="24">
+                                    <frame id="267:3520" name="Icon" x="6" y="6" width="12" height="12" />
+                                  </frame>
+                                </frame>
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="267:3526" name="KanbanCard" x="0" y="146" width="256" height="140">
+                          <frame id="267:3527" name="Container" x="13" y="13" width="230" height="24">
+                            <frame id="267:3533" name="Button:margin" x="0" y="0" width="16" height="18">
+                              <frame id="267:3528" name="Button" x="0" y="2" width="16" height="16" />
+                            </frame>
+                            <frame id="267:3529" name="Paragraph" x="24" y="0" width="178" height="17">
+                              <text id="267:3530" name="Cold stabilization — Rosé batch" x="0" y="0" width="174" height="17" />
+                            </frame>
+                            <frame id="267:3532" name="Container" x="210" y="0" width="20" height="24" />
+                          </frame>
+                          <frame id="267:3559" name="Container:margin" x="13" y="37" width="230" height="27">
+                            <frame id="267:3534" name="Container" x="0" y="8" width="230" height="19">
+                              <frame id="267:3535" name="Text" x="0" y="0" width="49" height="19">
+                                <text id="267:3536" name="CELLAR" x="6" y="2" width="37" height="15" />
+                              </frame>
+                              <frame id="267:3538" name="Text" x="53" y="0" width="71" height="19">
+                                <text id="267:3539" name="↻ Recurring" x="6" y="2" width="59" height="15" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="267:3560" name="Container:margin" x="13" y="64" width="230" height="23">
+                            <frame id="267:3541" name="Container" x="0" y="8" width="230" height="15">
+                              <frame id="267:3542" name="Icon" x="0" y="1.5" width="12" height="12" />
+                              <frame id="267:3547" name="Text" x="16" y="0" width="76" height="15">
+                                <text id="267:3548" name="20 Aug – 30 Aug" x="0" y="0" width="76" height="15" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="267:3561" name="Container:margin" x="13" y="87" width="230" height="40">
+                            <frame id="267:3550" name="Container" x="0" y="8" width="230" height="32">
+                              <frame id="267:3551" name="Container" x="0" y="15.999950408935547" width="0.00009999999747378752" height="0.00009999999747378752" />
+                              <frame id="267:3552" name="Container" x="206" y="0" width="24" height="32">
+                                <frame id="267:3554" name="SelectValue" x="0" y="4" width="24" height="24">
+                                  <frame id="267:3555" name="KanbanCard" x="0" y="0" width="24" height="24">
+                                    <frame id="267:3556" name="Icon" x="6" y="6" width="12" height="12" />
+                                  </frame>
+                                </frame>
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="267:3568" name="Button:margin" x="8" y="326" width="256" height="36">
+                        <frame id="267:3562" name="Button" x="0" y="8" width="256" height="28">
+                          <frame id="267:3563" name="Icon" x="4" y="7" width="14" height="14" />
+                          <text id="267:3566" name="Add a card" x="24" y="6" width="58" height="16" />
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="267:3569" name="KanbanColumn" x="568" y="0" width="272" height="379">
+                      <frame id="267:3570" name="Container" x="8" y="8" width="256" height="32">
+                        <frame id="267:3571" name="Icon" x="4" y="5" width="14" height="14" />
+                        <frame id="267:3578" name="Text" x="24" y="4" width="174" height="16">
+                          <text id="267:3579" name="In Progress" x="0" y="0" width="61" height="16" />
+                        </frame>
+                        <frame id="267:3581" name="Text" x="204" y="2.5" width="18" height="19">
+                          <text id="267:3582" name="2" x="6" y="2" width="6" height="15" />
+                        </frame>
+                        <frame id="267:3584" name="Button" x="228" y="0" width="24" height="24">
+                          <frame id="267:3585" name="Icon" x="5" y="5" width="14" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="267:3589" name="Container" x="8" y="40" width="256" height="295">
+                        <frame id="267:3590" name="KanbanCard" x="0" y="0" width="256" height="140">
+                          <frame id="267:3591" name="Container" x="14" y="13" width="229" height="24">
+                            <frame id="267:3597" name="Button:margin" x="0" y="0" width="16" height="18">
+                              <frame id="267:3592" name="Button" x="0" y="2" width="16" height="16" />
+                            </frame>
+                            <frame id="267:3593" name="Paragraph" x="24" y="0" width="177" height="17">
+                              <text id="267:3594" name="Bottling run — Grk 2022" x="0" y="0" width="133" height="17" />
+                            </frame>
+                            <frame id="267:3596" name="Container" x="209" y="0" width="20" height="24" />
+                          </frame>
+                          <frame id="267:3631" name="Container:margin" x="14" y="37" width="229" height="27">
+                            <frame id="267:3598" name="Container" x="0" y="8" width="229" height="19">
+                              <frame id="267:3599" name="Text" x="0" y="0" width="49" height="19">
+                                <text id="267:3600" name="CELLAR" x="6" y="2" width="37" height="15" />
+                              </frame>
+                              <frame id="267:3602" name="Text" x="53" y="0" width="53" height="19">
+                                <text id="267:3603" name="URGENT" x="6" y="2" width="41" height="15" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="267:3632" name="Container:margin" x="14" y="64" width="229" height="23">
+                            <frame id="267:3605" name="Container" x="0" y="8" width="229" height="15">
+                              <frame id="267:3606" name="Icon" x="0" y="1.5" width="12" height="12" />
+                              <frame id="267:3611" name="Text" x="16" y="0" width="71" height="15">
+                                <text id="267:3612" name="10 Aug – 11 Aug" x="0" y="0" width="71" height="15" />
+                              </frame>
+                              <frame id="267:3614" name="Text" x="91" y="0" width="44" height="15">
+                                <text id="267:3615" name="· Overdue" x="0" y="0" width="44" height="15" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="267:3633" name="Container:margin" x="14" y="87" width="229" height="40">
+                            <frame id="267:3617" name="Container" x="0" y="8" width="229" height="32">
+                              <frame id="267:3618" name="Container" x="0" y="8.5" width="41.15625" height="15">
+                                <frame id="267:3619" name="Icon" x="0" y="1.5" width="12" height="12" />
+                                <frame id="267:3622" name="Text" x="16" y="0" width="25.15625" height="15">
+                                  <text id="267:3623" name="Line 1" x="0" y="0" width="26" height="15" />
+                                </frame>
+                              </frame>
+                              <frame id="267:3625" name="Container" x="205" y="0" width="24" height="32">
+                                <frame id="267:3627" name="SelectValue" x="0" y="4" width="24" height="24">
+                                  <text id="267:3629" name="MB" x="4" y="5" width="16" height="14" />
+                                </frame>
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="267:3634" name="KanbanCard" x="0" y="146" width="256" height="149">
+                          <frame id="267:3635" name="Container" x="13" y="13" width="230" height="33">
+                            <frame id="267:3641" name="Button:margin" x="0" y="0" width="16" height="18">
+                              <frame id="267:3636" name="Button" x="0" y="2" width="16" height="16" />
+                            </frame>
+                            <frame id="267:3637" name="Paragraph" x="24" y="0" width="178" height="33">
+                              <text id="267:3638" name="Oak chip addition — Plavac 2023" x="0" y="0" width="178" height="33" />
+                            </frame>
+                            <frame id="267:3640" name="Container" x="210" y="0" width="20" height="24" />
+                          </frame>
+                          <frame id="267:3669" name="Container:margin" x="13" y="46" width="230" height="27">
+                            <frame id="267:3642" name="Container" x="0" y="8" width="230" height="19">
+                              <frame id="267:3643" name="Text" x="0" y="0" width="49" height="19">
+                                <text id="267:3644" name="CELLAR" x="6" y="2" width="37" height="15" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="267:3670" name="Container:margin" x="13" y="73" width="230" height="23">
+                            <frame id="267:3646" name="Container" x="0" y="8" width="230" height="15">
+                              <frame id="267:3647" name="Icon" x="0" y="1.5" width="12" height="12" />
+                              <frame id="267:3652" name="Text" x="16" y="0" width="70" height="15">
+                                <text id="267:3653" name="11 Aug – 13 Aug" x="0" y="0" width="70" height="15" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="267:3671" name="Container:margin" x="13" y="96" width="230" height="40">
+                            <frame id="267:3655" name="Container" x="0" y="8" width="230" height="32">
+                              <frame id="267:3656" name="Container" x="0" y="8.5" width="54.765625" height="15">
+                                <frame id="267:3657" name="Icon" x="0" y="1.5" width="12" height="12" />
+                                <frame id="267:3660" name="Text" x="16" y="0" width="38.765625" height="15">
+                                  <text id="267:3661" name="Tank B-2" x="0" y="0" width="39" height="15" />
+                                </frame>
+                              </frame>
+                              <frame id="267:3663" name="Container" x="206" y="0" width="24" height="32">
+                                <frame id="267:3665" name="SelectValue" x="0" y="4" width="24" height="24">
+                                  <text id="267:3667" name="AK" x="4.5" y="5" width="15" height="14" />
+                                </frame>
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="267:3678" name="Button:margin" x="8" y="335" width="256" height="36">
+                        <frame id="267:3672" name="Button" x="0" y="8" width="256" height="28">
+                          <frame id="267:3673" name="Icon" x="4" y="7" width="14" height="14" />
+                          <text id="267:3676" name="Add a card" x="24" y="6" width="58" height="16" />
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="267:3679" name="KanbanColumn" x="852" y="0" width="272" height="379">
+                      <frame id="267:3680" name="Container" x="8" y="8" width="256" height="32">
+                        <frame id="267:3681" name="Icon" x="4" y="5" width="14" height="14" />
+                        <frame id="267:3688" name="Text" x="24" y="4" width="175" height="16">
+                          <text id="267:3689" name="Done" x="0" y="0" width="29" height="16" />
+                        </frame>
+                        <frame id="267:3691" name="Text" x="205" y="2.5" width="17" height="19">
+                          <text id="267:3692" name="1" x="6" y="2" width="5" height="15" />
+                        </frame>
+                        <frame id="267:3694" name="Button" x="228" y="0" width="24" height="24">
+                          <frame id="267:3695" name="Icon" x="5" y="5" width="14" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="267:3700" name="KanbanCard" x="8" y="40" width="256" height="140">
+                        <frame id="267:3701" name="Container" x="13" y="13" width="230" height="24">
+                          <frame id="267:3709" name="Button:margin" x="0" y="0" width="16" height="18">
+                            <frame id="267:3702" name="Button" x="0" y="2" width="16" height="16">
+                              <frame id="267:3703" name="Icon" x="3" y="3" width="10" height="10" />
+                            </frame>
+                          </frame>
+                          <frame id="267:3705" name="Paragraph" x="24" y="0" width="178" height="17">
+                            <text id="267:3706" name="QC lab analysis — Pošip 2024" x="0" y="0" width="163" height="17" />
+                          </frame>
+                          <frame id="267:3708" name="Container" x="210" y="0" width="20" height="24" />
+                        </frame>
+                        <frame id="267:3731" name="Container:margin" x="13" y="37" width="230" height="27">
+                          <frame id="267:3710" name="Container" x="0" y="8" width="230" height="19">
+                            <frame id="267:3711" name="Text" x="0" y="0" width="49" height="19">
+                              <text id="267:3712" name="CELLAR" x="6" y="2" width="37" height="15" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="267:3732" name="Container:margin" x="13" y="64" width="230" height="23">
+                          <frame id="267:3714" name="Container" x="0" y="8" width="230" height="15">
+                            <frame id="267:3715" name="Icon" x="0" y="1.5" width="12" height="12" />
+                            <frame id="267:3720" name="Text" x="16" y="0" width="62" height="15">
+                              <text id="267:3721" name="1 Aug – 5 Aug" x="0" y="0" width="62" height="15" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="267:3733" name="Container:margin" x="13" y="87" width="230" height="40">
+                          <frame id="267:3723" name="Container" x="0" y="8" width="230" height="32">
+                            <frame id="267:3724" name="Container" x="0" y="15.999950408935547" width="0.00009999999747378752" height="0.00009999999747378752" />
+                            <frame id="267:3725" name="Container" x="206" y="0" width="24" height="32">
+                              <frame id="267:3727" name="SelectValue" x="0" y="4" width="24" height="24">
+                                <text id="267:3729" name="IP" x="7" y="5" width="10" height="14" />
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="267:3740" name="Button:margin" x="8" y="180" width="256" height="36">
+                        <frame id="267:3734" name="Button" x="0" y="8" width="256" height="28">
+                          <frame id="267:3735" name="Icon" x="4" y="7" width="14" height="14" />
+                          <text id="267:3738" name="Add a card" x="24" y="6" width="58" height="16" />
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="267:3741" name="Button" x="1136" y="0" width="200" height="42">
+                      <frame id="267:3742" name="Icon" x="17" y="14" width="14" height="14" />
+                      <text id="267:3745" name="Add another list" x="37" y="13" width="86" height="16" />
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+      <frame id="267:3795" name="DialogBackdrop" x="0" y="0" width="1369" height="933">
+        <frame id="335:4964" name="View Task — Add details open" x="879" y="10" width="480" height="1208">
+          <frame id="335:4965" name="FormHeader" x="0" y="0" width="480" height="68">
+            <text id="335:4966" name="Filter and rack Malvazija 2024" x="24" y="22" width="363" height="24" />
+            <frame id="335:4967" name="Button" x="401" y="20" width="28" height="28">
+              <instance id="335:4968" name="lucide/ellipsis" x="6" y="6" width="16" height="16" />
+            </frame>
+            <text id="335:4969" name="✕" x="443" y="24" width="13" height="20" />
+          </frame>
+          <frame id="335:4970" name="Separator" x="0" y="68" width="480" height="1" />
+          <frame id="335:4971" name="MetaStrip" x="0" y="69" width="480" height="80">
+            <frame id="335:4972" name="Container" x="24" y="16" width="125" height="22">
+              <instance id="335:4973" name="Badge" x="0" y="0" width="54" height="22" />
+              <instance id="335:4974" name="Badge" x="60" y="0" width="65" height="22" />
+            </frame>
+            <text id="335:4975" name="Created by Filip Demo · 10 Aug 2026, 09:00 · Updated 12 Aug 2026, 08:00" x="24" y="48" width="401" height="16" />
+          </frame>
+          <frame id="335:4976" name="FormBody" x="0" y="149" width="480" height="974">
+            <frame id="335:4977" name="TaskSheet" x="24" y="0" width="432" height="49">
+              <frame id="335:4978" name="Frame 10" x="0" y="10" width="278" height="28">
+                <frame id="335:4979" name="Button" x="0" y="0" width="78" height="28">
+                  <text id="335:4980" name="This Week" x="11" y="6" width="56" height="16" />
+                </frame>
+                <frame id="335:4981" name="Button" x="82" y="0" width="54" height="28">
+                  <text id="335:4982" name="To Do" x="11" y="6" width="32" height="16" />
+                </frame>
+                <frame id="335:4983" name="Button" x="140" y="0" width="83" height="28">
+                  <text id="335:4984" name="In Progress" x="11" y="6" width="61" height="16" />
+                </frame>
+                <frame id="335:4985" name="Button" x="227" y="0" width="51" height="28">
+                  <text id="335:4986" name="Done" x="11" y="6" width="29" height="16" />
+                </frame>
+              </frame>
+            </frame>
+            <instance id="335:4987" name="Field" x="24" y="65" width="432" height="62" />
+            <instance id="335:4988" name="Field" x="24" y="143" width="432" height="106" />
+            <frame id="335:4989" name="FieldRow" x="24" y="265" width="432" height="62">
+              <instance id="335:4990" name="Field" x="0" y="0" width="208" height="62" />
+              <instance id="335:4991" name="Field" x="224" y="0" width="208" height="62" />
+            </frame>
+            <frame id="335:4992" name="FieldRow" x="24" y="343" width="432" height="62">
+              <instance id="335:4993" name="Field" x="0" y="0" width="208" height="62" />
+              <instance id="335:4994" name="Field" x="224" y="0" width="208" height="62" />
+            </frame>
+            <instance id="335:4995" name="Field" x="24" y="421" width="432" height="62" />
+            <frame id="335:4996" name="Separator" x="24" y="499" width="432" height="1" />
+            <frame id="335:4997" name="Disclosure" x="24" y="516" width="432" height="267">
+              <frame id="335:4998" name="DisclosureHeader" x="0" y="0" width="432" height="40">
+                <text id="335:4999" name="Add details" x="12" y="10" width="382" height="20" />
+                <text id="335:5000" name="Hide" x="394" y="12" width="26" height="16" />
+              </frame>
+              <frame id="335:5001" name="Separator" x="0" y="40" width="432" height="1" />
+              <frame id="335:5002" name="DisclosureBody" x="0" y="41" width="432" height="226">
+                <instance id="335:5003" name="Field" x="12" y="16" width="408" height="62" />
+                <instance id="335:5004" name="Field" x="12" y="94" width="408" height="62" />
+                <frame id="335:5005" name="SwitchRow" x="12" y="172" width="408" height="38">
+                  <frame id="335:5006" name="Container" x="0" y="0" width="344" height="38">
+                    <text id="335:5007" name="Recurring work order" x="0" y="0" width="133" height="20" />
+                    <text id="335:5008" name="Repeats on a schedule once completed." x="0" y="22" width="344" height="16" />
+                  </frame>
+                  <instance id="335:5009" name="Switch" x="356" y="0" width="52" height="24" />
+                </frame>
+              </frame>
+            </frame>
+            <frame id="335:5010" name="Container:margin" x="24" y="799" width="432" height="151">
+              <frame id="335:5011" name="Container" x="0" y="0" width="432" height="151">
+                <frame id="335:5012" name="Paragraph" x="17" y="17" width="398" height="22">
+                  <text id="335:5013" name="Information" x="0" y="0" width="398" height="22" />
+                </frame>
+                <frame id="335:5014" name="Container:margin" x="17" y="39" width="398" height="95">
+                  <frame id="335:5015" name="Container" x="0" y="12" width="398" height="83">
+                    <frame id="335:5016" name="Container" x="0" y="0" width="120" height="33">
+                      <frame id="335:5017" name="Paragraph" x="0" y="0" width="120" height="14">
+                        <text id="335:5018" name="Created by" x="0" y="0" width="60" height="14" />
+                      </frame>
+                      <frame id="335:5019" name="Paragraph" x="0" y="18" width="120" height="16">
+                        <text id="335:5020" name="Filip Demo" x="0" y="0" width="67" height="16" />
+                      </frame>
+                    </frame>
+                    <frame id="335:5021" name="Container" x="136" y="0" width="120" height="33">
+                      <frame id="335:5022" name="Paragraph" x="0" y="0" width="120" height="14">
+                        <text id="335:5023" name="Assigned to" x="0" y="0" width="64" height="14" />
+                      </frame>
+                      <frame id="335:5024" name="Paragraph" x="0" y="18" width="120" height="16">
+                        <text id="335:5025" name="Marko Blažević" x="0" y="0" width="94" height="16" />
+                      </frame>
+                    </frame>
+                    <frame id="335:5026" name="Container" x="272" y="0" width="120" height="33">
+                      <frame id="335:5027" name="Paragraph" x="0" y="0" width="120" height="14">
+                        <text id="335:5028" name="Due Date" x="0" y="0" width="50" height="14" />
+                      </frame>
+                      <frame id="335:5029" name="Paragraph" x="0" y="18" width="120" height="16">
+                        <text id="335:5030" name="14 Aug 2026" x="0" y="0" width="80" height="16" />
+                      </frame>
+                    </frame>
+                    <frame id="335:5031" name="Frame 14" x="0" y="49" width="256" height="34">
+                      <frame id="335:5032" name="Container" x="0" y="0" width="120" height="34">
+                        <frame id="335:5033" name="Paragraph" x="0" y="0" width="120" height="14">
+                          <text id="335:5034" name="Created" x="0" y="0" width="44" height="14" />
+                        </frame>
+                        <frame id="335:5035" name="Paragraph" x="0" y="18" width="120" height="16">
+                          <text id="335:5036" name="10 Aug 2026, 09:00" x="0" y="0" width="125" height="16" />
+                        </frame>
+                      </frame>
+                      <frame id="335:5037" name="Container" x="136" y="0" width="120" height="34">
+                        <frame id="335:5038" name="Paragraph" x="0" y="0" width="120" height="14">
+                          <text id="335:5039" name="Updated" x="0" y="0" width="47" height="14" />
+                        </frame>
+                        <frame id="335:5040" name="Paragraph" x="0" y="18" width="120" height="16">
+                          <text id="335:5041" name="12 Aug 2026, 08:00" x="0" y="0" width="125" height="16" />
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="335:5042" name="Separator" x="0" y="1123" width="480" height="1" />
+          <frame id="335:5043" name="FormFooter" x="0" y="1124" width="480" height="84">
+            <frame id="335:5044" name="Button" x="269" y="24" width="68" height="36">
+              <text id="335:5045" name="Cancel" x="12" y="8" width="44" height="20" />
+            </frame>
+            <frame id="335:5046" name="Button" x="345" y="24" width="111" height="36">
+              <text id="335:5047" name="Save changes" x="12" y="8" width="87" height="20" />
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+    </frame>

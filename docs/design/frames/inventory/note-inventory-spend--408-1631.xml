@@ -1,0 +1,9 @@
+    <frame id="408:1631" name="Note · Inventory Spend" x="5854" y="1223" width="1369" height="120">
+      <text id="408:1632" name="Inventory Spend" x="18" y="16" width="1333" height="17" />
+      <frame id="408:1633" name="Frame" x="18" y="41" width="1333" height="32">
+        <text id="408:1634" name="· Now about money: what&#39;s tied up in stock, what came back, what&#39;s sitting still." x="0" y="0" width="1333" height="14" />
+        <text id="408:1635" name="· Two near-identical tables merged into one." x="0" y="18" width="1333" height="14" />
+      </frame>
+      <rounded-rectangle id="408:1637" name="Rectangle" x="18" y="81" width="1333" height="1" />
+      <text id="408:1638" name="Why — The tab is called Spend, so it should answer the money question — and not guess a date from five bottles." x="18" y="90" width="1333" height="14" />
+    </frame>

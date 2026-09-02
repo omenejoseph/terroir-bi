@@ -1,0 +1,8 @@
+    <frame id="408:1655" name="Note · Create order" x="100" y="2185" width="480" height="102">
+      <text id="408:1656" name="Create order" x="18" y="16" width="444" height="17" />
+      <frame id="408:1657" name="Frame" x="18" y="41" width="444" height="14">
+        <text id="408:1658" name="· You can now search for a wine when adding it." x="0" y="0" width="444" height="14" />
+      </frame>
+      <rounded-rectangle id="408:1659" name="Rectangle" x="18" y="63" width="444" height="1" />
+      <text id="408:1660" name="Why — You asked for it. Picking from a list stops working once the range grows." x="18" y="72" width="444" height="14" />
+    </frame>

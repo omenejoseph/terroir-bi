@@ -1,0 +1,775 @@
+    <frame id="449:1577" name="Product Detail" x="8705" y="100" width="1369" height="1927">
+      <frame id="449:1578" name="App" x="0" y="0" width="1369" height="1927">
+        <frame id="449:1579" name="NavRail" x="0" y="0" width="56" height="1927">
+          <frame id="449:1580" name="Container" x="11.5" y="0" width="32" height="48">
+            <frame id="449:1581" name="Container" x="0" y="8" width="32" height="32">
+              <frame id="449:1582" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+          </frame>
+          <frame id="449:1592" name="Navigation" x="7.5" y="48" width="40" height="1830.9998779296875">
+            <frame id="449:1593" name="PreviewCardTrigger" x="0" y="8" width="40" height="40">
+              <frame id="449:1594" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="449:1599" name="PreviewCardTrigger" x="0" y="52" width="40" height="40">
+              <frame id="449:1600" name="ShortcutsFlyout" x="0" y="0" width="40" height="40">
+                <frame id="449:1601" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+            </frame>
+            <frame id="449:1604" name="PreviewCardTrigger" x="0" y="96" width="40" height="40">
+              <frame id="449:1605" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="449:1609" name="PreviewCardTrigger" x="0" y="140" width="40" height="40">
+              <frame id="449:1610" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="449:1615" name="PreviewCardTrigger" x="0" y="184" width="40" height="40">
+              <frame id="449:1616" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="449:1621" name="PreviewCardTrigger" x="0" y="228" width="40" height="40">
+              <frame id="449:1622" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="449:1635" name="PreviewCardTrigger" x="0" y="272" width="40" height="40">
+              <frame id="449:1636" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="449:1640" name="PreviewCardTrigger" x="0" y="316" width="40" height="40">
+              <frame id="449:1641" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="449:1646" name="PreviewCardTrigger" x="0" y="360" width="40" height="40">
+              <frame id="449:1647" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+          </frame>
+          <frame id="449:1650" name="Container" x="7.5" y="1878.9998779296875" width="40" height="48">
+            <frame id="449:1651" name="Button" x="0" y="4.5" width="40" height="40">
+              <frame id="449:1652" name="AvatarRoot" x="4" y="4" width="32" height="32">
+                <frame id="449:1653" name="AvatarFallback" x="0" y="0" width="32" height="32">
+                  <text id="449:1654" name="FD" x="8.5" y="8" width="15" height="16" />
+                </frame>
+                <frame id="449:1655" name="Text" x="0" y="0" width="32" height="32" />
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+        <frame id="449:1656" name="Container" x="56" y="0" width="1313" height="2122">
+          <frame id="449:1657" name="Header" x="0" y="0" width="1313" height="48">
+            <frame id="449:1658" name="Button" x="16" y="7.5" width="32" height="32">
+              <frame id="449:1659" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+            <frame id="449:1662" name="Container:align" x="60" y="7.5" width="1237" height="32">
+              <frame id="449:1663" name="Container" x="845" y="0" width="392" height="32">
+                <frame id="449:1664" name="Container" x="0" y="0" width="288" height="32">
+                  <frame id="449:1665" name="Icon" x="10" y="9" width="14" height="14" />
+                  <frame id="449:1668" name="FieldControl" x="0" y="0" width="288" height="32">
+                    <text id="449:1669" name="Search orders, SKUs, partners…" x="33" y="9" width="214" height="14" />
+                  </frame>
+                  <frame id="449:1670" name="Kbd" x="255.7734375" y="6" width="25" height="20">
+                    <text id="449:1671" name="⌘K" x="5" y="2" width="15" height="16" />
+                  </frame>
+                </frame>
+                <frame id="449:1672" name="Container" x="296" y="0" width="96" height="32">
+                  <frame id="449:1673" name="Button" x="0" y="0" width="32" height="32">
+                    <frame id="449:1674" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="449:1678" name="Button" x="32" y="0" width="32" height="32">
+                    <frame id="449:1679" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="449:1684" name="Button" x="64" y="0" width="32" height="32">
+                    <frame id="449:1685" name="Icon" x="8" y="8" width="16" height="16" />
+                    <frame id="449:1688" name="App" x="19" y="7" width="6" height="6" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="449:1689" name="Main Content" x="0" y="48" width="1313" height="2122">
+            <frame id="449:1690" name="Container:margin" x="0" y="0" width="1313" height="2122">
+              <frame id="449:1691" name="Container" x="16.5" y="0" width="1280" height="1879">
+                <frame id="449:1692" name="Container" x="32" y="24" width="1216" height="36">
+                  <frame id="449:1693" name="Heading 1" x="0" y="8" width="44" height="28">
+                    <text id="449:1694" name="← R3" x="0" y="0" width="44" height="28" />
+                  </frame>
+                  <frame id="449:1695" name="Container" x="1058" y="8" width="158" height="28">
+                    <frame id="449:1696" name="Button" x="0" y="0" width="74" height="28">
+                      <text id="449:1700" name="Duplicate" x="11" y="6" width="52" height="16" />
+                    </frame>
+                    <frame id="453:2853" name="Container" x="82" y="0" width="76" height="28">
+                      <frame id="453:2859" name="Button" x="0" y="0" width="76" height="28">
+                        <frame id="453:2860" name="Icon" x="11" y="7" width="14" height="14" />
+                        <text id="453:2866" name="Delete" x="29" y="6" width="36" height="16" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="449:1708" name="Band • Identity" x="32" y="60" width="1216" height="18">
+                  <text id="449:1709" name="LOTR32026 · Finished Product · 2025 · 2.595 bottles" x="0" y="4" width="298" height="14" />
+                </frame>
+                <frame id="449:1710" name="TabsRoot" x="32" y="78" width="1216" height="42">
+                  <frame id="449:1711" name="TabsTab" x="0" y="16" width="56" height="26">
+                    <text id="449:1712" name="Stock" x="12" y="6" width="32" height="14" />
+                  </frame>
+                  <frame id="449:1713" name="TabsTab" x="58" y="16" width="61" height="26">
+                    <text id="449:1714" name="Details" x="12" y="6" width="37" height="14" />
+                  </frame>
+                  <frame id="449:1715" name="TabsTab" x="121" y="16" width="62" height="26">
+                    <text id="449:1716" name="Recipe" x="12" y="6" width="38" height="14" />
+                  </frame>
+                  <frame id="449:1717" name="TabsTab" x="185" y="16" width="69" height="26">
+                    <text id="449:1718" name="Produce" x="12" y="6" width="45" height="14" />
+                  </frame>
+                  <frame id="449:1719" name="TabsTab" x="256" y="16" width="82" height="26">
+                    <text id="449:1720" name="Images (2)" x="12" y="6" width="58" height="14" />
+                  </frame>
+                  <frame id="449:1721" name="TabsTab" x="340" y="16" width="70" height="26">
+                    <text id="449:1722" name="Docs (2)" x="12" y="6" width="46" height="14" />
+                  </frame>
+                  <frame id="449:1723" name="TabsTab" x="412" y="16" width="62" height="26">
+                    <text id="449:1724" name="Pricing" x="12" y="6" width="38" height="14" />
+                  </frame>
+                  <frame id="449:1725" name="TabsTab" x="476" y="16" width="87" height="26">
+                    <text id="449:1726" name="Analysis (3)" x="12" y="6" width="63" height="14" />
+                  </frame>
+                </frame>
+                <frame id="449:1727" name="Band • Position" x="32" y="120" width="1216" height="117">
+                  <frame id="450:1577" name="Card • On hand" x="0" y="16" width="292" height="101">
+                    <text id="450:1578" name="On hand" x="16" y="14" width="46" height="14" />
+                    <text id="450:1579" name="2.595" x="16" y="32" width="77" height="37" />
+                    <text id="450:1580" name="bottles · 216 cases · min 1.200" x="16" y="73" width="160" height="14" />
+                  </frame>
+                  <frame id="450:1581" name="Card • Cover" x="308" y="16" width="292" height="101">
+                    <text id="450:1582" name="Cover" x="16" y="14" width="33" height="14" />
+                    <text id="450:1583" name="64.9 d" x="16" y="32" width="86" height="37" />
+                    <text id="450:1584" name="at this month&#39;s exit rate" x="16" y="73" width="126" height="14" />
+                  </frame>
+                  <frame id="450:1585" name="Card • Value on hand" x="616" y="16" width="292" height="101">
+                    <text id="450:1586" name="Value on hand" x="16" y="14" width="77" height="14" />
+                    <text id="450:1587" name="14.068 €" x="16" y="32" width="121" height="37" />
+                    <text id="450:1588" name="at cost · 22.810 € at realised price" x="16" y="73" width="181" height="14" />
+                  </frame>
+                  <frame id="450:1589" name="Card • Realised margin" x="924" y="16" width="292" height="101">
+                    <text id="450:1590" name="Realised margin" x="16" y="14" width="86" height="14" />
+                    <text id="450:1591" name="38.3 %" x="16" y="32" width="89" height="37" />
+                    <text id="450:1592" name="12 months · list margin 54.8 %" x="16" y="73" width="160" height="14" />
+                  </frame>
+                </frame>
+                <frame id="451:1577" name="Band • Current stock" x="32" y="237" width="1216" height="406">
+                  <frame id="451:1578" name="Card • Current stock" x="0" y="16" width="1216" height="390">
+                    <frame id="451:1579" name="head" x="16" y="18" width="1184" height="35">
+                      <text id="451:1580" name="Current stock" x="0" y="0" width="101" height="19" />
+                      <text id="451:1581" name="What is in the warehouse, what it cost, " x="0" y="21" width="384" height="14" />
+                    </frame>
+                    <frame id="451:1582" name="headline" x="16" y="69" width="1184" height="37">
+                      <text id="451:1583" name="2.595" x="0" y="0" width="77" height="37" />
+                      <text id="451:1584" name="bottles" x="87" y="16" width="45" height="17" />
+                      <text id="451:1585" name="216 cases" x="142" y="18" width="52" height="14" />
+                    </frame>
+                    <frame id="451:1586" name="Gauge • against minimum" x="16" y="122" width="1184" height="27">
+                      <frame id="451:1587" name="track" x="0" y="0" width="1184" height="8">
+                        <rounded-rectangle id="451:1588" name="Rectangle" x="0" y="0" width="1184" height="8" />
+                        <rounded-rectangle id="451:1589" name="Rectangle" x="547" y="-4" width="2" height="16" />
+                      </frame>
+                      <frame id="451:1590" name="gauge labels" x="0" y="14" width="1184" height="13">
+                        <text id="451:1591" name="minimum 1.200 bottles" x="0" y="0" width="113" height="13" />
+                        <frame id="451:1592" name="sp" x="113" y="0" width="927" height="1" />
+                        <text id="451:1593" name="1.395 bottles above minimum" x="1040" y="0" width="144" height="13" />
+                      </frame>
+                    </frame>
+                    <rounded-rectangle id="451:1594" name="Rectangle" x="16" y="165" width="1184" height="1" />
+                    <frame id="451:1595" name="Group • Cost basis" x="16" y="182" width="1184" height="56">
+                      <text id="451:1596" name="COST BASIS" x="0" y="0" width="52" height="11" />
+                      <frame id="451:1597" name="row" x="0" y="21" width="1184" height="35">
+                        <frame id="451:1598" name="M · Cost per bottle" x="0" y="0" width="378.6666564941406" height="35">
+                          <text id="451:1599" name="Cost per bottle" x="0" y="0" width="82" height="14" />
+                          <frame id="451:1600" name="v" x="0" y="17" width="43" height="18">
+                            <text id="451:1601" name="5,42 €" x="0" y="0" width="43" height="18" />
+                          </frame>
+                        </frame>
+                        <frame id="451:1602" name="M · Production value" x="402.6666564941406" y="0" width="378.66668701171875" height="35">
+                          <text id="451:1603" name="Production value" x="0" y="0" width="91" height="14" />
+                          <frame id="451:1604" name="v" x="0" y="17" width="82" height="18">
+                            <text id="451:1605" name="14.068,36 €" x="0" y="0" width="82" height="18" />
+                          </frame>
+                        </frame>
+                        <frame id="452:1577" name="spacer" x="805.3333740234375" y="0" width="378.66668701171875" height="1" />
+                      </frame>
+                    </frame>
+                    <rounded-rectangle id="451:1614" name="Rectangle" x="16" y="254" width="1184" height="1" />
+                    <frame id="451:1615" name="Group • Selling" x="16" y="271" width="1184" height="101">
+                      <text id="451:1616" name="SELLING" x="0" y="0" width="37" height="11" />
+                      <frame id="451:1617" name="row" x="0" y="21" width="1184" height="35">
+                        <frame id="451:1618" name="M · Margin (list)" x="0" y="0" width="378.6666564941406" height="35">
+                          <text id="451:1619" name="Margin (list)" x="0" y="0" width="64" height="14" />
+                          <frame id="451:1620" name="v" x="0" y="17" width="123" height="18">
+                            <text id="451:1621" name="54.8 %" x="0" y="0" width="45" height="18" />
+                            <text id="451:1622" name="6,58 €/bottle" x="51" y="3" width="72" height="14" />
+                          </frame>
+                        </frame>
+                        <frame id="451:1623" name="M · Margin (realised, 12m)" x="402.6666564941406" y="0" width="378.66668701171875" height="35">
+                          <text id="451:1624" name="Margin (realised, 12m)" x="0" y="0" width="118" height="14" />
+                          <frame id="451:1625" name="v" x="0" y="17" width="122" height="18">
+                            <text id="451:1626" name="38.3 %" x="0" y="0" width="45" height="18" />
+                            <text id="451:1627" name="3,37 €/bottle" x="51" y="3" width="71" height="14" />
+                          </frame>
+                        </frame>
+                        <frame id="451:1628" name="M · Mean price (realised, 12m)" x="805.3333740234375" y="0" width="378.66668701171875" height="35">
+                          <text id="451:1629" name="Mean price (realised, 12m)" x="0" y="0" width="140" height="14" />
+                          <frame id="451:1630" name="v" x="0" y="17" width="86" height="18">
+                            <text id="451:1631" name="8,79 €" x="0" y="0" width="43" height="18" />
+                            <text id="451:1632" name="/bottle" x="49" y="3" width="37" height="14" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="451:1633" name="row" x="0" y="66" width="1184" height="35">
+                        <frame id="451:1634" name="M · Mean realised rebate" x="0" y="0" width="378.6666564941406" height="35">
+                          <text id="451:1635" name="Mean realised rebate" x="0" y="0" width="112" height="14" />
+                          <frame id="451:1636" name="v" x="0" y="17" width="120" height="18">
+                            <text id="451:1637" name="26.8 %" x="0" y="0" width="45" height="18" />
+                            <text id="451:1638" name="3,21 €/bottle" x="51" y="3" width="69" height="14" />
+                          </frame>
+                        </frame>
+                        <frame id="451:1639" name="M · Sales value (at realised price)" x="402.6666564941406" y="0" width="378.66668701171875" height="35">
+                          <text id="451:1640" name="Sales value (at realised price)" x="0" y="0" width="156" height="14" />
+                          <frame id="451:1641" name="v" x="0" y="17" width="81" height="18">
+                            <text id="451:1642" name="22.810,05 €" x="0" y="0" width="81" height="18" />
+                          </frame>
+                        </frame>
+                        <frame id="451:1643" name="M · Potential profit (at realised price)" x="805.3333740234375" y="0" width="378.66668701171875" height="35">
+                          <text id="451:1644" name="Potential profit (at realised price)" x="0" y="0" width="177" height="14" />
+                          <frame id="451:1645" name="v" x="0" y="17" width="68" height="18">
+                            <text id="451:1646" name="8.741,69 €" x="0" y="0" width="68" height="18" />
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="452:1578" name="Band • Exit" x="32" y="643" width="1216" height="358">
+                  <frame id="452:1579" name="Card • Inventory spend" x="0" y="16" width="800" height="326">
+                    <frame id="452:1580" name="head" x="16" y="18" width="768" height="35">
+                      <frame id="452:1581" name="t" x="0" y="0" width="547" height="35">
+                        <text id="452:1582" name="Inventory spend" x="0" y="0" width="118" height="19" />
+                        <text id="452:1583" name="Warehouse exit — every bottle, regardles" x="0" y="21" width="290" height="14" />
+                      </frame>
+                      <frame id="452:1584" name="Period" x="547" y="7" width="221" height="21">
+                        <frame id="452:1585" name="pill" x="0" y="0" width="48" height="21">
+                          <text id="452:1586" name="Today" x="9" y="4" width="30" height="13" />
+                        </frame>
+                        <frame id="452:1587" name="pill" x="52" y="0" width="42" height="21">
+                          <text id="452:1588" name="MTD" x="9" y="4" width="24" height="13" />
+                        </frame>
+                        <frame id="452:1589" name="pill" x="98" y="0" width="39" height="21">
+                          <text id="452:1590" name="YTD" x="9" y="4" width="21" height="13" />
+                        </frame>
+                        <frame id="452:1591" name="pill" x="141" y="0" width="38" height="21">
+                          <text id="452:1592" name="30d" x="9" y="4" width="20" height="13" />
+                        </frame>
+                        <frame id="452:1593" name="pill" x="183" y="0" width="38" height="21">
+                          <text id="452:1594" name="90d" x="9" y="4" width="20" height="13" />
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="452:1595" name="headline" x="16" y="67" width="768" height="37">
+                      <text id="452:1596" name="720" x="0" y="0" width="54" height="37" />
+                      <text id="452:1597" name="bottles exited" x="62" y="16" width="87" height="17" />
+                      <text id="452:1598" name="· 14 movements" x="157" y="18" width="85" height="14" />
+                    </frame>
+                    <frame id="452:1599" name="Sparkline • daily exits" x="16" y="118" width="758" height="87">
+                      <rounded-rectangle id="452:1600" name="Rectangle" x="0" y="79" width="12" height="8" />
+                      <rounded-rectangle id="452:1601" name="Rectangle" x="15" y="67" width="12" height="20" />
+                      <rounded-rectangle id="452:1602" name="Rectangle" x="30" y="74" width="12" height="13" />
+                      <rounded-rectangle id="452:1603" name="Rectangle" x="45" y="34" width="12" height="53" />
+                      <rounded-rectangle id="452:1604" name="Rectangle" x="60" y="56" width="12" height="31" />
+                      <rounded-rectangle id="452:1605" name="Rectangle" x="75" y="72" width="12" height="15" />
+                      <rounded-rectangle id="452:1606" name="Rectangle" x="90" y="77" width="12" height="10" />
+                      <rounded-rectangle id="452:1607" name="Rectangle" x="105" y="80" width="12" height="7" />
+                      <rounded-rectangle id="452:1608" name="Rectangle" x="120" y="51" width="12" height="36" />
+                      <rounded-rectangle id="452:1609" name="Rectangle" x="135" y="63" width="12" height="24" />
+                      <rounded-rectangle id="452:1610" name="Rectangle" x="150" y="74" width="12" height="13" />
+                      <rounded-rectangle id="452:1611" name="Rectangle" x="165" y="44" width="12" height="43" />
+                      <rounded-rectangle id="452:1612" name="Rectangle" x="180" y="70" width="12" height="17" />
+                      <rounded-rectangle id="452:1613" name="Rectangle" x="195" y="76" width="12" height="11" />
+                      <rounded-rectangle id="452:1614" name="Rectangle" x="210" y="60" width="12" height="27" />
+                      <rounded-rectangle id="452:1615" name="Rectangle" x="225" y="73" width="12" height="14" />
+                      <rounded-rectangle id="452:1616" name="Rectangle" x="240" y="79" width="12" height="8" />
+                      <rounded-rectangle id="452:1617" name="Rectangle" x="255" y="53" width="12" height="34" />
+                      <rounded-rectangle id="452:1618" name="Rectangle" x="270" y="69" width="12" height="18" />
+                      <rounded-rectangle id="452:1619" name="Rectangle" x="285" y="77" width="12" height="10" />
+                    </frame>
+                    <frame id="452:1620" name="metrics" x="16" y="219" width="768" height="35">
+                      <frame id="452:1621" name="M · Cost of exits" x="0" y="0" width="137.60000610351562" height="35">
+                        <text id="452:1622" name="Cost of exits" x="0" y="0" width="69" height="14" />
+                        <frame id="452:1623" name="v" x="0" y="17" width="76" height="18">
+                          <text id="452:1624" name="3.902,40 €" x="0" y="0" width="76" height="18" />
+                        </frame>
+                      </frame>
+                      <frame id="452:1625" name="M · Revenue (realised)" x="157.60000610351562" y="0" width="137.60000610351562" height="35">
+                        <text id="452:1626" name="Revenue (realised)" x="0" y="0" width="100" height="14" />
+                        <frame id="452:1627" name="v" x="0" y="17" width="72" height="18">
+                          <text id="452:1628" name="7.345,44 €" x="0" y="0" width="72" height="18" />
+                        </frame>
+                      </frame>
+                      <frame id="452:1629" name="M · Mean margin" x="315.20001220703125" y="0" width="137.60000610351562" height="35">
+                        <text id="452:1630" name="Mean margin" x="0" y="0" width="70" height="14" />
+                        <frame id="452:1631" name="v" x="0" y="17" width="45" height="18">
+                          <text id="452:1632" name="36.4 %" x="0" y="0" width="45" height="18" />
+                        </frame>
+                      </frame>
+                      <frame id="452:1633" name="M · Velocity" x="472.8000183105469" y="0" width="137.60000610351562" height="35">
+                        <text id="452:1634" name="Velocity" x="0" y="0" width="45" height="14" />
+                        <frame id="452:1635" name="v" x="0" y="17" width="101" height="18">
+                          <text id="452:1636" name="40,0" x="0" y="0" width="33" height="18" />
+                          <text id="452:1637" name="bottles/day" x="39" y="3" width="62" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="452:1638" name="M · Days of stock left" x="630.4000244140625" y="0" width="137.60000610351562" height="35">
+                        <text id="452:1639" name="Days of stock left" x="0" y="0" width="94" height="14" />
+                        <frame id="452:1640" name="v" x="0" y="17" width="43" height="18">
+                          <text id="452:1641" name="64.9 d" x="0" y="0" width="43" height="18" />
+                        </frame>
+                      </frame>
+                    </frame>
+                    <rounded-rectangle id="452:1642" name="Rectangle" x="16" y="268" width="768" height="1" />
+                    <text id="452:1643" name="of which Internal / POS:  348 bottles  ·" x="16" y="283" width="499" height="13" />
+                  </frame>
+                  <frame id="452:1644" name="Card • Exit by channel" x="816" y="16" width="400" height="326">
+                    <frame id="452:1645" name="head" x="16" y="18" width="368" height="35">
+                      <text id="452:1646" name="Exit by channel" x="0" y="0" width="111" height="19" />
+                      <text id="452:1647" name="Where the bottles went this period." x="0" y="21" width="190" height="14" />
+                    </frame>
+                    <frame id="452:1648" name="Ch · Internal / POS" x="16" y="67" width="368" height="47">
+                      <frame id="452:1649" name="t" x="0" y="0" width="368" height="16">
+                        <text id="452:1650" name="Internal / POS" x="0" y="0" width="325" height="16" />
+                        <text id="452:1651" name="348 btl" x="325" y="0" width="43" height="16" />
+                      </frame>
+                      <frame id="452:1652" name="track" x="0" y="21" width="368" height="8">
+                        <rounded-rectangle id="452:1653" name="Rectangle" x="0" y="0" width="177" height="8" />
+                      </frame>
+                      <text id="452:1654" name="48 %  ·  4.176,00 €" x="0" y="34" width="91" height="13" />
+                    </frame>
+                    <frame id="452:1655" name="Ch · Distributor / Importer" x="16" y="128" width="368" height="47">
+                      <frame id="452:1656" name="t" x="0" y="0" width="368" height="16">
+                        <text id="452:1657" name="Distributor / Importer" x="0" y="0" width="325" height="16" />
+                        <text id="452:1658" name="336 btl" x="325" y="0" width="43" height="16" />
+                      </frame>
+                      <frame id="452:1659" name="track" x="0" y="21" width="368" height="8">
+                        <rounded-rectangle id="452:1660" name="Rectangle" x="0" y="0" width="173" height="8" />
+                      </frame>
+                      <text id="452:1661" name="47 %  ·  2.862,72 €" x="0" y="34" width="90" height="13" />
+                    </frame>
+                    <frame id="452:1662" name="Ch · Retailer / Shop" x="16" y="189" width="368" height="47">
+                      <frame id="452:1663" name="t" x="0" y="0" width="368" height="16">
+                        <text id="452:1664" name="Retailer / Shop" x="0" y="0" width="333" height="16" />
+                        <text id="452:1665" name="36 btl" x="333" y="0" width="35" height="16" />
+                      </frame>
+                      <frame id="452:1666" name="track" x="0" y="21" width="368" height="8">
+                        <rounded-rectangle id="452:1667" name="Rectangle" x="0" y="0" width="18" height="8" />
+                      </frame>
+                      <text id="452:1668" name="5 %  ·  306,72 €" x="0" y="34" width="76" height="13" />
+                    </frame>
+                    <rounded-rectangle id="452:1669" name="Rectangle" x="16" y="250" width="368" height="1" />
+                    <frame id="452:1670" name="total" x="16" y="265" width="368" height="16">
+                      <text id="452:1671" name="Total exited" x="0" y="0" width="298" height="16" />
+                      <text id="452:1672" name="720 bottles" x="298" y="0" width="70" height="16" />
+                    </frame>
+                    <text id="452:1673" name="+24 bottles from edited / deleted orders" x="16" y="295" width="247" height="13" />
+                  </frame>
+                </frame>
+                <frame id="449:1929" name="Band • Quick stock entry" x="32" y="1001" width="1216" height="161">
+                  <frame id="449:1930" name="Card • Quick stock entry" x="0" y="0" width="1216" height="161">
+                    <frame id="449:1931" name="CardHeader" x="0" y="0" width="1216" height="43">
+                      <frame id="449:1932" name="Frame" x="16" y="14" width="113" height="17">
+                        <text id="449:1933" name="Quick stock entry" x="0" y="0" width="113" height="17" />
+                      </frame>
+                      <frame id="449:1934" name="Spacer" x="129" y="22" width="1071" height="1" />
+                    </frame>
+                    <frame id="449:1935" name="FormRow" x="0" y="43" width="1216" height="74">
+                      <frame id="449:1936" name="Frame" x="16" y="14" width="180" height="50">
+                        <text id="449:1937" name="Type" x="0" y="0" width="27" height="14" />
+                        <frame id="449:1938" name="Input" x="0" y="20" width="180" height="30">
+                          <text id="449:1939" name="Stock In ▾" x="10" y="8" width="52" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="449:1940" name="Frame" x="208" y="14" width="160" height="50">
+                        <text id="449:1941" name="Quantity (bottles)" x="0" y="0" width="98" height="14" />
+                        <frame id="449:1942" name="Input" x="0" y="20" width="160" height="30">
+                          <text id="449:1943" name="0" x="10" y="8" width="8" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="449:1944" name="Frame" x="380" y="14" width="753" height="50">
+                        <text id="449:1945" name="Note" x="0" y="0" width="28" height="14" />
+                        <frame id="449:1946" name="Input" x="0" y="20" width="753" height="30">
+                          <text id="449:1947" name="Optional note…" x="10" y="8" width="82" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="449:1948" name="Button · Add" x="1145" y="32" width="55" height="32">
+                        <text id="449:1949" name="Add" x="16" y="9" width="23" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="449:1950" name="Checkbox row" x="0" y="117" width="1216" height="44">
+                      <rounded-rectangle id="449:1951" name="Rectangle" x="16" y="0" width="14" height="14" />
+                      <frame id="449:1952" name="Frame" x="38" y="0" width="1162" height="30">
+                        <text id="449:1953" name="Inventory-count correction — won&#39;t count as a sale or exit" x="0" y="0" width="316" height="14" />
+                        <text id="449:1954" name="Use when matching the book to a physical count. Corrections are excluded from velocity and cover." x="0" y="16" width="534" height="14" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="449:1955" name="Band • Movement history" x="32" y="1162" width="1216" height="693">
+                  <frame id="449:1956" name="Card • Movement history" x="0" y="16" width="1216" height="669">
+                    <frame id="449:1957" name="CardHeader" x="0" y="0" width="1216" height="59">
+                      <frame id="449:1958" name="Frame" x="16" y="14" width="382" height="33">
+                        <text id="449:1959" name="Movement history" x="0" y="0" width="116" height="17" />
+                        <text id="449:1960" name="11 movements · running balance so you can see stock rebuild then drain" x="0" y="19" width="382" height="14" />
+                      </frame>
+                      <frame id="449:1961" name="Spacer" x="398" y="30" width="766" height="1" />
+                      <text id="449:1962" name="Export" x="1164" y="23.5" width="36" height="14" />
+                    </frame>
+                    <frame id="449:1963" name="Filters" x="0" y="59" width="1216" height="50">
+                      <frame id="449:1964" name="Chip" x="16" y="12" width="34" height="26">
+                        <text id="449:1965" name="All" x="10" y="6" width="14" height="14" />
+                      </frame>
+                      <frame id="449:1966" name="Chip" x="58" y="12" width="57" height="26">
+                        <text id="449:1967" name="Orders" x="10" y="6" width="37" height="14" />
+                      </frame>
+                      <frame id="449:1968" name="Chip" x="123" y="12" width="73" height="26">
+                        <text id="449:1969" name="Produced" x="10" y="6" width="53" height="14" />
+                      </frame>
+                      <frame id="449:1970" name="Chip" x="204" y="12" width="90" height="26">
+                        <text id="449:1971" name="Adjustments" x="10" y="6" width="70" height="14" />
+                      </frame>
+                      <frame id="449:1972" name="Spacer" x="302" y="24.5" width="701" height="1" />
+                      <text id="449:1973" name="Corrections excluded from velocity" x="1011" y="18" width="189" height="14" />
+                    </frame>
+                    <frame id="449:1974" name="TableHeader" x="0" y="109" width="1216" height="36">
+                      <frame id="449:1975" name="Cell" x="16" y="11" width="130" height="14">
+                        <text id="449:1976" name="Date" x="0" y="0" width="26" height="14" />
+                      </frame>
+                      <frame id="449:1977" name="Cell" x="146" y="11" width="150" height="14">
+                        <text id="449:1978" name="Type" x="0" y="0" width="27" height="14" />
+                      </frame>
+                      <frame id="449:1979" name="Cell" x="296" y="11" width="100" height="14">
+                        <text id="449:1980" name="Quantity" x="0" y="0" width="48" height="14" />
+                      </frame>
+                      <frame id="449:1981" name="Cell" x="396" y="11" width="100" height="14">
+                        <text id="449:1982" name="Balance" x="0" y="0" width="43" height="14" />
+                      </frame>
+                      <frame id="449:1983" name="Cell" x="496" y="11" width="150" height="14">
+                        <text id="449:1984" name="Reference" x="0" y="0" width="56" height="14" />
+                      </frame>
+                      <frame id="449:1985" name="Cell" x="646" y="11" width="372" height="14">
+                        <text id="449:1986" name="Note" x="0" y="0" width="28" height="14" />
+                      </frame>
+                      <frame id="449:1987" name="Cell" x="1018" y="11" width="182" height="14">
+                        <text id="449:1988" name="By" x="0" y="0" width="14" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="449:1989" name="TableRow" x="0" y="145" width="1216" height="44">
+                      <frame id="449:1990" name="Cell" x="16" y="15" width="130" height="14">
+                        <text id="449:1991" name="10 Aug 18:26" x="0" y="0" width="70" height="14" />
+                      </frame>
+                      <frame id="449:1992" name="Cell" x="146" y="12" width="150" height="20">
+                        <frame id="449:1993" name="Frame" x="0" y="0" width="48" height="20">
+                          <frame id="449:1994" name="Badge" x="0" y="0" width="48" height="20">
+                            <text id="449:1995" name="Order" x="8" y="3" width="32" height="14" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="449:1996" name="Cell" x="296" y="14.5" width="100" height="15">
+                        <text id="449:1997" name="−3" x="0" y="0" width="13" height="15" />
+                      </frame>
+                      <frame id="449:1998" name="Cell" x="396" y="14.5" width="100" height="15">
+                        <text id="449:1999" name="1.275" x="0" y="0" width="27" height="15" />
+                      </frame>
+                      <frame id="449:2000" name="Cell" x="496" y="15" width="150" height="14">
+                        <text id="449:2001" name="261651" x="0" y="0" width="38" height="14" />
+                      </frame>
+                      <frame id="449:2002" name="Cell" x="646" y="15" width="372" height="14">
+                        <text id="449:2003" name="Auto-deducted from order 261651" x="0" y="0" width="184" height="14" />
+                      </frame>
+                      <frame id="449:2004" name="Cell" x="1018" y="15" width="182" height="14">
+                        <text id="449:2005" name="Filip Demo" x="0" y="0" width="57" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="449:2006" name="TableRow" x="0" y="189" width="1216" height="44">
+                      <frame id="449:2007" name="Cell" x="16" y="15" width="130" height="14">
+                        <text id="449:2008" name="10 Aug 18:26" x="0" y="0" width="70" height="14" />
+                      </frame>
+                      <frame id="449:2009" name="Cell" x="146" y="12" width="150" height="20">
+                        <frame id="449:2010" name="Frame" x="0" y="0" width="48" height="20">
+                          <frame id="449:2011" name="Badge" x="0" y="0" width="48" height="20">
+                            <text id="449:2012" name="Order" x="8" y="3" width="32" height="14" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="449:2013" name="Cell" x="296" y="14.5" width="100" height="15">
+                        <text id="449:2014" name="−2" x="0" y="0" width="13" height="15" />
+                      </frame>
+                      <frame id="449:2015" name="Cell" x="396" y="14.5" width="100" height="15">
+                        <text id="449:2016" name="1.278" x="0" y="0" width="28" height="15" />
+                      </frame>
+                      <frame id="449:2017" name="Cell" x="496" y="15" width="150" height="14">
+                        <text id="449:2018" name="261651" x="0" y="0" width="38" height="14" />
+                      </frame>
+                      <frame id="449:2019" name="Cell" x="646" y="15" width="372" height="14">
+                        <text id="449:2020" name="Auto-deducted from order 261651" x="0" y="0" width="184" height="14" />
+                      </frame>
+                      <frame id="449:2021" name="Cell" x="1018" y="15" width="182" height="14">
+                        <text id="449:2022" name="Filip Demo" x="0" y="0" width="57" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="449:2023" name="TableRow" x="0" y="233" width="1216" height="44">
+                      <frame id="449:2024" name="Cell" x="16" y="15" width="130" height="14">
+                        <text id="449:2025" name="22 Jun 16:41" x="0" y="0" width="67" height="14" />
+                      </frame>
+                      <frame id="449:2026" name="Cell" x="146" y="12" width="150" height="20">
+                        <frame id="449:2027" name="Frame" x="0" y="0" width="48" height="20">
+                          <frame id="449:2028" name="Badge" x="0" y="0" width="48" height="20">
+                            <text id="449:2029" name="Order" x="8" y="3" width="32" height="14" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="449:2030" name="Cell" x="296" y="14.5" width="100" height="15">
+                        <text id="449:2031" name="−45" x="0" y="0" width="21" height="15" />
+                      </frame>
+                      <frame id="449:2032" name="Cell" x="396" y="14.5" width="100" height="15">
+                        <text id="449:2033" name="1.280" x="0" y="0" width="30" height="15" />
+                      </frame>
+                      <frame id="449:2034" name="Cell" x="496" y="15" width="150" height="14">
+                        <text id="449:2035" name="VT-20261045" x="0" y="0" width="75" height="14" />
+                      </frame>
+                      <frame id="449:2036" name="Cell" x="646" y="15" width="372" height="14">
+                        <text id="449:2037" name="Auto-deducted from order" x="0" y="0" width="144" height="14" />
+                      </frame>
+                      <frame id="449:2038" name="Cell" x="1018" y="15" width="182" height="14">
+                        <text id="449:2039" name="Tomislav Novak" x="0" y="0" width="84" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="449:2040" name="TableRow" x="0" y="277" width="1216" height="44">
+                      <frame id="449:2041" name="Cell" x="16" y="15" width="130" height="14">
+                        <text id="449:2042" name="19 Jun 16:41" x="0" y="0" width="65" height="14" />
+                      </frame>
+                      <frame id="449:2043" name="Cell" x="146" y="12" width="150" height="20">
+                        <frame id="449:2044" name="Frame" x="0" y="0" width="158" height="20">
+                          <frame id="449:2045" name="Badge" x="0" y="0" width="80" height="20">
+                            <text id="449:2046" name="Adjustment" x="8" y="3" width="64" height="14" />
+                          </frame>
+                          <frame id="449:2047" name="Frame" x="86" y="0" width="72" height="20">
+                            <text id="449:2048" name="correction" x="8" y="3" width="56" height="14" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="449:2049" name="Cell" x="296" y="14.5" width="100" height="15">
+                        <text id="449:2050" name="+3" x="0" y="0" width="13" height="15" />
+                      </frame>
+                      <frame id="449:2051" name="Cell" x="396" y="14.5" width="100" height="15">
+                        <text id="449:2052" name="1.325" x="0" y="0" width="28" height="15" />
+                      </frame>
+                      <frame id="449:2053" name="Cell" x="496" y="15" width="150" height="14">
+                        <text id="449:2054" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="449:2055" name="Cell" x="646" y="15" width="372" height="14">
+                        <text id="449:2056" name="Physical count reconciliation" x="0" y="0" width="154" height="14" />
+                      </frame>
+                      <frame id="449:2057" name="Cell" x="1018" y="15" width="182" height="14">
+                        <text id="449:2058" name="Ana Marković" x="0" y="0" width="73" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="449:2059" name="TableRow" x="0" y="321" width="1216" height="44">
+                      <frame id="449:2060" name="Cell" x="16" y="15" width="130" height="14">
+                        <text id="449:2061" name="13 Jun 16:41" x="0" y="0" width="65" height="14" />
+                      </frame>
+                      <frame id="449:2062" name="Cell" x="146" y="12" width="150" height="20">
+                        <frame id="449:2063" name="Frame" x="0" y="0" width="48" height="20">
+                          <frame id="449:2064" name="Badge" x="0" y="0" width="48" height="20">
+                            <text id="449:2065" name="Order" x="8" y="3" width="32" height="14" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="449:2066" name="Cell" x="296" y="14.5" width="100" height="15">
+                        <text id="449:2067" name="−65" x="0" y="0" width="21" height="15" />
+                      </frame>
+                      <frame id="449:2068" name="Cell" x="396" y="14.5" width="100" height="15">
+                        <text id="449:2069" name="1.322" x="0" y="0" width="28" height="15" />
+                      </frame>
+                      <frame id="449:2070" name="Cell" x="496" y="15" width="150" height="14">
+                        <text id="449:2071" name="VT-20261052" x="0" y="0" width="75" height="14" />
+                      </frame>
+                      <frame id="449:2072" name="Cell" x="646" y="15" width="372" height="14">
+                        <text id="449:2073" name="Auto-deducted from order" x="0" y="0" width="144" height="14" />
+                      </frame>
+                      <frame id="449:2074" name="Cell" x="1018" y="15" width="182" height="14">
+                        <text id="449:2075" name="Marko Petrović" x="0" y="0" width="81" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="449:2076" name="TableRow" x="0" y="365" width="1216" height="44">
+                      <frame id="449:2077" name="Cell" x="16" y="15" width="130" height="14">
+                        <text id="449:2078" name="6 Jun 16:41" x="0" y="0" width="60" height="14" />
+                      </frame>
+                      <frame id="449:2079" name="Cell" x="146" y="12" width="150" height="20">
+                        <frame id="449:2080" name="Frame" x="0" y="0" width="48" height="20">
+                          <frame id="449:2081" name="Badge" x="0" y="0" width="48" height="20">
+                            <text id="449:2082" name="Order" x="8" y="3" width="32" height="14" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="449:2083" name="Cell" x="296" y="14.5" width="100" height="15">
+                        <text id="449:2084" name="−40" x="0" y="0" width="22" height="15" />
+                      </frame>
+                      <frame id="449:2085" name="Cell" x="396" y="14.5" width="100" height="15">
+                        <text id="449:2086" name="1.387" x="0" y="0" width="28" height="15" />
+                      </frame>
+                      <frame id="449:2087" name="Cell" x="496" y="15" width="150" height="14">
+                        <text id="449:2088" name="VT-20261054" x="0" y="0" width="75" height="14" />
+                      </frame>
+                      <frame id="449:2089" name="Cell" x="646" y="15" width="372" height="14">
+                        <text id="449:2090" name="Auto-deducted from order" x="0" y="0" width="144" height="14" />
+                      </frame>
+                      <frame id="449:2091" name="Cell" x="1018" y="15" width="182" height="14">
+                        <text id="449:2092" name="Filip Demo" x="0" y="0" width="57" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="449:2093" name="TableRow" x="0" y="409" width="1216" height="44">
+                      <frame id="449:2094" name="Cell" x="16" y="15" width="130" height="14">
+                        <text id="449:2095" name="31 May 16:41" x="0" y="0" width="68" height="14" />
+                      </frame>
+                      <frame id="449:2096" name="Cell" x="146" y="12" width="150" height="20">
+                        <frame id="449:2097" name="Frame" x="0" y="0" width="48" height="20">
+                          <frame id="449:2098" name="Badge" x="0" y="0" width="48" height="20">
+                            <text id="449:2099" name="Order" x="8" y="3" width="32" height="14" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="449:2100" name="Cell" x="296" y="14.5" width="100" height="15">
+                        <text id="449:2101" name="−40" x="0" y="0" width="22" height="15" />
+                      </frame>
+                      <frame id="449:2102" name="Cell" x="396" y="14.5" width="100" height="15">
+                        <text id="449:2103" name="1.427" x="0" y="0" width="27" height="15" />
+                      </frame>
+                      <frame id="449:2104" name="Cell" x="496" y="15" width="150" height="14">
+                        <text id="449:2105" name="VT-20261049" x="0" y="0" width="75" height="14" />
+                      </frame>
+                      <frame id="449:2106" name="Cell" x="646" y="15" width="372" height="14">
+                        <text id="449:2107" name="Auto-deducted from order" x="0" y="0" width="144" height="14" />
+                      </frame>
+                      <frame id="449:2108" name="Cell" x="1018" y="15" width="182" height="14">
+                        <text id="449:2109" name="Ana Marković" x="0" y="0" width="73" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="449:2110" name="TableRow" x="0" y="453" width="1216" height="44">
+                      <frame id="449:2111" name="Cell" x="16" y="15" width="130" height="14">
+                        <text id="449:2112" name="24 May 16:41" x="0" y="0" width="70" height="14" />
+                      </frame>
+                      <frame id="449:2113" name="Cell" x="146" y="12" width="150" height="20">
+                        <frame id="449:2114" name="Frame" x="0" y="0" width="48" height="20">
+                          <frame id="449:2115" name="Badge" x="0" y="0" width="48" height="20">
+                            <text id="449:2116" name="Order" x="8" y="3" width="32" height="14" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="449:2117" name="Cell" x="296" y="14.5" width="100" height="15">
+                        <text id="449:2118" name="−63" x="0" y="0" width="21" height="15" />
+                      </frame>
+                      <frame id="449:2119" name="Cell" x="396" y="14.5" width="100" height="15">
+                        <text id="449:2120" name="1.467" x="0" y="0" width="28" height="15" />
+                      </frame>
+                      <frame id="449:2121" name="Cell" x="496" y="15" width="150" height="14">
+                        <text id="449:2122" name="VT-20261048" x="0" y="0" width="76" height="14" />
+                      </frame>
+                      <frame id="449:2123" name="Cell" x="646" y="15" width="372" height="14">
+                        <text id="449:2124" name="Auto-deducted from order" x="0" y="0" width="144" height="14" />
+                      </frame>
+                      <frame id="449:2125" name="Cell" x="1018" y="15" width="182" height="14">
+                        <text id="449:2126" name="Marko Petrović" x="0" y="0" width="81" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="449:2127" name="TableRow" x="0" y="497" width="1216" height="44">
+                      <frame id="449:2128" name="Cell" x="16" y="15" width="130" height="14">
+                        <text id="449:2129" name="13 May 16:41" x="0" y="0" width="68" height="14" />
+                      </frame>
+                      <frame id="449:2130" name="Cell" x="146" y="12" width="150" height="20">
+                        <frame id="449:2131" name="Frame" x="0" y="0" width="48" height="20">
+                          <frame id="449:2132" name="Badge" x="0" y="0" width="48" height="20">
+                            <text id="449:2133" name="Order" x="8" y="3" width="32" height="14" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="449:2134" name="Cell" x="296" y="14.5" width="100" height="15">
+                        <text id="449:2135" name="−22" x="0" y="0" width="19" height="15" />
+                      </frame>
+                      <frame id="449:2136" name="Cell" x="396" y="14.5" width="100" height="15">
+                        <text id="449:2137" name="1.530" x="0" y="0" width="29" height="15" />
+                      </frame>
+                      <frame id="449:2138" name="Cell" x="496" y="15" width="150" height="14">
+                        <text id="449:2139" name="VT-20261050" x="0" y="0" width="76" height="14" />
+                      </frame>
+                      <frame id="449:2140" name="Cell" x="646" y="15" width="372" height="14">
+                        <text id="449:2141" name="Auto-deducted from order" x="0" y="0" width="144" height="14" />
+                      </frame>
+                      <frame id="449:2142" name="Cell" x="1018" y="15" width="182" height="14">
+                        <text id="449:2143" name="Marko Petrović" x="0" y="0" width="81" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="449:2144" name="TableRow" x="0" y="541" width="1216" height="44">
+                      <frame id="449:2145" name="Cell" x="16" y="15" width="130" height="14">
+                        <text id="449:2146" name="9 May 16:41" x="0" y="0" width="63" height="14" />
+                      </frame>
+                      <frame id="449:2147" name="Cell" x="146" y="12" width="150" height="20">
+                        <frame id="449:2148" name="Frame" x="0" y="0" width="48" height="20">
+                          <frame id="449:2149" name="Badge" x="0" y="0" width="48" height="20">
+                            <text id="449:2150" name="Order" x="8" y="3" width="32" height="14" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="449:2151" name="Cell" x="296" y="14.5" width="100" height="15">
+                        <text id="449:2152" name="−73" x="0" y="0" width="19" height="15" />
+                      </frame>
+                      <frame id="449:2153" name="Cell" x="396" y="14.5" width="100" height="15">
+                        <text id="449:2154" name="1.552" x="0" y="0" width="28" height="15" />
+                      </frame>
+                      <frame id="449:2155" name="Cell" x="496" y="15" width="150" height="14">
+                        <text id="449:2156" name="VT-20261047" x="0" y="0" width="75" height="14" />
+                      </frame>
+                      <frame id="449:2157" name="Cell" x="646" y="15" width="372" height="14">
+                        <text id="449:2158" name="Auto-deducted from order" x="0" y="0" width="144" height="14" />
+                      </frame>
+                      <frame id="449:2159" name="Cell" x="1018" y="15" width="182" height="14">
+                        <text id="449:2160" name="Tomislav Novak" x="0" y="0" width="84" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="449:2161" name="TableRow" x="0" y="585" width="1216" height="44">
+                      <frame id="449:2162" name="Cell" x="16" y="15" width="130" height="14">
+                        <text id="449:2163" name="2 May 16:41" x="0" y="0" width="63" height="14" />
+                      </frame>
+                      <frame id="449:2164" name="Cell" x="146" y="12" width="150" height="20">
+                        <frame id="449:2165" name="Frame" x="0" y="0" width="69" height="20">
+                          <frame id="449:2166" name="Badge" x="0" y="0" width="69" height="20">
+                            <text id="449:2167" name="Produced" x="8" y="3" width="53" height="14" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="449:2168" name="Cell" x="296" y="14.5" width="100" height="15">
+                        <text id="449:2169" name="+742" x="0" y="0" width="25" height="15" />
+                      </frame>
+                      <frame id="449:2170" name="Cell" x="396" y="14.5" width="100" height="15">
+                        <text id="449:2171" name="1.625" x="0" y="0" width="28" height="15" />
+                      </frame>
+                      <frame id="449:2172" name="Cell" x="496" y="15" width="150" height="14">
+                        <text id="449:2173" name="PROD-VT-RDB-23" x="0" y="0" width="99" height="14" />
+                      </frame>
+                      <frame id="449:2174" name="Cell" x="646" y="15" width="372" height="14">
+                        <text id="449:2175" name="Bottling run — 742 bottles" x="0" y="0" width="144" height="14" />
+                      </frame>
+                      <frame id="449:2176" name="Cell" x="1018" y="15" width="182" height="14">
+                        <text id="449:2177" name="Marko Petrović" x="0" y="0" width="81" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="449:2178" name="TableFooter" x="0" y="629" width="1216" height="40">
+                      <text id="449:2179" name="353 bottles out · 745 in · net +392 since 2 May" x="16" y="12" width="248" height="14" />
+                      <frame id="449:2180" name="Spacer" x="264" y="18.5" width="741" height="1" />
+                      <text id="449:2181" name="Balance before the bottling run: 883" x="1005" y="12" width="195" height="14" />
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+    </frame>

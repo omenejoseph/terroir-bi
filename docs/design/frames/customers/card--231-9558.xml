@@ -1,0 +1,28 @@
+    <frame id="231:9558" name="Card" x="0" y="16" width="538" height="172">
+      <frame id="231:9559" name="CardContent" x="0" y="0" width="538" height="172">
+        <frame id="231:9560" name="CustomerProfilePage" x="16" y="16" width="506" height="42">
+          <text id="231:9561" name="Self-Service Order Link" x="0" y="0" width="189" height="22" />
+          <text id="237:80" name="Share this link with the customer. They can place " x="0" y="26" width="445" height="16" />
+        </frame>
+        <frame id="231:9584" name="CustomerProfilePage:margin" x="16" y="58" width="506" height="58">
+          <frame id="231:9563" name="CustomerProfilePage" x="0" y="12" width="506" height="46">
+            <frame id="231:9564" name="Text" x="13" y="15" width="444" height="16">
+              <text id="231:9565" name="https://terroir-bi-staging.vercel.app/order/01fce6" x="0" y="0" width="430" height="16" />
+            </frame>
+            <frame id="231:9567" name="Button" x="465" y="9" width="28" height="28">
+              <frame id="231:9568" name="Icon" x="7" y="7" width="14" height="14" />
+            </frame>
+          </frame>
+        </frame>
+        <frame id="231:9571" name="CustomerProfilePage" x="16" y="116" width="1184" height="40">
+          <frame id="231:9572" name="Button" x="0" y="12" width="83" height="28">
+            <frame id="231:9573" name="Icon" x="11" y="7" width="14" height="14" />
+            <text id="231:9576" name="Preview" x="29" y="6" width="43" height="16" />
+          </frame>
+          <frame id="231:9578" name="Button" x="91" y="12" width="62" height="28">
+            <text id="231:9579" name="Revoke" x="11" y="6" width="40" height="16" />
+          </frame>
+        </frame>
+      </frame>
+    </frame>
+  </frame>

@@ -1,0 +1,10 @@
+    <frame id="408:1677" name="Note · Product panel — new" x="4620" y="1662" width="480" height="152">
+      <text id="408:1678" name="Product panel — new" x="18" y="16" width="444" height="17" />
+      <frame id="408:1679" name="Frame" x="18" y="41" width="444" height="50">
+        <text id="408:1680" name="· Opens with how many bottles you can actually sell." x="0" y="0" width="444" height="14" />
+        <text id="408:1681" name="· Says plainly when a cost is missing, instead of showing a blank." x="0" y="18" width="444" height="14" />
+        <text id="408:1682" name="· Flags that this wine has no low-stock alert set." x="0" y="36" width="444" height="14" />
+      </frame>
+      <rounded-rectangle id="408:1683" name="Rectangle" x="18" y="99" width="444" height="1" />
+      <text id="408:1684" name="Why — It&#39;s the lowest stock in the range, so nobody would be warned before it ran out." x="18" y="108" width="444" height="28" />
+    </frame>

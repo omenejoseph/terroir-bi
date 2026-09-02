@@ -1,0 +1,296 @@
+    <frame id="378:1592" name="Item — View" x="4620" y="92" width="480" height="1544">
+      <frame id="378:1593" name="FormHeader" x="0" y="0" width="480" height="78">
+        <frame id="378:1594" name="Frame" x="24" y="20" width="367" height="38">
+          <text id="378:1595" name="Pelješki Stari Vinograd" x="0" y="0" width="185" height="22" />
+          <text id="378:1596" name="VT-PSV-20 · 2020 · 0.75 L" x="0" y="24" width="154" height="14" />
+        </frame>
+        <frame id="378:1597" name="Button" x="405" y="24.5" width="24" height="29">
+          <text id="378:1598" name="⋯" x="6" y="6" width="12" height="17" />
+        </frame>
+        <text id="378:1599" name="✕" x="443" y="30.5" width="13" height="17" />
+      </frame>
+      <frame id="378:1600" name="Separator" x="0" y="78" width="480" height="1" />
+      <frame id="378:1601" name="MetaStrip" x="0" y="79" width="480" height="74">
+        <frame id="378:1602" name="Frame" x="24" y="16" width="412" height="18">
+          <frame id="378:1603" name="Badge" x="0" y="0" width="65" height="18">
+            <text id="378:1604" name="Finished" x="10" y="2" width="45" height="14" />
+          </frame>
+          <frame id="378:1605" name="Badge" x="71" y="0" width="125" height="18">
+            <text id="378:1606" name="Wine · Red Reserve" x="10" y="2" width="105" height="14" />
+          </frame>
+          <frame id="378:1607" name="Badge" x="202" y="0" width="112" height="18">
+            <text id="378:1608" name="Available for sale" x="10" y="2" width="92" height="14" />
+          </frame>
+          <frame id="378:1609" name="Badge" x="320" y="0" width="92" height="18">
+            <text id="378:1610" name="No min stock" x="10" y="2" width="72" height="14" />
+          </frame>
+        </frame>
+        <text id="378:1611" name="Lowest stock of the six wines · Updated 8 Aug 2026 by Iva Šimić" x="24" y="44" width="353" height="14" />
+      </frame>
+      <frame id="378:1612" name="Separator" x="0" y="153" width="480" height="1" />
+      <frame id="378:1613" name="FormBody" x="0" y="154" width="480" height="1308">
+        <frame id="378:1614" name="Section · Stock" x="24" y="24" width="432" height="280">
+          <frame id="378:1615" name="SectionHeader" x="0" y="0" width="432" height="17">
+            <text id="378:1616" name="Stock" x="0" y="0" width="37" height="17" />
+            <text id="378:1617" name="420 bottles · 70 cases" x="45" y="1.5" width="120" height="14" />
+            <frame id="378:1618" name="Spacer" x="173" y="8" width="215" height="1" />
+            <text id="378:1619" name="Adjust" x="396" y="1.5" width="36" height="14" />
+          </frame>
+          <frame id="378:1620" name="Frame" x="0" y="27" width="432" height="37">
+            <text id="378:1621" name="393" x="0" y="0" width="54" height="37" />
+            <frame id="378:1622" name="Frame" x="62" y="0" width="83" height="37">
+              <text id="378:1623" name="free to sell" x="0" y="8" width="57" height="14" />
+              <text id="378:1624" name="of 420 physical" x="0" y="23" width="83" height="14" />
+            </frame>
+          </frame>
+          <frame id="378:1625" name="Composition" x="0" y="74" width="432" height="10">
+            <rounded-rectangle id="378:1626" name="Rectangle" x="0" y="0" width="404" height="10" />
+            <rounded-rectangle id="378:1627" name="Rectangle" x="406" y="0" width="28" height="10" />
+          </frame>
+          <frame id="378:1628" name="Waterfall" x="0" y="94" width="432" height="186">
+            <frame id="378:1629" name="Row · Physical stock" x="0" y="0" width="432" height="28">
+              <frame id="378:1630" name="Frame" x="0" y="7" width="76" height="14">
+                <text id="378:1631" name="Physical stock" x="0" y="0" width="76" height="14" />
+              </frame>
+              <frame id="378:1632" name="Spacer" x="76" y="13.5" width="334" height="1" />
+              <text id="378:1633" name="420" x="410" y="7" width="22" height="14" />
+            </frame>
+            <frame id="378:1634" name="Row · − Allocated" x="0" y="28" width="432" height="43">
+              <frame id="378:1635" name="Frame" x="0" y="7" width="94" height="29">
+                <text id="378:1636" name="− Allocated" x="0" y="0" width="62" height="14" />
+                <text id="378:1637" name="no allocations set" x="0" y="15" width="94" height="14" />
+              </frame>
+              <frame id="378:1638" name="Spacer" x="94" y="21" width="330" height="1" />
+              <text id="378:1639" name="0" x="424" y="14.5" width="8" height="14" />
+            </frame>
+            <frame id="378:1640" name="Row · − Reserved by open orders" x="0" y="71" width="432" height="43">
+              <frame id="378:1641" name="Frame" x="0" y="7" width="199" height="29">
+                <text id="378:1642" name="− Reserved by open orders" x="0" y="0" width="144" height="14" />
+                <text id="378:1643" name="#VT-20260035 · Restoran Mediteran" x="0" y="15" width="199" height="14" />
+              </frame>
+              <frame id="378:1644" name="Spacer" x="199" y="21" width="219" height="1" />
+              <text id="378:1645" name="27" x="418" y="14.5" width="14" height="14" />
+            </frame>
+            <frame id="378:1646" name="Row · − On consignment" x="0" y="114" width="432" height="43">
+              <frame id="378:1647" name="Frame" x="0" y="7" width="166" height="29">
+                <text id="378:1648" name="− On consignment" x="0" y="0" width="100" height="14" />
+                <text id="378:1649" name="komisija not in use for this SKU" x="0" y="15" width="166" height="14" />
+              </frame>
+              <frame id="378:1650" name="Spacer" x="166" y="21" width="258" height="1" />
+              <text id="378:1651" name="0" x="424" y="14.5" width="8" height="14" />
+            </frame>
+            <frame id="378:1652" name="Row · = Free to sell" x="0" y="157" width="432" height="29">
+              <frame id="378:1653" name="Frame" x="0" y="7.5" width="69" height="14">
+                <text id="378:1654" name="= Free to sell" x="0" y="0" width="69" height="14" />
+              </frame>
+              <frame id="378:1655" name="Spacer" x="69" y="14" width="341" height="1" />
+              <text id="378:1656" name="393" x="410" y="7" width="22" height="15" />
+            </frame>
+          </frame>
+        </frame>
+        <frame id="378:1657" name="Separator" x="24" y="320" width="432" height="1" />
+        <frame id="378:1658" name="Section · Pricing" x="24" y="337" width="432" height="198">
+          <frame id="378:1659" name="SectionHeader" x="0" y="0" width="432" height="17">
+            <text id="378:1660" name="Pricing &amp; margin" x="0" y="0" width="103" height="17" />
+            <frame id="378:1661" name="Spacer" x="111" y="8" width="291" height="1" />
+            <text id="378:1662" name="Edit" x="410" y="1.5" width="22" height="14" />
+          </frame>
+          <frame id="378:1663" name="Panel" x="0" y="27" width="432" height="107">
+            <frame id="378:1664" name="Row · Default price" x="14" y="4" width="404" height="28">
+              <frame id="378:1665" name="Frame" x="0" y="7" width="70" height="14">
+                <text id="378:1666" name="Default price" x="0" y="0" width="70" height="14" />
+              </frame>
+              <frame id="378:1667" name="Spacer" x="70" y="13.5" width="293" height="1" />
+              <text id="378:1668" name="37,53 €" x="363" y="7" width="41" height="14" />
+            </frame>
+            <frame id="378:1669" name="Row · Realised price · last 12m" x="14" y="32" width="404" height="43">
+              <frame id="378:1670" name="Frame" x="0" y="7" width="132" height="29">
+                <text id="378:1671" name="Realised price · last 12m" x="0" y="0" width="128" height="14" />
+                <text id="378:1672" name="no discounting recorded" x="0" y="15" width="132" height="14" />
+              </frame>
+              <frame id="378:1673" name="Spacer" x="132" y="21" width="231" height="1" />
+              <text id="378:1674" name="37,53 €" x="363" y="14.5" width="41" height="14" />
+            </frame>
+            <frame id="378:1675" name="Row · Cost per unit" x="14" y="75" width="404" height="28">
+              <frame id="378:1676" name="Frame" x="0" y="7" width="71" height="14">
+                <text id="378:1677" name="Cost per unit" x="0" y="0" width="71" height="14" />
+              </frame>
+              <frame id="378:1678" name="Spacer" x="71" y="13.5" width="292" height="1" />
+              <text id="378:1679" name="Not set" x="363" y="7" width="41" height="14" />
+            </frame>
+          </frame>
+          <frame id="378:1680" name="EmptyState · Margin" x="0" y="144" width="432" height="54">
+            <frame id="378:1681" name="Frame" x="14" y="12" width="325" height="30">
+              <text id="378:1682" name="Margin unavailable" x="0" y="0" width="101" height="14" />
+              <text id="378:1683" name="Needs a cost per unit, or a recipe to calculate from." x="0" y="16" width="274" height="14" />
+            </frame>
+            <frame id="378:1684" name="Button" x="349" y="14" width="69" height="26">
+              <text id="378:1685" name="Add cost" x="10" y="6" width="49" height="14" />
+            </frame>
+          </frame>
+        </frame>
+        <frame id="378:1686" name="Separator" x="24" y="551" width="432" height="1" />
+        <frame id="378:1687" name="Section · Details" x="24" y="568" width="432" height="219">
+          <frame id="378:1688" name="SectionHeader" x="0" y="0" width="432" height="17">
+            <text id="378:1689" name="Item details" x="0" y="0" width="74" height="17" />
+            <frame id="378:1690" name="Spacer" x="82" y="8" width="320" height="1" />
+            <text id="378:1691" name="Edit" x="410" y="1.5" width="22" height="14" />
+          </frame>
+          <frame id="378:1692" name="Frame" x="0" y="23" width="432" height="196">
+            <frame id="378:1693" name="Row · Type" x="0" y="0" width="432" height="28">
+              <frame id="378:1694" name="Frame" x="0" y="7" width="27" height="14">
+                <text id="378:1695" name="Type" x="0" y="0" width="27" height="14" />
+              </frame>
+              <frame id="378:1696" name="Spacer" x="27" y="13.5" width="360" height="1" />
+              <text id="378:1697" name="Finished" x="387" y="7" width="45" height="14" />
+            </frame>
+            <frame id="378:1698" name="Row · Category" x="0" y="28" width="432" height="28">
+              <frame id="378:1699" name="Frame" x="0" y="7" width="51" height="14">
+                <text id="378:1700" name="Category" x="0" y="0" width="51" height="14" />
+              </frame>
+              <frame id="378:1701" name="Spacer" x="51" y="13.5" width="276" height="1" />
+              <text id="378:1702" name="Wine · Red Reserve" x="327" y="7" width="105" height="14" />
+            </frame>
+            <frame id="378:1703" name="Row · Unit size / unit" x="0" y="56" width="432" height="28">
+              <frame id="378:1704" name="Frame" x="0" y="7" width="78" height="14">
+                <text id="378:1705" name="Unit size / unit" x="0" y="0" width="78" height="14" />
+              </frame>
+              <frame id="378:1706" name="Spacer" x="78" y="13.5" width="269" height="1" />
+              <text id="378:1707" name="750 ml · Bottles" x="347" y="7" width="85" height="14" />
+            </frame>
+            <frame id="378:1708" name="Row · Sales unit" x="0" y="84" width="432" height="28">
+              <frame id="378:1709" name="Frame" x="0" y="7" width="52" height="14">
+                <text id="378:1710" name="Sales unit" x="0" y="0" width="52" height="14" />
+              </frame>
+              <frame id="378:1711" name="Spacer" x="52" y="13.5" width="341" height="1" />
+              <text id="378:1712" name="Bottles" x="393" y="7" width="39" height="14" />
+            </frame>
+            <frame id="378:1713" name="Row · Vintage" x="0" y="112" width="432" height="28">
+              <frame id="378:1714" name="Frame" x="0" y="7" width="43" height="14">
+                <text id="378:1715" name="Vintage" x="0" y="0" width="43" height="14" />
+              </frame>
+              <frame id="378:1716" name="Spacer" x="43" y="13.5" width="360" height="1" />
+              <text id="378:1717" name="2020" x="403" y="7" width="29" height="14" />
+            </frame>
+            <frame id="378:1718" name="Row · Min stock" x="0" y="140" width="432" height="28">
+              <frame id="378:1719" name="Frame" x="0" y="7" width="52" height="14">
+                <text id="378:1720" name="Min stock" x="0" y="0" width="52" height="14" />
+              </frame>
+              <frame id="378:1721" name="Spacer" x="52" y="13.5" width="222" height="1" />
+              <text id="378:1722" name="Not set — no low-stock alert" x="274" y="7" width="158" height="14" />
+            </frame>
+            <frame id="378:1723" name="Row · Available for sale" x="0" y="168" width="432" height="28">
+              <frame id="378:1724" name="Frame" x="0" y="7" width="91" height="14">
+                <text id="378:1725" name="Available for sale" x="0" y="0" width="91" height="14" />
+              </frame>
+              <frame id="378:1726" name="Spacer" x="91" y="13.5" width="322" height="1" />
+              <text id="378:1727" name="Yes" x="413" y="7" width="19" height="14" />
+            </frame>
+          </frame>
+        </frame>
+        <frame id="378:1728" name="Separator" x="24" y="803" width="432" height="1" />
+        <frame id="378:1729" name="Section · Demand" x="24" y="820" width="432" height="152">
+          <frame id="378:1730" name="SectionHeader" x="0" y="0" width="432" height="17">
+            <text id="378:1731" name="Who&#39;s buying it" x="0" y="0" width="98" height="17" />
+            <frame id="378:1732" name="Spacer" x="106" y="8" width="235" height="1" />
+            <text id="378:1733" name="Open in Orders" x="349" y="1.5" width="83" height="14" />
+          </frame>
+          <frame id="378:1734" name="Frame" x="0" y="23" width="432" height="129">
+            <frame id="378:1735" name="Row · Restoran Mediteran" x="0" y="0" width="432" height="43">
+              <frame id="378:1736" name="Frame" x="0" y="7" width="201" height="29">
+                <text id="378:1737" name="Restoran Mediteran" x="0" y="0" width="106" height="14" />
+                <text id="378:1738" name="22% of their bottles · last order 11 Apr" x="0" y="15" width="201" height="14" />
+              </frame>
+              <frame id="378:1739" name="Spacer" x="201" y="21" width="191" height="1" />
+              <text id="378:1740" name="304 btl" x="392" y="14.5" width="40" height="14" />
+            </frame>
+            <frame id="378:1741" name="Row · Open orders" x="0" y="43" width="432" height="43">
+              <frame id="378:1742" name="Frame" x="0" y="7" width="130" height="29">
+                <text id="378:1743" name="Open orders" x="0" y="0" width="67" height="14" />
+                <text id="378:1744" name="1 order · #VT-20260035" x="0" y="15" width="130" height="14" />
+              </frame>
+              <frame id="378:1745" name="Spacer" x="130" y="21" width="271" height="1" />
+              <text id="378:1746" name="27 btl" x="401" y="14.5" width="31" height="14" />
+            </frame>
+            <frame id="378:1747" name="Row · Highest € per bottle" x="0" y="86" width="432" height="43">
+              <frame id="378:1748" name="Frame" x="0" y="7" width="109" height="29">
+                <text id="378:1749" name="Highest € per bottle" x="0" y="0" width="109" height="14" />
+                <text id="378:1750" name="2,6× the Rosé line" x="0" y="15" width="96" height="14" />
+              </frame>
+              <frame id="378:1751" name="Spacer" x="109" y="21" width="282" height="1" />
+              <text id="378:1752" name="37,53 €" x="391" y="14.5" width="41" height="14" />
+            </frame>
+          </frame>
+        </frame>
+        <frame id="378:1753" name="Separator" x="24" y="988" width="432" height="1" />
+        <frame id="378:1754" name="Section · Movements" x="24" y="1005" width="432" height="139">
+          <frame id="378:1755" name="SectionHeader" x="0" y="0" width="432" height="17">
+            <text id="378:1756" name="Stock movements" x="0" y="0" width="115" height="17" />
+            <frame id="378:1757" name="Spacer" x="123" y="8" width="259" height="1" />
+            <text id="378:1758" name="View all" x="390" y="1.5" width="42" height="14" />
+          </frame>
+          <frame id="378:1759" name="Frame" x="0" y="23" width="432" height="116">
+            <frame id="378:1760" name="Frame" x="0" y="0" width="432" height="29">
+              <text id="378:1761" name="Sale · #VT-20260022" x="0" y="7.5" width="116" height="14" />
+              <frame id="378:1762" name="Spacer" x="126" y="14" width="194" height="1" />
+              <text id="378:1763" name="−46" x="330" y="7" width="21" height="15" />
+              <text id="378:1764" name="28 May 2026" x="361" y="7.5" width="71" height="14" />
+            </frame>
+            <frame id="378:1765" name="Frame" x="0" y="29" width="432" height="29">
+              <text id="378:1766" name="Sale · #VT-20260020" x="0" y="7.5" width="117" height="14" />
+              <frame id="378:1767" name="Spacer" x="127" y="14" width="200" height="1" />
+              <text id="378:1768" name="−27" x="337" y="7" width="19" height="15" />
+              <text id="378:1769" name="14 Apr 2026" x="366" y="7.5" width="66" height="14" />
+            </frame>
+            <frame id="378:1770" name="Frame" x="0" y="58" width="432" height="29">
+              <text id="378:1771" name="Sale · #VT-20260027" x="0" y="7.5" width="116" height="14" />
+              <frame id="378:1772" name="Spacer" x="126" y="14" width="203" height="1" />
+              <text id="378:1773" name="−55" x="339" y="7" width="20" height="15" />
+              <text id="378:1774" name="11 Apr 2026" x="369" y="7.5" width="63" height="14" />
+            </frame>
+            <frame id="378:1775" name="Frame" x="0" y="87" width="432" height="29">
+              <text id="378:1776" name="Sale · #VT-20260013" x="0" y="7.5" width="114" height="14" />
+              <frame id="378:1777" name="Spacer" x="124" y="14" width="206" height="1" />
+              <text id="378:1778" name="−13" x="340" y="7" width="18" height="15" />
+              <text id="378:1779" name="8 May 2026" x="368" y="7.5" width="64" height="14" />
+            </frame>
+          </frame>
+        </frame>
+        <frame id="378:1780" name="Separator" x="24" y="1160" width="432" height="1" />
+        <frame id="378:1781" name="Section · Timeline" x="24" y="1177" width="432" height="107">
+          <frame id="378:1782" name="SectionHeader" x="0" y="0" width="432" height="17">
+            <text id="378:1783" name="Timeline" x="0" y="0" width="53" height="17" />
+            <frame id="378:1784" name="Spacer" x="61" y="8" width="371" height="1" />
+          </frame>
+          <frame id="378:1785" name="Frame" x="0" y="29" width="432" height="33">
+            <rounded-rectangle id="378:1786" name="Rectangle" x="0" y="0" width="8" height="8" />
+            <frame id="378:1787" name="Frame" x="18" y="0" width="305" height="33">
+              <text id="378:1788" name="Stock adjusted to 420" x="0" y="0" width="141" height="17" />
+              <text id="378:1789" name="by Iva Šimić" x="0" y="19" width="65" height="14" />
+            </frame>
+            <text id="378:1790" name="8 Aug 2026, 09:14" x="333" y="0" width="99" height="14" />
+          </frame>
+          <frame id="378:1791" name="Frame" x="0" y="74" width="432" height="33">
+            <rounded-rectangle id="378:1792" name="Rectangle" x="0" y="0" width="8" height="8" />
+            <frame id="378:1793" name="Frame" x="18" y="0" width="305" height="33">
+              <text id="378:1794" name="Item created" x="0" y="0" width="81" height="17" />
+              <text id="378:1795" name="by Iva Šimić" x="0" y="19" width="65" height="14" />
+            </frame>
+            <text id="378:1796" name="12 Mar 2026, 11:02" x="333" y="0" width="99" height="14" />
+          </frame>
+        </frame>
+      </frame>
+      <frame id="378:1797" name="Separator" x="0" y="1462" width="480" height="1" />
+      <frame id="378:1798" name="FormFooter" x="0" y="1463" width="480" height="81">
+        <frame id="378:1799" name="Button · Delete" x="24" y="24" width="66" height="33">
+          <text id="378:1800" name="Delete" x="12" y="8" width="42" height="17" />
+        </frame>
+        <frame id="378:1801" name="Spacer" x="98" y="40" width="156" height="1" />
+        <frame id="378:1802" name="Button · Adjust stock" x="262" y="24" width="104" height="33">
+          <text id="378:1803" name="Adjust stock" x="12" y="8" width="80" height="17" />
+        </frame>
+        <frame id="378:1804" name="Button · Edit item" x="374" y="24" width="82" height="33">
+          <text id="378:1805" name="Edit item" x="12" y="8" width="58" height="17" />
+        </frame>
+      </frame>
+    </frame>

@@ -1,0 +1,783 @@
+    <frame id="231:9592" name="Edit Customer" x="3042" y="100" width="1369" height="933">
+      <frame id="231:9595" name="App" x="0" y="0" width="1369" height="933">
+        <frame id="231:9596" name="NavRail" x="0" y="0" width="56" height="933">
+          <frame id="231:9597" name="Container" x="11.5" y="0" width="32" height="48">
+            <frame id="231:9598" name="Container" x="0" y="8" width="32" height="32">
+              <frame id="231:9599" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+          </frame>
+          <frame id="231:9609" name="Navigation" x="7.5" y="48" width="40" height="837">
+            <frame id="231:9610" name="PreviewCardTrigger" x="0" y="8" width="40" height="40">
+              <frame id="231:9611" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="231:9616" name="PreviewCardTrigger" x="0" y="52" width="40" height="40">
+              <frame id="231:9617" name="ShortcutsFlyout" x="0" y="0" width="40" height="40">
+                <frame id="231:9618" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+            </frame>
+            <frame id="231:9621" name="PreviewCardTrigger" x="0" y="96" width="40" height="40">
+              <frame id="231:9622" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="231:9626" name="PreviewCardTrigger" x="0" y="140" width="40" height="40">
+              <frame id="231:9627" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="231:9632" name="PreviewCardTrigger" x="0" y="184" width="40" height="40">
+              <frame id="231:9633" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="231:9638" name="PreviewCardTrigger" x="0" y="228" width="40" height="40">
+              <frame id="231:9639" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="231:9652" name="PreviewCardTrigger" x="0" y="272" width="40" height="40">
+              <frame id="231:9653" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="231:9657" name="PreviewCardTrigger" x="0" y="316" width="40" height="40">
+              <frame id="231:9658" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="231:9663" name="PreviewCardTrigger" x="0" y="360" width="40" height="40">
+              <frame id="231:9664" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+          </frame>
+          <frame id="231:9667" name="Container" x="7.5" y="885" width="40" height="48">
+            <frame id="231:9668" name="Button" x="0" y="4.5" width="40" height="40">
+              <frame id="231:9669" name="AvatarRoot" x="4" y="4" width="32" height="32">
+                <frame id="231:9670" name="AvatarFallback" x="0" y="0" width="32" height="32">
+                  <text id="231:9671" name="FD" x="8" y="8" width="16" height="16" />
+                </frame>
+                <frame id="231:9673" name="Text" x="0" y="0" width="32" height="32" />
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+        <frame id="231:9674" name="Container" x="56" y="0" width="1313" height="933">
+          <frame id="231:9675" name="Header" x="0" y="0" width="1313" height="48">
+            <frame id="231:9676" name="Button" x="16" y="7.5" width="32" height="32">
+              <frame id="231:9677" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+            <frame id="231:9680" name="Separator" x="60" y="0" width="1" height="20" />
+            <frame id="231:9708" name="Container:align" x="73" y="7.5" width="1224" height="32">
+              <frame id="231:9681" name="Container" x="832" y="0" width="392" height="32">
+                <frame id="231:9682" name="Container" x="0" y="0" width="288" height="32">
+                  <frame id="231:9683" name="Icon" x="10" y="9" width="14" height="14" />
+                  <frame id="231:9686" name="FieldControl" x="0" y="0" width="288" height="32">
+                    <text id="231:9687" name="Search orders, SKUs, partners…" x="33" y="9" width="214" height="14" />
+                  </frame>
+                  <frame id="231:9688" name="Kbd" x="255.7734375" y="6" width="25" height="20">
+                    <text id="231:9689" name="⌘K" x="5" y="2" width="15" height="16" />
+                  </frame>
+                </frame>
+                <frame id="231:9691" name="Container" x="296" y="0" width="96" height="32">
+                  <frame id="231:9692" name="Button" x="0" y="0" width="32" height="32">
+                    <frame id="231:9693" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="231:9697" name="Button" x="32" y="0" width="32" height="32">
+                    <frame id="231:9698" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="231:9703" name="Button" x="64" y="0" width="32" height="32">
+                    <frame id="231:9704" name="Icon" x="8" y="8" width="16" height="16" />
+                    <frame id="231:9707" name="App" x="19" y="7" width="6" height="6" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="231:9709" name="Main Content" x="0" y="48" width="1313" height="1">
+            <frame id="231:9847" name="Container:margin" x="0" y="0" width="1313" height="590" />
+          </frame>
+          <frame id="332:3703" name="Main Content" x="0" y="49" width="1313" height="3598">
+            <frame id="332:3705" name="CustomerProfilePage" x="0" y="0" width="1280" height="3598">
+              <frame id="332:3706" name="Button:margin" x="32" y="24" width="97" height="40">
+                <frame id="332:3707" name="Button" x="-8" y="0" width="102" height="28">
+                  <frame id="332:3708" name="Icon" x="11" y="7" width="14" height="14" />
+                  <text id="332:3711" name="Customers" x="31" y="6" width="60" height="16" />
+                </frame>
+              </frame>
+              <frame id="332:3712" name="Container" x="32" y="64" width="1216" height="46">
+                <frame id="332:3713" name="Container" x="0" y="0" width="183.1875" height="46">
+                  <frame id="332:3714" name="Heading 1" x="0" y="0" width="183.1875" height="28">
+                    <text id="332:3715" name="Restoran Mediteran" x="0" y="0" width="178" height="28" />
+                  </frame>
+                  <frame id="332:3716" name="Paragraph" x="0" y="28" width="183.1875" height="18">
+                    <text id="332:3717" name="Marija Vukoja · 12% rebate" x="0" y="2" width="141" height="16" />
+                  </frame>
+                </frame>
+                <frame id="332:3718" name="Container" x="1070" y="0" width="146" height="28">
+                  <frame id="332:3719" name="Button" x="0" y="0" width="62" height="28">
+                    <frame id="332:3720" name="Icon" x="11" y="7" width="14" height="14" />
+                    <text id="332:3723" name="Edit" x="29" y="6" width="22" height="16" />
+                  </frame>
+                  <frame id="332:3724" name="Button" x="70" y="0" width="76" height="28">
+                    <frame id="332:3725" name="Icon" x="11" y="7" width="14" height="14" />
+                    <text id="332:3731" name="Delete" x="29" y="6" width="36" height="16" />
+                  </frame>
+                </frame>
+              </frame>
+              <frame id="332:3732" name="TabsRoot" x="32" y="110" width="1216" height="3464">
+                <frame id="332:3733" name="Frame 11" x="0" y="20" width="1216" height="32">
+                  <frame id="332:3734" name="CompositeRoot" x="0" y="0" width="327" height="32">
+                    <frame id="332:3735" name="TabsTab" x="3" y="3.5" width="66" height="25">
+                      <text id="332:3736" name="Overview" x="7" y="4.5" width="52" height="16" />
+                    </frame>
+                    <frame id="332:3737" name="TabsTab" x="73" y="3.5" width="71" height="25">
+                      <text id="332:3738" name="Pricing (0)" x="7" y="4.5" width="57" height="16" />
+                    </frame>
+                    <frame id="332:3739" name="TabsTab" x="148" y="3.5" width="112" height="25">
+                      <text id="332:3740" name="Order History (13)" x="7" y="4.5" width="98" height="16" />
+                    </frame>
+                    <frame id="332:3741" name="TabsTab" x="264" y="3.5" width="60" height="25">
+                      <text id="332:3742" name="Komisija" x="7" y="4.5" width="46" height="16" />
+                    </frame>
+                  </frame>
+                  <frame id="332:3743" name="Button" x="1064" y="2" width="152" height="28">
+                    <instance id="332:3744" name="lucide/link-2" x="11" y="6" width="16" height="16" />
+                    <text id="332:3745" name="Generate Order Link" x="31" y="6" width="110" height="16" />
+                  </frame>
+                </frame>
+                <frame id="332:3746" name="TabsPanel" x="0" y="60" width="1216" height="3404">
+                  <frame id="332:3747" name="CustomerProfilePage" x="0" y="20" width="1216" height="106">
+                    <frame id="332:3748" name="Card" x="0" y="0" width="292" height="106">
+                      <frame id="332:3749" name="CardContent" x="0" y="0" width="292" height="106">
+                        <frame id="332:3750" name="StatCard" x="16" y="16" width="260" height="16">
+                          <text id="332:3751" name="Total Revenue" x="0" y="0" width="76" height="16" />
+                        </frame>
+                        <frame id="332:3752" name="StatCard" x="16" y="32" width="260" height="38">
+                          <text id="332:3753" name="34.110,84 €" x="0" y="6" width="123" height="32" />
+                        </frame>
+                        <frame id="332:3754" name="StatCard" x="16" y="70" width="260" height="20">
+                          <text id="332:3755" name="13 orders · 2.623,91 € avg" x="0" y="4" width="135" height="16" />
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="332:3756" name="Card" x="308" y="0" width="292" height="106">
+                      <frame id="332:3757" name="CardContent" x="0" y="0" width="292" height="106">
+                        <frame id="332:3758" name="StatCard" x="16" y="16" width="260" height="16">
+                          <text id="332:3759" name="This Year" x="0" y="0" width="48" height="16" />
+                        </frame>
+                        <frame id="332:3760" name="StatCard" x="16" y="32" width="260" height="38">
+                          <text id="332:3761" name="34.110,84 €" x="0" y="6" width="123" height="32" />
+                        </frame>
+                        <frame id="332:3762" name="StatCard" x="16" y="70" width="260" height="20">
+                          <text id="332:3763" name="13 orders" x="0" y="4" width="49" height="16" />
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="332:3764" name="Card" x="616" y="0" width="292" height="106">
+                      <frame id="332:3765" name="CardContent" x="0" y="0" width="292" height="106">
+                        <frame id="332:3766" name="StatCard" x="16" y="16" width="260" height="16">
+                          <text id="332:3767" name="Last Year" x="0" y="0" width="49" height="16" />
+                        </frame>
+                        <frame id="332:3768" name="StatCard" x="16" y="32" width="260" height="38">
+                          <text id="332:3769" name="0,00 €" x="0" y="6" width="75" height="32" />
+                        </frame>
+                        <frame id="332:3770" name="StatCard" x="16" y="70" width="260" height="20">
+                          <text id="332:3771" name="0 orders" x="0" y="4" width="45" height="16" />
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="332:3772" name="Card" x="924" y="0" width="292" height="106">
+                      <frame id="332:3773" name="CardContent" x="0" y="0" width="292" height="106">
+                        <frame id="332:3774" name="StatCard" x="16" y="16" width="260" height="16">
+                          <text id="332:3775" name="Last Order" x="0" y="0" width="57" height="16" />
+                        </frame>
+                        <frame id="332:3776" name="StatCard" x="16" y="32" width="260" height="38">
+                          <text id="332:3777" name="37 days ago" x="0" y="6" width="131" height="32" />
+                        </frame>
+                        <frame id="332:3778" name="StatCard" x="16" y="70" width="260" height="20">
+                          <text id="332:3779" name="~6d between orders" x="0" y="4" width="108" height="16" />
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="332:3780" name="Card" x="0" y="142" width="1216" height="272">
+                    <frame id="332:3781" name="CardHeader" x="24" y="24" width="1168" height="52">
+                      <text id="332:3782" name="Realized sales" x="0" y="0" width="114" height="28" />
+                      <text id="332:3783" name="Lifetime, across 6 products" x="0" y="32" width="170" height="20" />
+                    </frame>
+                    <frame id="332:3784" name="Container" x="24" y="92" width="1168" height="56">
+                      <frame id="332:3785" name="Container" x="0" y="0" width="1074" height="56">
+                        <text id="332:3786" name="REVENUE (REALIZED)" x="0" y="0" width="123" height="16" />
+                        <text id="332:3787" name="34.110,84 €" x="0" y="20" width="153" height="36" />
+                      </frame>
+                      <instance id="332:3788" name="Badge" x="1074" y="17" width="94" height="22" />
+                    </frame>
+                    <frame id="332:3789" name="Container" x="24" y="164" width="1168" height="84">
+                      <frame id="332:3790" name="Card" x="0" y="0" width="280" height="84">
+                        <text id="332:3791" name="Bottles sold" x="16" y="16" width="74" height="20" />
+                        <text id="332:3792" name="1.376" x="16" y="40" width="42" height="28" />
+                      </frame>
+                      <frame id="332:3793" name="Card" x="296" y="0" width="280" height="84">
+                        <text id="332:3794" name="Mean price/btl" x="16" y="16" width="92" height="20" />
+                        <text id="332:3795" name="24,79 €" x="16" y="40" width="63" height="28" />
+                      </frame>
+                      <frame id="332:3796" name="Card" x="592" y="0" width="280" height="84">
+                        <text id="332:3797" name="COGS" x="16" y="16" width="41" height="20" />
+                        <text id="332:3798" name="9.809,70 €" x="16" y="40" width="90" height="28" />
+                      </frame>
+                      <frame id="332:3799" name="Card" x="888" y="0" width="280" height="84">
+                        <text id="332:3800" name="Gross profit" x="16" y="16" width="75" height="20" />
+                        <text id="332:3801" name="24.301,14 €" x="16" y="40" width="95" height="28" />
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="332:3802" name="CustomerProfilePage" x="0" y="430" width="1216" height="178">
+                    <frame id="332:3803" name="Card" x="0" y="0" width="292" height="128">
+                      <frame id="332:3804" name="CardHeader" x="16" y="16" width="260" height="32">
+                        <text id="332:3805" name="THIS YEAR" x="0" y="8" width="220" height="16" />
+                        <frame id="332:3806" name="Container" x="228" y="0" width="32" height="32">
+                          <instance id="332:3807" name="lucide/coins" x="6" y="6" width="20" height="20" />
+                        </frame>
+                      </frame>
+                      <text id="332:3808" name="34.110,84 €" x="16" y="56" width="260" height="32" />
+                      <text id="332:3809" name="13 orders" x="16" y="96" width="260" height="16" />
+                    </frame>
+                    <frame id="332:3810" name="Card" x="308" y="0" width="292" height="124">
+                      <frame id="332:3811" name="CardHeader" x="16" y="16" width="260" height="28">
+                        <text id="332:3812" name="YOY Growth (last 3 months)" x="0" y="6" width="224" height="16" />
+                        <frame id="332:3813" name="Container" x="232" y="0" width="28" height="28">
+                          <instance id="332:3814" name="lucide/calendar" x="6" y="6" width="16" height="16" />
+                        </frame>
+                      </frame>
+                      <text id="332:3815" name="—" x="16" y="52" width="260" height="32" />
+                      <text id="332:3816" name="Scale factor for same-month-LY forecasts" x="16" y="92" width="260" height="16" />
+                    </frame>
+                    <frame id="332:3817" name="Card" x="616" y="0" width="292" height="178">
+                      <frame id="332:3818" name="CardHeader" x="16" y="16" width="260" height="28">
+                        <text id="332:3819" name="Annual projection 2026" x="0" y="6" width="224" height="16" />
+                        <frame id="332:3820" name="Container" x="232" y="0" width="28" height="28">
+                          <instance id="332:3821" name="lucide/target" x="6" y="6" width="16" height="16" />
+                        </frame>
+                      </frame>
+                      <text id="332:3822" name="34.111,00 €" x="16" y="52" width="260" height="32" />
+                      <frame id="332:3823" name="Progressbar" x="16" y="92" width="260" height="6" />
+                      <frame id="332:3824" name="Container" x="16" y="106" width="260" height="16">
+                        <text id="332:3825" name="YTD: 34.111,00 €" x="0" y="0" width="230" height="16" />
+                        <text id="332:3826" name="100%" x="230" y="0" width="30" height="16" />
+                      </frame>
+                      <text id="332:3827" name="Some months have no LY history — projection is partial" x="16" y="130" width="260" height="32" />
+                    </frame>
+                    <frame id="332:3828" name="Card" x="924" y="0" width="292" height="124">
+                      <frame id="332:3829" name="CardHeader" x="16" y="16" width="260" height="28">
+                        <text id="332:3830" name="Expected next order" x="0" y="6" width="224" height="16" />
+                        <frame id="332:3831" name="Container" x="232" y="0" width="28" height="28">
+                          <instance id="332:3832" name="lucide/clock" x="6" y="6" width="16" height="16" />
+                        </frame>
+                      </frame>
+                      <text id="332:3833" name="Jun 26, 2026" x="16" y="52" width="260" height="32" />
+                      <text id="332:3834" name="Typical gap: 6d · 53d since last" x="16" y="92" width="260" height="16" />
+                    </frame>
+                  </frame>
+                  <frame id="332:3835" name="Card" x="0" y="624" width="1216" height="200">
+                    <frame id="332:3836" name="CardHeader" x="24" y="24" width="1168" height="24">
+                      <instance id="332:3837" name="lucide/target" x="0" y="3" width="18" height="18" />
+                      <text id="332:3838" name="Next 3 months — same month last year × YoY growth" x="26" y="0" width="390" height="24" />
+                    </frame>
+                    <frame id="332:3839" name="Container" x="24" y="64" width="1168" height="112">
+                      <frame id="332:3840" name="Card" x="0" y="0" width="378.6666564941406" height="112">
+                        <text id="332:3841" name="Aug 26" x="16" y="16" width="45" height="20" />
+                        <text id="332:3842" name="—" x="16" y="44" width="18" height="24" />
+                        <text id="332:3843" name="No history" x="16" y="76" width="66" height="20" />
+                      </frame>
+                      <frame id="332:3844" name="Card" x="394.6666564941406" y="0" width="378.66668701171875" height="112">
+                        <text id="332:3845" name="Sep 26" x="16" y="16" width="44" height="20" />
+                        <text id="332:3846" name="—" x="16" y="44" width="18" height="24" />
+                        <text id="332:3847" name="No history" x="16" y="76" width="66" height="20" />
+                      </frame>
+                      <frame id="332:3848" name="Card" x="789.3333740234375" y="0" width="378.66668701171875" height="112">
+                        <text id="332:3849" name="Oct 26" x="16" y="16" width="43" height="20" />
+                        <text id="332:3850" name="—" x="16" y="44" width="18" height="24" />
+                        <text id="332:3851" name="No history" x="16" y="76" width="66" height="20" />
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="332:3852" name="Card" x="0" y="840" width="1216" height="296">
+                    <frame id="332:3853" name="CardHeader" x="24" y="24" width="1168" height="24">
+                      <instance id="332:3854" name="lucide/bar-chart-3" x="0" y="3" width="18" height="18" />
+                      <text id="332:3855" name="Spend by category" x="26" y="0" width="138" height="24" />
+                    </frame>
+                    <frame id="332:3856" name="CardContent" x="24" y="64" width="1168" height="208">
+                      <frame id="332:3857" name="Container" x="0" y="0" width="1168" height="24">
+                        <ellipse id="332:3858" name="Ellipse" x="0" y="7" width="10" height="10" />
+                        <text id="332:3859" name="Wine" x="18" y="0" width="38" height="24" />
+                        <text id="332:3860" name="1.376 bottles" x="64" y="4" width="967" height="16" />
+                        <text id="332:3861" name="34.111,00 €" x="1039" y="0" width="82" height="24" />
+                        <text id="332:3862" name="(100%)" x="1129" y="4" width="39" height="16" />
+                      </frame>
+                      <frame id="332:3863" name="Progressbar" x="0" y="36" width="1168" height="8">
+                        <frame id="332:3864" name="Indicator" x="0" y="0" width="1168" height="8" />
+                      </frame>
+                      <frame id="332:3865" name="Container" x="0" y="56" width="1168" height="29">
+                        <frame id="332:3866" name="Container" x="0" y="0" width="1168" height="20">
+                          <text id="332:3867" name="Red" x="0" y="0" width="1048" height="20" />
+                          <text id="332:3868" name="11.581,00 €" x="1056" y="0" width="72" height="20" />
+                          <text id="332:3869" name="(34%)" x="1136" y="2" width="32" height="16" />
+                        </frame>
+                        <frame id="332:3870" name="Progressbar" x="0" y="24" width="1168" height="5">
+                          <frame id="332:3871" name="Indicator" x="0" y="0" width="397" height="5" />
+                        </frame>
+                      </frame>
+                      <frame id="332:3872" name="Container" x="0" y="97" width="1168" height="29">
+                        <frame id="332:3873" name="Container" x="0" y="0" width="1168" height="20">
+                          <text id="332:3874" name="Red Reserve" x="0" y="0" width="1044" height="20" />
+                          <text id="332:3875" name="10.977,00 €" x="1052" y="0" width="76" height="20" />
+                          <text id="332:3876" name="(32%)" x="1136" y="2" width="32" height="16" />
+                        </frame>
+                        <frame id="332:3877" name="Progressbar" x="0" y="24" width="1168" height="5">
+                          <frame id="332:3878" name="Indicator" x="0" y="0" width="374" height="5" />
+                        </frame>
+                      </frame>
+                      <frame id="332:3879" name="Container" x="0" y="138" width="1168" height="29">
+                        <frame id="332:3880" name="Container" x="0" y="0" width="1168" height="20">
+                          <text id="332:3881" name="White" x="0" y="0" width="1050" height="20" />
+                          <text id="332:3882" name="7.906,00 €" x="1058" y="0" width="70" height="20" />
+                          <text id="332:3883" name="(23%)" x="1136" y="2" width="32" height="16" />
+                        </frame>
+                        <frame id="332:3884" name="Progressbar" x="0" y="24" width="1168" height="5">
+                          <frame id="332:3885" name="Indicator" x="0" y="0" width="269" height="5" />
+                        </frame>
+                      </frame>
+                      <frame id="332:3886" name="Container" x="0" y="179" width="1168" height="29">
+                        <frame id="332:3887" name="Container" x="0" y="0" width="1168" height="20">
+                          <text id="332:3888" name="Rosé" x="0" y="0" width="1054" height="20" />
+                          <text id="332:3889" name="3.647,00 €" x="1062" y="0" width="70" height="20" />
+                          <text id="332:3890" name="(11%)" x="1140" y="2" width="28" height="16" />
+                        </frame>
+                        <frame id="332:3891" name="Progressbar" x="0" y="24" width="1168" height="5">
+                          <frame id="332:3892" name="Indicator" x="0" y="0" width="128" height="5" />
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="332:3893" name="Card" x="0" y="1152" width="1216" height="552">
+                    <text id="332:3894" name="Revenue Trend (Last 12 Months)" x="24" y="24" width="233" height="24" />
+                    <frame id="332:3895" name="ChartContainer" x="24" y="64" width="1168" height="464">
+                      <frame id="332:3896" name="YAxis" x="0" y="0" width="72" height="440">
+                        <text id="332:3897" name="14.000 €" x="23" y="0" width="49" height="16" />
+                        <text id="332:3898" name="10.500 €" x="23" y="106" width="49" height="16" />
+                        <text id="332:3899" name="7.000 €" x="29" y="212" width="43" height="16" />
+                        <text id="332:3900" name="3.500 €" x="29" y="318" width="43" height="16" />
+                        <text id="332:3901" name="0 €" x="53" y="424" width="19" height="16" />
+                      </frame>
+                      <frame id="332:3902" name="Plot" x="80" y="0" width="1088" height="464">
+                        <frame id="332:3903" name="ChartArea" x="0" y="0" width="1088" height="440">
+                          <line id="332:3904" name="Gridline" x="0" y="8" width="1088" height="0" />
+                          <line id="332:3905" name="Gridline" x="0" y="114" width="1088" height="0" />
+                          <line id="332:3906" name="Gridline" x="0" y="220" width="1088" height="0" />
+                          <line id="332:3907" name="Gridline" x="0" y="326" width="1088" height="0" />
+                          <line id="332:3908" name="Gridline" x="0" y="432" width="1088" height="0" />
+                          <rounded-rectangle id="332:3909" name="Bar/Mar 26" x="570" y="303" width="38" height="129" />
+                          <rounded-rectangle id="332:3910" name="Bar/Apr 26" x="661" y="43" width="38" height="389" />
+                          <rounded-rectangle id="332:3911" name="Bar/May 26" x="752" y="88" width="38" height="344" />
+                          <rounded-rectangle id="332:3912" name="Bar/Jun 26" x="842" y="230" width="38" height="202" />
+                        </frame>
+                        <frame id="332:3913" name="XAxis" x="0" y="448" width="1088" height="16">
+                          <text id="332:3914" name="Sep 25" x="0" y="0" width="90.66666412353516" height="16" />
+                          <text id="332:3915" name="Oct 25" x="90.66666412353516" y="0" width="90.66666412353516" height="16" />
+                          <text id="332:3916" name="Nov 25" x="181.3333282470703" y="0" width="90.66666412353516" height="16" />
+                          <text id="332:3917" name="Dec 25" x="272" y="0" width="90.66665649414062" height="16" />
+                          <text id="332:3918" name="Jan 26" x="362.6666564941406" y="0" width="90.66665649414062" height="16" />
+                          <text id="332:3919" name="Feb 26" x="453.33331298828125" y="0" width="90.66666412353516" height="16" />
+                          <text id="332:3920" name="Mar 26" x="544" y="0" width="90.66665649414062" height="16" />
+                          <text id="332:3921" name="Apr 26" x="634.6666259765625" y="0" width="90.66665649414062" height="16" />
+                          <text id="332:3922" name="May 26" x="725.333251953125" y="0" width="90.66665649414062" height="16" />
+                          <text id="332:3923" name="Jun 26" x="815.9998779296875" y="0" width="90.66665649414062" height="16" />
+                          <text id="332:3924" name="Jul 26" x="906.66650390625" y="0" width="90.66665649414062" height="16" />
+                          <text id="332:3925" name="Aug 26" x="997.3331298828125" y="0" width="90.66665649414062" height="16" />
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="332:3926" name="Card" x="0" y="1720" width="1216" height="724">
+                    <frame id="332:3927" name="CardHeader" x="24" y="24" width="1168" height="24">
+                      <text id="332:3928" name="Products bought" x="0" y="0" width="977" height="24" />
+                      <text id="332:3929" name="1.376 bottles total · 6 products" x="977" y="2" width="191" height="20" />
+                    </frame>
+                    <frame id="332:3930" name="ButtonGroup" x="24" y="64" width="1168" height="32">
+                      <frame id="332:3931" name="Button" x="0" y="0" width="76" height="32">
+                        <text id="332:3932" name="Lifetime" x="12" y="6" width="52" height="20" />
+                      </frame>
+                      <frame id="332:3933" name="Button" x="84" y="0" width="81" height="32">
+                        <text id="332:3934" name="This year" x="12" y="6" width="57" height="20" />
+                      </frame>
+                      <frame id="332:3935" name="Button" x="173" y="0" width="95" height="32">
+                        <text id="332:3936" name="This month" x="12" y="6" width="71" height="20" />
+                      </frame>
+                      <frame id="332:3937" name="Button" x="276" y="0" width="74" height="32">
+                        <text id="332:3938" name="Custom" x="12" y="6" width="50" height="20" />
+                      </frame>
+                    </frame>
+                    <frame id="332:3939" name="CardContent" x="24" y="112" width="1168" height="588">
+                      <frame id="332:3940" name="GroupHeader" x="0" y="0" width="1168" height="36">
+                        <text id="332:3941" name="WINE" x="12" y="8" width="37" height="20" />
+                      </frame>
+                      <frame id="332:3942" name="GroupHeader" x="0" y="44" width="1168" height="32">
+                        <text id="332:3943" name="WHITE" x="8" y="8" width="38" height="16" />
+                      </frame>
+                      <frame id="332:3944" name="Item" x="0" y="84" width="1168" height="64">
+                        <frame id="332:3945" name="ItemContent" x="12" y="12" width="1059" height="40">
+                          <text id="332:3946" name="Velika Bjelica 2022" x="0" y="0" width="119" height="20" />
+                          <text id="332:3947" name="2022 · 0.75L" x="0" y="24" width="67" height="16" />
+                        </frame>
+                        <frame id="332:3948" name="Badge" x="1071" y="16" width="85" height="32">
+                          <text id="332:3949" name="185 bottles" x="12" y="8" width="61" height="16" />
+                        </frame>
+                      </frame>
+                      <frame id="332:3950" name="Item" x="0" y="156" width="1168" height="64">
+                        <frame id="332:3951" name="ItemContent" x="12" y="12" width="1057" height="40">
+                          <text id="332:3952" name="Žuti Vapor 2024" x="0" y="0" width="104" height="20" />
+                          <text id="332:3953" name="2024 · 0.75L" x="0" y="24" width="68" height="16" />
+                        </frame>
+                        <frame id="332:3954" name="Badge" x="1069" y="16" width="87" height="32">
+                          <text id="332:3955" name="206 bottles" x="12" y="8" width="63" height="16" />
+                        </frame>
+                      </frame>
+                      <frame id="332:3956" name="GroupHeader" x="0" y="228" width="1168" height="32">
+                        <text id="332:3957" name="ROSÉ" x="8" y="8" width="32" height="16" />
+                      </frame>
+                      <frame id="332:3958" name="Item" x="0" y="268" width="1168" height="64">
+                        <frame id="332:3959" name="ItemContent" x="12" y="12" width="1058" height="40">
+                          <text id="332:3960" name="Rožica Debit 2023" x="0" y="0" width="116" height="20" />
+                          <text id="332:3961" name="2023 · 0.75L" x="0" y="24" width="67" height="16" />
+                        </frame>
+                        <frame id="332:3962" name="Badge" x="1070" y="16" width="86" height="32">
+                          <text id="332:3963" name="252 bottles" x="12" y="8" width="62" height="16" />
+                        </frame>
+                      </frame>
+                      <frame id="332:3964" name="GroupHeader" x="0" y="340" width="1168" height="32">
+                        <text id="332:3965" name="RED" x="8" y="8" width="23" height="16" />
+                      </frame>
+                      <frame id="332:3966" name="Item" x="0" y="380" width="1168" height="64">
+                        <frame id="332:3967" name="ItemContent" x="12" y="12" width="1057" height="40">
+                          <text id="332:3968" name="Kosa Plavac 2021" x="0" y="0" width="109" height="20" />
+                          <text id="332:3969" name="2021 · 0.75L" x="0" y="24" width="65" height="16" />
+                        </frame>
+                        <frame id="332:3970" name="Badge" x="1069" y="16" width="87" height="32">
+                          <text id="332:3971" name="260 bottles" x="12" y="8" width="63" height="16" />
+                        </frame>
+                      </frame>
+                      <frame id="332:3972" name="Item" x="0" y="452" width="1168" height="64">
+                        <frame id="332:3973" name="ItemContent" x="12" y="12" width="1060" height="40">
+                          <text id="332:3974" name="Ostro Crna 2023" x="0" y="0" width="106" height="20" />
+                          <text id="332:3975" name="2023 · 0.75L" x="0" y="24" width="67" height="16" />
+                        </frame>
+                        <frame id="332:3976" name="Badge" x="1072" y="16" width="84" height="32">
+                          <text id="332:3977" name="169 bottles" x="12" y="8" width="60" height="16" />
+                        </frame>
+                      </frame>
+                      <frame id="332:3978" name="Item" x="0" y="524" width="1168" height="64">
+                        <frame id="332:3979" name="ItemContent" x="12" y="12" width="1057" height="40">
+                          <text id="332:3980" name="Pelješki Stari Vinograd 2020" x="0" y="0" width="179" height="20" />
+                          <text id="332:3981" name="2020 · 0.75L" x="0" y="24" width="68" height="16" />
+                        </frame>
+                        <frame id="332:3982" name="Badge" x="1069" y="16" width="87" height="32">
+                          <text id="332:3983" name="304 bottles" x="12" y="8" width="63" height="16" />
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="332:3984" name="Card" x="0" y="2460" width="1216" height="944">
+                    <text id="332:3985" name="Order History" x="24" y="24" width="100" height="24" />
+                    <frame id="332:3986" name="Table" x="24" y="64" width="1168" height="856">
+                      <frame id="332:3987" name="TableHeader" x="0" y="0" width="1168" height="36">
+                        <frame id="332:3988" name="TableCell" x="0" y="8" width="200" height="20">
+                          <text id="332:3989" name="Order" x="0" y="0" width="200" height="20" />
+                        </frame>
+                        <frame id="332:3990" name="TableCell" x="208" y="8" width="170" height="20">
+                          <text id="332:3991" name="Date" x="0" y="0" width="170" height="20" />
+                        </frame>
+                        <frame id="332:3992" name="TableCell" x="386" y="8" width="190" height="20">
+                          <text id="332:3993" name="Status" x="0" y="0" width="190" height="20" />
+                        </frame>
+                        <frame id="332:3994" name="TableCell" x="584" y="8" width="416" height="20">
+                          <text id="332:3995" name="Items" x="0" y="0" width="416" height="20" />
+                        </frame>
+                        <frame id="332:3996" name="TableCell" x="1008" y="8" width="160" height="20">
+                          <text id="332:3997" name="Total" x="0" y="0" width="160" height="20" />
+                        </frame>
+                      </frame>
+                      <frame id="332:3998" name="TableRow" x="0" y="36" width="1168" height="80">
+                        <frame id="332:3999" name="TableCell" x="0" y="30" width="200" height="20">
+                          <text id="332:4000" name="#VT-20260035" x="0" y="0" width="200" height="20" />
+                        </frame>
+                        <frame id="332:4001" name="TableCell" x="208" y="30" width="170" height="20">
+                          <text id="332:4002" name="Jun 20, 2026" x="0" y="0" width="170" height="20" />
+                        </frame>
+                        <frame id="332:4003" name="TableCell" x="386" y="29" width="190" height="22">
+                          <instance id="332:4004" name="Badge" x="0" y="0" width="79" height="22" />
+                        </frame>
+                        <frame id="332:4005" name="TableCell" x="584" y="12" width="416" height="56">
+                          <text id="332:4006" name="14 x Velika Bjelica 2022 2022" x="0" y="0" width="416" height="16" />
+                          <text id="332:4007" name="14 x Rožica Debit 2023 2023" x="0" y="20" width="416" height="16" />
+                          <text id="332:4008" name="+2 more" x="0" y="40" width="416" height="16" />
+                        </frame>
+                        <frame id="332:4009" name="TableCell" x="1008" y="30" width="160" height="20">
+                          <text id="332:4010" name="3.370,58 €" x="0" y="0" width="160" height="20" />
+                        </frame>
+                      </frame>
+                      <frame id="332:4011" name="TableRow" x="0" y="116" width="1168" height="80">
+                        <frame id="332:4012" name="TableCell" x="0" y="30" width="200" height="20">
+                          <text id="332:4013" name="#VT-20260026" x="0" y="0" width="200" height="20" />
+                        </frame>
+                        <frame id="332:4014" name="TableCell" x="208" y="30" width="170" height="20">
+                          <text id="332:4015" name="Jun 17, 2026" x="0" y="0" width="170" height="20" />
+                        </frame>
+                        <frame id="332:4016" name="TableCell" x="386" y="29" width="190" height="22">
+                          <instance id="332:4017" name="Badge" x="0" y="0" width="67" height="22" />
+                        </frame>
+                        <frame id="332:4018" name="TableCell" x="584" y="12" width="416" height="56">
+                          <text id="332:4019" name="60 x Ostro Crna 2023 2023" x="0" y="0" width="416" height="16" />
+                          <text id="332:4020" name="14 x Rožica Debit 2023 2023" x="0" y="20" width="416" height="16" />
+                          <text id="332:4021" name="+2 more" x="0" y="40" width="416" height="16" />
+                        </frame>
+                        <frame id="332:4022" name="TableCell" x="1008" y="30" width="160" height="20">
+                          <text id="332:4023" name="3.113,88 €" x="0" y="0" width="160" height="20" />
+                        </frame>
+                      </frame>
+                      <frame id="332:4024" name="TableRow" x="0" y="196" width="1168" height="80">
+                        <frame id="332:4025" name="TableCell" x="0" y="30" width="200" height="20">
+                          <text id="332:4026" name="#VT-20260022" x="0" y="0" width="200" height="20" />
+                        </frame>
+                        <frame id="332:4027" name="TableCell" x="208" y="30" width="170" height="20">
+                          <text id="332:4028" name="May 28, 2026" x="0" y="0" width="170" height="20" />
+                        </frame>
+                        <frame id="332:4029" name="TableCell" x="386" y="29" width="190" height="22">
+                          <instance id="332:4030" name="Badge" x="0" y="0" width="67" height="22" />
+                        </frame>
+                        <frame id="332:4031" name="TableCell" x="584" y="12" width="416" height="56">
+                          <text id="332:4032" name="46 x Pelješki Stari Vinograd 2020 2020" x="0" y="0" width="416" height="16" />
+                          <text id="332:4033" name="8 x Rožica Debit 2023 2023" x="0" y="20" width="416" height="16" />
+                          <text id="332:4034" name="+2 more" x="0" y="40" width="416" height="16" />
+                        </frame>
+                        <frame id="332:4035" name="TableCell" x="1008" y="30" width="160" height="20">
+                          <text id="332:4036" name="3.277,97 €" x="0" y="0" width="160" height="20" />
+                        </frame>
+                      </frame>
+                      <frame id="332:4037" name="TableRow" x="0" y="276" width="1168" height="80">
+                        <frame id="332:4038" name="TableCell" x="0" y="30" width="200" height="20">
+                          <text id="332:4039" name="#VT-20260010" x="0" y="0" width="200" height="20" />
+                        </frame>
+                        <frame id="332:4040" name="TableCell" x="208" y="30" width="170" height="20">
+                          <text id="332:4041" name="May 16, 2026" x="0" y="0" width="170" height="20" />
+                        </frame>
+                        <frame id="332:4042" name="TableCell" x="386" y="29" width="190" height="22">
+                          <instance id="332:4043" name="Badge" x="0" y="0" width="67" height="22" />
+                        </frame>
+                        <frame id="332:4044" name="TableCell" x="584" y="12" width="416" height="56">
+                          <text id="332:4045" name="57 x Kosa Plavac 2021 2021" x="0" y="0" width="416" height="16" />
+                          <text id="332:4046" name="22 x Rožica Debit 2023 2023" x="0" y="20" width="416" height="16" />
+                          <text id="332:4047" name="+1 more" x="0" y="40" width="416" height="16" />
+                        </frame>
+                        <frame id="332:4048" name="TableCell" x="1008" y="30" width="160" height="20">
+                          <text id="332:4049" name="2.820,58 €" x="0" y="0" width="160" height="20" />
+                        </frame>
+                      </frame>
+                      <frame id="332:4050" name="TableRow" x="0" y="356" width="1168" height="80">
+                        <frame id="332:4051" name="TableCell" x="0" y="30" width="200" height="20">
+                          <text id="332:4052" name="#VT-20260030" x="0" y="0" width="200" height="20" />
+                        </frame>
+                        <frame id="332:4053" name="TableCell" x="208" y="30" width="170" height="20">
+                          <text id="332:4054" name="May 14, 2026" x="0" y="0" width="170" height="20" />
+                        </frame>
+                        <frame id="332:4055" name="TableCell" x="386" y="29" width="190" height="22">
+                          <instance id="332:4056" name="Badge" x="0" y="0" width="67" height="22" />
+                        </frame>
+                        <frame id="332:4057" name="TableCell" x="584" y="12" width="416" height="56">
+                          <text id="332:4058" name="36 x Žuti Vapor 2024 2024" x="0" y="0" width="416" height="16" />
+                          <text id="332:4059" name="59 x Velika Bjelica 2022 2022" x="0" y="20" width="416" height="16" />
+                          <text id="332:4060" name="+1 more" x="0" y="40" width="416" height="16" />
+                        </frame>
+                        <frame id="332:4061" name="TableCell" x="1008" y="30" width="160" height="20">
+                          <text id="332:4062" name="2.810,88 €" x="0" y="0" width="160" height="20" />
+                        </frame>
+                      </frame>
+                      <frame id="332:4063" name="TableRow" x="0" y="436" width="1168" height="60">
+                        <frame id="332:4064" name="TableCell" x="0" y="20" width="200" height="20">
+                          <text id="332:4065" name="#VT-20260013" x="0" y="0" width="200" height="20" />
+                        </frame>
+                        <frame id="332:4066" name="TableCell" x="208" y="20" width="170" height="20">
+                          <text id="332:4067" name="May 8, 2026" x="0" y="0" width="170" height="20" />
+                        </frame>
+                        <frame id="332:4068" name="TableCell" x="386" y="19" width="190" height="22">
+                          <instance id="332:4069" name="Badge" x="0" y="0" width="67" height="22" />
+                        </frame>
+                        <frame id="332:4070" name="TableCell" x="584" y="12" width="416" height="36">
+                          <text id="332:4071" name="13 x Pelješki Stari Vinograd 2020 2020" x="0" y="0" width="416" height="16" />
+                          <text id="332:4072" name="31 x Velika Bjelica 2022 2022" x="0" y="20" width="416" height="16" />
+                        </frame>
+                        <frame id="332:4073" name="TableCell" x="1008" y="20" width="160" height="20">
+                          <text id="332:4074" name="1.246,03 €" x="0" y="0" width="160" height="20" />
+                        </frame>
+                      </frame>
+                      <frame id="332:4075" name="TableRow" x="0" y="496" width="1168" height="60">
+                        <frame id="332:4076" name="TableCell" x="0" y="20" width="200" height="20">
+                          <text id="332:4077" name="#VT-20260024" x="0" y="0" width="200" height="20" />
+                        </frame>
+                        <frame id="332:4078" name="TableCell" x="208" y="20" width="170" height="20">
+                          <text id="332:4079" name="May 7, 2026" x="0" y="0" width="170" height="20" />
+                        </frame>
+                        <frame id="332:4080" name="TableCell" x="386" y="19" width="190" height="22">
+                          <instance id="332:4081" name="Badge" x="0" y="0" width="99" height="22" />
+                        </frame>
+                        <frame id="332:4082" name="TableCell" x="584" y="12" width="416" height="36">
+                          <text id="332:4083" name="13 x Ostro Crna 2023 2023" x="0" y="0" width="416" height="16" />
+                          <text id="332:4084" name="45 x Rožica Debit 2023 2023" x="0" y="20" width="416" height="16" />
+                        </frame>
+                        <frame id="332:4085" name="TableCell" x="1008" y="20" width="160" height="20">
+                          <text id="332:4086" name="873,19 €" x="0" y="0" width="160" height="20" />
+                        </frame>
+                      </frame>
+                      <frame id="332:4087" name="TableRow" x="0" y="556" width="1168" height="80">
+                        <frame id="332:4088" name="TableCell" x="0" y="30" width="200" height="20">
+                          <text id="332:4089" name="#VT-20260023" x="0" y="0" width="200" height="20" />
+                        </frame>
+                        <frame id="332:4090" name="TableCell" x="208" y="30" width="170" height="20">
+                          <text id="332:4091" name="Apr 14, 2026" x="0" y="0" width="170" height="20" />
+                        </frame>
+                        <frame id="332:4092" name="TableCell" x="386" y="29" width="190" height="22">
+                          <instance id="332:4093" name="Badge" x="0" y="0" width="67" height="22" />
+                        </frame>
+                        <frame id="332:4094" name="TableCell" x="584" y="12" width="416" height="56">
+                          <text id="332:4095" name="33 x Kosa Plavac 2021 2021" x="0" y="0" width="416" height="16" />
+                          <text id="332:4096" name="18 x Ostro Crna 2023 2023" x="0" y="20" width="416" height="16" />
+                          <text id="332:4097" name="+2 more" x="0" y="40" width="416" height="16" />
+                        </frame>
+                        <frame id="332:4098" name="TableCell" x="1008" y="30" width="160" height="20">
+                          <text id="332:4099" name="4.051,40 €" x="0" y="0" width="160" height="20" />
+                        </frame>
+                      </frame>
+                      <frame id="332:4100" name="TableRow" x="0" y="636" width="1168" height="80">
+                        <frame id="332:4101" name="TableCell" x="0" y="30" width="200" height="20">
+                          <text id="332:4102" name="#VT-20260020" x="0" y="0" width="200" height="20" />
+                        </frame>
+                        <frame id="332:4103" name="TableCell" x="208" y="30" width="170" height="20">
+                          <text id="332:4104" name="Apr 14, 2026" x="0" y="0" width="170" height="20" />
+                        </frame>
+                        <frame id="332:4105" name="TableCell" x="386" y="29" width="190" height="22">
+                          <instance id="332:4106" name="Badge" x="0" y="0" width="67" height="22" />
+                        </frame>
+                        <frame id="332:4107" name="TableCell" x="584" y="12" width="416" height="56">
+                          <text id="332:4108" name="12 x Ostro Crna 2023 2023" x="0" y="0" width="416" height="16" />
+                          <text id="332:4109" name="27 x Pelješki Stari Vinograd 2020 2020" x="0" y="20" width="416" height="16" />
+                          <text id="332:4110" name="+2 more" x="0" y="40" width="416" height="16" />
+                        </frame>
+                        <frame id="332:4111" name="TableCell" x="1008" y="30" width="160" height="20">
+                          <text id="332:4112" name="2.120,35 €" x="0" y="0" width="160" height="20" />
+                        </frame>
+                      </frame>
+                      <frame id="332:4113" name="TableRow" x="0" y="716" width="1168" height="80">
+                        <frame id="332:4114" name="TableCell" x="0" y="30" width="200" height="20">
+                          <text id="332:4115" name="#VT-20260027" x="0" y="0" width="200" height="20" />
+                        </frame>
+                        <frame id="332:4116" name="TableCell" x="208" y="30" width="170" height="20">
+                          <text id="332:4117" name="Apr 11, 2026" x="0" y="0" width="170" height="20" />
+                        </frame>
+                        <frame id="332:4118" name="TableCell" x="386" y="29" width="190" height="22">
+                          <instance id="332:4119" name="Badge" x="0" y="0" width="67" height="22" />
+                        </frame>
+                        <frame id="332:4120" name="TableCell" x="584" y="12" width="416" height="56">
+                          <text id="332:4121" name="55 x Pelješki Stari Vinograd 2020 2020" x="0" y="0" width="416" height="16" />
+                          <text id="332:4122" name="42 x Ostro Crna 2023 2023" x="0" y="20" width="416" height="16" />
+                          <text id="332:4123" name="+1 more" x="0" y="40" width="416" height="16" />
+                        </frame>
+                        <frame id="332:4124" name="TableCell" x="1008" y="30" width="160" height="20">
+                          <text id="332:4125" name="3.672,14 €" x="0" y="0" width="160" height="20" />
+                        </frame>
+                      </frame>
+                      <frame id="332:4126" name="TableRow" x="0" y="796" width="1168" height="60">
+                        <frame id="332:4127" name="TableCell" x="0" y="20" width="200" height="20">
+                          <text id="332:4128" name="#VT-20260017" x="0" y="0" width="200" height="20" />
+                        </frame>
+                        <frame id="332:4129" name="TableCell" x="208" y="20" width="170" height="20">
+                          <text id="332:4130" name="Apr 5, 2026" x="0" y="0" width="170" height="20" />
+                        </frame>
+                        <frame id="332:4131" name="TableCell" x="386" y="19" width="190" height="22">
+                          <instance id="332:4132" name="Badge" x="0" y="0" width="67" height="22" />
+                        </frame>
+                        <frame id="332:4133" name="TableCell" x="584" y="12" width="416" height="36">
+                          <text id="332:4134" name="30 x Velika Bjelica 2022 2022" x="0" y="0" width="416" height="16" />
+                          <text id="332:4135" name="33 x Rožica Debit 2023 2023" x="0" y="20" width="416" height="16" />
+                        </frame>
+                        <frame id="332:4136" name="TableCell" x="1008" y="20" width="160" height="20">
+                          <text id="332:4137" name="2.650,11 €" x="0" y="0" width="160" height="20" />
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+      <frame id="231:9849" name="DialogBackdrop" x="0" y="0" width="1369" height="933">
+        <frame id="323:2953" name="Customer — Edit" x="879" y="10" width="480" height="1278">
+          <frame id="323:2954" name="FormHeader" x="0" y="0" width="480" height="64">
+            <text id="323:2955" name="Edit customer" x="24" y="20" width="419" height="24" />
+            <text id="323:2956" name="✕" x="443" y="22" width="13" height="20" />
+          </frame>
+          <frame id="323:2957" name="Separator" x="0" y="64" width="480" height="1" />
+          <frame id="323:2958" name="FormBody" x="0" y="65" width="480" height="1128">
+            <frame id="323:2959" name="FormSection" x="24" y="24" width="432" height="120">
+              <text id="323:2960" name="SectionHeader" x="0" y="0" width="64" height="20" />
+              <frame id="323:2961" name="LookupField" x="0" y="36" width="432" height="84">
+                <instance id="323:2962" name="label" x="0" y="0" width="76" height="20" />
+                <frame id="323:2963" name="Container" x="0" y="26" width="432" height="36">
+                  <instance id="323:2964" name="Default" x="0" y="0" width="349" height="36" />
+                  <frame id="323:2965" name="Button" x="357" y="0" width="75" height="34">
+                    <text id="323:2966" name="Look up" x="12" y="7" width="51" height="20" />
+                  </frame>
+                </frame>
+                <text id="323:2967" name="Enter a Croatian OIB or EU VAT number to auto-fill name and address." x="0" y="68" width="432" height="16" />
+              </frame>
+            </frame>
+            <frame id="323:2968" name="Separator" x="24" y="168" width="432" height="1" />
+            <frame id="323:2969" name="FormSection" x="24" y="193" width="432" height="332">
+              <text id="323:2970" name="SectionHeader" x="0" y="0" width="67" height="20" />
+              <instance id="323:2971" name="Field" x="0" y="36" width="432" height="62" />
+              <instance id="323:2972" name="Field" x="0" y="114" width="432" height="62" />
+              <instance id="323:2973" name="Field" x="0" y="192" width="432" height="62" />
+              <frame id="323:2974" name="FieldRow" x="0" y="270" width="432" height="62">
+                <instance id="323:2975" name="Field" x="0" y="0" width="208" height="62" />
+                <instance id="323:2976" name="Field" x="224" y="0" width="208" height="62" />
+              </frame>
+            </frame>
+            <frame id="323:2977" name="Separator" x="24" y="549" width="432" height="1" />
+            <frame id="323:2978" name="FormSection" x="24" y="574" width="432" height="254">
+              <text id="323:2979" name="SectionHeader" x="0" y="0" width="67" height="20" />
+              <instance id="323:2980" name="Field" x="0" y="36" width="432" height="62" />
+              <frame id="323:2981" name="FieldRow" x="0" y="114" width="432" height="62">
+                <instance id="323:2982" name="Field" x="0" y="0" width="208" height="62" />
+                <instance id="323:2983" name="Field" x="224" y="0" width="208" height="62" />
+              </frame>
+              <frame id="323:2984" name="FieldRow" x="0" y="192" width="432" height="62">
+                <instance id="323:2985" name="Field" x="0" y="0" width="208" height="62" />
+                <instance id="323:2986" name="Field" x="224" y="0" width="208" height="62" />
+              </frame>
+            </frame>
+            <frame id="323:2987" name="Separator" x="24" y="852" width="432" height="1" />
+            <frame id="323:2988" name="FormSection" x="24" y="877" width="432" height="120">
+              <text id="323:2989" name="SectionHeader" x="0" y="0" width="56" height="20" />
+              <frame id="323:2990" name="FieldRow" x="0" y="36" width="432" height="84">
+                <instance id="323:2991" name="Field" x="0" y="0" width="208" height="62" />
+                <instance id="323:2992" name="Field" x="224" y="0" width="208" height="84" />
+              </frame>
+            </frame>
+            <frame id="323:2993" name="Separator" x="24" y="1021" width="432" height="1" />
+            <frame id="323:2994" name="Disclosure" x="24" y="1046" width="432" height="58">
+              <frame id="323:2995" name="Container" x="12" y="10" width="369" height="38">
+                <text id="323:2996" name="Advanced settings" x="0" y="0" width="118" height="20" />
+                <text id="323:2997" name="Excluded from stats · Prices shown · Not an agency · Cases only" x="0" y="22" width="342" height="16" />
+              </frame>
+              <text id="323:2998" name="Show" x="389" y="21" width="31" height="16" />
+            </frame>
+          </frame>
+          <frame id="323:2999" name="Separator" x="0" y="1193" width="480" height="1" />
+          <frame id="323:3000" name="FormFooter" x="0" y="1194" width="480" height="84">
+            <frame id="323:3001" name="Button" x="269" y="24" width="68" height="36">
+              <text id="323:3002" name="Cancel" x="12" y="8" width="44" height="20" />
+            </frame>
+            <frame id="323:3003" name="Button" x="345" y="24" width="111" height="36">
+              <text id="323:3004" name="Save changes" x="12" y="8" width="87" height="20" />
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+    </frame>

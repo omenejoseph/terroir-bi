@@ -1,0 +1,9 @@
+    <frame id="408:1599" name="Notes" x="5980" y="1276" width="1369" height="120">
+      <text id="408:1600" name="Restoran Mediteran — order history" x="18" y="16" width="1333" height="17" />
+      <frame id="408:1601" name="Frame" x="18" y="41" width="1333" height="32">
+        <text id="408:1603" name="· Customer and channel columns dropped, wines ordered shown instead." x="0" y="0" width="1333" height="14" />
+        <text id="408:1604" name="· Only the statuses this restaurant actually has." x="0" y="18" width="1333" height="14" />
+      </frame>
+      <rounded-rectangle id="408:1605" name="Rectangle" x="18" y="81" width="1333" height="1" />
+      <text id="408:1606" name="Why — On one customer&#39;s page, repeating their name in every row wastes space that could show what they bought." x="18" y="90" width="1333" height="14" />
+    </frame>

@@ -1,0 +1,1103 @@
+    <frame id="143:3508" name="Manage Shortcuts" x="1533" y="100" width="1369" height="933">
+      <frame id="143:3509" name="App" x="0" y="0" width="1369" height="933">
+        <frame id="143:3510" name="ExpandedNav" x="0" y="0" width="240" height="1372">
+          <frame id="143:3511" name="Container" x="0" y="0" width="239" height="56">
+            <frame id="143:3512" name="Container" x="12" y="12" width="32" height="32">
+              <frame id="143:3513" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+            <frame id="143:3523" name="Container" x="54" y="13" width="173" height="30">
+              <frame id="143:3524" name="Paragraph" x="0" y="0" width="173" height="16.25">
+                <text id="143:3525" name="Terroir" x="0" y="0" width="42" height="17" />
+              </frame>
+              <frame id="143:3526" name="Paragraph" x="0" y="16.25" width="173" height="13.75">
+                <text id="143:3527" name="Business Intelligence" x="0" y="0" width="103" height="14" />
+              </frame>
+            </frame>
+          </frame>
+          <frame id="143:3528" name="Navigation" x="0" y="56" width="239" height="1243">
+            <frame id="143:3529" name="CollapsibleCategory" x="8" y="8" width="223" height="93">
+              <frame id="143:3530" name="Button" x="0" y="0" width="223" height="28">
+                <frame id="143:3531" name="Icon" x="6" y="8" width="12" height="12" />
+                <frame id="143:3533" name="Paragraph" x="24" y="4" width="193" height="20">
+                  <text id="143:3534" name="Overview" x="0" y="0" width="56" height="20" />
+                </frame>
+              </frame>
+              <frame id="143:3535" name="Container" x="0" y="28" width="223" height="65">
+                <frame id="143:3536" name="Button" x="0" y="2" width="223" height="31">
+                  <frame id="143:3537" name="Icon" x="8" y="8" width="15" height="15" />
+                  <text id="143:3542" name="Dashboard" x="33" y="5" width="68" height="21" />
+                  <frame id="143:3543" name="Text" x="0" y="7.5" width="2" height="16" />
+                </frame>
+                <frame id="143:3544" name="Button" x="0" y="34" width="223" height="31">
+                  <frame id="143:3545" name="Icon" x="8" y="8" width="15" height="15" />
+                  <text id="143:3549" name="Cash System" x="33" y="5" width="83" height="21" />
+                </frame>
+              </frame>
+            </frame>
+            <frame id="143:3550" name="Container:margin" x="8" y="101" width="223" height="16.000099182128906">
+              <frame id="143:3551" name="Container" x="0" y="8" width="223" height="0.00009999999747378752" />
+            </frame>
+            <frame id="143:3552" name="ShortcutsSection" x="8" y="117.0000991821289" width="223" height="163">
+              <frame id="143:3553" name="Container" x="0" y="0" width="223" height="32">
+                <frame id="143:3554" name="Button" x="6" y="6" width="187" height="20">
+                  <frame id="143:3555" name="Icon" x="0" y="4" width="12" height="12" />
+                  <frame id="143:3557" name="Paragraph" x="18" y="0" width="169" height="20">
+                    <text id="143:3558" name="Shortcuts" x="0" y="0" width="58" height="20" />
+                  </frame>
+                </frame>
+                <frame id="143:3559" name="TooltipTrigger" x="199" y="4" width="18" height="24" />
+              </frame>
+              <frame id="143:3560" name="Container" x="0" y="32" width="223" height="131">
+                <frame id="143:3561" name="ShortcutRow" x="0" y="2" width="223" height="31.5">
+                  <frame id="143:3562" name="Icon" x="8" y="8.25" width="15" height="15" />
+                  <frame id="143:3565" name="Button" x="33" y="5.25" width="154" height="21">
+                    <text id="143:3566" name="Cash System" x="0" y="0" width="83" height="21" />
+                  </frame>
+                  <frame id="143:3567" name="TooltipTrigger" x="197" y="5" width="18" height="21.5" />
+                </frame>
+                <frame id="143:3568" name="ShortcutRow" x="0" y="34.5" width="223" height="31.5">
+                  <frame id="143:3569" name="Icon" x="8" y="8.25" width="15" height="15" />
+                  <frame id="143:3572" name="Button" x="33" y="5.25" width="154" height="21">
+                    <text id="143:3573" name="Orders" x="0" y="0" width="43" height="21" />
+                  </frame>
+                  <frame id="143:3574" name="TooltipTrigger" x="197" y="5" width="18" height="21.5" />
+                </frame>
+                <frame id="143:3575" name="ShortcutRow" x="0" y="67" width="223" height="31.5">
+                  <frame id="143:3576" name="Icon" x="8" y="8.25" width="15" height="15" />
+                  <frame id="143:3579" name="Button" x="33" y="5.25" width="154" height="21">
+                    <text id="143:3580" name="Harvest" x="0" y="0" width="49" height="21" />
+                  </frame>
+                  <frame id="143:3581" name="TooltipTrigger" x="197" y="5" width="18" height="21.5" />
+                </frame>
+                <frame id="143:3582" name="ShortcutRow" x="0" y="99.5" width="223" height="31.5">
+                  <frame id="143:3583" name="Icon" x="8" y="8.25" width="15" height="15" />
+                  <frame id="143:3586" name="Button" x="33" y="5.25" width="154" height="21">
+                    <text id="143:3587" name="Inventory" x="0" y="0" width="60" height="21" />
+                  </frame>
+                  <frame id="143:3588" name="TooltipTrigger" x="197" y="5" width="18" height="21.5" />
+                </frame>
+              </frame>
+            </frame>
+            <frame id="143:3589" name="Container:margin" x="8" y="280.0000915527344" width="223" height="16.000099182128906">
+              <frame id="143:3590" name="Container" x="0" y="8" width="223" height="0.00009999999747378752" />
+            </frame>
+            <frame id="143:3591" name="Container" x="8" y="296.00018310546875" width="223" height="1075">
+              <frame id="143:3592" name="CollapsibleCategory" x="0" y="0" width="223" height="221">
+                <frame id="143:3593" name="Button" x="0" y="0" width="223" height="28">
+                  <frame id="143:3594" name="Icon" x="6" y="8" width="12" height="12" />
+                  <frame id="143:3596" name="Paragraph" x="24" y="4" width="193" height="20">
+                    <text id="143:3597" name="Sales" x="0" y="0" width="31" height="20" />
+                  </frame>
+                </frame>
+                <frame id="143:3598" name="Container" x="0" y="28" width="223" height="193">
+                  <frame id="143:3599" name="Button" x="0" y="2" width="223" height="31">
+                    <frame id="143:3600" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3604" name="Orders" x="33" y="5" width="43" height="21" />
+                  </frame>
+                  <frame id="143:3605" name="Button" x="0" y="34" width="223" height="31">
+                    <frame id="143:3606" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3611" name="Customers" x="33" y="5" width="69" height="21" />
+                  </frame>
+                  <frame id="143:3612" name="Button" x="0" y="66" width="223" height="31">
+                    <frame id="143:3613" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3620" name="Work Orders" x="33" y="5" width="79" height="21" />
+                  </frame>
+                  <frame id="143:3621" name="Button" x="0" y="98" width="223" height="31">
+                    <frame id="143:3622" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3627" name="Wine Club" x="33" y="5" width="65" height="21" />
+                  </frame>
+                  <frame id="143:3628" name="Button" x="0" y="130" width="223" height="31">
+                    <frame id="143:3629" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3635" name="Agencies" x="33" y="5" width="59" height="21" />
+                  </frame>
+                  <frame id="143:3636" name="Button" x="0" y="162" width="223" height="31">
+                    <frame id="143:3637" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3640" name="Pipeline" x="33" y="5" width="50" height="21" />
+                  </frame>
+                </frame>
+              </frame>
+              <frame id="143:3641" name="CollapsibleCategory" x="0" y="233" width="223" height="125">
+                <frame id="143:3642" name="Button" x="0" y="0" width="223" height="28">
+                  <frame id="143:3643" name="Icon" x="6" y="8" width="12" height="12" />
+                  <frame id="143:3645" name="Paragraph" x="24" y="4" width="193" height="20">
+                    <text id="143:3646" name="Hospitality" x="0" y="0" width="64" height="20" />
+                  </frame>
+                </frame>
+                <frame id="143:3647" name="Container" x="0" y="28" width="223" height="97">
+                  <frame id="143:3648" name="Button" x="0" y="2" width="223" height="31">
+                    <frame id="143:3649" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3654" name="Accommodation" x="33" y="5" width="105" height="21" />
+                  </frame>
+                  <frame id="143:3655" name="Button" x="0" y="34" width="223" height="31">
+                    <frame id="143:3656" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3659" name="Kitchen" x="33" y="5" width="48" height="21" />
+                  </frame>
+                  <frame id="143:3660" name="Button" x="0" y="66" width="223" height="31">
+                    <frame id="143:3661" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3666" name="Hospitality" x="33" y="5" width="69" height="21" />
+                  </frame>
+                </frame>
+              </frame>
+              <frame id="143:3667" name="CollapsibleCategory" x="0" y="370" width="223" height="125">
+                <frame id="143:3668" name="Button" x="0" y="0" width="223" height="28">
+                  <frame id="143:3669" name="Icon" x="6" y="8" width="12" height="12" />
+                  <frame id="143:3671" name="Paragraph" x="24" y="4" width="193" height="20">
+                    <text id="143:3672" name="Production" x="0" y="0" width="65" height="20" />
+                  </frame>
+                </frame>
+                <frame id="143:3673" name="Container" x="0" y="28" width="223" height="97">
+                  <frame id="143:3674" name="Button" x="0" y="2" width="223" height="31">
+                    <frame id="143:3675" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3680" name="Cellar" x="33" y="5" width="36" height="21" />
+                  </frame>
+                  <frame id="143:3681" name="Button" x="0" y="34" width="223" height="31">
+                    <frame id="143:3682" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3692" name="Harvest" x="33" y="5" width="49" height="21" />
+                  </frame>
+                  <frame id="143:3693" name="Button" x="0" y="66" width="223" height="31">
+                    <frame id="143:3694" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3703" name="Production Plan" x="33" y="5" width="99" height="21" />
+                  </frame>
+                </frame>
+              </frame>
+              <frame id="143:3704" name="CollapsibleCategory" x="0" y="507" width="223" height="125">
+                <frame id="143:3705" name="Button" x="0" y="0" width="223" height="28">
+                  <frame id="143:3706" name="Icon" x="6" y="8" width="12" height="12" />
+                  <frame id="143:3708" name="Paragraph" x="24" y="4" width="193" height="20">
+                    <text id="143:3709" name="Supply" x="0" y="0" width="41" height="20" />
+                  </frame>
+                </frame>
+                <frame id="143:3710" name="Container" x="0" y="28" width="223" height="97">
+                  <frame id="143:3711" name="Button" x="0" y="2" width="223" height="31">
+                    <frame id="143:3712" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3717" name="Inventory" x="33" y="5" width="60" height="21" />
+                  </frame>
+                  <frame id="143:3718" name="Button" x="0" y="34" width="223" height="31">
+                    <frame id="143:3719" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3723" name="Purchase Orders" x="33" y="5" width="104" height="21" />
+                  </frame>
+                  <frame id="143:3724" name="Button" x="0" y="66" width="223" height="31">
+                    <frame id="143:3725" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3731" name="Suppliers" x="33" y="5" width="59" height="21" />
+                  </frame>
+                </frame>
+              </frame>
+              <frame id="143:3732" name="CollapsibleCategory" x="0" y="644" width="223" height="125">
+                <frame id="143:3733" name="Button" x="0" y="0" width="223" height="28">
+                  <frame id="143:3734" name="Icon" x="6" y="8" width="12" height="12" />
+                  <frame id="143:3736" name="Paragraph" x="24" y="4" width="193" height="20">
+                    <text id="143:3737" name="Finance" x="0" y="0" width="46" height="20" />
+                  </frame>
+                </frame>
+                <frame id="143:3738" name="Container" x="0" y="28" width="223" height="97">
+                  <frame id="143:3739" name="Button" x="0" y="2" width="223" height="31">
+                    <frame id="143:3740" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3744" name="Costs" x="33" y="5" width="37" height="21" />
+                  </frame>
+                  <frame id="143:3745" name="Button" x="0" y="34" width="223" height="31">
+                    <frame id="143:3746" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3750" name="Inflow" x="33" y="5" width="39" height="21" />
+                  </frame>
+                  <frame id="143:3751" name="Button" x="0" y="66" width="223" height="31">
+                    <frame id="143:3752" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3754" name="Cash Flow" x="33" y="5" width="65" height="21" />
+                  </frame>
+                </frame>
+              </frame>
+              <frame id="143:3755" name="CollapsibleCategory" x="0" y="781" width="223" height="189">
+                <frame id="143:3756" name="Button" x="0" y="0" width="223" height="28">
+                  <frame id="143:3757" name="Icon" x="6" y="8" width="12" height="12" />
+                  <frame id="143:3759" name="Paragraph" x="24" y="4" width="193" height="20">
+                    <text id="143:3760" name="Team" x="0" y="0" width="32" height="20" />
+                  </frame>
+                </frame>
+                <frame id="143:3761" name="Container" x="0" y="28" width="223" height="161">
+                  <frame id="143:3762" name="Button" x="0" y="2" width="223" height="31">
+                    <frame id="143:3763" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3768" name="Employees" x="33" y="5" width="69" height="21" />
+                  </frame>
+                  <frame id="143:3769" name="Button" x="0" y="34" width="223" height="31">
+                    <frame id="143:3770" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3781" name="Schedules" x="33" y="5" width="65" height="21" />
+                  </frame>
+                  <frame id="143:3782" name="Button" x="0" y="66" width="223" height="31">
+                    <frame id="143:3783" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3787" name="My Team" x="33" y="5" width="57" height="21" />
+                  </frame>
+                  <frame id="143:3788" name="Button" x="0" y="98" width="223" height="31">
+                    <frame id="143:3789" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3793" name="Surveys" x="33" y="5" width="50" height="21" />
+                  </frame>
+                  <frame id="143:3794" name="Button" x="0" y="130" width="223" height="31">
+                    <frame id="143:3795" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3798" name="My Hours" x="33" y="5" width="61" height="21" />
+                  </frame>
+                </frame>
+              </frame>
+              <frame id="143:3799" name="CollapsibleCategory" x="0" y="982" width="223" height="93">
+                <frame id="143:3800" name="Button" x="0" y="0" width="223" height="28">
+                  <frame id="143:3801" name="Icon" x="6" y="8" width="12" height="12" />
+                  <frame id="143:3803" name="Paragraph" x="24" y="4" width="193" height="20">
+                    <text id="143:3804" name="System" x="0" y="0" width="44" height="20" />
+                  </frame>
+                </frame>
+                <frame id="143:3805" name="Container" x="0" y="28" width="223" height="65">
+                  <frame id="143:3806" name="Button" x="0" y="2" width="223" height="31">
+                    <frame id="143:3807" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3810" name="Settings" x="33" y="5" width="53" height="21" />
+                  </frame>
+                  <frame id="143:3811" name="Button" x="0" y="34" width="223" height="31">
+                    <frame id="143:3812" name="Icon" x="8" y="8" width="15" height="15" />
+                    <text id="143:3814" name="WhatsApp Bot" x="33" y="5" width="92" height="21" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="143:3815" name="Container" x="0" y="1299" width="239" height="73">
+            <frame id="143:3816" name="Button" x="12" y="13" width="215" height="48">
+              <frame id="143:3817" name="AvatarRoot" x="8" y="8" width="32" height="32">
+                <frame id="143:3818" name="AvatarFallback" x="0" y="0" width="32" height="32">
+                  <text id="143:3819" name="FD" x="8.5" y="7.5" width="15" height="17" />
+                </frame>
+                <frame id="143:3820" name="Text" x="0" y="0" width="32" height="32" />
+              </frame>
+              <frame id="143:3821" name="Container" x="50" y="9" width="131" height="30">
+                <frame id="143:3822" name="Paragraph" x="0" y="0" width="131" height="16.25">
+                  <text id="143:3823" name="Filip Demo" x="0" y="0" width="66" height="17" />
+                </frame>
+                <frame id="143:3824" name="Paragraph" x="0" y="16.25" width="131" height="13.75">
+                  <text id="143:3825" name="Administrator" x="0" y="0" width="68" height="14" />
+                </frame>
+              </frame>
+              <frame id="143:3826" name="Icon" x="191" y="16" width="16" height="16" />
+            </frame>
+          </frame>
+        </frame>
+        <frame id="143:3828" name="Container" x="240" y="0" width="1129" height="933">
+          <frame id="143:3829" name="Header" x="0" y="0" width="1129" height="48">
+            <frame id="143:3830" name="Button" x="8" y="7.5" width="32" height="32">
+              <frame id="143:3831" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+            <frame id="143:3834" name="Separator" x="48" y="0" width="1" height="47" />
+            <frame id="143:3835" name="Container:align" x="57" y="7.5" width="1064" height="32">
+              <frame id="143:3836" name="Container" x="672" y="0" width="392" height="32">
+                <frame id="143:3837" name="Container" x="0" y="0" width="288" height="32">
+                  <frame id="143:3838" name="Icon" x="10" y="9" width="14" height="14" />
+                  <frame id="143:3841" name="FieldControl" x="0" y="0" width="288" height="32">
+                    <text id="143:3842" name="Search orders, SKUs, partners…" x="33" y="9" width="214" height="14" />
+                  </frame>
+                  <frame id="143:3843" name="Kbd" x="255.7734375" y="6" width="25" height="20">
+                    <text id="143:3844" name="⌘K" x="5" y="2" width="15" height="16" />
+                  </frame>
+                </frame>
+                <frame id="143:3845" name="Container" x="296" y="0" width="96" height="32">
+                  <frame id="143:3846" name="Button" x="0" y="0" width="32" height="32">
+                    <frame id="143:3847" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="143:3851" name="Button" x="32" y="0" width="32" height="32">
+                    <frame id="143:3852" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="143:3857" name="Button" x="64" y="0" width="32" height="32">
+                    <frame id="143:3858" name="Icon" x="8" y="8" width="16" height="16" />
+                    <frame id="143:3861" name="App" x="19" y="7" width="6" height="6" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="231:10379" name="Main Content" x="0" y="48" width="1129" height="1303">
+            <frame id="231:10380" name="Container:margin" x="0" y="0" width="1129" height="1309.5">
+              <frame id="231:10381" name="Container" x="0" y="0" width="1129" height="1309.5">
+                <frame id="231:10382" name="Container" x="32" y="24" width="1216" height="36">
+                  <frame id="231:10383" name="Heading 1" x="0" y="8" width="98" height="28">
+                    <text id="231:10384" name="Dashboard" x="0" y="0" width="98" height="28" />
+                  </frame>
+                  <frame id="231:10385" name="Container" x="990" y="8" width="226" height="28">
+                    <frame id="231:10386" name="Button" x="0" y="0" width="98" height="28">
+                      <frame id="231:10387" name="Icon" x="11" y="7" width="14" height="14" />
+                      <text id="231:10390" name="New order" x="29" y="6" width="58" height="16" />
+                    </frame>
+                    <frame id="231:10391" name="Button" x="106" y="0" width="120" height="28">
+                      <frame id="231:10392" name="Icon" x="11" y="7" width="14" height="14" />
+                      <text id="231:10397" name="New customer" x="29" y="6" width="80" height="16" />
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="231:10398" name="Container" x="32" y="60" width="1216" height="48">
+                  <frame id="231:10399" name="TabsRoot" x="0" y="12" width="1216" height="32">
+                    <frame id="231:10400" name="CompositeRoot" x="0" y="0" width="505" height="32">
+                      <frame id="231:10401" name="TabsTab" x="3" y="3.5" width="47" height="25">
+                        <text id="231:10402" name="Today" x="7" y="4.5" width="33" height="16" />
+                      </frame>
+                      <frame id="231:10403" name="TabsTab" x="50" y="3.5" width="68" height="25">
+                        <text id="231:10404" name="Yesterday" x="7" y="4.5" width="54" height="16" />
+                      </frame>
+                      <frame id="231:10405" name="TabsTab" x="118" y="3.5" width="70" height="25">
+                        <text id="231:10406" name="This Week" x="7" y="4.5" width="56" height="16" />
+                      </frame>
+                      <frame id="231:10407" name="TabsTab" x="188" y="3.5" width="75" height="25">
+                        <text id="231:10408" name="This Month" x="7" y="4.5" width="61" height="16" />
+                      </frame>
+                      <frame id="231:10409" name="TabsTab" x="263" y="3.5" width="81" height="25">
+                        <text id="231:10410" name="This Quarter" x="7" y="4.5" width="67" height="16" />
+                      </frame>
+                      <frame id="231:10411" name="TabsTab" x="344" y="3.5" width="81" height="25">
+                        <text id="231:10412" name="Year to Date" x="7" y="4.5" width="67" height="16" />
+                      </frame>
+                      <frame id="231:10413" name="TabsTab" x="425" y="3.5" width="77" height="25">
+                        <frame id="231:10414" name="Icon" x="7" y="5.5" width="14" height="14" />
+                        <text id="231:10419" name="Custom" x="27" y="4.5" width="43" height="16" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="231:10420" name="Container" x="32" y="108" width="1216" height="46">
+                  <frame id="231:10421" name="Container" x="0" y="16" width="188" height="30">
+                    <frame id="231:10422" name="Icon" x="11" y="8" width="14" height="14" />
+                    <frame id="231:10427" name="Text" x="33" y="7" width="118" height="16">
+                      <text id="231:10428" name="6 orders ready to ship" x="0" y="0" width="118" height="16" />
+                    </frame>
+                    <frame id="231:10429" name="Button:margin" x="159" y="7" width="18" height="16">
+                      <frame id="231:10430" name="Button" x="2" y="0" width="16" height="16">
+                        <frame id="231:10431" name="Icon" x="2" y="2" width="12" height="12" />
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="231:10434" name="Container" x="196" y="16" width="287" height="30">
+                    <frame id="231:10435" name="Icon" x="11" y="8" width="14" height="14" />
+                    <frame id="231:10448" name="Text" x="33" y="7" width="217" height="16">
+                      <text id="231:10449" name="Inventory turnover 0,5× — below target" x="0" y="0" width="217" height="16" />
+                    </frame>
+                    <frame id="231:10450" name="Button:margin" x="258" y="7" width="18" height="16">
+                      <frame id="231:10451" name="Button" x="2" y="0" width="16" height="16">
+                        <frame id="231:10452" name="Icon" x="2" y="2" width="12" height="12" />
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="231:10455" name="Container" x="491" y="16" width="148" height="30">
+                    <frame id="231:10456" name="Icon" x="11" y="8" width="14" height="14" />
+                    <frame id="231:10460" name="Text" x="33" y="7" width="78" height="16">
+                      <text id="231:10461" name="1 task overdue" x="0" y="0" width="78" height="16" />
+                    </frame>
+                    <frame id="231:10462" name="Button:margin" x="119" y="7" width="18" height="16">
+                      <frame id="231:10463" name="Button" x="2" y="0" width="16" height="16">
+                        <frame id="231:10464" name="Icon" x="2" y="2" width="12" height="12" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="231:10467" name="Container:margin" x="32" y="154" width="1065" height="270">
+                  <frame id="231:10468" name="Container" x="0" y="24" width="1065" height="246">
+                    <frame id="231:10469" name="Card" x="0" y="0" width="908" height="246">
+                      <frame id="231:10470" name="CardHeader" x="0" y="0" width="908" height="68">
+                        <frame id="231:10471" name="CardDescription" x="16" y="16" width="876" height="44">
+                          <frame id="231:10472" name="Frame 4" x="0" y="0" width="876" height="44">
+                            <frame id="231:10473" name="CardTitle" x="0" y="0" width="295.0625" height="20">
+                              <text id="231:10474" name="Revenue" x="0" y="0" width="55" height="20" />
+                            </frame>
+                            <text id="231:10475" name="Year to Date" x="0" y="24" width="67" height="20" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="231:10476" name="CardContent" x="0" y="68" width="908" height="42">
+                        <frame id="231:10477" name="Frame 5" x="16" y="0" width="232.6015625" height="30">
+                          <text id="231:10478" name="67.753,68 €" x="0" y="0" width="157" height="30" />
+                          <frame id="231:10479" name="CardAction" x="169" y="0" width="63.6015625" height="21.5">
+                            <frame id="231:10480" name="Badge" x="0" y="0" width="63.6015625" height="20">
+                              <frame id="231:10481" name="Icon" x="8.80078125" y="4" width="12" height="12" />
+                              <text id="231:10484" name="18,5%" x="22.80078125" y="2" width="32" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="231:10485" name="ChartContainer" x="0" y="110" width="908" height="136">
+                        <frame id="231:10486" name="Container" x="16" y="0" width="0.00009999999747378752" height="0.00009999999747378752">
+                          <frame id="231:10487" name="Container" x="0" y="0" width="1" height="128">
+                            <frame id="231:10488" name="Icon" x="0" y="0" width="868" height="128">
+                              <frame id="231:10489" name="Group" x="9.564738273620605" y="4" width="848.8704833984375" height="94">
+                                <frame id="231:10490" name="Group" x="9.564738273620605" y="4" width="848.8704833984375" height="94">
+                                  <frame id="231:10491" name="Group" x="9.564738273620605" y="4" width="848.8704833984375" height="94">
+                                    <vector id="231:10492" name="Vector" x="9.564738273620605" y="98" width="848.8704833984375" height="0" />
+                                    <vector id="231:10493" name="Vector" x="9.564738273620605" y="51" width="848.8704833984375" height="0" />
+                                    <vector id="231:10494" name="Vector" x="9.564738273620605" y="4" width="848.8704833984375" height="0" />
+                                  </frame>
+                                </frame>
+                              </frame>
+                              <frame id="231:10495" name="Group" x="9.564738273620605" y="14.847000122070312" width="848.8704833984375" height="83.15299987792969">
+                                <frame id="231:10496" name="Group" x="9.564738273620605" y="14.847000122070312" width="848.8704833984375" height="83.15299987792969">
+                                  <frame id="231:10497" name="Group" x="9.564738273620605" y="14.847000122070312" width="848.8704833984375" height="83.15299987792969">
+                                    <vector id="231:10498" name="recharts-area-_r_20_" x="9.564738273620605" y="14.847000122070312" width="848.8704833984375" height="83.15299987792969" />
+                                    <vector id="231:10499" name="Vector" x="9.564738273620605" y="14.847000122070312" width="848.8704833984375" height="46.72800064086914" />
+                                  </frame>
+                                </frame>
+                              </frame>
+                              <frame id="231:10500" name="Group" x="125.93572998046875" y="108.5199966430664" width="744.0444946289062" height="15">
+                                <frame id="231:10501" name="Group" x="125.93572998046875" y="108.5199966430664" width="744.0444946289062" height="15">
+                                  <frame id="231:10502" name="Group" x="125.93572998046875" y="108.5199966430664" width="50.21487808227539" height="15">
+                                    <text id="231:10503" name="Feb" x="125.93572998046875" y="108.5199966430664" width="50.21487808227539" height="15" />
+                                  </frame>
+                                  <frame id="231:10504" name="Group" x="266.2185516357422" y="108.5199966430664" width="52.60606384277344" height="15">
+                                    <text id="231:10505" name="Mar" x="266.2185516357422" y="108.5199966430664" width="52.60606384277344" height="15" />
+                                  </frame>
+                                  <frame id="231:10506" name="Group" x="410.088134765625" y="108.5199966430664" width="47.823692321777344" height="15">
+                                    <text id="231:10507" name="Apr" x="410.088134765625" y="108.5199966430664" width="47.823692321777344" height="15" />
+                                  </frame>
+                                  <frame id="231:10508" name="Group" x="546.7841796875" y="108.5199966430664" width="57.388427734375" height="15">
+                                    <text id="231:10509" name="May" x="546.7841796875" y="108.5199966430664" width="57.388427734375" height="15" />
+                                  </frame>
+                                  <frame id="231:10510" name="Group" x="691.8494262695312" y="108.5199966430664" width="50.21487808227539" height="15">
+                                    <text id="231:10511" name="Jun" x="691.8494262695312" y="108.5199966430664" width="50.21487808227539" height="15" />
+                                  </frame>
+                                  <frame id="231:10512" name="Group" x="829.330078125" y="108.5199966430664" width="40.6501350402832" height="15">
+                                    <text id="231:10513" name="Jul" x="829.330078125" y="108.5199966430664" width="40.6501350402832" height="15" />
+                                  </frame>
+                                </frame>
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="231:10514" name="Card" x="924" y="0" width="291" height="246">
+                      <frame id="231:10515" name="CardHeader" x="0" y="16" width="291" height="24">
+                        <frame id="231:10516" name="CardTitle" x="15.99981689453125" y="0" width="296.234375" height="20">
+                          <text id="231:10517" name="Upcoming tasks" x="0" y="0" width="102" height="20" />
+                        </frame>
+                        <frame id="231:10518" name="CardAction" x="316.2340087890625" y="0" width="62.4296875" height="19.5">
+                          <text id="231:10519" name="3 remaining" x="0" y="0" width="63" height="16" />
+                        </frame>
+                      </frame>
+                      <frame id="231:10520" name="CardContent" x="0" y="56" width="291" height="140">
+                        <frame id="231:10521" name="App" x="16" y="0" width="259" height="44">
+                          <frame id="231:10522" name="CheckboxRoot:margin" x="0" y="6" width="16" height="18">
+                            <frame id="231:10523" name="CheckboxRoot" x="0" y="2" width="16" height="16" />
+                          </frame>
+                          <frame id="231:10524" name="Container" x="26" y="6" width="233" height="32">
+                            <frame id="231:10525" name="Paragraph" x="0" y="0" width="233" height="16">
+                              <text id="231:10526" name="Priprema degustacije za distributera (IT)" x="0" y="0" width="217" height="16" />
+                            </frame>
+                            <frame id="231:10527" name="Paragraph" x="0" y="16" width="233" height="16">
+                              <text id="231:10528" name="Hospitality · Overdue 1d" x="0" y="0" width="129" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="231:10529" name="App:margin" x="16" y="44" width="259" height="48">
+                          <frame id="231:10530" name="App" x="0" y="4" width="362.6640625" height="44">
+                            <frame id="231:10531" name="CheckboxRoot:margin" x="0" y="6" width="16" height="18">
+                              <frame id="231:10532" name="CheckboxRoot" x="0" y="2" width="16" height="16" />
+                            </frame>
+                            <frame id="231:10533" name="Container" x="26" y="6" width="336.6640625" height="32">
+                              <frame id="231:10534" name="Paragraph" x="0" y="0" width="336.6640625" height="16">
+                                <text id="231:10535" name="Kalibracija vage u skladištu" x="0" y="0" width="145" height="16" />
+                              </frame>
+                              <frame id="231:10536" name="Paragraph" x="0" y="16" width="336.6640625" height="16">
+                                <text id="231:10537" name="Vineyard · No due date" x="0" y="0" width="124" height="16" />
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="231:10538" name="App:margin" x="16" y="92" width="259" height="48">
+                          <frame id="231:10539" name="App" x="0" y="4" width="362.6640625" height="44">
+                            <frame id="231:10540" name="CheckboxRoot:margin" x="0" y="6" width="16" height="18">
+                              <frame id="231:10541" name="CheckboxRoot" x="0" y="2" width="16" height="16" />
+                            </frame>
+                            <frame id="231:10542" name="Container" x="26" y="6" width="336.6640625" height="32">
+                              <frame id="231:10543" name="Paragraph" x="0" y="0" width="336.6640625" height="16">
+                                <text id="231:10544" name="Slanje uzoraka — novi distributer NL" x="0" y="0" width="198" height="16" />
+                              </frame>
+                              <frame id="231:10545" name="Paragraph" x="0" y="16" width="336.6640625" height="16">
+                                <text id="231:10546" name="Sales · Due tomorrow" x="0" y="0" width="115" height="16" />
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="231:10547" name="Container" x="32" y="424" width="1065" height="283">
+                  <frame id="231:10548" name="Card" x="0" y="16" width="254.25" height="267">
+                    <frame id="231:10549" name="CardHeader" x="0" y="0" width="254.25" height="44">
+                      <frame id="231:10550" name="CardTitle" x="15.999908447265625" y="12" width="221.7421875" height="20">
+                        <instance id="231:10551" name="Lucide Icons / hourglass" x="0" y="2" width="16" height="16" />
+                        <text id="231:10552" name="Runway" x="24" y="0" width="51" height="20" />
+                      </frame>
+                    </frame>
+                    <frame id="231:10553" name="CardContent" x="0" y="44" width="295" height="54.5">
+                      <frame id="231:10554" name="App" x="16" y="12" width="263" height="30.5">
+                        <text id="231:10555" name="4,2" x="0" y="0" width="42" height="30" />
+                        <text id="231:10556" name="months" x="50.2578125" y="10.5" width="48" height="20" />
+                      </frame>
+                    </frame>
+                    <frame id="231:10557" name="App" x="0" y="98.5" width="254.25" height="121">
+                      <frame id="231:10558" name="Container" x="0" y="9" width="295" height="52">
+                        <frame id="231:10559" name="Container" x="16" y="10" width="263" height="32">
+                          <frame id="231:10560" name="Paragraph" x="0" y="0" width="263" height="16">
+                            <text id="231:10561" name="Collect 1.480 € — Wiener Weinhaus" x="0" y="0" width="196" height="16" />
+                          </frame>
+                          <frame id="231:10562" name="Paragraph" x="0" y="16" width="263" height="16">
+                            <text id="231:10563" name="Overdue 14 days" x="0" y="0" width="90" height="16" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="231:10564" name="Container" x="0" y="61" width="295" height="52">
+                        <frame id="231:10565" name="Container" x="16" y="10" width="263" height="32">
+                          <frame id="231:10566" name="Paragraph" x="0" y="0" width="263" height="16">
+                            <text id="231:10567" name="Delay payable — Plaza Una Marinović" x="0" y="0" width="203" height="16" />
+                          </frame>
+                          <frame id="231:10568" name="Paragraph" x="0" y="16" width="263" height="16">
+                            <text id="231:10569" name="2.300 € due soon" x="0" y="0" width="95" height="16" />
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="231:10570" name="Card" x="270.25" y="16" width="254.25" height="267">
+                    <frame id="231:10571" name="CardHeader" x="0" y="0" width="254.25" height="44">
+                      <frame id="231:10572" name="CardTitle" x="16" y="12" width="243" height="20">
+                        <instance id="231:10573" name="lucide/wallet-cards" x="0" y="2" width="16" height="16" />
+                        <text id="231:10574" name="Net cash flow" x="24" y="0" width="88" height="20" />
+                      </frame>
+                    </frame>
+                    <frame id="231:10575" name="CardContent" x="0" y="44" width="295" height="54">
+                      <frame id="231:10576" name="App" x="16" y="12" width="263" height="30">
+                        <text id="231:10577" name="−2.493 €" x="0" y="0" width="119" height="30" />
+                      </frame>
+                    </frame>
+                    <frame id="231:10578" name="CardContent" x="0" y="98" width="295" height="119">
+                      <frame id="231:10579" name="App" x="16" y="13" width="263" height="16">
+                        <frame id="231:10580" name="Text" x="0" y="0" width="80" height="16">
+                          <text id="231:10581" name="Salary" x="0" y="0" width="33" height="16" />
+                        </frame>
+                        <frame id="231:10582" name="ProgressTrack" x="88" y="6" width="139" height="4">
+                          <frame id="231:10583" name="ProgressIndicator" x="0" y="0" width="68.109375" height="4" />
+                        </frame>
+                        <frame id="231:10584" name="Text" x="235" y="0" width="28" height="16">
+                          <text id="231:10585" name="49%" x="4" y="0" width="24" height="16" />
+                        </frame>
+                      </frame>
+                      <frame id="231:10586" name="App:margin" x="16" y="29" width="263" height="26">
+                        <frame id="231:10587" name="App" x="0" y="10" width="263" height="16">
+                          <frame id="231:10588" name="Text" x="0" y="0" width="80" height="16">
+                            <text id="231:10589" name="Marketing" x="0" y="0" width="54" height="16" />
+                          </frame>
+                          <frame id="231:10590" name="ProgressTrack" x="88" y="6" width="139" height="4">
+                            <frame id="231:10591" name="ProgressIndicator" x="0" y="0" width="34.75" height="4" />
+                          </frame>
+                          <frame id="231:10592" name="Text" x="235" y="0" width="28" height="16">
+                            <text id="231:10593" name="25%" x="4" y="0" width="24" height="16" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="231:10594" name="App:margin" x="16" y="55" width="263" height="26">
+                        <frame id="231:10595" name="App" x="0" y="10" width="263" height="16">
+                          <frame id="231:10596" name="Text" x="0" y="0" width="80" height="16">
+                            <text id="231:10597" name="Operations" x="0" y="0" width="60" height="16" />
+                          </frame>
+                          <frame id="231:10598" name="ProgressTrack" x="88" y="6" width="139" height="4">
+                            <frame id="231:10599" name="ProgressIndicator" x="0" y="0" width="19.453125" height="4" />
+                          </frame>
+                          <frame id="231:10600" name="Text" x="235" y="0" width="28" height="16">
+                            <text id="231:10601" name="14%" x="6" y="0" width="22" height="16" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="231:10602" name="App:margin" x="16" y="81" width="263" height="26">
+                        <frame id="231:10603" name="App" x="0" y="10" width="263" height="16">
+                          <frame id="231:10604" name="Text" x="0" y="0" width="80" height="16">
+                            <text id="231:10605" name="Other" x="0" y="0" width="32" height="16" />
+                          </frame>
+                          <frame id="231:10606" name="ProgressTrack" x="88" y="6" width="139" height="4">
+                            <frame id="231:10607" name="ProgressIndicator" x="0" y="0" width="16.6796875" height="4" />
+                          </frame>
+                          <frame id="231:10608" name="Text" x="235" y="0" width="28" height="16">
+                            <text id="231:10609" name="12%" x="6" y="0" width="22" height="16" />
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="231:10610" name="Card" x="540.5" y="16" width="254.25" height="267">
+                    <frame id="231:10611" name="CardHeader" x="0" y="0" width="254.25" height="40">
+                      <frame id="231:10612" name="CardTitle" x="16" y="12" width="208" height="20">
+                        <frame id="231:10613" name="Icon" x="0" y="3" width="14" height="14" />
+                        <text id="231:10617" name="Reorder pipeline" x="22" y="0" width="104" height="20" />
+                      </frame>
+                      <frame id="231:10618" name="CardAction" x="224" y="12" width="14.25" height="19.5">
+                        <text id="231:10619" name="View all" x="0" y="0" width="14.25" height="64" />
+                      </frame>
+                    </frame>
+                    <frame id="231:10620" name="CardContent" x="0" y="40" width="254.25" height="54">
+                      <frame id="231:10621" name="App" x="16" y="12" width="263" height="30">
+                        <text id="231:10622" name="11.758,19 €" x="0" y="0" width="141" height="30" />
+                      </frame>
+                    </frame>
+                    <frame id="231:10623" name="App" x="0" y="94" width="254.25" height="167">
+                      <frame id="231:10624" name="CardContent" x="0" y="9" width="254.25" height="150">
+                        <frame id="231:10625" name="App" x="16" y="0" width="222.25" height="52">
+                          <frame id="231:10626" name="Container" x="0" y="10" width="149.25" height="32">
+                            <frame id="231:10627" name="Paragraph" x="0" y="0" width="149.25" height="16">
+                              <text id="231:10628" name="Dubrovnik Palace Hotel" x="0" y="0" width="126" height="16" />
+                            </frame>
+                            <frame id="231:10629" name="Paragraph" x="0" y="16" width="149.25" height="16">
+                              <text id="231:10630" name="94 days ago" x="0" y="0" width="66" height="16" />
+                            </frame>
+                          </frame>
+                          <frame id="231:10631" name="Text" x="161.25" y="10" width="61" height="16">
+                            <text id="231:10632" name="4.250,00 €" x="0" y="0" width="61" height="16" />
+                          </frame>
+                        </frame>
+                        <frame id="231:10633" name="App" x="16" y="52" width="222.25" height="49">
+                          <frame id="231:10634" name="Container" x="0" y="10" width="151.25" height="32">
+                            <frame id="231:10635" name="Paragraph" x="0" y="0" width="151.25" height="16">
+                              <text id="231:10636" name="Noel Restaurant" x="0" y="0" width="88" height="16" />
+                            </frame>
+                            <frame id="231:10637" name="Paragraph" x="0" y="16" width="151.25" height="16">
+                              <text id="231:10638" name="67 days ago" x="0" y="0" width="65" height="16" />
+                            </frame>
+                          </frame>
+                          <frame id="231:10639" name="Text" x="163.25" y="10" width="59" height="16">
+                            <text id="231:10640" name="1.980,00 €" x="0" y="0" width="59" height="16" />
+                          </frame>
+                        </frame>
+                        <frame id="231:10641" name="App" x="16" y="101" width="222.25" height="49">
+                          <frame id="231:10642" name="Container" x="0" y="10" width="154.25" height="32">
+                            <frame id="231:10643" name="Paragraph" x="0" y="0" width="154.25" height="16">
+                              <text id="231:10644" name="Wine &amp; More d.o.o." x="0" y="0" width="102" height="16" />
+                            </frame>
+                            <frame id="231:10645" name="Paragraph" x="0" y="16" width="154.25" height="16">
+                              <text id="231:10646" name="58 days ago" x="0" y="0" width="66" height="16" />
+                            </frame>
+                          </frame>
+                          <frame id="231:10647" name="Text" x="166.25" y="10" width="56" height="16">
+                            <text id="231:10648" name="5.528,19 €" x="0" y="0" width="56" height="16" />
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="231:10649" name="Card" x="810.75" y="16" width="254.25" height="267">
+                    <frame id="231:10650" name="CardHeader" x="0" y="0" width="254.25" height="40">
+                      <frame id="231:10651" name="CardTitle" x="16" y="12" width="176.25" height="20">
+                        <frame id="231:10652" name="Icon" x="0" y="3" width="14" height="14" />
+                        <text id="231:10655" name="Production" x="22" y="0" width="70" height="20" />
+                      </frame>
+                      <frame id="231:10656" name="CardAction" x="196.25" y="12" width="42" height="19.5">
+                        <text id="231:10657" name="View all" x="0" y="0" width="42" height="16" />
+                      </frame>
+                    </frame>
+                    <frame id="231:10658" name="CardContent" x="0" y="40" width="254.25" height="54">
+                      <frame id="231:10659" name="App" x="16" y="12" width="263" height="30.5">
+                        <text id="231:10660" name="2" x="0" y="0" width="17" height="30" />
+                        <text id="231:10661" name="work orders late" x="24" y="10.5" width="101" height="20" />
+                      </frame>
+                    </frame>
+                    <frame id="231:10662" name="App" x="0" y="94" width="254.25" height="173">
+                      <frame id="231:10663" name="Container" x="0" y="9" width="254.25" height="52">
+                        <frame id="231:10664" name="Container" x="16" y="10" width="141.25" height="32">
+                          <frame id="231:10665" name="Paragraph" x="0" y="0" width="141.25" height="16">
+                            <text id="231:10666" name="Bottling — Malvazija 2024" x="0" y="0" width="144" height="16" />
+                          </frame>
+                          <frame id="231:10667" name="Paragraph" x="0" y="16" width="141.25" height="16">
+                            <text id="231:10668" name="Harvest · late" x="0" y="0" width="71" height="16" />
+                          </frame>
+                        </frame>
+                        <frame id="231:10669" name="Button" x="167.25" y="10" width="71" height="28">
+                          <text id="231:10670" name="Reassign" x="11" y="6" width="49" height="16" />
+                        </frame>
+                      </frame>
+                      <frame id="231:10671" name="Container" x="0" y="61" width="254.25" height="52">
+                        <frame id="231:10672" name="Container" x="16" y="10" width="222.24998474121094" height="32">
+                          <frame id="231:10673" name="Paragraph" x="0" y="0" width="222.24998474121094" height="16">
+                            <text id="231:10674" name="Bottling — Refošk 2025" x="0" y="0" width="131" height="16" />
+                          </frame>
+                          <frame id="231:10675" name="Paragraph" x="0" y="16" width="222.24998474121094" height="16">
+                            <text id="231:10676" name="Bottle line · 0 cases left" x="0" y="0" width="126" height="16" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="231:10677" name="Container" x="0" y="113" width="254.25" height="52">
+                        <frame id="231:10678" name="Container" x="16" y="10" width="222.25" height="32">
+                          <frame id="231:10679" name="Paragraph" x="0" y="0" width="222.25" height="16">
+                            <text id="231:10680" name="Harvest — Teran black" x="0" y="0" width="123" height="16" />
+                          </frame>
+                          <frame id="231:10681" name="Paragraph" x="0" y="16" width="222.25" height="16">
+                            <text id="231:10682" name="Unassigned · on track" x="0" y="0" width="116" height="16" />
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="231:10683" name="Card:margin" x="32" y="707" width="1065" height="165">
+                  <frame id="231:10684" name="Card" x="0" y="16" width="1065" height="149">
+                    <frame id="231:10685" name="App" x="0" y="0" width="1065" height="149">
+                      <frame id="231:10686" name="TooltipTrigger" x="0" y="0" width="304" height="75">
+                        <frame id="231:10687" name="App" x="16" y="16" width="271" height="16">
+                          <frame id="231:10688" name="Text" x="0" y="0" width="74" height="16">
+                            <text id="231:10689" name="DTC Revenue" x="0" y="0" width="74" height="16" />
+                          </frame>
+                          <frame id="231:10690" name="Icon" x="257" y="1" width="14" height="14" />
+                        </frame>
+                        <frame id="231:10693" name="App" x="16" y="40" width="271" height="18">
+                          <text id="231:10694" name="0,0%" x="0" y="0" width="44" height="18" />
+                        </frame>
+                      </frame>
+                      <frame id="231:10695" name="TooltipTrigger" x="304" y="0" width="304" height="75">
+                        <frame id="231:10696" name="App" x="16" y="16" width="271" height="16">
+                          <frame id="231:10697" name="Text" x="0" y="0" width="95" height="16">
+                            <text id="231:10698" name="Operating Margin" x="0" y="0" width="95" height="16" />
+                          </frame>
+                          <frame id="231:10699" name="Icon" x="257" y="1" width="14" height="14" />
+                        </frame>
+                        <frame id="231:10702" name="App" x="16" y="40" width="271" height="18">
+                          <text id="231:10703" name="77,0%" x="0" y="0" width="52" height="18" />
+                        </frame>
+                      </frame>
+                      <frame id="231:10704" name="TooltipTrigger" x="608" y="0" width="304" height="75">
+                        <frame id="231:10705" name="App" x="16" y="16" width="271" height="16">
+                          <frame id="231:10706" name="Text" x="0" y="0" width="83" height="16">
+                            <text id="231:10707" name="Employee Cost" x="0" y="0" width="83" height="16" />
+                          </frame>
+                          <frame id="231:10708" name="Icon" x="257" y="1" width="14" height="14" />
+                        </frame>
+                        <frame id="231:10710" name="App" x="16" y="40" width="271" height="18">
+                          <text id="231:10711" name="16,6%" x="0" y="0" width="52" height="18" />
+                        </frame>
+                      </frame>
+                      <frame id="231:10712" name="TooltipTrigger" x="912" y="0" width="304" height="75">
+                        <frame id="231:10713" name="App" x="16" y="16" width="271" height="16">
+                          <frame id="231:10714" name="Text" x="0" y="0" width="84" height="16">
+                            <text id="231:10715" name="Marketing Cost" x="0" y="0" width="84" height="16" />
+                          </frame>
+                          <frame id="231:10716" name="Icon" x="257" y="1" width="14" height="14" />
+                        </frame>
+                        <frame id="231:10718" name="App" x="16" y="40" width="271" height="18">
+                          <text id="231:10719" name="3,2%" x="0" y="0" width="44" height="18" />
+                        </frame>
+                      </frame>
+                      <frame id="231:10720" name="TooltipTrigger" x="0" y="75" width="304" height="74">
+                        <frame id="231:10721" name="App" x="16" y="16" width="271" height="16">
+                          <frame id="231:10722" name="Text" x="0" y="0" width="35" height="16">
+                            <text id="231:10723" name="COGS" x="0" y="0" width="35" height="16" />
+                          </frame>
+                          <frame id="231:10724" name="Icon" x="257" y="1" width="14" height="14" />
+                        </frame>
+                        <frame id="231:10726" name="App" x="16" y="40" width="271" height="18">
+                          <text id="231:10727" name="24,5%" x="0" y="0" width="55" height="18" />
+                        </frame>
+                      </frame>
+                      <frame id="231:10728" name="TooltipTrigger" x="304" y="75" width="304" height="74">
+                        <frame id="231:10729" name="App" x="16" y="16" width="271" height="16">
+                          <frame id="231:10730" name="Text" x="0" y="0" width="111" height="16">
+                            <text id="231:10731" name="Revenue / Employee" x="0" y="0" width="111" height="16" />
+                          </frame>
+                          <frame id="231:10732" name="Icon" x="257" y="1" width="14" height="14" />
+                        </frame>
+                        <frame id="231:10735" name="App" x="16" y="40" width="271" height="18">
+                          <text id="231:10736" name="15.094,00 €" x="0" y="0" width="106" height="18" />
+                        </frame>
+                      </frame>
+                      <frame id="231:10737" name="TooltipTrigger" x="608" y="75" width="304" height="74">
+                        <frame id="231:10738" name="App" x="16" y="16" width="271" height="16">
+                          <frame id="231:10739" name="Text" x="0" y="0" width="89" height="16">
+                            <text id="231:10740" name="Avg Order Value" x="0" y="0" width="89" height="16" />
+                          </frame>
+                          <frame id="231:10741" name="Icon" x="257" y="1" width="14" height="14" />
+                        </frame>
+                        <frame id="231:10744" name="App" x="16" y="40" width="271" height="18">
+                          <text id="231:10745" name="1.389,60 €" x="0" y="0" width="93" height="18" />
+                        </frame>
+                      </frame>
+                      <frame id="231:10746" name="TooltipTrigger" x="912" y="75" width="304" height="74">
+                        <frame id="231:10747" name="App" x="16" y="16" width="271" height="16">
+                          <frame id="231:10748" name="Text" x="0" y="0" width="103" height="16">
+                            <text id="231:10749" name="Inventory Turnover" x="0" y="0" width="103" height="16" />
+                          </frame>
+                          <frame id="231:10750" name="Icon" x="257" y="1" width="14" height="14" />
+                        </frame>
+                        <frame id="231:10753" name="App" x="16" y="40" width="271" height="18">
+                          <text id="231:10754" name="0,5×" x="0" y="0" width="41" height="18" />
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="231:10755" name="Container:margin" x="32" y="872" width="1065" height="413.5">
+                  <frame id="231:10756" name="Container" x="0" y="16" width="1065" height="397.5">
+                    <frame id="231:10757" name="Container" x="0" y="0" width="756" height="397.5">
+                      <frame id="231:10758" name="Card" x="0" y="0" width="756" height="190.75">
+                        <frame id="231:10759" name="CardHeader" x="0" y="16" width="756" height="43.5">
+                          <frame id="231:10760" name="CardTitle" x="15.999969482421875" y="0" width="362.6640625" height="20">
+                            <text id="231:10761" name="Revenue breakdown" x="0" y="0" width="128" height="20" />
+                          </frame>
+                          <frame id="231:10762" name="CardDescription" x="15.999969482421875" y="24" width="362.6640625" height="19.5">
+                            <text id="231:10763" name="By channel · 56.037 € attributed" x="0" y="0" width="173" height="20" />
+                          </frame>
+                        </frame>
+                        <frame id="231:10764" name="CardContent" x="0" y="75.5" width="756" height="72">
+                          <frame id="231:10765" name="App" x="16" y="0" width="724" height="16">
+                            <frame id="231:10766" name="Container" x="0" y="0" width="112" height="16">
+                              <frame id="231:10767" name="Text" x="0" y="4" width="8" height="8" />
+                              <frame id="231:10768" name="Text" x="16" y="0" width="56" height="16">
+                                <text id="231:10769" name="Wholesale" x="0" y="0" width="56" height="16" />
+                              </frame>
+                            </frame>
+                            <frame id="231:10770" name="ProgressTrack" x="124" y="6" width="492" height="4">
+                              <frame id="231:10771" name="ProgressIndicator" x="0" y="0" width="116.2890625" height="4" />
+                            </frame>
+                            <frame id="231:10772" name="Text" x="628" y="0" width="96" height="16">
+                              <text id="231:10773" name="50.025,75 €" x="30" y="0" width="66" height="16" />
+                            </frame>
+                          </frame>
+                          <frame id="231:10774" name="App:margin" x="16" y="16" width="724" height="28">
+                            <frame id="231:10775" name="App" x="0" y="12" width="724" height="16">
+                              <frame id="231:10776" name="Container" x="0" y="0" width="112" height="16">
+                                <frame id="231:10777" name="Text" x="0" y="4" width="8" height="8" />
+                                <frame id="231:10778" name="Text" x="16" y="0" width="89.46875" height="16">
+                                  <text id="231:10779" name="Accommodation" x="0" y="0" width="90" height="16" />
+                                </frame>
+                              </frame>
+                              <frame id="231:10780" name="ProgressTrack" x="124" y="6" width="492" height="4">
+                                <frame id="231:10781" name="ProgressIndicator" x="0" y="0" width="9.140625" height="4" />
+                              </frame>
+                              <frame id="231:10782" name="Text" x="628" y="0" width="96" height="16">
+                                <text id="231:10783" name="4.026,00 €" x="35" y="0" width="61" height="16" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="231:10784" name="App:margin" x="16" y="44" width="724" height="28">
+                            <frame id="231:10785" name="App" x="0" y="12" width="724" height="16">
+                              <frame id="231:10786" name="Container" x="0" y="0" width="112" height="16">
+                                <frame id="231:10787" name="Text" x="0" y="4" width="8" height="8" />
+                                <frame id="231:10788" name="Text" x="16" y="0" width="50" height="16">
+                                  <text id="231:10789" name="Agencies" x="0" y="0" width="50" height="16" />
+                                </frame>
+                              </frame>
+                              <frame id="231:10790" name="ProgressTrack" x="124" y="6" width="492" height="4">
+                                <frame id="231:10791" name="ProgressIndicator" x="0" y="0" width="5.2265625" height="4" />
+                              </frame>
+                              <frame id="231:10792" name="Text" x="628" y="0" width="96" height="16">
+                                <text id="231:10793" name="1.985,63 €" x="40" y="0" width="56" height="16" />
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="231:10794" name="Card" x="0" y="206.75" width="756" height="190.75">
+                        <frame id="231:10795" name="CardHeader" x="-0.0001220703125" y="16" width="756" height="20">
+                          <frame id="231:10796" name="CardTitle" x="16.0001220703125" y="0" width="334.09375" height="20">
+                            <text id="231:10797" name="Low stock" x="0" y="0" width="65" height="20" />
+                          </frame>
+                          <frame id="231:10798" name="CardAction" x="715.4296875" y="0" width="24.5703125" height="20">
+                            <frame id="231:10799" name="Badge" x="0" y="0" width="24.5703125" height="20">
+                              <text id="231:10800" name="3" x="8.78515625" y="2" width="7" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="231:10801" name="CardContent" x="0" y="52" width="756" height="102">
+                          <frame id="231:10802" name="App" x="16" y="0" width="724" height="26">
+                            <frame id="231:10803" name="Container" x="0" y="0" width="724" height="16">
+                              <frame id="231:10804" name="Text" x="0" y="0" width="135.0703125" height="16">
+                                <text id="231:10805" name="Plavac Mali Reserve 2021" x="0" y="0" width="136" height="16" />
+                              </frame>
+                              <frame id="231:10806" name="Text" x="676" y="0" width="48" height="16">
+                                <text id="231:10807" name="12/24 btl" x="0" y="0" width="48" height="16" />
+                              </frame>
+                            </frame>
+                            <frame id="231:10808" name="ProgressRoot:margin" x="0" y="16" width="724" height="10">
+                              <frame id="231:10809" name="ProgressTrack" x="0" y="6" width="724" height="4">
+                                <frame id="231:10810" name="ProgressIndicator" x="0" y="0" width="181.328125" height="4" />
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="231:10811" name="App:margin" x="16" y="26" width="724" height="38">
+                            <frame id="231:10812" name="App" x="0" y="12" width="724" height="26">
+                              <frame id="231:10813" name="Container" x="0" y="0" width="724" height="16">
+                                <frame id="231:10814" name="Text" x="0" y="0" width="109.1484375" height="16">
+                                  <text id="231:10815" name="Rosé Pjenušac 2023" x="0" y="0" width="110" height="16" />
+                                </frame>
+                                <frame id="231:10816" name="Text" x="690" y="0" width="34" height="16">
+                                  <text id="231:10817" name="3/6 cs" x="0" y="0" width="34" height="16" />
+                                </frame>
+                              </frame>
+                              <frame id="231:10818" name="ProgressRoot:margin" x="0" y="16" width="724" height="10">
+                                <frame id="231:10819" name="ProgressTrack" x="0" y="6" width="724" height="4">
+                                  <frame id="231:10820" name="ProgressIndicator" x="0" y="0" width="181.328125" height="4" />
+                                </frame>
+                              </frame>
+                            </frame>
+                          </frame>
+                          <frame id="231:10821" name="App:margin" x="16" y="64" width="724" height="38">
+                            <frame id="231:10822" name="App" x="0" y="12" width="724" height="26">
+                              <frame id="231:10823" name="Container" x="0" y="0" width="724" height="16">
+                                <frame id="231:10824" name="Text" x="0" y="0" width="50.2109375" height="16">
+                                  <text id="231:10825" name="Grk 2022" x="0" y="0" width="51" height="16" />
+                                </frame>
+                                <frame id="231:10826" name="Text" x="683" y="0" width="41" height="16">
+                                  <text id="231:10827" name="8/12 btl" x="0" y="0" width="41" height="16" />
+                                </frame>
+                              </frame>
+                              <frame id="231:10828" name="ProgressRoot:margin" x="0" y="16" width="724" height="10">
+                                <frame id="231:10829" name="ProgressTrack" x="0" y="6" width="724" height="4">
+                                  <frame id="231:10830" name="ProgressIndicator" x="0" y="0" width="242.984375" height="4" />
+                                </frame>
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="231:10831" name="Card" x="772" y="0" width="293" height="397.5">
+                      <frame id="231:10832" name="CardHeader" x="0" y="16" width="293" height="43.5">
+                        <frame id="231:10833" name="CardTitle" x="15.999969482421875" y="0" width="362.6640625" height="20">
+                          <frame id="231:10834" name="Icon" x="0" y="2" width="16" height="16" />
+                          <text id="231:10838" name="Revenue vs. target" x="24" y="0" width="118" height="20" />
+                        </frame>
+                        <frame id="231:10839" name="CardDescription" x="15.999969482421875" y="24" width="362.6640625" height="19.5">
+                          <text id="231:10840" name="Annual target: 100.000 €" x="0" y="0" width="136" height="20" />
+                        </frame>
+                      </frame>
+                      <frame id="231:10841" name="CardContent" x="0" y="75.5" width="293" height="306">
+                        <frame id="231:10842" name="App" x="16" y="0" width="261" height="72">
+                          <text id="231:10843" name="68%" x="0" y="0" width="97" height="48" />
+                          <frame id="231:10844" name="Paragraph:margin" x="0" y="48" width="261" height="24">
+                            <frame id="231:10845" name="Paragraph" x="0" y="8" width="261" height="16">
+                              <text id="231:10846" name="of annual target reached" x="0" y="0" width="132" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="231:10847" name="App" x="16" y="92" width="261" height="30">
+                          <frame id="231:10848" name="Container" x="0" y="0" width="261" height="8">
+                            <frame id="231:10849" name="ProgressTrack" x="0" y="0" width="261" height="8">
+                              <frame id="231:10850" name="ProgressIndicator" x="0" y="0" width="144" height="8" />
+                            </frame>
+                          </frame>
+                          <frame id="231:10851" name="Container:margin" x="0" y="8" width="261" height="22">
+                            <frame id="231:10852" name="Container" x="0" y="6" width="261" height="16">
+                              <frame id="231:10853" name="Text" x="0" y="0" width="104" height="16">
+                                <text id="231:10854" name="67.753,68 € earned" x="0" y="0" width="104" height="16" />
+                              </frame>
+                              <frame id="231:10855" name="Text" x="166" y="0" width="95" height="16">
+                                <text id="231:10856" name="32.246,32 € to go" x="0" y="0" width="95" height="16" />
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="231:10857" name="App" x="16" y="142" width="261" height="164">
+                          <frame id="231:10858" name="Container" x="0" y="0" width="261" height="78">
+                            <frame id="231:10859" name="Paragraph" x="13" y="11" width="235" height="16">
+                              <text id="231:10860" name="Projected EOY" x="0" y="0" width="79" height="16" />
+                            </frame>
+                            <frame id="231:10861" name="Paragraph" x="13" y="27" width="149.328125" height="24">
+                              <text id="231:10862" name="~116.149,00 €" x="0" y="4" width="95" height="20" />
+                            </frame>
+                            <frame id="231:10863" name="Paragraph" x="13" y="51" width="235" height="16">
+                              <text id="231:10864" name="at current run rate" x="0" y="0" width="98" height="16" />
+                            </frame>
+                          </frame>
+                          <frame id="231:10865" name="Container" x="0" y="86" width="261" height="78">
+                            <frame id="231:10866" name="Paragraph" x="13" y="11" width="235" height="16">
+                              <text id="231:10867" name="Avg / month" x="0" y="0" width="67" height="16" />
+                            </frame>
+                            <frame id="231:10868" name="Paragraph" x="13" y="27" width="149.3359375" height="24">
+                              <text id="231:10869" name="9.679,10 €" x="0" y="4" width="71" height="20" />
+                            </frame>
+                            <frame id="231:10870" name="Paragraph" x="13" y="51" width="235" height="16">
+                              <text id="231:10871" name="this year" x="0" y="0" width="46" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+      <frame id="143:4178" name="DialogBackdrop" x="0" y="0" width="1369" height="933" />
+      <frame id="143:4179" name="DialogPopup" x="460.5" y="301" width="448" height="331">
+        <frame id="143:4180" name="DialogHeader" x="16" y="16" width="416" height="20">
+          <text id="143:4181" name="Manage shortcuts" x="0" y="0" width="114" height="20" />
+        </frame>
+        <frame id="143:4182" name="ManageShortcutsDialog" x="16" y="52" width="416" height="214.75">
+          <frame id="143:4183" name="Container" x="0" y="0" width="416" height="63">
+            <frame id="143:4184" name="Paragraph" x="0" y="0" width="416" height="22">
+              <text id="143:4185" name="Pinned" x="0" y="0" width="44" height="22" />
+            </frame>
+            <frame id="143:4186" name="Container:margin" x="0" y="22" width="416" height="41">
+              <frame id="143:4187" name="Container" x="0" y="8" width="416" height="33">
+                <frame id="143:4188" name="Icon" x="4" y="8.5" width="16" height="16" />
+                <frame id="143:4191" name="Text" x="30" y="6" width="352" height="21">
+                  <text id="143:4192" name="Cash System" x="0" y="0" width="77" height="22" />
+                </frame>
+                <frame id="143:4193" name="Button - Unpin Cash System" x="392" y="6.5" width="20" height="20">
+                  <frame id="143:4194" name="Icon" x="2" y="2" width="16" height="16" />
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="143:4197" name="Container" x="0" y="63" width="416" height="153">
+            <frame id="143:4198" name="Container" x="0" y="20" width="416" height="22">
+              <frame id="143:4199" name="Paragraph" x="0" y="0" width="45" height="22">
+                <text id="143:4200" name="Recent" x="0" y="0" width="45" height="22" />
+              </frame>
+              <frame id="143:4201" name="Button" x="369" y="0" width="47" height="22">
+                <text id="143:4202" name="Clear all" x="0" y="0" width="47" height="22" />
+              </frame>
+            </frame>
+            <frame id="143:4203" name="Container" x="0" y="42" width="416" height="111">
+              <frame id="143:4204" name="Container" x="0" y="8" width="416" height="33">
+                <frame id="143:4205" name="Icon" x="4" y="8.5" width="16" height="16" />
+                <frame id="143:4208" name="Text" x="30" y="6" width="352" height="21">
+                  <text id="143:4209" name="Orders" x="0" y="0" width="41" height="22" />
+                </frame>
+                <frame id="143:4210" name="Button - Pin Orders" x="392" y="6.5" width="20" height="20">
+                  <frame id="143:4211" name="Icon" x="2" y="2" width="16" height="16" />
+                </frame>
+              </frame>
+              <frame id="143:4214" name="Container:margin" x="0" y="41" width="416" height="35">
+                <frame id="143:4215" name="Container" x="0" y="2" width="416" height="33">
+                  <frame id="143:4216" name="Icon" x="4" y="8.5" width="16" height="16" />
+                  <frame id="143:4219" name="Text" x="30" y="6" width="352" height="21">
+                    <text id="143:4220" name="Harvest" x="0" y="0" width="46" height="22" />
+                  </frame>
+                  <frame id="143:4221" name="Button - Pin Harvest" x="392" y="6.5" width="20" height="20">
+                    <frame id="143:4222" name="Icon" x="2" y="2" width="16" height="16" />
+                  </frame>
+                </frame>
+              </frame>
+              <frame id="143:4225" name="Container:margin" x="0" y="76" width="416" height="35">
+                <frame id="143:4226" name="Container" x="0" y="2" width="416" height="33">
+                  <frame id="143:4227" name="Icon" x="4" y="8.5" width="16" height="16" />
+                  <frame id="143:4230" name="Text" x="30" y="6" width="352" height="21">
+                    <text id="143:4231" name="Inventory" x="0" y="0" width="56" height="22" />
+                  </frame>
+                  <frame id="143:4232" name="Button - Pin Inventory" x="392" y="6.5" width="20" height="20">
+                    <frame id="143:4233" name="Icon" x="2" y="2" width="16" height="16" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+        <frame id="143:4236" name="DialogFooter" x="16" y="282.75" width="416" height="32">
+          <frame id="143:4237" name="DialogClose" x="301" y="0" width="59" height="32">
+            <frame id="143:4238" name="Button" x="0" y="0" width="60" height="32">
+              <text id="143:4239" name="Cancel" x="11" y="8" width="38" height="16" />
+            </frame>
+          </frame>
+          <frame id="143:4240" name="DialogClose" x="368" y="0" width="48" height="32">
+            <frame id="143:4241" name="Button" x="0" y="0" width="49" height="32">
+              <text id="143:4242" name="Save" x="11" y="8" width="27" height="16" />
+            </frame>
+          </frame>
+        </frame>
+        <frame id="143:4243" name="Button" x="412" y="8.125" width="28" height="28">
+          <frame id="143:4244" name="Icon" x="6" y="6" width="16" height="16" />
+        </frame>
+      </frame>
+    </frame>

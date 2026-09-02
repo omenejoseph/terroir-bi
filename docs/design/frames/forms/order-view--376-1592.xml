@@ -1,0 +1,288 @@
+    <frame id="376:1592" name="Order — View" x="4040" y="92" width="480" height="1394">
+      <frame id="376:1593" name="FormHeader" x="0" y="0" width="480" height="78">
+        <frame id="376:1594" name="Frame" x="24" y="20" width="367" height="38">
+          <text id="376:1595" name="Restoran Mediteran" x="0" y="0" width="162" height="22" />
+          <text id="376:1596" name="#VT-20260035 · 20 Jun 2026" x="0" y="24" width="167" height="14" />
+        </frame>
+        <frame id="376:1597" name="Button" x="405" y="24.5" width="24" height="29">
+          <text id="376:1598" name="⋯" x="6" y="6" width="12" height="17" />
+        </frame>
+        <text id="376:1599" name="✕" x="443" y="30.5" width="13" height="17" />
+      </frame>
+      <frame id="376:1600" name="Separator" x="0" y="78" width="480" height="1" />
+      <frame id="376:1601" name="MetaStrip" x="0" y="79" width="480" height="74">
+        <frame id="376:1602" name="Frame" x="24" y="16" width="292" height="18">
+          <frame id="376:1603" name="Badge" x="0" y="0" width="76" height="18">
+            <text id="376:1604" name="In Process" x="10" y="2" width="56" height="14" />
+          </frame>
+          <frame id="376:1605" name="Badge" x="82" y="0" width="120" height="18">
+            <text id="376:1606" name="Restaurant · Zadar" x="10" y="2" width="100" height="14" />
+          </frame>
+          <frame id="376:1607" name="Badge" x="208" y="0" width="84" height="18">
+            <text id="376:1608" name="Rebate 18%" x="10" y="2" width="64" height="14" />
+          </frame>
+        </frame>
+        <text id="376:1609" name="Received 20 Jun 2026, 16:41 · Updated 23 Jun 2026, 16:41 by Iva Šimić" x="24" y="44" width="385" height="14" />
+      </frame>
+      <frame id="376:1610" name="Separator" x="0" y="153" width="480" height="1" />
+      <frame id="376:1611" name="FormBody" x="0" y="154" width="480" height="1158">
+        <frame id="376:1612" name="Section · Status" x="24" y="24" width="432" height="73">
+          <frame id="376:1613" name="SectionHeader" x="0" y="0" width="432" height="17">
+            <text id="376:1614" name="Status" x="0" y="0" width="41" height="17" />
+            <frame id="376:1615" name="Spacer" x="49" y="8" width="300" height="1" />
+            <text id="376:1616" name="Tap to update" x="357" y="1.5" width="75" height="14" />
+          </frame>
+          <frame id="376:1617" name="Stepper" x="0" y="29" width="432" height="44">
+            <frame id="376:1618" name="Step · Received" x="0" y="0" width="129" height="44">
+              <frame id="376:1619" name="Frame" x="0" y="0" width="129" height="24">
+                <frame id="376:1620" name="Dot" x="0" y="0" width="24" height="24">
+                  <text id="376:1621" name="✓" x="7" y="5" width="10" height="14" />
+                </frame>
+                <rounded-rectangle id="376:1622" name="Rectangle" x="24" y="11.5" width="105" height="1" />
+              </frame>
+              <text id="376:1623" name="Received" x="0" y="30" width="50" height="14" />
+            </frame>
+            <frame id="376:1624" name="Step · In Process" x="129" y="0" width="129" height="44">
+              <frame id="376:1625" name="Frame" x="0" y="0" width="129" height="24">
+                <frame id="376:1626" name="Dot" x="0" y="0" width="24" height="24">
+                  <text id="376:1627" name="2" x="8.5" y="5" width="7" height="14" />
+                </frame>
+                <rounded-rectangle id="376:1628" name="Rectangle" x="24" y="11.5" width="105" height="1" />
+              </frame>
+              <text id="376:1629" name="In Process" x="0" y="30" width="56" height="14" />
+            </frame>
+            <frame id="376:1630" name="Step · Ready to Ship" x="258" y="0" width="129" height="44">
+              <frame id="376:1631" name="Frame" x="0" y="0" width="129" height="24">
+                <frame id="376:1632" name="Dot" x="0" y="0" width="24" height="24">
+                  <text id="376:1633" name="3" x="8.5" y="5" width="7" height="14" />
+                </frame>
+                <rounded-rectangle id="376:1634" name="Rectangle" x="24" y="11.5" width="105" height="1" />
+              </frame>
+              <text id="376:1635" name="Ready to Ship" x="0" y="30" width="75" height="14" />
+            </frame>
+            <frame id="376:1636" name="Step · Shipped" x="387" y="0" width="45" height="44">
+              <frame id="376:1637" name="Frame" x="0" y="0" width="24" height="24">
+                <frame id="376:1638" name="Dot" x="0" y="0" width="24" height="24">
+                  <text id="376:1639" name="4" x="8" y="5" width="8" height="14" />
+                </frame>
+              </frame>
+              <text id="376:1640" name="Shipped" x="0" y="30" width="45" height="14" />
+            </frame>
+          </frame>
+        </frame>
+        <frame id="376:1641" name="Separator" x="24" y="113" width="432" height="1" />
+        <frame id="376:1642" name="Section · Items" x="24" y="130" width="432" height="295">
+          <frame id="376:1643" name="SectionHeader" x="0" y="0" width="432" height="17">
+            <text id="376:1644" name="Items" x="0" y="0" width="36" height="17" />
+            <text id="376:1645" name="4 lines · 106 bottles" x="44" y="1.5" width="104" height="14" />
+            <frame id="376:1646" name="Spacer" x="156" y="8" width="276" height="1" />
+          </frame>
+          <frame id="376:1647" name="LineItem" x="0" y="17" width="432" height="60">
+            <rounded-rectangle id="376:1648" name="Rectangle" x="0" y="12" width="28" height="36" />
+            <frame id="376:1649" name="Frame" x="40" y="13.5" width="317" height="33">
+              <frame id="376:1650" name="Frame" x="0" y="0" width="122" height="17">
+                <text id="376:1651" name="Velika Bjelica" x="0" y="0" width="83" height="17" />
+                <text id="376:1652" name="2022" x="89" y="0" width="33" height="17" />
+              </frame>
+              <text id="376:1653" name="25,48 € / bottle · 0.75 L" x="0" y="19" width="133" height="14" />
+            </frame>
+            <text id="376:1654" name="14 bottles" x="369" y="21.5" width="63" height="17" />
+          </frame>
+          <frame id="376:1655" name="LineItem" x="0" y="77" width="432" height="60">
+            <rounded-rectangle id="376:1656" name="Rectangle" x="0" y="12" width="28" height="36" />
+            <frame id="376:1657" name="Frame" x="40" y="13.5" width="317" height="33">
+              <frame id="376:1658" name="Frame" x="0" y="0" width="119" height="17">
+                <text id="376:1659" name="Rožica Debit" x="0" y="0" width="80" height="17" />
+                <text id="376:1660" name="2023" x="86" y="0" width="33" height="17" />
+              </frame>
+              <text id="376:1661" name="12,30 € / bottle · 0.75 L" x="0" y="19" width="130" height="14" />
+            </frame>
+            <text id="376:1662" name="14 bottles" x="369" y="21.5" width="63" height="17" />
+          </frame>
+          <frame id="376:1663" name="LineItem" x="0" y="137" width="432" height="60">
+            <rounded-rectangle id="376:1664" name="Rectangle" x="0" y="12" width="28" height="36" />
+            <frame id="376:1665" name="Frame" x="40" y="13.5" width="318" height="33">
+              <frame id="376:1666" name="Frame" x="0" y="0" width="112" height="17">
+                <text id="376:1667" name="Kosa Plavac" x="0" y="0" width="75" height="17" />
+                <text id="376:1668" name="2021" x="81" y="0" width="31" height="17" />
+              </frame>
+              <text id="376:1669" name="35,85 € / bottle · 0.75 L" x="0" y="19" width="132" height="14" />
+            </frame>
+            <text id="376:1670" name="51 bottles" x="370" y="21.5" width="62" height="17" />
+          </frame>
+          <frame id="376:1671" name="LineItem" x="0" y="197" width="432" height="60">
+            <rounded-rectangle id="376:1672" name="Rectangle" x="0" y="12" width="28" height="36" />
+            <frame id="376:1673" name="Frame" x="40" y="13.5" width="316" height="33">
+              <frame id="376:1674" name="Frame" x="0" y="0" width="182" height="17">
+                <text id="376:1675" name="Pelješki Stari Vinograd" x="0" y="0" width="142" height="17" />
+                <text id="376:1676" name="2020" x="148" y="0" width="34" height="17" />
+              </frame>
+              <text id="376:1677" name="37,53 € / bottle · 0.75 L" x="0" y="19" width="131" height="14" />
+            </frame>
+            <text id="376:1678" name="27 bottles" x="368" y="21.5" width="64" height="17" />
+          </frame>
+          <frame id="376:1679" name="Total" x="0" y="257" width="432" height="38">
+            <text id="376:1680" name="Total · excl. VAT" x="0" y="16.5" width="99" height="17" />
+            <frame id="376:1681" name="Spacer" x="99" y="24.5" width="246" height="1" />
+            <text id="376:1682" name="3.370,58 €" x="345" y="14" width="87" height="22" />
+          </frame>
+        </frame>
+        <frame id="376:1683" name="Separator" x="24" y="441" width="432" height="1" />
+        <frame id="376:1684" name="Section · Profitability" x="24" y="458" width="432" height="120">
+          <frame id="376:1685" name="SectionHeader" x="0" y="0" width="432" height="17">
+            <text id="376:1686" name="Profitability" x="0" y="0" width="74" height="17" />
+            <frame id="376:1687" name="Spacer" x="82" y="8" width="350" height="1" />
+          </frame>
+          <frame id="376:1688" name="Panel" x="0" y="27" width="432" height="93">
+            <frame id="376:1689" name="Frame" x="14" y="12" width="404" height="14">
+              <frame id="376:1690" name="Frame" x="0" y="0" width="196" height="14">
+                <text id="376:1691" name="Revenue" x="0" y="0" width="47" height="14" />
+                <frame id="376:1692" name="Spacer" x="47" y="6.5" width="93" height="1" />
+                <text id="376:1693" name="4.110,46 €" x="140" y="0" width="56" height="14" />
+              </frame>
+              <frame id="376:1694" name="Frame" x="208" y="0" width="196" height="14">
+                <text id="376:1695" name="Rebate · 18%" x="0" y="0" width="69" height="14" />
+                <frame id="376:1696" name="Spacer" x="69" y="6.5" width="71" height="1" />
+                <text id="376:1697" name="−739,88 €" x="140" y="0" width="56" height="14" />
+              </frame>
+            </frame>
+            <frame id="376:1698" name="Frame" x="14" y="34" width="404" height="14">
+              <frame id="376:1699" name="Frame" x="0" y="0" width="196" height="14">
+                <text id="376:1700" name="Net revenue" x="0" y="0" width="67" height="14" />
+                <frame id="376:1701" name="Spacer" x="67" y="6.5" width="70" height="1" />
+                <text id="376:1702" name="3.370,58 €" x="137" y="0" width="59" height="14" />
+              </frame>
+              <frame id="376:1703" name="Frame" x="208" y="0" width="196" height="14">
+                <text id="376:1704" name="COGS" x="0" y="0" width="35" height="14" />
+                <frame id="376:1705" name="Spacer" x="35" y="6.5" width="104" height="1" />
+                <text id="376:1706" name="−905,70 €" x="139" y="0" width="57" height="14" />
+              </frame>
+            </frame>
+            <frame id="376:1707" name="Frame" x="14" y="56" width="404" height="25">
+              <frame id="376:1708" name="Frame" x="0" y="8" width="196" height="17">
+                <text id="376:1709" name="Gross profit" x="0" y="1.5" width="65" height="14" />
+                <frame id="376:1710" name="Spacer" x="65" y="8" width="61" height="1" />
+                <text id="376:1711" name="2.464,88 €" x="126" y="0" width="70" height="17" />
+              </frame>
+              <frame id="376:1712" name="Frame" x="208" y="8" width="196" height="17">
+                <text id="376:1713" name="Margin" x="0" y="1.5" width="37" height="14" />
+                <frame id="376:1714" name="Spacer" x="37" y="8" width="124" height="1" />
+                <text id="376:1715" name="73,1%" x="161" y="0" width="35" height="17" />
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+        <frame id="376:1716" name="Separator" x="24" y="594" width="432" height="1" />
+        <frame id="376:1717" name="Section · Customer" x="24" y="611" width="432" height="204">
+          <frame id="376:1718" name="SectionHeader" x="0" y="0" width="432" height="17">
+            <text id="376:1719" name="Customer" x="0" y="0" width="63" height="17" />
+            <frame id="376:1720" name="Spacer" x="71" y="8" width="287" height="1" />
+            <text id="376:1721" name="View profile" x="366" y="1.5" width="66" height="14" />
+          </frame>
+          <frame id="376:1722" name="Panel" x="0" y="27" width="432" height="177">
+            <frame id="376:1723" name="Frame" x="14" y="12" width="404" height="33">
+              <frame id="376:1724" name="Avatar" x="0" y="0.5" width="32" height="32">
+                <text id="376:1725" name="RE" x="8.5" y="9" width="15" height="14" />
+              </frame>
+              <frame id="376:1726" name="Frame" x="42" y="0" width="362" height="33">
+                <text id="376:1727" name="Restoran Mediteran" x="0" y="0" width="124" height="17" />
+                <text id="376:1728" name="Restaurant · Zadar" x="0" y="19" width="105" height="14" />
+              </frame>
+            </frame>
+            <frame id="376:1729" name="Frame" x="14" y="55" width="404" height="20">
+              <text id="376:1730" name="Contact" x="0" y="6" width="44" height="14" />
+              <frame id="376:1731" name="Spacer" x="44" y="12.5" width="286" height="1" />
+              <text id="376:1732" name="Marija Vukoja" x="330" y="6" width="74" height="14" />
+            </frame>
+            <frame id="376:1733" name="Frame" x="14" y="85" width="404" height="20">
+              <text id="376:1734" name="Email" x="0" y="6" width="29" height="14" />
+              <frame id="376:1735" name="Spacer" x="29" y="12.5" width="187" height="1" />
+              <text id="376:1736" name="narucivanje@restoranmediteran.hr" x="216" y="6" width="188" height="14" />
+            </frame>
+            <frame id="376:1737" name="Frame" x="14" y="115" width="404" height="20">
+              <text id="376:1738" name="Phone" x="0" y="6" width="34" height="14" />
+              <frame id="376:1739" name="Spacer" x="34" y="12.5" width="276" height="1" />
+              <text id="376:1740" name="+385 23 555 020" x="310" y="6" width="94" height="14" />
+            </frame>
+            <frame id="376:1741" name="Frame" x="14" y="145" width="404" height="20">
+              <text id="376:1742" name="Standing rebate" x="0" y="6" width="87" height="14" />
+              <frame id="376:1743" name="Spacer" x="87" y="12.5" width="295" height="1" />
+              <text id="376:1744" name="18%" x="382" y="6" width="22" height="14" />
+            </frame>
+          </frame>
+        </frame>
+        <frame id="376:1745" name="Separator" x="24" y="831" width="432" height="1" />
+        <frame id="376:1746" name="Section · Timeline" x="24" y="848" width="432" height="107">
+          <frame id="376:1747" name="SectionHeader" x="0" y="0" width="432" height="17">
+            <text id="376:1748" name="Timeline" x="0" y="0" width="53" height="17" />
+            <frame id="376:1749" name="Spacer" x="61" y="8" width="371" height="1" />
+          </frame>
+          <frame id="376:1750" name="Frame" x="0" y="29" width="432" height="33">
+            <rounded-rectangle id="376:1751" name="Rectangle" x="0" y="0" width="8" height="8" />
+            <frame id="376:1752" name="Frame" x="18" y="0" width="304" height="33">
+              <text id="376:1753" name="In Process" x="0" y="0" width="65" height="17" />
+              <text id="376:1754" name="by Iva Šimić" x="0" y="19" width="65" height="14" />
+            </frame>
+            <text id="376:1755" name="23 Jun 2026, 16:41" x="332" y="0" width="100" height="14" />
+          </frame>
+          <frame id="376:1756" name="Frame" x="0" y="74" width="432" height="33">
+            <rounded-rectangle id="376:1757" name="Rectangle" x="0" y="0" width="8" height="8" />
+            <frame id="376:1758" name="Frame" x="18" y="0" width="303" height="33">
+              <text id="376:1759" name="Received" x="0" y="0" width="59" height="17" />
+              <text id="376:1760" name="by Iva Šimić" x="0" y="19" width="65" height="14" />
+            </frame>
+            <text id="376:1761" name="20 Jun 2026, 16:41" x="331" y="0" width="101" height="14" />
+          </frame>
+        </frame>
+        <frame id="376:1762" name="Separator" x="24" y="971" width="432" height="1" />
+        <frame id="376:1763" name="Section · Comments" x="24" y="988" width="432" height="146">
+          <frame id="376:1764" name="SectionHeader" x="0" y="0" width="432" height="17">
+            <text id="376:1765" name="Comments" x="0" y="0" width="70" height="17" />
+            <text id="376:1766" name="1" x="78" y="1.5" width="5" height="14" />
+            <frame id="376:1767" name="Spacer" x="91" y="8" width="341" height="1" />
+          </frame>
+          <frame id="376:1768" name="Comment" x="0" y="29" width="432" height="61">
+            <frame id="376:1769" name="Avatar" x="0" y="0" width="28" height="28">
+              <text id="376:1770" name="TN" x="5.5" y="7" width="17" height="14" />
+            </frame>
+            <frame id="376:1771" name="Frame" x="38" y="0" width="394" height="61">
+              <frame id="376:1772" name="Frame" x="0" y="0" width="193" height="14">
+                <text id="376:1773" name="Tomislav Novak" x="0" y="0" width="85" height="14" />
+                <text id="376:1774" name="29 Apr 2026, 16:41" x="93" y="0" width="100" height="14" />
+              </frame>
+              <text id="376:1775" name="Kupac traži dostavu prije vikenda." x="0" y="18" width="394" height="17" />
+              <frame id="376:1776" name="Frame" x="0" y="39" width="80" height="22">
+                <frame id="376:1777" name="Frame" x="0" y="2" width="37" height="20">
+                  <text id="376:1778" name="✅" x="8" y="3" width="12" height="12" />
+                  <text id="376:1779" name="1" x="24" y="3" width="5" height="14" />
+                </frame>
+                <frame id="376:1780" name="Frame" x="43" y="2" width="37" height="20">
+                  <text id="376:1781" name="👀" x="8" y="3" width="12" height="12" />
+                  <text id="376:1782" name="1" x="24" y="3" width="5" height="14" />
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="376:1783" name="Input · Comment" x="0" y="102" width="432" height="44">
+            <text id="376:1784" name="Write a comment… use @ to tag" x="12" y="13.5" width="205" height="17" />
+            <frame id="376:1785" name="Spacer" x="225" y="21.5" width="163" height="1" />
+            <frame id="376:1786" name="Button" x="396" y="8" width="28" height="28">
+              <text id="376:1787" name="→" x="9.5" y="7" width="9" height="14" />
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+      <frame id="376:1788" name="Separator" x="0" y="1312" width="480" height="1" />
+      <frame id="376:1789" name="FormFooter" x="0" y="1313" width="480" height="81">
+        <frame id="376:1790" name="Button · Delete" x="24" y="24" width="66" height="33">
+          <text id="376:1791" name="Delete" x="12" y="8" width="42" height="17" />
+        </frame>
+        <frame id="376:1792" name="Spacer" x="98" y="40" width="170" height="1" />
+        <frame id="376:1793" name="Button · Duplicate" x="276" y="24" width="85" height="33">
+          <text id="376:1794" name="Duplicate" x="12" y="8" width="61" height="17" />
+        </frame>
+        <frame id="376:1795" name="Button · Edit order" x="369" y="24" width="87" height="33">
+          <text id="376:1796" name="Edit order" x="12" y="8" width="63" height="17" />
+        </frame>
+      </frame>
+    </frame>

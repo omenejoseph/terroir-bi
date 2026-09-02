@@ -1,0 +1,663 @@
+    <frame id="455:1577" name="ORDERS - List" x="95" y="100" width="1369" height="1420">
+      <frame id="455:1578" name="App" x="0" y="0" width="1369" height="1420">
+        <frame id="455:1579" name="NavRail" x="0" y="0" width="56" height="1420">
+          <frame id="455:1580" name="Container" x="11.5" y="0" width="32" height="48">
+            <frame id="455:1581" name="Container" x="0" y="8" width="32" height="32">
+              <frame id="455:1582" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+          </frame>
+          <frame id="455:1592" name="Navigation" x="7.5" y="48" width="40" height="1324">
+            <frame id="455:1593" name="PreviewCardTrigger" x="0" y="8" width="40" height="40">
+              <frame id="455:1594" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="455:1599" name="PreviewCardTrigger" x="0" y="52" width="40" height="40">
+              <frame id="455:1600" name="ShortcutsFlyout" x="0" y="0" width="40" height="40">
+                <frame id="455:1601" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+            </frame>
+            <frame id="455:1604" name="PreviewCardTrigger" x="0" y="96" width="40" height="40">
+              <frame id="455:1605" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="455:1609" name="PreviewCardTrigger" x="0" y="140" width="40" height="40">
+              <frame id="455:1610" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="455:1615" name="PreviewCardTrigger" x="0" y="184" width="40" height="40">
+              <frame id="455:1616" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="455:1621" name="PreviewCardTrigger" x="0" y="228" width="40" height="40">
+              <frame id="455:1622" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="455:1635" name="PreviewCardTrigger" x="0" y="272" width="40" height="40">
+              <frame id="455:1636" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="455:1640" name="PreviewCardTrigger" x="0" y="316" width="40" height="40">
+              <frame id="455:1641" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="455:1646" name="PreviewCardTrigger" x="0" y="360" width="40" height="40">
+              <frame id="455:1647" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+          </frame>
+          <frame id="455:1650" name="Container" x="7.5" y="1372" width="40" height="48">
+            <frame id="455:1651" name="Button" x="0" y="4.5" width="40" height="40">
+              <frame id="455:1652" name="AvatarRoot" x="4" y="4" width="32" height="32">
+                <frame id="455:1653" name="AvatarFallback" x="0" y="0" width="32" height="32">
+                  <text id="455:1654" name="FD" x="8.5" y="8" width="15" height="16" />
+                </frame>
+                <frame id="455:1655" name="Text" x="0" y="0" width="32" height="32" />
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+        <frame id="455:1656" name="Container" x="56" y="0" width="1313" height="1540">
+          <frame id="455:1657" name="Header" x="0" y="0" width="1313" height="48">
+            <frame id="455:1658" name="Button" x="16" y="7.5" width="32" height="32">
+              <frame id="455:1659" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+            <frame id="455:1662" name="Container:align" x="60" y="7.5" width="1237" height="32">
+              <frame id="455:1663" name="Container" x="845" y="0" width="392" height="32">
+                <frame id="455:1664" name="Container" x="0" y="0" width="288" height="32">
+                  <frame id="455:1665" name="Icon" x="10" y="9" width="14" height="14" />
+                  <frame id="455:1668" name="FieldControl" x="0" y="0" width="288" height="32">
+                    <text id="455:1669" name="Search orders, SKUs, partners…" x="33" y="9" width="214" height="14" />
+                  </frame>
+                  <frame id="455:1670" name="Kbd" x="255.7734375" y="6" width="25" height="20">
+                    <text id="455:1671" name="⌘K" x="5" y="2" width="15" height="16" />
+                  </frame>
+                </frame>
+                <frame id="455:1672" name="Container" x="296" y="0" width="96" height="32">
+                  <frame id="455:1673" name="Button" x="0" y="0" width="32" height="32">
+                    <frame id="455:1674" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="455:1678" name="Button" x="32" y="0" width="32" height="32">
+                    <frame id="455:1679" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="455:1684" name="Button" x="64" y="0" width="32" height="32">
+                    <frame id="455:1685" name="Icon" x="8" y="8" width="16" height="16" />
+                    <frame id="455:1688" name="App" x="19" y="7" width="6" height="6" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="455:1689" name="Main Content" x="0" y="48" width="1313" height="1540">
+            <frame id="455:1690" name="Container:margin" x="0" y="0" width="1313" height="1540">
+              <frame id="455:1691" name="Container" x="16.5" y="0" width="1280" height="1372">
+                <frame id="455:1692" name="Container" x="32" y="24" width="1216" height="36">
+                  <frame id="455:1693" name="Heading 1" x="0" y="8" width="62" height="28">
+                    <text id="455:1694" name="Orders" x="0" y="0" width="62" height="28" />
+                  </frame>
+                  <frame id="455:1695" name="Container" x="1034" y="8" width="182" height="28">
+                    <frame id="455:1696" name="Button" x="0" y="0" width="98" height="28">
+                      <frame id="455:1697" name="Icon" x="11" y="7" width="14" height="14" />
+                      <text id="455:1700" name="New order" x="29" y="6" width="58" height="16" />
+                    </frame>
+                    <frame id="455:1701" name="Button" x="106" y="0" width="76" height="28">
+                      <frame id="455:1702" name="Icon" x="11" y="7" width="14" height="14" />
+                      <text id="455:1707" name="Export" x="29" y="6" width="36" height="16" />
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="455:1708" name="Container" x="32" y="60" width="1216" height="48">
+                  <frame id="455:1709" name="TabsRoot" x="0" y="12" width="1216" height="32">
+                    <frame id="455:1710" name="CompositeRoot" x="0" y="0" width="505" height="32">
+                      <frame id="455:1711" name="TabsTab" x="3" y="3.5" width="47" height="25">
+                        <text id="455:1712" name="Today" x="7" y="4.5" width="33" height="16" />
+                      </frame>
+                      <frame id="455:1713" name="TabsTab" x="50" y="3.5" width="68" height="25">
+                        <text id="455:1714" name="Yesterday" x="7" y="4.5" width="54" height="16" />
+                      </frame>
+                      <frame id="455:1715" name="TabsTab" x="118" y="3.5" width="70" height="25">
+                        <text id="455:1716" name="This Week" x="7" y="4.5" width="56" height="16" />
+                      </frame>
+                      <frame id="455:1717" name="TabsTab" x="188" y="3.5" width="75" height="25">
+                        <text id="455:1718" name="This Month" x="7" y="4.5" width="61" height="16" />
+                      </frame>
+                      <frame id="455:1719" name="TabsTab" x="263" y="3.5" width="81" height="25">
+                        <text id="455:1720" name="This Quarter" x="7" y="4.5" width="67" height="16" />
+                      </frame>
+                      <frame id="455:1721" name="TabsTab" x="344" y="3.5" width="81" height="25">
+                        <text id="455:1722" name="Year to Date" x="7" y="4.5" width="67" height="16" />
+                      </frame>
+                      <frame id="455:1723" name="TabsTab" x="425" y="3.5" width="77" height="25">
+                        <frame id="455:1724" name="Icon" x="7" y="5.5" width="14" height="14" />
+                        <text id="455:1729" name="Custom" x="27" y="4.5" width="43" height="16" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="455:1730" name="Band • Pipeline" x="32" y="108" width="1216" height="192">
+                  <frame id="455:1731" name="Card • Order pipeline" x="0" y="24" width="1216" height="168">
+                    <frame id="455:1732" name="CardHeader" x="0" y="0" width="1216" height="61">
+                      <frame id="455:1733" name="CardTitle" x="16" y="16" width="320" height="33">
+                        <text id="455:1734" name="Order-to-cash pipeline" x="0" y="0" width="146" height="17" />
+                        <text id="455:1735" name="Open orders by stage · click a stage to filter the table below" x="0" y="19" width="320" height="14" />
+                      </frame>
+                      <frame id="455:1736" name="Spacer" x="336" y="32" width="796" height="1" />
+                      <text id="455:1737" name="This month ▾" x="1132" y="25.5" width="68" height="14" />
+                    </frame>
+                    <frame id="455:1738" name="Stages" x="0" y="61" width="1216" height="107">
+                      <frame id="455:1739" name="Stage · Draft" x="0" y="0" width="202.6666717529297" height="91">
+                        <text id="455:1740" name="Draft" x="16" y="4" width="28" height="14" />
+                        <text id="455:1741" name="12" x="16" y="24" width="29" height="37" />
+                        <text id="455:1742" name="€18,400" x="16" y="67" width="46" height="14" />
+                        <frame id="455:1743" name="Bar" x="16" y="87" width="170.6666717529297" height="4">
+                          <rounded-rectangle id="455:1744" name="Rectangle" x="0" y="0" width="8" height="4" />
+                        </frame>
+                      </frame>
+                      <frame id="455:1745" name="Stage · Confirmed" x="202.6666717529297" y="0" width="202.66665649414062" height="91">
+                        <text id="455:1746" name="Confirmed" x="16" y="4" width="58" height="14" />
+                        <text id="455:1747" name="34" x="16" y="24" width="36" height="37" />
+                        <text id="455:1748" name="€96,200" x="16" y="67" width="47" height="14" />
+                        <frame id="455:1749" name="Bar" x="16" y="87" width="170.66665649414062" height="4">
+                          <rounded-rectangle id="455:1750" name="Rectangle" x="0" y="0" width="40" height="4" />
+                        </frame>
+                      </frame>
+                      <frame id="455:1751" name="Stage · Picking / packed" x="405.33331298828125" y="0" width="202.66665649414062" height="91">
+                        <text id="455:1752" name="Picking / packed" x="16" y="4" width="90" height="14" />
+                        <text id="455:1753" name="9" x="16" y="24" width="19" height="37" />
+                        <text id="455:1754" name="€22,700" x="16" y="67" width="46" height="14" />
+                        <frame id="455:1755" name="Bar" x="16" y="87" width="170.66665649414062" height="4">
+                          <rounded-rectangle id="455:1756" name="Rectangle" x="0" y="0" width="10" height="4" />
+                        </frame>
+                      </frame>
+                      <frame id="455:1757" name="Stage · Delivered" x="608" y="0" width="202.6666717529297" height="91">
+                        <text id="455:1758" name="Delivered" x="16" y="4" width="52" height="14" />
+                        <text id="455:1759" name="21" x="16" y="24" width="29" height="37" />
+                        <text id="455:1760" name="€61,500" x="16" y="67" width="45" height="14" />
+                        <frame id="455:1761" name="Bar" x="16" y="87" width="170.6666717529297" height="4">
+                          <rounded-rectangle id="455:1762" name="Rectangle" x="0" y="0" width="26" height="4" />
+                        </frame>
+                      </frame>
+                      <frame id="455:1763" name="Stage · Invoiced" x="810.6666870117188" y="0" width="202.66665649414062" height="91">
+                        <text id="455:1764" name="Invoiced" x="16" y="4" width="47" height="14" />
+                        <text id="455:1765" name="47" x="16" y="24" width="35" height="37" />
+                        <text id="455:1766" name="€142,900" x="16" y="67" width="52" height="14" />
+                        <frame id="455:1767" name="Bar" x="16" y="87" width="170.66665649414062" height="4">
+                          <rounded-rectangle id="455:1768" name="Rectangle" x="0" y="0" width="59" height="4" />
+                        </frame>
+                      </frame>
+                      <frame id="455:1769" name="Stage · Paid" x="1013.3333740234375" y="0" width="202.66665649414062" height="91">
+                        <text id="455:1770" name="Paid" x="16" y="4" width="24" height="14" />
+                        <text id="455:1771" name="128" x="16" y="24" width="47" height="37" />
+                        <text id="455:1772" name="€389,100" x="16" y="67" width="52" height="14" />
+                        <frame id="455:1773" name="Bar" x="16" y="87" width="170.66665649414062" height="4">
+                          <rounded-rectangle id="455:1774" name="Rectangle" x="0" y="0" width="160" height="4" />
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="455:1797" name="Band • Orders table" x="32" y="300" width="1216" height="1048">
+                  <frame id="455:1798" name="Card • Orders" x="0" y="16" width="1216" height="1032">
+                    <frame id="455:1799" name="Toolbar" x="0" y="0" width="1216" height="54">
+                      <frame id="455:1800" name="Input · Search" x="16" y="12" width="280" height="30">
+                        <text id="455:1801" name="Search order no., customer, SKU…" x="10" y="8" width="181" height="14" />
+                      </frame>
+                      <frame id="455:1804" name="Filter · Channel" x="304" y="12" width="72" height="30">
+                        <text id="455:1805" name="Channel ▾" x="10" y="8" width="52" height="14" />
+                      </frame>
+                      <frame id="455:1806" name="Filter · Date range" x="384" y="12" width="87" height="30">
+                        <text id="455:1807" name="Date range ▾" x="10" y="8" width="67" height="14" />
+                      </frame>
+                      <frame id="455:1808" name="Filter · Rep" x="479" y="12" width="49" height="30">
+                        <text id="455:1809" name="Rep ▾" x="10" y="8" width="29" height="14" />
+                      </frame>
+                      <frame id="455:1810" name="Spacer" x="536" y="26.5" width="487" height="1" />
+                      <frame id="455:1811" name="Btn · Bulk actions ▾" x="1031" y="12" width="93" height="30">
+                        <text id="455:1812" name="Bulk actions ▾" x="10" y="8" width="73" height="14" />
+                      </frame>
+                      <frame id="455:1813" name="Btn · Columns" x="1132" y="12" width="68" height="30">
+                        <text id="455:1814" name="Columns" x="10" y="8" width="48" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="456:1867" name="Status chips" x="0" y="54" width="1216" height="39">
+                      <frame id="456:1868" name="Chip · All" x="16" y="0" width="55" height="25">
+                        <text id="456:1869" name="All" x="10" y="5.5" width="14" height="14" />
+                        <text id="456:1870" name="37" x="31" y="5" width="14" height="15" />
+                      </frame>
+                      <frame id="456:1871" name="Chip · Received" x="79" y="0" width="97" height="25">
+                        <rounded-rectangle id="456:1872" name="Rectangle" x="8" y="8.5" width="8" height="8" />
+                        <text id="456:1873" name="Received" x="23" y="5.5" width="50" height="14" />
+                        <text id="456:1874" name="2" x="80" y="5" width="7" height="15" />
+                      </frame>
+                      <frame id="456:1875" name="Chip · In Process" x="184" y="0" width="104" height="25">
+                        <rounded-rectangle id="456:1876" name="Rectangle" x="8" y="8.5" width="8" height="8" />
+                        <text id="456:1877" name="In Process" x="23" y="5.5" width="56" height="14" />
+                        <text id="456:1878" name="4" x="86" y="5" width="8" height="15" />
+                      </frame>
+                      <frame id="456:1879" name="Chip · Ready to Ship" x="296" y="0" width="124" height="25">
+                        <rounded-rectangle id="456:1880" name="Rectangle" x="8" y="8.5" width="8" height="8" />
+                        <text id="456:1881" name="Ready to Ship" x="23" y="5.5" width="76" height="14" />
+                        <text id="456:1882" name="6" x="106" y="5" width="8" height="15" />
+                      </frame>
+                      <frame id="456:1883" name="Chip · Shipped" x="428" y="0" width="99" height="25">
+                        <rounded-rectangle id="456:1884" name="Rectangle" x="8" y="8.5" width="8" height="8" />
+                        <text id="456:1885" name="Shipped" x="23" y="5.5" width="45" height="14" />
+                        <text id="456:1886" name="25" x="75" y="5" width="14" height="15" />
+                      </frame>
+                    </frame>
+                    <frame id="456:1577" name="TableHeader" x="0" y="93" width="1216" height="32">
+                      <text id="456:1578" name="ORDER" x="16" y="10" width="200" height="12" />
+                      <text id="456:1579" name="ITEMS" x="232" y="10" width="520" height="12" />
+                      <text id="456:1580" name="TOTAL" x="768" y="10" width="130" height="12" />
+                      <text id="456:1581" name="STATUS" x="914" y="10" width="140" height="12" />
+                      <text id="456:1582" name="DATE" x="1070" y="10" width="130" height="12" />
+                    </frame>
+                    <frame id="456:1583" name="Row · #261651" x="0" y="125" width="1216" height="98">
+                      <frame id="456:1584" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="456:1585" name="id" x="0" y="0" width="59" height="16">
+                          <text id="456:1586" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="456:1587" name="#261651" x="10" y="0" width="49" height="16" />
+                        </frame>
+                        <text id="456:1588" name="Taverna Olea" x="0" y="19" width="69" height="14" />
+                      </frame>
+                      <frame id="456:1589" name="Cell" x="232" y="12" width="520" height="74">
+                        <frame id="456:1590" name="line" x="0" y="0" width="186" height="16">
+                          <text id="456:1591" name="23×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1592" name="Kosa Plavac" x="40" y="0" width="70" height="16" />
+                          <text id="456:1593" name="2021 · 0.75 L" x="118" y="2" width="68" height="14" />
+                        </frame>
+                        <frame id="456:1594" name="line" x="0" y="20" width="186" height="16">
+                          <text id="456:1595" name="1×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1596" name="Kosa Plavac" x="40" y="0" width="70" height="16" />
+                          <text id="456:1597" name="2021 · 0.75 L" x="118" y="2" width="68" height="14" />
+                        </frame>
+                        <frame id="456:1598" name="line" x="0" y="40" width="193" height="16">
+                          <text id="456:1599" name="2×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1600" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="456:1601" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                        <text id="456:1602" name="+ 1 more" x="0" y="60" width="47" height="14" />
+                      </frame>
+                      <frame id="456:1603" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="456:1604" name="669,38 €" x="0" y="0" width="130" height="17" />
+                        <text id="456:1605" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="456:1606" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="456:1607" name="Status · In Process" x="0" y="0" width="87" height="20">
+                          <rounded-rectangle id="456:1608" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="456:1609" name="In Process" x="22" y="3" width="56" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1610" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="456:1611" name="10/08/26" x="0" y="0" width="130" height="16" />
+                        <text id="456:1612" name="Filip Demo" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="456:1613" name="Row · #VT-20260036" x="0" y="223" width="1216" height="60">
+                      <frame id="456:1614" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="456:1615" name="id" x="0" y="0" width="103" height="16">
+                          <text id="456:1616" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="456:1617" name="#VT-20260036" x="10" y="0" width="93" height="16" />
+                        </frame>
+                        <text id="456:1618" name="Taverna Olea" x="0" y="19" width="69" height="14" />
+                      </frame>
+                      <frame id="456:1619" name="Cell" x="232" y="12" width="520" height="36">
+                        <frame id="456:1620" name="line" x="0" y="0" width="183" height="16">
+                          <text id="456:1621" name="58×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1622" name="Ostro Crna" x="40" y="0" width="65" height="16" />
+                          <text id="456:1623" name="2023 · 0.75 L" x="113" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="456:1624" name="line" x="0" y="20" width="195" height="16">
+                          <text id="456:1625" name="29×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1626" name="Velika Bjelica" x="40" y="0" width="77" height="16" />
+                          <text id="456:1627" name="2022 · 0.75 L" x="125" y="2" width="70" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1628" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="456:1629" name="1.703,17 €" x="0" y="0" width="130" height="17" />
+                        <text id="456:1630" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="456:1631" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="456:1632" name="Status · Ready to Ship" x="0" y="0" width="107" height="20">
+                          <rounded-rectangle id="456:1633" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="456:1634" name="Ready to Ship" x="22" y="3" width="76" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1635" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="456:1636" name="25/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="456:1637" name="Filip Demo" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="456:1638" name="Row · #VT-20260025" x="0" y="283" width="1216" height="60">
+                      <frame id="456:1639" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="456:1640" name="id" x="0" y="0" width="103" height="16">
+                          <text id="456:1641" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="456:1642" name="#VT-20260025" x="10" y="0" width="93" height="16" />
+                        </frame>
+                        <text id="456:1643" name="Konoba Kraljevac" x="0" y="19" width="93" height="14" />
+                      </frame>
+                      <frame id="456:1644" name="Cell" x="232" y="12" width="520" height="36">
+                        <frame id="456:1645" name="line" x="0" y="0" width="195" height="16">
+                          <text id="456:1646" name="20×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1647" name="Velika Bjelica" x="40" y="0" width="77" height="16" />
+                          <text id="456:1648" name="2022 · 0.75 L" x="125" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="456:1649" name="line" x="0" y="20" width="251" height="16">
+                          <text id="456:1650" name="45×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1651" name="Pelješki Stari Vinograd" x="40" y="0" width="132" height="16" />
+                          <text id="456:1652" name="2020 · 0.75 L" x="180" y="2" width="71" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1653" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="456:1654" name="1.845,55 €" x="0" y="0" width="130" height="17" />
+                        <text id="456:1655" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="456:1656" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="456:1657" name="Status · Received" x="0" y="0" width="81" height="20">
+                          <rounded-rectangle id="456:1658" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="456:1659" name="Received" x="22" y="3" width="50" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1660" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="456:1661" name="25/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="456:1662" name="Iva Šimić" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="456:1663" name="Row · #VT-20260019" x="0" y="343" width="1216" height="80">
+                      <frame id="456:1664" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="456:1665" name="id" x="0" y="0" width="101" height="16">
+                          <text id="456:1666" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="456:1667" name="#VT-20260019" x="10" y="0" width="91" height="16" />
+                        </frame>
+                        <text id="456:1668" name="Taverna Olea" x="0" y="19" width="69" height="14" />
+                      </frame>
+                      <frame id="456:1669" name="Cell" x="232" y="12" width="520" height="56">
+                        <frame id="456:1670" name="line" x="0" y="0" width="183" height="16">
+                          <text id="456:1671" name="12×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1672" name="Ostro Crna" x="40" y="0" width="65" height="16" />
+                          <text id="456:1673" name="2023 · 0.75 L" x="113" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="456:1674" name="line" x="0" y="20" width="193" height="16">
+                          <text id="456:1675" name="23×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1676" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="456:1677" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="456:1678" name="line" x="0" y="40" width="251" height="16">
+                          <text id="456:1679" name="46×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1680" name="Pelješki Stari Vinograd" x="40" y="0" width="132" height="16" />
+                          <text id="456:1681" name="2020 · 0.75 L" x="180" y="2" width="71" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1682" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="456:1683" name="2.037,03 €" x="0" y="0" width="130" height="17" />
+                        <text id="456:1684" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="456:1685" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="456:1686" name="Status · Shipped" x="0" y="0" width="76" height="20">
+                          <rounded-rectangle id="456:1687" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="456:1688" name="Shipped" x="22" y="3" width="45" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1689" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="456:1690" name="25/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="456:1691" name="Filip Demo" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="456:1692" name="Row · #VT-20260004" x="0" y="423" width="1216" height="60">
+                      <frame id="456:1693" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="456:1694" name="id" x="0" y="0" width="105" height="16">
+                          <text id="456:1695" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="456:1696" name="#VT-20260004" x="10" y="0" width="95" height="16" />
+                        </frame>
+                        <text id="456:1697" name="Nordic Vintners GmbH" x="0" y="19" width="124" height="14" />
+                      </frame>
+                      <frame id="456:1698" name="Cell" x="232" y="12" width="520" height="36">
+                        <frame id="456:1699" name="line" x="0" y="0" width="181" height="16">
+                          <text id="456:1700" name="52×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1701" name="Žuti Vapor" x="40" y="0" width="62" height="16" />
+                          <text id="456:1702" name="2024 · 0.75 L" x="110" y="2" width="71" height="14" />
+                        </frame>
+                        <frame id="456:1703" name="line" x="0" y="20" width="193" height="16">
+                          <text id="456:1704" name="27×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1705" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="456:1706" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1707" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="456:1708" name="1.069,05 €" x="0" y="0" width="130" height="17" />
+                        <text id="456:1709" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="456:1710" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="456:1711" name="Status · Shipped" x="0" y="0" width="76" height="20">
+                          <rounded-rectangle id="456:1712" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="456:1713" name="Shipped" x="22" y="3" width="45" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1714" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="456:1715" name="23/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="456:1716" name="Filip Demo" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="456:1717" name="Row · #VT-20260001" x="0" y="483" width="1216" height="147">
+                      <frame id="456:1718" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="456:1719" name="id" x="0" y="0" width="102" height="16">
+                          <text id="456:1720" name="▾" x="0" y="2" width="4" height="12" />
+                          <text id="456:1721" name="#VT-20260001" x="10" y="0" width="92" height="16" />
+                        </frame>
+                        <text id="456:1722" name="Konoba Kraljevac" x="0" y="19" width="93" height="14" />
+                      </frame>
+                      <frame id="456:1723" name="Cell" x="232" y="12" width="520" height="123">
+                        <text id="456:1724" name="OTHER" x="0" y="0" width="30" height="11" />
+                        <frame id="456:1725" name="line" x="0" y="15" width="288" height="16">
+                          <text id="456:1726" name="4×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1727" name="Mixed sampler crate — sommelier curated" x="40" y="0" width="248" height="16" />
+                        </frame>
+                        <text id="456:1728" name="WINE" x="0" y="35" width="24" height="11" />
+                        <frame id="456:1729" name="line" x="0" y="50" width="183" height="16">
+                          <text id="456:1730" name="31×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1731" name="Ostro Crna" x="40" y="0" width="65" height="16" />
+                          <text id="456:1732" name="2023 · 0.75 L" x="113" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="456:1733" name="line" x="0" y="70" width="193" height="16">
+                          <text id="456:1734" name="40×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1735" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="456:1736" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="456:1737" name="line" x="0" y="90" width="195" height="16">
+                          <text id="456:1738" name="13×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1739" name="Velika Bjelica" x="40" y="0" width="77" height="16" />
+                          <text id="456:1740" name="2022 · 0.75 L" x="125" y="2" width="70" height="14" />
+                        </frame>
+                        <text id="456:1741" name="4 lines · 88 bottles" x="0" y="110" width="91" height="13" />
+                      </frame>
+                      <frame id="456:1742" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="456:1743" name="1.615,07 €" x="0" y="0" width="130" height="17" />
+                        <text id="456:1744" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="456:1745" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="456:1746" name="Status · Ready to Ship" x="0" y="0" width="107" height="20">
+                          <rounded-rectangle id="456:1747" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="456:1748" name="Ready to Ship" x="22" y="3" width="76" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1749" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="456:1750" name="22/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="456:1751" name="Iva Šimić" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="456:1752" name="Row · #VT-20260035" x="0" y="630" width="1216" height="98">
+                      <frame id="456:1753" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="456:1754" name="id" x="0" y="0" width="103" height="16">
+                          <text id="456:1755" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="456:1756" name="#VT-20260035" x="10" y="0" width="93" height="16" />
+                        </frame>
+                        <text id="456:1757" name="Restoran Mediteran" x="0" y="19" width="106" height="14" />
+                      </frame>
+                      <frame id="456:1758" name="Cell" x="232" y="12" width="520" height="74">
+                        <frame id="456:1759" name="line" x="0" y="0" width="195" height="16">
+                          <text id="456:1760" name="14×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1761" name="Velika Bjelica" x="40" y="0" width="77" height="16" />
+                          <text id="456:1762" name="2022 · 0.75 L" x="125" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="456:1763" name="line" x="0" y="20" width="193" height="16">
+                          <text id="456:1764" name="14×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1765" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="456:1766" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="456:1767" name="line" x="0" y="40" width="186" height="16">
+                          <text id="456:1768" name="51×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1769" name="Kosa Plavac" x="40" y="0" width="70" height="16" />
+                          <text id="456:1770" name="2021 · 0.75 L" x="118" y="2" width="68" height="14" />
+                        </frame>
+                        <text id="456:1771" name="+ 1 more" x="0" y="60" width="47" height="14" />
+                      </frame>
+                      <frame id="456:1772" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="456:1773" name="3.370,58 €" x="0" y="0" width="130" height="17" />
+                        <text id="456:1774" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="456:1775" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="456:1776" name="Status · In Process" x="0" y="0" width="87" height="20">
+                          <rounded-rectangle id="456:1777" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="456:1778" name="In Process" x="22" y="3" width="56" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1779" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="456:1780" name="20/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="456:1781" name="Iva Šimić" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="456:1782" name="Row · #VT-20260026" x="0" y="728" width="1216" height="98">
+                      <frame id="456:1783" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="456:1784" name="id" x="0" y="0" width="103" height="16">
+                          <text id="456:1785" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="456:1786" name="#VT-20260026" x="10" y="0" width="93" height="16" />
+                        </frame>
+                        <text id="456:1787" name="Restoran Mediteran" x="0" y="19" width="106" height="14" />
+                      </frame>
+                      <frame id="456:1788" name="Cell" x="232" y="12" width="520" height="74">
+                        <frame id="456:1789" name="line" x="0" y="0" width="183" height="16">
+                          <text id="456:1790" name="60×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1791" name="Ostro Crna" x="40" y="0" width="65" height="16" />
+                          <text id="456:1792" name="2023 · 0.75 L" x="113" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="456:1793" name="line" x="0" y="20" width="193" height="16">
+                          <text id="456:1794" name="14×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1795" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="456:1796" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="456:1797" name="line" x="0" y="40" width="251" height="16">
+                          <text id="456:1798" name="37×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1799" name="Pelješki Stari Vinograd" x="40" y="0" width="132" height="16" />
+                          <text id="456:1800" name="2020 · 0.75 L" x="180" y="2" width="71" height="14" />
+                        </frame>
+                        <text id="456:1801" name="+ 1 more" x="0" y="60" width="47" height="14" />
+                      </frame>
+                      <frame id="456:1802" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="456:1803" name="3.113,88 €" x="0" y="0" width="130" height="17" />
+                        <text id="456:1804" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="456:1805" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="456:1806" name="Status · Shipped" x="0" y="0" width="76" height="20">
+                          <rounded-rectangle id="456:1807" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="456:1808" name="Shipped" x="22" y="3" width="45" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1809" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="456:1810" name="17/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="456:1811" name="Ana Marković" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="456:1812" name="Row · #VT-20260029" x="0" y="826" width="1216" height="60">
+                      <frame id="456:1813" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="456:1814" name="id" x="0" y="0" width="103" height="16">
+                          <text id="456:1815" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="456:1816" name="#VT-20260029" x="10" y="0" width="93" height="16" />
+                        </frame>
+                        <text id="456:1817" name="Taverna Olea" x="0" y="19" width="69" height="14" />
+                      </frame>
+                      <frame id="456:1818" name="Cell" x="232" y="12" width="520" height="36">
+                        <frame id="456:1819" name="line" x="0" y="0" width="251" height="16">
+                          <text id="456:1820" name="43×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1821" name="Pelješki Stari Vinograd" x="40" y="0" width="132" height="16" />
+                          <text id="456:1822" name="2020 · 0.75 L" x="180" y="2" width="71" height="14" />
+                        </frame>
+                        <frame id="456:1823" name="line" x="0" y="20" width="186" height="16">
+                          <text id="456:1824" name="45×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1825" name="Kosa Plavac" x="40" y="0" width="70" height="16" />
+                          <text id="456:1826" name="2021 · 0.75 L" x="118" y="2" width="68" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1827" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="456:1828" name="2.865,89 €" x="0" y="0" width="130" height="17" />
+                        <text id="456:1829" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="456:1830" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="456:1831" name="Status · Shipped" x="0" y="0" width="76" height="20">
+                          <rounded-rectangle id="456:1832" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="456:1833" name="Shipped" x="22" y="3" width="45" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1834" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="456:1835" name="15/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="456:1836" name="Iva Šimić" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="456:1837" name="Row · #VT-20260014" x="0" y="886" width="1216" height="98">
+                      <frame id="456:1838" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="456:1839" name="id" x="0" y="0" width="102" height="16">
+                          <text id="456:1840" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="456:1841" name="#VT-20260014" x="10" y="0" width="92" height="16" />
+                        </frame>
+                        <text id="456:1842" name="Hotel Skradinska Luka" x="0" y="19" width="118" height="14" />
+                      </frame>
+                      <frame id="456:1843" name="Cell" x="232" y="12" width="520" height="74">
+                        <frame id="456:1844" name="line" x="0" y="0" width="181" height="16">
+                          <text id="456:1845" name="16×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1846" name="Žuti Vapor" x="40" y="0" width="62" height="16" />
+                          <text id="456:1847" name="2024 · 0.75 L" x="110" y="2" width="71" height="14" />
+                        </frame>
+                        <frame id="456:1848" name="line" x="0" y="20" width="193" height="16">
+                          <text id="456:1849" name="25×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1850" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="456:1851" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="456:1852" name="line" x="0" y="40" width="195" height="16">
+                          <text id="456:1853" name="39×" x="0" y="1" width="32" height="15" />
+                          <text id="456:1854" name="Velika Bjelica" x="40" y="0" width="77" height="16" />
+                          <text id="456:1855" name="2022 · 0.75 L" x="125" y="2" width="70" height="14" />
+                        </frame>
+                        <text id="456:1856" name="+ 1 more" x="0" y="60" width="47" height="14" />
+                      </frame>
+                      <frame id="456:1857" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="456:1858" name="2.297,86 €" x="0" y="0" width="130" height="17" />
+                        <text id="456:1859" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="456:1860" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="456:1861" name="Status · Ready to Ship" x="0" y="0" width="107" height="20">
+                          <rounded-rectangle id="456:1862" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="456:1863" name="Ready to Ship" x="22" y="3" width="76" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="456:1864" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="456:1865" name="09/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="456:1866" name="Iva Šimić" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="455:2107" name="TableFooter" x="0" y="984" width="1216" height="48">
+                      <text id="455:2108" name="Showing 10 of 37 orders" x="16" y="17" width="130" height="14" />
+                      <frame id="455:2109" name="Spacer" x="154" y="23.5" width="833" height="1" />
+                      <frame id="455:2110" name="Page" x="995" y="12" width="63" height="24">
+                        <text id="455:2111" name="Previous" x="8" y="5" width="47" height="14" />
+                      </frame>
+                      <frame id="455:2112" name="Page" x="1066" y="12" width="21" height="24">
+                        <text id="455:2113" name="1" x="8" y="5" width="5" height="14" />
+                      </frame>
+                      <frame id="455:2114" name="Page" x="1095" y="12" width="23" height="24">
+                        <text id="455:2115" name="2" x="8" y="5" width="7" height="14" />
+                      </frame>
+                      <frame id="455:2116" name="Page" x="1126" y="12" width="23" height="24">
+                        <text id="455:2117" name="3" x="8" y="5" width="7" height="14" />
+                      </frame>
+                      <frame id="455:2118" name="Page" x="1157" y="12" width="43" height="24">
+                        <text id="455:2119" name="Next" x="8" y="5" width="27" height="14" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+    </frame>

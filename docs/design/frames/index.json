@@ -1,0 +1,338 @@
+{
+  "Dashboard": [
+    {
+      "name": "Manage Shortcuts",
+      "node": "143:3508",
+      "file": "frames/dashboard/manage-shortcuts--143-3508.xml",
+      "lines": 1103
+    },
+    {
+      "name": "Form \u2022 Create Order",
+      "node": "143:5013",
+      "file": "frames/dashboard/form-create-order--143-5013.xml",
+      "lines": 1170
+    },
+    {
+      "name": "Form \u2022 New customer",
+      "node": "146:9605",
+      "file": "frames/dashboard/form-new-customer--146-9605.xml",
+      "lines": 899
+    },
+    {
+      "name": "Dashboard",
+      "node": "208:5577",
+      "file": "frames/dashboard/dashboard--208-5577.xml",
+      "lines": 747
+    },
+    {
+      "name": "Note \u00b7 Dashboard",
+      "node": "408:1577",
+      "file": "frames/dashboard/note-dashboard--408-1577.xml",
+      "lines": 9
+    },
+    {
+      "name": "ExpandedNav",
+      "node": "547:1568",
+      "file": "frames/dashboard/expandednav--547-1568.xml",
+      "lines": 276
+    }
+  ],
+  "Customers": [
+    {
+      "name": "Customers",
+      "node": "230:2395",
+      "file": "frames/customers/customers--230-2395.xml",
+      "lines": 480
+    },
+    {
+      "name": "Analytics",
+      "node": "230:4717",
+      "file": "frames/customers/analytics--230-4717.xml",
+      "lines": 475
+    },
+    {
+      "name": "Restoran Mediteran - Order History",
+      "node": "361:2157",
+      "file": "frames/customers/restoran-mediteran-order-history--361-2157.xml",
+      "lines": 524
+    },
+    {
+      "name": "Restoran Mediteran - Order History",
+      "node": "361:4355",
+      "file": "frames/customers/restoran-mediteran-order-history--361-4355.xml",
+      "lines": 877
+    },
+    {
+      "name": "Edit Customer",
+      "node": "231:9592",
+      "file": "frames/customers/edit-customer--231-9592.xml",
+      "lines": 783
+    },
+    {
+      "name": "Notes",
+      "node": "408:1599",
+      "file": "frames/customers/notes--408-1599.xml",
+      "lines": 9
+    },
+    {
+      "name": "Note \u00b7 Customer overview",
+      "node": "408:1607",
+      "file": "frames/customers/note-customer-overview--408-1607.xml",
+      "lines": 10
+    },
+    {
+      "name": "Individual Customer - Overview",
+      "node": "231:9336",
+      "file": "frames/customers/individual-customer-overview--231-9336.xml",
+      "lines": 741
+    },
+    {
+      "name": "Card",
+      "node": "231:9558",
+      "file": "frames/customers/card--231-9558.xml",
+      "lines": 28
+    }
+  ],
+  "WORK ORDERS": [
+    {
+      "name": "Main View",
+      "node": "267:1781",
+      "file": "frames/work-orders/main-view--267-1781.xml",
+      "lines": 550
+    },
+    {
+      "name": "New Task",
+      "node": "267:2411",
+      "file": "frames/work-orders/new-task--267-2411.xml",
+      "lines": 603
+    },
+    {
+      "name": "Existing Task",
+      "node": "267:3164",
+      "file": "frames/work-orders/existing-task--267-3164.xml",
+      "lines": 681
+    },
+    {
+      "name": "Filters: Due Soon",
+      "node": "267:4000",
+      "file": "frames/work-orders/filters-due-soon--267-4000.xml",
+      "lines": 431
+    },
+    {
+      "name": "Recent Activity",
+      "node": "267:4526",
+      "file": "frames/work-orders/recent-activity--267-4526.xml",
+      "lines": 544
+    },
+    {
+      "name": "Assign quickly",
+      "node": "267:5804",
+      "file": "frames/work-orders/assign-quickly--267-5804.xml",
+      "lines": 458
+    },
+    {
+      "name": "Search",
+      "node": "267:6361",
+      "file": "frames/work-orders/search--267-6361.xml",
+      "lines": 353
+    }
+  ],
+  "INVENTORY": [
+    {
+      "name": "Bulk Edit",
+      "node": "270:9646",
+      "file": "frames/inventory/bulk-edit--270-9646.xml",
+      "lines": 492
+    },
+    {
+      "name": "New Item",
+      "node": "270:10206",
+      "file": "frames/inventory/new-item--270-10206.xml",
+      "lines": 596
+    },
+    {
+      "name": "Inventory Check",
+      "node": "271:12639",
+      "file": "frames/inventory/inventory-check--271-12639.xml",
+      "lines": 454
+    },
+    {
+      "name": "Inventory Spend",
+      "node": "386:1673",
+      "file": "frames/inventory/inventory-spend--386-1673.xml",
+      "lines": 528
+    },
+    {
+      "name": "Inventory Check \u2014 rethought",
+      "node": "388:1592",
+      "file": "frames/inventory/inventory-check-rethought--388-1592.xml",
+      "lines": 535
+    },
+    {
+      "name": "Analytics",
+      "node": "382:1592",
+      "file": "frames/inventory/analytics--382-1592.xml",
+      "lines": 443
+    },
+    {
+      "name": "Note \u00b7 Analytics",
+      "node": "408:1623",
+      "file": "frames/inventory/note-analytics--408-1623.xml",
+      "lines": 9
+    },
+    {
+      "name": "Note \u00b7 Inventory Spend",
+      "node": "408:1631",
+      "file": "frames/inventory/note-inventory-spend--408-1631.xml",
+      "lines": 9
+    },
+    {
+      "name": "Product Detail",
+      "node": "449:1577",
+      "file": "frames/inventory/product-detail--449-1577.xml",
+      "lines": 775
+    },
+    {
+      "name": "Inventory",
+      "node": "389:1592",
+      "file": "frames/inventory/inventory--389-1592.xml",
+      "lines": 650
+    },
+    {
+      "name": "Inventory Check",
+      "node": "408:1640",
+      "file": "frames/inventory/inventory-check--408-1640.xml",
+      "lines": 1
+    },
+    {
+      "name": "Frame",
+      "node": "408:1641",
+      "file": "frames/inventory/frame--408-1641.xml",
+      "lines": 6
+    },
+    {
+      "name": "Why \u2014 Before, there was no way to tell a finished count from one nobody had started.",
+      "node": "408:1646",
+      "file": "frames/inventory/why-before-there-was-no-way-to-tell-a-finished-count-from-one-nobody-had-started--408-1646.xml",
+      "lines": 2
+    }
+  ],
+  "Forms": [
+    {
+      "name": "Customer \u2014 Create",
+      "node": "316:80",
+      "file": "frames/forms/customer-create--316-80.xml",
+      "lines": 71
+    },
+    {
+      "name": "Customer \u2014 Edit",
+      "node": "316:695",
+      "file": "frames/forms/customer-edit--316-695.xml",
+      "lines": 71
+    },
+    {
+      "name": "New Task",
+      "node": "317:369",
+      "file": "frames/forms/new-task--317-369.xml",
+      "lines": 37
+    },
+    {
+      "name": "New Item",
+      "node": "317:468",
+      "file": "frames/forms/new-item--317-468.xml",
+      "lines": 37
+    },
+    {
+      "name": "New Task \u2014 Advanced open",
+      "node": "321:618",
+      "file": "frames/forms/new-task-advanced-open--321-618.xml",
+      "lines": 49
+    },
+    {
+      "name": "New Item \u2014 Advanced open",
+      "node": "322:704",
+      "file": "frames/forms/new-item-advanced-open--322-704.xml",
+      "lines": 52
+    },
+    {
+      "name": "Customer \u2014 Create \u2014 Advanced open",
+      "node": "322:848",
+      "file": "frames/forms/customer-create-advanced-open--322-848.xml",
+      "lines": 102
+    },
+    {
+      "name": "View Task \u2014 Add details open",
+      "node": "324:862",
+      "file": "frames/forms/view-task-add-details-open--324-862.xml",
+      "lines": 127
+    },
+    {
+      "name": "View Task \u2014 Actions menu",
+      "node": "325:982",
+      "file": "frames/forms/view-task-actions-menu--325-982.xml",
+      "lines": 59
+    },
+    {
+      "name": "Create Order",
+      "node": "335:4233",
+      "file": "frames/forms/create-order--335-4233.xml",
+      "lines": 144
+    },
+    {
+      "name": "Create Order \u2014 Advanced open",
+      "node": "335:4331",
+      "file": "frames/forms/create-order-advanced-open--335-4331.xml",
+      "lines": 162
+    },
+    {
+      "name": "View Task",
+      "node": "318:402",
+      "file": "frames/forms/view-task--318-402.xml",
+      "lines": 101
+    },
+    {
+      "name": "Item \u2014 View",
+      "node": "378:1592",
+      "file": "frames/forms/item-view--378-1592.xml",
+      "lines": 296
+    },
+    {
+      "name": "Note \u00b7 Create order",
+      "node": "408:1655",
+      "file": "frames/forms/note-create-order--408-1655.xml",
+      "lines": 8
+    },
+    {
+      "name": "Note \u00b7 Product panel \u2014 new",
+      "node": "408:1677",
+      "file": "frames/forms/note-product-panel-new--408-1677.xml",
+      "lines": 10
+    },
+    {
+      "name": "Order \u2014 View",
+      "node": "376:1592",
+      "file": "frames/forms/order-view--376-1592.xml",
+      "lines": 288
+    },
+    {
+      "name": "Note \u00b7 Order panel \u2014 new",
+      "node": "408:1669",
+      "file": "frames/forms/note-order-panel-new--408-1669.xml",
+      "lines": 11
+    }
+  ],
+  "ORDERS": [
+    {
+      "name": "ORDERS - List",
+      "node": "455:1577",
+      "file": "frames/orders/orders-list--455-1577.xml",
+      "lines": 663
+    },
+    {
+      "name": "Individual Order",
+      "node": "453:4938",
+      "file": "frames/orders/individual-order--453-4938.xml",
+      "lines": 955
+    }
+  ]
+}

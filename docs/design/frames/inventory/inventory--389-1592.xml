@@ -1,0 +1,650 @@
+    <frame id="389:1592" name="Inventory" x="170" y="100" width="1369" height="1211">
+      <frame id="389:1593" name="App" x="0" y="0" width="1369" height="1211">
+        <frame id="389:1594" name="NavRail" x="0" y="0" width="56" height="1211">
+          <frame id="389:1595" name="Container" x="11.5" y="0" width="32" height="48">
+            <frame id="389:1596" name="Container" x="0" y="8" width="32" height="32">
+              <frame id="389:1597" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+          </frame>
+          <frame id="389:1607" name="Navigation" x="7.5" y="48" width="40" height="1115">
+            <frame id="389:1608" name="PreviewCardTrigger" x="0" y="8" width="40" height="40">
+              <frame id="389:1609" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="389:1614" name="PreviewCardTrigger" x="0" y="52" width="40" height="40">
+              <frame id="389:1615" name="ShortcutsFlyout" x="0" y="0" width="40" height="40">
+                <frame id="389:1616" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+            </frame>
+            <frame id="389:1619" name="PreviewCardTrigger" x="0" y="96" width="40" height="40">
+              <frame id="389:1620" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="389:1624" name="PreviewCardTrigger" x="0" y="140" width="40" height="40">
+              <frame id="389:1625" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="389:1630" name="PreviewCardTrigger" x="0" y="184" width="40" height="40">
+              <frame id="389:1631" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="389:1636" name="PreviewCardTrigger" x="0" y="228" width="40" height="40">
+              <frame id="389:1637" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="389:1650" name="PreviewCardTrigger" x="0" y="272" width="40" height="40">
+              <frame id="389:1651" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="389:1655" name="PreviewCardTrigger" x="0" y="316" width="40" height="40">
+              <frame id="389:1656" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="389:1661" name="PreviewCardTrigger" x="0" y="360" width="40" height="40">
+              <frame id="389:1662" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+          </frame>
+          <frame id="389:1665" name="Container" x="7.5" y="1163" width="40" height="48">
+            <frame id="389:1666" name="Button" x="0" y="4.5" width="40" height="40">
+              <frame id="389:1667" name="AvatarRoot" x="4" y="4" width="32" height="32">
+                <frame id="389:1668" name="AvatarFallback" x="0" y="0" width="32" height="32">
+                  <text id="389:1669" name="FD" x="8.5" y="8" width="15" height="16" />
+                </frame>
+                <frame id="389:1670" name="Text" x="0" y="0" width="32" height="32" />
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+        <frame id="389:1671" name="Container" x="56" y="0" width="1313" height="1211">
+          <frame id="389:1672" name="Header" x="0" y="0" width="1313" height="48">
+            <frame id="389:1673" name="Button" x="16" y="7.5" width="32" height="32">
+              <frame id="389:1674" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+            <frame id="389:1677" name="Container:align" x="60" y="7.5" width="1237" height="32">
+              <frame id="389:1678" name="Container" x="845" y="0" width="392" height="32">
+                <frame id="389:1679" name="Container" x="0" y="0" width="288" height="32">
+                  <frame id="389:1680" name="Icon" x="10" y="9" width="14" height="14" />
+                  <frame id="389:1683" name="FieldControl" x="0" y="0" width="288" height="32">
+                    <text id="389:1684" name="Search orders, SKUs, partners…" x="33" y="9" width="214" height="14" />
+                  </frame>
+                  <frame id="389:1685" name="Kbd" x="255.7734375" y="6" width="25" height="20">
+                    <text id="389:1686" name="⌘K" x="5" y="2" width="15" height="16" />
+                  </frame>
+                </frame>
+                <frame id="389:1687" name="Container" x="296" y="0" width="96" height="32">
+                  <frame id="389:1688" name="Button" x="0" y="0" width="32" height="32">
+                    <frame id="389:1689" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="389:1693" name="Button" x="32" y="0" width="32" height="32">
+                    <frame id="389:1694" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="389:1699" name="Button" x="64" y="0" width="32" height="32">
+                    <frame id="389:1700" name="Icon" x="8" y="8" width="16" height="16" />
+                    <frame id="389:1703" name="App" x="19" y="7" width="6" height="6" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="389:1704" name="Main Content" x="0" y="48" width="1313" height="1283">
+            <frame id="389:1705" name="Container:margin" x="0" y="0" width="1313" height="1283">
+              <frame id="389:1706" name="Container" x="16.5" y="0" width="1280" height="1163">
+                <frame id="389:1707" name="Container" x="32" y="24" width="1216" height="36">
+                  <frame id="389:1708" name="Heading 1" x="0" y="8" width="87" height="28">
+                    <text id="389:1709" name="Inventory" x="0" y="0" width="87" height="28" />
+                  </frame>
+                  <frame id="389:1710" name="Container" x="1012" y="8" width="204" height="28">
+                    <frame id="405:5179" name="Frame 8" x="0" y="0" width="204" height="28">
+                      <frame id="405:5180" name="Button" x="0" y="0" width="103" height="28">
+                        <frame id="405:5181" name="Icon" x="11" y="7" width="14" height="14" />
+                        <text id="405:5185" name="Bulk Import" x="29" y="6" width="63" height="16" />
+                      </frame>
+                      <frame id="405:5186" name="Button" x="111" y="0" width="93" height="28">
+                        <frame id="405:5187" name="Icon" x="11" y="7" width="14" height="14" />
+                        <text id="405:5190" name="New Item" x="29" y="6" width="53" height="16" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="389:1723" name="Container" x="32" y="60" width="1216" height="48">
+                  <frame id="389:1724" name="CompositeRoot" x="0" y="12" width="380" height="32">
+                    <frame id="389:1725" name="TabsTab" x="3" y="3.5" width="76.11116027832031" height="25">
+                      <text id="389:1726" name="Inventory" x="12.055580139160156" y="4.5" width="52" height="16" />
+                    </frame>
+                    <frame id="389:1727" name="TabsTab" x="79.11116027832031" y="3.5" width="74.52919006347656" height="25">
+                      <text id="389:1728" name="Analytics" x="12.264595031738281" y="4.5" width="50" height="16" />
+                    </frame>
+                    <frame id="389:1729" name="TabsTab" x="153.64035034179688" y="3.5" width="111.84615325927734" height="25">
+                      <text id="389:1730" name="Inventory Spend" x="10.923076629638672" y="4.5" width="90" height="16" />
+                    </frame>
+                    <frame id="389:1731" name="TabsTab" x="265.48651123046875" y="3.5" width="111.51349639892578" height="25">
+                      <text id="389:1732" name="Inventory Check" x="10.75674819946289" y="4.5" width="90" height="16" />
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="389:1985" name="Band • Needs attention" x="32" y="108" width="1216" height="48">
+                  <text id="389:1986" name="Needs attention" x="0" y="27" width="88" height="14" />
+                  <frame id="389:1987" name="Chip · No min stock set" x="96" y="20" width="135" height="28">
+                    <text id="389:1988" name="No min stock set" x="10" y="7" width="92" height="14" />
+                    <frame id="389:1989" name="Frame" x="108" y="6" width="17" height="16">
+                      <text id="389:1990" name="6" x="5" y="1" width="7" height="14" />
+                    </frame>
+                  </frame>
+                  <frame id="389:1991" name="Chip · No cost per unit" x="239" y="20" width="131" height="28">
+                    <text id="389:1992" name="No cost per unit" x="10" y="7" width="88" height="14" />
+                    <frame id="389:1993" name="Frame" x="104" y="6" width="17" height="16">
+                      <text id="389:1994" name="6" x="5" y="1" width="7" height="14" />
+                    </frame>
+                  </frame>
+                  <frame id="389:1995" name="Chip · Reserved by open orders" x="378" y="20" width="177" height="28">
+                    <text id="389:1996" name="Reserved by open orders" x="10" y="7" width="135" height="14" />
+                    <frame id="389:1997" name="Frame" x="151" y="6" width="16" height="16">
+                      <text id="389:1998" name="1" x="5" y="1" width="6" height="14" />
+                    </frame>
+                  </frame>
+                  <frame id="389:1999" name="Chip · Zero stock" x="563" y="20" width="101" height="28">
+                    <text id="389:2000" name="Zero stock" x="10" y="7" width="58" height="14" />
+                    <frame id="389:2001" name="Frame" x="74" y="6" width="17" height="16">
+                      <text id="389:2002" name="6" x="5" y="1" width="7" height="14" />
+                    </frame>
+                  </frame>
+                  <frame id="389:2003" name="Chip · No movement 90d" x="672" y="20" width="146" height="28">
+                    <text id="389:2004" name="No movement 90d" x="10" y="7" width="102" height="14" />
+                    <frame id="389:2005" name="Frame" x="118" y="6" width="18" height="16">
+                      <text id="389:2006" name="4" x="5" y="1" width="8" height="14" />
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="389:2007" name="Band • Toolbar" x="32" y="156" width="1216" height="44">
+                  <frame id="389:2008" name="Input · Search" x="0" y="14" width="280" height="30">
+                    <text id="389:2009" name="Search name, SKU or vintage…" x="10" y="8" width="163" height="14" />
+                  </frame>
+                  <frame id="389:2010" name="Tab · Finished" x="288" y="14" width="65" height="30">
+                    <text id="389:2011" name="Finished" x="10" y="8" width="45" height="14" />
+                  </frame>
+                  <frame id="389:2012" name="Tab · Semi-Finished" x="361" y="14" width="98" height="30">
+                    <text id="389:2013" name="Semi-Finished" x="10" y="8" width="78" height="14" />
+                  </frame>
+                  <frame id="389:2014" name="Tab · Raw Materials" x="467" y="14" width="96" height="30">
+                    <text id="389:2015" name="Raw Materials" x="10" y="8" width="76" height="14" />
+                  </frame>
+                  <frame id="389:2016" name="Spacer" x="571" y="28.5" width="570" height="1" />
+                  <frame id="389:2017" name="Btn · Bulk edit" x="1149" y="14" width="67" height="30">
+                    <text id="389:2018" name="Bulk edit" x="10" y="8" width="47" height="14" />
+                  </frame>
+                </frame>
+                <frame id="389:2021" name="Band • Stock list" x="32" y="200" width="1216" height="939">
+                  <frame id="389:2022" name="Card • Stock" x="0" y="14" width="1216" height="917">
+                    <frame id="389:2023" name="CardHeader" x="0" y="0" width="1216" height="59">
+                      <frame id="389:2024" name="Frame" x="16" y="14" width="345" height="33">
+                        <text id="389:2025" name="Finished products" x="0" y="0" width="114" height="17" />
+                        <text id="389:2026" name="12 products · 6 wines, 6 tasting boards · 7.971 bottles · 163.502 €" x="0" y="19" width="345" height="14" />
+                      </frame>
+                      <frame id="389:2027" name="Spacer" x="361" y="30" width="839" height="1" />
+                    </frame>
+                    <frame id="459:1569" name="TableHeader" x="0" y="59" width="1216" height="30">
+                      <text id="459:1570" name=" " x="16" y="9" width="30" height="12" />
+                      <text id="459:1571" name="Name" x="50" y="9" width="236" height="12" />
+                      <text id="459:1572" name="Size" x="290" y="9" width="70" height="12" />
+                      <text id="459:1573" name="SKU" x="364" y="9" width="100" height="12" />
+                      <text id="459:1574" name="Vintage" x="468" y="9" width="62" height="12" />
+                      <text id="459:1575" name="On hand" x="534" y="9" width="80" height="12" />
+                      <text id="459:1576" name="Free to sell" x="618" y="9" width="92" height="12" />
+                      <text id="459:1577" name="Cover" x="714" y="9" width="120" height="12" />
+                      <text id="459:1578" name="Level" x="838" y="9" width="176" height="12" />
+                      <text id="459:1579" name="Flags" x="1018" y="9" width="180" height="12" />
+                    </frame>
+                    <frame id="459:1580" name="Group · Wine" x="0" y="89" width="1216" height="34">
+                      <frame id="459:1581" name="Icon" x="16" y="10" width="14" height="14" />
+                      <text id="459:1588" name="▾" x="38" y="11" width="4" height="12" />
+                      <text id="459:1589" name="Wine" x="50" y="10" width="29" height="14" />
+                      <text id="459:1590" name="(6)" x="87" y="10" width="16" height="14" />
+                      <frame id="459:1591" name="Spacer" x="111" y="16.5" width="951" height="1" />
+                      <text id="459:1592" name="7.971 bottles · 163.502 €" x="1070" y="10" width="130" height="14" />
+                    </frame>
+                    <frame id="459:1593" name="Category · WHITE" x="0" y="123" width="1216" height="28">
+                      <frame id="459:1594" name="Icon" x="16" y="7" width="14" height="14" />
+                      <text id="459:1601" name="WHITE" x="38" y="8" width="35" height="12" />
+                    </frame>
+                    <frame id="459:1602" name="Row · Velika Bjelica" x="0" y="151" width="1216" height="54">
+                      <frame id="459:1603" name="Cell" x="16" y="20" width="24" height="14">
+                        <frame id="459:1604" name="Icon" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1611" name="Cell" x="44" y="11" width="236" height="32">
+                        <frame id="458:1575" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                          <frame id="458:1576" name="Container" x="13" y="6" width="6" height="20" />
+                        </frame>
+                        <text id="459:1612" name="Velika Bjelica" x="42" y="9" width="71" height="14" />
+                      </frame>
+                      <frame id="459:1613" name="Cell" x="284" y="20" width="70" height="14">
+                        <text id="459:1614" name="0.75 L" x="0" y="0" width="33" height="14" />
+                      </frame>
+                      <frame id="459:1615" name="Cell" x="358" y="20" width="100" height="14">
+                        <text id="459:1616" name="VT-VBJ-22" x="0" y="0" width="61" height="14" />
+                      </frame>
+                      <frame id="459:1617" name="Cell" x="462" y="20" width="62" height="14">
+                        <text id="459:1618" name="2022" x="0" y="0" width="28" height="14" />
+                      </frame>
+                      <frame id="459:1619" name="Cell" x="528" y="19.5" width="80" height="15">
+                        <text id="459:1620" name="1.450" x="0" y="0" width="80" height="15" />
+                      </frame>
+                      <frame id="459:1621" name="Cell" x="612" y="19.5" width="90" height="15">
+                        <text id="459:1622" name="1.450" x="0" y="0" width="30" height="15" />
+                      </frame>
+                      <frame id="459:1623" name="Cell" x="706" y="20" width="120" height="14">
+                        <text id="459:1624" name="No exits recorded" x="0" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="459:1625" name="Cell" x="830" y="15.5" width="176" height="23">
+                        <frame id="459:1626" name="track" x="0" y="0" width="160" height="8" />
+                        <text id="459:1628" name="1.450 of 2.050 max" x="0" y="10" width="95" height="13" />
+                      </frame>
+                      <frame id="459:1629" name="Cell" x="1010" y="12.5" width="180" height="29">
+                        <text id="459:1630" name="No min stock" x="0" y="0" width="72" height="14" />
+                        <text id="459:1631" name="no movement 90d" x="0" y="16" width="91" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="459:1632" name="Row · Žuti Vapor" x="0" y="205" width="1216" height="54">
+                      <frame id="459:1633" name="Cell" x="16" y="20" width="24" height="14">
+                        <frame id="459:1634" name="Icon" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1641" name="Cell" x="44" y="11" width="236" height="32">
+                        <frame id="458:1579" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                          <frame id="458:1580" name="Container" x="13" y="6" width="6" height="20" />
+                        </frame>
+                        <text id="459:1642" name="Žuti Vapor" x="42" y="9" width="58" height="14" />
+                      </frame>
+                      <frame id="459:1643" name="Cell" x="284" y="20" width="70" height="14">
+                        <text id="459:1644" name="0.75 L" x="0" y="0" width="33" height="14" />
+                      </frame>
+                      <frame id="459:1645" name="Cell" x="358" y="20" width="100" height="14">
+                        <text id="459:1646" name="VT-ZVP-24" x="0" y="0" width="63" height="14" />
+                      </frame>
+                      <frame id="459:1647" name="Cell" x="462" y="20" width="62" height="14">
+                        <text id="459:1648" name="2024" x="0" y="0" width="29" height="14" />
+                      </frame>
+                      <frame id="459:1649" name="Cell" x="528" y="19.5" width="80" height="15">
+                        <text id="459:1650" name="2.050" x="0" y="0" width="80" height="15" />
+                      </frame>
+                      <frame id="459:1651" name="Cell" x="612" y="19.5" width="90" height="15">
+                        <text id="459:1652" name="2.050" x="0" y="0" width="33" height="15" />
+                      </frame>
+                      <frame id="459:1653" name="Cell" x="706" y="20" width="120" height="14">
+                        <text id="459:1654" name="No exits recorded" x="0" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="459:1655" name="Cell" x="830" y="15.5" width="176" height="23">
+                        <frame id="459:1656" name="track" x="0" y="0" width="160" height="8" />
+                        <text id="459:1658" name="2.050 of 2.050 max" x="0" y="10" width="97" height="13" />
+                      </frame>
+                      <frame id="459:1659" name="Cell" x="1010" y="12.5" width="180" height="29">
+                        <text id="459:1660" name="No min stock" x="0" y="0" width="72" height="14" />
+                        <text id="459:1661" name="no movement 90d" x="0" y="16" width="91" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="459:1662" name="Category · ROSÉ" x="0" y="259" width="1216" height="28">
+                      <frame id="459:1663" name="Icon" x="16" y="7" width="14" height="14" />
+                      <text id="459:1670" name="ROSÉ" x="38" y="8" width="29" height="12" />
+                    </frame>
+                    <frame id="459:1671" name="Row · Rožica Debit" x="0" y="287" width="1216" height="54">
+                      <frame id="459:1672" name="Cell" x="16" y="20" width="24" height="14">
+                        <frame id="459:1673" name="Icon" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1680" name="Cell" x="44" y="11" width="236" height="32">
+                        <frame id="458:1573" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                          <frame id="458:1574" name="Container" x="13" y="6" width="6" height="20" />
+                        </frame>
+                        <text id="459:1681" name="Rožica Debit" x="42" y="9" width="69" height="14" />
+                      </frame>
+                      <frame id="459:1682" name="Cell" x="284" y="20" width="70" height="14">
+                        <text id="459:1683" name="0.75 L" x="0" y="0" width="33" height="14" />
+                      </frame>
+                      <frame id="459:1684" name="Cell" x="358" y="20" width="100" height="14">
+                        <text id="459:1685" name="VT-RDB-23" x="0" y="0" width="62" height="14" />
+                      </frame>
+                      <frame id="459:1686" name="Cell" x="462" y="20" width="62" height="14">
+                        <text id="459:1687" name="2023" x="0" y="0" width="28" height="14" />
+                      </frame>
+                      <frame id="459:1688" name="Cell" x="528" y="19.5" width="80" height="15">
+                        <text id="459:1689" name="1.275" x="0" y="0" width="80" height="15" />
+                      </frame>
+                      <frame id="459:1690" name="Cell" x="612" y="19.5" width="90" height="15">
+                        <text id="459:1691" name="1.275" x="0" y="0" width="28" height="15" />
+                      </frame>
+                      <frame id="459:1692" name="Cell" x="706" y="20" width="120" height="14">
+                        <text id="459:1693" name="Beyond horizon" x="0" y="0" width="85" height="14" />
+                      </frame>
+                      <frame id="459:1694" name="Cell" x="830" y="15.5" width="176" height="23">
+                        <frame id="459:1695" name="track" x="0" y="0" width="160" height="8" />
+                        <text id="459:1697" name="1.275 of 2.050 max" x="0" y="10" width="93" height="13" />
+                      </frame>
+                      <frame id="459:1698" name="Cell" x="1010" y="20" width="180" height="14">
+                        <text id="459:1699" name="No min stock" x="0" y="0" width="72" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="459:1700" name="Category · RED" x="0" y="341" width="1216" height="28">
+                      <frame id="459:1701" name="Icon" x="16" y="7" width="14" height="14" />
+                      <text id="459:1708" name="RED" x="38" y="8" width="21" height="12" />
+                    </frame>
+                    <frame id="459:1709" name="Row · Kosa Plavac" x="0" y="369" width="1216" height="54">
+                      <frame id="459:1710" name="Cell" x="16" y="20" width="24" height="14">
+                        <frame id="459:1711" name="Icon" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1718" name="Cell" x="44" y="11" width="236" height="32">
+                        <frame id="458:1571" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                          <frame id="458:1572" name="Container" x="13" y="6" width="6" height="20" />
+                        </frame>
+                        <text id="459:1719" name="Kosa Plavac" x="42" y="9" width="64" height="14" />
+                      </frame>
+                      <frame id="459:1720" name="Cell" x="284" y="20" width="70" height="14">
+                        <text id="459:1721" name="0.75 L" x="0" y="0" width="33" height="14" />
+                      </frame>
+                      <frame id="459:1722" name="Cell" x="358" y="20" width="100" height="14">
+                        <text id="459:1723" name="VT-KPL-21" x="0" y="0" width="58" height="14" />
+                      </frame>
+                      <frame id="459:1724" name="Cell" x="462" y="20" width="62" height="14">
+                        <text id="459:1725" name="2021" x="0" y="0" width="27" height="14" />
+                      </frame>
+                      <frame id="459:1726" name="Cell" x="528" y="19.5" width="80" height="15">
+                        <text id="459:1727" name="956" x="0" y="0" width="80" height="15" />
+                      </frame>
+                      <frame id="459:1728" name="Cell" x="612" y="19.5" width="90" height="15">
+                        <text id="459:1729" name="956" x="0" y="0" width="22" height="15" />
+                      </frame>
+                      <frame id="459:1730" name="Cell" x="706" y="20" width="120" height="14">
+                        <text id="459:1731" name="About 16 months" x="0" y="0" width="93" height="14" />
+                      </frame>
+                      <frame id="459:1732" name="Cell" x="830" y="15.5" width="176" height="23">
+                        <frame id="459:1733" name="track" x="0" y="0" width="160" height="8" />
+                        <text id="459:1735" name="956 of 2.050 max" x="0" y="10" width="87" height="13" />
+                      </frame>
+                      <frame id="459:1736" name="Cell" x="1010" y="20" width="180" height="14">
+                        <text id="459:1737" name="Only mover of the six" x="0" y="0" width="115" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="459:1738" name="Row · Ostro Crna" x="0" y="423" width="1216" height="54">
+                      <frame id="459:1739" name="Cell" x="16" y="20" width="24" height="14">
+                        <frame id="459:1740" name="Icon" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1747" name="Cell" x="44" y="11" width="236" height="32">
+                        <frame id="458:1577" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                          <frame id="458:1578" name="Container" x="13" y="6" width="6" height="20" />
+                        </frame>
+                        <text id="459:1748" name="Ostro Crna" x="42" y="9" width="60" height="14" />
+                      </frame>
+                      <frame id="459:1749" name="Cell" x="284" y="20" width="70" height="14">
+                        <text id="459:1750" name="0.75 L" x="0" y="0" width="33" height="14" />
+                      </frame>
+                      <frame id="459:1751" name="Cell" x="358" y="20" width="100" height="14">
+                        <text id="459:1752" name="VT-OCR-23" x="0" y="0" width="64" height="14" />
+                      </frame>
+                      <frame id="459:1753" name="Cell" x="462" y="20" width="62" height="14">
+                        <text id="459:1754" name="2023" x="0" y="0" width="28" height="14" />
+                      </frame>
+                      <frame id="459:1755" name="Cell" x="528" y="19.5" width="80" height="15">
+                        <text id="459:1756" name="1.820" x="0" y="0" width="80" height="15" />
+                      </frame>
+                      <frame id="459:1757" name="Cell" x="612" y="19.5" width="90" height="15">
+                        <text id="459:1758" name="1.820" x="0" y="0" width="30" height="15" />
+                      </frame>
+                      <frame id="459:1759" name="Cell" x="706" y="20" width="120" height="14">
+                        <text id="459:1760" name="No exits recorded" x="0" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="459:1761" name="Cell" x="830" y="15.5" width="176" height="23">
+                        <frame id="459:1762" name="track" x="0" y="0" width="160" height="8" />
+                        <text id="459:1764" name="1.820 of 2.050 max" x="0" y="10" width="95" height="13" />
+                      </frame>
+                      <frame id="459:1765" name="Cell" x="1010" y="12.5" width="180" height="29">
+                        <text id="459:1766" name="No min stock" x="0" y="0" width="72" height="14" />
+                        <text id="459:1767" name="no movement 90d" x="0" y="16" width="91" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="459:1768" name="Category · RED RESERVE" x="0" y="477" width="1216" height="28">
+                      <frame id="459:1769" name="Icon" x="16" y="7" width="14" height="14" />
+                      <text id="459:1776" name="RED RESERVE" x="38" y="8" width="72" height="12" />
+                    </frame>
+                    <frame id="459:1777" name="Row · Pelješki Stari Vinograd" x="0" y="505" width="1216" height="54">
+                      <frame id="459:1778" name="Cell" x="16" y="20" width="24" height="14">
+                        <frame id="459:1779" name="Icon" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1786" name="Cell" x="44" y="11" width="236" height="32">
+                        <frame id="458:1569" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                          <frame id="458:1570" name="Container" x="13" y="6" width="6" height="20" />
+                        </frame>
+                        <text id="459:1787" name="Pelješki Stari Vinograd" x="42" y="9" width="122" height="14" />
+                      </frame>
+                      <frame id="459:1788" name="Cell" x="284" y="20" width="70" height="14">
+                        <text id="459:1789" name="0.75 L" x="0" y="0" width="33" height="14" />
+                      </frame>
+                      <frame id="459:1790" name="Cell" x="358" y="20" width="100" height="14">
+                        <text id="459:1791" name="VT-PSV-20" x="0" y="0" width="62" height="14" />
+                      </frame>
+                      <frame id="459:1792" name="Cell" x="462" y="20" width="62" height="14">
+                        <text id="459:1793" name="2020" x="0" y="0" width="29" height="14" />
+                      </frame>
+                      <frame id="459:1794" name="Cell" x="528" y="19.5" width="80" height="15">
+                        <text id="459:1795" name="420" x="0" y="0" width="80" height="15" />
+                      </frame>
+                      <frame id="459:1796" name="Cell" x="612" y="19.5" width="90" height="15">
+                        <text id="459:1797" name="393" x="0" y="0" width="22" height="15" />
+                      </frame>
+                      <frame id="459:1798" name="Cell" x="706" y="12.5" width="120" height="29">
+                        <text id="459:1799" name="About 16 months" x="0" y="0" width="93" height="14" />
+                        <text id="459:1800" name="if it ever moves" x="0" y="16" width="75" height="13" />
+                      </frame>
+                      <frame id="459:1801" name="Cell" x="830" y="15.5" width="176" height="23">
+                        <frame id="459:1802" name="track" x="0" y="0" width="160" height="8" />
+                        <text id="459:1804" name="420 of 2.050 max" x="0" y="10" width="88" height="13" />
+                      </frame>
+                      <frame id="459:1805" name="Cell" x="1010" y="12.5" width="180" height="29">
+                        <text id="459:1806" name="No min stock" x="0" y="0" width="72" height="14" />
+                        <text id="459:1807" name="27 reserved" x="0" y="16" width="58" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="459:1808" name="Group · Tasting Boards" x="0" y="559" width="1216" height="34">
+                      <frame id="459:1809" name="Icon" x="16" y="10" width="14" height="14" />
+                      <text id="459:1816" name="▾" x="38" y="11" width="4" height="12" />
+                      <text id="459:1817" name="Tasting Boards" x="50" y="10" width="81" height="14" />
+                      <text id="459:1818" name="(6)" x="139" y="10" width="16" height="14" />
+                      <frame id="459:1819" name="Spacer" x="163" y="16.5" width="977" height="1" />
+                      <text id="459:1820" name="all at zero" x="1148" y="10" width="52" height="14" />
+                    </frame>
+                    <frame id="459:1821" name="Row · Slate Board Small" x="0" y="593" width="1216" height="54">
+                      <frame id="459:1822" name="Cell" x="16" y="20" width="24" height="14">
+                        <frame id="459:1823" name="Icon" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1830" name="Cell" x="44" y="11" width="236" height="32">
+                        <rounded-rectangle id="459:1831" name="Rectangle" x="0" y="0" width="32" height="32" />
+                        <text id="459:1832" name="Slate Board Small" x="42" y="9" width="95" height="14" />
+                      </frame>
+                      <frame id="459:1833" name="Cell" x="284" y="19" width="70" height="16">
+                        <text id="459:1834" name="20×30cm" x="0" y="0" width="53" height="16" />
+                      </frame>
+                      <frame id="459:1835" name="Cell" x="358" y="20" width="100" height="14">
+                        <text id="459:1836" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1837" name="Cell" x="462" y="20" width="62" height="14">
+                        <text id="459:1838" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1839" name="Cell" x="528" y="19.5" width="80" height="15">
+                        <text id="459:1840" name="0" x="0" y="0" width="80" height="15" />
+                      </frame>
+                      <frame id="459:1841" name="Cell" x="612" y="19.5" width="90" height="15">
+                        <text id="459:1842" name="0" x="0" y="0" width="9" height="15" />
+                      </frame>
+                      <frame id="459:1843" name="Cell" x="706" y="20" width="120" height="14">
+                        <text id="459:1844" name="No exits recorded" x="0" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="459:1845" name="Cell" x="830" y="20" width="176" height="14">
+                        <text id="459:1846" name="No max set" x="0" y="0" width="61" height="14" />
+                      </frame>
+                      <frame id="459:1847" name="Cell" x="1010" y="20" width="220" height="14">
+                        <text id="459:1848" name="No min stock" x="0" y="0" width="72" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="459:1849" name="Row · Slate Board Medium" x="0" y="647" width="1216" height="54">
+                      <frame id="459:1850" name="Cell" x="16" y="20" width="24" height="14">
+                        <frame id="459:1851" name="Icon" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1858" name="Cell" x="44" y="11" width="236" height="32">
+                        <rounded-rectangle id="459:1859" name="Rectangle" x="0" y="0" width="32" height="32" />
+                        <text id="459:1860" name="Slate Board Medium" x="42" y="9" width="109" height="14" />
+                      </frame>
+                      <frame id="459:1861" name="Cell" x="284" y="20" width="70" height="14">
+                        <text id="459:1862" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1863" name="Cell" x="358" y="20" width="100" height="14">
+                        <text id="459:1864" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1865" name="Cell" x="462" y="20" width="62" height="14">
+                        <text id="459:1866" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1867" name="Cell" x="528" y="19.5" width="80" height="15">
+                        <text id="459:1868" name="0" x="0" y="0" width="80" height="15" />
+                      </frame>
+                      <frame id="459:1869" name="Cell" x="612" y="19.5" width="90" height="15">
+                        <text id="459:1870" name="0" x="0" y="0" width="9" height="15" />
+                      </frame>
+                      <frame id="459:1871" name="Cell" x="706" y="20" width="120" height="14">
+                        <text id="459:1872" name="No exits recorded" x="0" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="459:1873" name="Cell" x="830" y="20" width="176" height="14">
+                        <text id="459:1874" name="No max set" x="0" y="0" width="61" height="14" />
+                      </frame>
+                      <frame id="459:1875" name="Cell" x="1010" y="20" width="220" height="14">
+                        <text id="459:1876" name="No min stock" x="0" y="0" width="72" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="459:1877" name="Row · Slate Board Large" x="0" y="701" width="1216" height="54">
+                      <frame id="459:1878" name="Cell" x="16" y="20" width="24" height="14">
+                        <frame id="459:1879" name="Icon" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1886" name="Cell" x="44" y="11" width="236" height="32">
+                        <rounded-rectangle id="459:1887" name="Rectangle" x="0" y="0" width="32" height="32" />
+                        <text id="459:1888" name="Slate Board Large" x="42" y="9" width="96" height="14" />
+                      </frame>
+                      <frame id="459:1889" name="Cell" x="284" y="20" width="70" height="14">
+                        <text id="459:1890" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1891" name="Cell" x="358" y="20" width="100" height="14">
+                        <text id="459:1892" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1893" name="Cell" x="462" y="20" width="62" height="14">
+                        <text id="459:1894" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1895" name="Cell" x="528" y="19.5" width="80" height="15">
+                        <text id="459:1896" name="0" x="0" y="0" width="80" height="15" />
+                      </frame>
+                      <frame id="459:1897" name="Cell" x="612" y="19.5" width="90" height="15">
+                        <text id="459:1898" name="0" x="0" y="0" width="9" height="15" />
+                      </frame>
+                      <frame id="459:1899" name="Cell" x="706" y="20" width="120" height="14">
+                        <text id="459:1900" name="No exits recorded" x="0" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="459:1901" name="Cell" x="830" y="20" width="176" height="14">
+                        <text id="459:1902" name="No max set" x="0" y="0" width="61" height="14" />
+                      </frame>
+                      <frame id="459:1903" name="Cell" x="1010" y="20" width="220" height="14">
+                        <text id="459:1904" name="No min stock" x="0" y="0" width="72" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="459:1905" name="Row · Cheese Board" x="0" y="755" width="1216" height="54">
+                      <frame id="459:1906" name="Cell" x="16" y="20" width="24" height="14">
+                        <frame id="459:1907" name="Icon" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1914" name="Cell" x="44" y="11" width="236" height="32">
+                        <rounded-rectangle id="459:1915" name="Rectangle" x="0" y="0" width="32" height="32" />
+                        <text id="459:1916" name="Cheese Board" x="42" y="9" width="76" height="14" />
+                      </frame>
+                      <frame id="459:1917" name="Cell" x="284" y="20" width="70" height="14">
+                        <text id="459:1918" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1919" name="Cell" x="358" y="20" width="100" height="14">
+                        <text id="459:1920" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1921" name="Cell" x="462" y="20" width="62" height="14">
+                        <text id="459:1922" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1923" name="Cell" x="528" y="19.5" width="80" height="15">
+                        <text id="459:1924" name="0" x="0" y="0" width="80" height="15" />
+                      </frame>
+                      <frame id="459:1925" name="Cell" x="612" y="19.5" width="90" height="15">
+                        <text id="459:1926" name="0" x="0" y="0" width="9" height="15" />
+                      </frame>
+                      <frame id="459:1927" name="Cell" x="706" y="20" width="120" height="14">
+                        <text id="459:1928" name="No exits recorded" x="0" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="459:1929" name="Cell" x="830" y="20" width="176" height="14">
+                        <text id="459:1930" name="No max set" x="0" y="0" width="61" height="14" />
+                      </frame>
+                      <frame id="459:1931" name="Cell" x="1010" y="20" width="220" height="14">
+                        <text id="459:1932" name="No min stock" x="0" y="0" width="72" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="459:1933" name="Row · Wine Flight Board" x="0" y="809" width="1216" height="54">
+                      <frame id="459:1934" name="Cell" x="16" y="20" width="24" height="14">
+                        <frame id="459:1935" name="Icon" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1942" name="Cell" x="44" y="11" width="236" height="32">
+                        <rounded-rectangle id="459:1943" name="Rectangle" x="0" y="0" width="32" height="32" />
+                        <text id="459:1944" name="Wine Flight Board" x="42" y="9" width="96" height="14" />
+                      </frame>
+                      <frame id="459:1945" name="Cell" x="284" y="20" width="70" height="14">
+                        <text id="459:1946" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1947" name="Cell" x="358" y="20" width="100" height="14">
+                        <text id="459:1948" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1949" name="Cell" x="462" y="20" width="62" height="14">
+                        <text id="459:1950" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1951" name="Cell" x="528" y="19.5" width="80" height="15">
+                        <text id="459:1952" name="0" x="0" y="0" width="80" height="15" />
+                      </frame>
+                      <frame id="459:1953" name="Cell" x="612" y="19.5" width="90" height="15">
+                        <text id="459:1954" name="0" x="0" y="0" width="9" height="15" />
+                      </frame>
+                      <frame id="459:1955" name="Cell" x="706" y="20" width="120" height="14">
+                        <text id="459:1956" name="No exits recorded" x="0" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="459:1957" name="Cell" x="830" y="20" width="176" height="14">
+                        <text id="459:1958" name="No max set" x="0" y="0" width="61" height="14" />
+                      </frame>
+                      <frame id="459:1959" name="Cell" x="1010" y="20" width="220" height="14">
+                        <text id="459:1960" name="No min stock" x="0" y="0" width="72" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="459:1961" name="Row · Olive Wood Serving Board" x="0" y="863" width="1216" height="54">
+                      <frame id="459:1962" name="Cell" x="16" y="20" width="24" height="14">
+                        <frame id="459:1963" name="Icon" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1970" name="Cell" x="44" y="11" width="236" height="32">
+                        <rounded-rectangle id="459:1971" name="Rectangle" x="0" y="0" width="32" height="32" />
+                        <text id="459:1972" name="Olive Wood Serving Board" x="42" y="9" width="142" height="14" />
+                      </frame>
+                      <frame id="459:1973" name="Cell" x="284" y="20" width="70" height="14">
+                        <text id="459:1974" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1975" name="Cell" x="358" y="20" width="100" height="14">
+                        <text id="459:1976" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1977" name="Cell" x="462" y="20" width="62" height="14">
+                        <text id="459:1978" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="459:1979" name="Cell" x="528" y="19.5" width="80" height="15">
+                        <text id="459:1980" name="0" x="0" y="0" width="80" height="15" />
+                      </frame>
+                      <frame id="459:1981" name="Cell" x="612" y="19.5" width="90" height="15">
+                        <text id="459:1982" name="0" x="0" y="0" width="9" height="15" />
+                      </frame>
+                      <frame id="459:1983" name="Cell" x="706" y="20" width="120" height="14">
+                        <text id="459:1984" name="No exits recorded" x="0" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="459:1985" name="Cell" x="830" y="20" width="176" height="14">
+                        <text id="459:1986" name="No max set" x="0" y="0" width="61" height="14" />
+                      </frame>
+                      <frame id="459:1987" name="Cell" x="1010" y="20" width="220" height="14">
+                        <text id="459:1988" name="No min stock" x="0" y="0" width="72" height="14" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+    </frame>
+  </section>
+  <frame id="408:1639" name="Note · Inventory Check" x="13276" y="6580" width="1369" height="138" hidden="true">

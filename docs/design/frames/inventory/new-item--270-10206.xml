@@ -1,0 +1,596 @@
+    <frame id="270:10206" name="New Item" x="3012" y="100" width="1369" height="933">
+      <frame id="270:10209" name="App" x="0" y="0" width="1369" height="933">
+        <frame id="270:10210" name="NavRail" x="0" y="0" width="56" height="933">
+          <frame id="270:10211" name="Container" x="11.5" y="0" width="32" height="48">
+            <frame id="270:10212" name="Container" x="0" y="8" width="32" height="32">
+              <frame id="270:10213" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+          </frame>
+          <frame id="270:10223" name="Navigation" x="7.5" y="48" width="40" height="837">
+            <frame id="270:10224" name="PreviewCardTrigger" x="0" y="8" width="40" height="40">
+              <frame id="270:10225" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="270:10230" name="PreviewCardTrigger" x="0" y="52" width="40" height="40">
+              <frame id="270:10231" name="ShortcutsFlyout" x="0" y="0" width="40" height="40">
+                <frame id="270:10232" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+            </frame>
+            <frame id="270:10235" name="PreviewCardTrigger" x="0" y="96" width="40" height="40">
+              <frame id="270:10236" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="270:10240" name="PreviewCardTrigger" x="0" y="140" width="40" height="40">
+              <frame id="270:10241" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="270:10246" name="PreviewCardTrigger" x="0" y="184" width="40" height="40">
+              <frame id="270:10247" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="270:10252" name="PreviewCardTrigger" x="0" y="228" width="40" height="40">
+              <frame id="270:10253" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="270:10266" name="PreviewCardTrigger" x="0" y="272" width="40" height="40">
+              <frame id="270:10267" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="270:10271" name="PreviewCardTrigger" x="0" y="316" width="40" height="40">
+              <frame id="270:10272" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="270:10277" name="PreviewCardTrigger" x="0" y="360" width="40" height="40">
+              <frame id="270:10278" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+          </frame>
+          <frame id="270:10281" name="Container" x="7.5" y="885" width="40" height="48">
+            <frame id="270:10282" name="Button" x="0" y="4.5" width="40" height="40">
+              <frame id="270:10283" name="AvatarRoot" x="4" y="4" width="32" height="32">
+                <frame id="270:10284" name="AvatarFallback" x="0" y="0" width="32" height="32">
+                  <text id="270:10285" name="FD" x="8" y="8" width="16" height="16" />
+                </frame>
+                <frame id="270:10287" name="Text" x="0" y="0" width="32" height="32" />
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+        <frame id="270:10288" name="Container" x="56" y="0" width="1313" height="933">
+          <frame id="270:10289" name="Header" x="0" y="0" width="1313" height="48">
+            <frame id="270:10290" name="Button" x="16" y="7.5" width="32" height="32">
+              <frame id="270:10291" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+            <frame id="270:10322" name="Container:align" x="60" y="7.5" width="1237" height="32">
+              <frame id="270:10295" name="Container" x="845" y="0" width="392" height="32">
+                <frame id="270:10296" name="Container" x="0" y="0" width="288" height="32">
+                  <frame id="270:10297" name="Icon" x="10" y="9" width="14" height="14" />
+                  <frame id="270:10300" name="FieldControl" x="0" y="0" width="288" height="32">
+                    <text id="270:10301" name="Search orders, SKUs, partners…" x="33" y="9" width="214" height="14" />
+                  </frame>
+                  <frame id="270:10302" name="Kbd" x="255.7734375" y="6" width="25" height="20">
+                    <text id="270:10303" name="⌘K" x="5" y="2" width="15" height="16" />
+                  </frame>
+                </frame>
+                <frame id="270:10305" name="Container" x="296" y="0" width="96" height="32">
+                  <frame id="270:10306" name="Button" x="0" y="0" width="32" height="32">
+                    <frame id="270:10307" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="270:10311" name="Button" x="32" y="0" width="32" height="32">
+                    <frame id="270:10312" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="270:10317" name="Button" x="64" y="0" width="32" height="32">
+                    <frame id="270:10318" name="Icon" x="8" y="8" width="16" height="16" />
+                    <frame id="270:10321" name="App" x="19" y="7" width="6" height="6" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="283:117" name="Main Content" x="0" y="48" width="1313" height="885">
+            <frame id="283:119" name="InventoryPage" x="0" y="0" width="1280" height="1177.5">
+              <frame id="283:120" name="Container" x="32" y="24" width="1216" height="28">
+                <frame id="283:121" name="Heading 1" x="0" y="0" width="1004" height="28">
+                  <text id="283:122" name="Inventory" x="0" y="0" width="87" height="28" />
+                </frame>
+                <frame id="283:123" name="Frame 8" x="1004" y="0" width="212" height="28">
+                  <frame id="283:124" name="Button" x="0" y="0" width="103" height="28">
+                    <frame id="283:125" name="Icon" x="11" y="7" width="14" height="14" />
+                    <text id="283:129" name="Bulk Import" x="29" y="6" width="63" height="16" />
+                  </frame>
+                  <frame id="283:130" name="Button" x="119" y="0" width="93" height="28">
+                    <frame id="283:131" name="Icon" x="11" y="7" width="14" height="14" />
+                    <text id="283:134" name="New Item" x="29" y="6" width="53" height="16" />
+                  </frame>
+                </frame>
+              </frame>
+              <frame id="283:135" name="TabsRoot:margin" x="32" y="52" width="1216" height="1101.5">
+                <frame id="283:136" name="TabsRoot" x="0" y="16" width="1216" height="1085.5">
+                  <frame id="283:137" name="CompositeRoot" x="0" y="0" width="380" height="32">
+                    <frame id="283:138" name="TabsTab" x="3" y="3.5" width="76.11116027832031" height="25">
+                      <text id="283:139" name="Inventory" x="12.055580139160156" y="4.5" width="52" height="16" />
+                    </frame>
+                    <frame id="283:140" name="TabsTab" x="79.11116027832031" y="3.5" width="74.52919006347656" height="25">
+                      <text id="283:141" name="Analytics" x="12.264595031738281" y="4.5" width="50" height="16" />
+                    </frame>
+                    <frame id="283:142" name="TabsTab" x="153.64035034179688" y="3.5" width="111.84615325927734" height="25">
+                      <text id="283:143" name="Inventory Spend" x="10.923076629638672" y="4.5" width="90" height="16" />
+                    </frame>
+                    <frame id="283:144" name="TabsTab" x="265.48651123046875" y="3.5" width="111.51349639892578" height="25">
+                      <text id="283:145" name="Inventory Check" x="10.75674819946289" y="4.5" width="90" height="16" />
+                    </frame>
+                  </frame>
+                  <frame id="283:146" name="TabsPanel:margin" x="0" y="40" width="1216" height="1045.5">
+                    <frame id="283:147" name="TabsPanel" x="0" y="0" width="1216" height="1025.5">
+                      <frame id="283:148" name="InventoryPage:margin" x="0" y="0" width="1216" height="48">
+                        <frame id="283:149" name="InventoryPage" x="0" y="16" width="1216" height="32">
+                          <frame id="283:150" name="InventoryPage" x="0" y="0" width="1120" height="32">
+                            <frame id="283:151" name="Container" x="0" y="0" width="320" height="32">
+                              <frame id="283:152" name="Icon" x="10" y="9" width="14" height="14" />
+                              <frame id="283:155" name="FieldControl" x="0" y="0" width="320" height="32">
+                                <text id="283:156" name="Search inventory…" x="33" y="9" width="258" height="14" />
+                              </frame>
+                            </frame>
+                            <frame id="283:157" name="Separator" x="332" y="0" width="1" height="32" />
+                            <frame id="283:158" name="Button" x="345" y="2" width="67" height="28">
+                              <text id="283:159" name="Finished" x="11" y="6" width="45" height="16" />
+                            </frame>
+                            <frame id="283:160" name="Button" x="424" y="2" width="100" height="28">
+                              <text id="283:161" name="Semi-Finished" x="11" y="6" width="78" height="16" />
+                            </frame>
+                            <frame id="283:162" name="Button" x="536" y="2" width="98" height="28">
+                              <text id="283:163" name="Raw Materials" x="11" y="6" width="76" height="16" />
+                            </frame>
+                          </frame>
+                          <frame id="283:164" name="Button" x="1128" y="2" width="88" height="28">
+                            <frame id="283:165" name="Icon" x="11" y="7" width="14" height="14" />
+                            <text id="283:167" name="Bulk Edit" x="29" y="6" width="48" height="16" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="283:168" name="GroupedListView:margin" x="0" y="48" width="1216" height="953.25">
+                        <frame id="283:169" name="GroupedListView" x="0" y="16" width="1216" height="937.25">
+                          <frame id="283:170" name="Container" x="0" y="0" width="1216" height="937.25">
+                            <frame id="283:171" name="Paragraph" x="0" y="0" width="1216" height="17">
+                              <text id="283:172" name="FINISHED PRODUCTS" x="0" y="0" width="101" height="17" />
+                            </frame>
+                            <frame id="283:173" name="Container:margin" x="0" y="17" width="1216" height="920.25">
+                              <frame id="283:174" name="Container" x="0" y="8" width="1216" height="912.25">
+                                <frame id="283:175" name="Container" x="1" y="1" width="1214" height="33.25">
+                                  <frame id="283:176" name="Text" x="12" y="8" width="32" height="16.25" />
+                                  <frame id="283:177" name="Text" x="44" y="8" width="742" height="16.25">
+                                    <text id="283:178" name="Name" x="0" y="0" width="27" height="17" />
+                                  </frame>
+                                  <frame id="283:179" name="Text" x="786" y="8" width="96" height="16.25">
+                                    <text id="283:180" name="Size" x="77" y="0" width="19" height="17" />
+                                  </frame>
+                                  <frame id="283:181" name="Text" x="882" y="8" width="80" height="16.25">
+                                    <text id="283:182" name="Vintage" x="44" y="0" width="36" height="17" />
+                                  </frame>
+                                  <frame id="283:183" name="Text" x="962" y="8" width="128" height="16.25">
+                                    <text id="283:184" name="Stock" x="101" y="0" width="27" height="17" />
+                                  </frame>
+                                  <frame id="283:185" name="Text" x="1090" y="8" width="112" height="16.25">
+                                    <text id="283:186" name="Unit" x="93" y="0" width="19" height="17" />
+                                  </frame>
+                                </frame>
+                                <frame id="283:187" name="Container" x="1" y="34.25" width="1214" height="499">
+                                  <frame id="283:188" name="Button" x="0" y="0" width="1214" height="37">
+                                    <frame id="283:189" name="Icon" x="12" y="11" width="14" height="14" />
+                                    <frame id="283:196" name="Icon" x="34" y="11" width="14" height="14" />
+                                    <text id="283:198" name="Wine" x="56" y="10" width="30" height="16" />
+                                    <frame id="283:199" name="Text" x="94" y="10" width="16" height="16">
+                                      <text id="283:200" name="(6)" x="0" y="0" width="16" height="16" />
+                                    </frame>
+                                  </frame>
+                                  <frame id="283:201" name="Container" x="0" y="37" width="1214" height="144">
+                                    <frame id="283:202" name="Container" x="0" y="0" width="1214" height="30">
+                                      <frame id="283:203" name="Icon" x="12" y="7.5" width="14" height="14" />
+                                      <frame id="283:210" name="Text" x="34" y="6" width="33" height="17">
+                                        <text id="283:211" name="White" x="0" y="0" width="33" height="17" />
+                                      </frame>
+                                    </frame>
+                                    <frame id="283:212" name="Button" x="0" y="30" width="1214" height="57">
+                                      <frame id="283:213" name="Icon" x="12" y="21" width="14" height="14" />
+                                      <frame id="283:220" name="Container" x="44" y="12" width="742" height="32">
+                                        <frame id="283:221" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                          <frame id="283:222" name="Container" x="13" y="6" width="6" height="20" />
+                                        </frame>
+                                        <frame id="283:223" name="Text" x="42" y="8" width="102" height="16">
+                                          <text id="283:224" name="Velika Bjelica 2022" x="0" y="0" width="102" height="16" />
+                                        </frame>
+                                      </frame>
+                                      <frame id="283:225" name="Text" x="786" y="20" width="96" height="16">
+                                        <text id="283:226" name="0.75L" x="66" y="0" width="30" height="16" />
+                                      </frame>
+                                      <frame id="283:227" name="Text" x="882" y="20" width="80" height="16">
+                                        <text id="283:228" name="2022" x="52" y="0" width="28" height="16" />
+                                      </frame>
+                                      <frame id="283:229" name="Text" x="962" y="20" width="128" height="16">
+                                        <text id="283:230" name="1.450" x="94" y="0" width="34" height="16" />
+                                      </frame>
+                                      <frame id="283:231" name="Text" x="1090" y="13.3359375" width="112" height="29.328125">
+                                        <frame id="283:232" name="Container" x="0" y="0" width="112" height="16">
+                                          <text id="283:233" name="bottles" x="74.1640625" y="0.5" width="38" height="16" />
+                                        </frame>
+                                        <frame id="283:234" name="Text" x="0" y="16" width="112" height="14">
+                                          <text id="283:235" name="(241 cases)" x="61" y="0" width="51" height="14" />
+                                        </frame>
+                                      </frame>
+                                    </frame>
+                                    <frame id="283:236" name="Button" x="0" y="87" width="1214" height="57">
+                                      <frame id="283:237" name="Icon" x="12" y="21" width="14" height="14" />
+                                      <frame id="283:244" name="Container" x="44" y="12" width="742" height="32">
+                                        <frame id="283:245" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                          <frame id="283:246" name="Container" x="13" y="6" width="6" height="20" />
+                                        </frame>
+                                        <frame id="283:247" name="Text" x="42" y="8" width="89" height="16">
+                                          <text id="283:248" name="Žuti Vapor 2024" x="0" y="0" width="89" height="16" />
+                                        </frame>
+                                      </frame>
+                                      <frame id="283:249" name="Text" x="786" y="20" width="96" height="16">
+                                        <text id="283:250" name="0.75L" x="66" y="0" width="30" height="16" />
+                                      </frame>
+                                      <frame id="283:251" name="Text" x="882" y="20" width="80" height="16">
+                                        <text id="283:252" name="2024" x="51" y="0" width="29" height="16" />
+                                      </frame>
+                                      <frame id="283:253" name="Text" x="962" y="20" width="128" height="16">
+                                        <text id="283:254" name="2.050" x="92" y="0" width="36" height="16" />
+                                      </frame>
+                                      <frame id="283:255" name="Text" x="1090" y="13.3359375" width="112" height="29.328125">
+                                        <frame id="283:256" name="Container" x="0" y="0" width="112" height="16">
+                                          <text id="283:257" name="bottles" x="74.1640625" y="0.5" width="38" height="16" />
+                                        </frame>
+                                        <frame id="283:258" name="Text" x="0" y="16" width="112" height="14">
+                                          <text id="283:259" name="(341 cases)" x="61" y="0" width="51" height="14" />
+                                        </frame>
+                                      </frame>
+                                    </frame>
+                                  </frame>
+                                  <frame id="283:260" name="Container" x="0" y="181" width="1214" height="87">
+                                    <frame id="283:261" name="Container" x="0" y="0" width="1214" height="30">
+                                      <frame id="283:262" name="Icon" x="12" y="7.5" width="14" height="14" />
+                                      <frame id="283:269" name="Text" x="34" y="6" width="27" height="17">
+                                        <text id="283:270" name="Rosé" x="0" y="0" width="27" height="17" />
+                                      </frame>
+                                    </frame>
+                                    <frame id="283:271" name="Button" x="0" y="30" width="1214" height="57">
+                                      <frame id="283:272" name="Icon" x="12" y="21" width="14" height="14" />
+                                      <frame id="283:279" name="Container" x="44" y="12" width="742" height="32">
+                                        <frame id="283:280" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                          <frame id="283:281" name="Container" x="13" y="6" width="6" height="20" />
+                                        </frame>
+                                        <frame id="283:282" name="Text" x="42" y="8" width="100" height="16">
+                                          <text id="283:283" name="Rožica Debit 2023" x="0" y="0" width="100" height="16" />
+                                        </frame>
+                                      </frame>
+                                      <frame id="283:284" name="Text" x="786" y="20" width="96" height="16">
+                                        <text id="283:285" name="0.75L" x="66" y="0" width="30" height="16" />
+                                      </frame>
+                                      <frame id="283:286" name="Text" x="882" y="20" width="80" height="16">
+                                        <text id="283:287" name="2023" x="52" y="0" width="28" height="16" />
+                                      </frame>
+                                      <frame id="283:288" name="Text" x="962" y="20" width="128" height="16">
+                                        <text id="283:289" name="1.275" x="96" y="0" width="32" height="16" />
+                                      </frame>
+                                      <frame id="283:290" name="Text" x="1090" y="13.3359375" width="112" height="29.328125">
+                                        <frame id="283:291" name="Container" x="0" y="0" width="112" height="16">
+                                          <text id="283:292" name="bottles" x="74.1640625" y="0.5" width="38" height="16" />
+                                        </frame>
+                                        <frame id="283:293" name="Text" x="0" y="16" width="112" height="14">
+                                          <text id="283:294" name="(212 cases)" x="61" y="0" width="51" height="14" />
+                                        </frame>
+                                      </frame>
+                                    </frame>
+                                  </frame>
+                                  <frame id="283:295" name="Container" x="0" y="268" width="1214" height="144">
+                                    <frame id="283:296" name="Container" x="0" y="0" width="1214" height="30">
+                                      <frame id="283:297" name="Icon" x="12" y="7.5" width="14" height="14" />
+                                      <frame id="283:304" name="Text" x="34" y="6" width="20" height="17">
+                                        <text id="283:305" name="Red" x="0" y="0" width="20" height="17" />
+                                      </frame>
+                                    </frame>
+                                    <frame id="283:306" name="Button" x="0" y="30" width="1214" height="57">
+                                      <frame id="283:307" name="Icon" x="12" y="21" width="14" height="14" />
+                                      <frame id="283:314" name="Container" x="44" y="12" width="742" height="32">
+                                        <frame id="283:315" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                          <frame id="283:316" name="Container" x="13" y="6" width="6" height="20" />
+                                        </frame>
+                                        <frame id="283:317" name="Text" x="42" y="8" width="93" height="16">
+                                          <text id="283:318" name="Kosa Plavac 2021" x="0" y="0" width="93" height="16" />
+                                        </frame>
+                                      </frame>
+                                      <frame id="283:319" name="Text" x="786" y="20" width="96" height="16">
+                                        <text id="283:320" name="0.75L" x="66" y="0" width="30" height="16" />
+                                      </frame>
+                                      <frame id="283:321" name="Text" x="882" y="20" width="80" height="16">
+                                        <text id="283:322" name="2021" x="53" y="0" width="27" height="16" />
+                                      </frame>
+                                      <frame id="283:323" name="Text" x="962" y="20" width="128" height="16">
+                                        <text id="283:324" name="956" x="104" y="0" width="24" height="16" />
+                                      </frame>
+                                      <frame id="283:325" name="Text" x="1090" y="13.3359375" width="112" height="29.328125">
+                                        <frame id="283:326" name="Container" x="0" y="0" width="112" height="16">
+                                          <text id="283:327" name="bottles" x="74.1640625" y="0.5" width="38" height="16" />
+                                        </frame>
+                                        <frame id="283:328" name="Text" x="0" y="16" width="112" height="14">
+                                          <text id="283:329" name="(159 cases)" x="61" y="0" width="51" height="14" />
+                                        </frame>
+                                      </frame>
+                                    </frame>
+                                    <frame id="283:330" name="Button" x="0" y="87" width="1214" height="57">
+                                      <frame id="283:331" name="Icon" x="12" y="21" width="14" height="14" />
+                                      <frame id="283:338" name="Container" x="44" y="12" width="742" height="32">
+                                        <frame id="283:339" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                          <frame id="283:340" name="Container" x="13" y="6" width="6" height="20" />
+                                        </frame>
+                                        <frame id="283:341" name="Text" x="42" y="8" width="91" height="16">
+                                          <text id="283:342" name="Ostro Crna 2023" x="0" y="0" width="91" height="16" />
+                                        </frame>
+                                      </frame>
+                                      <frame id="283:343" name="Text" x="786" y="20" width="96" height="16">
+                                        <text id="283:344" name="0.75L" x="66" y="0" width="30" height="16" />
+                                      </frame>
+                                      <frame id="283:345" name="Text" x="882" y="20" width="80" height="16">
+                                        <text id="283:346" name="2023" x="52" y="0" width="28" height="16" />
+                                      </frame>
+                                      <frame id="283:347" name="Text" x="962" y="20" width="128" height="16">
+                                        <text id="283:348" name="1.820" x="95" y="0" width="33" height="16" />
+                                      </frame>
+                                      <frame id="283:349" name="Text" x="1090" y="13.3359375" width="112" height="29.328125">
+                                        <frame id="283:350" name="Container" x="0" y="0" width="112" height="16">
+                                          <text id="283:351" name="bottles" x="74.1640625" y="0.5" width="38" height="16" />
+                                        </frame>
+                                        <frame id="283:352" name="Text" x="0" y="16" width="112" height="14">
+                                          <text id="283:353" name="(303 cases)" x="59" y="0" width="53" height="14" />
+                                        </frame>
+                                      </frame>
+                                    </frame>
+                                  </frame>
+                                  <frame id="283:354" name="Container" x="0" y="412" width="1214" height="87">
+                                    <frame id="283:355" name="Container" x="0" y="0" width="1214" height="30">
+                                      <frame id="283:356" name="Icon" x="12" y="7.5" width="14" height="14" />
+                                      <frame id="283:363" name="Text" x="34" y="6" width="68" height="17">
+                                        <text id="283:364" name="Red Reserve" x="0" y="0" width="68" height="17" />
+                                      </frame>
+                                    </frame>
+                                    <frame id="283:365" name="Button" x="0" y="30" width="1214" height="57">
+                                      <frame id="283:366" name="Icon" x="12" y="21" width="14" height="14" />
+                                      <frame id="283:373" name="Container" x="44" y="12" width="742" height="32">
+                                        <frame id="283:374" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                          <frame id="283:375" name="Container" x="13" y="6" width="6" height="20" />
+                                        </frame>
+                                        <frame id="283:376" name="Text" x="42" y="8" width="154" height="16">
+                                          <text id="283:377" name="Pelješki Stari Vinograd 2020" x="0" y="0" width="154" height="16" />
+                                        </frame>
+                                      </frame>
+                                      <frame id="283:378" name="Text" x="786" y="20" width="96" height="16">
+                                        <text id="283:379" name="0.75L" x="66" y="0" width="30" height="16" />
+                                      </frame>
+                                      <frame id="283:380" name="Text" x="882" y="20" width="80" height="16">
+                                        <text id="283:381" name="2020" x="51" y="0" width="29" height="16" />
+                                      </frame>
+                                      <frame id="283:382" name="Text" x="962" y="20" width="128" height="16">
+                                        <text id="283:383" name="420" x="104" y="0" width="24" height="16" />
+                                      </frame>
+                                      <frame id="283:384" name="Text" x="1090" y="13.3359375" width="112" height="29.328125">
+                                        <frame id="283:385" name="Container" x="0" y="0" width="112" height="16">
+                                          <text id="283:386" name="bottles" x="74.1640625" y="0.5" width="38" height="16" />
+                                        </frame>
+                                        <frame id="283:387" name="Text" x="0" y="16" width="112" height="14">
+                                          <text id="283:388" name="(70 cases)" x="65" y="0" width="47" height="14" />
+                                        </frame>
+                                      </frame>
+                                    </frame>
+                                  </frame>
+                                </frame>
+                                <frame id="283:389" name="Container" x="1" y="533.25" width="1214" height="378">
+                                  <frame id="283:390" name="Button" x="0" y="0" width="1214" height="37">
+                                    <frame id="283:391" name="Icon" x="12" y="11" width="14" height="14" />
+                                    <frame id="283:398" name="Icon" x="34" y="11" width="14" height="14" />
+                                    <text id="283:400" name="Tasting Boards" x="56" y="10" width="87" height="16" />
+                                    <frame id="283:401" name="Text" x="151" y="10" width="16" height="16">
+                                      <text id="283:402" name="(6)" x="0" y="0" width="16" height="16" />
+                                    </frame>
+                                  </frame>
+                                  <frame id="283:403" name="Container" x="0" y="37" width="1214" height="341">
+                                    <frame id="283:404" name="Button" x="0" y="0" width="1214" height="57">
+                                      <frame id="283:405" name="Icon" x="12" y="21" width="14" height="14" />
+                                      <frame id="283:412" name="Container" x="44" y="12" width="742" height="32">
+                                        <frame id="283:413" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                          <frame id="283:414" name="Container" x="13" y="6" width="6" height="20" />
+                                        </frame>
+                                        <frame id="283:415" name="Text" x="42" y="8" width="95" height="16">
+                                          <text id="283:416" name="Slate Board Small" x="0" y="0" width="95" height="16" />
+                                        </frame>
+                                      </frame>
+                                      <frame id="283:417" name="Text" x="786" y="20" width="96" height="16">
+                                        <text id="283:418" name="20×30cm" x="43" y="0" width="53" height="16" />
+                                      </frame>
+                                      <frame id="283:419" name="Text" x="882" y="20" width="80" height="16">
+                                        <text id="283:420" name="—" x="66" y="0" width="14" height="16" />
+                                      </frame>
+                                      <frame id="283:421" name="Text" x="962" y="20" width="128" height="16">
+                                        <text id="283:422" name="0" x="119" y="0" width="9" height="16" />
+                                      </frame>
+                                      <frame id="283:423" name="Text" x="1090" y="20" width="112" height="16">
+                                        <text id="283:424" name="units" x="85" y="0" width="27" height="16" />
+                                      </frame>
+                                    </frame>
+                                    <frame id="283:425" name="Button" x="0" y="57" width="1214" height="57">
+                                      <frame id="283:426" name="Icon" x="12" y="21" width="14" height="14" />
+                                      <frame id="283:433" name="Container" x="44" y="12" width="742" height="32">
+                                        <frame id="283:434" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                          <frame id="283:435" name="Container" x="13" y="6" width="6" height="20" />
+                                        </frame>
+                                        <frame id="283:436" name="Text" x="42" y="8" width="109" height="16">
+                                          <text id="283:437" name="Slate Board Medium" x="0" y="0" width="109" height="16" />
+                                        </frame>
+                                      </frame>
+                                      <frame id="283:438" name="Text" x="786" y="20" width="96" height="16">
+                                        <text id="283:439" name="30×40cm" x="42" y="0" width="54" height="16" />
+                                      </frame>
+                                      <frame id="283:440" name="Text" x="882" y="20" width="80" height="16">
+                                        <text id="283:441" name="—" x="66" y="0" width="14" height="16" />
+                                      </frame>
+                                      <frame id="283:442" name="Text" x="962" y="20" width="128" height="16">
+                                        <text id="283:443" name="0" x="119" y="0" width="9" height="16" />
+                                      </frame>
+                                      <frame id="283:444" name="Text" x="1090" y="20" width="112" height="16">
+                                        <text id="283:445" name="units" x="85" y="0" width="27" height="16" />
+                                      </frame>
+                                    </frame>
+                                    <frame id="283:446" name="Button" x="0" y="114" width="1214" height="57">
+                                      <frame id="283:447" name="Icon" x="12" y="21" width="14" height="14" />
+                                      <frame id="283:454" name="Container" x="44" y="12" width="742" height="32">
+                                        <frame id="283:455" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                          <frame id="283:456" name="Container" x="13" y="6" width="6" height="20" />
+                                        </frame>
+                                        <frame id="283:457" name="Text" x="42" y="8" width="96" height="16">
+                                          <text id="283:458" name="Slate Board Large" x="0" y="0" width="96" height="16" />
+                                        </frame>
+                                      </frame>
+                                      <frame id="283:459" name="Text" x="786" y="20" width="96" height="16">
+                                        <text id="283:460" name="40×60cm" x="42" y="0" width="54" height="16" />
+                                      </frame>
+                                      <frame id="283:461" name="Text" x="882" y="20" width="80" height="16">
+                                        <text id="283:462" name="—" x="66" y="0" width="14" height="16" />
+                                      </frame>
+                                      <frame id="283:463" name="Text" x="962" y="20" width="128" height="16">
+                                        <text id="283:464" name="0" x="119" y="0" width="9" height="16" />
+                                      </frame>
+                                      <frame id="283:465" name="Text" x="1090" y="20" width="112" height="16">
+                                        <text id="283:466" name="units" x="85" y="0" width="27" height="16" />
+                                      </frame>
+                                    </frame>
+                                    <frame id="283:467" name="Button" x="0" y="171" width="1214" height="57">
+                                      <frame id="283:468" name="Icon" x="12" y="21" width="14" height="14" />
+                                      <frame id="283:475" name="Container" x="44" y="12" width="742" height="32">
+                                        <frame id="283:476" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                          <frame id="283:477" name="Container" x="13" y="6" width="6" height="20" />
+                                        </frame>
+                                        <frame id="283:478" name="Text" x="42" y="8" width="76" height="16">
+                                          <text id="283:479" name="Cheese Board" x="0" y="0" width="76" height="16" />
+                                        </frame>
+                                      </frame>
+                                      <frame id="283:480" name="Text" x="786" y="20" width="96" height="16">
+                                        <text id="283:481" name="—" x="82" y="0" width="14" height="16" />
+                                      </frame>
+                                      <frame id="283:482" name="Text" x="882" y="20" width="80" height="16">
+                                        <text id="283:483" name="—" x="66" y="0" width="14" height="16" />
+                                      </frame>
+                                      <frame id="283:484" name="Text" x="962" y="20" width="128" height="16">
+                                        <text id="283:485" name="0" x="119" y="0" width="9" height="16" />
+                                      </frame>
+                                      <frame id="283:486" name="Text" x="1090" y="20" width="112" height="16">
+                                        <text id="283:487" name="units" x="85" y="0" width="27" height="16" />
+                                      </frame>
+                                    </frame>
+                                    <frame id="283:488" name="Button" x="0" y="228" width="1214" height="57">
+                                      <frame id="283:489" name="Icon" x="12" y="21" width="14" height="14" />
+                                      <frame id="283:496" name="Container" x="44" y="12" width="742" height="32">
+                                        <frame id="283:497" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                          <frame id="283:498" name="Container" x="13" y="6" width="6" height="20" />
+                                        </frame>
+                                        <frame id="283:499" name="Text" x="42" y="8" width="96" height="16">
+                                          <text id="283:500" name="Wine Flight Board" x="0" y="0" width="96" height="16" />
+                                        </frame>
+                                      </frame>
+                                      <frame id="283:501" name="Text" x="786" y="20" width="96" height="16">
+                                        <text id="283:502" name="—" x="82" y="0" width="14" height="16" />
+                                      </frame>
+                                      <frame id="283:503" name="Text" x="882" y="20" width="80" height="16">
+                                        <text id="283:504" name="—" x="66" y="0" width="14" height="16" />
+                                      </frame>
+                                      <frame id="283:505" name="Text" x="962" y="20" width="128" height="16">
+                                        <text id="283:506" name="0" x="119" y="0" width="9" height="16" />
+                                      </frame>
+                                      <frame id="283:507" name="Text" x="1090" y="20" width="112" height="16">
+                                        <text id="283:508" name="units" x="85" y="0" width="27" height="16" />
+                                      </frame>
+                                    </frame>
+                                    <frame id="283:509" name="Button" x="0" y="285" width="1214" height="56">
+                                      <frame id="283:510" name="Icon" x="12" y="21" width="14" height="14" />
+                                      <frame id="283:517" name="Container" x="44" y="12" width="742" height="32">
+                                        <frame id="283:518" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                          <frame id="283:519" name="Container" x="13" y="6" width="6" height="20" />
+                                        </frame>
+                                        <frame id="283:520" name="Text" x="42" y="8" width="142" height="16">
+                                          <text id="283:521" name="Olive Wood Serving Board" x="0" y="0" width="142" height="16" />
+                                        </frame>
+                                      </frame>
+                                      <frame id="283:522" name="Text" x="786" y="20" width="96" height="16">
+                                        <text id="283:523" name="—" x="82" y="0" width="14" height="16" />
+                                      </frame>
+                                      <frame id="283:524" name="Text" x="882" y="20" width="80" height="16">
+                                        <text id="283:525" name="—" x="66" y="0" width="14" height="16" />
+                                      </frame>
+                                      <frame id="283:526" name="Text" x="962" y="20" width="128" height="16">
+                                        <text id="283:527" name="0" x="119" y="0" width="9" height="16" />
+                                      </frame>
+                                      <frame id="283:528" name="Text" x="1090" y="20" width="112" height="16">
+                                        <text id="283:529" name="units" x="85" y="0" width="27" height="16" />
+                                      </frame>
+                                    </frame>
+                                  </frame>
+                                </frame>
+                              </frame>
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+      <frame id="270:10828" name="DialogBackdrop" x="0" y="0" width="1369" height="933">
+        <frame id="323:3552" name="New Item — Advanced open" x="879" y="10" width="480" height="1354">
+          <frame id="323:3553" name="FormHeader" x="0" y="0" width="480" height="64">
+            <text id="323:3554" name="New item" x="24" y="20" width="419" height="24" />
+            <text id="323:3555" name="✕" x="443" y="22" width="13" height="20" />
+          </frame>
+          <frame id="323:3556" name="Separator" x="0" y="64" width="480" height="1" />
+          <frame id="323:3557" name="FormBody" x="0" y="65" width="480" height="1204">
+            <instance id="323:3558" name="Field" x="24" y="24" width="432" height="62" />
+            <instance id="323:3559" name="Field" x="24" y="102" width="432" height="84" />
+            <frame id="323:3560" name="FieldRow" x="24" y="202" width="432" height="62">
+              <instance id="323:3561" name="Field" x="0" y="0" width="208" height="62" />
+              <instance id="323:3562" name="Field" x="224" y="0" width="208" height="62" />
+            </frame>
+            <frame id="323:3563" name="FieldRow" x="24" y="280" width="432" height="62">
+              <instance id="323:3564" name="Field" x="0" y="0" width="208" height="62" />
+              <instance id="323:3565" name="Field" x="224" y="0" width="208" height="62" />
+            </frame>
+            <instance id="323:3566" name="Field" x="24" y="358" width="432" height="84" />
+            <frame id="323:3567" name="Separator" x="24" y="458" width="432" height="1" />
+            <frame id="323:3568" name="Disclosure" x="24" y="475" width="432" height="705">
+              <frame id="323:3569" name="DisclosureHeader" x="0" y="0" width="432" height="40">
+                <text id="323:3570" name="Advanced" x="12" y="10" width="382" height="20" />
+                <text id="323:3571" name="Hide" x="394" y="12" width="26" height="16" />
+              </frame>
+              <frame id="323:3572" name="Separator" x="0" y="40" width="432" height="1" />
+              <frame id="323:3573" name="DisclosureBody" x="0" y="41" width="432" height="664">
+                <instance id="323:3574" name="Field" x="12" y="16" width="408" height="62" />
+                <instance id="323:3575" name="Field" x="12" y="94" width="408" height="62" />
+                <instance id="323:3576" name="Field" x="12" y="172" width="408" height="84" />
+                <instance id="323:3577" name="Field" x="12" y="272" width="408" height="84" />
+                <frame id="323:3578" name="SwitchRow" x="12" y="372" width="408" height="54">
+                  <frame id="323:3579" name="Container" x="0" y="0" width="249" height="54">
+                    <text id="323:3580" name="Available for sale" x="0" y="0" width="107" height="20" />
+                    <text id="323:3581" name="Shows in the customer order form. Needs a price set." x="0" y="22" width="249" height="32" />
+                  </frame>
+                  <instance id="323:3582" name="Switch" x="261" y="0" width="147" height="24" />
+                </frame>
+                <instance id="323:3583" name="Field" x="12" y="442" width="408" height="84" />
+                <instance id="323:3584" name="Field" x="12" y="542" width="408" height="106" />
+              </frame>
+            </frame>
+          </frame>
+          <frame id="323:3585" name="Separator" x="0" y="1269" width="480" height="1" />
+          <frame id="323:3586" name="FormFooter" x="0" y="1270" width="480" height="84">
+            <frame id="323:3587" name="Button" x="281" y="24" width="68" height="36">
+              <text id="323:3588" name="Cancel" x="12" y="8" width="44" height="20" />
+            </frame>
+            <frame id="323:3589" name="Button" x="357" y="24" width="99" height="36">
+              <text id="323:3590" name="Create item" x="12" y="8" width="75" height="20" />
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+    </frame>

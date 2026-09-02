@@ -1,0 +1,955 @@
+    <frame id="453:4938" name="Individual Order" x="1500" y="100" width="1369" height="1024">
+      <frame id="453:4939" name="App" x="0" y="0" width="1369" height="1024">
+        <frame id="453:4940" name="NavRail" x="0" y="0" width="56" height="1420">
+          <frame id="453:4941" name="Container" x="11.5" y="0" width="32" height="48">
+            <frame id="453:4942" name="Container" x="0" y="8" width="32" height="32">
+              <frame id="453:4943" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+          </frame>
+          <frame id="453:4953" name="Navigation" x="7.5" y="48" width="40" height="1324">
+            <frame id="453:4954" name="PreviewCardTrigger" x="0" y="8" width="40" height="40">
+              <frame id="453:4955" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="453:4960" name="PreviewCardTrigger" x="0" y="52" width="40" height="40">
+              <frame id="453:4961" name="ShortcutsFlyout" x="0" y="0" width="40" height="40">
+                <frame id="453:4962" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+            </frame>
+            <frame id="453:4965" name="PreviewCardTrigger" x="0" y="96" width="40" height="40">
+              <frame id="453:4966" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="453:4970" name="PreviewCardTrigger" x="0" y="140" width="40" height="40">
+              <frame id="453:4971" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="453:4976" name="PreviewCardTrigger" x="0" y="184" width="40" height="40">
+              <frame id="453:4977" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="453:4982" name="PreviewCardTrigger" x="0" y="228" width="40" height="40">
+              <frame id="453:4983" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="453:4996" name="PreviewCardTrigger" x="0" y="272" width="40" height="40">
+              <frame id="453:4997" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="453:5001" name="PreviewCardTrigger" x="0" y="316" width="40" height="40">
+              <frame id="453:5002" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="453:5007" name="PreviewCardTrigger" x="0" y="360" width="40" height="40">
+              <frame id="453:5008" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+          </frame>
+          <frame id="453:5011" name="Container" x="7.5" y="1372" width="40" height="48">
+            <frame id="453:5012" name="Button" x="0" y="4.5" width="40" height="40">
+              <frame id="453:5013" name="AvatarRoot" x="4" y="4" width="32" height="32">
+                <frame id="453:5014" name="AvatarFallback" x="0" y="0" width="32" height="32">
+                  <text id="453:5015" name="FD" x="8.5" y="8" width="15" height="16" />
+                </frame>
+                <frame id="453:5016" name="Text" x="0" y="0" width="32" height="32" />
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+        <frame id="453:5017" name="Container" x="56" y="0" width="1313" height="1024">
+          <frame id="453:5018" name="Header" x="0" y="0" width="1313" height="48">
+            <frame id="453:5019" name="Button" x="16" y="7.5" width="32" height="32">
+              <frame id="453:5020" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+            <frame id="453:5023" name="Container:align" x="60" y="7.5" width="1237" height="32">
+              <frame id="453:5024" name="Container" x="845" y="0" width="392" height="32">
+                <frame id="453:5025" name="Container" x="0" y="0" width="288" height="32">
+                  <frame id="453:5026" name="Icon" x="10" y="9" width="14" height="14" />
+                  <frame id="453:5029" name="FieldControl" x="0" y="0" width="288" height="32">
+                    <text id="453:5030" name="Search orders, SKUs, partners…" x="33" y="9" width="214" height="14" />
+                  </frame>
+                  <frame id="453:5031" name="Kbd" x="255.7734375" y="6" width="25" height="20">
+                    <text id="453:5032" name="⌘K" x="5" y="2" width="15" height="16" />
+                  </frame>
+                </frame>
+                <frame id="453:5033" name="Container" x="296" y="0" width="96" height="32">
+                  <frame id="453:5034" name="Button" x="0" y="0" width="32" height="32">
+                    <frame id="453:5035" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="453:5039" name="Button" x="32" y="0" width="32" height="32">
+                    <frame id="453:5040" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="453:5045" name="Button" x="64" y="0" width="32" height="32">
+                    <frame id="453:5046" name="Icon" x="8" y="8" width="16" height="16" />
+                    <frame id="453:5049" name="App" x="19" y="7" width="6" height="6" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="453:5050" name="Main Content" x="0" y="48" width="1313" height="1540">
+            <frame id="453:5051" name="Container:margin" x="0" y="0" width="1313" height="1540">
+              <frame id="453:5052" name="Container" x="16.5" y="0" width="1280" height="1372">
+                <frame id="453:5053" name="Container" x="32" y="24" width="1216" height="36">
+                  <frame id="453:5054" name="Heading 1" x="0" y="8" width="62" height="28">
+                    <text id="453:5055" name="Orders" x="0" y="0" width="62" height="28" />
+                  </frame>
+                  <frame id="453:5056" name="Container" x="1034" y="8" width="182" height="28">
+                    <frame id="453:5057" name="Button" x="0" y="0" width="98" height="28">
+                      <frame id="453:5058" name="Icon" x="11" y="7" width="14" height="14" />
+                      <text id="453:5061" name="New order" x="29" y="6" width="58" height="16" />
+                    </frame>
+                    <frame id="453:5062" name="Button" x="106" y="0" width="76" height="28">
+                      <frame id="453:5063" name="Icon" x="11" y="7" width="14" height="14" />
+                      <text id="453:5068" name="Export" x="29" y="6" width="36" height="16" />
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="453:5069" name="Container" x="32" y="60" width="1216" height="48">
+                  <frame id="453:5070" name="TabsRoot" x="0" y="12" width="1216" height="32">
+                    <frame id="453:5071" name="CompositeRoot" x="0" y="0" width="505" height="32">
+                      <frame id="453:5072" name="TabsTab" x="3" y="3.5" width="47" height="25">
+                        <text id="453:5073" name="Today" x="7" y="4.5" width="33" height="16" />
+                      </frame>
+                      <frame id="453:5074" name="TabsTab" x="50" y="3.5" width="68" height="25">
+                        <text id="453:5075" name="Yesterday" x="7" y="4.5" width="54" height="16" />
+                      </frame>
+                      <frame id="453:5076" name="TabsTab" x="118" y="3.5" width="70" height="25">
+                        <text id="453:5077" name="This Week" x="7" y="4.5" width="56" height="16" />
+                      </frame>
+                      <frame id="453:5078" name="TabsTab" x="188" y="3.5" width="75" height="25">
+                        <text id="453:5079" name="This Month" x="7" y="4.5" width="61" height="16" />
+                      </frame>
+                      <frame id="453:5080" name="TabsTab" x="263" y="3.5" width="81" height="25">
+                        <text id="453:5081" name="This Quarter" x="7" y="4.5" width="67" height="16" />
+                      </frame>
+                      <frame id="453:5082" name="TabsTab" x="344" y="3.5" width="81" height="25">
+                        <text id="453:5083" name="Year to Date" x="7" y="4.5" width="67" height="16" />
+                      </frame>
+                      <frame id="453:5084" name="TabsTab" x="425" y="3.5" width="77" height="25">
+                        <frame id="453:5085" name="Icon" x="7" y="5.5" width="14" height="14" />
+                        <text id="453:5090" name="Custom" x="27" y="4.5" width="43" height="16" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="453:5091" name="Band • Pipeline" x="32" y="108" width="1216" height="192">
+                  <frame id="453:5092" name="Card • Order pipeline" x="0" y="24" width="1216" height="168">
+                    <frame id="453:5093" name="CardHeader" x="0" y="0" width="1216" height="61">
+                      <frame id="453:5094" name="CardTitle" x="16" y="16" width="320" height="33">
+                        <text id="453:5095" name="Order-to-cash pipeline" x="0" y="0" width="146" height="17" />
+                        <text id="453:5096" name="Open orders by stage · click a stage to filter the table below" x="0" y="19" width="320" height="14" />
+                      </frame>
+                      <frame id="453:5097" name="Spacer" x="336" y="32" width="796" height="1" />
+                      <text id="453:5098" name="This month ▾" x="1132" y="25.5" width="68" height="14" />
+                    </frame>
+                    <frame id="453:5099" name="Stages" x="0" y="61" width="1216" height="107">
+                      <frame id="453:5100" name="Stage · Draft" x="0" y="0" width="202.6666717529297" height="91">
+                        <text id="453:5101" name="Draft" x="16" y="4" width="28" height="14" />
+                        <text id="453:5102" name="12" x="16" y="24" width="29" height="37" />
+                        <text id="453:5103" name="€18,400" x="16" y="67" width="46" height="14" />
+                        <frame id="453:5104" name="Bar" x="16" y="87" width="170.6666717529297" height="4">
+                          <rounded-rectangle id="453:5105" name="Rectangle" x="0" y="0" width="8" height="4" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5106" name="Stage · Confirmed" x="202.6666717529297" y="0" width="202.66665649414062" height="91">
+                        <text id="453:5107" name="Confirmed" x="16" y="4" width="58" height="14" />
+                        <text id="453:5108" name="34" x="16" y="24" width="36" height="37" />
+                        <text id="453:5109" name="€96,200" x="16" y="67" width="47" height="14" />
+                        <frame id="453:5110" name="Bar" x="16" y="87" width="170.66665649414062" height="4">
+                          <rounded-rectangle id="453:5111" name="Rectangle" x="0" y="0" width="40" height="4" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5112" name="Stage · Picking / packed" x="405.33331298828125" y="0" width="202.66665649414062" height="91">
+                        <text id="453:5113" name="Picking / packed" x="16" y="4" width="90" height="14" />
+                        <text id="453:5114" name="9" x="16" y="24" width="19" height="37" />
+                        <text id="453:5115" name="€22,700" x="16" y="67" width="46" height="14" />
+                        <frame id="453:5116" name="Bar" x="16" y="87" width="170.66665649414062" height="4">
+                          <rounded-rectangle id="453:5117" name="Rectangle" x="0" y="0" width="10" height="4" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5118" name="Stage · Delivered" x="608" y="0" width="202.6666717529297" height="91">
+                        <text id="453:5119" name="Delivered" x="16" y="4" width="52" height="14" />
+                        <text id="453:5120" name="21" x="16" y="24" width="29" height="37" />
+                        <text id="453:5121" name="€61,500" x="16" y="67" width="45" height="14" />
+                        <frame id="453:5122" name="Bar" x="16" y="87" width="170.6666717529297" height="4">
+                          <rounded-rectangle id="453:5123" name="Rectangle" x="0" y="0" width="26" height="4" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5124" name="Stage · Invoiced" x="810.6666870117188" y="0" width="202.66665649414062" height="91">
+                        <text id="453:5125" name="Invoiced" x="16" y="4" width="47" height="14" />
+                        <text id="453:5126" name="47" x="16" y="24" width="35" height="37" />
+                        <text id="453:5127" name="€142,900" x="16" y="67" width="52" height="14" />
+                        <frame id="453:5128" name="Bar" x="16" y="87" width="170.66665649414062" height="4">
+                          <rounded-rectangle id="453:5129" name="Rectangle" x="0" y="0" width="59" height="4" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5130" name="Stage · Paid" x="1013.3333740234375" y="0" width="202.66665649414062" height="91">
+                        <text id="453:5131" name="Paid" x="16" y="4" width="24" height="14" />
+                        <text id="453:5132" name="128" x="16" y="24" width="47" height="37" />
+                        <text id="453:5133" name="€389,100" x="16" y="67" width="52" height="14" />
+                        <frame id="453:5134" name="Bar" x="16" y="87" width="170.66665649414062" height="4">
+                          <rounded-rectangle id="453:5135" name="Rectangle" x="0" y="0" width="160" height="4" />
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="453:5136" name="Band • Orders table" x="32" y="300" width="1216" height="1048">
+                  <frame id="453:5137" name="Card • Orders" x="0" y="16" width="1216" height="1032">
+                    <frame id="453:5138" name="Toolbar" x="0" y="0" width="1216" height="54">
+                      <frame id="453:5139" name="Input · Search" x="16" y="12" width="280" height="30">
+                        <text id="453:5140" name="Search order no., customer, SKU…" x="10" y="8" width="181" height="14" />
+                      </frame>
+                      <frame id="453:5141" name="Filter · Channel" x="304" y="12" width="72" height="30">
+                        <text id="453:5142" name="Channel ▾" x="10" y="8" width="52" height="14" />
+                      </frame>
+                      <frame id="453:5143" name="Filter · Date range" x="384" y="12" width="87" height="30">
+                        <text id="453:5144" name="Date range ▾" x="10" y="8" width="67" height="14" />
+                      </frame>
+                      <frame id="453:5145" name="Filter · Rep" x="479" y="12" width="49" height="30">
+                        <text id="453:5146" name="Rep ▾" x="10" y="8" width="29" height="14" />
+                      </frame>
+                      <frame id="453:5147" name="Spacer" x="536" y="26.5" width="487" height="1" />
+                      <frame id="453:5148" name="Btn · Bulk actions ▾" x="1031" y="12" width="93" height="30">
+                        <text id="453:5149" name="Bulk actions ▾" x="10" y="8" width="73" height="14" />
+                      </frame>
+                      <frame id="453:5150" name="Btn · Columns" x="1132" y="12" width="68" height="30">
+                        <text id="453:5151" name="Columns" x="10" y="8" width="48" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="453:5152" name="Status chips" x="0" y="54" width="1216" height="39">
+                      <frame id="453:5153" name="Chip · All" x="16" y="0" width="55" height="25">
+                        <text id="453:5154" name="All" x="10" y="5.5" width="14" height="14" />
+                        <text id="453:5155" name="37" x="31" y="5" width="14" height="15" />
+                      </frame>
+                      <frame id="453:5156" name="Chip · Received" x="79" y="0" width="97" height="25">
+                        <rounded-rectangle id="453:5157" name="Rectangle" x="8" y="8.5" width="8" height="8" />
+                        <text id="453:5158" name="Received" x="23" y="5.5" width="50" height="14" />
+                        <text id="453:5159" name="2" x="80" y="5" width="7" height="15" />
+                      </frame>
+                      <frame id="453:5160" name="Chip · In Process" x="184" y="0" width="104" height="25">
+                        <rounded-rectangle id="453:5161" name="Rectangle" x="8" y="8.5" width="8" height="8" />
+                        <text id="453:5162" name="In Process" x="23" y="5.5" width="56" height="14" />
+                        <text id="453:5163" name="4" x="86" y="5" width="8" height="15" />
+                      </frame>
+                      <frame id="453:5164" name="Chip · Ready to Ship" x="296" y="0" width="124" height="25">
+                        <rounded-rectangle id="453:5165" name="Rectangle" x="8" y="8.5" width="8" height="8" />
+                        <text id="453:5166" name="Ready to Ship" x="23" y="5.5" width="76" height="14" />
+                        <text id="453:5167" name="6" x="106" y="5" width="8" height="15" />
+                      </frame>
+                      <frame id="453:5168" name="Chip · Shipped" x="428" y="0" width="99" height="25">
+                        <rounded-rectangle id="453:5169" name="Rectangle" x="8" y="8.5" width="8" height="8" />
+                        <text id="453:5170" name="Shipped" x="23" y="5.5" width="45" height="14" />
+                        <text id="453:5171" name="25" x="75" y="5" width="14" height="15" />
+                      </frame>
+                    </frame>
+                    <frame id="453:5172" name="TableHeader" x="0" y="93" width="1216" height="32">
+                      <text id="453:5173" name="ORDER" x="16" y="10" width="200" height="12" />
+                      <text id="453:5174" name="ITEMS" x="232" y="10" width="520" height="12" />
+                      <text id="453:5175" name="TOTAL" x="768" y="10" width="130" height="12" />
+                      <text id="453:5176" name="STATUS" x="914" y="10" width="140" height="12" />
+                      <text id="453:5177" name="DATE" x="1070" y="10" width="130" height="12" />
+                    </frame>
+                    <frame id="453:5178" name="Row · #261651" x="0" y="125" width="1216" height="98">
+                      <frame id="453:5179" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="453:5180" name="id" x="0" y="0" width="59" height="16">
+                          <text id="453:5181" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="453:5182" name="#261651" x="10" y="0" width="49" height="16" />
+                        </frame>
+                        <text id="453:5183" name="Taverna Olea" x="0" y="19" width="69" height="14" />
+                      </frame>
+                      <frame id="453:5184" name="Cell" x="232" y="12" width="520" height="74">
+                        <frame id="453:5185" name="line" x="0" y="0" width="186" height="16">
+                          <text id="453:5186" name="23×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5187" name="Kosa Plavac" x="40" y="0" width="70" height="16" />
+                          <text id="453:5188" name="2021 · 0.75 L" x="118" y="2" width="68" height="14" />
+                        </frame>
+                        <frame id="453:5189" name="line" x="0" y="20" width="186" height="16">
+                          <text id="453:5190" name="1×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5191" name="Kosa Plavac" x="40" y="0" width="70" height="16" />
+                          <text id="453:5192" name="2021 · 0.75 L" x="118" y="2" width="68" height="14" />
+                        </frame>
+                        <frame id="453:5193" name="line" x="0" y="40" width="193" height="16">
+                          <text id="453:5194" name="2×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5195" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="453:5196" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                        <text id="453:5197" name="+ 1 more" x="0" y="60" width="47" height="14" />
+                      </frame>
+                      <frame id="453:5198" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="453:5199" name="669,38 €" x="0" y="0" width="130" height="17" />
+                        <text id="453:5200" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="453:5201" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="453:5202" name="Status · In Process" x="0" y="0" width="87" height="20">
+                          <rounded-rectangle id="453:5203" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="453:5204" name="In Process" x="22" y="3" width="56" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5205" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="453:5206" name="10/08/26" x="0" y="0" width="130" height="16" />
+                        <text id="453:5207" name="Filip Demo" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="453:5208" name="Row · #VT-20260036" x="0" y="223" width="1216" height="60">
+                      <frame id="453:5209" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="453:5210" name="id" x="0" y="0" width="103" height="16">
+                          <text id="453:5211" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="453:5212" name="#VT-20260036" x="10" y="0" width="93" height="16" />
+                        </frame>
+                        <text id="453:5213" name="Taverna Olea" x="0" y="19" width="69" height="14" />
+                      </frame>
+                      <frame id="453:5214" name="Cell" x="232" y="12" width="520" height="36">
+                        <frame id="453:5215" name="line" x="0" y="0" width="183" height="16">
+                          <text id="453:5216" name="58×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5217" name="Ostro Crna" x="40" y="0" width="65" height="16" />
+                          <text id="453:5218" name="2023 · 0.75 L" x="113" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="453:5219" name="line" x="0" y="20" width="195" height="16">
+                          <text id="453:5220" name="29×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5221" name="Velika Bjelica" x="40" y="0" width="77" height="16" />
+                          <text id="453:5222" name="2022 · 0.75 L" x="125" y="2" width="70" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5223" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="453:5224" name="1.703,17 €" x="0" y="0" width="130" height="17" />
+                        <text id="453:5225" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="453:5226" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="453:5227" name="Status · Ready to Ship" x="0" y="0" width="107" height="20">
+                          <rounded-rectangle id="453:5228" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="453:5229" name="Ready to Ship" x="22" y="3" width="76" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5230" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="453:5231" name="25/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="453:5232" name="Filip Demo" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="453:5233" name="Row · #VT-20260025" x="0" y="283" width="1216" height="60">
+                      <frame id="453:5234" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="453:5235" name="id" x="0" y="0" width="103" height="16">
+                          <text id="453:5236" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="453:5237" name="#VT-20260025" x="10" y="0" width="93" height="16" />
+                        </frame>
+                        <text id="453:5238" name="Konoba Kraljevac" x="0" y="19" width="93" height="14" />
+                      </frame>
+                      <frame id="453:5239" name="Cell" x="232" y="12" width="520" height="36">
+                        <frame id="453:5240" name="line" x="0" y="0" width="195" height="16">
+                          <text id="453:5241" name="20×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5242" name="Velika Bjelica" x="40" y="0" width="77" height="16" />
+                          <text id="453:5243" name="2022 · 0.75 L" x="125" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="453:5244" name="line" x="0" y="20" width="251" height="16">
+                          <text id="453:5245" name="45×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5246" name="Pelješki Stari Vinograd" x="40" y="0" width="132" height="16" />
+                          <text id="453:5247" name="2020 · 0.75 L" x="180" y="2" width="71" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5248" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="453:5249" name="1.845,55 €" x="0" y="0" width="130" height="17" />
+                        <text id="453:5250" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="453:5251" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="453:5252" name="Status · Received" x="0" y="0" width="81" height="20">
+                          <rounded-rectangle id="453:5253" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="453:5254" name="Received" x="22" y="3" width="50" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5255" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="453:5256" name="25/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="453:5257" name="Iva Šimić" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="453:5258" name="Row · #VT-20260019" x="0" y="343" width="1216" height="80">
+                      <frame id="453:5259" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="453:5260" name="id" x="0" y="0" width="101" height="16">
+                          <text id="453:5261" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="453:5262" name="#VT-20260019" x="10" y="0" width="91" height="16" />
+                        </frame>
+                        <text id="453:5263" name="Taverna Olea" x="0" y="19" width="69" height="14" />
+                      </frame>
+                      <frame id="453:5264" name="Cell" x="232" y="12" width="520" height="56">
+                        <frame id="453:5265" name="line" x="0" y="0" width="183" height="16">
+                          <text id="453:5266" name="12×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5267" name="Ostro Crna" x="40" y="0" width="65" height="16" />
+                          <text id="453:5268" name="2023 · 0.75 L" x="113" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="453:5269" name="line" x="0" y="20" width="193" height="16">
+                          <text id="453:5270" name="23×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5271" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="453:5272" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="453:5273" name="line" x="0" y="40" width="251" height="16">
+                          <text id="453:5274" name="46×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5275" name="Pelješki Stari Vinograd" x="40" y="0" width="132" height="16" />
+                          <text id="453:5276" name="2020 · 0.75 L" x="180" y="2" width="71" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5277" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="453:5278" name="2.037,03 €" x="0" y="0" width="130" height="17" />
+                        <text id="453:5279" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="453:5280" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="453:5281" name="Status · Shipped" x="0" y="0" width="76" height="20">
+                          <rounded-rectangle id="453:5282" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="453:5283" name="Shipped" x="22" y="3" width="45" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5284" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="453:5285" name="25/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="453:5286" name="Filip Demo" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="453:5287" name="Row · #VT-20260004" x="0" y="423" width="1216" height="60">
+                      <frame id="453:5288" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="453:5289" name="id" x="0" y="0" width="105" height="16">
+                          <text id="453:5290" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="453:5291" name="#VT-20260004" x="10" y="0" width="95" height="16" />
+                        </frame>
+                        <text id="453:5292" name="Nordic Vintners GmbH" x="0" y="19" width="124" height="14" />
+                      </frame>
+                      <frame id="453:5293" name="Cell" x="232" y="12" width="520" height="36">
+                        <frame id="453:5294" name="line" x="0" y="0" width="181" height="16">
+                          <text id="453:5295" name="52×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5296" name="Žuti Vapor" x="40" y="0" width="62" height="16" />
+                          <text id="453:5297" name="2024 · 0.75 L" x="110" y="2" width="71" height="14" />
+                        </frame>
+                        <frame id="453:5298" name="line" x="0" y="20" width="193" height="16">
+                          <text id="453:5299" name="27×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5300" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="453:5301" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5302" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="453:5303" name="1.069,05 €" x="0" y="0" width="130" height="17" />
+                        <text id="453:5304" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="453:5305" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="453:5306" name="Status · Shipped" x="0" y="0" width="76" height="20">
+                          <rounded-rectangle id="453:5307" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="453:5308" name="Shipped" x="22" y="3" width="45" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5309" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="453:5310" name="23/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="453:5311" name="Filip Demo" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="453:5312" name="Row · #VT-20260001" x="0" y="483" width="1216" height="147">
+                      <frame id="453:5313" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="453:5314" name="id" x="0" y="0" width="102" height="16">
+                          <text id="453:5315" name="▾" x="0" y="2" width="4" height="12" />
+                          <text id="453:5316" name="#VT-20260001" x="10" y="0" width="92" height="16" />
+                        </frame>
+                        <text id="453:5317" name="Konoba Kraljevac" x="0" y="19" width="93" height="14" />
+                      </frame>
+                      <frame id="453:5318" name="Cell" x="232" y="12" width="520" height="123">
+                        <text id="453:5319" name="OTHER" x="0" y="0" width="30" height="11" />
+                        <frame id="453:5320" name="line" x="0" y="15" width="288" height="16">
+                          <text id="453:5321" name="4×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5322" name="Mixed sampler crate — sommelier curated" x="40" y="0" width="248" height="16" />
+                        </frame>
+                        <text id="453:5323" name="WINE" x="0" y="35" width="24" height="11" />
+                        <frame id="453:5324" name="line" x="0" y="50" width="183" height="16">
+                          <text id="453:5325" name="31×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5326" name="Ostro Crna" x="40" y="0" width="65" height="16" />
+                          <text id="453:5327" name="2023 · 0.75 L" x="113" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="453:5328" name="line" x="0" y="70" width="193" height="16">
+                          <text id="453:5329" name="40×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5330" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="453:5331" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="453:5332" name="line" x="0" y="90" width="195" height="16">
+                          <text id="453:5333" name="13×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5334" name="Velika Bjelica" x="40" y="0" width="77" height="16" />
+                          <text id="453:5335" name="2022 · 0.75 L" x="125" y="2" width="70" height="14" />
+                        </frame>
+                        <text id="453:5336" name="4 lines · 88 bottles" x="0" y="110" width="91" height="13" />
+                      </frame>
+                      <frame id="453:5337" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="453:5338" name="1.615,07 €" x="0" y="0" width="130" height="17" />
+                        <text id="453:5339" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="453:5340" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="453:5341" name="Status · Ready to Ship" x="0" y="0" width="107" height="20">
+                          <rounded-rectangle id="453:5342" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="453:5343" name="Ready to Ship" x="22" y="3" width="76" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5344" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="453:5345" name="22/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="453:5346" name="Iva Šimić" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="453:5347" name="Row · #VT-20260035" x="0" y="630" width="1216" height="98">
+                      <frame id="453:5348" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="453:5349" name="id" x="0" y="0" width="103" height="16">
+                          <text id="453:5350" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="453:5351" name="#VT-20260035" x="10" y="0" width="93" height="16" />
+                        </frame>
+                        <text id="453:5352" name="Restoran Mediteran" x="0" y="19" width="106" height="14" />
+                      </frame>
+                      <frame id="453:5353" name="Cell" x="232" y="12" width="520" height="74">
+                        <frame id="453:5354" name="line" x="0" y="0" width="195" height="16">
+                          <text id="453:5355" name="14×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5356" name="Velika Bjelica" x="40" y="0" width="77" height="16" />
+                          <text id="453:5357" name="2022 · 0.75 L" x="125" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="453:5358" name="line" x="0" y="20" width="193" height="16">
+                          <text id="453:5359" name="14×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5360" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="453:5361" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="453:5362" name="line" x="0" y="40" width="186" height="16">
+                          <text id="453:5363" name="51×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5364" name="Kosa Plavac" x="40" y="0" width="70" height="16" />
+                          <text id="453:5365" name="2021 · 0.75 L" x="118" y="2" width="68" height="14" />
+                        </frame>
+                        <text id="453:5366" name="+ 1 more" x="0" y="60" width="47" height="14" />
+                      </frame>
+                      <frame id="453:5367" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="453:5368" name="3.370,58 €" x="0" y="0" width="130" height="17" />
+                        <text id="453:5369" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="453:5370" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="453:5371" name="Status · In Process" x="0" y="0" width="87" height="20">
+                          <rounded-rectangle id="453:5372" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="453:5373" name="In Process" x="22" y="3" width="56" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5374" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="453:5375" name="20/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="453:5376" name="Iva Šimić" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="453:5377" name="Row · #VT-20260026" x="0" y="728" width="1216" height="98">
+                      <frame id="453:5378" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="453:5379" name="id" x="0" y="0" width="103" height="16">
+                          <text id="453:5380" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="453:5381" name="#VT-20260026" x="10" y="0" width="93" height="16" />
+                        </frame>
+                        <text id="453:5382" name="Restoran Mediteran" x="0" y="19" width="106" height="14" />
+                      </frame>
+                      <frame id="453:5383" name="Cell" x="232" y="12" width="520" height="74">
+                        <frame id="453:5384" name="line" x="0" y="0" width="183" height="16">
+                          <text id="453:5385" name="60×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5386" name="Ostro Crna" x="40" y="0" width="65" height="16" />
+                          <text id="453:5387" name="2023 · 0.75 L" x="113" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="453:5388" name="line" x="0" y="20" width="193" height="16">
+                          <text id="453:5389" name="14×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5390" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="453:5391" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="453:5392" name="line" x="0" y="40" width="251" height="16">
+                          <text id="453:5393" name="37×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5394" name="Pelješki Stari Vinograd" x="40" y="0" width="132" height="16" />
+                          <text id="453:5395" name="2020 · 0.75 L" x="180" y="2" width="71" height="14" />
+                        </frame>
+                        <text id="453:5396" name="+ 1 more" x="0" y="60" width="47" height="14" />
+                      </frame>
+                      <frame id="453:5397" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="453:5398" name="3.113,88 €" x="0" y="0" width="130" height="17" />
+                        <text id="453:5399" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="453:5400" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="453:5401" name="Status · Shipped" x="0" y="0" width="76" height="20">
+                          <rounded-rectangle id="453:5402" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="453:5403" name="Shipped" x="22" y="3" width="45" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5404" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="453:5405" name="17/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="453:5406" name="Ana Marković" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="453:5407" name="Row · #VT-20260029" x="0" y="826" width="1216" height="60">
+                      <frame id="453:5408" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="453:5409" name="id" x="0" y="0" width="103" height="16">
+                          <text id="453:5410" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="453:5411" name="#VT-20260029" x="10" y="0" width="93" height="16" />
+                        </frame>
+                        <text id="453:5412" name="Taverna Olea" x="0" y="19" width="69" height="14" />
+                      </frame>
+                      <frame id="453:5413" name="Cell" x="232" y="12" width="520" height="36">
+                        <frame id="453:5414" name="line" x="0" y="0" width="251" height="16">
+                          <text id="453:5415" name="43×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5416" name="Pelješki Stari Vinograd" x="40" y="0" width="132" height="16" />
+                          <text id="453:5417" name="2020 · 0.75 L" x="180" y="2" width="71" height="14" />
+                        </frame>
+                        <frame id="453:5418" name="line" x="0" y="20" width="186" height="16">
+                          <text id="453:5419" name="45×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5420" name="Kosa Plavac" x="40" y="0" width="70" height="16" />
+                          <text id="453:5421" name="2021 · 0.75 L" x="118" y="2" width="68" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5422" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="453:5423" name="2.865,89 €" x="0" y="0" width="130" height="17" />
+                        <text id="453:5424" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="453:5425" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="453:5426" name="Status · Shipped" x="0" y="0" width="76" height="20">
+                          <rounded-rectangle id="453:5427" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="453:5428" name="Shipped" x="22" y="3" width="45" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5429" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="453:5430" name="15/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="453:5431" name="Iva Šimić" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="453:5432" name="Row · #VT-20260014" x="0" y="886" width="1216" height="98">
+                      <frame id="453:5433" name="Cell" x="16" y="12" width="200" height="33">
+                        <frame id="453:5434" name="id" x="0" y="0" width="102" height="16">
+                          <text id="453:5435" name="▸" x="0" y="2" width="4" height="12" />
+                          <text id="453:5436" name="#VT-20260014" x="10" y="0" width="92" height="16" />
+                        </frame>
+                        <text id="453:5437" name="Hotel Skradinska Luka" x="0" y="19" width="118" height="14" />
+                      </frame>
+                      <frame id="453:5438" name="Cell" x="232" y="12" width="520" height="74">
+                        <frame id="453:5439" name="line" x="0" y="0" width="181" height="16">
+                          <text id="453:5440" name="16×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5441" name="Žuti Vapor" x="40" y="0" width="62" height="16" />
+                          <text id="453:5442" name="2024 · 0.75 L" x="110" y="2" width="71" height="14" />
+                        </frame>
+                        <frame id="453:5443" name="line" x="0" y="20" width="193" height="16">
+                          <text id="453:5444" name="25×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5445" name="Rožica Debit" x="40" y="0" width="75" height="16" />
+                          <text id="453:5446" name="2023 · 0.75 L" x="123" y="2" width="70" height="14" />
+                        </frame>
+                        <frame id="453:5447" name="line" x="0" y="40" width="195" height="16">
+                          <text id="453:5448" name="39×" x="0" y="1" width="32" height="15" />
+                          <text id="453:5449" name="Velika Bjelica" x="40" y="0" width="77" height="16" />
+                          <text id="453:5450" name="2022 · 0.75 L" x="125" y="2" width="70" height="14" />
+                        </frame>
+                        <text id="453:5451" name="+ 1 more" x="0" y="60" width="47" height="14" />
+                      </frame>
+                      <frame id="453:5452" name="Cell" x="768" y="12" width="130" height="33">
+                        <text id="453:5453" name="2.297,86 €" x="0" y="0" width="130" height="17" />
+                        <text id="453:5454" name="excl. VAT" x="0" y="20" width="130" height="13" />
+                      </frame>
+                      <frame id="453:5455" name="Cell" x="914" y="12" width="140" height="20">
+                        <frame id="453:5456" name="Status · Ready to Ship" x="0" y="0" width="107" height="20">
+                          <rounded-rectangle id="453:5457" name="Rectangle" x="8" y="6" width="8" height="8" />
+                          <text id="453:5458" name="Ready to Ship" x="22" y="3" width="76" height="14" />
+                        </frame>
+                      </frame>
+                      <frame id="453:5459" name="Cell" x="1070" y="12" width="130" height="32">
+                        <text id="453:5460" name="09/06/26" x="0" y="0" width="130" height="16" />
+                        <text id="453:5461" name="Iva Šimić" x="0" y="19" width="130" height="13" />
+                      </frame>
+                    </frame>
+                    <frame id="453:5462" name="TableFooter" x="0" y="984" width="1216" height="48">
+                      <text id="453:5463" name="Showing 10 of 37 orders" x="16" y="17" width="130" height="14" />
+                      <frame id="453:5464" name="Spacer" x="154" y="23.5" width="833" height="1" />
+                      <frame id="453:5465" name="Page" x="995" y="12" width="63" height="24">
+                        <text id="453:5466" name="Previous" x="8" y="5" width="47" height="14" />
+                      </frame>
+                      <frame id="453:5467" name="Page" x="1066" y="12" width="21" height="24">
+                        <text id="453:5468" name="1" x="8" y="5" width="5" height="14" />
+                      </frame>
+                      <frame id="453:5469" name="Page" x="1095" y="12" width="23" height="24">
+                        <text id="453:5470" name="2" x="8" y="5" width="7" height="14" />
+                      </frame>
+                      <frame id="453:5471" name="Page" x="1126" y="12" width="23" height="24">
+                        <text id="453:5472" name="3" x="8" y="5" width="7" height="14" />
+                      </frame>
+                      <frame id="453:5473" name="Page" x="1157" y="12" width="43" height="24">
+                        <text id="453:5474" name="Next" x="8" y="5" width="27" height="14" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+      <frame id="453:5476" name="DialogBackdrop" x="0" y="0" width="1369" height="1024">
+        <frame id="453:5477" name="Order — View" x="879" y="10" width="480" height="1394">
+          <frame id="453:5478" name="FormHeader" x="0" y="0" width="480" height="78">
+            <frame id="453:5479" name="Frame" x="24" y="20" width="367" height="38">
+              <text id="453:5480" name="Restoran Mediteran" x="0" y="0" width="162" height="22" />
+              <text id="453:5481" name="#VT-20260035 · 20 Jun 2026" x="0" y="24" width="167" height="14" />
+            </frame>
+            <frame id="453:5482" name="Button" x="405" y="24.5" width="24" height="29">
+              <text id="453:5483" name="⋯" x="6" y="6" width="12" height="17" />
+            </frame>
+            <text id="453:5484" name="✕" x="443" y="30.5" width="13" height="17" />
+          </frame>
+          <frame id="453:5485" name="Separator" x="0" y="78" width="480" height="1" />
+          <frame id="453:5486" name="MetaStrip" x="0" y="79" width="480" height="74">
+            <frame id="453:5487" name="Frame" x="24" y="16" width="292" height="18">
+              <frame id="453:5488" name="Badge" x="0" y="0" width="76" height="18">
+                <text id="453:5489" name="In Process" x="10" y="2" width="56" height="14" />
+              </frame>
+              <frame id="453:5490" name="Badge" x="82" y="0" width="120" height="18">
+                <text id="453:5491" name="Restaurant · Zadar" x="10" y="2" width="100" height="14" />
+              </frame>
+              <frame id="453:5492" name="Badge" x="208" y="0" width="84" height="18">
+                <text id="453:5493" name="Rebate 18%" x="10" y="2" width="64" height="14" />
+              </frame>
+            </frame>
+            <text id="453:5494" name="Received 20 Jun 2026, 16:41 · Updated 23 Jun 2026, 16:41 by Iva Šimić" x="24" y="44" width="385" height="14" />
+          </frame>
+          <frame id="453:5495" name="Separator" x="0" y="153" width="480" height="1" />
+          <frame id="453:5496" name="FormBody" x="0" y="154" width="480" height="1158">
+            <frame id="453:5497" name="Section · Status" x="24" y="24" width="432" height="73">
+              <frame id="453:5498" name="SectionHeader" x="0" y="0" width="432" height="17">
+                <text id="453:5499" name="Status" x="0" y="0" width="41" height="17" />
+                <frame id="453:5500" name="Spacer" x="49" y="8" width="300" height="1" />
+                <text id="453:5501" name="Tap to update" x="357" y="1.5" width="75" height="14" />
+              </frame>
+              <frame id="453:5502" name="Stepper" x="0" y="29" width="432" height="44">
+                <frame id="453:5503" name="Step · Received" x="0" y="0" width="129" height="44">
+                  <frame id="453:5504" name="Frame" x="0" y="0" width="129" height="24">
+                    <frame id="453:5505" name="Dot" x="0" y="0" width="24" height="24">
+                      <text id="453:5506" name="✓" x="7" y="5" width="10" height="14" />
+                    </frame>
+                    <rounded-rectangle id="453:5507" name="Rectangle" x="24" y="11.5" width="105" height="1" />
+                  </frame>
+                  <text id="453:5508" name="Received" x="0" y="30" width="50" height="14" />
+                </frame>
+                <frame id="453:5509" name="Step · In Process" x="129" y="0" width="129" height="44">
+                  <frame id="453:5510" name="Frame" x="0" y="0" width="129" height="24">
+                    <frame id="453:5511" name="Dot" x="0" y="0" width="24" height="24">
+                      <text id="453:5512" name="2" x="8.5" y="5" width="7" height="14" />
+                    </frame>
+                    <rounded-rectangle id="453:5513" name="Rectangle" x="24" y="11.5" width="105" height="1" />
+                  </frame>
+                  <text id="453:5514" name="In Process" x="0" y="30" width="56" height="14" />
+                </frame>
+                <frame id="453:5515" name="Step · Ready to Ship" x="258" y="0" width="129" height="44">
+                  <frame id="453:5516" name="Frame" x="0" y="0" width="129" height="24">
+                    <frame id="453:5517" name="Dot" x="0" y="0" width="24" height="24">
+                      <text id="453:5518" name="3" x="8.5" y="5" width="7" height="14" />
+                    </frame>
+                    <rounded-rectangle id="453:5519" name="Rectangle" x="24" y="11.5" width="105" height="1" />
+                  </frame>
+                  <text id="453:5520" name="Ready to Ship" x="0" y="30" width="75" height="14" />
+                </frame>
+                <frame id="453:5521" name="Step · Shipped" x="387" y="0" width="45" height="44">
+                  <frame id="453:5522" name="Frame" x="0" y="0" width="24" height="24">
+                    <frame id="453:5523" name="Dot" x="0" y="0" width="24" height="24">
+                      <text id="453:5524" name="4" x="8" y="5" width="8" height="14" />
+                    </frame>
+                  </frame>
+                  <text id="453:5525" name="Shipped" x="0" y="30" width="45" height="14" />
+                </frame>
+              </frame>
+            </frame>
+            <frame id="453:5526" name="Separator" x="24" y="113" width="432" height="1" />
+            <frame id="453:5527" name="Section · Items" x="24" y="130" width="432" height="295">
+              <frame id="453:5528" name="SectionHeader" x="0" y="0" width="432" height="17">
+                <text id="453:5529" name="Items" x="0" y="0" width="36" height="17" />
+                <text id="453:5530" name="4 lines · 106 bottles" x="44" y="1.5" width="104" height="14" />
+                <frame id="453:5531" name="Spacer" x="156" y="8" width="276" height="1" />
+              </frame>
+              <frame id="453:5532" name="LineItem" x="0" y="17" width="432" height="60">
+                <rounded-rectangle id="453:5533" name="Rectangle" x="0" y="12" width="28" height="36" />
+                <frame id="453:5534" name="Frame" x="40" y="13.5" width="317" height="33">
+                  <frame id="453:5535" name="Frame" x="0" y="0" width="122" height="17">
+                    <text id="453:5536" name="Velika Bjelica" x="0" y="0" width="83" height="17" />
+                    <text id="453:5537" name="2022" x="89" y="0" width="33" height="17" />
+                  </frame>
+                  <text id="453:5538" name="25,48 € / bottle · 0.75 L" x="0" y="19" width="133" height="14" />
+                </frame>
+                <text id="453:5539" name="14 bottles" x="369" y="21.5" width="63" height="17" />
+              </frame>
+              <frame id="453:5540" name="LineItem" x="0" y="77" width="432" height="60">
+                <rounded-rectangle id="453:5541" name="Rectangle" x="0" y="12" width="28" height="36" />
+                <frame id="453:5542" name="Frame" x="40" y="13.5" width="317" height="33">
+                  <frame id="453:5543" name="Frame" x="0" y="0" width="119" height="17">
+                    <text id="453:5544" name="Rožica Debit" x="0" y="0" width="80" height="17" />
+                    <text id="453:5545" name="2023" x="86" y="0" width="33" height="17" />
+                  </frame>
+                  <text id="453:5546" name="12,30 € / bottle · 0.75 L" x="0" y="19" width="130" height="14" />
+                </frame>
+                <text id="453:5547" name="14 bottles" x="369" y="21.5" width="63" height="17" />
+              </frame>
+              <frame id="453:5548" name="LineItem" x="0" y="137" width="432" height="60">
+                <rounded-rectangle id="453:5549" name="Rectangle" x="0" y="12" width="28" height="36" />
+                <frame id="453:5550" name="Frame" x="40" y="13.5" width="318" height="33">
+                  <frame id="453:5551" name="Frame" x="0" y="0" width="112" height="17">
+                    <text id="453:5552" name="Kosa Plavac" x="0" y="0" width="75" height="17" />
+                    <text id="453:5553" name="2021" x="81" y="0" width="31" height="17" />
+                  </frame>
+                  <text id="453:5554" name="35,85 € / bottle · 0.75 L" x="0" y="19" width="132" height="14" />
+                </frame>
+                <text id="453:5555" name="51 bottles" x="370" y="21.5" width="62" height="17" />
+              </frame>
+              <frame id="453:5556" name="LineItem" x="0" y="197" width="432" height="60">
+                <rounded-rectangle id="453:5557" name="Rectangle" x="0" y="12" width="28" height="36" />
+                <frame id="453:5558" name="Frame" x="40" y="13.5" width="316" height="33">
+                  <frame id="453:5559" name="Frame" x="0" y="0" width="182" height="17">
+                    <text id="453:5560" name="Pelješki Stari Vinograd" x="0" y="0" width="142" height="17" />
+                    <text id="453:5561" name="2020" x="148" y="0" width="34" height="17" />
+                  </frame>
+                  <text id="453:5562" name="37,53 € / bottle · 0.75 L" x="0" y="19" width="131" height="14" />
+                </frame>
+                <text id="453:5563" name="27 bottles" x="368" y="21.5" width="64" height="17" />
+              </frame>
+              <frame id="453:5564" name="Total" x="0" y="257" width="432" height="38">
+                <text id="453:5565" name="Total · excl. VAT" x="0" y="16.5" width="99" height="17" />
+                <frame id="453:5566" name="Spacer" x="99" y="24.5" width="246" height="1" />
+                <text id="453:5567" name="3.370,58 €" x="345" y="14" width="87" height="22" />
+              </frame>
+            </frame>
+            <frame id="453:5568" name="Separator" x="24" y="441" width="432" height="1" />
+            <frame id="453:5569" name="Section · Profitability" x="24" y="458" width="432" height="120">
+              <frame id="453:5570" name="SectionHeader" x="0" y="0" width="432" height="17">
+                <text id="453:5571" name="Profitability" x="0" y="0" width="74" height="17" />
+                <frame id="453:5572" name="Spacer" x="82" y="8" width="350" height="1" />
+              </frame>
+              <frame id="453:5573" name="Panel" x="0" y="27" width="432" height="93">
+                <frame id="453:5574" name="Frame" x="14" y="12" width="404" height="14">
+                  <frame id="453:5575" name="Frame" x="0" y="0" width="196" height="14">
+                    <text id="453:5576" name="Revenue" x="0" y="0" width="47" height="14" />
+                    <frame id="453:5577" name="Spacer" x="47" y="6.5" width="93" height="1" />
+                    <text id="453:5578" name="4.110,46 €" x="140" y="0" width="56" height="14" />
+                  </frame>
+                  <frame id="453:5579" name="Frame" x="208" y="0" width="196" height="14">
+                    <text id="453:5580" name="Rebate · 18%" x="0" y="0" width="69" height="14" />
+                    <frame id="453:5581" name="Spacer" x="69" y="6.5" width="71" height="1" />
+                    <text id="453:5582" name="−739,88 €" x="140" y="0" width="56" height="14" />
+                  </frame>
+                </frame>
+                <frame id="453:5583" name="Frame" x="14" y="34" width="404" height="14">
+                  <frame id="453:5584" name="Frame" x="0" y="0" width="196" height="14">
+                    <text id="453:5585" name="Net revenue" x="0" y="0" width="67" height="14" />
+                    <frame id="453:5586" name="Spacer" x="67" y="6.5" width="70" height="1" />
+                    <text id="453:5587" name="3.370,58 €" x="137" y="0" width="59" height="14" />
+                  </frame>
+                  <frame id="453:5588" name="Frame" x="208" y="0" width="196" height="14">
+                    <text id="453:5589" name="COGS" x="0" y="0" width="35" height="14" />
+                    <frame id="453:5590" name="Spacer" x="35" y="6.5" width="104" height="1" />
+                    <text id="453:5591" name="−905,70 €" x="139" y="0" width="57" height="14" />
+                  </frame>
+                </frame>
+                <frame id="453:5592" name="Frame" x="14" y="56" width="404" height="25">
+                  <frame id="453:5593" name="Frame" x="0" y="8" width="196" height="17">
+                    <text id="453:5594" name="Gross profit" x="0" y="1.5" width="65" height="14" />
+                    <frame id="453:5595" name="Spacer" x="65" y="8" width="61" height="1" />
+                    <text id="453:5596" name="2.464,88 €" x="126" y="0" width="70" height="17" />
+                  </frame>
+                  <frame id="453:5597" name="Frame" x="208" y="8" width="196" height="17">
+                    <text id="453:5598" name="Margin" x="0" y="1.5" width="37" height="14" />
+                    <frame id="453:5599" name="Spacer" x="37" y="8" width="124" height="1" />
+                    <text id="453:5600" name="73,1%" x="161" y="0" width="35" height="17" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+            <frame id="453:5601" name="Separator" x="24" y="594" width="432" height="1" />
+            <frame id="453:5602" name="Section · Customer" x="24" y="611" width="432" height="204">
+              <frame id="453:5603" name="SectionHeader" x="0" y="0" width="432" height="17">
+                <text id="453:5604" name="Customer" x="0" y="0" width="63" height="17" />
+                <frame id="453:5605" name="Spacer" x="71" y="8" width="287" height="1" />
+                <text id="453:5606" name="View profile" x="366" y="1.5" width="66" height="14" />
+              </frame>
+              <frame id="453:5607" name="Panel" x="0" y="27" width="432" height="177">
+                <frame id="453:5608" name="Frame" x="14" y="12" width="404" height="33">
+                  <frame id="453:5609" name="Avatar" x="0" y="0.5" width="32" height="32">
+                    <text id="453:5610" name="RE" x="8.5" y="9" width="15" height="14" />
+                  </frame>
+                  <frame id="453:5611" name="Frame" x="42" y="0" width="362" height="33">
+                    <text id="453:5612" name="Restoran Mediteran" x="0" y="0" width="124" height="17" />
+                    <text id="453:5613" name="Restaurant · Zadar" x="0" y="19" width="105" height="14" />
+                  </frame>
+                </frame>
+                <frame id="453:5614" name="Frame" x="14" y="55" width="404" height="20">
+                  <text id="453:5615" name="Contact" x="0" y="6" width="44" height="14" />
+                  <frame id="453:5616" name="Spacer" x="44" y="12.5" width="286" height="1" />
+                  <text id="453:5617" name="Marija Vukoja" x="330" y="6" width="74" height="14" />
+                </frame>
+                <frame id="453:5618" name="Frame" x="14" y="85" width="404" height="20">
+                  <text id="453:5619" name="Email" x="0" y="6" width="29" height="14" />
+                  <frame id="453:5620" name="Spacer" x="29" y="12.5" width="187" height="1" />
+                  <text id="453:5621" name="narucivanje@restoranmediteran.hr" x="216" y="6" width="188" height="14" />
+                </frame>
+                <frame id="453:5622" name="Frame" x="14" y="115" width="404" height="20">
+                  <text id="453:5623" name="Phone" x="0" y="6" width="34" height="14" />
+                  <frame id="453:5624" name="Spacer" x="34" y="12.5" width="276" height="1" />
+                  <text id="453:5625" name="+385 23 555 020" x="310" y="6" width="94" height="14" />
+                </frame>
+                <frame id="453:5626" name="Frame" x="14" y="145" width="404" height="20">
+                  <text id="453:5627" name="Standing rebate" x="0" y="6" width="87" height="14" />
+                  <frame id="453:5628" name="Spacer" x="87" y="12.5" width="295" height="1" />
+                  <text id="453:5629" name="18%" x="382" y="6" width="22" height="14" />
+                </frame>
+              </frame>
+            </frame>
+            <frame id="453:5630" name="Separator" x="24" y="831" width="432" height="1" />
+            <frame id="453:5631" name="Section · Timeline" x="24" y="848" width="432" height="107">
+              <frame id="453:5632" name="SectionHeader" x="0" y="0" width="432" height="17">
+                <text id="453:5633" name="Timeline" x="0" y="0" width="53" height="17" />
+                <frame id="453:5634" name="Spacer" x="61" y="8" width="371" height="1" />
+              </frame>
+              <frame id="453:5635" name="Frame" x="0" y="29" width="432" height="33">
+                <rounded-rectangle id="453:5636" name="Rectangle" x="0" y="0" width="8" height="8" />
+                <frame id="453:5637" name="Frame" x="18" y="0" width="304" height="33">
+                  <text id="453:5638" name="In Process" x="0" y="0" width="65" height="17" />
+                  <text id="453:5639" name="by Iva Šimić" x="0" y="19" width="65" height="14" />
+                </frame>
+                <text id="453:5640" name="23 Jun 2026, 16:41" x="332" y="0" width="100" height="14" />
+              </frame>
+              <frame id="453:5641" name="Frame" x="0" y="74" width="432" height="33">
+                <rounded-rectangle id="453:5642" name="Rectangle" x="0" y="0" width="8" height="8" />
+                <frame id="453:5643" name="Frame" x="18" y="0" width="303" height="33">
+                  <text id="453:5644" name="Received" x="0" y="0" width="59" height="17" />
+                  <text id="453:5645" name="by Iva Šimić" x="0" y="19" width="65" height="14" />
+                </frame>
+                <text id="453:5646" name="20 Jun 2026, 16:41" x="331" y="0" width="101" height="14" />
+              </frame>
+            </frame>
+            <frame id="453:5647" name="Separator" x="24" y="971" width="432" height="1" />
+            <frame id="453:5648" name="Section · Comments" x="24" y="988" width="432" height="146">
+              <frame id="453:5649" name="SectionHeader" x="0" y="0" width="432" height="17">
+                <text id="453:5650" name="Comments" x="0" y="0" width="70" height="17" />
+                <text id="453:5651" name="1" x="78" y="1.5" width="5" height="14" />
+                <frame id="453:5652" name="Spacer" x="91" y="8" width="341" height="1" />
+              </frame>
+              <frame id="453:5653" name="Comment" x="0" y="29" width="432" height="61">
+                <frame id="453:5654" name="Avatar" x="0" y="0" width="28" height="28">
+                  <text id="453:5655" name="TN" x="5.5" y="7" width="17" height="14" />
+                </frame>
+                <frame id="453:5656" name="Frame" x="38" y="0" width="394" height="61">
+                  <frame id="453:5657" name="Frame" x="0" y="0" width="193" height="14">
+                    <text id="453:5658" name="Tomislav Novak" x="0" y="0" width="85" height="14" />
+                    <text id="453:5659" name="29 Apr 2026, 16:41" x="93" y="0" width="100" height="14" />
+                  </frame>
+                  <text id="453:5660" name="Kupac traži dostavu prije vikenda." x="0" y="18" width="394" height="17" />
+                  <frame id="453:5661" name="Frame" x="0" y="39" width="80" height="22">
+                    <frame id="453:5662" name="Frame" x="0" y="2" width="37" height="20">
+                      <text id="453:5663" name="✅" x="8" y="3" width="12" height="12" />
+                      <text id="453:5664" name="1" x="24" y="3" width="5" height="14" />
+                    </frame>
+                    <frame id="453:5665" name="Frame" x="43" y="2" width="37" height="20">
+                      <text id="453:5666" name="👀" x="8" y="3" width="12" height="12" />
+                      <text id="453:5667" name="1" x="24" y="3" width="5" height="14" />
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+              <frame id="453:5668" name="Input · Comment" x="0" y="102" width="432" height="44">
+                <text id="453:5669" name="Write a comment… use @ to tag" x="12" y="13.5" width="205" height="17" />
+                <frame id="453:5670" name="Spacer" x="225" y="21.5" width="163" height="1" />
+                <frame id="453:5671" name="Button" x="396" y="8" width="28" height="28">
+                  <text id="453:5672" name="→" x="9.5" y="7" width="9" height="14" />
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="453:5673" name="Separator" x="0" y="1312" width="480" height="1" />
+          <frame id="453:5674" name="FormFooter" x="0" y="1313" width="480" height="81">
+            <frame id="453:5675" name="Button · Delete" x="24" y="24" width="66" height="33">
+              <text id="453:5676" name="Delete" x="12" y="8" width="42" height="17" />
+            </frame>
+            <frame id="453:5677" name="Spacer" x="98" y="40" width="170" height="1" />
+            <frame id="453:5678" name="Button · Duplicate" x="276" y="24" width="85" height="33">
+              <text id="453:5679" name="Duplicate" x="12" y="8" width="61" height="17" />
+            </frame>
+            <frame id="453:5680" name="Button · Edit order" x="369" y="24" width="87" height="33">
+              <text id="453:5681" name="Edit order" x="12" y="8" width="63" height="17" />
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+    </frame>
+  </section>
+</canvas>

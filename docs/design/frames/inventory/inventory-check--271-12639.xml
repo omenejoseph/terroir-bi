@@ -1,0 +1,454 @@
+    <frame id="271:12639" name="Inventory Check" x="7275" y="100" width="1369" height="1497">
+      <frame id="271:12642" name="App" x="0" y="0" width="1369" height="1497">
+        <frame id="271:12643" name="NavRail" x="0" y="0" width="56" height="1497">
+          <frame id="381:5132" name="Frame 15" x="7.5" y="0" width="40" height="893">
+            <frame id="271:12644" name="Container" x="4" y="0" width="32" height="48">
+              <frame id="271:12645" name="Container" x="0" y="8" width="32" height="32">
+                <frame id="271:12646" name="Icon" x="8" y="8" width="16" height="16" />
+              </frame>
+            </frame>
+            <frame id="271:12656" name="Navigation" x="0" y="56" width="40" height="837">
+              <frame id="271:12657" name="PreviewCardTrigger" x="0" y="8" width="40" height="40">
+                <frame id="271:12658" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="271:12663" name="PreviewCardTrigger" x="0" y="52" width="40" height="40">
+                <frame id="271:12664" name="ShortcutsFlyout" x="0" y="0" width="40" height="40">
+                  <frame id="271:12665" name="Icon" x="11" y="11" width="18" height="18" />
+                </frame>
+              </frame>
+              <frame id="271:12668" name="PreviewCardTrigger" x="0" y="96" width="40" height="40">
+                <frame id="271:12669" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="271:12673" name="PreviewCardTrigger" x="0" y="140" width="40" height="40">
+                <frame id="271:12674" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="271:12679" name="PreviewCardTrigger" x="0" y="184" width="40" height="40">
+                <frame id="271:12680" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="271:12685" name="PreviewCardTrigger" x="0" y="228" width="40" height="40">
+                <frame id="271:12686" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="271:12699" name="PreviewCardTrigger" x="0" y="272" width="40" height="40">
+                <frame id="271:12700" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="271:12704" name="PreviewCardTrigger" x="0" y="316" width="40" height="40">
+                <frame id="271:12705" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="271:12710" name="PreviewCardTrigger" x="0" y="360" width="40" height="40">
+                <frame id="271:12711" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+            </frame>
+          </frame>
+          <frame id="271:12714" name="Container" x="7.5" y="1449" width="40" height="48">
+            <frame id="271:12715" name="Button" x="0" y="4.5" width="40" height="40">
+              <frame id="271:12716" name="AvatarRoot" x="4" y="4" width="32" height="32">
+                <frame id="271:12717" name="AvatarFallback" x="0" y="0" width="32" height="32">
+                  <text id="271:12718" name="FD" x="8" y="8" width="16" height="16" />
+                </frame>
+                <frame id="271:12720" name="Text" x="0" y="0" width="32" height="32" />
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+        <frame id="271:12721" name="Container" x="56" y="0" width="1313" height="1497">
+          <frame id="271:12722" name="Header" x="0" y="0" width="1313" height="48">
+            <frame id="271:12723" name="Button" x="16" y="7.5" width="32" height="32">
+              <frame id="271:12724" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+            <frame id="271:12755" name="Container:align" x="60" y="7.5" width="1237" height="32">
+              <frame id="271:12728" name="Container" x="845" y="0" width="392" height="32">
+                <frame id="271:12729" name="Container" x="0" y="0" width="288" height="32">
+                  <frame id="271:12730" name="Icon" x="10" y="9" width="14" height="14" />
+                  <frame id="271:12733" name="FieldControl" x="0" y="0" width="288" height="32">
+                    <text id="271:12734" name="Search orders, SKUs, partners…" x="33" y="9" width="214" height="14" />
+                  </frame>
+                  <frame id="271:12735" name="Kbd" x="255.7734375" y="6" width="25" height="20">
+                    <text id="271:12736" name="⌘K" x="5" y="2" width="15" height="16" />
+                  </frame>
+                </frame>
+                <frame id="271:12738" name="Container" x="296" y="0" width="96" height="32">
+                  <frame id="271:12739" name="Button" x="0" y="0" width="32" height="32">
+                    <frame id="271:12740" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="271:12744" name="Button" x="32" y="0" width="32" height="32">
+                    <frame id="271:12745" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="271:12750" name="Button" x="64" y="0" width="32" height="32">
+                    <frame id="271:12751" name="Icon" x="8" y="8" width="16" height="16" />
+                    <frame id="271:12754" name="App" x="19" y="7" width="6" height="6" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="271:12756" name="Main Content" x="0" y="48" width="1313" height="1449">
+            <frame id="271:13255" name="Container:margin" x="0" y="0" width="1313" height="1423.96875">
+              <frame id="271:12758" name="InventoryPage" x="16.5" y="0" width="1280" height="1423.96875">
+                <frame id="271:12759" name="Container" x="32" y="24" width="1216" height="28">
+                  <frame id="271:12760" name="Heading 1" x="0" y="0" width="87" height="28">
+                    <text id="271:12761" name="Inventory" x="0" y="0" width="87" height="28" />
+                  </frame>
+                  <frame id="284:647" name="Button" x="1136" y="0" width="80" height="28">
+                    <frame id="284:648" name="Icon" x="11" y="7" width="14" height="14" />
+                    <text id="284:652" name="History" x="29" y="6" width="40" height="16" />
+                  </frame>
+                </frame>
+                <frame id="271:13254" name="TabsRoot:margin" x="32" y="52" width="1216" height="1347.96875">
+                  <frame id="271:12769" name="TabsRoot" x="0" y="16" width="1216" height="1331.96875">
+                    <frame id="271:12770" name="CompositeRoot" x="0" y="0" width="380" height="32">
+                      <frame id="271:12771" name="TabsTab" x="3" y="3.5" width="76.11116027832031" height="25">
+                        <text id="271:12772" name="Inventory" x="12.055580139160156" y="4.5" width="52" height="16" />
+                      </frame>
+                      <frame id="271:12774" name="TabsTab" x="79.11116027832031" y="3.5" width="74.52919006347656" height="25">
+                        <text id="271:12775" name="Analytics" x="12.264595031738281" y="4.5" width="50" height="16" />
+                      </frame>
+                      <frame id="271:12777" name="TabsTab" x="153.64035034179688" y="3.5" width="111.84615325927734" height="25">
+                        <text id="271:12778" name="Inventory Spend" x="10.923076629638672" y="4.5" width="90" height="16" />
+                      </frame>
+                      <frame id="271:12780" name="TabsTab" x="265.48651123046875" y="3.5" width="111.51349639892578" height="25">
+                        <text id="271:12781" name="Inventory Check" x="10.75674819946289" y="4.5" width="90" height="16" />
+                      </frame>
+                    </frame>
+                    <frame id="271:12783" name="TabsPanel" x="0" y="40" width="1216" height="1257.328125">
+                      <frame id="271:13250" name="Card:margin" x="0" y="0" width="1216" height="1008">
+                        <frame id="285:703" name="InventoryPage:margin" x="0" y="8" width="1216" height="48">
+                          <frame id="285:704" name="InventoryPage" x="0" y="16" width="1216" height="32">
+                            <frame id="285:705" name="InventoryPage" x="0" y="0" width="986" height="32">
+                              <frame id="285:706" name="Container" x="0" y="0" width="320" height="32">
+                                <frame id="285:707" name="Icon" x="10" y="9" width="14" height="14" />
+                                <frame id="285:710" name="FieldControl" x="0" y="0" width="320" height="32">
+                                  <text id="285:711" name="Search inventory…" x="33" y="9" width="258" height="14" />
+                                </frame>
+                              </frame>
+                            </frame>
+                            <frame id="285:735" name="Button" x="994" y="2" width="78" height="28">
+                              <frame id="285:736" name="Icon" x="11" y="7" width="14" height="14" />
+                              <text id="285:739" name="Cancel" x="29" y="6" width="38" height="16" />
+                            </frame>
+                            <frame id="285:740" name="Button" x="1080" y="2" width="136" height="28">
+                              <frame id="285:741" name="Icon" x="11" y="7" width="14" height="14" />
+                              <text id="285:743" name="Save Changes (2)" x="29" y="6" width="96" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="271:12800" name="Card" x="0" y="72" width="1216" height="936">
+                          <frame id="271:12801" name="CardHeader" x="0" y="0" width="1216" height="49">
+                            <frame id="271:12802" name="CardTitle" x="20" y="12" width="1176" height="20">
+                              <text id="271:12803" name="Finished Products" x="0" y="0" width="113" height="20" />
+                            </frame>
+                          </frame>
+                          <frame id="271:12805" name="CheckView" x="0" y="49" width="1216" height="887">
+                            <frame id="271:12808" name="Table Row" x="0" y="0" width="1216" height="36.5">
+                              <text id="271:12810" name="Product" x="20" y="10.5" width="44" height="16" />
+                              <text id="271:12813" name="Size" x="479.7890625" y="10.5" width="23" height="16" />
+                              <text id="271:12816" name="Vintage" x="569.2421875" y="10.5" width="43" height="16" />
+                              <text id="271:12819" name="Unit" x="691.140625" y="10.5" width="23" height="16" />
+                              <text id="271:12822" name="System" x="779.6015625" y="10.5" width="41" height="16" />
+                              <text id="271:12825" name="Physical Count" x="955.3671875" y="10.5" width="81" height="16" />
+                              <text id="271:12828" name="Difference" x="1138.7109375" y="10.5" width="58" height="16" />
+                            </frame>
+                            <frame id="271:12831" name="Table Row" x="0" y="36.5" width="1216" height="26.328125">
+                              <text id="271:12833" name="Wine — White" x="20" y="7" width="86" height="14" />
+                            </frame>
+                            <frame id="271:12835" name="Table Row" x="0" y="62.828125" width="1216" height="57">
+                              <frame id="271:12837" name="Container" x="20" y="12.5" width="346.53125" height="32">
+                                <frame id="271:12838" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:12839" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:12840" name="Text" x="42" y="8" width="102" height="16">
+                                  <text id="271:12841" name="Velika Bjelica 2022" x="0" y="0" width="102" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:12844" name="0.75L" x="472.6796875" y="21" width="30" height="16" />
+                              <text id="271:12847" name="2022" x="583.890625" y="21" width="28" height="16" />
+                              <text id="271:12850" name="Bottles" x="675.7109375" y="21" width="39" height="16" />
+                              <text id="271:12853" name="1.450" x="787.046875" y="21" width="34" height="16" />
+                              <frame id="271:12856" name="Number Input" x="940.03125" y="15.5" width="96" height="26">
+                                <text id="271:12857" name="1450" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:12859" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                            <frame id="271:12861" name="Table Row" x="0" y="119.828125" width="1216" height="57">
+                              <frame id="271:12863" name="Container" x="20" y="12.5" width="346.53125" height="32">
+                                <frame id="271:12864" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:12865" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:12866" name="Text" x="42" y="8" width="89" height="16">
+                                  <text id="271:12867" name="Žuti Vapor 2024" x="0" y="0" width="89" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:12870" name="0.75L" x="472.6796875" y="21" width="30" height="16" />
+                              <text id="271:12873" name="2024" x="583.140625" y="21" width="29" height="16" />
+                              <text id="271:12876" name="Bottles" x="675.7109375" y="21" width="39" height="16" />
+                              <text id="271:12879" name="2.050" x="784.9921875" y="21" width="36" height="16" />
+                              <frame id="271:12882" name="Number Input" x="940.03125" y="15.5" width="96" height="26">
+                                <text id="271:12883" name="2050" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:12885" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                            <frame id="271:12887" name="Table Row" x="0" y="176.828125" width="1216" height="26.328125">
+                              <text id="271:12889" name="Wine — Rosé" x="20" y="7" width="79" height="14" />
+                            </frame>
+                            <frame id="271:12891" name="Table Row" x="0" y="203.15625" width="1216" height="57">
+                              <frame id="271:12893" name="Container" x="20" y="12.5" width="346.53125" height="32">
+                                <frame id="271:12894" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:12895" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:12896" name="Text" x="42" y="8" width="100" height="16">
+                                  <text id="271:12897" name="Rožica Debit 2023" x="0" y="0" width="100" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:12900" name="0.75L" x="472.6796875" y="21" width="30" height="16" />
+                              <text id="271:12903" name="2023" x="584.0703125" y="21" width="28" height="16" />
+                              <text id="271:12906" name="Bottles" x="675.7109375" y="21" width="39" height="16" />
+                              <text id="271:12909" name="1.275" x="788.8125" y="21" width="32" height="16" />
+                              <frame id="271:12912" name="Number Input" x="940.03125" y="15.5" width="96" height="26">
+                                <text id="271:12913" name="1275" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:12915" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                            <frame id="271:12917" name="Table Row" x="0" y="260.15625" width="1216" height="26.328125">
+                              <text id="271:12919" name="Wine — Red" x="20" y="7" width="71" height="14" />
+                            </frame>
+                            <frame id="271:12921" name="Table Row" x="0" y="286.484375" width="1216" height="57">
+                              <frame id="271:12923" name="Container" x="20" y="12.5" width="346.53125" height="32">
+                                <frame id="271:12924" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:12925" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:12926" name="Text" x="42" y="8" width="93" height="16">
+                                  <text id="271:12927" name="Kosa Plavac 2021" x="0" y="0" width="93" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:12930" name="0.75L" x="472.6796875" y="21" width="30" height="16" />
+                              <text id="271:12933" name="2021" x="585.6328125" y="21" width="27" height="16" />
+                              <text id="271:12936" name="Bottles" x="675.7109375" y="21" width="39" height="16" />
+                              <text id="271:12939" name="956" x="796.5546875" y="21" width="24" height="16" />
+                              <frame id="271:12942" name="Number Input" x="940.03125" y="15.5" width="96" height="26">
+                                <text id="271:12943" name="956" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:12945" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                            <frame id="271:12947" name="Table Row" x="0" y="343.484375" width="1216" height="57">
+                              <frame id="271:12949" name="Container" x="20" y="12.5" width="346.53125" height="32">
+                                <frame id="271:12950" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:12951" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:12952" name="Text" x="42" y="8" width="91" height="16">
+                                  <text id="271:12953" name="Ostro Crna 2023" x="0" y="0" width="91" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:12956" name="0.75L" x="472.6796875" y="21" width="30" height="16" />
+                              <text id="271:12959" name="2023" x="584.0703125" y="21" width="28" height="16" />
+                              <text id="271:12962" name="Bottles" x="675.7109375" y="21" width="39" height="16" />
+                              <text id="271:12965" name="1.820" x="788.328125" y="21" width="33" height="16" />
+                              <frame id="271:12968" name="Number Input" x="940.03125" y="15.5" width="96" height="26">
+                                <text id="271:12969" name="1820" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:12971" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                            <frame id="271:12973" name="Table Row" x="0" y="400.484375" width="1216" height="26.328125">
+                              <text id="271:12975" name="Wine — Red Reserve" x="20" y="7" width="126" height="14" />
+                            </frame>
+                            <frame id="271:12977" name="Table Row" x="0" y="426.8125" width="1216" height="57">
+                              <frame id="271:12979" name="Container" x="20" y="12.5" width="346.53125" height="32">
+                                <frame id="271:12980" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:12981" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:12982" name="Text" x="42" y="8" width="154" height="16">
+                                  <text id="271:12983" name="Pelješki Stari Vinograd 2020" x="0" y="0" width="154" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:12986" name="0.75L" x="472.6796875" y="21" width="30" height="16" />
+                              <text id="271:12989" name="2020" x="582.90625" y="21" width="29" height="16" />
+                              <text id="271:12992" name="Bottles" x="675.7109375" y="21" width="39" height="16" />
+                              <text id="271:12995" name="420" x="797.1171875" y="21" width="24" height="16" />
+                              <frame id="271:12998" name="Number Input" x="940.03125" y="15.5" width="96" height="26">
+                                <text id="271:12999" name="420" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:13001" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                            <frame id="271:13003" name="Table Row" x="0" y="483.8125" width="1216" height="26.328125">
+                              <text id="271:13005" name="Tasting Boards" x="20" y="7" width="102" height="14" />
+                            </frame>
+                            <frame id="271:13007" name="Table Row" x="0" y="510.140625" width="1216" height="57">
+                              <frame id="271:13009" name="Container" x="20" y="12.5" width="346.53125" height="32">
+                                <frame id="271:13010" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:13011" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:13012" name="Text" x="42" y="8" width="95" height="16">
+                                  <text id="271:13013" name="Slate Board Small" x="0" y="0" width="95" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:13016" name="20×30cm" x="449.6484375" y="21" width="53" height="16" />
+                              <text id="271:13019" name="—" x="598.4921875" y="21" width="14" height="16" />
+                              <text id="271:13022" name="Units" x="685.75" y="21" width="29" height="16" />
+                              <text id="271:13025" name="0" x="811.6640625" y="21" width="9" height="16" />
+                              <frame id="271:13028" name="Number Input" x="940.03125" y="15.5" width="96" height="26">
+                                <text id="271:13029" name="0" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:13031" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                            <frame id="271:13033" name="Table Row" x="0" y="567.140625" width="1216" height="57">
+                              <frame id="271:13035" name="Container" x="20" y="12.5" width="346.53125" height="32">
+                                <frame id="271:13036" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:13037" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:13038" name="Text" x="42" y="8" width="109" height="16">
+                                  <text id="271:13039" name="Slate Board Medium" x="0" y="0" width="109" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:13042" name="30×40cm" x="448.90625" y="21" width="54" height="16" />
+                              <text id="271:13045" name="—" x="598.4921875" y="21" width="14" height="16" />
+                              <text id="271:13048" name="Units" x="685.75" y="21" width="29" height="16" />
+                              <text id="271:13051" name="0" x="811.6640625" y="21" width="9" height="16" />
+                              <frame id="271:13054" name="Number Input" x="940.03125" y="15.5" width="96" height="26">
+                                <text id="271:13055" name="0" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:13057" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                            <frame id="271:13059" name="Table Row" x="0" y="624.140625" width="1216" height="57">
+                              <frame id="271:13061" name="Container" x="20" y="12.5" width="346.53125" height="32">
+                                <frame id="271:13062" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:13063" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:13064" name="Text" x="42" y="8" width="96" height="16">
+                                  <text id="271:13065" name="Slate Board Large" x="0" y="0" width="96" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:13068" name="40×60cm" x="448.640625" y="21" width="54" height="16" />
+                              <text id="271:13071" name="—" x="598.4921875" y="21" width="14" height="16" />
+                              <text id="271:13074" name="Units" x="685.75" y="21" width="29" height="16" />
+                              <text id="271:13077" name="0" x="811.6640625" y="21" width="9" height="16" />
+                              <frame id="271:13080" name="Number Input" x="940.03125" y="15.5" width="96" height="26">
+                                <text id="271:13081" name="0" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:13083" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                            <frame id="271:13085" name="Table Row" x="0" y="681.140625" width="1216" height="57">
+                              <frame id="271:13087" name="Container" x="20" y="12.5" width="346.53125" height="32">
+                                <frame id="271:13088" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:13089" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:13090" name="Text" x="42" y="8" width="76" height="16">
+                                  <text id="271:13091" name="Cheese Board" x="0" y="0" width="76" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:13094" name="—" x="489.2421875" y="21" width="14" height="16" />
+                              <text id="271:13097" name="—" x="598.4921875" y="21" width="14" height="16" />
+                              <text id="271:13100" name="Units" x="685.75" y="21" width="29" height="16" />
+                              <text id="271:13103" name="0" x="811.6640625" y="21" width="9" height="16" />
+                              <frame id="271:13106" name="Number Input" x="940.03125" y="15.5" width="96" height="26">
+                                <text id="271:13107" name="0" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:13109" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                            <frame id="271:13111" name="Table Row" x="0" y="738.140625" width="1216" height="57">
+                              <frame id="271:13113" name="Container" x="20" y="12.5" width="346.53125" height="32">
+                                <frame id="271:13114" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:13115" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:13116" name="Text" x="42" y="8" width="96" height="16">
+                                  <text id="271:13117" name="Wine Flight Board" x="0" y="0" width="96" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:13120" name="—" x="489.2421875" y="21" width="14" height="16" />
+                              <text id="271:13123" name="—" x="598.4921875" y="21" width="14" height="16" />
+                              <text id="271:13126" name="Units" x="685.75" y="21" width="29" height="16" />
+                              <text id="271:13129" name="0" x="811.6640625" y="21" width="9" height="16" />
+                              <frame id="271:13132" name="Number Input" x="940.03125" y="15.5" width="96" height="26">
+                                <text id="271:13133" name="0" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:13135" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                            <frame id="271:13137" name="Table Row" x="0" y="795.140625" width="1216" height="56.5">
+                              <frame id="271:13139" name="Container" x="20" y="12.5" width="346.53125" height="32">
+                                <frame id="271:13140" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:13141" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:13142" name="Text" x="42" y="8" width="142" height="16">
+                                  <text id="271:13143" name="Olive Wood Serving Board" x="0" y="0" width="142" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:13146" name="—" x="489.2421875" y="21" width="14" height="16" />
+                              <text id="271:13149" name="—" x="598.4921875" y="21" width="14" height="16" />
+                              <text id="271:13152" name="Units" x="685.75" y="21" width="29" height="16" />
+                              <text id="271:13155" name="0" x="811.6640625" y="21" width="9" height="16" />
+                              <frame id="271:13158" name="Number Input" x="940.03125" y="15.5" width="96" height="26">
+                                <text id="271:13159" name="0" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:13161" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                            <frame id="285:676" name="Container" x="1" y="854" width="1214" height="33">
+                              <text id="285:677" name="2 item(s) modified" x="12" y="9" width="99" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="271:13251" name="Card:margin" x="0" y="1024" width="1216" height="233.328125">
+                        <frame id="271:13163" name="Card" x="0" y="8" width="1216" height="225.328125">
+                          <frame id="271:13164" name="CardHeader" x="0" y="0" width="1216" height="49">
+                            <frame id="271:13165" name="CardTitle" x="20" y="12" width="1176" height="20">
+                              <text id="271:13166" name="Raw Materials" x="0" y="0" width="88" height="20" />
+                            </frame>
+                          </frame>
+                          <frame id="271:13168" name="CheckView" x="0" y="49" width="1216" height="176.328125">
+                            <frame id="271:13171" name="Table Row" x="0" y="0" width="1216" height="36.5">
+                              <text id="271:13173" name="Product" x="20" y="10.5" width="44" height="16" />
+                              <text id="271:13176" name="Size" x="436.1484375" y="10.5" width="23" height="16" />
+                              <text id="271:13179" name="Vintage" x="536.75" y="10.5" width="43" height="16" />
+                              <text id="271:13182" name="Unit" x="641.1171875" y="10.5" width="23" height="16" />
+                              <text id="271:13185" name="System" x="740.4609375" y="10.5" width="41" height="16" />
+                              <text id="271:13188" name="Physical Count" x="939.046875" y="10.5" width="81" height="16" />
+                              <text id="271:13191" name="Difference" x="1138.7109375" y="10.5" width="58" height="16" />
+                            </frame>
+                            <frame id="271:13194" name="Table Row" x="0" y="36.5" width="1216" height="26.328125">
+                              <text id="271:13196" name="Enological" x="20" y="7" width="75" height="14" />
+                            </frame>
+                            <frame id="271:13198" name="Table Row" x="0" y="62.828125" width="1216" height="57">
+                              <frame id="271:13200" name="Container" x="20" y="12.5" width="346.2734375" height="32">
+                                <frame id="271:13201" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:13202" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:13203" name="Text" x="42" y="8" width="132" height="16">
+                                  <text id="271:13204" name="Bentonit (Pluxbenton N)" x="0" y="0" width="132" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:13207" name="—" x="445.6015625" y="21" width="14" height="16" />
+                              <text id="271:13210" name="—" x="566" y="21" width="14" height="16" />
+                              <text id="271:13213" name="Kg" x="649.5546875" y="21" width="15" height="16" />
+                              <text id="271:13216" name="40" x="764.921875" y="21" width="17" height="16" />
+                              <frame id="271:13219" name="Number Input" x="923.7109375" y="15.5" width="96" height="26">
+                                <text id="271:13220" name="40" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:13222" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                            <frame id="271:13224" name="Table Row" x="0" y="119.828125" width="1216" height="56.5">
+                              <frame id="271:13226" name="Container" x="20" y="12.5" width="346.2734375" height="32">
+                                <frame id="271:13227" name="WineThumbnail" x="0" y="0" width="32" height="32">
+                                  <frame id="271:13228" name="Container" x="13" y="6" width="6" height="20" />
+                                </frame>
+                                <frame id="271:13229" name="Text" x="42" y="8" width="77" height="16">
+                                  <text id="271:13230" name="K-Metabisulfit" x="0" y="0" width="77" height="16" />
+                                </frame>
+                              </frame>
+                              <text id="271:13233" name="—" x="445.6015625" y="21" width="14" height="16" />
+                              <text id="271:13236" name="—" x="566" y="21" width="14" height="16" />
+                              <text id="271:13239" name="Kg" x="649.5546875" y="21" width="15" height="16" />
+                              <text id="271:13242" name="25" x="765.3828125" y="21" width="16" height="16" />
+                              <frame id="271:13245" name="Number Input" x="923.7109375" y="15.5" width="96" height="26">
+                                <text id="271:13246" name="25" x="9" y="5" width="78" height="16" />
+                              </frame>
+                              <text id="271:13248" name="—" x="1182.796875" y="21" width="14" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+    </frame>

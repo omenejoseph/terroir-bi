@@ -1,0 +1,276 @@
+    <frame id="547:1568" name="ExpandedNav" x="2495" y="1115" width="240" height="1372">
+      <frame id="547:1569" name="Container" x="0" y="0" width="239" height="56">
+        <frame id="547:1570" name="Container" x="12" y="12" width="32" height="32">
+          <frame id="547:1571" name="Icon" x="8" y="8" width="16" height="16" />
+        </frame>
+        <frame id="547:1581" name="Container" x="54" y="13" width="173" height="30">
+          <frame id="547:1582" name="Paragraph" x="0" y="0" width="173" height="16.25">
+            <text id="547:1583" name="Terroir" x="0" y="0" width="42" height="17" />
+          </frame>
+          <frame id="547:1584" name="Paragraph" x="0" y="16.25" width="173" height="13.75">
+            <text id="547:1585" name="Business Intelligence" x="0" y="0" width="103" height="14" />
+          </frame>
+        </frame>
+      </frame>
+      <frame id="547:1586" name="Navigation" x="0" y="56" width="239" height="1243">
+        <frame id="547:1587" name="CollapsibleCategory" x="8" y="8" width="223" height="93">
+          <frame id="547:1588" name="Button" x="0" y="0" width="223" height="28">
+            <frame id="547:1589" name="Icon" x="6" y="8" width="12" height="12" />
+            <frame id="547:1591" name="Paragraph" x="24" y="4" width="193" height="20">
+              <text id="547:1592" name="Overview" x="0" y="0" width="56" height="20" />
+            </frame>
+          </frame>
+          <frame id="547:1593" name="Container" x="0" y="28" width="223" height="65">
+            <frame id="547:1594" name="Button" x="0" y="2" width="223" height="31">
+              <frame id="547:1595" name="Icon" x="8" y="8" width="15" height="15" />
+              <text id="547:1600" name="Dashboard" x="33" y="5" width="68" height="21" />
+              <frame id="547:1601" name="Text" x="0" y="7.5" width="2" height="16" />
+            </frame>
+            <frame id="547:1602" name="Button" x="0" y="34" width="223" height="31">
+              <frame id="547:1603" name="Icon" x="8" y="8" width="15" height="15" />
+              <text id="547:1607" name="Cash System" x="33" y="5" width="83" height="21" />
+            </frame>
+          </frame>
+        </frame>
+        <frame id="547:1608" name="Container:margin" x="8" y="101" width="223" height="16.000099182128906">
+          <frame id="547:1609" name="Container" x="0" y="8" width="223" height="0.00009999999747378752" />
+        </frame>
+        <frame id="547:1610" name="ShortcutsSection" x="8" y="117.0000991821289" width="223" height="163">
+          <frame id="547:1611" name="Container" x="0" y="0" width="223" height="32">
+            <frame id="547:1612" name="Button" x="6" y="6" width="187" height="20">
+              <frame id="547:1613" name="Icon" x="0" y="4" width="12" height="12" />
+              <frame id="547:1615" name="Paragraph" x="18" y="0" width="169" height="20">
+                <text id="547:1616" name="Shortcuts" x="0" y="0" width="58" height="20" />
+              </frame>
+            </frame>
+            <frame id="547:1617" name="TooltipTrigger" x="199" y="4" width="18" height="24" />
+          </frame>
+          <frame id="547:1618" name="Container" x="0" y="32" width="223" height="131">
+            <frame id="547:1619" name="ShortcutRow" x="0" y="2" width="223" height="31.5">
+              <frame id="547:1620" name="Icon" x="8" y="8.25" width="15" height="15" />
+              <frame id="547:1623" name="Button" x="33" y="5.25" width="154" height="21">
+                <text id="547:1624" name="Cash System" x="0" y="0" width="83" height="21" />
+              </frame>
+              <frame id="547:1625" name="TooltipTrigger" x="197" y="5" width="18" height="21.5" />
+            </frame>
+            <frame id="547:1626" name="ShortcutRow" x="0" y="34.5" width="223" height="31.5">
+              <frame id="547:1627" name="Icon" x="8" y="8.25" width="15" height="15" />
+              <frame id="547:1630" name="Button" x="33" y="5.25" width="154" height="21">
+                <text id="547:1631" name="Orders" x="0" y="0" width="43" height="21" />
+              </frame>
+              <frame id="547:1632" name="TooltipTrigger" x="197" y="5" width="18" height="21.5" />
+            </frame>
+            <frame id="547:1633" name="ShortcutRow" x="0" y="67" width="223" height="31.5">
+              <frame id="547:1634" name="Icon" x="8" y="8.25" width="15" height="15" />
+              <frame id="547:1637" name="Button" x="33" y="5.25" width="154" height="21">
+                <text id="547:1638" name="Harvest" x="0" y="0" width="49" height="21" />
+              </frame>
+              <frame id="547:1639" name="TooltipTrigger" x="197" y="5" width="18" height="21.5" />
+            </frame>
+            <frame id="547:1640" name="ShortcutRow" x="0" y="99.5" width="223" height="31.5">
+              <frame id="547:1641" name="Icon" x="8" y="8.25" width="15" height="15" />
+              <frame id="547:1644" name="Button" x="33" y="5.25" width="154" height="21">
+                <text id="547:1645" name="Inventory" x="0" y="0" width="60" height="21" />
+              </frame>
+              <frame id="547:1646" name="TooltipTrigger" x="197" y="5" width="18" height="21.5" />
+            </frame>
+          </frame>
+        </frame>
+        <frame id="547:1647" name="Container:margin" x="8" y="280.0000915527344" width="223" height="16.000099182128906">
+          <frame id="547:1648" name="Container" x="0" y="8" width="223" height="0.00009999999747378752" />
+        </frame>
+        <frame id="547:1649" name="Container" x="8" y="296.00018310546875" width="223" height="1075">
+          <frame id="547:1650" name="CollapsibleCategory" x="0" y="0" width="223" height="221">
+            <frame id="547:1651" name="Button" x="0" y="0" width="223" height="28">
+              <frame id="547:1652" name="Icon" x="6" y="8" width="12" height="12" />
+              <frame id="547:1654" name="Paragraph" x="24" y="4" width="193" height="20">
+                <text id="547:1655" name="Sales" x="0" y="0" width="31" height="20" />
+              </frame>
+            </frame>
+            <frame id="547:1656" name="Container" x="0" y="28" width="223" height="193">
+              <frame id="547:1657" name="Button" x="0" y="2" width="223" height="31">
+                <frame id="547:1658" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1662" name="Orders" x="33" y="5" width="43" height="21" />
+              </frame>
+              <frame id="547:1663" name="Button" x="0" y="34" width="223" height="31">
+                <frame id="547:1664" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1669" name="Customers" x="33" y="5" width="69" height="21" />
+              </frame>
+              <frame id="547:1670" name="Button" x="0" y="66" width="223" height="31">
+                <frame id="547:1671" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1678" name="Work Orders" x="33" y="5" width="79" height="21" />
+              </frame>
+              <frame id="547:1679" name="Button" x="0" y="98" width="223" height="31">
+                <frame id="547:1680" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1685" name="Wine Club" x="33" y="5" width="65" height="21" />
+              </frame>
+              <frame id="547:1686" name="Button" x="0" y="130" width="223" height="31">
+                <frame id="547:1687" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1693" name="Agencies" x="33" y="5" width="59" height="21" />
+              </frame>
+              <frame id="547:1694" name="Button" x="0" y="162" width="223" height="31">
+                <frame id="547:1695" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1698" name="Pipeline" x="33" y="5" width="50" height="21" />
+              </frame>
+            </frame>
+          </frame>
+          <frame id="547:1699" name="CollapsibleCategory" x="0" y="233" width="223" height="125">
+            <frame id="547:1700" name="Button" x="0" y="0" width="223" height="28">
+              <frame id="547:1701" name="Icon" x="6" y="8" width="12" height="12" />
+              <frame id="547:1703" name="Paragraph" x="24" y="4" width="193" height="20">
+                <text id="547:1704" name="Hospitality" x="0" y="0" width="64" height="20" />
+              </frame>
+            </frame>
+            <frame id="547:1705" name="Container" x="0" y="28" width="223" height="97">
+              <frame id="547:1706" name="Button" x="0" y="2" width="223" height="31">
+                <frame id="547:1707" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1712" name="Accommodation" x="33" y="5" width="105" height="21" />
+              </frame>
+              <frame id="547:1713" name="Button" x="0" y="34" width="223" height="31">
+                <frame id="547:1714" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1717" name="Kitchen" x="33" y="5" width="48" height="21" />
+              </frame>
+              <frame id="547:1718" name="Button" x="0" y="66" width="223" height="31">
+                <frame id="547:1719" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1724" name="Hospitality" x="33" y="5" width="69" height="21" />
+              </frame>
+            </frame>
+          </frame>
+          <frame id="547:1725" name="CollapsibleCategory" x="0" y="370" width="223" height="125">
+            <frame id="547:1726" name="Button" x="0" y="0" width="223" height="28">
+              <frame id="547:1727" name="Icon" x="6" y="8" width="12" height="12" />
+              <frame id="547:1729" name="Paragraph" x="24" y="4" width="193" height="20">
+                <text id="547:1730" name="Production" x="0" y="0" width="65" height="20" />
+              </frame>
+            </frame>
+            <frame id="547:1731" name="Container" x="0" y="28" width="223" height="97">
+              <frame id="547:1732" name="Button" x="0" y="2" width="223" height="31">
+                <frame id="547:1733" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1738" name="Cellar" x="33" y="5" width="36" height="21" />
+              </frame>
+              <frame id="547:1739" name="Button" x="0" y="34" width="223" height="31">
+                <frame id="547:1740" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1750" name="Harvest" x="33" y="5" width="49" height="21" />
+              </frame>
+              <frame id="547:1751" name="Button" x="0" y="66" width="223" height="31">
+                <frame id="547:1752" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1761" name="Production Plan" x="33" y="5" width="99" height="21" />
+              </frame>
+            </frame>
+          </frame>
+          <frame id="547:1762" name="CollapsibleCategory" x="0" y="507" width="223" height="125">
+            <frame id="547:1763" name="Button" x="0" y="0" width="223" height="28">
+              <frame id="547:1764" name="Icon" x="6" y="8" width="12" height="12" />
+              <frame id="547:1766" name="Paragraph" x="24" y="4" width="193" height="20">
+                <text id="547:1767" name="Supply" x="0" y="0" width="41" height="20" />
+              </frame>
+            </frame>
+            <frame id="547:1768" name="Container" x="0" y="28" width="223" height="97">
+              <frame id="547:1769" name="Button" x="0" y="2" width="223" height="31">
+                <frame id="547:1770" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1775" name="Inventory" x="33" y="5" width="60" height="21" />
+              </frame>
+              <frame id="547:1776" name="Button" x="0" y="34" width="223" height="31">
+                <frame id="547:1777" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1781" name="Purchase Orders" x="33" y="5" width="104" height="21" />
+              </frame>
+              <frame id="547:1782" name="Button" x="0" y="66" width="223" height="31">
+                <frame id="547:1783" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1789" name="Suppliers" x="33" y="5" width="59" height="21" />
+              </frame>
+            </frame>
+          </frame>
+          <frame id="547:1790" name="CollapsibleCategory" x="0" y="644" width="223" height="125">
+            <frame id="547:1791" name="Button" x="0" y="0" width="223" height="28">
+              <frame id="547:1792" name="Icon" x="6" y="8" width="12" height="12" />
+              <frame id="547:1794" name="Paragraph" x="24" y="4" width="193" height="20">
+                <text id="547:1795" name="Finance" x="0" y="0" width="46" height="20" />
+              </frame>
+            </frame>
+            <frame id="547:1796" name="Container" x="0" y="28" width="223" height="97">
+              <frame id="547:1797" name="Button" x="0" y="2" width="223" height="31">
+                <frame id="547:1798" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1802" name="Costs" x="33" y="5" width="37" height="21" />
+              </frame>
+              <frame id="547:1803" name="Button" x="0" y="34" width="223" height="31">
+                <frame id="547:1804" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1808" name="Inflow" x="33" y="5" width="39" height="21" />
+              </frame>
+              <frame id="547:1809" name="Button" x="0" y="66" width="223" height="31">
+                <frame id="547:1810" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1812" name="Cash Flow" x="33" y="5" width="65" height="21" />
+              </frame>
+            </frame>
+          </frame>
+          <frame id="547:1813" name="CollapsibleCategory" x="0" y="781" width="223" height="189">
+            <frame id="547:1814" name="Button" x="0" y="0" width="223" height="28">
+              <frame id="547:1815" name="Icon" x="6" y="8" width="12" height="12" />
+              <frame id="547:1817" name="Paragraph" x="24" y="4" width="193" height="20">
+                <text id="547:1818" name="Team" x="0" y="0" width="32" height="20" />
+              </frame>
+            </frame>
+            <frame id="547:1819" name="Container" x="0" y="28" width="223" height="161">
+              <frame id="547:1820" name="Button" x="0" y="2" width="223" height="31">
+                <frame id="547:1821" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1826" name="Employees" x="33" y="5" width="69" height="21" />
+              </frame>
+              <frame id="547:1827" name="Button" x="0" y="34" width="223" height="31">
+                <frame id="547:1828" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1839" name="Schedules" x="33" y="5" width="65" height="21" />
+              </frame>
+              <frame id="547:1840" name="Button" x="0" y="66" width="223" height="31">
+                <frame id="547:1841" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1845" name="My Team" x="33" y="5" width="57" height="21" />
+              </frame>
+              <frame id="547:1846" name="Button" x="0" y="98" width="223" height="31">
+                <frame id="547:1847" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1851" name="Surveys" x="33" y="5" width="50" height="21" />
+              </frame>
+              <frame id="547:1852" name="Button" x="0" y="130" width="223" height="31">
+                <frame id="547:1853" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1856" name="My Hours" x="33" y="5" width="61" height="21" />
+              </frame>
+            </frame>
+          </frame>
+          <frame id="547:1857" name="CollapsibleCategory" x="0" y="982" width="223" height="93">
+            <frame id="547:1858" name="Button" x="0" y="0" width="223" height="28">
+              <frame id="547:1859" name="Icon" x="6" y="8" width="12" height="12" />
+              <frame id="547:1861" name="Paragraph" x="24" y="4" width="193" height="20">
+                <text id="547:1862" name="System" x="0" y="0" width="44" height="20" />
+              </frame>
+            </frame>
+            <frame id="547:1863" name="Container" x="0" y="28" width="223" height="65">
+              <frame id="547:1864" name="Button" x="0" y="2" width="223" height="31">
+                <frame id="547:1865" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1868" name="Settings" x="33" y="5" width="53" height="21" />
+              </frame>
+              <frame id="547:1869" name="Button" x="0" y="34" width="223" height="31">
+                <frame id="547:1870" name="Icon" x="8" y="8" width="15" height="15" />
+                <text id="547:1872" name="WhatsApp Bot" x="33" y="5" width="92" height="21" />
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+      <frame id="547:1873" name="Container" x="0" y="1299" width="239" height="73">
+        <frame id="547:1874" name="Button" x="12" y="13" width="215" height="48">
+          <frame id="547:1875" name="AvatarRoot" x="8" y="8" width="32" height="32">
+            <frame id="547:1876" name="AvatarFallback" x="0" y="0" width="32" height="32">
+              <text id="547:1877" name="FD" x="8.5" y="7.5" width="15" height="17" />
+            </frame>
+            <frame id="547:1878" name="Text" x="0" y="0" width="32" height="32" />
+          </frame>
+          <frame id="547:1879" name="Container" x="50" y="9" width="131" height="30">
+            <frame id="547:1880" name="Paragraph" x="0" y="0" width="131" height="16.25">
+              <text id="547:1881" name="Filip Demo" x="0" y="0" width="66" height="17" />
+            </frame>
+            <frame id="547:1882" name="Paragraph" x="0" y="16.25" width="131" height="13.75">
+              <text id="547:1883" name="Administrator" x="0" y="0" width="68" height="14" />
+            </frame>
+          </frame>
+          <frame id="547:1884" name="Icon" x="191" y="16" width="16" height="16" />
+        </frame>
+      </frame>
+    </frame>
+  </section>
+  <rounded-rectangle id="144:5848" name="Screenshot 2026-08-04 at 21.07.54 1" x="-16622" y="3309" width="405" height="1545" />

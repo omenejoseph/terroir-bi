@@ -1,0 +1,480 @@
+    <frame id="230:2395" name="Customers" x="104" y="100" width="1369" height="933">
+      <frame id="230:2398" name="App" x="0" y="0" width="1369" height="933">
+        <frame id="230:2399" name="NavRail" x="0" y="0" width="56" height="933">
+          <frame id="230:2400" name="Container" x="11.5" y="0" width="32" height="48">
+            <frame id="230:2401" name="Container" x="0" y="8" width="32" height="32">
+              <frame id="230:2402" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+          </frame>
+          <frame id="230:2412" name="Navigation" x="7.5" y="48" width="40" height="837">
+            <frame id="230:2413" name="PreviewCardTrigger" x="0" y="8" width="40" height="40">
+              <frame id="230:2414" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="230:2419" name="PreviewCardTrigger" x="0" y="52" width="40" height="40">
+              <frame id="230:2420" name="ShortcutsFlyout" x="0" y="0" width="40" height="40">
+                <frame id="230:2421" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+            </frame>
+            <frame id="230:2424" name="PreviewCardTrigger" x="0" y="96" width="40" height="40">
+              <frame id="230:2425" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="230:2429" name="PreviewCardTrigger" x="0" y="140" width="40" height="40">
+              <frame id="230:2430" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="230:2435" name="PreviewCardTrigger" x="0" y="184" width="40" height="40">
+              <frame id="230:2436" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="230:2441" name="PreviewCardTrigger" x="0" y="228" width="40" height="40">
+              <frame id="230:2442" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="230:2455" name="PreviewCardTrigger" x="0" y="272" width="40" height="40">
+              <frame id="230:2456" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="230:2460" name="PreviewCardTrigger" x="0" y="316" width="40" height="40">
+              <frame id="230:2461" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="230:2466" name="PreviewCardTrigger" x="0" y="360" width="40" height="40">
+              <frame id="230:2467" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+          </frame>
+          <frame id="230:2470" name="Container" x="7.5" y="885" width="40" height="48">
+            <frame id="230:2471" name="Button" x="0" y="4.5" width="40" height="40">
+              <frame id="230:2472" name="AvatarRoot" x="4" y="4" width="32" height="32">
+                <frame id="230:2473" name="AvatarFallback" x="0" y="0" width="32" height="32">
+                  <text id="230:2474" name="FD" x="8" y="8" width="16" height="16" />
+                </frame>
+                <frame id="230:2476" name="Text" x="0" y="0" width="32" height="32" />
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+        <frame id="230:2477" name="Container" x="56" y="0" width="1313" height="933">
+          <frame id="230:2478" name="Header" x="0" y="0" width="1313" height="48">
+            <frame id="230:2479" name="Button" x="16" y="7.5" width="32" height="32">
+              <frame id="230:2480" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+            <frame id="230:2511" name="Container:align" x="60" y="7.5" width="1237" height="32">
+              <frame id="230:2484" name="Container" x="845" y="0" width="392" height="32">
+                <frame id="230:2485" name="Container" x="0" y="0" width="288" height="32">
+                  <frame id="230:2486" name="Icon" x="10" y="9" width="14" height="14" />
+                  <frame id="230:2489" name="FieldControl" x="0" y="0" width="288" height="32">
+                    <text id="230:2490" name="Search orders, SKUs, partners…" x="33" y="9" width="214" height="14" />
+                  </frame>
+                  <frame id="230:2491" name="Kbd" x="255.7734375" y="6" width="25" height="20">
+                    <text id="230:2492" name="⌘K" x="5" y="2" width="15" height="16" />
+                  </frame>
+                </frame>
+                <frame id="230:2494" name="Container" x="296" y="0" width="96" height="32">
+                  <frame id="230:2495" name="Button" x="0" y="0" width="32" height="32">
+                    <frame id="230:2496" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="230:2500" name="Button" x="32" y="0" width="32" height="32">
+                    <frame id="230:2501" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="230:2506" name="Button" x="64" y="0" width="32" height="32">
+                    <frame id="230:2507" name="Icon" x="8" y="8" width="16" height="16" />
+                    <frame id="230:2510" name="App" x="19" y="7" width="6" height="6" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="230:2512" name="Main Content" x="0" y="48" width="1313" height="885">
+            <frame id="230:3034" name="Container:margin" x="0" y="0" width="1313" height="812">
+              <frame id="230:2514" name="CustomersPage" x="16.5" y="0" width="1280" height="812">
+                <frame id="230:2515" name="Container" x="32" y="24" width="1216" height="32">
+                  <frame id="230:2516" name="Heading 1" x="0" y="2" width="99" height="28">
+                    <text id="230:2517" name="Customers" x="0" y="0" width="99" height="28" />
+                  </frame>
+                  <frame id="230:3066" name="Container" x="978" y="0" width="238" height="32">
+                    <frame id="230:3067" name="Button" x="0" y="0" width="111" height="32">
+                      <frame id="230:3068" name="Icon" x="11" y="9" width="14" height="14" />
+                      <text id="230:3072" name="Export all" x="31" y="8" width="51" height="16" />
+                      <frame id="230:3073" name="Icon" x="88" y="10" width="12" height="12" />
+                    </frame>
+                    <frame id="230:3075" name="Button" x="119" y="0" width="119" height="32">
+                      <frame id="230:3076" name="CustomersPage" x="11" y="8" width="11" height="16">
+                        <text id="230:3077" name="+" x="0" y="0" width="11" height="16" />
+                      </frame>
+                      <text id="230:3078" name="New Customer" x="26" y="8" width="82" height="16" />
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="230:2519" name="TabsRoot" x="32" y="56" width="1216" height="732">
+                  <frame id="230:2520" name="CompositeRoot" x="0" y="16" width="143.125" height="32">
+                    <frame id="230:2521" name="TabsTab" x="3" y="3.5" width="72.2182388305664" height="25">
+                      <text id="230:2522" name="Customers" x="6.109119415283203" y="4.5" width="60" height="16" />
+                    </frame>
+                    <frame id="230:2524" name="TabsTab" x="75.2182388305664" y="3.5" width="64.9067611694336" height="25">
+                      <text id="230:2525" name="Analytics" x="7.453380584716797" y="4.5" width="50" height="16" />
+                    </frame>
+                  </frame>
+                  <frame id="230:2527" name="TabsPanel" x="0" y="56" width="1216" height="676">
+                    <frame id="230:2528" name="CustomersPage" x="0" y="16" width="1216" height="44">
+                      <frame id="230:2529" name="Container" x="0" y="0" width="1216" height="32">
+                        <frame id="230:2530" name="Container" x="0" y="0" width="220" height="32">
+                          <frame id="230:2531" name="Icon" x="10" y="9" width="14" height="14" />
+                          <frame id="230:2534" name="FieldControl" x="0" y="0" width="220" height="32">
+                            <text id="230:2535" name="Filter customers…" x="33" y="9" width="176" height="14" />
+                          </frame>
+                        </frame>
+                        <frame id="230:2536" name="FacetButton" x="228" y="0" width="77.0390625" height="32">
+                          <frame id="230:2537" name="Button" x="0" y="0" width="78" height="32">
+                            <frame id="230:2538" name="Icon" x="11" y="9" width="14" height="14" />
+                            <text id="230:2540" name="Status" x="31" y="8" width="36" height="16" />
+                          </frame>
+                        </frame>
+                        <frame id="230:2542" name="FacetButton" x="313.0390625" y="0" width="62.390625" height="32">
+                          <frame id="230:2543" name="Button" x="0" y="0" width="63" height="32">
+                            <frame id="230:2544" name="Icon" x="11" y="9" width="14" height="14" />
+                            <text id="230:2546" name="Tier" x="31" y="8" width="21" height="16" />
+                          </frame>
+                        </frame>
+                        <frame id="230:2548" name="FacetButton" x="383.4296875" y="0" width="68.6796875" height="32">
+                          <frame id="230:2549" name="Button" x="0" y="0" width="69" height="32">
+                            <frame id="230:2550" name="Icon" x="11" y="9" width="14" height="14" />
+                            <text id="230:2552" name="Type" x="31" y="8" width="27" height="16" />
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="230:2576" name="CustomersPage" x="0" y="60" width="1216" height="568">
+                      <frame id="230:2577" name="Container" x="1" y="1" width="1214" height="566">
+                        <frame id="230:2580" name="Table Row" x="0" y="0" width="1214" height="36.5">
+                          <frame id="230:2582" name="CheckboxRoot" x="12" y="10" width="16" height="16">
+                            <frame id="230:2583" name="CheckboxIndicator" x="1" y="1" width="14" height="14">
+                              <frame id="230:2584" name="Icon" x="0" y="0" width="14" height="14" />
+                            </frame>
+                          </frame>
+                          <frame id="230:2588" name="Button" x="48" y="10" width="69" height="16">
+                            <text id="230:2589" name="Company" x="0" y="0" width="53" height="16" />
+                            <frame id="230:2591" name="Text" x="57" y="2" width="12" height="12">
+                              <frame id="230:2592" name="Icon" x="0" y="0" width="12" height="12" />
+                            </frame>
+                          </frame>
+                          <frame id="230:2596" name="Button" x="285.8125" y="10" width="60.234375" height="16">
+                            <text id="230:2597" name="Contact" x="0" y="0" width="45" height="16" />
+                          </frame>
+                          <frame id="230:2600" name="Button" x="454.296875" y="10" width="42.6796875" height="16">
+                            <text id="230:2601" name="Type" x="0" y="0" width="27" height="16" />
+                          </frame>
+                          <frame id="230:2604" name="Button" x="566.28125" y="10" width="36.390625" height="16">
+                            <text id="230:2605" name="Tier" x="0" y="0" width="21" height="16" />
+                          </frame>
+                          <frame id="230:2608" name="Button" x="725.7421875" y="10" width="90.2421875" height="16">
+                            <text id="230:2609" name="Rebate" x="51.2421875" y="0" width="39" height="16" />
+                          </frame>
+                          <frame id="230:2612" name="Button" x="831.984375" y="10" width="87.8515625" height="16">
+                            <text id="230:2613" name="Orders" x="50.8515625" y="0" width="37" height="16" />
+                          </frame>
+                          <frame id="230:2616" name="Button" x="935.8359375" y="10" width="111.984375" height="16">
+                            <text id="230:2617" name="Revenue" x="64.984375" y="0" width="47" height="16" />
+                          </frame>
+                          <frame id="230:2620" name="Button" x="1063.8203125" y="10" width="51.0390625" height="16">
+                            <text id="230:2621" name="Status" x="0" y="0" width="36" height="16" />
+                          </frame>
+                        </frame>
+                        <frame id="230:2625" name="Table Row" x="0" y="36.5" width="1214" height="53">
+                          <frame id="230:2627" name="CheckboxRoot" x="12" y="18.5" width="16" height="16" />
+                          <frame id="230:2630" name="Container" x="48" y="18.5" width="221.8125" height="16">
+                            <frame id="230:2631" name="Text" x="0" y="0" width="95" height="16">
+                              <text id="230:2632" name="Adrion Cliff Hotel" x="0" y="0" width="95" height="16" />
+                            </frame>
+                          </frame>
+                          <text id="230:2635" name="Petra Gulin" x="285.8125" y="19" width="59" height="16" />
+                          <text id="230:2638" name="Hotel" x="454.296875" y="19" width="30" height="16" />
+                          <frame id="230:2641" name="Badge" x="566.28125" y="16.5" width="43.75" height="20">
+                            <text id="230:2642" name="Gold" x="8.875" y="2" width="26" height="16" />
+                          </frame>
+                          <text id="230:2645" name="13%" x="795.59375" y="19" width="21" height="16" />
+                          <text id="230:2648" name="1" x="915.3515625" y="19" width="5" height="16" />
+                          <text id="230:2651" name="2.874,79 €" x="990.34375" y="19" width="58" height="16" />
+                          <frame id="230:2654" name="StatusCell" x="1063.8203125" y="17" width="55" height="16">
+                            <frame id="230:2655" name="Icon" x="0" y="1" width="14" height="14" />
+                            <frame id="230:2658" name="Text" x="20" y="0" width="35" height="16">
+                              <text id="230:2659" name="Active" x="0" y="0" width="35" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="230:2662" name="Table Row" x="0" y="89.5" width="1214" height="53">
+                          <frame id="230:2664" name="CheckboxRoot" x="12" y="18.5" width="16" height="16" />
+                          <frame id="230:2667" name="Container" x="48" y="18.5" width="221.8125" height="16">
+                            <frame id="230:2668" name="Text" x="0" y="0" width="118" height="16">
+                              <text id="230:2669" name="Alpine Imports GmbH" x="0" y="0" width="118" height="16" />
+                            </frame>
+                          </frame>
+                          <text id="230:2672" name="Franz Müller" x="285.8125" y="19" width="65" height="16" />
+                          <text id="230:2675" name="Wholesale" x="454.296875" y="19" width="56" height="16" />
+                          <frame id="230:2678" name="Badge" x="566.28125" y="16.5" width="75.2265625" height="20">
+                            <text id="230:2679" name="Distributor" x="8.61328125" y="2" width="58" height="16" />
+                          </frame>
+                          <text id="230:2682" name="14%" x="794.59375" y="19" width="22" height="16" />
+                          <text id="230:2685" name="3" x="913.3515625" y="19" width="7" height="16" />
+                          <text id="230:2688" name="5.600,00 €" x="986.34375" y="19" width="62" height="16" />
+                          <frame id="230:2691" name="StatusCell" x="1063.8203125" y="17" width="55" height="16">
+                            <frame id="230:2692" name="Icon" x="0" y="1" width="14" height="14" />
+                            <frame id="230:2695" name="Text" x="20" y="0" width="35" height="16">
+                              <text id="230:2696" name="Active" x="0" y="0" width="35" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="230:2699" name="Table Row" x="0" y="142.5" width="1214" height="53">
+                          <frame id="230:2701" name="CheckboxRoot" x="12" y="18.5" width="16" height="16" />
+                          <frame id="230:2704" name="Container" x="48" y="18.5" width="221.8125" height="16">
+                            <frame id="230:2705" name="Text" x="0" y="0" width="142" height="16">
+                              <text id="230:2706" name="Balkan Wine Exports d.o.o." x="0" y="0" width="142" height="16" />
+                            </frame>
+                          </frame>
+                          <text id="230:2709" name="Janez Korošec" x="285.8125" y="19" width="79" height="16" />
+                          <text id="230:2712" name="Wholesale" x="454.296875" y="19" width="56" height="16" />
+                          <frame id="230:2715" name="Badge" x="566.28125" y="16.5" width="75.2265625" height="20">
+                            <text id="230:2716" name="Distributor" x="8.61328125" y="2" width="58" height="16" />
+                          </frame>
+                          <text id="230:2719" name="14%" x="794.59375" y="19" width="22" height="16" />
+                          <text id="230:2722" name="1" x="915.3515625" y="19" width="5" height="16" />
+                          <text id="230:2725" name="851,50 €" x="1000.4765625" y="19" width="48" height="16" />
+                          <frame id="230:2728" name="StatusCell" x="1063.8203125" y="17" width="55" height="16">
+                            <frame id="230:2729" name="Icon" x="0" y="1" width="14" height="14" />
+                            <frame id="230:2732" name="Text" x="20" y="0" width="35" height="16">
+                              <text id="230:2733" name="Active" x="0" y="0" width="35" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="230:2736" name="Table Row" x="0" y="195.5" width="1214" height="53">
+                          <frame id="230:2738" name="CheckboxRoot" x="12" y="18.5" width="16" height="16">
+                            <frame id="230:2739" name="CheckboxIndicator" x="1" y="1" width="14" height="14">
+                              <frame id="230:2740" name="Icon" x="0" y="0" width="14" height="14" />
+                            </frame>
+                          </frame>
+                          <frame id="230:2744" name="Container" x="48" y="18.5" width="221.8125" height="16">
+                            <frame id="230:2745" name="Text" x="0" y="0" width="98" height="16">
+                              <text id="230:2746" name="Chalk Street Wine" x="0" y="0" width="98" height="16" />
+                            </frame>
+                          </frame>
+                          <text id="230:2749" name="Eleanor Hartley" x="285.8125" y="19" width="83" height="16" />
+                          <text id="230:2752" name="Retail" x="454.296875" y="19" width="31" height="16" />
+                          <frame id="230:2755" name="Badge" x="566.28125" y="16.5" width="89.8984375" height="20">
+                            <text id="230:2756" name="Retail Partner" x="8.94921875" y="2" width="72" height="16" />
+                          </frame>
+                          <text id="230:2759" name="6%" x="799.0703125" y="19" width="17" height="16" />
+                          <text id="230:2762" name="1" x="915.3515625" y="19" width="5" height="16" />
+                          <text id="230:2765" name="374,00 €" x="998.4765625" y="19" width="50" height="16" />
+                          <frame id="230:2768" name="StatusCell" x="1063.8203125" y="17" width="55" height="16">
+                            <frame id="230:2769" name="Icon" x="0" y="1" width="14" height="14" />
+                            <frame id="230:2772" name="Text" x="20" y="0" width="35" height="16">
+                              <text id="230:2773" name="Active" x="0" y="0" width="35" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="230:2776" name="Table Row" x="0" y="248.5" width="1214" height="53">
+                          <frame id="230:2778" name="CheckboxRoot" x="12" y="18.5" width="16" height="16" />
+                          <frame id="230:2781" name="Container" x="48" y="18.5" width="221.8125" height="16">
+                            <frame id="230:2782" name="Text" x="0" y="0" width="117" height="16">
+                              <text id="230:2783" name="Dalmatia Group Tours" x="0" y="0" width="117" height="16" />
+                            </frame>
+                          </frame>
+                          <text id="230:2786" name="Ivana Šimić" x="285.8125" y="19" width="61" height="16" />
+                          <text id="230:2789" name="Agency" x="454.296875" y="19" width="41" height="16" />
+                          <text id="230:2792" name="—" x="566.28125" y="19" width="14" height="16" />
+                          <text id="230:2795" name="5%" x="799.0703125" y="19" width="17" height="16" />
+                          <text id="230:2798" name="0" x="912.3515625" y="19" width="8" height="16" />
+                          <text id="230:2801" name="—" x="1034.6171875" y="19" width="14" height="16" />
+                          <frame id="230:2804" name="StatusCell" x="1063.8203125" y="17" width="55" height="16">
+                            <frame id="230:2805" name="Icon" x="0" y="1" width="14" height="14" />
+                            <frame id="230:2808" name="Text" x="20" y="0" width="35" height="16">
+                              <text id="230:2809" name="Active" x="0" y="0" width="35" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="230:2812" name="Table Row" x="0" y="301.5" width="1214" height="53">
+                          <frame id="230:2814" name="CheckboxRoot" x="12" y="18.5" width="16" height="16">
+                            <frame id="230:2815" name="CheckboxIndicator" x="1" y="1" width="14" height="14">
+                              <frame id="230:2816" name="Icon" x="0" y="0" width="14" height="14" />
+                            </frame>
+                          </frame>
+                          <frame id="230:2820" name="Container" x="48" y="18.5" width="221.8125" height="16">
+                            <frame id="230:2821" name="Text" x="0" y="0" width="111" height="16">
+                              <text id="230:2822" name="ENO Boutique Berlin" x="0" y="0" width="111" height="16" />
+                            </frame>
+                          </frame>
+                          <text id="230:2825" name="Hannah Schreiber" x="285.8125" y="19" width="96" height="16" />
+                          <text id="230:2828" name="Retail" x="454.296875" y="19" width="31" height="16" />
+                          <frame id="230:2831" name="Badge" x="566.28125" y="16.5" width="89.8984375" height="20">
+                            <text id="230:2832" name="Retail Partner" x="8.94921875" y="2" width="72" height="16" />
+                          </frame>
+                          <text id="230:2835" name="6%" x="799.0703125" y="19" width="17" height="16" />
+                          <text id="230:2838" name="2" x="913.3515625" y="19" width="7" height="16" />
+                          <text id="230:2841" name="1.432,00 €" x="990.34375" y="19" width="58" height="16" />
+                          <frame id="230:2844" name="StatusCell" x="1063.5" y="17.5" width="131" height="24">
+                            <frame id="230:3776" name="Frame 6" x="0" y="4" width="55" height="16">
+                              <frame id="230:2845" name="Icon" x="0" y="1" width="14" height="14" />
+                              <frame id="230:2848" name="Text" x="20" y="0" width="35" height="16">
+                                <text id="230:2849" name="Active" x="0" y="0" width="35" height="16" />
+                              </frame>
+                            </frame>
+                            <instance id="230:3771" name="lucide/ellipsis" x="107" y="0" width="24" height="24" />
+                          </frame>
+                        </frame>
+                        <frame id="230:2852" name="Table Row" x="0" y="354.5" width="1214" height="53">
+                          <frame id="230:2854" name="CheckboxRoot" x="12" y="18.5" width="16" height="16" />
+                          <frame id="230:2857" name="Container" x="48" y="18.5" width="221.8125" height="16">
+                            <frame id="230:2858" name="Text" x="0" y="0" width="127" height="16">
+                              <text id="230:2859" name="Gastro Dubrovnik d.o.o." x="0" y="0" width="127" height="16" />
+                            </frame>
+                          </frame>
+                          <text id="230:2862" name="Maja Lukšić" x="285.8125" y="19" width="63" height="16" />
+                          <text id="230:2865" name="Restaurant" x="454.296875" y="19" width="59" height="16" />
+                          <frame id="230:2868" name="Badge" x="566.28125" y="16.5" width="43.75" height="20">
+                            <text id="230:2869" name="Gold" x="8.875" y="2" width="26" height="16" />
+                          </frame>
+                          <text id="230:2872" name="11%" x="796.59375" y="19" width="20" height="16" />
+                          <text id="230:2875" name="9" x="913.3515625" y="19" width="7" height="16" />
+                          <text id="230:2878" name="16.200,00 €" x="981.828125" y="19" width="66" height="16" />
+                          <frame id="230:2881" name="StatusCell" x="1063.8203125" y="17" width="55" height="16">
+                            <frame id="230:2882" name="Icon" x="0" y="1" width="14" height="14" />
+                            <frame id="230:2885" name="Text" x="20" y="0" width="35" height="16">
+                              <text id="230:2886" name="Active" x="0" y="0" width="35" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="230:3755" name="RowMenu" x="1023.5" y="323" width="144" height="66">
+                          <frame id="230:3756" name="Container" x="1" y="1" width="142" height="64">
+                            <frame id="230:3757" name="Button" x="4" y="4" width="134" height="28">
+                              <frame id="230:3758" name="Icon" x="8" y="7" width="14" height="14" />
+                              <text id="230:3761" name="Edit" x="30" y="6" width="22" height="16" />
+                            </frame>
+                            <frame id="230:3762" name="Button" x="4" y="32" width="134" height="28">
+                              <frame id="230:3763" name="Icon" x="8" y="7" width="14" height="14" />
+                              <text id="230:3769" name="Delete" x="30" y="6" width="36" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="230:2889" name="Table Row" x="0" y="407.5" width="1214" height="53">
+                          <frame id="230:2891" name="CheckboxRoot" x="12" y="18.5" width="16" height="16" />
+                          <frame id="230:2894" name="Container" x="48" y="18.5" width="221.8125" height="16">
+                            <frame id="230:2895" name="Text" x="0" y="0" width="106" height="16">
+                              <text id="230:2896" name="Gostionica Svitanje" x="0" y="0" width="106" height="16" />
+                            </frame>
+                          </frame>
+                          <text id="230:2899" name="Lara Kovač" x="285.8125" y="19" width="59" height="16" />
+                          <text id="230:2902" name="Restaurant" x="454.296875" y="19" width="59" height="16" />
+                          <frame id="230:2905" name="Badge" x="566.28125" y="16.5" width="47.5" height="20">
+                            <text id="230:2906" name="Silver" x="8.75" y="2" width="30" height="16" />
+                          </frame>
+                          <text id="230:2909" name="10%" x="793.59375" y="19" width="23" height="16" />
+                          <text id="230:2912" name="3" x="913.3515625" y="19" width="7" height="16" />
+                          <text id="230:2915" name="3.470,27 €" x="990.34375" y="19" width="58" height="16" />
+                          <frame id="230:2918" name="StatusCell" x="1063.8203125" y="17" width="55" height="16">
+                            <frame id="230:2919" name="Icon" x="0" y="1" width="14" height="14" />
+                            <frame id="230:2922" name="Text" x="20" y="0" width="35" height="16">
+                              <text id="230:2923" name="Active" x="0" y="0" width="35" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="230:2926" name="Table Row" x="0" y="460.5" width="1214" height="53">
+                          <frame id="230:2928" name="CheckboxRoot" x="12" y="18.5" width="16" height="16" />
+                          <frame id="230:2931" name="Container" x="48" y="18.5" width="221.8125" height="16">
+                            <frame id="230:2932" name="Text" x="0" y="0" width="107" height="16">
+                              <text id="230:2933" name="Hotel Bellevue Hvar" x="0" y="0" width="107" height="16" />
+                            </frame>
+                          </frame>
+                          <text id="230:2936" name="Ana Tomljanović" x="285.8125" y="19" width="88" height="16" />
+                          <text id="230:2939" name="Hotel" x="454.296875" y="19" width="30" height="16" />
+                          <frame id="230:2942" name="Badge" x="566.28125" y="16.5" width="43.75" height="20">
+                            <text id="230:2943" name="Gold" x="8.875" y="2" width="26" height="16" />
+                          </frame>
+                          <text id="230:2946" name="13%" x="795.59375" y="19" width="21" height="16" />
+                          <text id="230:2949" name="8" x="912.3515625" y="19" width="8" height="16" />
+                          <text id="230:2952" name="21.500,00 €" x="981.828125" y="19" width="66" height="16" />
+                          <frame id="230:2955" name="StatusCell" x="1063.8203125" y="17" width="55" height="16">
+                            <frame id="230:2956" name="Icon" x="0" y="1" width="14" height="14" />
+                            <frame id="230:2959" name="Text" x="20" y="0" width="35" height="16">
+                              <text id="230:2960" name="Active" x="0" y="0" width="35" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="230:2963" name="Table Row" x="0" y="513.5" width="1214" height="52.5">
+                          <frame id="230:2965" name="CheckboxRoot" x="12" y="18.5" width="16" height="16" />
+                          <frame id="230:2968" name="Container" x="48" y="18.5" width="221.8125" height="16">
+                            <frame id="230:2969" name="Text" x="0" y="0" width="119" height="16">
+                              <text id="230:2970" name="Hotel Skradinska Luka" x="0" y="0" width="119" height="16" />
+                            </frame>
+                          </frame>
+                          <text id="230:2973" name="Damir Tolić" x="285.8125" y="19" width="60" height="16" />
+                          <text id="230:2976" name="Hotel" x="454.296875" y="19" width="30" height="16" />
+                          <frame id="230:2979" name="Badge" x="566.28125" y="16.5" width="43.75" height="20">
+                            <text id="230:2980" name="Gold" x="8.875" y="2" width="26" height="16" />
+                          </frame>
+                          <text id="230:2983" name="15%" x="794.59375" y="19" width="22" height="16" />
+                          <text id="230:2986" name="4" x="912.3515625" y="19" width="8" height="16" />
+                          <text id="230:2989" name="12.757,31 €" x="987.828125" y="19" width="60" height="16" />
+                          <frame id="230:2992" name="StatusCell" x="1063.8203125" y="17" width="55" height="16">
+                            <frame id="230:2993" name="Icon" x="0" y="1" width="14" height="14" />
+                            <frame id="230:2996" name="Text" x="20" y="0" width="35" height="16">
+                              <text id="230:2997" name="Active" x="0" y="0" width="35" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="230:3000" name="PaginationBar" x="0" y="628" width="1216" height="48">
+                      <frame id="230:3001" name="Paragraph" x="0" y="24" width="125" height="16">
+                        <text id="230:3002" name="2 of 24 row(s) selected" x="0" y="0" width="125" height="16" />
+                      </frame>
+                      <frame id="230:3004" name="Container" x="853" y="16" width="363" height="32">
+                        <frame id="230:3005" name="Container" x="0" y="0" width="148" height="32">
+                          <text id="230:3006" name="Rows per page" x="0" y="8" width="80" height="16" />
+                          <frame id="230:3008" name="SelectTrigger" x="88" y="0" width="60" height="32">
+                            <frame id="230:3009" name="SelectValue" x="11" y="8" width="18" height="16">
+                              <text id="230:3010" name="10" x="0" y="0" width="13" height="16" />
+                            </frame>
+                            <frame id="230:3012" name="Icon" x="35" y="8" width="16" height="16" />
+                          </frame>
+                        </frame>
+                        <frame id="230:3014" name="Paragraph" x="164" y="8" width="59" height="16">
+                          <text id="230:3015" name="Page 1 of 3" x="0" y="0" width="59" height="16" />
+                        </frame>
+                        <frame id="230:3017" name="Container" x="239" y="2" width="124" height="28">
+                          <frame id="230:3018" name="Button" x="0" y="0" width="28" height="28">
+                            <frame id="230:3019" name="Icon" x="7" y="7" width="14" height="14" />
+                          </frame>
+                          <frame id="230:3022" name="Button" x="32" y="0" width="28" height="28">
+                            <frame id="230:3023" name="Icon" x="7" y="7" width="14" height="14" />
+                          </frame>
+                          <frame id="230:3025" name="Button" x="64" y="0" width="28" height="28">
+                            <frame id="230:3026" name="Icon" x="7" y="7" width="14" height="14" />
+                          </frame>
+                          <frame id="230:3028" name="Button" x="96" y="0" width="28" height="28">
+                            <frame id="230:3029" name="Icon" x="7" y="7" width="14" height="14" />
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+      <frame id="230:3035" name="CustomersPage" x="0" y="863" width="1369" height="46">
+        <frame id="230:3036" name="Container" x="522" y="0" width="325" height="46">
+          <frame id="230:3037" name="Text" x="17" y="15" width="56" height="16">
+            <text id="230:3038" name="2 selected" x="0" y="0" width="56" height="16" />
+          </frame>
+          <frame id="230:3040" name="Separator" x="85" y="9" width="1" height="28" />
+          <frame id="230:3041" name="Button" x="98" y="9" width="78" height="28">
+            <frame id="230:3042" name="Icon" x="11" y="7" width="14" height="14" />
+            <text id="230:3046" name="Export" x="31" y="6" width="36" height="16" />
+          </frame>
+          <frame id="230:3054" name="Button" x="188" y="9" width="77" height="28">
+            <frame id="230:3055" name="Icon" x="11" y="7" width="14" height="14" />
+            <text id="230:3059" name="Merge" x="31" y="6" width="35" height="16" />
+          </frame>
+          <frame id="230:3061" name="Separator" x="277" y="9" width="1" height="28" />
+          <frame id="230:3062" name="Button - Clear selection" x="290" y="14" width="18" height="18">
+            <frame id="230:3063" name="Icon" x="2" y="2" width="14" height="14" />
+          </frame>
+        </frame>
+      </frame>
+    </frame>

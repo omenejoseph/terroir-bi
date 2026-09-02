@@ -7,6 +7,14 @@ can continue **without further Figma calls**.
 |---|---|
 | `tokens.json` | Colour / radius / type / spacing variables (`get_variable_defs`, node `208:5577`) |
 | `screens.json` | Every section and screen on the Desktop canvas (`get_metadata`, node `32:2`) |
+| `frames/**/*.xml` | Per-screen layer trees — **12,657 nodes** with exact `x`/`y`/`width`/`height`, and **4,214 text nodes** whose `name` carries the visible copy |
+| `frames/index.json` | Section → screen → node id → file map |
+| `EXPORTING.md` | What to export from Figma by hand, and what is already covered here |
+
+Between them, `frames/` and `tokens.json` mean **layout, sizing and copy for all
+42 screens are already available offline**. What they cannot show is
+appearance — fills, shadows, states — which is what a PNG render adds. See
+`EXPORTING.md`.
 
 ## Source
 

@@ -1,0 +1,11 @@
+    <frame id="408:1669" name="Note · Order panel — new" x="4040" y="1512" width="480" height="152">
+      <text id="408:1670" name="Order panel — new" x="18" y="16" width="444" height="17" />
+      <frame id="408:1671" name="Frame" x="18" y="41" width="444" height="50">
+        <text id="408:1672" name="· Same panel as staging, rebuilt to match the other forms here." x="0" y="0" width="444" height="14" />
+        <text id="408:1673" name="· Everything kept: status, wines, profit, customer, history, comments." x="0" y="18" width="444" height="14" />
+        <text id="408:1674" name="· Added a Duplicate button." x="0" y="36" width="444" height="14" />
+      </frame>
+      <rounded-rectangle id="408:1675" name="Rectangle" x="18" y="99" width="444" height="1" />
+      <text id="408:1676" name="Why — Consistent with the rest of the forms, and duplicating a past order is the quickest way to get a quiet customer buying again." x="18" y="108" width="444" height="28" />
+    </frame>
+  </section>

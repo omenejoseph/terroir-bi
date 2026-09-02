@@ -1,0 +1,9 @@
+    <frame id="408:1623" name="Note · Analytics" x="4433" y="1096" width="1369" height="120">
+      <text id="408:1624" name="Analytics" x="18" y="16" width="1333" height="17" />
+      <frame id="408:1625" name="Frame" x="18" y="41" width="1333" height="32">
+        <text id="408:1626" name="· Now answers one question: what moved, and where did it go." x="0" y="0" width="1333" height="14" />
+        <text id="408:1627" name="· New chart puts what we hold next to what actually sold." x="0" y="18" width="1333" height="14" />
+      </frame>
+      <rounded-rectangle id="408:1629" name="Rectangle" x="18" y="81" width="1333" height="1" />
+      <text id="408:1630" name="Why — Analytics and Inventory Spend were showing much the same numbers. Each tab now has its own job." x="18" y="90" width="1333" height="14" />
+    </frame>

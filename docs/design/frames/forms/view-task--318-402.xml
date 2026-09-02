@@ -1,0 +1,101 @@
+    <frame id="318:402" name="View Task" x="2900" y="100" width="480" height="958">
+      <frame id="318:403" name="FormHeader" x="0" y="0" width="480" height="68">
+        <text id="318:404" name="Filter and rack Malvazija 2024" x="24" y="22" width="363" height="24" />
+        <frame id="325:976" name="Button" x="401" y="20" width="28" height="28">
+          <instance id="325:977" name="lucide/ellipsis" x="6" y="6" width="16" height="16" />
+        </frame>
+        <text id="318:405" name="✕" x="443" y="24" width="13" height="20" />
+      </frame>
+      <frame id="318:406" name="Separator" x="0" y="68" width="480" height="1" />
+      <frame id="318:499" name="MetaStrip" x="0" y="69" width="480" height="80">
+        <frame id="318:500" name="Container" x="24" y="16" width="209" height="22">
+          <instance id="318:501" name="Badge" x="0" y="0" width="54" height="22" />
+          <instance id="318:504" name="Badge" x="60" y="0" width="65" height="22" />
+          <instance id="318:507" name="Badge" x="131" y="0" width="78" height="22" />
+        </frame>
+        <text id="318:510" name="Created by Filip Demo · 10 Aug 2026, 09:00 · Updated 12 Aug 2026, 08:00" x="24" y="48" width="401" height="16" />
+      </frame>
+      <frame id="318:407" name="FormBody" x="0" y="149" width="480" height="724">
+        <instance id="318:408" name="Field" x="24" y="24" width="432" height="62" />
+        <instance id="318:409" name="Field" x="24" y="102" width="432" height="106" />
+        <frame id="318:410" name="FieldRow" x="24" y="224" width="432" height="62">
+          <instance id="318:411" name="Field" x="0" y="0" width="208" height="62" />
+          <instance id="318:412" name="Field" x="224" y="0" width="208" height="62" />
+        </frame>
+        <frame id="318:413" name="FieldRow" x="24" y="302" width="432" height="62">
+          <instance id="318:414" name="Field" x="0" y="0" width="208" height="62" />
+          <instance id="318:415" name="Field" x="224" y="0" width="208" height="62" />
+        </frame>
+        <instance id="318:416" name="Field" x="24" y="380" width="432" height="62" />
+        <frame id="318:417" name="Separator" x="24" y="458" width="432" height="1" />
+        <frame id="318:418" name="Disclosure" x="24" y="475" width="432" height="58">
+          <frame id="318:419" name="Container" x="12" y="10" width="369" height="38">
+            <text id="318:420" name="Add details" x="0" y="0" width="71" height="20" />
+            <text id="318:421" name="Malvazija 2024 · Tank A-2 · Not recurring" x="0" y="22" width="219" height="16" />
+          </frame>
+          <text id="318:422" name="Show" x="389" y="21" width="31" height="16" />
+        </frame>
+        <frame id="335:5147" name="Container:margin" x="24" y="549" width="432" height="151">
+          <frame id="335:5148" name="Container" x="0" y="0" width="432" height="151">
+            <frame id="335:5149" name="Paragraph" x="17" y="17" width="398" height="22">
+              <text id="335:5150" name="Information" x="0" y="0" width="398" height="22" />
+            </frame>
+            <frame id="335:5151" name="Container:margin" x="17" y="39" width="398" height="95">
+              <frame id="335:5152" name="Container" x="0" y="12" width="398" height="83">
+                <frame id="335:5153" name="Container" x="0" y="0" width="120" height="33">
+                  <frame id="335:5154" name="Paragraph" x="0" y="0" width="120" height="14">
+                    <text id="335:5155" name="Created by" x="0" y="0" width="60" height="14" />
+                  </frame>
+                  <frame id="335:5156" name="Paragraph" x="0" y="18" width="120" height="16">
+                    <text id="335:5157" name="Filip Demo" x="0" y="0" width="67" height="16" />
+                  </frame>
+                </frame>
+                <frame id="335:5158" name="Container" x="136" y="0" width="120" height="33">
+                  <frame id="335:5159" name="Paragraph" x="0" y="0" width="120" height="14">
+                    <text id="335:5160" name="Assigned to" x="0" y="0" width="64" height="14" />
+                  </frame>
+                  <frame id="335:5161" name="Paragraph" x="0" y="18" width="120" height="16">
+                    <text id="335:5162" name="Marko Blažević" x="0" y="0" width="94" height="16" />
+                  </frame>
+                </frame>
+                <frame id="335:5163" name="Container" x="272" y="0" width="120" height="33">
+                  <frame id="335:5164" name="Paragraph" x="0" y="0" width="120" height="14">
+                    <text id="335:5165" name="Due Date" x="0" y="0" width="50" height="14" />
+                  </frame>
+                  <frame id="335:5166" name="Paragraph" x="0" y="18" width="120" height="16">
+                    <text id="335:5167" name="14 Aug 2026" x="0" y="0" width="80" height="16" />
+                  </frame>
+                </frame>
+                <frame id="335:5168" name="Frame 14" x="0" y="49" width="256" height="34">
+                  <frame id="335:5169" name="Container" x="0" y="0" width="120" height="34">
+                    <frame id="335:5170" name="Paragraph" x="0" y="0" width="120" height="14">
+                      <text id="335:5171" name="Created" x="0" y="0" width="44" height="14" />
+                    </frame>
+                    <frame id="335:5172" name="Paragraph" x="0" y="18" width="120" height="16">
+                      <text id="335:5173" name="10 Aug 2026, 09:00" x="0" y="0" width="125" height="16" />
+                    </frame>
+                  </frame>
+                  <frame id="335:5174" name="Container" x="136" y="0" width="120" height="34">
+                    <frame id="335:5175" name="Paragraph" x="0" y="0" width="120" height="14">
+                      <text id="335:5176" name="Updated" x="0" y="0" width="47" height="14" />
+                    </frame>
+                    <frame id="335:5177" name="Paragraph" x="0" y="18" width="120" height="16">
+                      <text id="335:5178" name="12 Aug 2026, 08:00" x="0" y="0" width="125" height="16" />
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+      <frame id="318:423" name="Separator" x="0" y="873" width="480" height="1" />
+      <frame id="318:424" name="FormFooter" x="0" y="874" width="480" height="84">
+        <frame id="318:425" name="Button" x="269" y="24" width="68" height="36">
+          <text id="318:426" name="Cancel" x="12" y="8" width="44" height="20" />
+        </frame>
+        <frame id="318:427" name="Button" x="345" y="24" width="111" height="36">
+          <text id="318:428" name="Save changes" x="12" y="8" width="87" height="20" />
+        </frame>
+      </frame>
+    </frame>

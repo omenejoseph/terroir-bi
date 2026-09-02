@@ -1,0 +1,9 @@
+    <frame id="408:1577" name="Note · Dashboard" x="100" y="1490" width="1369" height="120">
+      <text id="408:1578" name="Dashboard" x="18" y="16" width="1333" height="17" />
+      <frame id="408:1579" name="Frame" x="18" y="41" width="1333" height="32">
+        <text id="408:1580" name="· Tasks card now looks like the three cards next to it." x="0" y="0" width="1333" height="14" />
+        <text id="408:1581" name="· Revenue vs target now shows each sales channel, with a mark for where you should be by today." x="0" y="18" width="1333" height="14" />
+      </frame>
+      <rounded-rectangle id="408:1582" name="Rectangle" x="18" y="81" width="1333" height="1" />
+      <text id="408:1583" name="Why: The marker answers the real question: are we behind, or is it just early in the month?" x="18" y="90" width="1333" height="14" />
+    </frame>

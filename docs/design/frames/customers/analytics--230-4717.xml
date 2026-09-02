@@ -1,0 +1,475 @@
+    <frame id="230:4717" name="Analytics" x="1573" y="100" width="1369" height="1518">
+      <frame id="230:3777" name="Terroir• Desktop (Final)" x="0" y="0" width="1369" height="1518">
+        <frame id="230:3780" name="App" x="0" y="0" width="1369" height="1518">
+          <frame id="230:3781" name="NavRail" x="0" y="0" width="56" height="1518">
+            <frame id="230:3782" name="Container" x="11.5" y="0" width="32" height="48">
+              <frame id="230:3783" name="Container" x="0" y="8" width="32" height="32">
+                <frame id="230:3784" name="Icon" x="8" y="8" width="16" height="16" />
+              </frame>
+            </frame>
+            <frame id="230:3794" name="Navigation" x="7.5" y="48" width="40" height="1422">
+              <frame id="230:3795" name="PreviewCardTrigger" x="0" y="8" width="40" height="40">
+                <frame id="230:3796" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="230:3801" name="PreviewCardTrigger" x="0" y="52" width="40" height="40">
+                <frame id="230:3802" name="ShortcutsFlyout" x="0" y="0" width="40" height="40">
+                  <frame id="230:3803" name="Icon" x="11" y="11" width="18" height="18" />
+                </frame>
+              </frame>
+              <frame id="230:3806" name="PreviewCardTrigger" x="0" y="96" width="40" height="40">
+                <frame id="230:3807" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="230:3811" name="PreviewCardTrigger" x="0" y="140" width="40" height="40">
+                <frame id="230:3812" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="230:3817" name="PreviewCardTrigger" x="0" y="184" width="40" height="40">
+                <frame id="230:3818" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="230:3823" name="PreviewCardTrigger" x="0" y="228" width="40" height="40">
+                <frame id="230:3824" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="230:3837" name="PreviewCardTrigger" x="0" y="272" width="40" height="40">
+                <frame id="230:3838" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="230:3842" name="PreviewCardTrigger" x="0" y="316" width="40" height="40">
+                <frame id="230:3843" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+              <frame id="230:3848" name="PreviewCardTrigger" x="0" y="360" width="40" height="40">
+                <frame id="230:3849" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+            </frame>
+            <frame id="230:3852" name="Container" x="7.5" y="1470" width="40" height="48">
+              <frame id="230:3853" name="Button" x="0" y="4.5" width="40" height="40">
+                <frame id="230:3854" name="AvatarRoot" x="4" y="4" width="32" height="32">
+                  <frame id="230:3855" name="AvatarFallback" x="0" y="0" width="32" height="32">
+                    <text id="230:3856" name="FD" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="230:3858" name="Text" x="0" y="0" width="32" height="32" />
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="230:3859" name="Container" x="56" y="0" width="1313" height="1518">
+            <frame id="230:3860" name="Header" x="0" y="0" width="1313" height="48">
+              <frame id="230:3861" name="Button" x="16" y="7.5" width="32" height="32">
+                <frame id="230:3862" name="Icon" x="8" y="8" width="16" height="16" />
+              </frame>
+              <frame id="230:3893" name="Container:align" x="60" y="7.5" width="1237" height="32">
+                <frame id="230:3866" name="Container" x="845" y="0" width="392" height="32">
+                  <frame id="230:3867" name="Container" x="0" y="0" width="288" height="32">
+                    <frame id="230:3868" name="Icon" x="10" y="9" width="14" height="14" />
+                    <frame id="230:3871" name="FieldControl" x="0" y="0" width="288" height="32">
+                      <text id="230:3872" name="Search orders, SKUs, partners…" x="33" y="9" width="214" height="14" />
+                    </frame>
+                    <frame id="230:3873" name="Kbd" x="255.7734375" y="6" width="25" height="20">
+                      <text id="230:3874" name="⌘K" x="5" y="2" width="15" height="16" />
+                    </frame>
+                  </frame>
+                  <frame id="230:3876" name="Container" x="296" y="0" width="96" height="32">
+                    <frame id="230:3877" name="Button" x="0" y="0" width="32" height="32">
+                      <frame id="230:3878" name="Icon" x="8" y="8" width="16" height="16" />
+                    </frame>
+                    <frame id="230:3882" name="Button" x="32" y="0" width="32" height="32">
+                      <frame id="230:3883" name="Icon" x="8" y="8" width="16" height="16" />
+                    </frame>
+                    <frame id="230:3888" name="Button" x="64" y="0" width="32" height="32">
+                      <frame id="230:3889" name="Icon" x="8" y="8" width="16" height="16" />
+                      <frame id="230:3892" name="App" x="19" y="7" width="6" height="6" />
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+            <frame id="230:3894" name="Main Content" x="0" y="48" width="1313" height="1470">
+              <frame id="230:4660" name="Container:margin" x="0" y="0" width="1313" height="1490">
+                <frame id="230:3896" name="CustomersPage" x="16.5" y="0" width="1280" height="1490">
+                  <frame id="230:3897" name="Container" x="32" y="24" width="1216" height="32">
+                    <frame id="230:3898" name="Heading 1" x="0" y="2" width="99" height="28">
+                      <text id="230:3899" name="Customers" x="0" y="0" width="99" height="28" />
+                    </frame>
+                    <frame id="230:4679" name="Container" x="978" y="0" width="238" height="32">
+                      <frame id="230:4680" name="Button" x="0" y="0" width="111" height="32">
+                        <frame id="230:4681" name="Icon" x="11" y="9" width="14" height="14" />
+                        <text id="230:4685" name="Export all" x="31" y="8" width="51" height="16" />
+                        <frame id="230:4686" name="Icon" x="88" y="10" width="12" height="12" />
+                      </frame>
+                      <frame id="230:4688" name="Button" x="119" y="0" width="119" height="32">
+                        <frame id="230:4689" name="CustomersPage" x="11" y="8" width="11" height="16">
+                          <text id="230:4690" name="+" x="0" y="0" width="11" height="16" />
+                        </frame>
+                        <text id="230:4691" name="New Customer" x="26" y="8" width="82" height="16" />
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="230:3901" name="TabsRoot" x="32" y="56" width="1216" height="1414">
+                    <frame id="230:3902" name="CompositeRoot" x="0" y="16" width="143.125" height="32">
+                      <frame id="230:3903" name="TabsTab" x="3" y="3.5" width="72.2182388305664" height="25">
+                        <text id="230:3904" name="Customers" x="6.109119415283203" y="4.5" width="60" height="16" />
+                      </frame>
+                      <frame id="230:3906" name="TabsTab" x="75.2182388305664" y="3.5" width="64.9067611694336" height="25">
+                        <text id="230:3907" name="Analytics" x="7.453380584716797" y="4.5" width="50" height="16" />
+                      </frame>
+                    </frame>
+                    <frame id="230:3909" name="TabsPanel" x="0" y="56" width="1216" height="1358">
+                      <frame id="234:46" name="CustomersPage" x="0" y="16" width="1216" height="104">
+                        <frame id="234:47" name="Card" x="0" y="0" width="292" height="104">
+                          <frame id="234:48" name="CardContent" x="0" y="16" width="292" height="72">
+                            <frame id="234:49" name="CustomersPage" x="16" y="0" width="260" height="16">
+                              <text id="234:50" name="Active customers" x="0" y="0" width="95" height="16" />
+                            </frame>
+                            <frame id="234:51" name="CustomersPage" x="16" y="16" width="362.6640625" height="38">
+                              <text id="234:52" name="21" x="0" y="6" width="23" height="32" />
+                            </frame>
+                            <frame id="234:53" name="CustomersPage" x="16" y="54" width="362.6640625" height="18">
+                              <text id="234:54" name="at least one order" x="0" y="2" width="94" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="234:55" name="Card" x="308" y="0" width="292" height="104">
+                          <frame id="234:56" name="CardContent" x="0" y="0" width="292" height="104">
+                            <frame id="234:57" name="CustomersPage" x="16" y="16" width="260" height="16">
+                              <text id="234:58" name="Revenue last 12 months" x="0" y="0" width="127" height="16" />
+                            </frame>
+                            <frame id="234:59" name="CustomersPage" x="16" y="32" width="362.6640625" height="38">
+                              <text id="234:60" name="172.233,91 €" x="0" y="6" width="134" height="32" />
+                            </frame>
+                            <frame id="234:61" name="CustomersPage" x="16" y="70" width="362.6640625" height="18">
+                              <text id="234:62" name="across all customers" x="0" y="2" width="109" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="234:63" name="Card" x="616" y="0" width="292" height="104">
+                          <frame id="234:64" name="CardContent" x="0" y="0" width="292" height="104">
+                            <frame id="234:65" name="CustomersPage" x="16" y="16" width="260" height="16">
+                              <text id="234:66" name="Top customer (12m)" x="0" y="0" width="108" height="16" />
+                            </frame>
+                            <frame id="234:67" name="CustomersPage" x="16" y="32" width="362.6640625" height="38">
+                              <text id="234:68" name="Restoran Mediteran" x="0" y="6" width="223" height="32" />
+                            </frame>
+                            <frame id="234:69" name="CustomersPage" x="16" y="70" width="362.6640625" height="18">
+                              <text id="234:70" name="34.110,84 €" x="0" y="2" width="63" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                        <frame id="234:71" name="Card" x="924" y="0" width="292" height="104">
+                          <frame id="234:72" name="CardContent" x="0" y="0" width="292" height="104">
+                            <frame id="234:73" name="CustomersPage" x="16" y="16" width="260" height="16">
+                              <text id="234:74" name="Rebate performance" x="0" y="0" width="111" height="16" />
+                            </frame>
+                            <frame id="234:75" name="CustomersPage" x="16" y="32" width="362.6640625" height="38">
+                              <text id="234:76" name="20.119,90 €" x="0" y="6" width="124" height="32" />
+                            </frame>
+                            <frame id="234:77" name="CustomersPage" x="16" y="70" width="362.6640625" height="18">
+                              <text id="234:78" name="weighted avg 11.5% · 21 customers" x="0" y="2" width="185" height="16" />
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="230:4693" name="CustomersPage" x="0" y="120" width="1216" height="60">
+                        <frame id="230:4694" name="Container" x="0" y="16" width="1216" height="32">
+                          <frame id="230:4695" name="Container" x="0" y="0" width="220" height="32">
+                            <frame id="230:4696" name="Icon" x="10" y="9" width="14" height="14" />
+                            <frame id="230:4699" name="FieldControl" x="0" y="0" width="220" height="32">
+                              <text id="230:4700" name="Filter customers…" x="33" y="9" width="176" height="14" />
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="230:3978" name="CustomersPage" x="0" y="180" width="1216" height="1098">
+                        <frame id="230:3979" name="Container" x="1" y="1" width="1214" height="1096">
+                          <frame id="230:3982" name="Table Row" x="0" y="0" width="1214" height="36.5">
+                            <frame id="230:3984" name="Button" x="12" y="10" width="68.328125" height="16">
+                              <text id="230:3985" name="Company" x="0" y="0" width="53" height="16" />
+                            </frame>
+                            <frame id="230:3988" name="Button" x="209.09375" y="10" width="60.234375" height="16">
+                              <text id="230:3989" name="Contact" x="0" y="0" width="45" height="16" />
+                            </frame>
+                            <frame id="230:3992" name="Button" x="344.6953125" y="10" width="136.484375" height="16">
+                              <text id="230:3993" name="Revenue last 12m" x="26.484375" y="0" width="94" height="16" />
+                              <frame id="230:3995" name="Text" x="124.484375" y="2" width="12" height="12">
+                                <frame id="230:3996" name="Icon" x="0" y="0" width="12" height="12" />
+                              </frame>
+                            </frame>
+                            <frame id="230:4000" name="Button" x="497.1796875" y="10" width="86.3671875" height="16">
+                              <text id="230:4001" name="All-time" x="43.3671875" y="0" width="43" height="16" />
+                            </frame>
+                            <frame id="230:4004" name="Button" x="599.546875" y="10" width="108.3125" height="16">
+                              <text id="230:4005" name="Orders (12m)" x="37.3125" y="0" width="71" height="16" />
+                            </frame>
+                            <frame id="230:4008" name="Button" x="723.859375" y="10" width="87.2734375" height="16">
+                              <text id="230:4009" name="Avg order" x="33.2734375" y="0" width="54" height="16" />
+                            </frame>
+                            <frame id="230:4012" name="Button" x="827.1328125" y="10" width="92.40625" height="16">
+                              <text id="230:4013" name="Last order" x="37.40625" y="0" width="55" height="16" />
+                            </frame>
+                            <frame id="230:4016" name="Button" x="935.5390625" y="10" width="97.6171875" height="16">
+                              <text id="230:4017" name="Typical gap" x="35.6171875" y="0" width="62" height="16" />
+                            </frame>
+                            <frame id="230:4020" name="Button" x="1049.15625" y="10" width="104.84375" height="16">
+                              <text id="230:4021" name="Expected by" x="36.84375" y="0" width="68" height="16" />
+                            </frame>
+                          </frame>
+                          <frame id="230:4025" name="Table Row" x="0" y="36.5" width="1214" height="53">
+                            <text id="230:4027" name="Restoran Mediteran" x="12" y="19" width="107" height="16" />
+                            <text id="230:4030" name="Marija Vukoja" x="209.09375" y="19" width="73" height="16" />
+                            <text id="230:4033" name="34.110,84 €" x="417.1875" y="19" width="64" height="16" />
+                            <text id="230:4036" name="34.110,84 €" x="521.078125" y="19" width="63" height="16" />
+                            <text id="230:4039" name="13" x="695.8984375" y="19" width="12" height="16" />
+                            <text id="230:4042" name="2.623,91 €" x="756.1484375" y="19" width="55" height="16" />
+                            <text id="230:4045" name="37 days ago" x="855.5703125" y="19" width="64" height="16" />
+                            <text id="230:4048" name="6d" x="1019.640625" y="19" width="14" height="16" />
+                            <text id="230:4051" name="16. 08. 26." x="1100.71875" y="19" width="54" height="16" />
+                          </frame>
+                          <frame id="230:4055" name="Table Row" x="0" y="89.5" width="1214" height="53">
+                            <text id="230:4057" name="Hotel Bellevue Hvar" x="12" y="19" width="107" height="16" />
+                            <text id="230:4060" name="Ana Tomljanović" x="209.09375" y="19" width="88" height="16" />
+                            <text id="230:4063" name="21.500,00 €" x="415.1875" y="19" width="66" height="16" />
+                            <text id="230:4066" name="38.000,00 €" x="515.078125" y="19" width="69" height="16" />
+                            <text id="230:4069" name="8" x="700.375" y="19" width="8" height="16" />
+                            <text id="230:4072" name="2.687,50 €" x="752.1484375" y="19" width="59" height="16" />
+                            <text id="230:4075" name="14 days ago" x="855.5703125" y="19" width="64" height="16" />
+                            <text id="230:4078" name="21d" x="1014.1640625" y="19" width="19" height="16" />
+                            <text id="230:4081" name="17. 08. 26." x="1100.71875" y="19" width="54" height="16" />
+                          </frame>
+                          <frame id="230:4085" name="Table Row" x="0" y="142.5" width="1214" height="53">
+                            <text id="230:4087" name="Porto Bello Resort &amp; Spa" x="12" y="19" width="132" height="16" />
+                            <text id="230:4090" name="Kristina Jurić" x="209.09375" y="19" width="70" height="16" />
+                            <text id="230:4093" name="18.900,00 €" x="414.1875" y="19" width="67" height="16" />
+                            <text id="230:4096" name="27.600,00 €" x="517.078125" y="19" width="67" height="16" />
+                            <text id="230:4099" name="6" x="701.375" y="19" width="7" height="16" />
+                            <text id="230:4102" name="3.150,00 €" x="753.1484375" y="19" width="58" height="16" />
+                            <text id="230:4105" name="33 days ago" x="854.5703125" y="19" width="65" height="16" />
+                            <text id="230:4108" name="28d" x="1011.1640625" y="19" width="22" height="16" />
+                            <text id="230:4111" name="05. 08. 26." x="1097.71875" y="19" width="57" height="16" />
+                          </frame>
+                          <frame id="230:4115" name="Table Row" x="0" y="195.5" width="1214" height="53">
+                            <text id="230:4117" name="Konoba Kraljevac" x="12" y="19" width="94" height="16" />
+                            <text id="230:4120" name="Ivan Knežević" x="209.09375" y="19" width="74" height="16" />
+                            <text id="230:4123" name="18.103,10 €" x="420.1875" y="19" width="61" height="16" />
+                            <text id="230:4126" name="18.103,10 €" x="523.078125" y="19" width="61" height="16" />
+                            <text id="230:4129" name="7" x="701.375" y="19" width="7" height="16" />
+                            <text id="230:4132" name="2.586,16 €" x="755.1484375" y="19" width="56" height="16" />
+                            <text id="230:4135" name="32 days ago" x="854.5703125" y="19" width="65" height="16" />
+                            <text id="230:4138" name="4d" x="1018.640625" y="19" width="15" height="16" />
+                            <text id="230:4141" name="14. 08. 26." x="1099.71875" y="19" width="55" height="16" />
+                          </frame>
+                          <frame id="230:4145" name="Table Row" x="0" y="248.5" width="1214" height="53">
+                            <text id="230:4147" name="Gastro Dubrovnik d.o.o." x="12" y="19" width="127" height="16" />
+                            <text id="230:4150" name="Maja Lukšić" x="209.09375" y="19" width="63" height="16" />
+                            <text id="230:4153" name="16.200,00 €" x="415.1875" y="19" width="66" height="16" />
+                            <text id="230:4156" name="25.400,00 €" x="516.078125" y="19" width="68" height="16" />
+                            <text id="230:4159" name="9" x="701.375" y="19" width="7" height="16" />
+                            <text id="230:4162" name="1.800,00 €" x="751.1484375" y="19" width="60" height="16" />
+                            <text id="230:4165" name="19 days ago" x="856.5703125" y="19" width="63" height="16" />
+                            <text id="230:4168" name="18d" x="1013.1640625" y="19" width="20" height="16" />
+                            <text id="230:4171" name="09. 08. 26." x="1097.71875" y="19" width="57" height="16" />
+                          </frame>
+                          <frame id="230:4175" name="Table Row" x="0" y="301.5" width="1214" height="53">
+                            <text id="230:4177" name="Hotel Skradinska Luka" x="12" y="19" width="119" height="16" />
+                            <text id="230:4180" name="Damir Tolić" x="209.09375" y="19" width="60" height="16" />
+                            <text id="230:4183" name="12.757,31 €" x="421.1875" y="19" width="60" height="16" />
+                            <text id="230:4186" name="12.757,31 €" x="524.078125" y="19" width="60" height="16" />
+                            <text id="230:4189" name="4" x="700.375" y="19" width="8" height="16" />
+                            <text id="230:4192" name="3.189,33 €" x="756.1484375" y="19" width="55" height="16" />
+                            <text id="230:4195" name="48 days ago" x="853.5703125" y="19" width="66" height="16" />
+                            <text id="230:4198" name="28d" x="1011.1640625" y="19" width="22" height="16" />
+                            <text id="230:4201" name="07. 09. 26." x="1098.71875" y="19" width="56" height="16" />
+                          </frame>
+                          <frame id="230:4205" name="Table Row" x="0" y="354.5" width="1214" height="53">
+                            <text id="230:4207" name="Vinarija Babić d.o.o." x="12" y="19" width="106" height="16" />
+                            <text id="230:4210" name="Tomislav Babić" x="209.09375" y="19" width="80" height="16" />
+                            <text id="230:4213" name="9.245,00 €" x="421.703125" y="19" width="60" height="16" />
+                            <text id="230:4216" name="13.400,00 €" x="518.078125" y="19" width="66" height="16" />
+                            <text id="230:4219" name="5" x="701.375" y="19" width="7" height="16" />
+                            <text id="230:4222" name="1.849,00 €" x="752.1484375" y="19" width="59" height="16" />
+                            <text id="230:4225" name="21 days ago" x="856.5703125" y="19" width="63" height="16" />
+                            <text id="230:4228" name="30d" x="1011.1640625" y="19" width="22" height="16" />
+                            <text id="230:4231" name="19. 08. 26." x="1100.71875" y="19" width="54" height="16" />
+                          </frame>
+                          <frame id="230:4235" name="Table Row" x="0" y="407.5" width="1214" height="53">
+                            <text id="230:4237" name="Taverna Olea" x="12" y="19" width="70" height="16" />
+                            <text id="230:4240" name="Stipe Bilić" x="209.09375" y="19" width="54" height="16" />
+                            <text id="230:4243" name="6.606,09 €" x="421.703125" y="19" width="60" height="16" />
+                            <text id="230:4246" name="6.606,09 €" x="524.5625" y="19" width="59" height="16" />
+                            <text id="230:4249" name="3" x="701.375" y="19" width="7" height="16" />
+                            <text id="230:4252" name="2.202,03 €" x="752.1484375" y="19" width="59" height="16" />
+                            <text id="230:4255" name="32 days ago" x="854.5703125" y="19" width="65" height="16" />
+                            <text id="230:4258" name="5d" x="1019.640625" y="19" width="14" height="16" />
+                            <text id="230:4261" name="15. 08. 26." x="1100.71875" y="19" width="54" height="16" />
+                          </frame>
+                          <frame id="230:4265" name="Table Row" x="0" y="460.5" width="1214" height="53">
+                            <text id="230:4267" name="La Vigna Zagreb" x="12" y="19" width="89" height="16" />
+                            <text id="230:4270" name="Roberto Čović" x="209.09375" y="19" width="78" height="16" />
+                            <text id="230:4273" name="6.324,00 €" x="421.703125" y="19" width="60" height="16" />
+                            <text id="230:4276" name="11.000,00 €" x="519.078125" y="19" width="65" height="16" />
+                            <text id="230:4279" name="14" x="694.8984375" y="19" width="13" height="16" />
+                            <text id="230:4282" name="451,71 €" x="767.1171875" y="19" width="45" height="16" />
+                            <text id="230:4285" name="6 days ago" x="862.046875" y="19" width="58" height="16" />
+                            <text id="230:4288" name="10d" x="1013.1640625" y="19" width="20" height="16" />
+                            <text id="230:4291" name="14. 08. 26." x="1099.71875" y="19" width="55" height="16" />
+                          </frame>
+                          <frame id="230:4295" name="Table Row" x="0" y="513.5" width="1214" height="53">
+                            <text id="230:4297" name="Alpine Imports GmbH" x="12" y="19" width="118" height="16" />
+                            <text id="230:4300" name="Franz Müller" x="209.09375" y="19" width="65" height="16" />
+                            <text id="230:4303" name="5.600,00 €" x="419.703125" y="19" width="62" height="16" />
+                            <text id="230:4306" name="5.600,00 €" x="522.5625" y="19" width="61" height="16" />
+                            <text id="230:4309" name="3" x="701.375" y="19" width="7" height="16" />
+                            <text id="230:4312" name="1.866,67 €" x="755.1484375" y="19" width="56" height="16" />
+                            <text id="230:4315" name="65 days ago" x="854.5703125" y="19" width="65" height="16" />
+                            <text id="230:4318" name="—" x="1019.953125" y="19" width="14" height="16" />
+                            <text id="230:4321" name="—" x="1140.796875" y="19" width="14" height="16" />
+                          </frame>
+                          <frame id="230:4325" name="Table Row" x="0" y="566.5" width="1214" height="53">
+                            <text id="230:4327" name="Split Wine Bar" x="12" y="19" width="77" height="16" />
+                            <text id="230:4330" name="Nikola Petrić" x="209.09375" y="19" width="68" height="16" />
+                            <text id="230:4333" name="4.782,00 €" x="421.703125" y="19" width="60" height="16" />
+                            <text id="230:4336" name="8.910,00 €" x="524.5625" y="19" width="59" height="16" />
+                            <text id="230:4339" name="11" x="697.8984375" y="19" width="10" height="16" />
+                            <text id="230:4342" name="434,73 €" x="763.1171875" y="19" width="49" height="16" />
+                            <text id="230:4345" name="8 days ago" x="861.046875" y="19" width="59" height="16" />
+                            <text id="230:4348" name="14d" x="1013.1640625" y="19" width="20" height="16" />
+                            <text id="230:4351" name="16. 08. 26." x="1100.71875" y="19" width="54" height="16" />
+                          </frame>
+                          <frame id="230:4355" name="Table Row" x="0" y="619.5" width="1214" height="53">
+                            <text id="230:4357" name="Gostionica Svitanje" x="12" y="19" width="106" height="16" />
+                            <text id="230:4360" name="Lara Kovač" x="209.09375" y="19" width="59" height="16" />
+                            <text id="230:4363" name="3.470,27 €" x="423.703125" y="19" width="58" height="16" />
+                            <text id="230:4366" name="3.470,27 €" x="525.5625" y="19" width="58" height="16" />
+                            <text id="230:4369" name="3" x="701.375" y="19" width="7" height="16" />
+                            <text id="230:4372" name="1.156,76 €" x="758.1484375" y="19" width="53" height="16" />
+                            <text id="230:4375" name="59 days ago" x="854.5703125" y="19" width="65" height="16" />
+                            <text id="230:4378" name="6d" x="1019.640625" y="19" width="14" height="16" />
+                            <text id="230:4381" name="16. 08. 26." x="1100.71875" y="19" width="54" height="16" />
+                          </frame>
+                          <frame id="230:4385" name="Table Row" x="0" y="672.5" width="1214" height="53">
+                            <text id="230:4387" name="Konoba Sv. Nikola" x="12" y="19" width="98" height="16" />
+                            <text id="230:4390" name="Josipa Radić" x="209.09375" y="19" width="68" height="16" />
+                            <text id="230:4393" name="3.120,00 €" x="423.703125" y="19" width="58" height="16" />
+                            <text id="230:4396" name="3.120,00 €" x="525.5625" y="19" width="58" height="16" />
+                            <text id="230:4399" name="4" x="700.375" y="19" width="8" height="16" />
+                            <text id="230:4402" name="780,00 €" x="761.1171875" y="19" width="51" height="16" />
+                            <text id="230:4405" name="43 days ago" x="854.5703125" y="19" width="65" height="16" />
+                            <text id="230:4408" name="45d" x="1011.1640625" y="19" width="22" height="16" />
+                            <text id="230:4411" name="12. 08. 26." x="1100.71875" y="19" width="54" height="16" />
+                          </frame>
+                          <frame id="230:4415" name="Table Row" x="0" y="725.5" width="1214" height="53">
+                            <text id="230:4417" name="Adrion Cliff Hotel" x="12" y="19" width="95" height="16" />
+                            <text id="230:4420" name="Petra Gulin" x="209.09375" y="19" width="59" height="16" />
+                            <text id="230:4423" name="2.874,79 €" x="423.703125" y="19" width="58" height="16" />
+                            <text id="230:4426" name="2.874,79 €" x="525.5625" y="19" width="58" height="16" />
+                            <text id="230:4429" name="1" x="703.375" y="19" width="5" height="16" />
+                            <text id="230:4432" name="2.874,79 €" x="753.1484375" y="19" width="58" height="16" />
+                            <text id="230:4435" name="52 days ago" x="854.5703125" y="19" width="65" height="16" />
+                            <text id="230:4438" name="—" x="1019.953125" y="19" width="14" height="16" />
+                            <text id="230:4441" name="—" x="1140.796875" y="19" width="14" height="16" />
+                          </frame>
+                          <frame id="230:4445" name="Table Row" x="0" y="778.5" width="1214" height="53">
+                            <text id="230:4447" name="Vino Terra Rijeka" x="12" y="19" width="91" height="16" />
+                            <text id="230:4450" name="Danijela Horvat" x="209.09375" y="19" width="83" height="16" />
+                            <text id="230:4453" name="2.870,00 €" x="420.703125" y="19" width="61" height="16" />
+                            <text id="230:4456" name="2.870,00 €" x="523.5625" y="19" width="60" height="16" />
+                            <text id="230:4459" name="6" x="701.375" y="19" width="7" height="16" />
+                            <text id="230:4462" name="478,33 €" x="764.1171875" y="19" width="48" height="16" />
+                            <text id="230:4465" name="27 days ago" x="854.5703125" y="19" width="65" height="16" />
+                            <text id="230:4468" name="35d" x="1012.1640625" y="19" width="21" height="16" />
+                            <text id="230:4471" name="18. 08. 26." x="1099.71875" y="19" width="55" height="16" />
+                          </frame>
+                          <frame id="230:4475" name="Table Row" x="0" y="831.5" width="1214" height="53">
+                            <text id="230:4477" name="Wiener Weinhaus" x="12" y="19" width="94" height="16" />
+                            <text id="230:4480" name="Sophie Mayrhofer" x="209.09375" y="19" width="96" height="16" />
+                            <text id="230:4483" name="1.789,84 €" x="424.703125" y="19" width="57" height="16" />
+                            <text id="230:4486" name="1.789,84 €" x="526.5625" y="19" width="57" height="16" />
+                            <text id="230:4489" name="2" x="701.375" y="19" width="7" height="16" />
+                            <text id="230:4492" name="—" x="797.9296875" y="19" width="14" height="16" />
+                            <text id="230:4495" name="106 days ago" x="849.0859375" y="19" width="71" height="16" />
+                            <text id="230:4498" name="—" x="1019.953125" y="19" width="14" height="16" />
+                            <text id="230:4501" name="—" x="1140.796875" y="19" width="14" height="16" />
+                          </frame>
+                          <frame id="230:4505" name="Table Row" x="0" y="884.5" width="1214" height="53">
+                            <text id="230:4507" name="ENO Boutique Berlin" x="12" y="19" width="111" height="16" />
+                            <text id="230:4510" name="Hannah Schreiber" x="209.09375" y="19" width="96" height="16" />
+                            <text id="230:4513" name="1.432,00 €" x="423.703125" y="19" width="58" height="16" />
+                            <text id="230:4516" name="1.432,00 €" x="525.5625" y="19" width="58" height="16" />
+                            <text id="230:4519" name="2" x="701.375" y="19" width="7" height="16" />
+                            <text id="230:4522" name="716,00 €" x="764.1171875" y="19" width="48" height="16" />
+                            <text id="230:4525" name="90 days ago" x="853.5703125" y="19" width="66" height="16" />
+                            <text id="230:4528" name="—" x="1019.953125" y="19" width="14" height="16" />
+                            <text id="230:4531" name="—" x="1140.796875" y="19" width="14" height="16" />
+                          </frame>
+                          <frame id="230:4535" name="Table Row" x="0" y="937.5" width="1214" height="53">
+                            <text id="230:4537" name="Weinkontor Haufen" x="12" y="19" width="106" height="16" />
+                            <text id="230:4540" name="Klaus Bergmann" x="209.09375" y="19" width="87" height="16" />
+                            <text id="230:4543" name="1.323,17 €" x="428.703125" y="19" width="53" height="16" />
+                            <text id="230:4546" name="1.323,17 €" x="530.5625" y="19" width="53" height="16" />
+                            <text id="230:4549" name="2" x="701.375" y="19" width="7" height="16" />
+                            <text id="230:4552" name="—" x="797.9296875" y="19" width="14" height="16" />
+                            <text id="230:4555" name="52 days ago" x="854.5703125" y="19" width="65" height="16" />
+                            <text id="230:4558" name="—" x="1019.953125" y="19" width="14" height="16" />
+                            <text id="230:4561" name="—" x="1140.796875" y="19" width="14" height="16" />
+                          </frame>
+                          <frame id="230:4565" name="Table Row" x="0" y="990.5" width="1214" height="53">
+                            <text id="230:4567" name="Balkan Wine Exports d.o.o." x="12" y="19" width="142" height="16" />
+                            <text id="230:4570" name="Janez Korošec" x="209.09375" y="19" width="79" height="16" />
+                            <text id="230:4573" name="851,50 €" x="433.8359375" y="19" width="48" height="16" />
+                            <text id="230:4576" name="851,50 €" x="536.53125" y="19" width="48" height="16" />
+                            <text id="230:4579" name="1" x="703.375" y="19" width="5" height="16" />
+                            <text id="230:4582" name="—" x="797.9296875" y="19" width="14" height="16" />
+                            <text id="230:4585" name="81 days ago" x="855.5703125" y="19" width="64" height="16" />
+                            <text id="230:4588" name="—" x="1019.953125" y="19" width="14" height="16" />
+                            <text id="230:4591" name="—" x="1140.796875" y="19" width="14" height="16" />
+                          </frame>
+                          <frame id="230:4595" name="Table Row" x="0" y="1043.5" width="1214" height="52.5">
+                            <text id="230:4597" name="Chalk Street Wine" x="12" y="19" width="98" height="16" />
+                            <text id="230:4600" name="Eleanor Hartley" x="209.09375" y="19" width="83" height="16" />
+                            <text id="230:4603" name="374,00 €" x="431.8359375" y="19" width="50" height="16" />
+                            <text id="230:4606" name="374,00 €" x="534.53125" y="19" width="50" height="16" />
+                            <text id="230:4609" name="1" x="703.375" y="19" width="5" height="16" />
+                            <text id="230:4612" name="—" x="797.9296875" y="19" width="14" height="16" />
+                            <text id="230:4615" name="49 days ago" x="853.5703125" y="19" width="66" height="16" />
+                            <text id="230:4618" name="—" x="1019.953125" y="19" width="14" height="16" />
+                            <text id="230:4621" name="—" x="1140.796875" y="19" width="14" height="16" />
+                          </frame>
+                        </frame>
+                      </frame>
+                      <frame id="230:4625" name="PaginationBar" x="0" y="1278" width="1216" height="48">
+                        <frame id="230:4626" name="Paragraph" x="0" y="24" width="126" height="16">
+                          <text id="230:4627" name="0 of 20 row(s) selected" x="0" y="0" width="126" height="16" />
+                        </frame>
+                        <frame id="230:4629" name="Container" x="855" y="16" width="361" height="32">
+                          <frame id="230:4630" name="Container" x="0" y="0" width="148" height="32">
+                            <text id="230:4631" name="Rows per page" x="0" y="8" width="80" height="16" />
+                            <frame id="230:4633" name="SelectTrigger" x="88" y="0" width="60" height="32">
+                              <frame id="230:4634" name="SelectValue" x="11" y="8" width="18" height="16">
+                                <text id="230:4635" name="20" x="0" y="0" width="15" height="16" />
+                              </frame>
+                              <frame id="230:4637" name="Icon" x="35" y="8" width="16" height="16" />
+                            </frame>
+                          </frame>
+                          <frame id="230:4639" name="Paragraph" x="164" y="8" width="57" height="16">
+                            <text id="230:4640" name="Page 1 of 1" x="0" y="0" width="57" height="16" />
+                          </frame>
+                          <frame id="230:4642" name="Container" x="237" y="2" width="124" height="28">
+                            <frame id="230:4643" name="Button" x="0" y="0" width="28" height="28">
+                              <frame id="230:4644" name="Icon" x="7" y="7" width="14" height="14" />
+                            </frame>
+                            <frame id="230:4647" name="Button" x="32" y="0" width="28" height="28">
+                              <frame id="230:4648" name="Icon" x="7" y="7" width="14" height="14" />
+                            </frame>
+                            <frame id="230:4650" name="Button" x="64" y="0" width="28" height="28">
+                              <frame id="230:4651" name="Icon" x="7" y="7" width="14" height="14" />
+                            </frame>
+                            <frame id="230:4653" name="Button" x="96" y="0" width="28" height="28">
+                              <frame id="230:4654" name="Icon" x="7" y="7" width="14" height="14" />
+                            </frame>
+                          </frame>
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+    </frame>

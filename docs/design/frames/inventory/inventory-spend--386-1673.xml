@@ -1,0 +1,528 @@
+    <frame id="386:1673" name="Inventory Spend" x="5854" y="100" width="1369" height="1099">
+      <frame id="386:1674" name="App" x="0" y="0" width="1369" height="1099">
+        <frame id="386:1675" name="NavRail" x="0" y="0" width="56" height="1099">
+          <frame id="386:1676" name="Container" x="11.5" y="0" width="32" height="48">
+            <frame id="386:1677" name="Container" x="0" y="8" width="32" height="32">
+              <frame id="386:1678" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+          </frame>
+          <frame id="386:1688" name="Navigation" x="7.5" y="48" width="40" height="1003">
+            <frame id="386:1689" name="PreviewCardTrigger" x="0" y="8" width="40" height="40">
+              <frame id="386:1690" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="386:1695" name="PreviewCardTrigger" x="0" y="52" width="40" height="40">
+              <frame id="386:1696" name="ShortcutsFlyout" x="0" y="0" width="40" height="40">
+                <frame id="386:1697" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+            </frame>
+            <frame id="386:1700" name="PreviewCardTrigger" x="0" y="96" width="40" height="40">
+              <frame id="386:1701" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="386:1705" name="PreviewCardTrigger" x="0" y="140" width="40" height="40">
+              <frame id="386:1706" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="386:1711" name="PreviewCardTrigger" x="0" y="184" width="40" height="40">
+              <frame id="386:1712" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="386:1717" name="PreviewCardTrigger" x="0" y="228" width="40" height="40">
+              <frame id="386:1718" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="386:1731" name="PreviewCardTrigger" x="0" y="272" width="40" height="40">
+              <frame id="386:1732" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="386:1736" name="PreviewCardTrigger" x="0" y="316" width="40" height="40">
+              <frame id="386:1737" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="386:1742" name="PreviewCardTrigger" x="0" y="360" width="40" height="40">
+              <frame id="386:1743" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+          </frame>
+          <frame id="386:1746" name="Container" x="7.5" y="1051" width="40" height="48">
+            <frame id="386:1747" name="Button" x="0" y="4.5" width="40" height="40">
+              <frame id="386:1748" name="AvatarRoot" x="4" y="4" width="32" height="32">
+                <frame id="386:1749" name="AvatarFallback" x="0" y="0" width="32" height="32">
+                  <text id="386:1750" name="FD" x="8.5" y="8" width="15" height="16" />
+                </frame>
+                <frame id="386:1751" name="Text" x="0" y="0" width="32" height="32" />
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+        <frame id="386:1752" name="Container" x="56" y="0" width="1313" height="1099">
+          <frame id="386:1753" name="Header" x="0" y="0" width="1313" height="48">
+            <frame id="386:1754" name="Button" x="16" y="7.5" width="32" height="32">
+              <frame id="386:1755" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+            <frame id="386:1758" name="Container:align" x="60" y="7.5" width="1237" height="32">
+              <frame id="386:1759" name="Container" x="845" y="0" width="392" height="32">
+                <frame id="386:1760" name="Container" x="0" y="0" width="288" height="32">
+                  <frame id="386:1761" name="Icon" x="10" y="9" width="14" height="14" />
+                  <frame id="386:1764" name="FieldControl" x="0" y="0" width="288" height="32">
+                    <text id="386:1765" name="Search orders, SKUs, partners…" x="33" y="9" width="214" height="14" />
+                  </frame>
+                  <frame id="386:1766" name="Kbd" x="255.7734375" y="6" width="25" height="20">
+                    <text id="386:1767" name="⌘K" x="5" y="2" width="15" height="16" />
+                  </frame>
+                </frame>
+                <frame id="386:1768" name="Container" x="296" y="0" width="96" height="32">
+                  <frame id="386:1769" name="Button" x="0" y="0" width="32" height="32">
+                    <frame id="386:1770" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="386:1774" name="Button" x="32" y="0" width="32" height="32">
+                    <frame id="386:1775" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="386:1780" name="Button" x="64" y="0" width="32" height="32">
+                    <frame id="386:1781" name="Icon" x="8" y="8" width="16" height="16" />
+                    <frame id="386:1784" name="App" x="19" y="7" width="6" height="6" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="386:1785" name="Main Content" x="0" y="48" width="1313" height="1007">
+            <frame id="386:1786" name="Container:margin" x="0" y="0" width="1313" height="1007">
+              <frame id="386:1787" name="Container" x="16.5" y="0" width="1280" height="1007">
+                <frame id="386:1788" name="Container" x="32" y="24" width="1216" height="36">
+                  <frame id="386:1789" name="Heading 1" x="0" y="8" width="87" height="28">
+                    <text id="386:1790" name="Inventory" x="0" y="0" width="87" height="28" />
+                  </frame>
+                  <frame id="386:1791" name="Container" x="1012" y="8" width="204" height="28">
+                    <frame id="405:5205" name="Frame 8" x="0" y="0" width="204" height="28">
+                      <frame id="405:5206" name="Button" x="0" y="0" width="103" height="28">
+                        <frame id="405:5207" name="Icon" x="11" y="7" width="14" height="14" />
+                        <text id="405:5211" name="Bulk Import" x="29" y="6" width="63" height="16" />
+                      </frame>
+                      <frame id="405:5212" name="Button" x="111" y="0" width="93" height="28">
+                        <frame id="405:5213" name="Icon" x="11" y="7" width="14" height="14" />
+                        <text id="405:5216" name="New Item" x="29" y="6" width="53" height="16" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="386:1804" name="Container" x="32" y="60" width="1216" height="48">
+                  <frame id="405:5133" name="CompositeRoot" x="0" y="12" width="380" height="32">
+                    <frame id="405:5134" name="TabsTab" x="3" y="3.5" width="76.11116027832031" height="25">
+                      <text id="405:5135" name="Inventory" x="12.055580139160156" y="4.5" width="52" height="16" />
+                    </frame>
+                    <frame id="405:5136" name="TabsTab" x="79.11116027832031" y="3.5" width="74.52919006347656" height="25">
+                      <text id="405:5137" name="Analytics" x="12.264595031738281" y="4.5" width="50" height="16" />
+                    </frame>
+                    <frame id="405:5138" name="TabsTab" x="153.64035034179688" y="3.5" width="111.84615325927734" height="25">
+                      <text id="405:5139" name="Inventory Spend" x="10.923076629638672" y="4.5" width="90" height="16" />
+                    </frame>
+                    <frame id="405:5140" name="TabsTab" x="265.48651123046875" y="3.5" width="111.51349639892578" height="25">
+                      <text id="405:5141" name="Inventory Check" x="10.75674819946289" y="4.5" width="90" height="16" />
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="387:1592" name="Band • Capital" x="32" y="108" width="1216" height="123">
+                  <frame id="387:1593" name="Card • Capital tied up" x="0" y="20" width="292" height="103">
+                    <frame id="387:1594" name="CardContent" x="0" y="0" width="292" height="103">
+                      <frame id="387:1595" name="Frame" x="16" y="14" width="260" height="14">
+                        <text id="387:1596" name="Capital tied up" x="0" y="0" width="80" height="14" />
+                      </frame>
+                      <text id="387:1597" name="163.502 €" x="16" y="32" width="136" height="37" />
+                      <text id="387:1598" name="in finished goods on hand" x="16" y="73" width="138" height="14" />
+                    </frame>
+                  </frame>
+                  <frame id="387:1599" name="Card • Returned in 90 days" x="308" y="20" width="292" height="103">
+                    <frame id="387:1600" name="CardContent" x="0" y="0" width="292" height="103">
+                      <frame id="387:1601" name="Frame" x="16" y="14" width="260" height="14">
+                        <text id="387:1602" name="Returned in 90 days" x="0" y="0" width="109" height="14" />
+                        <frame id="387:1603" name="Spacer" x="109" y="6.5" width="143" height="1" />
+                        <rounded-rectangle id="387:1604" name="Rectangle" x="252" y="3" width="8" height="8" />
+                      </frame>
+                      <text id="387:1605" name="669,38 €" x="16" y="32" width="125" height="37" />
+                      <text id="387:1606" name="0,4% of the stock value" x="16" y="73" width="126" height="14" />
+                    </frame>
+                  </frame>
+                  <frame id="387:1607" name="Card • Cost of what left" x="616" y="20" width="292" height="103">
+                    <frame id="387:1608" name="CardContent" x="0" y="0" width="292" height="103">
+                      <frame id="387:1609" name="Frame" x="16" y="14" width="260" height="14">
+                        <text id="387:1610" name="Cost of what left" x="0" y="0" width="92" height="14" />
+                      </frame>
+                      <text id="387:1611" name="246,60 €" x="16" y="32" width="126" height="37" />
+                      <text id="387:1612" name="against 669,38 € revenue" x="16" y="73" width="136" height="14" />
+                    </frame>
+                  </frame>
+                  <frame id="387:1613" name="Card • Sitting untouched" x="924" y="20" width="292" height="103">
+                    <frame id="387:1614" name="CardContent" x="0" y="0" width="292" height="103">
+                      <frame id="387:1615" name="Frame" x="16" y="14" width="260" height="14">
+                        <text id="387:1616" name="Sitting untouched" x="0" y="0" width="98" height="14" />
+                        <frame id="387:1617" name="Spacer" x="98" y="6.5" width="154" height="1" />
+                        <rounded-rectangle id="387:1618" name="Rectangle" x="252" y="3" width="8" height="8" />
+                      </frame>
+                      <text id="387:1619" name="148.000 €" x="16" y="32" width="143" height="37" />
+                      <text id="387:1620" name="4 of 6 wines, no exits" x="16" y="73" width="113" height="14" />
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="387:1621" name="Band • Flow" x="32" y="231" width="1216" height="253">
+                  <frame id="387:1622" name="Card • Daily volume" x="0" y="16" width="840" height="237">
+                    <frame id="387:1623" name="CardHeader" x="0" y="0" width="840" height="59">
+                      <frame id="387:1624" name="Frame" x="16" y="14" width="239" height="33">
+                        <text id="387:1625" name="Bottles leaving per day" x="0" y="0" width="146" height="17" />
+                        <text id="387:1626" name="29 bottles across 12 days — the whole cellar" x="0" y="19" width="239" height="14" />
+                      </frame>
+                      <frame id="387:1627" name="Spacer" x="255" y="30" width="514" height="1" />
+                      <text id="387:1628" name="1 – 12 Aug" x="769" y="23.5" width="55" height="14" />
+                    </frame>
+                    <frame id="387:1629" name="ChartContainer" x="0" y="59" width="840" height="146">
+                      <frame id="387:1630" name="Frame" x="16" y="18" width="30" height="120">
+                        <text id="387:1631" name="16" x="18" y="0" width="12" height="14" />
+                        <text id="387:1632" name="12" x="18" y="26.5" width="12" height="14" />
+                        <text id="387:1633" name="8" x="22" y="53" width="8" height="14" />
+                        <text id="387:1634" name="4" x="22" y="79.5" width="8" height="14" />
+                        <text id="387:1635" name="0" x="22" y="106" width="8" height="14" />
+                      </frame>
+                      <frame id="387:1636" name="Frame" x="56" y="18" width="768" height="120">
+                        <frame id="387:1637" name="Frame" x="0" y="0" width="56.66666793823242" height="120">
+                          <rounded-rectangle id="387:1638" name="Rectangle" x="0" y="118" width="56.66666793823242" height="2" />
+                        </frame>
+                        <frame id="387:1639" name="Frame" x="64.66667175292969" y="0" width="56.666664123535156" height="120">
+                          <rounded-rectangle id="387:1640" name="Rectangle" x="0" y="118" width="56.666664123535156" height="2" />
+                        </frame>
+                        <frame id="387:1641" name="Frame" x="129.33334350585938" y="0" width="56.666664123535156" height="120">
+                          <rounded-rectangle id="387:1642" name="Rectangle" x="0" y="82" width="56.666664123535156" height="38" />
+                        </frame>
+                        <frame id="387:1643" name="Frame" x="194" y="0" width="56.666664123535156" height="120">
+                          <rounded-rectangle id="387:1644" name="Rectangle" x="0" y="118" width="56.666664123535156" height="2" />
+                        </frame>
+                        <frame id="387:1645" name="Frame" x="258.6666564941406" y="0" width="56.666664123535156" height="120">
+                          <rounded-rectangle id="387:1646" name="Rectangle" x="0" y="30" width="56.666664123535156" height="90" />
+                        </frame>
+                        <frame id="387:1647" name="Frame" x="323.33331298828125" y="0" width="56.666664123535156" height="120">
+                          <rounded-rectangle id="387:1648" name="Rectangle" x="0" y="118" width="56.666664123535156" height="2" />
+                        </frame>
+                        <frame id="387:1649" name="Frame" x="387.9999694824219" y="0" width="56.66666793823242" height="120">
+                          <rounded-rectangle id="387:1650" name="Rectangle" x="0" y="118" width="56.66666793823242" height="2" />
+                        </frame>
+                        <frame id="387:1651" name="Frame" x="452.6666259765625" y="0" width="56.66666793823242" height="120">
+                          <rounded-rectangle id="387:1652" name="Rectangle" x="0" y="90" width="56.66666793823242" height="30" />
+                        </frame>
+                        <frame id="387:1653" name="Frame" x="517.3333129882812" y="0" width="56.66666793823242" height="120">
+                          <rounded-rectangle id="387:1654" name="Rectangle" x="0" y="118" width="56.66666793823242" height="2" />
+                        </frame>
+                        <frame id="387:1655" name="Frame" x="582" y="0" width="56.66666793823242" height="120">
+                          <rounded-rectangle id="387:1656" name="Rectangle" x="0" y="60" width="56.66666793823242" height="60" />
+                        </frame>
+                        <frame id="387:1657" name="Frame" x="646.6666870117188" y="0" width="56.666664123535156" height="120">
+                          <rounded-rectangle id="387:1658" name="Rectangle" x="0" y="118" width="56.666664123535156" height="2" />
+                        </frame>
+                        <frame id="387:1659" name="Frame" x="711.3333740234375" y="0" width="56.666664123535156" height="120">
+                          <rounded-rectangle id="387:1660" name="Rectangle" x="0" y="118" width="56.666664123535156" height="2" />
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="387:1661" name="Frame" x="0" y="205" width="840" height="32">
+                      <frame id="387:1662" name="Frame" x="56" y="4" width="56.66666793823242" height="14">
+                        <text id="387:1663" name="01.08" x="12.833333969116211" y="0" width="31" height="14" />
+                      </frame>
+                      <frame id="387:1664" name="Frame" x="120.66667175292969" y="4" width="56.666664123535156" height="14">
+                        <text id="387:1665" name="02.08" x="12.333332061767578" y="0" width="32" height="14" />
+                      </frame>
+                      <frame id="387:1666" name="Frame" x="185.33334350585938" y="4" width="56.666664123535156" height="14">
+                        <text id="387:1667" name="03.08" x="12.333332061767578" y="0" width="32" height="14" />
+                      </frame>
+                      <frame id="387:1668" name="Frame" x="250" y="4" width="56.666664123535156" height="14">
+                        <text id="387:1669" name="04.08" x="11.833332061767578" y="0" width="33" height="14" />
+                      </frame>
+                      <frame id="387:1670" name="Frame" x="314.6666564941406" y="4" width="56.666664123535156" height="14">
+                        <text id="387:1671" name="05.08" x="11.833332061767578" y="0" width="33" height="14" />
+                      </frame>
+                      <frame id="387:1672" name="Frame" x="379.33331298828125" y="4" width="56.666664123535156" height="14">
+                        <text id="387:1673" name="06.08" x="11.833332061767578" y="0" width="33" height="14" />
+                      </frame>
+                      <frame id="387:1674" name="Frame" x="443.9999694824219" y="4" width="56.66666793823242" height="14">
+                        <text id="387:1675" name="07.08" x="12.333333969116211" y="0" width="32" height="14" />
+                      </frame>
+                      <frame id="387:1676" name="Frame" x="508.6666259765625" y="4" width="56.66666793823242" height="14">
+                        <text id="387:1677" name="08.08" x="11.833333969116211" y="0" width="33" height="14" />
+                      </frame>
+                      <frame id="387:1678" name="Frame" x="573.3333129882812" y="4" width="56.66666793823242" height="14">
+                        <text id="387:1679" name="09.08" x="11.833333969116211" y="0" width="33" height="14" />
+                      </frame>
+                      <frame id="387:1680" name="Frame" x="638" y="4" width="56.66666793823242" height="14">
+                        <text id="387:1681" name="10.08" x="12.833333969116211" y="0" width="31" height="14" />
+                      </frame>
+                      <frame id="387:1682" name="Frame" x="702.6666870117188" y="4" width="56.666664123535156" height="14">
+                        <text id="387:1683" name="11.08" x="14.333332061767578" y="0" width="28" height="14" />
+                      </frame>
+                      <frame id="387:1684" name="Frame" x="767.3333740234375" y="4" width="56.666664123535156" height="14">
+                        <text id="387:1685" name="12.08" x="13.333332061767578" y="0" width="30" height="14" />
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="387:1686" name="Card • What the movement earned" x="856" y="16" width="360" height="237">
+                    <frame id="387:1687" name="CardHeader" x="0" y="0" width="360" height="43">
+                      <frame id="387:1688" name="Frame" x="16" y="14" width="95" height="17">
+                        <text id="387:1689" name="What it earned" x="0" y="0" width="95" height="17" />
+                      </frame>
+                      <frame id="387:1690" name="Spacer" x="111" y="22" width="233" height="1" />
+                    </frame>
+                    <frame id="387:1691" name="CardContent" x="0" y="43" width="360" height="194">
+                      <text id="387:1692" name="669,38 €" x="16" y="16" width="125" height="37" />
+                      <frame id="387:1693" name="Frame" x="16" y="65" width="328" height="14">
+                        <rounded-rectangle id="387:1694" name="Rectangle" x="0" y="0" width="210" height="14" />
+                        <rounded-rectangle id="387:1695" name="Rectangle" x="212" y="0" width="118" height="14" />
+                      </frame>
+                      <frame id="387:1696" name="Frame" x="16" y="91" width="328" height="14">
+                        <rounded-rectangle id="387:1697" name="Rectangle" x="0" y="3" width="8" height="8" />
+                        <text id="387:1698" name="Gross profit" x="16" y="0" width="65" height="14" />
+                        <frame id="387:1699" name="Spacer" x="89" y="6.5" width="137" height="1" />
+                        <text id="387:1700" name="422,78 € · 63,1%" x="234" y="0" width="94" height="14" />
+                      </frame>
+                      <frame id="387:1701" name="Frame" x="16" y="117" width="328" height="14">
+                        <rounded-rectangle id="387:1702" name="Rectangle" x="0" y="3" width="8" height="8" />
+                        <text id="387:1703" name="Cost of goods" x="16" y="0" width="77" height="14" />
+                        <frame id="387:1704" name="Spacer" x="101" y="6.5" width="122" height="1" />
+                        <text id="387:1705" name="246,60 € · 36,9%" x="231" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="387:1706" name="Frame" x="16" y="143" width="328" height="38">
+                        <text id="387:1707" name="Two SKUs produced all of it — Kosa Plavac 613,68 € and Rožica Debit 55,70 €." x="0" y="10" width="329" height="28" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="387:1708" name="Band • Depletion" x="32" y="484" width="1216" height="399">
+                  <frame id="387:1709" name="Card • Depletion and return" x="0" y="16" width="1216" height="383">
+                    <frame id="387:1710" name="CardHeader" x="0" y="0" width="1216" height="59">
+                      <frame id="387:1711" name="Frame" x="16" y="14" width="325" height="33">
+                        <text id="387:1712" name="Depletion and return by product" x="0" y="0" width="205" height="17" />
+                        <text id="387:1713" name="Runout forecast and per-product exit, merged into one table" x="0" y="19" width="325" height="14" />
+                      </frame>
+                      <frame id="387:1714" name="Spacer" x="341" y="30" width="823" height="1" />
+                      <text id="387:1715" name="Export" x="1164" y="23.5" width="36" height="14" />
+                    </frame>
+                    <frame id="387:1716" name="TableHeader" x="0" y="59" width="1216" height="36">
+                      <frame id="387:1717" name="Cell" x="16" y="11" width="250" height="14">
+                        <text id="387:1718" name="Product" x="0" y="0" width="44" height="14" />
+                      </frame>
+                      <frame id="387:1719" name="Cell" x="266" y="11" width="112" height="14">
+                        <text id="387:1720" name="SKU" x="0" y="0" width="24" height="14" />
+                      </frame>
+                      <frame id="387:1721" name="Cell" x="378" y="11" width="84" height="14">
+                        <text id="387:1722" name="On hand" x="0" y="0" width="46" height="14" />
+                      </frame>
+                      <frame id="387:1723" name="Cell" x="462" y="11" width="78" height="14">
+                        <text id="387:1724" name="Left 90d" x="0" y="0" width="47" height="14" />
+                      </frame>
+                      <frame id="387:1725" name="Cell" x="540" y="11" width="70" height="14">
+                        <text id="387:1726" name="Per day" x="0" y="0" width="41" height="14" />
+                      </frame>
+                      <frame id="387:1727" name="Cell" x="610" y="11" width="140" height="14">
+                        <text id="387:1728" name="Cover" x="0" y="0" width="33" height="14" />
+                      </frame>
+                      <frame id="387:1729" name="Cell" x="750" y="11" width="90" height="14">
+                        <text id="387:1730" name="Cost" x="0" y="0" width="26" height="14" />
+                      </frame>
+                      <frame id="387:1731" name="Cell" x="840" y="11" width="96" height="14">
+                        <text id="387:1732" name="Revenue" x="0" y="0" width="47" height="14" />
+                      </frame>
+                      <frame id="387:1733" name="Cell" x="936" y="11" width="264" height="14">
+                        <text id="387:1734" name="Signal" x="0" y="0" width="33" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="387:1735" name="TableRow" x="0" y="95" width="1216" height="48">
+                      <frame id="387:1736" name="Cell" x="16" y="9" width="250" height="30">
+                        <text id="387:1737" name="Kosa Plavac" x="0" y="0" width="64" height="14" />
+                        <text id="387:1738" name="2021" x="0" y="16" width="27" height="14" />
+                      </frame>
+                      <frame id="387:1739" name="Cell" x="266" y="17" width="112" height="14">
+                        <text id="387:1740" name="VT-KPL-21" x="0" y="0" width="58" height="14" />
+                      </frame>
+                      <frame id="387:1741" name="Cell" x="378" y="17" width="84" height="14">
+                        <text id="387:1742" name="956" x="0" y="0" width="21" height="14" />
+                      </frame>
+                      <frame id="387:1743" name="Cell" x="462" y="17" width="78" height="14">
+                        <text id="387:1744" name="24" x="0" y="0" width="15" height="14" />
+                      </frame>
+                      <frame id="387:1745" name="Cell" x="540" y="17" width="70" height="14">
+                        <text id="387:1746" name="2,00" x="0" y="0" width="25" height="14" />
+                      </frame>
+                      <frame id="387:1747" name="Cell" x="610" y="17" width="140" height="14">
+                        <text id="387:1748" name="About 16 months" x="0" y="0" width="92" height="14" />
+                      </frame>
+                      <frame id="387:1749" name="Cell" x="750" y="17" width="90" height="14">
+                        <text id="387:1750" name="220,80 €" x="0" y="0" width="50" height="14" />
+                      </frame>
+                      <frame id="387:1751" name="Cell" x="840" y="17" width="96" height="14">
+                        <text id="387:1752" name="613,68 €" x="0" y="0" width="47" height="14" />
+                      </frame>
+                      <frame id="387:1753" name="Cell" x="936" y="17" width="264" height="14">
+                        <text id="387:1754" name="Only SKU with a usable rate" x="0" y="0" width="149" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="387:1755" name="TableRow" x="0" y="143" width="1216" height="48">
+                      <frame id="387:1756" name="Cell" x="16" y="9" width="250" height="30">
+                        <text id="387:1757" name="Rožica Debit" x="0" y="0" width="69" height="14" />
+                        <text id="387:1758" name="2023" x="0" y="16" width="28" height="14" />
+                      </frame>
+                      <frame id="387:1759" name="Cell" x="266" y="17" width="112" height="14">
+                        <text id="387:1760" name="VT-RDB-23" x="0" y="0" width="62" height="14" />
+                      </frame>
+                      <frame id="387:1761" name="Cell" x="378" y="17" width="84" height="14">
+                        <text id="387:1762" name="1.275" x="0" y="0" width="28" height="14" />
+                      </frame>
+                      <frame id="387:1763" name="Cell" x="462" y="17" width="78" height="14">
+                        <text id="387:1764" name="5" x="0" y="0" width="7" height="14" />
+                      </frame>
+                      <frame id="387:1765" name="Cell" x="540" y="17" width="70" height="14">
+                        <text id="387:1766" name="0,42" x="0" y="0" width="25" height="14" />
+                      </frame>
+                      <frame id="387:1767" name="Cell" x="610" y="17" width="140" height="14">
+                        <text id="387:1768" name="Beyond forecast horizon" x="0" y="0" width="132" height="14" />
+                      </frame>
+                      <frame id="387:1769" name="Cell" x="750" y="17" width="90" height="14">
+                        <text id="387:1770" name="21,00 €" x="0" y="0" width="41" height="14" />
+                      </frame>
+                      <frame id="387:1771" name="Cell" x="840" y="17" width="96" height="14">
+                        <text id="387:1772" name="55,70 €" x="0" y="0" width="42" height="14" />
+                      </frame>
+                      <frame id="387:1773" name="Cell" x="936" y="17" width="264" height="14">
+                        <text id="387:1774" name="Holding 255× its 90-day movement" x="0" y="0" width="192" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="387:1775" name="TableRow" x="0" y="191" width="1216" height="48">
+                      <frame id="387:1776" name="Cell" x="16" y="9" width="250" height="30">
+                        <text id="387:1777" name="Žuti Vapor" x="0" y="0" width="58" height="14" />
+                        <text id="387:1778" name="2024" x="0" y="16" width="29" height="14" />
+                      </frame>
+                      <frame id="387:1779" name="Cell" x="266" y="17" width="112" height="14">
+                        <text id="387:1780" name="VT-ZVP-24" x="0" y="0" width="63" height="14" />
+                      </frame>
+                      <frame id="387:1781" name="Cell" x="378" y="17" width="84" height="14">
+                        <text id="387:1782" name="2.050" x="0" y="0" width="32" height="14" />
+                      </frame>
+                      <frame id="387:1783" name="Cell" x="462" y="17" width="78" height="14">
+                        <text id="387:1784" name="0" x="0" y="0" width="8" height="14" />
+                      </frame>
+                      <frame id="387:1785" name="Cell" x="540" y="17" width="70" height="14">
+                        <text id="387:1786" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="387:1787" name="Cell" x="610" y="17" width="140" height="14">
+                        <text id="387:1788" name="No exits recorded" x="0" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="387:1789" name="Cell" x="750" y="17" width="90" height="14">
+                        <text id="387:1790" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="387:1791" name="Cell" x="840" y="17" width="96" height="14">
+                        <text id="387:1792" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="387:1793" name="Cell" x="936" y="17" width="264" height="14">
+                        <text id="387:1794" name="Largest holding, nothing out" x="0" y="0" width="152" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="387:1795" name="TableRow" x="0" y="239" width="1216" height="48">
+                      <frame id="387:1796" name="Cell" x="16" y="9" width="250" height="30">
+                        <text id="387:1797" name="Ostro Crna" x="0" y="0" width="60" height="14" />
+                        <text id="387:1798" name="2023" x="0" y="16" width="28" height="14" />
+                      </frame>
+                      <frame id="387:1799" name="Cell" x="266" y="17" width="112" height="14">
+                        <text id="387:1800" name="VT-OCR-23" x="0" y="0" width="64" height="14" />
+                      </frame>
+                      <frame id="387:1801" name="Cell" x="378" y="17" width="84" height="14">
+                        <text id="387:1802" name="1.820" x="0" y="0" width="30" height="14" />
+                      </frame>
+                      <frame id="387:1803" name="Cell" x="462" y="17" width="78" height="14">
+                        <text id="387:1804" name="0" x="0" y="0" width="8" height="14" />
+                      </frame>
+                      <frame id="387:1805" name="Cell" x="540" y="17" width="70" height="14">
+                        <text id="387:1806" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="387:1807" name="Cell" x="610" y="17" width="140" height="14">
+                        <text id="387:1808" name="No exits recorded" x="0" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="387:1809" name="Cell" x="750" y="17" width="90" height="14">
+                        <text id="387:1810" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="387:1811" name="Cell" x="840" y="17" width="96" height="14">
+                        <text id="387:1812" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="387:1813" name="Cell" x="936" y="17" width="264" height="14">
+                        <text id="387:1814" name="Mediteran bought 169 btl" x="0" y="0" width="136" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="387:1815" name="TableRow" x="0" y="287" width="1216" height="48">
+                      <frame id="387:1816" name="Cell" x="16" y="9" width="250" height="30">
+                        <text id="387:1817" name="Velika Bjelica" x="0" y="0" width="71" height="14" />
+                        <text id="387:1818" name="2022" x="0" y="16" width="28" height="14" />
+                      </frame>
+                      <frame id="387:1819" name="Cell" x="266" y="17" width="112" height="14">
+                        <text id="387:1820" name="VT-VBJ-22" x="0" y="0" width="61" height="14" />
+                      </frame>
+                      <frame id="387:1821" name="Cell" x="378" y="17" width="84" height="14">
+                        <text id="387:1822" name="1.450" x="0" y="0" width="30" height="14" />
+                      </frame>
+                      <frame id="387:1823" name="Cell" x="462" y="17" width="78" height="14">
+                        <text id="387:1824" name="0" x="0" y="0" width="8" height="14" />
+                      </frame>
+                      <frame id="387:1825" name="Cell" x="540" y="17" width="70" height="14">
+                        <text id="387:1826" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="387:1827" name="Cell" x="610" y="17" width="140" height="14">
+                        <text id="387:1828" name="No exits recorded" x="0" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="387:1829" name="Cell" x="750" y="17" width="90" height="14">
+                        <text id="387:1830" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="387:1831" name="Cell" x="840" y="17" width="96" height="14">
+                        <text id="387:1832" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="387:1833" name="Cell" x="936" y="17" width="264" height="14">
+                        <text id="387:1834" name="Mediteran bought 185 btl" x="0" y="0" width="136" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="387:1835" name="TableRow" x="0" y="335" width="1216" height="48">
+                      <frame id="387:1836" name="Cell" x="16" y="9" width="250" height="30">
+                        <text id="387:1837" name="Pelješki Stari Vinograd" x="0" y="0" width="122" height="14" />
+                        <text id="387:1838" name="2020" x="0" y="16" width="29" height="14" />
+                      </frame>
+                      <frame id="387:1839" name="Cell" x="266" y="17" width="112" height="14">
+                        <text id="387:1840" name="VT-PSV-20" x="0" y="0" width="62" height="14" />
+                      </frame>
+                      <frame id="387:1841" name="Cell" x="378" y="17" width="84" height="14">
+                        <text id="387:1842" name="420" x="0" y="0" width="22" height="14" />
+                      </frame>
+                      <frame id="387:1843" name="Cell" x="462" y="17" width="78" height="14">
+                        <text id="387:1844" name="0" x="0" y="0" width="8" height="14" />
+                      </frame>
+                      <frame id="387:1845" name="Cell" x="540" y="17" width="70" height="14">
+                        <text id="387:1846" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="387:1847" name="Cell" x="610" y="17" width="140" height="14">
+                        <text id="387:1848" name="No exits recorded" x="0" y="0" width="97" height="14" />
+                      </frame>
+                      <frame id="387:1849" name="Cell" x="750" y="17" width="90" height="14">
+                        <text id="387:1850" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="387:1851" name="Cell" x="840" y="17" width="96" height="14">
+                        <text id="387:1852" name="—" x="0" y="0" width="14" height="14" />
+                      </frame>
+                      <frame id="387:1853" name="Cell" x="936" y="9" width="264" height="30">
+                        <text id="387:1854" name="Lowest stock, no min stock set" x="0" y="0" width="167" height="14" />
+                        <text id="387:1855" name="no alert will fire" x="0" y="16" width="82" height="14" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="387:1860" name="Band • No data" x="32" y="883" width="1216" height="100">
+                  <frame id="387:1861" name="EmptyState" x="0" y="16" width="1216" height="76">
+                    <frame id="387:1862" name="Frame" x="20" y="20" width="36" height="36">
+                      <text id="387:1863" name="—" x="10" y="9.5" width="16" height="17" />
+                    </frame>
+                    <frame id="387:1864" name="Frame" x="72" y="21" width="951" height="34">
+                      <text id="387:1865" name="Four wines have no spend or return to report" x="0" y="0" width="284" height="17" />
+                      <text id="387:1866" name="They all appear in shipped orders, so this is the broken order → stock link, not an absence of trade. 148.000 € of the 163.502 € on hand sits in these four." x="0" y="20" width="812" height="14" />
+                    </frame>
+                    <frame id="387:1867" name="Button" x="1039" y="23" width="157" height="30">
+                      <text id="387:1868" name="Check order → stock link" x="12" y="8" width="133" height="14" />
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+    </frame>

@@ -1,0 +1,102 @@
+    <frame id="322:848" name="Customer — Create — Advanced open" x="660" y="1428" width="480" height="1615">
+      <frame id="322:849" name="FormHeader" x="0" y="0" width="480" height="64">
+        <text id="322:850" name="New customer" x="24" y="20" width="419" height="24" />
+        <text id="322:851" name="✕" x="443" y="22" width="13" height="20" />
+      </frame>
+      <frame id="322:852" name="Separator" x="0" y="64" width="480" height="1" />
+      <frame id="322:853" name="FormBody" x="0" y="65" width="480" height="1465">
+        <frame id="322:854" name="FormSection" x="24" y="24" width="432" height="120">
+          <text id="322:855" name="SectionHeader" x="0" y="0" width="64" height="20" />
+          <frame id="322:856" name="LookupField" x="0" y="36" width="432" height="84">
+            <instance id="322:857" name="label" x="0" y="0" width="76" height="20" />
+            <frame id="322:858" name="Container" x="0" y="26" width="432" height="36">
+              <instance id="322:859" name="Default" x="0" y="0" width="349" height="36" />
+              <frame id="322:860" name="Button" x="357" y="0" width="75" height="34">
+                <text id="322:861" name="Look up" x="12" y="7" width="51" height="20" />
+              </frame>
+            </frame>
+            <text id="322:862" name="Enter a Croatian OIB or EU VAT number to auto-fill name and address." x="0" y="68" width="432" height="16" />
+          </frame>
+        </frame>
+        <frame id="322:863" name="Separator" x="24" y="168" width="432" height="1" />
+        <frame id="322:864" name="FormSection" x="24" y="193" width="432" height="332">
+          <text id="322:865" name="SectionHeader" x="0" y="0" width="67" height="20" />
+          <instance id="322:866" name="Field" x="0" y="36" width="432" height="62" />
+          <instance id="322:867" name="Field" x="0" y="114" width="432" height="62" />
+          <instance id="322:868" name="Field" x="0" y="192" width="432" height="62" />
+          <frame id="322:869" name="FieldRow" x="0" y="270" width="432" height="62">
+            <instance id="322:870" name="Field" x="0" y="0" width="208" height="62" />
+            <instance id="322:871" name="Field" x="224" y="0" width="208" height="62" />
+          </frame>
+        </frame>
+        <frame id="322:872" name="Separator" x="24" y="549" width="432" height="1" />
+        <frame id="322:873" name="FormSection" x="24" y="574" width="432" height="254">
+          <text id="322:874" name="SectionHeader" x="0" y="0" width="67" height="20" />
+          <instance id="322:875" name="Field" x="0" y="36" width="432" height="62" />
+          <frame id="322:876" name="FieldRow" x="0" y="114" width="432" height="62">
+            <instance id="322:877" name="Field" x="0" y="0" width="208" height="62" />
+            <instance id="322:878" name="Field" x="224" y="0" width="208" height="62" />
+          </frame>
+          <frame id="322:879" name="FieldRow" x="0" y="192" width="432" height="62">
+            <instance id="322:880" name="Field" x="0" y="0" width="208" height="62" />
+            <instance id="322:881" name="Field" x="224" y="0" width="208" height="62" />
+          </frame>
+        </frame>
+        <frame id="322:882" name="Separator" x="24" y="852" width="432" height="1" />
+        <frame id="322:883" name="FormSection" x="24" y="877" width="432" height="120">
+          <text id="322:884" name="SectionHeader" x="0" y="0" width="56" height="20" />
+          <frame id="322:885" name="FieldRow" x="0" y="36" width="432" height="84">
+            <instance id="322:886" name="Field" x="0" y="0" width="208" height="62" />
+            <instance id="322:887" name="Field" x="224" y="0" width="208" height="84" />
+          </frame>
+        </frame>
+        <frame id="322:888" name="Separator" x="24" y="1021" width="432" height="1" />
+        <frame id="322:997" name="Disclosure" x="24" y="1046" width="432" height="395">
+          <frame id="322:998" name="DisclosureHeader" x="0" y="0" width="432" height="40">
+            <text id="322:999" name="Advanced settings" x="12" y="10" width="382" height="20" />
+            <text id="322:1000" name="Hide" x="394" y="12" width="26" height="16" />
+          </frame>
+          <frame id="322:1001" name="Separator" x="0" y="40" width="432" height="1" />
+          <frame id="322:1002" name="DisclosureBody" x="0" y="41" width="432" height="354">
+            <frame id="322:795" name="SwitchRow" x="12" y="16" width="408" height="38">
+              <frame id="322:796" name="Container" x="0" y="0" width="356" height="38">
+                <text id="322:797" name="Exclude from statistics" x="0" y="0" width="144" height="20" />
+                <text id="322:798" name="Orders won&#39;t count in dashboard analytics." x="0" y="22" width="356" height="16" />
+              </frame>
+              <instance id="322:799" name="Switch" x="356" y="0" width="52" height="24" />
+            </frame>
+            <frame id="322:805" name="SwitchRow" x="12" y="70" width="408" height="38">
+              <frame id="322:806" name="Container" x="0" y="0" width="344" height="38">
+                <text id="322:807" name="Hide prices on order link" x="0" y="0" width="153" height="20" />
+                <text id="322:808" name="Prices won&#39;t show on the self-service order page." x="0" y="22" width="344" height="16" />
+              </frame>
+              <instance id="322:809" name="Switch" x="356" y="0" width="52" height="24" />
+            </frame>
+            <frame id="322:815" name="SwitchRow" x="12" y="124" width="408" height="38">
+              <frame id="322:816" name="Container" x="0" y="0" width="344" height="38">
+                <text id="322:817" name="Agency" x="0" y="0" width="49" height="20" />
+                <text id="322:818" name="This customer is a hospitality booking agency." x="0" y="22" width="344" height="16" />
+              </frame>
+              <instance id="322:819" name="Switch" x="356" y="0" width="52" height="24" />
+            </frame>
+            <frame id="322:825" name="SwitchRow" x="12" y="178" width="408" height="38">
+              <frame id="322:826" name="Container" x="0" y="0" width="344" height="38">
+                <text id="322:827" name="Allow single bottle orders" x="0" y="0" width="161" height="20" />
+                <text id="322:828" name="Customer can choose case or single bottle on the portal." x="0" y="22" width="344" height="16" />
+              </frame>
+              <instance id="322:829" name="Switch" x="356" y="0" width="52" height="24" />
+            </frame>
+            <instance id="322:835" name="Field" x="12" y="232" width="408" height="106" />
+          </frame>
+        </frame>
+      </frame>
+      <frame id="322:894" name="Separator" x="0" y="1530" width="480" height="1" />
+      <frame id="322:895" name="FormFooter" x="0" y="1531" width="480" height="84">
+        <frame id="322:896" name="Button" x="249" y="24" width="68" height="36">
+          <text id="322:897" name="Cancel" x="12" y="8" width="44" height="20" />
+        </frame>
+        <frame id="322:898" name="Button" x="325" y="24" width="131" height="36">
+          <text id="322:899" name="Create customer" x="12" y="8" width="107" height="20" />
+        </frame>
+      </frame>
+    </frame>

@@ -1,0 +1,443 @@
+    <frame id="382:1592" name="Analytics" x="4433" y="100" width="1369" height="965">
+      <frame id="382:1593" name="App" x="0" y="0" width="1369" height="965">
+        <frame id="382:1594" name="NavRail" x="0" y="0" width="56" height="965">
+          <frame id="382:1595" name="Container" x="11.5" y="0" width="32" height="48">
+            <frame id="382:1596" name="Container" x="0" y="8" width="32" height="32">
+              <frame id="382:1597" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+          </frame>
+          <frame id="382:1607" name="Navigation" x="7.5" y="48" width="40" height="869">
+            <frame id="382:1608" name="PreviewCardTrigger" x="0" y="8" width="40" height="40">
+              <frame id="382:1609" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="382:1614" name="PreviewCardTrigger" x="0" y="52" width="40" height="40">
+              <frame id="382:1615" name="ShortcutsFlyout" x="0" y="0" width="40" height="40">
+                <frame id="382:1616" name="Icon" x="11" y="11" width="18" height="18" />
+              </frame>
+            </frame>
+            <frame id="382:1619" name="PreviewCardTrigger" x="0" y="96" width="40" height="40">
+              <frame id="382:1620" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="382:1624" name="PreviewCardTrigger" x="0" y="140" width="40" height="40">
+              <frame id="382:1625" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="382:1630" name="PreviewCardTrigger" x="0" y="184" width="40" height="40">
+              <frame id="382:1631" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="382:1636" name="PreviewCardTrigger" x="0" y="228" width="40" height="40">
+              <frame id="382:1637" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="382:1650" name="PreviewCardTrigger" x="0" y="272" width="40" height="40">
+              <frame id="382:1651" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="382:1655" name="PreviewCardTrigger" x="0" y="316" width="40" height="40">
+              <frame id="382:1656" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+            <frame id="382:1661" name="PreviewCardTrigger" x="0" y="360" width="40" height="40">
+              <frame id="382:1662" name="Icon" x="11" y="11" width="18" height="18" />
+            </frame>
+          </frame>
+          <frame id="382:1665" name="Container" x="7.5" y="917" width="40" height="48">
+            <frame id="382:1666" name="Button" x="0" y="4.5" width="40" height="40">
+              <frame id="382:1667" name="AvatarRoot" x="4" y="4" width="32" height="32">
+                <frame id="382:1668" name="AvatarFallback" x="0" y="0" width="32" height="32">
+                  <text id="382:1669" name="FD" x="8.5" y="8" width="15" height="16" />
+                </frame>
+                <frame id="382:1670" name="Text" x="0" y="0" width="32" height="32" />
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+        <frame id="382:1671" name="Container" x="56" y="0" width="1313" height="965">
+          <frame id="382:1672" name="Header" x="0" y="0" width="1313" height="48">
+            <frame id="382:1673" name="Button" x="16" y="7.5" width="32" height="32">
+              <frame id="382:1674" name="Icon" x="8" y="8" width="16" height="16" />
+            </frame>
+            <frame id="382:1677" name="Container:align" x="60" y="7.5" width="1237" height="32">
+              <frame id="382:1678" name="Container" x="845" y="0" width="392" height="32">
+                <frame id="382:1679" name="Container" x="0" y="0" width="288" height="32">
+                  <frame id="382:1680" name="Icon" x="10" y="9" width="14" height="14" />
+                  <frame id="382:1683" name="FieldControl" x="0" y="0" width="288" height="32">
+                    <text id="382:1684" name="Search orders, SKUs, partners…" x="33" y="9" width="214" height="14" />
+                  </frame>
+                  <frame id="382:1685" name="Kbd" x="255.7734375" y="6" width="25" height="20">
+                    <text id="382:1686" name="⌘K" x="5" y="2" width="15" height="16" />
+                  </frame>
+                </frame>
+                <frame id="382:1687" name="Container" x="296" y="0" width="96" height="32">
+                  <frame id="382:1688" name="Button" x="0" y="0" width="32" height="32">
+                    <frame id="382:1689" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="382:1693" name="Button" x="32" y="0" width="32" height="32">
+                    <frame id="382:1694" name="Icon" x="8" y="8" width="16" height="16" />
+                  </frame>
+                  <frame id="382:1699" name="Button" x="64" y="0" width="32" height="32">
+                    <frame id="382:1700" name="Icon" x="8" y="8" width="16" height="16" />
+                    <frame id="382:1703" name="App" x="19" y="7" width="6" height="6" />
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+          <frame id="382:1704" name="Main Content" x="0" y="48" width="1313" height="917">
+            <frame id="382:1705" name="Container:margin" x="0" y="0" width="1313" height="917">
+              <frame id="382:1706" name="Container" x="16.5" y="0" width="1280" height="917">
+                <frame id="382:1707" name="Container" x="32" y="24" width="1216" height="36">
+                  <frame id="382:1708" name="Heading 1" x="0" y="8" width="87" height="28">
+                    <text id="382:1709" name="Inventory" x="0" y="0" width="87" height="28" />
+                  </frame>
+                  <frame id="382:1710" name="Container" x="1012" y="8" width="204" height="28">
+                    <frame id="405:5192" name="Frame 8" x="0" y="0" width="204" height="28">
+                      <frame id="405:5193" name="Button" x="0" y="0" width="103" height="28">
+                        <frame id="405:5194" name="Icon" x="11" y="7" width="14" height="14" />
+                        <text id="405:5198" name="Bulk Import" x="29" y="6" width="63" height="16" />
+                      </frame>
+                      <frame id="405:5199" name="Button" x="111" y="0" width="93" height="28">
+                        <frame id="405:5200" name="Icon" x="11" y="7" width="14" height="14" />
+                        <text id="405:5203" name="New Item" x="29" y="6" width="53" height="16" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="382:1723" name="Container" x="32" y="60" width="1216" height="48">
+                  <frame id="385:1592" name="CompositeRoot" x="0" y="12" width="380" height="32">
+                    <frame id="385:1595" name="TabsTab" x="3" y="3.5" width="74.52919006347656" height="25">
+                      <text id="385:1596" name="Invetory" x="14.764595031738281" y="4.5" width="45" height="16" />
+                    </frame>
+                    <frame id="385:1593" name="TabsTab" x="77.52919006347656" y="3.5" width="76.11116027832031" height="25">
+                      <text id="385:1594" name="Analytics" x="13.055580139160156" y="4.5" width="50" height="16" />
+                    </frame>
+                    <frame id="385:1597" name="TabsTab" x="153.64035034179688" y="3.5" width="111.84615325927734" height="25">
+                      <text id="385:1598" name="Inventory Spend" x="10.923076629638672" y="4.5" width="90" height="16" />
+                    </frame>
+                    <frame id="385:1599" name="TabsTab" x="265.48651123046875" y="3.5" width="111.51349639892578" height="25">
+                      <text id="385:1600" name="Inventory Check" x="10.75674819946289" y="4.5" width="90" height="16" />
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="383:1621" name="Band • Position" x="32" y="108" width="1216" height="119">
+                  <frame id="383:1622" name="Card • Stock on hand" x="0" y="16" width="292" height="103">
+                    <frame id="383:1623" name="CardContent" x="0" y="0" width="292" height="103">
+                      <frame id="383:1624" name="Frame" x="16" y="14" width="260" height="14">
+                        <text id="383:1625" name="Stock on hand" x="0" y="0" width="78" height="14" />
+                      </frame>
+                      <text id="383:1626" name="7.971" x="16" y="32" width="66" height="37" />
+                      <text id="383:1627" name="bottles · 6 wines" x="16" y="73" width="88" height="14" />
+                    </frame>
+                  </frame>
+                  <frame id="383:1628" name="Card • Stock value" x="308" y="16" width="292" height="103">
+                    <frame id="383:1629" name="CardContent" x="0" y="0" width="292" height="103">
+                      <frame id="383:1630" name="Frame" x="16" y="14" width="260" height="14">
+                        <text id="383:1631" name="Stock value" x="0" y="0" width="63" height="14" />
+                      </frame>
+                      <text id="383:1632" name="163.502 €" x="16" y="32" width="136" height="37" />
+                      <text id="383:1633" name="finished goods · portfolio only" x="16" y="73" width="161" height="14" />
+                    </frame>
+                  </frame>
+                  <frame id="383:1634" name="Card • Left the cellar · 90 days" x="616" y="16" width="292" height="103">
+                    <frame id="383:1635" name="CardContent" x="0" y="0" width="292" height="103">
+                      <frame id="383:1636" name="Frame" x="16" y="14" width="260" height="14">
+                        <text id="383:1637" name="Left the cellar · 90 days" x="0" y="0" width="127" height="14" />
+                      </frame>
+                      <text id="383:1638" name="30" x="16" y="32" width="38" height="37" />
+                      <text id="383:1639" name="bottles · 2 SKUs moved" x="16" y="73" width="125" height="14" />
+                    </frame>
+                  </frame>
+                  <frame id="383:1640" name="Card • Cover at that rate" x="924" y="16" width="292" height="103">
+                    <frame id="383:1641" name="CardContent" x="0" y="0" width="292" height="103">
+                      <frame id="383:1642" name="Frame" x="16" y="14" width="260" height="14">
+                        <text id="383:1643" name="Cover at that rate" x="0" y="0" width="96" height="14" />
+                        <frame id="383:1644" name="Spacer" x="96" y="6.5" width="156" height="1" />
+                        <rounded-rectangle id="383:1645" name="Rectangle" x="252" y="3" width="8" height="8" />
+                      </frame>
+                      <text id="383:1646" name="72 years" x="16" y="32" width="115" height="37" />
+                      <text id="383:1647" name="the reason to fix the link above" x="16" y="73" width="165" height="14" />
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="383:1648" name="Band • What moved" x="32" y="227" width="1216" height="287">
+                  <frame id="383:1649" name="Card • Stock movements" x="0" y="16" width="840" height="271">
+                    <frame id="383:1650" name="CardHeader" x="0" y="0" width="840" height="59">
+                      <frame id="383:1651" name="Frame" x="16" y="14" width="216" height="33">
+                        <text id="383:1652" name="In and out · 12 months" x="0" y="0" width="140" height="17" />
+                        <text id="383:1653" name="Bottles received against bottles shipped" x="0" y="19" width="216" height="14" />
+                      </frame>
+                      <frame id="383:1654" name="Spacer" x="232" y="30" width="516" height="1" />
+                      <text id="383:1655" name="Change range" x="748" y="23.5" width="76" height="14" />
+                    </frame>
+                    <frame id="383:1656" name="ChartContainer" x="0" y="59" width="840" height="156">
+                      <frame id="383:1657" name="Y axis" x="16" y="18" width="44" height="130">
+                        <text id="383:1658" name="6000" x="14" y="0" width="30" height="14" />
+                        <text id="383:1659" name="4500" x="14" y="29" width="30" height="14" />
+                        <text id="383:1660" name="3000" x="14" y="58" width="30" height="14" />
+                        <text id="383:1661" name="1500" x="16" y="87" width="28" height="14" />
+                        <text id="383:1662" name="0" x="36" y="116" width="8" height="14" />
+                      </frame>
+                      <frame id="383:1663" name="Plot" x="70" y="18" width="754" height="130">
+                        <frame id="383:1664" name="Month · Sep 25" x="0" y="0" width="55.5" height="130">
+                          <rounded-rectangle id="383:1665" name="Rectangle" x="0" y="128" width="26.75" height="2" />
+                          <rounded-rectangle id="383:1666" name="Rectangle" x="28.75" y="128" width="26.75" height="2" />
+                        </frame>
+                        <frame id="383:1667" name="Month · Oct 25" x="63.5" y="0" width="55.5" height="130">
+                          <rounded-rectangle id="383:1668" name="Rectangle" x="0" y="128" width="26.75" height="2" />
+                          <rounded-rectangle id="383:1669" name="Rectangle" x="28.75" y="128" width="26.75" height="2" />
+                        </frame>
+                        <frame id="383:1670" name="Month · Nov 25" x="127" y="0" width="55.5" height="130">
+                          <rounded-rectangle id="383:1671" name="Rectangle" x="0" y="128" width="26.75" height="2" />
+                          <rounded-rectangle id="383:1672" name="Rectangle" x="28.75" y="128" width="26.75" height="2" />
+                        </frame>
+                        <frame id="383:1673" name="Month · Dec 25" x="190.5" y="0" width="55.5" height="130">
+                          <rounded-rectangle id="383:1674" name="Rectangle" x="0" y="128" width="26.75" height="2" />
+                          <rounded-rectangle id="383:1675" name="Rectangle" x="28.75" y="128" width="26.75" height="2" />
+                        </frame>
+                        <frame id="383:1676" name="Month · Jan 26" x="254" y="0" width="55.5" height="130">
+                          <rounded-rectangle id="383:1677" name="Rectangle" x="0" y="128" width="26.75" height="2" />
+                          <rounded-rectangle id="383:1678" name="Rectangle" x="28.75" y="128" width="26.75" height="2" />
+                        </frame>
+                        <frame id="383:1679" name="Month · Feb 26" x="317.5" y="0" width="55.5" height="130">
+                          <rounded-rectangle id="383:1680" name="Rectangle" x="0" y="128" width="26.75" height="2" />
+                          <rounded-rectangle id="383:1681" name="Rectangle" x="28.75" y="128" width="26.75" height="2" />
+                        </frame>
+                        <frame id="383:1682" name="Month · Mar 26" x="381" y="0" width="55.5" height="130">
+                          <rounded-rectangle id="383:1683" name="Rectangle" x="0" y="17" width="26.75" height="113" />
+                          <rounded-rectangle id="383:1684" name="Rectangle" x="28.75" y="128" width="26.75" height="2" />
+                        </frame>
+                        <frame id="383:1685" name="Month · Apr 26" x="444.5" y="0" width="55.5" height="130">
+                          <rounded-rectangle id="383:1686" name="Rectangle" x="0" y="78" width="26.75" height="52" />
+                          <rounded-rectangle id="383:1687" name="Rectangle" x="28.75" y="128" width="26.75" height="2" />
+                        </frame>
+                        <frame id="383:1688" name="Month · May 26" x="508" y="0" width="55.5" height="130">
+                          <rounded-rectangle id="383:1689" name="Rectangle" x="0" y="128" width="26.75" height="2" />
+                          <rounded-rectangle id="383:1690" name="Rectangle" x="28.75" y="128" width="26.75" height="2" />
+                        </frame>
+                        <frame id="383:1691" name="Month · Jun 26" x="571.5" y="0" width="55.5" height="130">
+                          <rounded-rectangle id="383:1692" name="Rectangle" x="0" y="128" width="26.75" height="2" />
+                          <rounded-rectangle id="383:1693" name="Rectangle" x="28.75" y="128" width="26.75" height="2" />
+                        </frame>
+                        <frame id="383:1694" name="Month · Jul 26" x="635" y="0" width="55.5" height="130">
+                          <rounded-rectangle id="383:1695" name="Rectangle" x="0" y="128" width="26.75" height="2" />
+                          <rounded-rectangle id="383:1696" name="Rectangle" x="28.75" y="128" width="26.75" height="2" />
+                        </frame>
+                        <frame id="383:1697" name="Month · Aug 26" x="698.5" y="0" width="55.5" height="130">
+                          <rounded-rectangle id="383:1698" name="Rectangle" x="0" y="128" width="26.75" height="2" />
+                          <rounded-rectangle id="383:1699" name="Rectangle" x="28.75" y="129" width="26.75" height="1" />
+                        </frame>
+                      </frame>
+                    </frame>
+                    <frame id="383:1700" name="X axis" x="0" y="215" width="840" height="28">
+                      <frame id="383:1701" name="Frame" x="70" y="4" width="55.5" height="14">
+                        <text id="383:1702" name="Sep 25" x="8.75" y="0" width="38" height="14" />
+                      </frame>
+                      <frame id="383:1703" name="Frame" x="133.5" y="4" width="55.5" height="14">
+                        <text id="383:1704" name="Oct 25" x="9.25" y="0" width="37" height="14" />
+                      </frame>
+                      <frame id="383:1705" name="Frame" x="197" y="4" width="55.5" height="14">
+                        <text id="383:1706" name="Nov 25" x="8.25" y="0" width="39" height="14" />
+                      </frame>
+                      <frame id="383:1707" name="Frame" x="260.5" y="4" width="55.5" height="14">
+                        <text id="383:1708" name="Dec 25" x="8.75" y="0" width="38" height="14" />
+                      </frame>
+                      <frame id="383:1709" name="Frame" x="324" y="4" width="55.5" height="14">
+                        <text id="383:1710" name="Jan 26" x="9.75" y="0" width="36" height="14" />
+                      </frame>
+                      <frame id="383:1711" name="Frame" x="387.5" y="4" width="55.5" height="14">
+                        <text id="383:1712" name="Feb 26" x="9.25" y="0" width="37" height="14" />
+                      </frame>
+                      <frame id="383:1713" name="Frame" x="451" y="4" width="55.5" height="14">
+                        <text id="383:1714" name="Mar 26" x="9.25" y="0" width="37" height="14" />
+                      </frame>
+                      <frame id="383:1715" name="Frame" x="514.5" y="4" width="55.5" height="14">
+                        <text id="383:1716" name="Apr 26" x="9.75" y="0" width="36" height="14" />
+                      </frame>
+                      <frame id="383:1717" name="Frame" x="578" y="4" width="55.5" height="14">
+                        <text id="383:1718" name="May 26" x="8.25" y="0" width="39" height="14" />
+                      </frame>
+                      <frame id="383:1719" name="Frame" x="641.5" y="4" width="55.5" height="14">
+                        <text id="383:1720" name="Jun 26" x="9.25" y="0" width="37" height="14" />
+                      </frame>
+                      <frame id="383:1721" name="Frame" x="705" y="4" width="55.5" height="14">
+                        <text id="383:1722" name="Jul 26" x="11.75" y="0" width="32" height="14" />
+                      </frame>
+                      <frame id="383:1723" name="Frame" x="768.5" y="4" width="55.5" height="14">
+                        <text id="383:1724" name="Aug 26" x="8.25" y="0" width="39" height="14" />
+                      </frame>
+                    </frame>
+                    <frame id="383:1725" name="Legend" x="0" y="243" width="840" height="28">
+                      <frame id="383:1726" name="Frame" x="16" y="0" width="145" height="14">
+                        <rounded-rectangle id="383:1727" name="Rectangle" x="0" y="3" width="8" height="8" />
+                        <text id="383:1728" name="In · bottling and receipts" x="14" y="0" width="131" height="14" />
+                      </frame>
+                      <frame id="383:1729" name="Frame" x="181" y="0" width="87" height="14">
+                        <rounded-rectangle id="383:1730" name="Rectangle" x="0" y="3" width="8" height="8" />
+                        <text id="383:1731" name="Out · shipped" x="14" y="0" width="73" height="14" />
+                      </frame>
+                    </frame>
+                  </frame>
+                  <frame id="383:1732" name="Card • Where it went" x="856" y="16" width="360" height="271">
+                    <frame id="383:1733" name="CardHeader" x="0" y="0" width="360" height="59">
+                      <frame id="383:1734" name="Frame" x="16" y="14" width="157" height="33">
+                        <text id="383:1735" name="Where it went" x="0" y="0" width="91" height="17" />
+                        <text id="383:1736" name="Of the 30 bottles that moved" x="0" y="19" width="157" height="14" />
+                      </frame>
+                      <frame id="383:1737" name="Spacer" x="173" y="30" width="171" height="1" />
+                    </frame>
+                    <frame id="383:1738" name="CardContent" x="0" y="59" width="360" height="193">
+                      <frame id="383:1739" name="Frame" x="16" y="14" width="328" height="25">
+                        <frame id="383:1740" name="Frame" x="0" y="0" width="328" height="14">
+                          <text id="383:1741" name="Restaurant" x="0" y="0" width="59" height="14" />
+                          <frame id="383:1742" name="Spacer" x="59" y="6.5" width="181" height="1" />
+                          <text id="383:1743" name="29 btl · 669,38 €" x="240" y="0" width="88" height="14" />
+                        </frame>
+                        <frame id="383:1744" name="Frame" x="0" y="19" width="328" height="6">
+                          <rounded-rectangle id="383:1745" name="Rectangle" x="0" y="0" width="318" height="6" />
+                        </frame>
+                      </frame>
+                      <frame id="383:1746" name="Frame" x="16" y="53" width="328" height="25">
+                        <frame id="383:1747" name="Frame" x="0" y="0" width="328" height="14">
+                          <text id="383:1748" name="Samples / manual" x="0" y="0" width="96" height="14" />
+                          <frame id="383:1749" name="Spacer" x="96" y="6.5" width="141" height="1" />
+                          <text id="383:1750" name="1 btl · no revenue" x="237" y="0" width="91" height="14" />
+                        </frame>
+                        <frame id="383:1751" name="Frame" x="0" y="19" width="328" height="6">
+                          <rounded-rectangle id="383:1752" name="Rectangle" x="0" y="0" width="10" height="6" />
+                        </frame>
+                      </frame>
+                      <frame id="383:1753" name="Separator" x="16" y="92" width="328" height="1" />
+                      <frame id="383:1754" name="Frame" x="16" y="107" width="328" height="14">
+                        <text id="383:1755" name="Wine" x="0" y="0" width="28" height="14" />
+                        <frame id="383:1756" name="Spacer" x="28" y="6.5" width="188" height="1" />
+                        <text id="383:1757" name="6 products · 7.971 btl" x="216" y="0" width="112" height="14" />
+                      </frame>
+                      <frame id="383:1758" name="Frame" x="16" y="135" width="328" height="14">
+                        <text id="383:1759" name="Tasting boards" x="0" y="0" width="80" height="14" />
+                        <frame id="383:1760" name="Spacer" x="80" y="6.5" width="143" height="1" />
+                        <text id="383:1761" name="6 products · 0 units" x="223" y="0" width="105" height="14" />
+                      </frame>
+                      <frame id="383:1762" name="Frame" x="16" y="163" width="328" height="14">
+                        <text id="383:1763" name="Enological" x="0" y="0" width="56" height="14" />
+                        <frame id="383:1764" name="Spacer" x="56" y="6.5" width="175" height="1" />
+                        <text id="383:1765" name="2 products · 65 kg" x="231" y="0" width="97" height="14" />
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+                <frame id="386:1592" name="Band • Mix" x="32" y="514" width="1216" height="379">
+                  <frame id="386:1593" name="Card • Stock against movement" x="0" y="16" width="840" height="355">
+                    <frame id="386:1594" name="CardHeader" x="0" y="0" width="840" height="59">
+                      <frame id="386:1595" name="Frame" x="16" y="14" width="264" height="33">
+                        <text id="386:1596" name="Stock against movement" x="0" y="0" width="159" height="17" />
+                        <text id="386:1597" name="Bar is what we hold · notch is what left in 90 days" x="0" y="19" width="264" height="14" />
+                      </frame>
+                      <frame id="386:1598" name="Spacer" x="280" y="30" width="489" height="1" />
+                      <text id="386:1599" name="By bottles" x="769" y="23.5" width="55" height="14" />
+                    </frame>
+                    <frame id="386:1600" name="CardContent" x="0" y="59" width="840" height="296">
+                      <frame id="386:1601" name="Frame" x="16" y="16" width="808" height="29">
+                        <frame id="386:1602" name="Frame" x="0" y="0" width="808" height="14">
+                          <text id="386:1603" name="Žuti Vapor 2024" x="0" y="0" width="89" height="14" />
+                          <frame id="386:1604" name="Spacer" x="89" y="6.5" width="598" height="1" />
+                          <text id="386:1605" name="2.050 held · none out" x="687" y="0" width="121" height="14" />
+                        </frame>
+                        <frame id="386:1606" name="Frame" x="0" y="19" width="808" height="10">
+                          <rounded-rectangle id="386:1607" name="Rectangle" x="0" y="0" width="600" height="10" />
+                        </frame>
+                      </frame>
+                      <frame id="386:1608" name="Frame" x="16" y="58" width="808" height="29">
+                        <frame id="386:1609" name="Frame" x="0" y="0" width="808" height="14">
+                          <text id="386:1610" name="Ostro Crna 2023" x="0" y="0" width="91" height="14" />
+                          <frame id="386:1611" name="Spacer" x="91" y="6.5" width="598" height="1" />
+                          <text id="386:1612" name="1.820 held · none out" x="689" y="0" width="119" height="14" />
+                        </frame>
+                        <frame id="386:1613" name="Frame" x="0" y="19" width="808" height="10">
+                          <rounded-rectangle id="386:1614" name="Rectangle" x="0" y="0" width="533" height="10" />
+                        </frame>
+                      </frame>
+                      <frame id="386:1615" name="Frame" x="16" y="100" width="808" height="29">
+                        <frame id="386:1616" name="Frame" x="0" y="0" width="808" height="14">
+                          <text id="386:1617" name="Velika Bjelica 2022" x="0" y="0" width="102" height="14" />
+                          <frame id="386:1618" name="Spacer" x="102" y="6.5" width="587" height="1" />
+                          <text id="386:1619" name="1.450 held · none out" x="689" y="0" width="119" height="14" />
+                        </frame>
+                        <frame id="386:1620" name="Frame" x="0" y="19" width="808" height="10">
+                          <rounded-rectangle id="386:1621" name="Rectangle" x="0" y="0" width="424" height="10" />
+                        </frame>
+                      </frame>
+                      <frame id="386:1622" name="Frame" x="16" y="142" width="808" height="29">
+                        <frame id="386:1623" name="Frame" x="0" y="0" width="808" height="14">
+                          <text id="386:1624" name="Rožica Debit 2023" x="0" y="0" width="100" height="14" />
+                          <frame id="386:1625" name="Spacer" x="100" y="6.5" width="611" height="1" />
+                          <text id="386:1626" name="1.275 held · 5 out" x="711" y="0" width="97" height="14" />
+                        </frame>
+                        <frame id="386:1627" name="Frame" x="0" y="19" width="808" height="10">
+                          <rounded-rectangle id="386:1628" name="Rectangle" x="0" y="0" width="373" height="10" />
+                          <rounded-rectangle id="386:1629" name="Rectangle" x="373" y="0" width="2" height="10" />
+                        </frame>
+                      </frame>
+                      <frame id="386:1630" name="Frame" x="16" y="184" width="808" height="29">
+                        <frame id="386:1631" name="Frame" x="0" y="0" width="808" height="14">
+                          <text id="386:1632" name="Kosa Plavac 2021" x="0" y="0" width="93" height="14" />
+                          <frame id="386:1633" name="Spacer" x="93" y="6.5" width="618" height="1" />
+                          <text id="386:1634" name="956 held · 24 out" x="711" y="0" width="97" height="14" />
+                        </frame>
+                        <frame id="386:1635" name="Frame" x="0" y="19" width="808" height="10">
+                          <rounded-rectangle id="386:1636" name="Rectangle" x="0" y="0" width="280" height="10" />
+                          <rounded-rectangle id="386:1637" name="Rectangle" x="280" y="0" width="7" height="10" />
+                        </frame>
+                      </frame>
+                      <frame id="386:1638" name="Frame" x="16" y="226" width="808" height="29">
+                        <frame id="386:1639" name="Frame" x="0" y="0" width="808" height="14">
+                          <text id="386:1640" name="Pelješki S.V. 2020" x="0" y="0" width="97" height="14" />
+                          <frame id="386:1641" name="Spacer" x="97" y="6.5" width="600" height="1" />
+                          <text id="386:1642" name="420 held · none out" x="697" y="0" width="111" height="14" />
+                        </frame>
+                        <frame id="386:1643" name="Frame" x="0" y="19" width="808" height="10">
+                          <rounded-rectangle id="386:1644" name="Rectangle" x="0" y="0" width="123" height="10" />
+                        </frame>
+                      </frame>
+                      <text id="386:1645" name="Four of six wines show no exits at all in 90 days — all four appear in shipped orders." x="16" y="268" width="449" height="14" />
+                    </frame>
+                  </frame>
+                  <frame id="386:1646" name="Card • Stock value" x="856" y="16" width="360" height="354">
+                    <frame id="386:1647" name="CardHeader" x="0" y="0" width="360" height="43">
+                      <frame id="386:1648" name="Frame" x="16" y="14" width="74" height="17">
+                        <text id="386:1649" name="Stock value" x="0" y="0" width="74" height="17" />
+                      </frame>
+                      <frame id="386:1650" name="Spacer" x="90" y="22" width="254" height="1" />
+                    </frame>
+                    <frame id="386:1651" name="CardContent" x="0" y="43" width="360" height="311">
+                      <text id="386:1652" name="163.502 €" x="16" y="16" width="136" height="37" />
+                      <text id="386:1653" name="Finished goods · 7.971 bottles" x="16" y="65" width="159" height="14" />
+                      <frame id="386:1654" name="Frame" x="16" y="91" width="328" height="10">
+                        <rounded-rectangle id="386:1655" name="Rectangle" x="0" y="0" width="328" height="10" />
+                      </frame>
+                      <frame id="386:1656" name="Frame" x="16" y="113" width="328" height="14">
+                        <text id="386:1657" name="Finished" x="0" y="0" width="45" height="14" />
+                        <frame id="386:1658" name="Spacer" x="45" y="6.5" width="230" height="1" />
+                        <text id="386:1659" name="163.502 €" x="275" y="0" width="53" height="14" />
+                      </frame>
+                      <frame id="386:1660" name="Frame" x="16" y="139" width="328" height="14">
+                        <text id="386:1661" name="Tasting boards" x="0" y="0" width="80" height="14" />
+                        <frame id="386:1662" name="Spacer" x="80" y="6.5" width="229" height="1" />
+                        <text id="386:1663" name="0 €" x="309" y="0" width="19" height="14" />
+                      </frame>
+                      <frame id="386:1664" name="Frame" x="16" y="165" width="328" height="14">
+                        <text id="386:1665" name="Enological" x="0" y="0" width="56" height="14" />
+                        <frame id="386:1666" name="Spacer" x="56" y="6.5" width="215" height="1" />
+                        <text id="386:1667" name="not valued" x="271" y="0" width="57" height="14" />
+                      </frame>
+                      <frame id="386:1668" name="EmptyState · Per product" x="16" y="191" width="328" height="104">
+                        <text id="386:1669" name="No value per product" x="12" y="12" width="115" height="14" />
+                        <text id="386:1670" name="Cost per unit is empty on all six SKUs, so value can only be totalled at portfolio level." x="12" y="32" width="304" height="28" />
+                        <frame id="386:1671" name="Button" x="12" y="66" width="75" height="26">
+                          <text id="386:1672" name="Add costs" x="10" y="6" width="55" height="14" />
+                        </frame>
+                      </frame>
+                    </frame>
+                  </frame>
+                </frame>
+              </frame>
+            </frame>
+          </frame>
+        </frame>
+      </frame>
+    </frame>

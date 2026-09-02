@@ -1,0 +1,10 @@
+    <frame id="408:1607" name="Note · Customer overview" x="4511" y="2168" width="1369" height="138">
+      <text id="408:1608" name="Customer overview" x="18" y="16" width="1333" height="17" />
+      <frame id="408:1609" name="Frame" x="18" y="41" width="1333" height="50">
+        <text id="408:1610" name="· Opens with what needs doing, then the numbers behind it." x="0" y="0" width="1333" height="14" />
+        <text id="408:1611" name="· A timeline shows every order and the gap since the last one." x="0" y="18" width="1333" height="14" />
+        <text id="408:1612" name="· Nothing was removed — it&#39;s the same information, shown as cards, charts and a timeline." x="0" y="36" width="1333" height="14" />
+      </frame>
+      <rounded-rectangle id="408:1613" name="Rectangle" x="18" y="99" width="1333" height="1" />
+      <text id="408:1614" name="Why — Built the same way as the dashboard, so the customer story reads in one pass instead of a stack of tables." x="18" y="108" width="1333" height="14" />
+    </frame>
