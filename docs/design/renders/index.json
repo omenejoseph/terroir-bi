@@ -118,5 +118,21 @@
     "file": "renders/inventory/product-detail--449-1577.png",
     "render_px": "2738x3854",
     "at_1x": "1369x1927"
+  },
+  {
+    "section": "INVENTORY",
+    "screen": "Inventory Spend",
+    "node": "386:1673",
+    "file": "renders/inventory/inventory-spend--386-1673.png",
+    "render_px": "2738x2198",
+    "at_1x": "1369x1099"
+  },
+  {
+    "section": "Forms",
+    "screen": "Item \u2014 View",
+    "node": "378:1592",
+    "file": "renders/forms/item-view--378-1592.png",
+    "render_px": "960x3088",
+    "at_1x": "480x1544"
   }
 ]

@@ -352,6 +352,10 @@ class InventorySpendQuery
                 'group' => $item->group,
                 'subcategory' => $item->subcategory,
                 'on_hand' => $onHand,
+                // Capital held in this product, so the caller can total what is
+                // sitting untouched (Figma 386:1673). Cost is the honest basis;
+                // list price is the fallback when nothing is costed.
+                'stock_value' => $this->stockValue($item, $onHand, $currency),
                 'units_exited' => $units,
                 'prev_units_exited' => (int) round($prevUnitsByItem[$id] ?? 0.0),
                 'velocity_per_day' => number_format($velocity, 2, '.', ''),
@@ -420,5 +424,21 @@ class InventorySpendQuery
         $tenant = $this->tenant->current();
 
         return $tenant?->settings->default_currency ?? CurrencyRegistry::default()->code;
+    }
+
+    /**
+     * Capital held in one product, at cost where known and at list price
+     * otherwise. Null when the item carries neither, so the caller can tell
+     * "worth nothing" from "not valued".
+     */
+    private function stockValue(InventoryItem $item, float $onHand, string $currency): ?array
+    {
+        $unit = $item->cost_per_unit ?? $item->default_price;
+
+        if ($unit === null || $onHand <= 0) {
+            return null;
+        }
+
+        return Money::fromMinor((int) round($onHand * $unit->getMinorAmount()), $currency)->jsonSerialize();
     }
 }

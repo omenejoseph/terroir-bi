@@ -3,7 +3,9 @@ import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
 import AppLayout from '@/layouts/AppLayout.vue';
-import SparkBars from '@/components/inventory/SparkBars.vue';
+import BarChart from '@/components/ui/BarChart.vue';
+import Callout from '@/components/ui/Callout.vue';
+import StackedBar from '@/components/ui/StackedBar.vue';
 import Card from '@/components/ui/Card.vue';
 import CardContent from '@/components/ui/CardContent.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
@@ -61,7 +63,41 @@ const grossMargin = computed(() =>
 /** Products that moved nothing — the design's "Sitting untouched" tile. */
 const untouched = computed(() => props.spend.per_product.filter((p) => p.units_exited === 0));
 
-const dailyUnits = computed(() => props.spend.daily.map((d) => d.units));
+/**
+ * The design turns two tiles red (Figma 386:1673). Both are real conditions,
+ * not emphasis: a return far below what the stock value implies, and most of
+ * the portfolio not moving at all.
+ */
+const RETURN_SHARE_FLOOR = 5; // percent of stock value returned in the window
+const UNTOUCHED_SHARE_CEILING = 0.5; // fraction of products with no exits
+
+const returnIsLow = computed(() => returnShare.value !== null && returnShare.value < RETURN_SHARE_FLOOR);
+const tooManyUntouched = computed(
+    () =>
+        props.spend.per_product.length > 0 &&
+        untouched.value.length / props.spend.per_product.length > UNTOUCHED_SHARE_CEILING,
+);
+
+/** Daily exits, labelled the way the design labels them (01.08, 02.08 …). */
+const dailyPoints = computed(() =>
+    props.spend.daily.map((d) => ({
+        label: new Intl.DateTimeFormat(locale.value, { day: '2-digit', month: '2-digit' }).format(new Date(d.date)),
+        values: [d.units],
+    })),
+);
+
+/**
+ * The design labels the window by its preset ("90 days", "Left 90d"), not by
+ * the inclusive day count the query returns (91). Follow the design.
+ */
+const windowLabel = computed(() => props.filters.preset.replace(/d$/, ''));
+
+/** Capital sitting in products that did not move — the design's headline. */
+const untouchedValue = computed(() =>
+    untouched.value.reduce((sum, p) => sum + (p.stock_value?.minor ?? 0), 0),
+);
+
+const untouchedIsValued = computed(() => untouched.value.some((p) => p.stock_value !== null));
 
 const dateRange = computed(() => {
     const fmt = new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'short' });
@@ -83,8 +119,9 @@ const dateRange = computed(() => {
                     hint="in finished goods on hand"
                 />
                 <StatCard
-                    :label="`Returned in ${spend.period.days} days`"
+                    :label="`Returned in ${windowLabel} days`"
                     :value="money(summary.revenue.minor, summary.revenue.currency)"
+                    :alert="returnIsLow"
                     :hint="
                         returnShare !== null
                             ? `${returnShare.toFixed(1)} % of the stock value`
@@ -96,10 +133,17 @@ const dateRange = computed(() => {
                     :value="money(summary.cost_value.minor, summary.cost_value.currency)"
                     :hint="`against ${money(summary.revenue.minor, summary.revenue.currency)} revenue`"
                 />
+                <!--
+                  The design states this as capital, not a count: "148.000 EUR of
+                  the 163.502 on hand sits in these four". It falls back to the
+                  count when nothing is priced, rather than showing 0 EUR as if
+                  the stock were worthless.
+                -->
                 <StatCard
                     label="Sitting untouched"
-                    :value="num(untouched.length)"
-                    :hint="`of ${num(spend.per_product.length)} products, no exits`"
+                    :value="untouchedIsValued ? money(untouchedValue, currency) : num(untouched.length)"
+                    :alert="tooManyUntouched"
+                    :hint="`${num(untouched.length)} of ${num(spend.per_product.length)} products, no exits`"
                 />
             </section>
 
@@ -108,13 +152,13 @@ const dateRange = computed(() => {
                     <CardContent class="flex flex-col gap-4 p-6">
                         <SectionHeader
                             title="Units leaving per day"
-                            :description="`${num(summary.units_exited)} units across ${spend.period.days} days — the whole cellar`"
+                            :description="`${num(summary.units_exited)} units across ${windowLabel} days — the whole cellar`"
                         >
                             <template #actions>
                                 <span class="text-13 text-muted-foreground">{{ dateRange }}</span>
                             </template>
                         </SectionHeader>
-                        <SparkBars :values="dailyUnits" unit="units" />
+                        <BarChart :points="dailyPoints" :height="220" />
                     </CardContent>
                 </Card>
 
@@ -126,28 +170,20 @@ const dateRange = computed(() => {
                             {{ money(summary.revenue.minor, summary.revenue.currency) }}
                         </p>
 
-                        <Separator />
-
-                        <div class="flex flex-col gap-3">
-                            <div class="flex items-baseline justify-between gap-3">
-                                <span class="text-sm">Gross profit</span>
-                                <span class="text-sm font-medium tabular-nums">
-                                    {{ money(grossProfit, currency) }}
-                                    <span v-if="grossMargin !== null" class="text-muted-foreground">
-                                        · {{ grossMargin.toFixed(1) }} %
-                                    </span>
-                                </span>
-                            </div>
-                            <div class="flex items-baseline justify-between gap-3">
-                                <span class="text-sm">Cost of goods</span>
-                                <span class="text-sm font-medium tabular-nums">
-                                    {{ money(summary.cost_value.minor, summary.cost_value.currency) }}
-                                    <span v-if="grossMargin !== null" class="text-muted-foreground">
-                                        · {{ (100 - grossMargin).toFixed(1) }} %
-                                    </span>
-                                </span>
-                            </div>
-                        </div>
+                        <StackedBar
+                            :segments="[
+                                {
+                                    label: 'Gross profit',
+                                    value: grossProfit,
+                                    caption: money(grossProfit, currency),
+                                },
+                                {
+                                    label: 'Cost of goods',
+                                    value: summary.cost_value.minor,
+                                    caption: money(summary.cost_value.minor, summary.cost_value.currency),
+                                },
+                            ]"
+                        />
                     </CardContent>
                 </Card>
             </div>
@@ -167,7 +203,7 @@ const dateRange = computed(() => {
                                     <th scope="col" class="py-2.5 pr-4 font-medium">SKU</th>
                                     <th scope="col" class="py-2.5 pr-4 text-right font-medium">On hand</th>
                                     <th scope="col" class="py-2.5 pr-4 text-right font-medium">
-                                        Left {{ spend.period.days }}d
+                                        Left {{ windowLabel }}d
                                     </th>
                                     <th scope="col" class="py-2.5 pr-4 text-right font-medium">Per day</th>
                                     <th scope="col" class="py-2.5 pr-4 font-medium">Cover</th>
@@ -179,8 +215,8 @@ const dateRange = computed(() => {
                             <tbody class="divide-y divide-border">
                                 <tr v-for="row in spend.per_product" :key="row.id">
                                     <td class="py-3 pr-4">
-                                        <span class="font-medium">{{ row.name }}</span>
-                                        <span v-if="row.vintage" class="ml-1.5 text-muted-foreground">
+                                        <span class="block font-medium">{{ row.name }}</span>
+                                        <span v-if="row.vintage" class="block text-13 text-muted-foreground">
                                             {{ row.vintage }}
                                         </span>
                                     </td>
@@ -219,10 +255,14 @@ const dateRange = computed(() => {
                         Nothing left the cellar in this window.
                     </p>
 
-                    <p v-if="untouched.length" class="text-13 text-destructive">
-                        {{ num(untouched.length) }} of {{ num(spend.per_product.length) }} products have no spend or
-                        return to report in this window.
-                    </p>
+                    <Callout
+                        v-if="untouched.length"
+                        :title="`${num(untouched.length)} of ${num(spend.per_product.length)} products have no spend or return to report`"
+                        tone="warning"
+                    >
+                        They may still appear in shipped orders — an exit that never reached the ledger looks
+                        identical to no trade at all. Check the order → stock link before reading this as idle stock.
+                    </Callout>
                 </CardContent>
             </Card>
         </div>

@@ -32,11 +32,11 @@ inventory, plus the gap register).
 | Dashboard | `208:5577` | design context |
 | Inventory list | `389:1592` | design context |
 | Product Detail | `449:1577` | render |
-| Item — View (drawer) | `378:1592` | ⚠️ cached structure only |
+| Item — View (drawer) | `378:1592` | render |
 | New Item (+ Advanced) | `317:468` / `322:704` | render |
 | Bulk Edit | `270:9646` | render |
 | Inventory Check | `271:12639` | render |
-| Inventory Spend | `386:1673` | ⚠️ cached structure only |
+| Inventory Spend | `386:1673` | render |
 | Analytics | `382:1592` | render |
 
 ### Deferred from Phase 1
@@ -52,9 +52,8 @@ None of these blocked Phase 2, so they were left until a screen needs them:
 
 1. **Which Inventory Check is current?** The build follows the exported original
    `271:12639`; the canvas also holds `388:1592` "Inventory Check — rethought".
-2. **Two screens need renders.** `378:1592` and `386:1673` were built from the
-   cached layer tree and copy, so their structure and wording are right but
-   their appearance was never diffed. Both want exporting.
+2. ~~Two screens need renders.~~ **Resolved** — both were exported and diffed;
+   the fixes are in. Every shipped screen has now been checked against a render.
 3. **Channel taxonomy** — see the gap register in [`design/README.md`](design/README.md).
 
 ---
@@ -175,11 +174,11 @@ Backend is complete for the list and detail; the analytics screens need work.
 |---|---|---|---|
 | Inventory (list) | `389:1592` | — | ✅ **done** |
 | Product Detail | `449:1577` | L | ✅ **done** — stock tab; the other 7 tabs render disabled |
-| Item — View (drawer) | `378:1592` | M | ✅ **done** — built from cached structure; **needs a render diff** |
+| Item — View (drawer) | `378:1592` | M | ✅ **done** — render-diffed |
 | New Item (drawer) | `317:468` / `322:704` | M | ✅ **done** — delivered by Phase 1 |
 | Bulk Edit | `270:9646` | M | ✅ **done** — a mode of the list, not a route |
 | Inventory Check | `271:12639` | L | ✅ **done** — built from the exported original; the `388:1592` "rethought" variant is still undecided |
-| Inventory Spend | `386:1673` | M | ✅ **done** — built from cached structure; **no render was exported**, so it needs a visual diff |
+| Inventory Spend | `386:1673` | M | ✅ **done** — render-diffed |
 | Analytics | `382:1592` | M | ✅ **done** |
 
 **DoD:** all eight meet the nine criteria; `inventory` leaves `PENDING_MODULES`;

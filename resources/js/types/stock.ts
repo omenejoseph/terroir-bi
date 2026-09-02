@@ -133,6 +133,8 @@ export interface SpendProduct {
     group: string | null;
     subcategory: string | null;
     on_hand: number;
+    /** Capital held, at cost where known else list price; null when neither. */
+    stock_value: MoneyValue | null;
     units_exited: number;
     prev_units_exited: number;
     velocity_per_day: string;

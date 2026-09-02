@@ -4,10 +4,12 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
+import Callout from '@/components/ui/Callout.vue';
 import MetaStrip from '@/components/ui/MetaStrip.vue';
 import SectionHeader from '@/components/ui/SectionHeader.vue';
 import Separator from '@/components/ui/Separator.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
+import { cn } from '@/lib/cn';
 import { formatMoney, formatQuantity } from '@/lib/money';
 import { categoryLabel, formatMovementDate, movementTypeLabel } from '@/lib/stock';
 import type { InventoryItem, MoneyValue } from '@/types/inventory';
@@ -47,6 +49,18 @@ const cases = computed(() => {
     return per > 0 && Number.isFinite(stock) ? Math.floor(stock / per) : null;
 });
 
+/**
+ * The design's waterfall deducts allocations, open-order reservations and
+ * consignment from physical stock. None of the three exists in the schema, so
+ * each row says so rather than showing 0 — a zero would assert there are none,
+ * which is a claim the data cannot make.
+ */
+const deductions = [
+    { label: 'Allocated', note: 'allocations are not tracked' },
+    { label: 'Reserved by open orders', note: 'order lines do not reserve stock' },
+    { label: 'On consignment', note: 'consignment is not attributed per item' },
+];
+
 const details = computed(() => {
     const item = props.item;
 
@@ -58,7 +72,11 @@ const details = computed(() => {
         { label: 'Unit size / unit', value: [item.unit_size, item.unit].filter(Boolean).join(' · ') },
         { label: 'Sales unit', value: item.sales_unit ?? '—' },
         { label: 'Vintage', value: item.vintage ? String(item.vintage) : '—' },
-        { label: 'Min stock', value: item.min_stock ? qty(item.min_stock) : 'Not set — no low-stock alert' },
+        {
+            label: 'Min stock',
+            value: item.min_stock ? qty(item.min_stock) : 'Not set — no low-stock alert',
+            warn: !item.min_stock,
+        },
         { label: 'Available for sale', value: item.is_for_sale ? 'Yes' : 'No' },
     ];
 });
@@ -75,8 +93,9 @@ const details = computed(() => {
                     <Badge v-if="item.group" variant="outline">
                         {{ [item.group, item.subcategory].filter(Boolean).join(' · ') }}
                     </Badge>
-                    <Badge v-if="item.is_for_sale" variant="success">Available for sale</Badge>
-                    <Badge v-if="!item.min_stock" variant="outline">No min stock</Badge>
+                    <Badge v-if="item.is_for_sale" variant="outline">Available for sale</Badge>
+                    <!-- The design flags a data-quality problem with a red outline. -->
+                    <Badge v-if="!item.min_stock" variant="warning">No min stock</Badge>
                 </div>
             </div>
 
@@ -84,17 +103,26 @@ const details = computed(() => {
 
             <!-- Stock -->
             <section class="flex flex-col gap-3">
-                <SectionHeader title="Stock">
-                    <template #actions>
-                        <Button variant="outline" size="sm" :href="`/inventory/${item.id}`">Adjust</Button>
-                    </template>
-                </SectionHeader>
+                <div class="flex flex-wrap items-baseline justify-between gap-3">
+                    <div class="flex flex-wrap items-baseline gap-2">
+                        <h3 class="text-base font-semibold text-foreground">Stock</h3>
+                        <span class="text-13 text-muted-foreground">
+                            {{ qty(item.current_stock) }} {{ item.unit
+                            }}<template v-if="cases !== null"> · {{ cases }} cases</template>
+                        </span>
+                    </div>
+                    <Button variant="outline" size="sm" :href="`/inventory/${item.id}`">Adjust</Button>
+                </div>
 
-                <p class="text-2xl font-semibold tabular-nums">
-                    {{ qty(item.current_stock) }}
-                    <span class="text-sm font-normal text-muted-foreground">
-                        {{ item.unit }}<template v-if="cases !== null"> · {{ cases }} cases</template>
-                    </span>
+                <!--
+                  The design leads with free-to-sell. We cannot compute it, so
+                  physical stock leads instead and the label says which figure
+                  this is — rather than presenting physical as if it were
+                  available.
+                -->
+                <p class="flex items-baseline gap-2">
+                    <span class="text-3xl font-semibold tabular-nums">{{ qty(item.current_stock) }}</span>
+                    <span class="text-sm text-muted-foreground">physical stock</span>
                 </p>
 
                 <!--
@@ -104,23 +132,21 @@ const details = computed(() => {
                   none, which is a claim the data cannot make. The total is
                   withheld for the same reason.
                 -->
-                <dl class="flex flex-col gap-2 rounded-lg border border-border p-4 text-sm">
-                    <div class="flex items-baseline justify-between gap-3">
+                <dl class="divide-y divide-border text-sm">
+                    <div class="flex items-start justify-between gap-3 py-3">
                         <dt>Physical stock</dt>
-                        <dd class="font-medium tabular-nums">{{ qty(item.current_stock) }}</dd>
+                        <dd class="shrink-0 font-medium tabular-nums">{{ qty(item.current_stock) }}</dd>
                     </div>
-                    <div class="flex items-baseline justify-between gap-3 text-muted-foreground">
-                        <dt>− Reserved by open orders</dt>
-                        <dd class="text-13">not tracked</dd>
+                    <div v-for="row in deductions" :key="row.label" class="flex items-start justify-between gap-3 py-3">
+                        <dt class="min-w-0">
+                            <span class="block text-muted-foreground">− {{ row.label }}</span>
+                            <span class="block text-13 text-muted-foreground">{{ row.note }}</span>
+                        </dt>
+                        <dd class="shrink-0 text-13 text-muted-foreground">—</dd>
                     </div>
-                    <div class="flex items-baseline justify-between gap-3 text-muted-foreground">
-                        <dt>− On consignment</dt>
-                        <dd class="text-13">not tracked</dd>
-                    </div>
-                    <Separator />
-                    <div class="flex items-baseline justify-between gap-3">
+                    <div class="flex items-start justify-between gap-3 py-3">
                         <dt class="font-medium">= Free to sell</dt>
-                        <dd class="text-13 text-muted-foreground">needs order reservations</dd>
+                        <dd class="shrink-0 text-13 text-muted-foreground">needs order reservations</dd>
                     </div>
                 </dl>
             </section>
@@ -131,23 +157,27 @@ const details = computed(() => {
             <section class="flex flex-col gap-3">
                 <SectionHeader title="Pricing &amp; margin" />
 
-                <dl class="flex flex-col gap-2 text-sm">
-                    <div class="flex items-baseline justify-between gap-3">
+                <dl class="divide-y divide-border rounded-lg border border-border bg-muted/40 px-4 text-sm">
+                    <div class="flex items-baseline justify-between gap-3 py-3">
                         <dt class="text-muted-foreground">Default price</dt>
-                        <dd class="font-medium tabular-nums">{{ money(item.default_price) ?? 'Not set' }}</dd>
+                        <dd :class="cn('font-medium tabular-nums', !item.default_price && 'text-destructive')">
+                            {{ money(item.default_price) ?? 'Not set' }}
+                        </dd>
                     </div>
-                    <div class="flex items-baseline justify-between gap-3">
+                    <div class="flex items-baseline justify-between gap-3 py-3">
                         <dt class="text-muted-foreground">Cost per unit</dt>
-                        <dd class="font-medium tabular-nums">{{ money(item.cost_per_unit) ?? 'Not set' }}</dd>
+                        <dd :class="cn('font-medium tabular-nums', !item.cost_per_unit && 'text-destructive')">
+                            {{ money(item.cost_per_unit) ?? 'Not set' }}
+                        </dd>
                     </div>
                 </dl>
 
-                <div v-if="!item.cost_per_unit" class="rounded-lg border border-dashed border-border p-4">
-                    <p class="text-sm font-medium">Margin unavailable</p>
-                    <p class="mt-1 text-13 text-muted-foreground">
-                        Needs a cost per unit, or a recipe to calculate from.
-                    </p>
-                </div>
+                <Callout v-if="!item.cost_per_unit" title="Margin unavailable">
+                    Needs a cost per unit, or a recipe to calculate from.
+                    <template #action>
+                        <Button variant="outline" size="sm" :href="`/inventory/${item.id}`">Add cost</Button>
+                    </template>
+                </Callout>
             </section>
 
             <Separator />
@@ -155,10 +185,16 @@ const details = computed(() => {
             <!-- Item details -->
             <section class="flex flex-col gap-3">
                 <SectionHeader title="Item details" />
-                <dl class="flex flex-col gap-2 text-sm">
-                    <div v-for="detail in details" :key="detail.label" class="flex items-baseline justify-between gap-3">
+                <dl class="divide-y divide-border text-sm">
+                    <div
+                        v-for="detail in details"
+                        :key="detail.label"
+                        class="flex items-baseline justify-between gap-3 py-2.5"
+                    >
                         <dt class="shrink-0 text-muted-foreground">{{ detail.label }}</dt>
-                        <dd class="truncate text-right font-medium">{{ detail.value }}</dd>
+                        <dd :class="cn('truncate text-right font-medium', detail.warn && 'text-destructive')">
+                            {{ detail.value }}
+                        </dd>
                     </div>
                 </dl>
             </section>
@@ -176,23 +212,27 @@ const details = computed(() => {
                 </SectionHeader>
 
                 <ul v-if="movements.length" class="flex flex-col divide-y divide-border">
-                    <li v-for="movement in movements" :key="movement.id" class="flex items-baseline justify-between gap-3 py-2">
-                        <span class="min-w-0">
-                            <span class="block truncate text-sm">
-                                {{ movementTypeLabel(movement.type) }}
-                                <span v-if="movement.reference" class="text-muted-foreground">
-                                    · {{ movement.reference }}
-                                </span>
-                            </span>
-                            <span class="text-2xs text-muted-foreground">
-                                {{ formatMovementDate(movement.created_at, locale) }}
+                    <li
+                        v-for="movement in movements"
+                        :key="movement.id"
+                        class="flex items-baseline justify-between gap-3 py-2.5 text-sm"
+                    >
+                        <span class="min-w-0 truncate">
+                            {{ movementTypeLabel(movement.type) }}
+                            <span v-if="movement.reference" class="text-muted-foreground">
+                                · {{ movement.reference }}
                             </span>
                         </span>
-                        <span
-                            class="shrink-0 text-sm tabular-nums"
-                            :class="Number.parseFloat(movement.quantity) < 0 && 'text-destructive'"
-                        >
-                            {{ Number.parseFloat(movement.quantity) > 0 ? '+' : '' }}{{ qty(movement.quantity) }}
+                        <span class="flex shrink-0 items-baseline gap-3">
+                            <span
+                                class="tabular-nums"
+                                :class="Number.parseFloat(movement.quantity) < 0 && 'text-destructive'"
+                            >
+                                {{ Number.parseFloat(movement.quantity) > 0 ? '+' : '' }}{{ qty(movement.quantity) }}
+                            </span>
+                            <span class="text-13 text-muted-foreground">
+                                {{ formatMovementDate(movement.created_at, locale) }}
+                            </span>
                         </span>
                     </li>
                 </ul>
@@ -201,8 +241,11 @@ const details = computed(() => {
         </div>
 
         <template #footer>
-            <Button variant="outline" @click="emit('close')">Close</Button>
-            <Button v-if="item" :href="`/inventory/${item.id}`">Open item</Button>
+            <Button v-if="item" variant="outline" class="mr-auto border-destructive/40 text-destructive" :href="`/inventory/${item.id}`">
+                Delete
+            </Button>
+            <Button v-if="item" variant="outline" :href="`/inventory/${item.id}`">Adjust stock</Button>
+            <Button v-if="item" :href="`/inventory/${item.id}`">Edit item</Button>
         </template>
     </SidePanel>
 </template>

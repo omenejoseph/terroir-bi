@@ -3,7 +3,7 @@ import { computed } from 'vue';
 
 import { cn } from '@/lib/cn';
 
-type Variant = 'neutral' | 'success' | 'destructive' | 'outline';
+type Variant = 'neutral' | 'success' | 'destructive' | 'outline' | 'warning';
 
 const props = withDefaults(defineProps<{ variant?: Variant; class?: string }>(), { variant: 'neutral' });
 
@@ -12,6 +12,8 @@ const VARIANTS: Record<Variant, string> = {
     success: 'bg-success text-success-foreground',
     destructive: 'bg-destructive text-destructive-foreground',
     outline: 'border border-input text-foreground',
+    // Figma 378:1592 marks data-quality problems with a red outline, not a fill.
+    warning: 'border border-destructive text-destructive',
 };
 
 const classes = computed(() =>

@@ -4,7 +4,7 @@ import { usePage } from '@inertiajs/vue3';
 import { AlertTriangle } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
-import InOutChart from '@/components/inventory/InOutChart.vue';
+import BarChart from '@/components/ui/BarChart.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import CardContent from '@/components/ui/CardContent.vue';
@@ -15,7 +15,7 @@ import StatCard from '@/components/ui/StatCard.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { formatMoney, formatNumber, formatQuantity } from '@/lib/money';
-import { categoryLabel, channelLabel } from '@/lib/stock';
+import { categoryLabel, channelLabel, formatMonth } from '@/lib/stock';
 import type { InventoryAnalytics } from '@/types/stock';
 import type { SharedProps } from '@/types';
 import type { TabItem } from '@/types/ui';
@@ -130,7 +130,15 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                             title="In and out · 12 months"
                             description="Units received against units shipped."
                         />
-                        <InOutChart :points="analytics.movements_12m" :locale="locale" />
+                        <BarChart
+                            :points="
+                                analytics.movements_12m.map((m) => ({
+                                    label: formatMonth(m.month, locale),
+                                    values: [m.in, m.out],
+                                }))
+                            "
+                            :series="['In · bottling and receipts', 'Out · shipped']"
+                        />
                     </CardContent>
                 </Card>
 

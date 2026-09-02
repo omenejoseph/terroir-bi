@@ -118,6 +118,21 @@ and exit-by-channel) as missing. That was wrong.
 `mean_margin_percent`, a daily `spark` series, trailing-12-month `realized`
 figures and `channels`. Product Detail (`449:1577`) is almost entirely backed.
 
+### Item — View: two sections not built
+
+`378:1592` carries two sections the schema cannot yet fill:
+
+| Section | Missing |
+|---|---|
+| "Who's buying it" | No per-item customer attribution — needs order lines rolled up by customer, plus a share-of-their-volume figure |
+| "Timeline" | No audit trail. Stock movements cover adjustments, but not "item created" or field edits |
+
+Its free-to-sell waterfall also deducts **Allocated**, **Reserved by open
+orders** and **On consignment**. None of the three exists, so each row says so
+rather than showing `0` — a zero asserts there are none, which is a claim the
+data cannot make — and the `= Free to sell` total is withheld rather than
+silently equalling physical stock.
+
 ### But "Exit by channel" is on a different axis
 
 The design's card breaks exits down by **customer sales channel** — Internal /
