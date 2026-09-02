@@ -13,7 +13,7 @@ import CardTitle from '@/components/ui/CardTitle.vue';
 import PeriodTabs from '@/components/ui/PeriodTabs.vue';
 import ProgressBar from '@/components/ui/ProgressBar.vue';
 import StatCard from '@/components/ui/StatCard.vue';
-import { formatMoney, formatNumber } from '@/lib/money';
+import { formatMoney, formatNumber, formatQuantity } from '@/lib/money';
 import type { DashboardFilters, DashboardSummary } from '@/types/dashboard';
 import type { SharedProps } from '@/types';
 
@@ -33,6 +33,7 @@ const page = usePage<SharedProps>();
 
 const money = (minor: number) => formatMoney(minor, props.summary.currency, page.props.locale);
 const count = (value: number) => formatNumber(value, page.props.locale);
+const qty = (value: string) => formatQuantity(value, page.props.locale);
 
 /** Percentage change vs the comparison window, when one exists. */
 function delta(current: number, previous: number | null): number | null {
@@ -210,7 +211,7 @@ const stats = computed(() => [
                             >
                                 <p class="min-w-0 truncate text-sm font-medium">{{ item.name }}</p>
                                 <span class="shrink-0 text-sm tabular-nums">
-                                    {{ item.stock }} <span class="text-muted-foreground">/ {{ item.min }}</span>
+                                    {{ qty(item.stock) }} <span class="text-muted-foreground">/ {{ qty(item.min) }}</span>
                                 </span>
                             </li>
                         </ul>

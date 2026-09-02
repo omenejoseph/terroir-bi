@@ -51,7 +51,9 @@ const mobileOpen = ref(false);
                     <Menu class="size-4" :stroke-width="1.5" />
                 </button>
 
-                <h1 class="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{{ title }}</h1>
+                <!-- The design's header carries no title: each page renders its own
+                     H1 in the content area, so repeating it here would double it. -->
+                <div class="flex-1" />
 
                 <TenantSwitcher />
             </header>

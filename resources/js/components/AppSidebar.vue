@@ -20,8 +20,23 @@ import type { SharedProps } from '@/types';
 const page = usePage<SharedProps>();
 const { user, can } = useAuth();
 
-const categories = computed(() => navigationFor(can));
+const allCategories = computed(() => navigationFor(can));
 const shortcuts = computed(() => shortcutsFor(can));
+
+/*
+  The design orders the rail: Overview, rule, Shortcuts, rule, then everything
+  else (Figma 547:1568). Splitting Overview out keeps that order explicit rather
+  than depending on where it happens to sit in NAV_CATEGORIES.
+*/
+const overview = computed(() => allCategories.value.filter((c) => c.label === 'Overview'));
+const categories = computed(() => allCategories.value.filter((c) => c.label !== 'Overview'));
+
+/** "ADMIN" -> "Admin": the design shows the role in sentence case. */
+const roleLabel = computed(() => {
+    const role = page.props.auth.roles[0];
+
+    return role ? role.charAt(0) + role.slice(1).toLowerCase() : 'Member';
+});
 
 /** Categories collapse; all start open, matching the design's default state. */
 const collapsed = ref<Record<string, boolean>>({});
@@ -76,6 +91,43 @@ const rowClass = (item: NavItem) =>
         </div>
 
         <nav class="min-h-0 flex-1 overflow-y-auto p-2" aria-label="Main">
+            <!-- Overview -->
+            <section v-for="category in overview" :key="category.label">
+                <button
+                    type="button"
+                    class="flex w-full items-center gap-1.5 rounded-lg px-1.5 py-1 text-13 text-muted-foreground"
+                    :aria-expanded="!collapsed[category.label]"
+                    @click="toggle(category.label)"
+                >
+                    <ChevronDown
+                        class="size-3 shrink-0 transition-transform"
+                        :class="collapsed[category.label] && '-rotate-90'"
+                    />
+                    <span>{{ category.label }}</span>
+                </button>
+                <ul v-show="!collapsed[category.label]" class="space-y-px pt-0.5">
+                    <li v-for="item in category.items" :key="item.label">
+                        <component
+                            :is="item.href ? Link : 'span'"
+                            v-bind="item.href ? { href: item.href } : { 'aria-disabled': 'true' }"
+                            :class="rowClass(item)"
+                        >
+                            <component :is="item.icon" class="size-[15px] shrink-0" :stroke-width="1.5" />
+                            <span class="truncate">{{ item.label }}</span>
+                            <span
+                                v-if="isActive(item.href)"
+                                class="absolute left-0 h-4 w-0.5 rounded-full bg-foreground"
+                                aria-hidden="true"
+                            />
+                        </component>
+                    </li>
+                </ul>
+            </section>
+
+            <div v-if="overview.length && shortcuts.length" class="py-2">
+                <div class="h-px bg-sidebar-border" />
+            </div>
+
             <!-- Shortcuts -->
             <section v-if="shortcuts.length">
                 <button
@@ -158,7 +210,7 @@ const rowClass = (item: NavItem) =>
                 <span class="min-w-0 flex-1">
                     <span class="block truncate text-13 font-semibold text-foreground">{{ user?.name }}</span>
                     <span class="block truncate text-2xs text-muted-foreground">
-                        {{ page.props.auth.roles[0] ?? 'Member' }}
+                        {{ roleLabel }}
                     </span>
                 </span>
                 <ChevronsUpDown class="size-4 shrink-0 text-muted-foreground" :stroke-width="1.5" />

@@ -7,7 +7,7 @@ import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import Input from '@/components/ui/Input.vue';
 import { useAuth } from '@/composables/useAuth';
-import { formatMoney } from '@/lib/money';
+import { formatMoney, formatQuantity } from '@/lib/money';
 import type { InventoryFilters, InventoryItem } from '@/types/inventory';
 import type { Paginated, SharedProps } from '@/types';
 
@@ -75,7 +75,7 @@ function price(item: InventoryItem): string {
                             <td class="px-4 py-3 font-medium">{{ item.name }}</td>
                             <td class="px-4 py-3 text-muted-foreground">{{ item.sku }}</td>
                             <td class="px-4 py-3 text-muted-foreground">{{ item.category }}</td>
-                            <td class="px-4 py-3 text-right tabular-nums">{{ item.current_stock }}</td>
+                            <td class="px-4 py-3 text-right tabular-nums">{{ formatQuantity(item.current_stock, page.props.locale) }}</td>
                             <td class="px-4 py-3 text-right tabular-nums">{{ price(item) }}</td>
                             <td class="px-4 py-3">
                                 <Badge :variant="item.is_active ? 'success' : 'neutral'">

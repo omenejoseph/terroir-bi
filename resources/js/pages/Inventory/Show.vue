@@ -9,7 +9,7 @@ import Card from '@/components/ui/Card.vue';
 import CardContent from '@/components/ui/CardContent.vue';
 import CardHeader from '@/components/ui/CardHeader.vue';
 import CardTitle from '@/components/ui/CardTitle.vue';
-import { formatMoney } from '@/lib/money';
+import { formatMoney, formatQuantity } from '@/lib/money';
 import type { InventoryItem } from '@/types/inventory';
 import type { SharedProps } from '@/types';
 
@@ -22,8 +22,8 @@ const fields = computed(() => [
     { label: 'Category', value: props.item.category },
     { label: 'Group', value: props.item.group ?? '—' },
     { label: 'Unit', value: props.item.unit },
-    { label: 'Current stock', value: props.item.current_stock },
-    { label: 'Minimum stock', value: props.item.min_stock ?? '—' },
+    { label: 'Current stock', value: formatQuantity(props.item.current_stock, page.props.locale) },
+    { label: 'Minimum stock', value: formatQuantity(props.item.min_stock, page.props.locale) },
     {
         label: 'Default price',
         value: props.item.default_price
