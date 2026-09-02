@@ -96,11 +96,12 @@ Nothing after this phase should invent a primitive. Everything later composes.
 |---|---|
 | `PageHeader`, `TabNav`, `AttentionBand`, `LevelBar`, `PeriodTabs`, `ProgressBar` | ✅ built |
 | `Button`, `Card`, `Input`, `Label`, `Badge`, `InputError`, `StatCard`, `FlashMessages` | ✅ built |
-| **`SidePanel` drawer** — 480px, header/body/footer, "Advanced" disclosure | ❌ **blocks 14 screens** |
+| **`SidePanel` drawer** — 480px, header/body/footer, "Advanced" disclosure | ✅ built, proven with New Item |
 | **`DataTable`** — grouped rows, group subtotal band, sticky header | ⚠️ inlined in Inventory; extract |
 | **Global ⌘K search** in the topbar (`389:1592` header) | ❌ not built |
 | **Collapsed `NavRail`** — the second nav state (`208:5577`) | ❌ not built |
-| Form controls: select, combobox, date, textarea, checkbox | ❌ not built |
+| Form controls: `FormField`, `Select`, `Textarea`, `Toggle` | ✅ built |
+| Form controls: combobox, date picker | ❌ not built |
 
 **DoD:** every piece rendered in isolation and visually diffed against its
 Figma node; `SidePanel` demonstrated with one real form end to end (New Item);
@@ -118,7 +119,7 @@ Backend is complete for the list and detail; the analytics screens need work.
 | Inventory (list) | `389:1592` | — | ✅ **done** |
 | Product Detail | `449:1577` | L | 1927px tall — the richest detail page in the file |
 | Item — View (drawer) | `378:1592` | M | Drawer form of the same entity |
-| New Item (drawer) | `317:468` / `322:704` | M | Delivered by Phase 1 |
+| New Item (drawer) | `317:468` / `322:704` | M | ✅ **done** — delivered by Phase 1 |
 | Bulk Edit | `270:9646` | M | `BulkUpdateInventoryItemsAction` exists |
 | Inventory Check | `388:1592` | L | Prefer the "rethought" node over `271:12639` |
 | Inventory Spend | `386:1673` | M | `InventorySpendController` exists |

@@ -192,6 +192,47 @@ class WebInventoryTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_new_item_panel_creates_an_item(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/inventory', [
+                'name' => 'Plavac Mali 2022',
+                'sku' => 'VT-PM-22',
+                'category' => 'FINISHED',
+                'group' => 'Wine',
+                'unit_size' => '750 ml',
+                'unit' => 'bottles',
+                // Money reaches the server as integer minor units.
+                'default_price' => 1850,
+                'sales_unit' => 'bottles',
+                'bottles_per_case' => 6,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->actingAsTenant($tenant);
+        $item = InventoryItem::query()->where('sku', 'VT-PM-22')->first();
+        self::assertNotNull($item);
+        self::assertSame('Plavac Mali 2022', $item->name);
+        self::assertSame('Wine', $item->group);
+        $this->forgetTenant();
+    }
+
+    public function test_creating_an_item_requires_the_manage_capability(): void
+    {
+        $tenant = $this->createTenant();
+        // SALES grants finance only — no inventory.manage.
+        $member = $this->createMember($tenant, [TenantRole::Sales]);
+
+        $this->actingAs($member)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/inventory', ['name' => 'X', 'sku' => 'X-1', 'category' => 'FINISHED', 'unit' => 'units'])
+            ->assertForbidden();
+    }
+
     public function test_delete_deactivates_an_item_referenced_by_orders(): void
     {
         [$tenant, $admin] = $this->tenantAndAdmin();

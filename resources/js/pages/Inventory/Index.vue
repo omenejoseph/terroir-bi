@@ -4,6 +4,7 @@ import { router, usePage } from '@inertiajs/vue3';
 import { Search } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
+import NewItemPanel from '@/components/inventory/NewItemPanel.vue';
 import AttentionBand from '@/components/ui/AttentionBand.vue';
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
@@ -37,6 +38,9 @@ const page = usePage<SharedProps>();
 const { can } = useAuth();
 
 const search = ref(props.filters.search ?? '');
+
+/* The design opens New Item as a drawer over the list, not as its own page. */
+const newItemOpen = ref(false);
 
 /* Debounced server-side search; `preserveState` keeps focus and the typed value
    through the partial reload, `replace` stops one history entry per keystroke. */
@@ -116,7 +120,7 @@ function flags(item: InventoryItem): string[] {
             <PageHeader title="Inventory">
                 <template #actions>
                     <Button v-if="can('inventory.manage')" variant="outline" size="sm">Bulk Import</Button>
-                    <Button v-if="can('inventory.manage')" size="sm" href="/inventory/new">New Item</Button>
+                    <Button v-if="can('inventory.manage')" size="sm" @click="newItemOpen = true">New Item</Button>
                 </template>
             </PageHeader>
 
@@ -269,5 +273,7 @@ function flags(item: InventoryItem): string[] {
                 </div>
             </div>
         </div>
+
+        <NewItemPanel :open="newItemOpen" @close="newItemOpen = false" />
     </AppLayout>
 </template>
