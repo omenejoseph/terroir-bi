@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnforceModuleAccess;
 use App\Http\Middleware\EnforceTenantAccess;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -33,6 +34,24 @@ return Application::configure(basePath: dirname(__DIR__))
             EnforceModuleAccess::class,
             EnforceTenantAccess::class,
             SetLocale::class,
+        ]);
+
+        // The same chain for the Inertia frontend, differing only in the guard:
+        // a cookie session instead of a bearer token. ResolveTenant then falls
+        // through to its 'session' strategy, since a session carries no token.
+        // Routes in this group already run the 'web' group (session, cookies,
+        // CSRF) by virtue of living in routes/web.php.
+        $middleware->group('tenant.web', [
+            'auth',
+            ResolveTenant::class,
+            EnforceModuleAccess::class,
+            EnforceTenantAccess::class,
+            SetLocale::class,
+        ]);
+
+        // Shared props for every Inertia response (auth, tenant, flash, ziggy).
+        $middleware->web(append: [
+            HandleInertiaRequests::class,
         ]);
 
         // Tenant context must be bound before route-model binding resolves any

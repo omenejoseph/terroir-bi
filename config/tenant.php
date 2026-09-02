@@ -34,7 +34,7 @@ return [
     | Order in which ResolveTenant middleware attempts to identify the tenant.
     | Earlier entries win. See app/Http/Middleware/ResolveTenant.php.
     */
-    'resolution_order' => ['token', 'header', 'subdomain'],
+    'resolution_order' => ['token', 'session', 'header', 'subdomain'],
 
     // X-Tenant header lets a client pick its active tenant; membership is still
     // verified server-side, so it is safe. Toggle off to force token/subdomain only.

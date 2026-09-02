@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Inventory\BulkUpdateInventoryItemsAction;
 use App\Actions\Inventory\CreateInventoryItemAction;
+use App\Actions\Inventory\DeleteInventoryItemAction;
 use App\Actions\Inventory\DuplicateInventoryItemAction;
 use App\Actions\Inventory\UpdateInventoryItemAction;
 use App\DataTransferObjects\InventoryItemData;
@@ -17,8 +18,8 @@ use App\Models\InventoryItem;
 use App\Queries\InventoryAnalyticsQuery;
 use App\Queries\InventoryTaxonomyQuery;
 use App\Queries\ListInventoryItemsQuery;
-use App\Services\Uploads\PresignedUploadService;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use App\Services\Inventory\InventoryItemPresenter;
+use App\Support\InventoryItemFilters;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -36,38 +37,11 @@ class InventoryItemController extends Controller
         return response()->json(['data' => $query->get()]);
     }
 
-    public function index(Request $request, ListInventoryItemsQuery $query, PresignedUploadService $uploads): JsonResponse
+    public function index(Request $request, ListInventoryItemsQuery $query, InventoryItemPresenter $presenter): JsonResponse
     {
-        $paginator = $query->paginate([
-            'search' => $request->query('search'),
-            'category' => $request->query('category'),
-            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : null,
-            'is_for_sale' => $request->has('is_for_sale') ? $request->boolean('is_for_sale') : null,
-            'sellable' => $request->boolean('sellable'),
-        ]);
+        $paginator = $query->paginate(InventoryItemFilters::fromRequest($request));
 
-        // Lead image for the list thumbnail (one query for the whole page).
-        // loadMissing mutates the same model instances returned by items().
-        EloquentCollection::make($paginator->items())->loadMissing('firstImage');
-
-        return response()->json([
-            'data' => array_map(
-                function (InventoryItem $item) use ($uploads): array {
-                    $data = InventoryItemData::fromModel($item)->toArray();
-                    $key = $item->firstImage?->object_key;
-                    $data['image_url'] = $key !== null ? $uploads->readUrl($key) : null;
-
-                    return $data;
-                },
-                $paginator->items(),
-            ),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-            ],
-        ]);
+        return response()->json($presenter->page($paginator));
     }
 
     public function show(InventoryItem $item): JsonResponse
@@ -109,21 +83,14 @@ class InventoryItemController extends Controller
         return response()->json(['data' => $data->toArray()], 201);
     }
 
-    public function destroy(InventoryItem $item): JsonResponse
+    public function destroy(InventoryItem $item, DeleteInventoryItemAction $action): JsonResponse
     {
-        // Soft-delete (deactivate) when referenced by an order line; otherwise
-        // hard delete (cascades recipe lines, movements).
-        if ($item->orderItems()->exists()) {
-            $item->is_active = false;
-            $item->save();
-
+        if ($action->execute($item)) {
             return response()->json([
                 'data' => InventoryItemData::fromModel($item)->toArray(),
                 'message' => 'Item is referenced by orders and was deactivated instead of deleted.',
             ]);
         }
-
-        $item->delete();
 
         return response()->json(status: 204);
     }

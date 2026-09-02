@@ -28,6 +28,7 @@ rules.
 | 09 | [`10-migration-deltas.md`](10-migration-deltas.md) | 🆕 **Change log** — what landed in the source `main` after this blueprint's first snapshot (Customers/IAM/Inventory + Orders) |
 | 10 | [`11-backend-implementation-plan.md`](11-backend-implementation-plan.md) | 🆕 **Backend build plan** — phased Laravel work for parity + the Orders module |
 | 11 | [`12-backend-build-checklist.md`](12-backend-build-checklist.md) | 🆕 **Executable backlog** — ordered, tickable tasks (migrations→models→actions→endpoints→tests) for parity + Orders |
+| 12 | [`16-inertia-frontend-migration.md`](16-inertia-frontend-migration.md) | 🆕 **Frontend migration** — replacing the decoupled Next.js SPA with an Inertia (Vue 3 + TS) frontend served by Laravel |
 | 08 | [`openapi/openapi.yaml`](openapi/openapi.yaml) | Machine-readable OpenAPI 3.1 spec — the **target** contract (import into Postman/Swagger/codegen) |
 | 08a | [`openapi/live.yaml`](openapi/live.yaml) | OpenAPI 3.1 spec of the **currently implemented** API (kept in lock-step with the code) |
 

@@ -7,6 +7,7 @@ namespace App\Http\Middleware;
 use App\Authorization\MembershipContext;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Auth\ActiveTenantSession;
 use App\Tenancy\Contracts\TenantContext;
 use App\Tenancy\Contracts\TenantResolver;
 use Closure;
@@ -20,11 +21,14 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Active-tenant precedence (config('tenant.resolution_order')):
  *   1. token     — the Sanctum token's bound tenant_id (set at login / switch)
- *   2. header    — X-Tenant (membership is still verified, so it is safe)
- *   3. subdomain — acme.localhost -> tenant by slug
+ *   2. session   — the session's active_tenant_id (set at web login / switch);
+ *                  this is how the cookie-authenticated Inertia frontend picks
+ *                  its tenant, since it has no token to bind one to
+ *   3. header    — X-Tenant (membership is still verified, so it is safe)
+ *   4. subdomain — acme.localhost -> tenant by slug
  *
  * Security: the client never selects a tenant it cannot prove membership of.
- * No active membership ⇒ 403. Must run after auth:sanctum.
+ * No active membership ⇒ 403. Must run after the authentication middleware.
  */
 class ResolveTenant
 {
@@ -68,6 +72,7 @@ class ResolveTenant
         foreach ((array) config('tenant.resolution_order', []) as $strategy) {
             $tenant = match ($strategy) {
                 'token' => $this->fromToken($user),
+                'session' => $this->fromSession($request),
                 'header' => $this->fromHeader($request),
                 'subdomain' => $this->resolver->resolveFromSubdomain($request->getHost()),
                 default => null,
@@ -94,6 +99,24 @@ class ResolveTenant
         $tenantId = $token->getAttribute('tenant_id');
 
         return is_string($tenantId) ? $this->resolver->resolveById($tenantId) : null;
+    }
+
+    /**
+     * Active tenant for cookie-authenticated (Inertia) requests. Stateless API
+     * requests have no session, so this strategy is simply skipped there.
+     *
+     * The session only *nominates* a tenant — handle() still verifies the
+     * membership, so a tampered session cannot reach another tenant's data.
+     */
+    private function fromSession(Request $request): ?Tenant
+    {
+        if (! $request->hasSession()) {
+            return null;
+        }
+
+        $id = $request->session()->get(ActiveTenantSession::KEY);
+
+        return is_string($id) && $id !== '' ? $this->resolver->resolveById($id) : null;
     }
 
     private function fromHeader(Request $request): ?Tenant

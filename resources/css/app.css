@@ -1,9 +1,241 @@
 @import 'tailwindcss';
 
+@source '../../resources/js/**/*.vue';
+@source '../../resources/js/**/*.ts';
+@source '../../resources/views/**/*.blade.php';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/*
+  Dark mode is class-based (driven by the `.dark` token block below), not the OS.
+  Without this, Tailwind v4's `dark:` utilities default to `prefers-color-scheme`,
+  so a dark-mode OS would paint dark-variant colors onto the app's always-light
+  surfaces — illegible. Pinning `dark:` to the `.dark` class keeps utilities in
+  sync with the theme tokens.
+*/
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  ============================================================================
+  DESIGN TOKENS — the single source of truth for the app's look & feel.
+  ============================================================================
+  Every UI primitive (button, card, input, badge…) references these variables
+  instead of hard-coded colors. To restyle the whole app, edit values HERE —
+  you should not need to touch any component file.
+
+  PROVENANCE: these values are carried over from the outgoing Next.js app
+  (frontend/src/app/globals.css) so the Inertia app has a coherent look while
+  the port is in progress. They are a PLACEHOLDER. The TERROIR Figma file is the
+  authority: once the Figma connector is available, replace this block wholesale
+  with the file's published variables (get_variable_defs) and treat any
+  divergence as a bug. Nothing below this block hard-codes a colour, so that
+  swap is a one-file change.
+*/
+
+:root {
+    --radius: 0.625rem;
+
+    /* Palette: Warm Alabaster canvas; white cards lift off it. */
+    --background: #f9f8f6; /* Warm Alabaster */
+    --foreground: #3a3a3a; /* Deep Charcoal-Slate */
+
+    --card: #ffffff;
+    --card-foreground: #3a3a3a;
+
+    --popover: #ffffff;
+    --popover-foreground: #3a3a3a;
+
+    /*
+      Brand colour — the single source of truth for the app's accent. Everything
+      brand-tinted (primary, ring, the top-of-page glow) derives from --brand, so
+      rebranding is ONE line here. It can also be overridden at runtime (e.g. set
+      `--brand` on <html> from saved tenant settings) to retheme live without a
+      rebuild — the groundwork for per-tenant dynamic theming.
+    */
+    --brand: #3a3a3a; /* Deep Charcoal-Slate */
+    --primary: var(--brand);
+    --primary-foreground: #f9f8f6;
+
+    --secondary: #f4f5f6; /* Cool Platinum */
+    --secondary-foreground: #3a3a3a;
+
+    --muted: #f4f5f6; /* Cool Platinum */
+    --muted-foreground: oklch(0.55 0.01 250); /* mid slate-grey for secondary text */
+
+    --accent: #f4f5f6; /* Cool Platinum */
+    --accent-foreground: #3a3a3a;
+
+    /* Clear alert red — kept outside the neutral palette so warnings still read. */
+    --destructive: oklch(0.55 0.2 27);
+    --destructive-foreground: #f9f8f6;
+
+    --success: oklch(0.59 0.13 163);
+    --success-foreground: oklch(0.985 0 0);
+
+    --border: #d8dee2; /* Soft Slate */
+    --input: #d8dee2; /* Soft Slate */
+    --ring: var(--brand);
+
+    /*
+      Nav chrome surface (sidebar + top bars). Kept as its own token so the dark
+      chrome can be retuned independently of the accent. Defined only here (not in
+      .dark) so it stays constant even though those surfaces opt into dark tokens
+      for their contents.
+    */
+    --sidebar: #3a3a3a; /* Deep Charcoal-Slate */
+}
+
+.dark {
+    --background: oklch(0.141 0.005 285.823);
+    --foreground: oklch(0.985 0 0);
+
+    --card: oklch(0.21 0.006 285.885);
+    --card-foreground: oklch(0.985 0 0);
+
+    --popover: oklch(0.21 0.006 285.885);
+    --popover-foreground: oklch(0.985 0 0);
+
+    --brand: #d8dee2; /* Soft Slate — light accent for dark mode */
+    --primary: var(--brand);
+    --primary-foreground: #3a3a3a; /* dark text on the light accent */
+
+    --secondary: oklch(0.274 0.006 286.033);
+    --secondary-foreground: oklch(0.985 0 0);
+
+    --muted: oklch(0.274 0.006 286.033);
+    --muted-foreground: oklch(0.705 0.015 286.067);
+
+    --accent: oklch(0.274 0.006 286.033);
+    --accent-foreground: oklch(0.985 0 0);
+
+    --destructive: oklch(0.7 0.19 27);
+    --destructive-foreground: oklch(0.985 0 0);
+
+    --success: oklch(0.65 0.14 163);
+    --success-foreground: oklch(0.141 0.005 285.823);
+
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: var(--brand);
+}
+
+/*
+  Map the tokens above into Tailwind's theme so utilities like `bg-primary`,
+  `text-muted-foreground`, and `rounded-lg` resolve to them. This is the bridge
+  between "design tokens" and "what components actually type".
+*/
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-sidebar: var(--sidebar);
+
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+    * {
+        border-color: var(--color-border);
+    }
+    /*
+      Hard stop on horizontal page scroll. iOS Safari lets the viewport rubber-band
+      sideways when any descendant overflows — this root guard is the reliable
+      backstop.
+
+      Use `overflow-x: clip` (not `hidden`): `hidden` forces the other axis to
+      compute to `auto`, turning <html>/<body> into a scroll container — which
+      breaks `position: sticky` on the sidebar (the menu scrolls away with the
+      page). `clip` stops horizontal overflow without creating a scroll container.
+    */
+    html,
+    body {
+        overflow-x: clip;
+        max-width: 100%;
+    }
+    body {
+        position: relative;
+        background-color: var(--color-background);
+        /* Soft brand glow at the top — adds depth without distracting. */
+        background-image: radial-gradient(
+            72% 42% at 50% -8%,
+            color-mix(in oklch, var(--color-primary) 9%, transparent),
+            transparent 70%
+        );
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+        color: var(--color-foreground);
+        font-feature-settings: 'rlig' 1, 'calt' 1;
+    }
+}
+
+/*
+  Motion tokens — registered here so they're available as `animate-*` utilities
+  (e.g. animate-fade-up). Centralizing them means timing/easing is tuned in one
+  place, like the colour tokens above.
+*/
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --animate-fade-up: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    --animate-fade-in: fade-in 0.5s ease-out both;
+    --animate-scale-in: scale-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+    @keyframes fade-up {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    @keyframes scale-in {
+        from {
+            opacity: 0;
+            transform: scale(0.96);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+}
+
+/* Respect users who prefer less motion: keep the layout, drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
 }
