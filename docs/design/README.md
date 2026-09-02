@@ -94,9 +94,71 @@ ever disagrees with the design, the design wins — export it by hand.
 in the design renders **Figtree**. The app loads Figtree. Worth confirming with
 the designer which is intended.
 
-**Nav rail.** The design has two nav states: `ExpandedNav` (`547:1568`, 240px,
-implemented) and a collapsed `NavRail` used on the Dashboard screen. The
-collapsed state is not built yet.
+**Nav rail.** The design has two nav states, and **both are now built**:
+`ExpandedNav` (`547:1568`, 240px) and `NavRail` (`230:2399`, 56px). The header's
+panel button switches between them and the choice is remembered per browser.
+
+Two things about the rail are worth knowing. First, **every designed screen
+frame is drawn collapsed** — the 240px nav appears only as its own standalone
+component. The app still *defaults* to expanded, because a first-run member
+should see where things are; if the design intends collapsed-by-default, that is
+a one-line change in `AppLayout`. Second, the design's rail targets are
+`PreviewCardTrigger`s but the card itself is not drawn in any frame, so the
+flyout's own geometry is ours: it reuses `NavRow`, so a category reads
+identically expanded or collapsed. The rail's nine targets, their order and
+their glyphs are read off `230:2412` and match one-for-one with
+`NAV_CATEGORIES` plus Shortcuts.
+
+**Icon stroke width.** The design's icons are drawn at **1.75**; the app draws
+every icon at 1.5. Measured, not guessed: comparing ink coverage over the rail's
+eight unstyled glyphs against `renders/customers/customers--230-2395.png` gives
+0.870 at stroke 1.5, **0.962 at 1.75**, and 1.216 at 2. (The file's
+`stroke-width` variable says 2, which the render disagrees with.) Left at 1.5
+because it is an app-wide change nobody has asked for — but 1.75 is the number
+if we ever want to close it.
+
+**Radius is not uniformly 0.** The content area is square everywhere, verified
+pixel-by-pixel. The **navigation is not**: its rows, category buttons and the
+logo tile carry the file's own `rounded-lg` of 8px (`547:1588`, `547:1594`,
+`547:1570`), and avatars are fully round. `--radius-nav` exists so the nav can
+opt in by name without the content area picking it up. The one exception inside
+the nav is the collapsed rail's active target, which is a full-bleed square
+(`230:2424`).
+
+**The logo is a Lucide glyph.** The mark in the nav is `Grape` in the tile's
+foreground colour on a 32px `#171717` tile at 8px radius, with the glyph at half
+the tile — not the circle-cluster mark in `public/images/logo.png`, which is the
+standalone brand asset. Confirmed by rendering `230:2401` and matching it
+against Lucide's `grape` (8 circles plus the `M22 5V2l-5.89 5.89` stem). The
+Figma SVG itself could not be exported — same egress block as the other icons.
+
+## Type scale — verified exact
+
+The ramp in `app.css` is the design's, and the app's computed styles were
+checked against the design's own declarations (`get_design_context` reports the
+px values Figma applies, so these are declared values, not measurements off a
+render):
+
+| Element | Design | App |
+| --- | --- | --- |
+| Nav wordmark "Terroir" | 13 / 16.25, 600 | ✅ |
+| Nav subtitle, footer role | 11 / 13.75, 400 | ✅ |
+| Nav category heading | 13 / 19.5, 400 | ✅ |
+| Nav row | 14 / 21, 400 (`size/sm`) | ✅ |
+| Nav footer name | 13 / 16.25, 600 | ✅ |
+| Page H1 | 20 / 28, 600 (`size/xl`, `leading/7`) | ✅ |
+| Table cell, chips, buttons | 12 / 16, 400 (`size/xs`, `leading/4`) | ✅ |
+| Header search placeholder | 12, 400 | ✅ |
+| Header `Kbd` | 12 / 16, mono | ✅ |
+
+The file's size variables are `size/xs` 12, `size/sm` 14, `size/base` 16,
+`size/lg` 18, `size/xl` 20, `size/3xl` 30; 10, 11 and 13 appear as raw values on
+specific nodes rather than as scale steps. Every size used anywhere in
+`resources/js` is one of those nine.
+
+Two were wrong before this pass and are fixed: the nav wordmark and footer name
+were 14px where the design says 13, and `Kbd` was 11px sans where the design
+says 12px mono.
 
 ## Gaps — design ahead of the backend
 

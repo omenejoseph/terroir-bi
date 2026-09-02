@@ -60,14 +60,20 @@
 
 :root {
     /*
-      Square corners. The Figma file *defines* radius variables (rounded-lg 8,
-      radius-lg 10) but never applies them: every card, button, input, badge,
-      tab pill and bar in the renders measures a hard 0px corner (verified
-      pixel-by-pixel against docs/design/renders). The only curved shapes in
-      the whole design are the Switch track/knob and a few 2px status dots,
-      which opt in with `rounded-full` locally.
+      Square corners in the content area. Every card, button, input, badge, tab
+      pill and bar in the renders measures a hard 0px corner (verified
+      pixel-by-pixel against docs/design/renders), so the whole radius scale is
+      pinned to 0 and utilities like `rounded-lg` flatten with it.
+
+      The navigation is the exception, and it is a real one rather than an
+      oversight: its rows, category buttons, flyouts and the logo tile all carry
+      the file's own `rounded-lg` of 8px (Figma `547:1588`, `547:1594`,
+      `547:1570`). That is what `--radius-nav` below is for — the nav chrome
+      opts in by name, so nothing in the content area can pick it up by
+      accident. Avatars and status dots opt into `rounded-full` locally.
     */
     --radius: 0rem;
+    --radius-nav: 0.5rem;   /* 8px — navigation chrome only */
 
     --background: #ffffff;
     --foreground: #0a0a0a;
@@ -278,6 +284,7 @@
 
     --font-sans: 'Figtree', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
+    --radius-nav: var(--radius-nav);
     --radius-sm: var(--radius);
     --radius-md: var(--radius);
     --radius-lg: var(--radius);

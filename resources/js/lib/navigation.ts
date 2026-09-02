@@ -1,4 +1,5 @@
 import {
+    Banknote,
     Boxes,
     Building2,
     CalendarDays,
@@ -6,14 +7,17 @@ import {
     ClipboardList,
     Clock,
     Coins,
+    ConciergeBell,
     CookingPot,
     CreditCard,
+    Factory,
     FileStack,
     Grape,
     LayoutGrid,
     type LucideIcon,
     MessageCircle,
     Package,
+    Pin,
     Receipt,
     Settings,
     ShoppingCart,
@@ -55,12 +59,19 @@ export interface NavItem {
 
 export interface NavCategory {
     label: string;
+    /**
+     * The glyph the collapsed rail stands in for the whole category, since
+     * there is no room for the heading. Read off the rail in the design's
+     * screen frames (e.g. `230:2412`), which are all drawn collapsed.
+     */
+    icon: LucideIcon;
     items: NavItem[];
 }
 
 export const NAV_CATEGORIES: NavCategory[] = [
     {
         label: 'Overview',
+        icon: LayoutGrid,
         items: [
             { label: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
             { label: 'Cash System', href: null, icon: Coins, capability: 'finance.view' },
@@ -68,6 +79,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
     },
     {
         label: 'Sales',
+        icon: ShoppingCart,
         items: [
             { label: 'Orders', href: '/orders', icon: ShoppingCart, capability: 'orders.view' },
             { label: 'Customers', href: '/customers', icon: Users, capability: 'customers.view' },
@@ -82,6 +94,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
     },
     {
         label: 'Hospitality',
+        icon: ConciergeBell,
         items: [
             { label: 'Accommodation', href: null, icon: Store },
             { label: 'Kitchen', href: null, icon: CookingPot },
@@ -90,6 +103,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
     },
     {
         label: 'Production',
+        icon: Factory,
         items: [
             { label: 'Cellar', href: null, icon: Warehouse, capability: 'cellar.view' },
             { label: 'Harvest', href: null, icon: Grape, capability: 'vineyards.view' },
@@ -98,6 +112,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
     },
     {
         label: 'Supply',
+        icon: Boxes,
         items: [
             { label: 'Inventory', href: '/inventory', icon: Package, capability: 'inventory.view' },
             { label: 'Purchase Orders', href: null, icon: FileStack, capability: 'suppliers.view' },
@@ -106,6 +121,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
     },
     {
         label: 'Finance',
+        icon: Banknote,
         items: [
             { label: 'Costs', href: null, icon: Receipt, capability: 'finance.view' },
             { label: 'Inflow', href: null, icon: CreditCard, capability: 'finance.view' },
@@ -114,6 +130,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
     },
     {
         label: 'Team',
+        icon: Users,
         items: [
             { label: 'Employees', href: null, icon: Users, capability: 'members.view' },
             { label: 'Schedules', href: null, icon: CalendarDays },
@@ -124,6 +141,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
     },
     {
         label: 'System',
+        icon: Settings,
         items: [
             { label: 'Settings', href: null, icon: Settings, capability: 'settings.manage' },
             { label: 'WhatsApp Bot', href: null, icon: MessageCircle, capability: 'settings.manage' },
@@ -136,6 +154,8 @@ export const NAV_CATEGORIES: NavCategory[] = [
  * categories. Pinning is not implemented yet, so this renders the design's
  * default set.
  */
+export const SHORTCUTS_ICON = Pin;
+
 export const SHORTCUTS: NavItem[] = [
     { label: 'Cash System', href: null, icon: Coins },
     { label: 'Orders', href: '/orders', icon: ShoppingCart },
