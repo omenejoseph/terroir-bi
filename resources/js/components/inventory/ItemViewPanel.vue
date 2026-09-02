@@ -88,7 +88,7 @@ const details = computed(() => {
             <div class="flex flex-col gap-3">
                 <MetaStrip :items="[item.sku, item.vintage ? String(item.vintage) : null, item.unit_size]" />
 
-                <div class="flex flex-wrap gap-1.5">
+                <div class="flex flex-wrap items-center gap-1.5">
                     <Badge variant="outline">{{ categoryLabel(item.category) }}</Badge>
                     <Badge v-if="item.group" variant="outline">
                         {{ [item.group, item.subcategory].filter(Boolean).join(' · ') }}
@@ -98,6 +98,13 @@ const details = computed(() => {
                     <Badge v-if="!item.min_stock" variant="warning">No min stock</Badge>
                 </div>
             </div>
+
+            <!--
+              @todo Provenance line. The design reads "Lowest stock of the six
+              wines · Updated 8 Aug 2026 by Iva Šimić" — a ranking within its
+              group plus the last editor. Needs an audit trail; the ledger
+              records movements but not field edits.
+            -->
 
             <Separator />
 
@@ -155,7 +162,14 @@ const details = computed(() => {
 
             <!-- Pricing -->
             <section class="flex flex-col gap-3">
-                <SectionHeader title="Pricing &amp; margin" />
+                <SectionHeader title="Pricing &amp; margin">
+                    <template #actions>
+                        <!-- @todo Inline pricing edit; for now it opens the item. -->
+                        <Link :href="`/inventory/${item.id}`" class="text-13 text-muted-foreground hover:text-foreground">
+                            Edit
+                        </Link>
+                    </template>
+                </SectionHeader>
 
                 <dl class="divide-y divide-border rounded-lg border border-border bg-muted/40 px-4 text-sm">
                     <div class="flex items-baseline justify-between gap-3 py-3">
@@ -184,7 +198,14 @@ const details = computed(() => {
 
             <!-- Item details -->
             <section class="flex flex-col gap-3">
-                <SectionHeader title="Item details" />
+                <SectionHeader title="Item details">
+                    <template #actions>
+                        <!-- @todo Inline details edit; for now it opens the item. -->
+                        <Link :href="`/inventory/${item.id}`" class="text-13 text-muted-foreground hover:text-foreground">
+                            Edit
+                        </Link>
+                    </template>
+                </SectionHeader>
                 <dl class="divide-y divide-border text-sm">
                     <div
                         v-for="detail in details"
@@ -197,6 +218,25 @@ const details = computed(() => {
                         </dd>
                     </div>
                 </dl>
+            </section>
+
+            <Separator />
+
+            <!-- Who's buying it -->
+            <section class="flex flex-col gap-3">
+                <SectionHeader title="Who's buying it">
+                    <template #actions>
+                        <!-- @todo Filter Orders by this item once Orders is ported. -->
+                        <span class="text-13 text-muted-foreground">Open in Orders</span>
+                    </template>
+                </SectionHeader>
+                <!--
+                  @todo Customer attribution. The design lists each buyer with
+                  their share of this item's volume and their last order date.
+                  Needs order lines rolled up by customer for this item — the
+                  data exists on OrderItem, but no query aggregates it per item.
+                -->
+                <p class="text-13 text-muted-foreground">Per-customer demand is not attributed yet.</p>
             </section>
 
             <Separator />
@@ -237,6 +277,20 @@ const details = computed(() => {
                     </li>
                 </ul>
                 <p v-else class="text-13 text-muted-foreground">No movements recorded yet.</p>
+            </section>
+
+            <Separator />
+
+            <!-- Timeline -->
+            <section class="flex flex-col gap-3">
+                <SectionHeader title="Timeline" />
+                <!--
+                  @todo Audit trail. The design shows "Stock adjusted to 420 by
+                  Iva Šimić" and "Item created by Iva Šimić" with timestamps.
+                  Movements cover adjustments, but creation and field edits are
+                  not recorded anywhere.
+                -->
+                <p class="text-13 text-muted-foreground">Item history is not recorded yet.</p>
             </section>
         </div>
 

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { Download, Plus, Upload } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import BarChart from '@/components/ui/BarChart.vue';
+import Button from '@/components/ui/Button.vue';
 import Callout from '@/components/ui/Callout.vue';
 import StackedBar from '@/components/ui/StackedBar.vue';
 import Card from '@/components/ui/Card.vue';
@@ -109,7 +111,19 @@ const dateRange = computed(() => {
 <template>
     <AppLayout title="Inventory spend">
         <div class="flex flex-col gap-5">
-            <PageHeader title="Inventory" />
+            <PageHeader title="Inventory">
+                <template #actions>
+                    <!-- @todo Bulk Import — no import pipeline yet. -->
+                    <Button variant="outline" size="sm">
+                        <Upload class="size-4" :stroke-width="1.5" />
+                        Bulk Import
+                    </Button>
+                    <Button size="sm" href="/inventory">
+                        <Plus class="size-4" :stroke-width="1.5" />
+                        New Item
+                    </Button>
+                </template>
+            </PageHeader>
             <Tabs :items="MODULE_TABS" current="Inventory Spend" />
 
             <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -193,7 +207,19 @@ const dateRange = computed(() => {
                     <SectionHeader
                         title="Depletion and return by product"
                         description="Runout forecast and per-product exit, merged into one table."
-                    />
+                    >
+                        <template #actions>
+                            <!--
+                              @todo Export. Needs a CSV/XLSX endpoint for this
+                              query; the browser cannot serialise the paginated
+                              server-side result on its own.
+                            -->
+                            <Button variant="outline" size="sm">
+                                <Download class="size-4" :stroke-width="1.5" />
+                                Export
+                            </Button>
+                        </template>
+                    </SectionHeader>
 
                     <div v-if="spend.per_product.length" class="overflow-x-auto">
                         <table class="w-full min-w-[60rem] text-sm">
@@ -262,6 +288,14 @@ const dateRange = computed(() => {
                     >
                         They may still appear in shipped orders — an exit that never reached the ledger looks
                         identical to no trade at all. Check the order → stock link before reading this as idle stock.
+                        <template #action>
+                            <!--
+                              @todo "Check order → stock link" — needs a
+                              reconciliation view comparing shipped order lines
+                              against recorded stock movements.
+                            -->
+                            <Button variant="outline" size="sm">Check order → stock link</Button>
+                        </template>
                     </Callout>
                 </CardContent>
             </Card>

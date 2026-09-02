@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, Trash2 } from 'lucide-vue-next';
+import { ArrowLeft, Download, Trash2 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import QuickStockEntry from '@/components/inventory/QuickStockEntry.vue';
@@ -53,6 +53,20 @@ const current = computed(() => props.analytics.current);
 const exits = computed(() => props.analytics.exits);
 const realized = computed(() => props.analytics.realized);
 
+/**
+ * The design's tab strip (Figma 449:1577). Only Stock is built.
+ *
+ * @todo Details  — the item's own fields; the Item — View drawer already
+ *                  renders them and could be lifted here.
+ * @todo Recipe   — bill of materials. SetRecipeAction and the recipe endpoint
+ *                  exist; this needs the editor.
+ * @todo Produce  — ProduceItemAction exists; needs the run form.
+ * @todo Images   — InventoryMediaController + presigned uploads exist; needs
+ *                  the gallery and upload UI.
+ * @todo Docs     — tech sheets and documents; attach endpoints exist.
+ * @todo Pricing  — customer overrides and tiers; PriceController exists.
+ * @todo Analysis — BottleAnalysisController exists; needs the results view.
+ */
 const DETAIL_TABS: TabItem[] = [
     { label: 'Stock', value: 'stock' },
     { label: 'Details' },
@@ -107,6 +121,12 @@ const visibleMovements = computed(() => {
 
 const form = useForm({});
 
+/**
+ * @todo Duplicate. DuplicateInventoryItemAction exists and the API exposes it;
+ * this needs a web route before the button can call anything.
+ */
+function duplicate(): void {}
+
 function destroy(): void {
     if (!confirm(`Delete ${props.item.name}? Items referenced by orders are deactivated instead.`)) return;
 
@@ -142,7 +162,7 @@ function destroy(): void {
                 </div>
 
                 <div v-if="can('inventory.manage')" class="flex shrink-0 items-center gap-2">
-                    <Button variant="outline" size="sm">Duplicate</Button>
+                    <Button variant="outline" size="sm" @click="duplicate">Duplicate</Button>
                     <Button v-if="can('inventory.delete')" variant="outline" size="sm" @click="destroy">
                         <Trash2 class="size-4 text-destructive" :stroke-width="1.5" />
                         <span class="text-destructive">Delete</span>
@@ -372,7 +392,15 @@ function destroy(): void {
                     <SectionHeader
                         title="Movement history"
                         :description="`${movements.length} movements · running balance so you can see stock rebuild then drain`"
-                    />
+                    >
+                        <template #actions>
+                            <!-- @todo Export — needs a CSV endpoint for the ledger. -->
+                            <Button variant="outline" size="sm">
+                                <Download class="size-4" :stroke-width="1.5" />
+                                Export
+                            </Button>
+                        </template>
+                    </SectionHeader>
 
                     <Tabs
                         :items="MOVEMENT_TABS"

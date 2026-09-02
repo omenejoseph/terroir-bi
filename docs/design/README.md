@@ -70,6 +70,17 @@ The export is `271:12639` (the original, 1369×1497). The canvas also holds
 `388:1592` "Inventory Check — rethought" (1369×1219), which the screen plan
 prefers. Confirm with the designer which is current before building it.
 
+## Placeholders and `@todo`
+
+Screens are built complete: every control and section the design shows is
+rendered, even where the behaviour behind it does not exist. Each carries an
+`@todo` in the component naming what is missing and what would implement it —
+`grep -rn "@todo" resources/js` lists the outstanding work.
+
+What is never faked is a **figure**. A card with no data says so ("not
+tracked", "Runway is not calculated yet") or withholds the total, rather than
+showing a plausible number.
+
 ## Known deviations
 
 **Icons.** The design's own layer names call out Lucide (`lucide/ticket-check`,

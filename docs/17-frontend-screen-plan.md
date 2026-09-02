@@ -102,9 +102,16 @@ one is in progress.
    Not "it looks right" — screenshot both and check them side by side.
 8. **Navigable.** Its `navigation.ts` entry moves from `href: null` to a real
    path, so the sidebar stops showing it disabled.
-9. **Gaps recorded, never faked.** Any design element without backing data is
-   omitted and logged in `docs/design/README.md`. Inventing a number to fill a
-   card is a defect, not a placeholder.
+9. **Every element present; no invented data.** Build the whole screen the
+   design shows, including controls and sections whose behaviour does not exist
+   yet — those carry an `@todo` naming what is missing and what would implement
+   it. Omitting them makes the app quietly diverge from the design, and the
+   divergence is invisible until someone compares by eye.
+
+   The line is between *chrome* and *figures*: render the card, the button and
+   the column, but never fabricate a number to fill them. Say "not tracked",
+   "not calculated yet", or withhold the total — an invented figure is a defect,
+   not a placeholder. Data gaps still go in `docs/design/README.md`.
 
 ## Definition of done — every phase
 

@@ -114,7 +114,12 @@ function save(): void {
         <div class="flex flex-col gap-5">
             <PageHeader title="Inventory">
                 <template #actions>
-                    <Button variant="outline" size="sm" :disabled="!history.length">
+                    <!--
+                      @todo History panel. Past stocktakes are already loaded in
+                      `history` (InventoryCheck + its adjusted lines); this needs
+                      a drawer listing them with their net difference.
+                    -->
+                    <Button variant="outline" size="sm">
                         <History class="size-4" :stroke-width="1.5" />
                         History<template v-if="history.length"> ({{ history.length }})</template>
                     </Button>

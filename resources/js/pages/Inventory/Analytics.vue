@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import { AlertTriangle } from 'lucide-vue-next';
+import { AlertTriangle, Plus, Upload } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import BarChart from '@/components/ui/BarChart.vue';
 import Button from '@/components/ui/Button.vue';
+import Callout from '@/components/ui/Callout.vue';
 import Card from '@/components/ui/Card.vue';
 import CardContent from '@/components/ui/CardContent.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
@@ -80,7 +81,19 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
 <template>
     <AppLayout title="Inventory analytics">
         <div class="flex flex-col gap-5">
-            <PageHeader title="Inventory" />
+            <PageHeader title="Inventory">
+                <template #actions>
+                    <!-- @todo Bulk Import — no CSV/XLSX import pipeline yet. -->
+                    <Button v-if="can('inventory.manage')" variant="outline" size="sm">
+                        <Upload class="size-4" :stroke-width="1.5" />
+                        Bulk Import
+                    </Button>
+                    <Button v-if="can('inventory.manage')" size="sm" href="/inventory">
+                        <Plus class="size-4" :stroke-width="1.5" />
+                        New Item
+                    </Button>
+                </template>
+            </PageHeader>
             <Tabs :items="MODULE_TABS" current="Analytics" />
 
             <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -129,7 +142,19 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                         <SectionHeader
                             title="In and out · 12 months"
                             description="Units received against units shipped."
-                        />
+                        >
+                            <template #actions>
+                                <!--
+                                  @todo Range picker. The window is fixed at 12
+                                  months in InventoryAnalyticsQuery::movements12m();
+                                  it needs a period argument before this can do
+                                  anything.
+                                -->
+                                <button type="button" class="text-13 text-muted-foreground hover:text-foreground">
+                                    Change range
+                                </button>
+                            </template>
+                        </SectionHeader>
                         <BarChart
                             :points="
                                 analytics.movements_12m.map((m) => ({
@@ -190,7 +215,18 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                         <SectionHeader
                             title="Stock against movement"
                             description="Bar is what we hold. Per-product exits are not attributed yet, so no movement notch is drawn."
-                        />
+                        >
+                            <template #actions>
+                                <!--
+                                  @todo Unit switch (bottles / cases / value).
+                                  Needs bottles_per_case and a price basis per
+                                  row before the bars can be re-scaled.
+                                -->
+                                <button type="button" class="text-13 text-muted-foreground hover:text-foreground">
+                                    By bottles
+                                </button>
+                            </template>
+                        </SectionHeader>
 
                         <ul v-if="analytics.stock_levels.length" class="flex flex-col gap-3">
                             <li v-for="level in analytics.stock_levels" :key="level.name" class="flex flex-col gap-1.5">
@@ -236,17 +272,31 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                             </li>
                         </ul>
 
-                        <!-- The design's data-quality callout, shown only when it is true. -->
-                        <div v-if="nothingCosted" class="rounded-lg border border-dashed border-border p-4">
-                            <p class="text-sm font-medium">No value per product</p>
-                            <p class="mt-1 text-13 text-muted-foreground">
+                        <!--
+                          The design's data-quality callout. The wording reflects
+                          how many items are actually costed, but the section and
+                          its action are always present so the card matches the
+                          design whatever the data says.
+                        -->
+                        <Callout
+                            :title="nothingCosted ? 'No value per product' : 'Value is only as good as the costs'"
+                            :tone="nothingCosted ? 'warning' : 'neutral'"
+                        >
+                            <template v-if="nothingCosted">
                                 Cost per unit is empty on every active item, so value can only be totalled at
                                 portfolio level.
-                            </p>
-                            <Button v-if="can('inventory.manage')" variant="outline" size="sm" class="mt-3" href="/inventory">
-                                Add costs
-                            </Button>
-                        </div>
+                            </template>
+                            <template v-else>
+                                {{ num(summary.costed_count) }} of {{ num(summary.total_active) }} active items
+                                carry a cost per unit. The rest fall back to list price.
+                            </template>
+                            <template #action>
+                                <!-- @todo Deep-link to the items missing a cost, rather than the whole list. -->
+                                <Button v-if="can('inventory.manage')" variant="outline" size="sm" href="/inventory">
+                                    Add costs
+                                </Button>
+                            </template>
+                        </Callout>
                     </CardContent>
                 </Card>
             </div>

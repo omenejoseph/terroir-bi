@@ -109,8 +109,10 @@ const stats = computed(() => [
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 class="text-3xl font-semibold tracking-tight text-foreground">Dashboard</h2>
                 <div class="flex items-center gap-2">
-                    <Button variant="outline" size="sm" href="/orders/new">New order</Button>
-                    <Button size="sm" href="/customers/new">New customer</Button>
+                    <!-- @todo Opens the Create Order drawer (335:4233) once Orders is ported. -->
+                    <Button variant="outline" size="sm">New order</Button>
+                    <!-- @todo Opens the Customer — Create drawer (316:80) once Customers is ported. -->
+                    <Button size="sm">New customer</Button>
                 </div>
             </div>
 
@@ -214,6 +216,69 @@ const stats = computed(() => [
                             </li>
                         </ul>
                         <p v-else class="py-6 text-sm text-muted-foreground">No orders in this period.</p>
+                    </CardContent>
+                </Card>
+
+                <!--
+                  @todo Revenue vs. target (Figma 208:5577). The design shows
+                  progress toward an annual revenue target with a pace read.
+                  No target is stored anywhere — needs a tenant setting or a
+                  targets table before this can show a real number.
+                -->
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Revenue vs. target</CardTitle>
+                        <p class="text-13 text-muted-foreground">Annual target</p>
+                    </CardHeader>
+                    <CardContent>
+                        <p class="text-sm text-muted-foreground">
+                            No annual target is set. Add one in settings to track pace against plan.
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <!--
+                  @todo Target by channel. Same gap as above, per sales channel,
+                  plus the pace commentary the design writes beside each bar.
+                -->
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Target by channel</CardTitle>
+                        <p class="text-13 text-muted-foreground">Per-channel plan</p>
+                    </CardHeader>
+                    <CardContent>
+                        <p class="text-sm text-muted-foreground">No per-channel targets are set.</p>
+                    </CardContent>
+                </Card>
+
+                <!--
+                  @todo Runway (Figma 208:5577): months of cash left, net cash
+                  flow, and an expense split by category. CashFlowController and
+                  Cost records exist, but nothing computes a runway or groups
+                  spend into the design's categories.
+                -->
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Runway</CardTitle>
+                        <p class="text-13 text-muted-foreground">Months of cash left</p>
+                    </CardHeader>
+                    <CardContent>
+                        <p class="text-sm text-muted-foreground">Runway is not calculated yet.</p>
+                    </CardContent>
+                </Card>
+
+                <!--
+                  @todo Reorder pipeline: outstanding receivables by customer
+                  with age. Data exists across orders and payments; no query
+                  assembles it.
+                -->
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Reorder pipeline</CardTitle>
+                        <p class="text-13 text-muted-foreground">Outstanding by customer</p>
+                    </CardHeader>
+                    <CardContent>
+                        <p class="text-sm text-muted-foreground">Not assembled yet.</p>
                     </CardContent>
                 </Card>
 
