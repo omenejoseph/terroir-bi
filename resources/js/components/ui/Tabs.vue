@@ -16,7 +16,7 @@ import type { TabItem } from '@/types/ui';
  * neither is a designed destination that is not built yet and renders disabled,
  * matching how the sidebar treats unported modules.
  */
-const props = withDefaults(defineProps<{ items: TabItem[]; current: string; variant?: 'underline' | 'segmented' }>(), {
+const props = withDefaults(defineProps<{ items: TabItem[]; current: string; variant?: 'underline' | 'segmented' | 'filter' }>(), {
     variant: 'underline',
 });
 
@@ -31,6 +31,21 @@ function tabClass(tab: TabItem): string {
         return cn(
             'rounded-md px-3 py-1.5 text-13 transition-colors',
             active ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+            !tab.href && !tab.value && 'cursor-not-allowed opacity-60',
+        );
+    }
+
+    /*
+      `filter`: standalone bordered buttons whose active state is a solid dark
+      fill (Figma 389:1592's Finished / Semi-Finished / Raw Materials row) —
+      distinct from `segmented`, which is a light pill on a grey track.
+    */
+    if (props.variant === 'filter') {
+        return cn(
+            'rounded-md border px-3 py-1.5 text-13 transition-colors',
+            active
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-card text-foreground hover:border-foreground/40',
             !tab.href && !tab.value && 'cursor-not-allowed opacity-60',
         );
     }
@@ -50,7 +65,11 @@ function tabClass(tab: TabItem): string {
         :class="
             cn(
                 'flex flex-wrap items-center',
-                variant === 'segmented' ? 'gap-1 rounded-lg bg-muted p-1' : 'gap-1 border-b border-border',
+                variant === 'segmented'
+                    ? 'gap-1 rounded-lg bg-muted p-1'
+                    : variant === 'filter'
+                      ? 'gap-2'
+                      : 'gap-1 border-b border-border',
             )
         "
         role="tablist"

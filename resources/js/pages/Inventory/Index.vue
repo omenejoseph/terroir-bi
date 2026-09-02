@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { PencilLine, Search, Upload, X } from 'lucide-vue-next';
+import { ChevronDown, PencilLine, Upload, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import BulkEditTable from '@/components/inventory/BulkEditTable.vue';
 import ItemViewPanel from '@/components/inventory/ItemViewPanel.vue';
 import NewItemPanel from '@/components/inventory/NewItemPanel.vue';
 import AttentionBand from '@/components/ui/AttentionBand.vue';
-import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
+import GripHandle from '@/components/ui/GripHandle.vue';
 import LevelBar from '@/components/ui/LevelBar.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Tabs from '@/components/ui/Tabs.vue';
@@ -83,46 +83,92 @@ const MODULE_TABS: TabItem[] = [
 
 /** Mirrors the InventoryCategory enum; the design shows exactly these three. */
 const CATEGORY_TABS: TabItem[] = [
-    { value: '', label: 'All' },
     { value: 'FINISHED', label: 'Finished' },
     { value: 'SEMI_FINISHED', label: 'Semi-Finished' },
     { value: 'RAW_MATERIAL', label: 'Raw Materials' },
 ];
+
+/** The design shows no "All" chip; pressing the active category clears it. */
+function selectCategory(value: string): void {
+    reload({ category: props.filters.category === value ? undefined : value });
+}
+
+/** The attention chips double as filters. */
+const attentionFilter = ref<string | null>(null);
 
 /**
  * The design groups rows by product group with a count and a subtotal. Grouping
  * is applied to the current page rather than the whole result set, so the
  * subtotals describe what is on screen.
  */
+/**
+ * The design groups twice (Figma 389:1592): a group band carrying a count and
+ * the group's subtotal ("Wine (6) … 7.971 bottles · 163.502 €"), then quieter
+ * uppercase subcategory bands inside it ("WHITE", "ROSÉ", "RED").
+ */
 const groups = computed(() => {
     const byGroup = new Map<string, InventoryItem[]>();
 
-    for (const item of props.items.data) {
+    for (const item of visibleRows.value) {
         const key = item.group ?? 'Ungrouped';
-        const bucket = byGroup.get(key);
-        bucket ? bucket.push(item) : byGroup.set(key, [item]);
+        byGroup.set(key, [...(byGroup.get(key) ?? []), item]);
     }
 
-    return [...byGroup.entries()].map(([label, rows]) => ({
-        label,
-        rows,
-        onHand: rows.reduce((sum, r) => sum + (Number.parseFloat(r.current_stock) || 0), 0),
-        value: rows.reduce(
-            (sum, r) => sum + (r.default_price ? r.default_price.minor * (Number.parseFloat(r.current_stock) || 0) : 0),
-            0,
-        ),
-        currency: rows.find((r) => r.default_price)?.default_price?.currency ?? null,
-    }));
+    return [...byGroup.entries()].map(([label, rows]) => {
+        const bySub = new Map<string, InventoryItem[]>();
+        for (const row of rows) bySub.set(row.subcategory ?? '', [...(bySub.get(row.subcategory ?? '') ?? []), row]);
+
+        return {
+            label,
+            count: rows.length,
+            bands: [...bySub.entries()].map(([sub, subRows]) => ({ sub, rows: subRows })),
+            onHand: rows.reduce((sum, r) => sum + (Number.parseFloat(r.current_stock) || 0), 0),
+            value: rows.reduce(
+                (sum, r) =>
+                    sum + (r.default_price ? r.default_price.minor * (Number.parseFloat(r.current_stock) || 0) : 0),
+                0,
+            ),
+            currency: rows.find((r) => r.default_price)?.default_price?.currency ?? null,
+        };
+    });
+});
+
+/** Attention chips filter the visible rows client-side. */
+const visibleRows = computed(() => {
+    const key = attentionFilter.value;
+
+    if (key === null) return props.items.data;
+
+    return props.items.data.filter((item) => {
+        const stock = Number.parseFloat(item.current_stock) || 0;
+
+        if (key === 'no_min_stock') return item.min_stock === null;
+        if (key === 'no_cost_per_unit') return item.cost_per_unit === null;
+        if (key === 'zero_stock') return stock <= 0;
+
+        return true;
+    });
+});
+
+/** The card header above the table, as the design words it. */
+const listSummary = computed(() => {
+    const total = visibleRows.value.reduce((sum, r) => sum + (Number.parseFloat(r.current_stock) || 0), 0);
+
+    return `${visibleRows.value.length} products · ${qty(String(total))} on hand`;
 });
 
 const qty = (v: string | null) => formatQuantity(v, page.props.locale);
 
 /** Derived row badges, matching the design's "Flags" column. */
+/**
+ * The design renders flags as quiet stacked lines, not pills — the first at
+ * full weight and the rest muted beneath it.
+ */
 function flags(item: InventoryItem): string[] {
     const out: string[] = [];
 
     if (item.min_stock === null) out.push('No min stock');
-    if (item.cost_per_unit === null) out.push('No cost');
+    if (item.cost_per_unit === null) out.push('No cost per unit');
     if ((Number.parseFloat(item.current_stock) || 0) <= 0) out.push('Zero stock');
 
     return out;
@@ -159,7 +205,7 @@ function flags(item: InventoryItem): string[] {
 
             <Tabs :items="MODULE_TABS" current="Inventory" />
 
-            <AttentionBand :items="attention" />
+            <AttentionBand :items="attention" :active="attentionFilter" @select="attentionFilter = $event" />
 
             <!-- Search + category tabs -->
             <div class="flex flex-wrap items-center gap-3">
@@ -179,22 +225,21 @@ function flags(item: InventoryItem): string[] {
                 <Tabs
                     :items="CATEGORY_TABS"
                     :current="filters.category ?? ''"
-                    variant="segmented"
-                    @select="reload({ category: $event || undefined })"
+                    variant="filter"
+                    @select="selectCategory"
                 />
 
-                <div class="ml-auto flex items-center gap-3">
-                    <Button
-                        v-if="can('inventory.manage') && !bulkEditing"
-                        variant="outline"
-                        size="sm"
-                        @click="bulkEditing = true"
-                    >
-                        <PencilLine class="size-4" :stroke-width="1.5" />
-                        Bulk edit
-                    </Button>
-                    <span class="text-13 text-muted-foreground">{{ items.meta.total }} products</span>
-                </div>
+                <!-- The count lives in the table's own header, not here. -->
+                <Button
+                    v-if="can('inventory.manage') && !bulkEditing"
+                    variant="outline"
+                    size="sm"
+                    class="ml-auto"
+                    @click="bulkEditing = true"
+                >
+                    <PencilLine class="size-4" :stroke-width="1.5" />
+                    Bulk edit
+                </Button>
             </div>
 
             <BulkEditTable
@@ -206,87 +251,121 @@ function flags(item: InventoryItem): string[] {
             />
 
             <!-- The table scrolls inside its own container so the page never does. -->
-            <div v-else class="overflow-x-auto rounded-lg border border-border bg-card">
-                <table class="w-full min-w-[56rem] text-sm">
-                    <thead class="border-b border-border text-left text-13 text-muted-foreground">
-                        <tr>
-                            <th scope="col" class="px-4 py-2.5 font-medium">Name</th>
-                            <th scope="col" class="px-4 py-2.5 font-medium">Size</th>
-                            <th scope="col" class="px-4 py-2.5 font-medium">SKU</th>
-                            <th scope="col" class="px-4 py-2.5 font-medium">Vintage</th>
-                            <th scope="col" class="px-4 py-2.5 text-right font-medium">On hand</th>
-                            <th scope="col" class="px-4 py-2.5 font-medium">Level</th>
-                            <th scope="col" class="px-4 py-2.5 font-medium">Flags</th>
-                        </tr>
-                    </thead>
+            <div v-else class="overflow-hidden rounded-lg border border-border bg-card">
+                <div class="border-b border-border px-4 py-3">
+                    <h3 class="text-sm font-semibold">
+                        {{ filters.category ? CATEGORY_TABS.find((c) => c.value === filters.category)?.label : 'All products' }}
+                    </h3>
+                    <p class="mt-0.5 text-13 text-muted-foreground">{{ listSummary }}</p>
+                </div>
 
-                    <tbody v-for="group in groups" :key="group.label" class="divide-y divide-border">
-                        <!-- Group band: name, count and the page subtotal -->
-                        <tr class="bg-muted/50">
-                            <th colspan="7" scope="colgroup" class="px-4 py-2 text-left">
-                                <span class="text-13 font-semibold text-foreground">{{ group.label }}</span>
-                                <span class="text-13 text-muted-foreground"> ({{ group.rows.length }})</span>
-                                <span class="text-13 text-muted-foreground">
-                                    · {{ qty(String(group.onHand)) }} on hand<template v-if="group.currency">
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[64rem] text-sm">
+                        <thead class="border-b border-border text-left text-13 text-muted-foreground">
+                            <tr>
+                                <th scope="col" class="w-8 py-2.5 pl-3"><span class="sr-only">Reorder</span></th>
+                                <th scope="col" class="px-3 py-2.5 font-medium">Name</th>
+                                <th scope="col" class="px-3 py-2.5 font-medium">Size</th>
+                                <th scope="col" class="px-3 py-2.5 font-medium">SKU</th>
+                                <th scope="col" class="px-3 py-2.5 font-medium">Vintage</th>
+                                <th scope="col" class="px-3 py-2.5 text-right font-medium">On hand</th>
+                                <th scope="col" class="px-3 py-2.5 font-medium">Level</th>
+                                <th scope="col" class="px-3 py-2.5 font-medium">Flags</th>
+                            </tr>
+                        </thead>
+
+                        <tbody v-for="group in groups" :key="group.label" class="divide-y divide-border">
+                            <!-- Group band: name, count and the page subtotal -->
+                            <tr class="bg-muted/40">
+                                <td class="py-2 pl-3"><GripHandle /></td>
+                                <th colspan="4" scope="colgroup" class="px-3 py-2 text-left">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <ChevronDown class="size-3 text-muted-foreground" :stroke-width="2" />
+                                        <span class="text-13 font-semibold text-foreground">{{ group.label }}</span>
+                                        <span class="text-13 text-muted-foreground">({{ group.count }})</span>
+                                    </span>
+                                </th>
+                                <td colspan="3" class="px-3 py-2 text-right text-13 text-muted-foreground">
+                                    {{ qty(String(group.onHand)) }} on hand<template v-if="group.currency">
                                         · {{ formatMoney(group.value, group.currency, page.props.locale) }}</template
                                     >
-                                </span>
-                            </th>
-                        </tr>
+                                </td>
+                            </tr>
 
-                        <tr
-                            v-for="item in group.rows"
-                            :key="item.id"
-                            class="cursor-pointer hover:bg-accent/50"
-                            @click="viewing = item"
-                        >
-                            <td class="px-4 py-3">
-                                <div class="flex items-center gap-3">
-                                    <img
-                                        v-if="item.image_url"
-                                        :src="item.image_url"
-                                        alt=""
-                                        class="size-8 shrink-0 rounded-md border border-border object-cover"
-                                    />
-                                    <span
-                                        v-else
-                                        class="size-8 shrink-0 rounded-md border border-border bg-muted"
-                                        aria-hidden="true"
-                                    />
-                                    <span class="font-medium">{{ item.name }}</span>
-                                </div>
-                            </td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ item.unit_size ?? '—' }}</td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ item.sku }}</td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ item.vintage ?? '—' }}</td>
-                            <td class="px-4 py-3 text-right tabular-nums">{{ qty(item.current_stock) }}</td>
-                            <td class="px-4 py-3">
-                                <LevelBar :value="item.current_stock" :min="item.min_stock">
-                                    <template v-if="item.min_stock">
-                                        {{ qty(item.current_stock) }} of {{ qty(item.min_stock) }} min
-                                    </template>
-                                    <template v-else>No min stock set</template>
-                                </LevelBar>
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="flex flex-wrap gap-1">
-                                    <Badge v-for="flag in flags(item)" :key="flag" variant="outline">
-                                        {{ flag }}
-                                    </Badge>
-                                    <span v-if="!flags(item).length" class="text-muted-foreground">—</span>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
+                            <template v-for="band in group.bands" :key="`${group.label}-${band.sub}`">
+                                <!-- Subcategory band -->
+                                <tr v-if="band.sub" class="bg-muted/20">
+                                    <td class="py-1.5 pl-3"><GripHandle /></td>
+                                    <th
+                                        colspan="7"
+                                        scope="colgroup"
+                                        class="px-3 py-1.5 text-left text-2xs font-medium tracking-[0.08em] text-muted-foreground uppercase"
+                                    >
+                                        {{ band.sub }}
+                                    </th>
+                                </tr>
 
-                    <tbody v-if="items.data.length === 0">
-                        <tr>
-                            <td colspan="7" class="px-4 py-10 text-center text-muted-foreground">
-                                No items match these filters.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                <tr
+                                    v-for="item in band.rows"
+                                    :key="item.id"
+                                    class="cursor-pointer hover:bg-accent/50"
+                                    @click="viewing = item"
+                                >
+                                    <td class="py-3 pl-3"><GripHandle /></td>
+                                    <td class="px-3 py-3">
+                                        <div class="flex items-center gap-3">
+                                            <img
+                                                v-if="item.image_url"
+                                                :src="item.image_url"
+                                                alt=""
+                                                class="size-7 shrink-0 rounded border border-border object-cover"
+                                            />
+                                            <span
+                                                v-else
+                                                class="size-7 shrink-0 rounded border border-border bg-muted"
+                                                aria-hidden="true"
+                                            />
+                                            <span class="font-medium">{{ item.name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-3 text-muted-foreground">{{ item.unit_size ?? '—' }}</td>
+                                    <td class="px-3 py-3 text-muted-foreground">{{ item.sku }}</td>
+                                    <td class="px-3 py-3 text-muted-foreground">{{ item.vintage ?? '—' }}</td>
+                                    <td class="px-3 py-3 text-right font-semibold tabular-nums">
+                                        {{ qty(item.current_stock) }}
+                                    </td>
+                                    <td class="px-3 py-3">
+                                        <LevelBar :value="item.current_stock" :min="item.min_stock">
+                                            <template v-if="item.min_stock">
+                                                {{ qty(item.current_stock) }} of {{ qty(item.min_stock) }} min
+                                            </template>
+                                            <template v-else>No min stock set</template>
+                                        </LevelBar>
+                                    </td>
+                                    <td class="px-3 py-3">
+                                        <span
+                                            v-for="(flag, i) in flags(item)"
+                                            :key="flag"
+                                            class="block text-13"
+                                            :class="i === 0 ? 'text-foreground' : 'text-muted-foreground'"
+                                        >
+                                            {{ flag }}
+                                        </span>
+                                        <span v-if="!flags(item).length" class="text-muted-foreground">—</span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+
+                        <tbody v-if="!groups.length">
+                            <tr>
+                                <td colspan="8" class="px-4 py-10 text-center text-muted-foreground">
+                                    No items match these filters.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div v-if="items.meta.last_page > 1 && !bulkEditing" class="flex items-center justify-between text-sm">

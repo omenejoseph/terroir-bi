@@ -30,7 +30,7 @@ inventory, plus the gap register).
 |---|---|---|
 | ExpandedNav | `547:1568` | design context |
 | Dashboard | `208:5577` | design context |
-| Inventory list | `389:1592` | design context |
+| Inventory list | `389:1592` | ⚠️ screenshot diff — no render exported |
 | Product Detail | `449:1577` | render |
 | Item — View (drawer) | `378:1592` | render |
 | New Item (+ Advanced) | `317:468` / `322:704` | render |
@@ -52,8 +52,10 @@ None of these blocked Phase 2, so they were left until a screen needs them:
 
 1. **Which Inventory Check is current?** The build follows the exported original
    `271:12639`; the canvas also holds `388:1592` "Inventory Check — rethought".
-2. ~~Two screens need renders.~~ **Resolved** — both were exported and diffed;
-   the fixes are in. Every shipped screen has now been checked against a render.
+2. **`389:1592` (Inventory list) has never been exported.** It was built from
+   `get_design_context` early on and the claim that every screen had been
+   render-diffed was wrong — it had not. A `get_screenshot` diff found several
+   drifts (see below). Exporting it would still help for future changes.
 3. **Channel taxonomy** — see the gap register in [`design/README.md`](design/README.md).
 
 ---

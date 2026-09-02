@@ -118,6 +118,18 @@ and exit-by-channel) as missing. That was wrong.
 `mean_margin_percent`, a daily `spark` series, trailing-12-month `realized`
 figures and `channels`. Product Detail (`449:1577`) is almost entirely backed.
 
+### Inventory list: reorder grip is presentational
+
+`389:1592` puts a drag grip at the head of every row and band. `sort_order`
+exists on the model, but drag-to-reorder is not wired and
+`BulkUpdateInventoryItemsRequest` does not accept `sort_order`. The grip renders
+(the design's rhythm depends on that column) but carries no interaction and is
+hidden from assistive tech rather than announcing a control that does nothing.
+
+The list also omits two columns the design shows: **Free to sell** (no order
+reservations) and **Cover** (computable per item, but only via the spend query
+— worth wiring when the list gains a per-item exit rate).
+
 ### Item — View: two sections not built
 
 `378:1592` carries two sections the schema cannot yet fill:
