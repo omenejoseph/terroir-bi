@@ -42,7 +42,7 @@ defineEmits<{ 'toggle-sidebar': [] }>();
                     type="search"
                     placeholder="Search orders, SKUs, partners…"
                     aria-label="Search"
-                    class="h-8 w-full rounded-md border border-input bg-card pr-12 pl-8 text-13 placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    class="h-8 w-full rounded-md border border-input bg-card pr-12 pl-8 text-xs placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 />
                 <Kbd keys="⌘K" class="absolute top-1/2 right-2 -translate-y-1/2" />
             </div>

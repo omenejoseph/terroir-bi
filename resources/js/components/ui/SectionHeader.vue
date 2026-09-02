@@ -10,8 +10,8 @@ defineProps<{ title: string; description?: string }>();
 <template>
     <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="min-w-0">
-            <h3 class="text-base font-semibold text-foreground">{{ title }}</h3>
-            <p v-if="description" class="mt-0.5 text-13 text-muted-foreground">{{ description }}</p>
+            <h3 class="text-sm font-semibold text-foreground">{{ title }}</h3>
+            <p v-if="description" class="mt-0.5 text-xs text-muted-foreground">{{ description }}</p>
         </div>
         <div v-if="$slots.actions" class="flex shrink-0 items-center gap-2"><slot name="actions" /></div>
     </div>

@@ -169,7 +169,7 @@ const dateRange = computed(() => {
                             :description="`${num(summary.units_exited)} units across ${windowLabel} days — the whole cellar`"
                         >
                             <template #actions>
-                                <span class="text-13 text-muted-foreground">{{ dateRange }}</span>
+                                <span class="text-xs text-muted-foreground">{{ dateRange }}</span>
                             </template>
                         </SectionHeader>
                         <BarChart :points="dailyPoints" :height="220" />
@@ -223,7 +223,7 @@ const dateRange = computed(() => {
 
                     <div v-if="spend.per_product.length" class="overflow-x-auto">
                         <table class="w-full min-w-[60rem] text-sm">
-                            <thead class="border-b border-border text-left text-13 text-muted-foreground">
+                            <thead class="border-b border-border text-left text-3xs text-muted-foreground">
                                 <tr>
                                     <th scope="col" class="py-2.5 pr-4 font-medium">Product</th>
                                     <th scope="col" class="py-2.5 pr-4 font-medium">SKU</th>
@@ -242,7 +242,7 @@ const dateRange = computed(() => {
                                 <tr v-for="row in spend.per_product" :key="row.id">
                                     <td class="py-3 pr-4">
                                         <span class="block font-medium">{{ row.name }}</span>
-                                        <span v-if="row.vintage" class="block text-13 text-muted-foreground">
+                                        <span v-if="row.vintage" class="block text-xs text-muted-foreground">
                                             {{ row.vintage }}
                                         </span>
                                     </td>
@@ -263,7 +263,7 @@ const dateRange = computed(() => {
                                     </td>
                                     <td class="py-3">
                                         <span
-                                            class="text-13"
+                                            class="text-xs"
                                             :class="
                                                 spendSignal(row).tone === 'warn'
                                                     ? 'text-destructive'

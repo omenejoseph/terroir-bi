@@ -125,7 +125,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                         />
                     </div>
                     <p
-                        class="mt-2 text-2xl font-semibold tracking-tight tabular-nums"
+                        class="mt-2 text-3xl font-semibold tabular-nums"
                         :class="cover.implausible && 'text-destructive'"
                     >
                         {{ cover.text }}
@@ -150,7 +150,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                                   it needs a period argument before this can do
                                   anything.
                                 -->
-                                <button type="button" class="text-13 text-muted-foreground hover:text-foreground">
+                                <button type="button" class="text-xs text-muted-foreground hover:text-foreground">
                                     Change range
                                 </button>
                             </template>
@@ -178,14 +178,14 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                             <li v-for="channel in exits.channels" :key="channel.key" class="flex flex-col gap-1.5">
                                 <div class="flex items-baseline justify-between gap-3">
                                     <span class="truncate text-sm font-medium">{{ channelLabel(channel.key) }}</span>
-                                    <span class="shrink-0 text-13 tabular-nums">
+                                    <span class="shrink-0 text-xs tabular-nums">
                                         {{ num(channel.units) }} ·
                                         {{ channel.revenue ? money(channel.revenue.minor, channel.revenue.currency) : 'no revenue' }}
                                     </span>
                                 </div>
-                                <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                <div class="h-1.5 w-full overflow-hidden bg-muted">
                                     <div
-                                        class="h-full rounded-full bg-foreground/70"
+                                        class="h-full bg-foreground/70"
                                         :style="{ width: `${channelUnits > 0 ? (channel.units / channelUnits) * 100 : 0}%` }"
                                     />
                                 </div>
@@ -222,7 +222,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                                   Needs bottles_per_case and a price basis per
                                   row before the bars can be re-scaled.
                                 -->
-                                <button type="button" class="text-13 text-muted-foreground hover:text-foreground">
+                                <button type="button" class="text-xs text-muted-foreground hover:text-foreground">
                                     By bottles
                                 </button>
                             </template>
@@ -232,13 +232,13 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                             <li v-for="level in analytics.stock_levels" :key="level.name" class="flex flex-col gap-1.5">
                                 <div class="flex items-baseline justify-between gap-3">
                                     <span class="truncate text-sm font-medium">{{ level.name }}</span>
-                                    <span class="shrink-0 text-13 tabular-nums text-muted-foreground">
+                                    <span class="shrink-0 text-xs tabular-nums text-muted-foreground">
                                         {{ formatQuantity(level.stock, locale) }} held
                                     </span>
                                 </div>
-                                <div class="h-2 w-full overflow-hidden rounded-full bg-muted">
+                                <div class="h-2 w-full overflow-hidden bg-muted">
                                     <div
-                                        class="h-full rounded-full bg-muted-foreground/50"
+                                        class="h-full bg-muted-foreground/50"
                                         :style="{
                                             width: `${((Number.parseFloat(level.stock) || 0) / maxStock) * 100}%`,
                                         }"
@@ -255,7 +255,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                         <SectionHeader title="Stock value" />
 
                         <p class="text-3xl font-semibold tabular-nums">{{ money(value.total, value.currency) }}</p>
-                        <p class="-mt-2 text-13 text-muted-foreground">
+                        <p class="-mt-2 text-xs text-muted-foreground">
                             Finished goods · {{ num(summary.finished_units) }} units
                         </p>
 

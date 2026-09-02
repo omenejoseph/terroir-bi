@@ -113,7 +113,7 @@ const details = computed(() => {
                 <div class="flex flex-wrap items-baseline justify-between gap-3">
                     <div class="flex flex-wrap items-baseline gap-2">
                         <h3 class="text-base font-semibold text-foreground">Stock</h3>
-                        <span class="text-13 text-muted-foreground">
+                        <span class="text-xs text-muted-foreground">
                             {{ qty(item.current_stock) }} {{ item.unit
                             }}<template v-if="cases !== null"> · {{ cases }} cases</template>
                         </span>
@@ -147,13 +147,13 @@ const details = computed(() => {
                     <div v-for="row in deductions" :key="row.label" class="flex items-start justify-between gap-3 py-3">
                         <dt class="min-w-0">
                             <span class="block text-muted-foreground">− {{ row.label }}</span>
-                            <span class="block text-13 text-muted-foreground">{{ row.note }}</span>
+                            <span class="block text-xs text-muted-foreground">{{ row.note }}</span>
                         </dt>
-                        <dd class="shrink-0 text-13 text-muted-foreground">—</dd>
+                        <dd class="shrink-0 text-xs text-muted-foreground">—</dd>
                     </div>
                     <div class="flex items-start justify-between gap-3 py-3">
                         <dt class="font-medium">= Free to sell</dt>
-                        <dd class="shrink-0 text-13 text-muted-foreground">needs order reservations</dd>
+                        <dd class="shrink-0 text-xs text-muted-foreground">needs order reservations</dd>
                     </div>
                 </dl>
             </section>
@@ -165,7 +165,7 @@ const details = computed(() => {
                 <SectionHeader title="Pricing &amp; margin">
                     <template #actions>
                         <!-- @todo Inline pricing edit; for now it opens the item. -->
-                        <Link :href="`/inventory/${item.id}`" class="text-13 text-muted-foreground hover:text-foreground">
+                        <Link :href="`/inventory/${item.id}`" class="text-xs text-muted-foreground hover:text-foreground">
                             Edit
                         </Link>
                     </template>
@@ -201,7 +201,7 @@ const details = computed(() => {
                 <SectionHeader title="Item details">
                     <template #actions>
                         <!-- @todo Inline details edit; for now it opens the item. -->
-                        <Link :href="`/inventory/${item.id}`" class="text-13 text-muted-foreground hover:text-foreground">
+                        <Link :href="`/inventory/${item.id}`" class="text-xs text-muted-foreground hover:text-foreground">
                             Edit
                         </Link>
                     </template>
@@ -227,7 +227,7 @@ const details = computed(() => {
                 <SectionHeader title="Who's buying it">
                     <template #actions>
                         <!-- @todo Filter Orders by this item once Orders is ported. -->
-                        <span class="text-13 text-muted-foreground">Open in Orders</span>
+                        <span class="text-xs text-muted-foreground">Open in Orders</span>
                     </template>
                 </SectionHeader>
                 <!--
@@ -236,7 +236,7 @@ const details = computed(() => {
                   Needs order lines rolled up by customer for this item — the
                   data exists on OrderItem, but no query aggregates it per item.
                 -->
-                <p class="text-13 text-muted-foreground">Per-customer demand is not attributed yet.</p>
+                <p class="text-xs text-muted-foreground">Per-customer demand is not attributed yet.</p>
             </section>
 
             <Separator />
@@ -245,7 +245,7 @@ const details = computed(() => {
             <section class="flex flex-col gap-3">
                 <SectionHeader title="Stock movements">
                     <template #actions>
-                        <Link :href="`/inventory/${item.id}`" class="text-13 text-muted-foreground hover:text-foreground">
+                        <Link :href="`/inventory/${item.id}`" class="text-xs text-muted-foreground hover:text-foreground">
                             View all
                         </Link>
                     </template>
@@ -270,13 +270,13 @@ const details = computed(() => {
                             >
                                 {{ Number.parseFloat(movement.quantity) > 0 ? '+' : '' }}{{ qty(movement.quantity) }}
                             </span>
-                            <span class="text-13 text-muted-foreground">
+                            <span class="text-xs text-muted-foreground">
                                 {{ formatMovementDate(movement.created_at, locale) }}
                             </span>
                         </span>
                     </li>
                 </ul>
-                <p v-else class="text-13 text-muted-foreground">No movements recorded yet.</p>
+                <p v-else class="text-xs text-muted-foreground">No movements recorded yet.</p>
             </section>
 
             <Separator />
@@ -290,7 +290,7 @@ const details = computed(() => {
                   Movements cover adjustments, but creation and field edits are
                   not recorded anywhere.
                 -->
-                <p class="text-13 text-muted-foreground">Item history is not recorded yet.</p>
+                <p class="text-xs text-muted-foreground">Item history is not recorded yet.</p>
             </section>
         </div>
 

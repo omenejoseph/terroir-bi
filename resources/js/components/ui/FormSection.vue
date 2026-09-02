@@ -9,7 +9,7 @@ defineProps<{ label?: string }>();
 
 <template>
     <section class="flex flex-col gap-3">
-        <h4 v-if="label" class="text-2xs font-medium tracking-[0.08em] text-muted-foreground uppercase">
+        <h4 v-if="label" class="text-3xs font-medium tracking-[0.08em] text-muted-foreground uppercase">
             {{ label }}
         </h4>
         <div class="flex flex-col gap-4"><slot /></div>

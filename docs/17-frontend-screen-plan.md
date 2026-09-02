@@ -39,6 +39,22 @@ inventory, plus the gap register).
 | Inventory Spend | `386:1673` | render |
 | Analytics | `382:1592` | render |
 
+### Fidelity corrections applied across every built screen
+
+These were found by measuring the exported renders and the cached Figma frame
+XML rather than by eye, and they changed every screen at once. Recorded here so
+the next screen starts from the corrected vocabulary instead of re-introducing
+the drift.
+
+| What was wrong | What the design actually specifies | Evidence |
+|---|---|---|
+| `--radius: 8px`, so every card, button, input, badge, chip, tab and bar was rounded | **Square corners everywhere.** The file *defines* `rounded-lg 8` / `radius-lg 10` as variables and applies them nowhere. The only curved shapes are the Switch track/knob and the small circular status dots | Corner profiles measured pixel-by-pixel in the 2x renders: cards, the header search field, the primary button and the tab pill all step from background to border with zero inset |
+| Type ramp roughly one Tailwind step too large throughout (H1 30px, stat values 24px, body 13px) | **10 / 11 / 12 / 13 / 14 / 20 / 30.** H1 is 20px; stat values are 30px; body, buttons, chips, tabs and table cells are 12px; table column headers are 10px; 13px is used *only* for sidebar category headers | Figma text nodes carry their own advance widths in the cached frame XML; each was fitted against `canvas.measureText` in Figtree, so the sizes are exact rather than estimated |
+| `tracking-tight` on headings and figures | Tracking is **0** everywhere (`tokens.json` records `tracking.normal: 0`) | Removing it brought the H1's ink box from 163 to 171 render px against the design's 169 |
+| One button height (36px) | **Two.** Page toolbars are 28px with a 12px label; form footers are 36px with a 14px label | `382:1592` "Bulk Import" is 103x28; `322:704` "Create item" is 99x36 |
+| Tabs defaulted to an underline variant | The design has **no underline tabs.** A 32px grey track holds a 24px flat pill — white for page-level navigation, solid dark for in-card pickers — plus standalone bordered filter buttons on the inventory category row | `382:1592` tab strip measured: track 32px, pill 24px, 12px horizontal padding, no shadow |
+| Figtree loaded from Google Fonts at runtime | **Self-hosted** (`public/fonts/figtree`). A third-party font that fails to load silently falls back to a wider system face and breaks every measurement the design depends on — which is exactly what was happening in headless verification | `document.fonts.size` was 0 in the screenshot browser before the change |
+
 ### Deferred from Phase 1
 
 None of these blocked Phase 2, so they were left until a screen needs them:

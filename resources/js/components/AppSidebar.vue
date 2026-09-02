@@ -87,7 +87,7 @@ const rowClass = (item: NavItem) =>
                 <span class="text-2xs font-semibold text-primary-foreground">T</span>
             </div>
             <div class="min-w-0 flex-1">
-                <p class="truncate text-13 font-semibold text-foreground">Terroir</p>
+                <p class="truncate text-sm font-semibold text-foreground">Terroir</p>
                 <p class="truncate text-2xs text-muted-foreground">Business Intelligence</p>
             </div>
         </div>
@@ -118,7 +118,7 @@ const rowClass = (item: NavItem) =>
                             <span class="truncate">{{ item.label }}</span>
                             <span
                                 v-if="isActive(item.href)"
-                                class="absolute left-0 h-4 w-0.5 rounded-full bg-foreground"
+                                class="absolute left-0 h-4 w-0.5 bg-foreground"
                                 aria-hidden="true"
                             />
                         </component>
@@ -187,7 +187,7 @@ const rowClass = (item: NavItem) =>
                             <!-- 2px active indicator pinned to the row's left edge -->
                             <span
                                 v-if="isActive(item.href)"
-                                class="absolute left-0 h-4 w-0.5 rounded-full bg-foreground"
+                                class="absolute left-0 h-4 w-0.5 bg-foreground"
                                 aria-hidden="true"
                             />
                         </component>
@@ -206,7 +206,7 @@ const rowClass = (item: NavItem) =>
             >
                 <Avatar :name="user?.name" />
                 <span class="min-w-0 flex-1">
-                    <span class="block truncate text-13 font-semibold text-foreground">{{ user?.name }}</span>
+                    <span class="block truncate text-sm font-semibold text-foreground">{{ user?.name }}</span>
                     <span class="block truncate text-2xs text-muted-foreground">
                         {{ roleLabel }}
                     </span>

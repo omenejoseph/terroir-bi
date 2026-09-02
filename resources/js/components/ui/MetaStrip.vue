@@ -10,7 +10,7 @@ defineProps<{ items: (string | null | undefined)[] }>();
 </script>
 
 <template>
-    <p class="text-13 text-muted-foreground">
+    <p class="text-xs text-muted-foreground">
         <template v-for="(item, i) in items.filter(Boolean)" :key="i">
             <span v-if="i > 0" aria-hidden="true"> · </span>{{ item }}
         </template>

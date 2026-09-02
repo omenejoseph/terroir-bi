@@ -7,18 +7,38 @@ import type { TabItem } from '@/types/ui';
 /**
  * Figma components `TabsRoot` / `TabsTab` — 98 tab instances across 4 sections.
  *
- * The design uses two visual treatments of the same control, so they are
- * variants here rather than two components: `underline` for a module's
- * sub-navigation (Inventory / Analytics / Spend / Check) and `segmented` for
- * in-card range pickers (Today / MTD / YTD) and the Product Detail tab strip.
+ * The design draws this control three ways, and which one it uses is
+ * consistent by role:
+ *
+ * - `segmented` (default) — a grey track with a **white raised pill** for the
+ *   active tab and grey labels for the rest. Used for page-level navigation:
+ *   the module strip (Inventory / Analytics / Spend / Check) and the Product
+ *   Detail tabs. There is no underline anywhere in the design.
+ * - `solid` — the same track, but the active tab is a **solid dark** pill. Used
+ *   for pickers *inside* a card: the exit-period strip and the movement-history
+ *   filters on `449:1577`.
+ * - `filter` — standalone bordered buttons with a solid dark active state and
+ *   no track, as on the inventory category row (`389:1592`).
  *
  * A tab with an `href` navigates; one with a `value` emits `select`. A tab with
  * neither is a designed destination that is not built yet and renders disabled,
  * matching how the sidebar treats unported modules.
  */
-const props = withDefaults(defineProps<{ items: TabItem[]; current: string; variant?: 'underline' | 'segmented' | 'filter' }>(), {
-    variant: 'underline',
-});
+/*
+  `full` stretches the track across the content column. The design uses both
+  widths for the same control: the Dashboard's period strip is a full-width
+  1216px track (`208:5577`), while a module's sub-navigation hugs its tabs
+  (`382:1592`, 380px). Hugging is the common case, so it is the default.
+*/
+const props = withDefaults(
+    defineProps<{
+        items: TabItem[];
+        current: string;
+        variant?: 'segmented' | 'solid' | 'filter';
+        full?: boolean;
+    }>(),
+    { variant: 'segmented', full: false },
+);
 
 const emit = defineEmits<{ select: [value: string] }>();
 
@@ -27,35 +47,39 @@ const isCurrent = (tab: TabItem) => tab.label === props.current || tab.value ===
 function tabClass(tab: TabItem): string {
     const active = isCurrent(tab);
 
-    if (props.variant === 'segmented') {
+    const disabled = !tab.href && tab.value === undefined && 'cursor-not-allowed opacity-60';
+
+    if (props.variant === 'filter') {
         return cn(
-            'rounded-md px-3 py-1.5 text-13 transition-colors',
-            active ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-            !tab.href && !tab.value && 'cursor-not-allowed opacity-60',
+            'rounded-md border px-3 py-1.5 text-xs transition-colors',
+            active
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-card text-foreground hover:border-foreground/40',
+            disabled,
         );
     }
 
     /*
-      `filter`: standalone bordered buttons whose active state is a solid dark
-      fill (Figma 389:1592's Finished / Semi-Finished / Raw Materials row) —
-      distinct from `segmented`, which is a light pill on a grey track.
+      Track-mounted tabs measure 24px tall inside a 4px-padded 32px track, with
+      12px of horizontal padding either side of the label (analytics--382-1592,
+      pill 364..516 @2x). The active tab carries no shadow — it is a flat white
+      (or flat dark, for `solid`) rectangle against the grey track.
     */
-    if (props.variant === 'filter') {
+    const onTrack = 'inline-flex h-6 shrink-0 items-center px-3 text-xs transition-colors';
+
+    if (props.variant === 'solid') {
         return cn(
-            'rounded-md border px-3 py-1.5 text-13 transition-colors',
-            active
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border bg-card text-foreground hover:border-foreground/40',
-            !tab.href && !tab.value && 'cursor-not-allowed opacity-60',
+            onTrack,
+            active ? 'bg-primary font-semibold text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+            disabled,
         );
     }
 
+    // segmented — flat white pill on the grey track
     return cn(
-        '-mb-px border-b-2 px-3 py-2 text-sm transition-colors',
-        active
-            ? 'border-foreground font-medium text-foreground'
-            : 'border-transparent text-muted-foreground hover:text-foreground',
-        !tab.href && !tab.value && 'cursor-not-allowed opacity-60',
+        onTrack,
+        active ? 'bg-background font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground',
+        disabled,
     );
 }
 </script>
@@ -65,11 +89,8 @@ function tabClass(tab: TabItem): string {
         :class="
             cn(
                 'flex flex-wrap items-center',
-                variant === 'segmented'
-                    ? 'gap-1 rounded-lg bg-muted p-1'
-                    : variant === 'filter'
-                      ? 'gap-2'
-                      : 'gap-1 border-b border-border',
+                variant === 'filter' ? 'gap-2' : 'bg-muted p-1',  // tabs abut on the track — no gap (382:1592)
+                variant !== 'filter' && (full ? 'w-full' : 'w-fit'),
             )
         "
         role="tablist"

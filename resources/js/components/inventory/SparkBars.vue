@@ -22,7 +22,7 @@ const mean = computed(() =>
         <div
             v-for="(value, i) in values"
             :key="i"
-            class="min-h-px flex-1 rounded-[2px]"
+            class="min-h-px flex-1"
             :class="value > mean ? 'bg-foreground' : 'bg-muted-foreground/30'"
             :style="{ height: `${(value / max) * 100}%` }"
             :title="`${value}`"

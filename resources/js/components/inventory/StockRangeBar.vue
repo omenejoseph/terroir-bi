@@ -20,15 +20,15 @@ const headroom = computed(() => props.stock - props.min);
 
 <template>
     <div class="flex flex-col gap-1.5">
-        <div class="relative h-2 w-full rounded-full bg-muted">
+        <div class="relative h-2 w-full bg-muted">
             <div
-                class="h-full rounded-full"
+                class="h-full"
                 :class="belowMin ? 'bg-destructive' : 'bg-foreground'"
                 :style="{ width: `${Math.min(100, (stock / ceiling) * 100)}%` }"
             />
             <span
                 v-if="min > 0"
-                class="absolute top-1/2 h-3.5 w-0.5 -translate-y-1/2 rounded-full bg-foreground/70"
+                class="absolute top-1/2 h-3.5 w-0.5 -translate-y-1/2 bg-foreground/70"
                 :style="{ left: `${minPct}%` }"
                 aria-hidden="true"
             />

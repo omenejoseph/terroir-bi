@@ -155,7 +155,7 @@ function save(): void {
 
                 <div class="overflow-x-auto">
                     <table class="w-full min-w-[48rem] text-sm">
-                        <thead class="border-b border-border text-left text-13 text-muted-foreground">
+                        <thead class="border-b border-border text-left text-3xs text-muted-foreground">
                             <tr>
                                 <th scope="col" class="px-6 py-2.5 font-medium">Product</th>
                                 <th scope="col" class="px-4 py-2.5 font-medium">Size</th>
@@ -172,7 +172,7 @@ function save(): void {
                                 <th
                                     colspan="7"
                                     scope="colgroup"
-                                    class="px-6 py-2 text-left text-2xs font-medium tracking-[0.08em] text-muted-foreground uppercase"
+                                    class="px-6 py-2 text-left text-3xs font-medium tracking-[0.08em] text-muted-foreground uppercase"
                                 >
                                     {{ band.band }}
                                 </th>
@@ -221,7 +221,7 @@ function save(): void {
 
                 <p
                     v-if="section.bands.some((b) => b.rows.some((r) => difference(r) !== null))"
-                    class="border-t border-border bg-[color-mix(in_oklch,var(--color-primary)_5%,transparent)] px-6 py-2.5 text-13 font-medium"
+                    class="border-t border-border bg-[color-mix(in_oklch,var(--color-primary)_5%,transparent)] px-6 py-2.5 text-xs font-medium"
                 >
                     {{ section.bands.flatMap((b) => b.rows).filter((r) => difference(r) !== null).length }} item(s)
                     modified

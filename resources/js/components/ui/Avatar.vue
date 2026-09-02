@@ -26,7 +26,7 @@ const initials = computed(() =>
     <span
         :class="
             cn(
-                'inline-flex shrink-0 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground ring-1 ring-border',
+                'inline-flex shrink-0 items-center justify-center bg-primary font-semibold text-primary-foreground ring-1 ring-border',
                 props.size === 'sm' ? 'size-6 text-[10px]' : 'size-8 text-2xs',
                 props.class,
             )

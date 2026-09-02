@@ -107,7 +107,7 @@ const stats = computed(() => [
         <div class="space-y-6">
             <!-- Title row + primary actions -->
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <h2 class="text-3xl font-semibold tracking-tight text-foreground">Dashboard</h2>
+                <h2 class="text-xl font-semibold text-foreground">Dashboard</h2>
                 <div class="flex items-center gap-2">
                     <!-- @todo Opens the Create Order drawer (335:4233) once Orders is ported. -->
                     <Button variant="outline" size="sm">New order</Button>
@@ -116,10 +116,12 @@ const stats = computed(() => [
                 </div>
             </div>
 
+            <!-- The Dashboard's period strip spans the content column (208:5577). -->
             <Tabs
                 :items="PERIOD_TABS"
                 :current="filters.period ?? summary.range"
                 variant="segmented"
+                full
                 @select="selectPeriod"
             />
 
@@ -128,7 +130,7 @@ const stats = computed(() => [
                 <span
                     v-for="alert in alerts"
                     :key="alert.text"
-                    class="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-13 text-foreground"
+                    class="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground"
                 >
                     <component :is="alert.icon" class="size-4 shrink-0 text-muted-foreground" :stroke-width="1.5" />
                     {{ alert.text }}
@@ -144,7 +146,7 @@ const stats = computed(() => [
                 <Card>
                     <CardHeader>
                         <CardTitle>Revenue</CardTitle>
-                        <p class="text-13 text-muted-foreground">Year to date</p>
+                        <p class="text-xs text-muted-foreground">Year to date</p>
                     </CardHeader>
                     <CardContent>
                         <div class="flex items-baseline gap-3">
@@ -162,7 +164,7 @@ const stats = computed(() => [
                                 {{ Math.abs(revenueDelta).toFixed(1) }}%
                             </span>
                         </div>
-                        <p class="mt-1 text-13 text-muted-foreground">vs. the same period last year</p>
+                        <p class="mt-1 text-xs text-muted-foreground">vs. the same period last year</p>
                     </CardContent>
                 </Card>
 
@@ -170,7 +172,7 @@ const stats = computed(() => [
                 <Card>
                     <CardHeader>
                         <CardTitle>Revenue breakdown</CardTitle>
-                        <p class="text-13 text-muted-foreground">
+                        <p class="text-xs text-muted-foreground">
                             By channel · {{ money(channelTotal) }} attributed
                         </p>
                     </CardHeader>
@@ -205,7 +207,7 @@ const stats = computed(() => [
                             >
                                 <div class="min-w-0">
                                     <p class="truncate text-sm font-medium">{{ order.order_number }}</p>
-                                    <p class="truncate text-13 text-muted-foreground">
+                                    <p class="truncate text-xs text-muted-foreground">
                                         {{ order.customer || '—' }} · {{ order.date }}
                                     </p>
                                 </div>
@@ -228,7 +230,7 @@ const stats = computed(() => [
                 <Card>
                     <CardHeader>
                         <CardTitle>Revenue vs. target</CardTitle>
-                        <p class="text-13 text-muted-foreground">Annual target</p>
+                        <p class="text-xs text-muted-foreground">Annual target</p>
                     </CardHeader>
                     <CardContent>
                         <p class="text-sm text-muted-foreground">
@@ -244,7 +246,7 @@ const stats = computed(() => [
                 <Card>
                     <CardHeader>
                         <CardTitle>Target by channel</CardTitle>
-                        <p class="text-13 text-muted-foreground">Per-channel plan</p>
+                        <p class="text-xs text-muted-foreground">Per-channel plan</p>
                     </CardHeader>
                     <CardContent>
                         <p class="text-sm text-muted-foreground">No per-channel targets are set.</p>
@@ -260,7 +262,7 @@ const stats = computed(() => [
                 <Card>
                     <CardHeader>
                         <CardTitle>Runway</CardTitle>
-                        <p class="text-13 text-muted-foreground">Months of cash left</p>
+                        <p class="text-xs text-muted-foreground">Months of cash left</p>
                     </CardHeader>
                     <CardContent>
                         <p class="text-sm text-muted-foreground">Runway is not calculated yet.</p>
@@ -275,7 +277,7 @@ const stats = computed(() => [
                 <Card>
                     <CardHeader>
                         <CardTitle>Reorder pipeline</CardTitle>
-                        <p class="text-13 text-muted-foreground">Outstanding by customer</p>
+                        <p class="text-xs text-muted-foreground">Outstanding by customer</p>
                     </CardHeader>
                     <CardContent>
                         <p class="text-sm text-muted-foreground">Not assembled yet.</p>

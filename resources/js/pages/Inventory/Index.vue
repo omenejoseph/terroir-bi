@@ -256,12 +256,12 @@ function flags(item: InventoryItem): string[] {
                     <h3 class="text-sm font-semibold">
                         {{ filters.category ? CATEGORY_TABS.find((c) => c.value === filters.category)?.label : 'All products' }}
                     </h3>
-                    <p class="mt-0.5 text-13 text-muted-foreground">{{ listSummary }}</p>
+                    <p class="mt-0.5 text-xs text-muted-foreground">{{ listSummary }}</p>
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full min-w-[64rem] text-sm">
-                        <thead class="border-b border-border text-left text-13 text-muted-foreground">
+                        <thead class="border-b border-border text-left text-3xs text-muted-foreground">
                             <tr>
                                 <th scope="col" class="w-8 py-2.5 pl-3"><span class="sr-only">Reorder</span></th>
                                 <th scope="col" class="px-3 py-2.5 font-medium">Name</th>
@@ -281,11 +281,11 @@ function flags(item: InventoryItem): string[] {
                                 <th colspan="4" scope="colgroup" class="px-3 py-2 text-left">
                                     <span class="inline-flex items-center gap-1.5">
                                         <ChevronDown class="size-3 text-muted-foreground" :stroke-width="2" />
-                                        <span class="text-13 font-semibold text-foreground">{{ group.label }}</span>
-                                        <span class="text-13 text-muted-foreground">({{ group.count }})</span>
+                                        <span class="text-xs font-semibold text-foreground">{{ group.label }}</span>
+                                        <span class="text-xs text-muted-foreground">({{ group.count }})</span>
                                     </span>
                                 </th>
-                                <td colspan="3" class="px-3 py-2 text-right text-13 text-muted-foreground">
+                                <td colspan="3" class="px-3 py-2 text-right text-xs text-muted-foreground">
                                     {{ qty(String(group.onHand)) }} on hand<template v-if="group.currency">
                                         · {{ formatMoney(group.value, group.currency, page.props.locale) }}</template
                                     >
@@ -299,7 +299,7 @@ function flags(item: InventoryItem): string[] {
                                     <th
                                         colspan="7"
                                         scope="colgroup"
-                                        class="px-3 py-1.5 text-left text-2xs font-medium tracking-[0.08em] text-muted-foreground uppercase"
+                                        class="px-3 py-1.5 text-left text-3xs font-medium tracking-[0.08em] text-muted-foreground uppercase"
                                     >
                                         {{ band.sub }}
                                     </th>
@@ -346,7 +346,7 @@ function flags(item: InventoryItem): string[] {
                                         <span
                                             v-for="(flag, i) in flags(item)"
                                             :key="flag"
-                                            class="block text-13"
+                                            class="block text-xs"
                                             :class="i === 0 ? 'text-foreground' : 'text-muted-foreground'"
                                         >
                                             {{ flag }}

@@ -18,7 +18,7 @@ const VARIANTS: Record<Variant, string> = {
 
 const classes = computed(() =>
     cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+        'inline-flex items-center px-2.5 py-0.5 text-xs font-medium',
         VARIANTS[props.variant],
         props.class,
     ),

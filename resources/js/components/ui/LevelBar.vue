@@ -42,9 +42,9 @@ const belowMin = computed(() => {
 
 <template>
     <div class="min-w-32">
-        <div v-if="pct !== null" class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div v-if="pct !== null" class="h-1.5 w-full overflow-hidden bg-muted">
             <div
-                :class="cn('h-full rounded-full', belowMin ? 'bg-destructive' : 'bg-foreground/70')"
+                :class="cn('h-full', belowMin ? 'bg-destructive' : 'bg-foreground/70')"
                 :style="{ width: `${pct}%` }"
             />
         </div>

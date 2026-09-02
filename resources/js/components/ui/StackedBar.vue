@@ -17,7 +17,7 @@ const TONES = ['bg-foreground', 'bg-muted-foreground/35', 'bg-muted-foreground/2
 
 <template>
     <div class="flex flex-col gap-3">
-        <div class="flex h-2.5 w-full overflow-hidden rounded-full bg-muted" role="img">
+        <div class="flex h-2.5 w-full overflow-hidden bg-muted" role="img">
             <div
                 v-for="(segment, i) in segments"
                 :key="segment.label"
@@ -34,7 +34,7 @@ const TONES = ['bg-foreground', 'bg-muted-foreground/35', 'bg-muted-foreground/2
             >
                 <span class="inline-flex items-center gap-2">
                     <span
-                        class="size-2.5 shrink-0 rounded-[2px]"
+                        class="size-2.5 shrink-0"
                         :class="TONES[i] ?? TONES[TONES.length - 1]"
                         aria-hidden="true"
                     />

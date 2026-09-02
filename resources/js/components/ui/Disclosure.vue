@@ -31,7 +31,7 @@ const open = ref(false);
                     {{ summary }}
                 </span>
             </span>
-            <span class="shrink-0 text-13 text-muted-foreground">{{ open ? 'Hide' : 'Show' }}</span>
+            <span class="shrink-0 text-xs text-muted-foreground">{{ open ? 'Hide' : 'Show' }}</span>
         </button>
 
         <div v-if="open" class="flex flex-col gap-4 p-4">

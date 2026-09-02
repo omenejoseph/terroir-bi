@@ -9,13 +9,13 @@ const pct = computed(() => Math.max(0, Math.min(100, props.value)));
 
 <template>
     <div
-        class="h-2 w-full overflow-hidden rounded-full bg-muted"
+        class="h-2 w-full overflow-hidden bg-muted"
         role="progressbar"
         :aria-valuenow="pct"
         aria-valuemin="0"
         aria-valuemax="100"
         :aria-label="label"
     >
-        <div class="h-full rounded-full bg-primary transition-[width]" :style="{ width: `${pct}%` }" />
+        <div class="h-full bg-primary transition-[width]" :style="{ width: `${pct}%` }" />
     </div>
 </template>

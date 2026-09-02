@@ -16,7 +16,7 @@ const emit = defineEmits<{ select: [key: string | null] }>();
 
 <template>
     <div v-if="items.length" class="flex flex-wrap items-center gap-2">
-        <span class="text-13 text-muted-foreground">Needs attention</span>
+        <span class="text-xs text-muted-foreground">Needs attention</span>
 
         <button
             v-for="item in items"
@@ -25,7 +25,7 @@ const emit = defineEmits<{ select: [key: string | null] }>();
             :aria-pressed="active === item.key"
             :class="
                 cn(
-                    'inline-flex items-center gap-2 rounded-md border bg-card py-1.5 pr-1.5 pl-2.5 text-13 transition-colors',
+                    'inline-flex items-center gap-2 rounded-md border bg-card py-1.5 pr-1.5 pl-2.5 text-xs transition-colors',
                     active === item.key
                         ? 'border-foreground text-foreground'
                         : 'border-border text-foreground hover:border-foreground/40',
@@ -35,7 +35,7 @@ const emit = defineEmits<{ select: [key: string | null] }>();
         >
             <span>{{ item.label }}</span>
             <span
-                class="inline-flex min-w-5 items-center justify-center rounded-[3px] bg-primary px-1 py-0.5 text-2xs font-semibold tabular-nums text-primary-foreground"
+                class="inline-flex min-w-5 items-center justify-center bg-primary px-1 py-0.5 text-2xs font-semibold tabular-nums text-primary-foreground"
             >
                 {{ item.count }}
             </span>

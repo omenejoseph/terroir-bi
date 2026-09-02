@@ -8,11 +8,13 @@
     {{-- Paint the token background before Vue mounts so there is no flash. --}}
     <style>body { background-color: #ffffff; }</style>
 
-    {{-- Figtree is the typeface used throughout the TERROIR design. Loaded at
-         runtime by the browser (not at build time) so asset builds stay hermetic. --}}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+    {{-- Figtree is the typeface used throughout the TERROIR design, and every
+         measurement taken off the Figma renders assumes it. It is self-hosted
+         (public/fonts/figtree, @font-face in resources/css/app.css) rather than
+         pulled from Google Fonts: a third-party font that fails to load falls
+         back to a wider system face and silently breaks the layout the design
+         specifies. Preloading the latin subset avoids a flash of fallback text. --}}
+    <link rel="preload" href="/fonts/figtree/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
 
     @routes
     @vite(['resources/css/app.css', 'resources/js/app.ts'])

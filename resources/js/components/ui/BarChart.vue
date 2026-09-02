@@ -119,10 +119,10 @@ const labelEvery = computed(() => Math.ceil(props.points.length / 12) || 1);
             </svg>
         </div>
 
-        <div v-if="series?.length" class="flex flex-wrap items-center gap-4 text-13 text-muted-foreground">
+        <div v-if="series?.length" class="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
             <span v-for="(name, i) in series" :key="name" class="inline-flex items-center gap-2">
                 <span
-                    class="size-2.5 rounded-[2px]"
+                    class="size-2.5"
                     :class="cn(i === 0 ? 'bg-foreground' : 'bg-muted-foreground/45')"
                     aria-hidden="true"
                 />

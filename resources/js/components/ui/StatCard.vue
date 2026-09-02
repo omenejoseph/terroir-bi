@@ -18,10 +18,10 @@ withDefaults(defineProps<{ label: string; value: string; hint?: string; alert?: 
 <template>
     <div class="rounded-lg border border-border bg-card p-5">
         <div class="flex items-start justify-between gap-2">
-            <p class="text-sm font-medium text-muted-foreground">{{ label }}</p>
-            <span v-if="alert" class="mt-1 size-2 shrink-0 rounded-[1px] bg-destructive" aria-hidden="true" />
+            <p class="text-xs font-medium text-muted-foreground">{{ label }}</p>
+            <span v-if="alert" class="mt-1 size-2 shrink-0 bg-destructive" aria-hidden="true" />
         </div>
-        <p :class="cn('mt-2 text-2xl font-semibold tracking-tight tabular-nums', alert && 'text-destructive')">
+        <p :class="cn('mt-2 text-3xl font-semibold tabular-nums', alert && 'text-destructive')">
             {{ value }}
         </p>
         <p v-if="hint" class="mt-1 text-xs text-muted-foreground">{{ hint }}</p>

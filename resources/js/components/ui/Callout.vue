@@ -24,7 +24,7 @@ defineProps<{ title: string; tone?: 'neutral' | 'warning'; class?: string }>();
     >
         <div class="min-w-0 flex-1">
             <p class="text-sm font-medium" :class="tone === 'warning' && 'text-destructive'">{{ title }}</p>
-            <p v-if="$slots.default" class="mt-1 text-13 text-muted-foreground"><slot /></p>
+            <p v-if="$slots.default" class="mt-1 text-xs text-muted-foreground"><slot /></p>
         </div>
         <div v-if="$slots.action" class="shrink-0"><slot name="action" /></div>
     </div>

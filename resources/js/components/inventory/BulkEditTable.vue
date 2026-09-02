@@ -136,7 +136,7 @@ const cellInput =
     <div class="flex flex-col">
         <div class="overflow-x-auto rounded-lg border border-border bg-card">
             <table class="w-full min-w-[64rem] text-sm">
-                <thead class="border-b border-border text-left text-13 text-muted-foreground">
+                <thead class="border-b border-border text-left text-3xs text-muted-foreground">
                     <tr>
                         <th scope="col" class="w-[22rem] px-4 py-2.5 font-medium">Name</th>
                         <th scope="col" class="px-4 py-2.5 font-medium">SKU</th>
@@ -200,7 +200,7 @@ const cellInput =
 
         <p
             v-if="dirtyItems.length"
-            class="rounded-b-lg border border-t-0 border-border bg-[color-mix(in_oklch,var(--color-primary)_5%,transparent)] px-4 py-2.5 text-13 font-medium"
+            class="rounded-b-lg border border-t-0 border-border bg-[color-mix(in_oklch,var(--color-primary)_5%,transparent)] px-4 py-2.5 text-xs font-medium"
         >
             {{ dirtyItems.length }} item(s) modified
         </p>

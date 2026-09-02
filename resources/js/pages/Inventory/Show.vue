@@ -148,7 +148,7 @@ function destroy(): void {
                         >
                             <ArrowLeft class="size-5" :stroke-width="1.5" />
                         </Link>
-                        <h2 class="truncate text-3xl font-semibold tracking-tight text-foreground">{{ item.name }}</h2>
+                        <h2 class="truncate text-xl font-semibold text-foreground">{{ item.name }}</h2>
                     </div>
                     <MetaStrip
                         class="mt-1 pl-8"
@@ -225,11 +225,11 @@ function destroy(): void {
                     <FormSection label="Cost basis">
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div>
-                                <p class="text-13 text-muted-foreground">Cost per unit</p>
+                                <p class="text-xs text-muted-foreground">Cost per unit</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(current.cost_per_bottle) }}</p>
                             </div>
                             <div>
-                                <p class="text-13 text-muted-foreground">Value on hand</p>
+                                <p class="text-xs text-muted-foreground">Value on hand</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(valueOnHand) }}</p>
                             </div>
                         </div>
@@ -240,15 +240,15 @@ function destroy(): void {
                     <FormSection label="Selling">
                         <div class="grid gap-4 sm:grid-cols-3">
                             <div>
-                                <p class="text-13 text-muted-foreground">List price</p>
+                                <p class="text-xs text-muted-foreground">List price</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(current.selling_per_bottle) }}</p>
                             </div>
                             <div>
-                                <p class="text-13 text-muted-foreground">Mean price (realised, 12m)</p>
+                                <p class="text-xs text-muted-foreground">Mean price (realised, 12m)</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(realized.mean_price) }}</p>
                             </div>
                             <div>
-                                <p class="text-13 text-muted-foreground">Margin (realised, 12m)</p>
+                                <p class="text-xs text-muted-foreground">Margin (realised, 12m)</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">
                                     {{ realized.margin_percent !== null ? `${realized.margin_percent} %` : '—' }}
                                     <span v-if="realized.margin_amount" class="font-normal text-muted-foreground">
@@ -257,13 +257,13 @@ function destroy(): void {
                                 </p>
                             </div>
                             <div>
-                                <p class="text-13 text-muted-foreground">Mean realised rebate</p>
+                                <p class="text-xs text-muted-foreground">Mean realised rebate</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">
                                     {{ realized.rebate_percent !== null ? `${realized.rebate_percent} %` : '—' }}
                                 </p>
                             </div>
                             <div>
-                                <p class="text-13 text-muted-foreground">Sales value (at realised price)</p>
+                                <p class="text-xs text-muted-foreground">Sales value (at realised price)</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(realized.sales_value) }}</p>
                             </div>
                         </div>
@@ -283,7 +283,7 @@ function destroy(): void {
                                 <Tabs
                                     :items="PERIOD_TABS"
                                     :current="filters.period"
-                                    variant="segmented"
+                                    variant="solid"
                                     @select="selectPeriod"
                                 />
                             </template>
@@ -292,7 +292,7 @@ function destroy(): void {
                         <div class="flex items-baseline gap-3">
                             <span class="text-3xl font-semibold tabular-nums">{{ num(exits.bottles_exited) }}</span>
                             <span class="text-sm text-muted-foreground">{{ current.unit }} exited</span>
-                            <span class="text-13 text-muted-foreground">
+                            <span class="text-xs text-muted-foreground">
                                 · {{ num(exits.movements_count) }} movements
                             </span>
                         </div>
@@ -301,37 +301,37 @@ function destroy(): void {
 
                         <div class="grid gap-4 sm:grid-cols-3 xl:grid-cols-5">
                             <div>
-                                <p class="text-13 text-muted-foreground">Cost of exits</p>
+                                <p class="text-xs text-muted-foreground">Cost of exits</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(exits.cost_of_exits) }}</p>
                             </div>
                             <div>
-                                <p class="text-13 text-muted-foreground">Revenue (realised)</p>
+                                <p class="text-xs text-muted-foreground">Revenue (realised)</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(exits.revenue_realized) }}</p>
                             </div>
                             <div>
-                                <p class="text-13 text-muted-foreground">Mean margin</p>
+                                <p class="text-xs text-muted-foreground">Mean margin</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">
                                     {{ exits.mean_margin_percent !== null ? `${exits.mean_margin_percent} %` : '—' }}
                                 </p>
                             </div>
                             <div>
-                                <p class="text-13 text-muted-foreground">Velocity</p>
+                                <p class="text-xs text-muted-foreground">Velocity</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">
                                     {{ exits.velocity_per_day }}
-                                    <span class="text-13 font-normal text-muted-foreground">
+                                    <span class="text-xs font-normal text-muted-foreground">
                                         {{ current.unit }}/day
                                     </span>
                                 </p>
                             </div>
                             <div>
-                                <p class="text-13 text-muted-foreground">Days of stock left</p>
+                                <p class="text-xs text-muted-foreground">Days of stock left</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">
                                     {{ exits.days_of_stock_left !== null ? `${exits.days_of_stock_left} d` : '—' }}
                                 </p>
                             </div>
                         </div>
 
-                        <p v-if="exits.internal" class="text-13 text-muted-foreground">
+                        <p v-if="exits.internal" class="text-xs text-muted-foreground">
                             of which Internal / POS: {{ num(exits.internal.bottles) }} {{ current.unit }} · cost
                             {{ money(exits.internal.cost) }} · revenue {{ money(exits.internal.revenue) }}
                             (excluded from margin)
@@ -350,9 +350,9 @@ function destroy(): void {
                                     <span class="truncate text-sm font-medium">{{ channelLabel(channel.channel) }}</span>
                                     <span class="shrink-0 text-sm tabular-nums">{{ num(channel.bottles) }}</span>
                                 </div>
-                                <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                <div class="h-1.5 w-full overflow-hidden bg-muted">
                                     <div
-                                        class="h-full rounded-full bg-foreground/70"
+                                        class="h-full bg-foreground/70"
                                         :style="{
                                             width: `${channelTotal > 0 ? (channel.bottles / channelTotal) * 100 : 0}%`,
                                         }"
@@ -405,14 +405,14 @@ function destroy(): void {
                     <Tabs
                         :items="MOVEMENT_TABS"
                         :current="movementFilter"
-                        variant="segmented"
+                        variant="solid"
                         class="self-start"
                         @select="movementFilter = $event"
                     />
 
                     <div v-if="visibleMovements.length" class="overflow-x-auto">
                         <table class="w-full min-w-[44rem] text-sm">
-                            <thead class="border-b border-border text-left text-13 text-muted-foreground">
+                            <thead class="border-b border-border text-left text-3xs text-muted-foreground">
                                 <tr>
                                     <th scope="col" class="py-2.5 pr-4 font-medium">Date</th>
                                     <th scope="col" class="py-2.5 pr-4 font-medium">Type</th>
