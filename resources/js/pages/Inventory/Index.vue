@@ -318,11 +318,11 @@ function flags(item: InventoryItem): string[] {
                                                 v-if="item.image_url"
                                                 :src="item.image_url"
                                                 alt=""
-                                                class="size-7 shrink-0 rounded border border-border object-cover"
+                                                class="size-7 shrink-0 border border-border object-cover"
                                             />
                                             <span
                                                 v-else
-                                                class="size-7 shrink-0 rounded border border-border bg-muted"
+                                                class="size-7 shrink-0 border border-border bg-muted"
                                                 aria-hidden="true"
                                             />
                                             <span class="font-medium">{{ item.name }}</span>

@@ -14,7 +14,6 @@ use App\Models\User;
 use App\Services\Auth\ActiveTenantSession;
 use App\Support\Money\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Inertia\Inertia;
 use Inertia\Testing\AssertableInertia;
 use Tests\Concerns\InteractsWithTenancy;
 use Tests\TestCase;
@@ -240,12 +239,7 @@ class WebOrdersTest extends TestCase
 
         $response = $this->actingAs($admin)
             ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
-            ->get('/orders?order='.$order->getKey(), [
-                'X-Inertia' => 'true',
-                'X-Inertia-Version' => Inertia::getVersion(),
-                'X-Inertia-Partial-Component' => 'Orders/Index',
-                'X-Inertia-Partial-Data' => 'order',
-            ]);
+            ->get('/orders?order='.$order->getKey(), $this->inertiaPartial('Orders/Index', 'order'));
 
         $response->assertOk();
         $this->assertSame($order->getKey(), $response->json('props.order.id'));

@@ -64,7 +64,7 @@ function submit(): void {
                     </div>
 
                     <label class="flex items-center gap-2 text-sm">
-                        <input v-model="form.remember" type="checkbox" class="rounded border-input" />
+                        <input v-model="form.remember" type="checkbox" class="border-input" />
                         Keep me signed in
                     </label>
 

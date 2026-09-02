@@ -200,7 +200,7 @@ const cellInput =
 
         <p
             v-if="dirtyItems.length"
-            class="rounded-b-lg border border-t-0 border-border bg-[color-mix(in_oklch,var(--color-primary)_5%,transparent)] px-4 py-2.5 text-xs font-medium"
+            class="border border-t-0 border-border bg-[color-mix(in_oklch,var(--color-primary)_5%,transparent)] px-4 py-2.5 text-xs font-medium"
         >
             {{ dirtyItems.length }} item(s) modified
         </p>

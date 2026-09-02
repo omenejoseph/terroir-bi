@@ -16,7 +16,7 @@ import type { SharedProps } from '@/types';
  * Geometry is taken from that node: 240px rail on a #fafafa surface with a 1px
  * right rule, a 56px header, 8px-padded nav body, and rows that are 223px wide
  * with 8px horizontal / 5px vertical padding and an 8px radius. The active row
- * carries a 60%-opacity neutral wash plus a 2px × 16px rounded indicator pinned
+ * carries a 60%-opacity neutral wash plus a 2px × 16px indicator pinned
  * to its left edge.
  */
 const page = usePage<SharedProps>();

@@ -11,7 +11,7 @@ inventory, plus the gap register).
 
 ## Where we are
 
-**14 of 42 screens done. Phases 0–3 complete; Phase 4 (Customers) is next.**
+**20 of 42 screens done. Phases 0–4 complete; Phase 5 (Work Orders) is next.**
 
 | Phase | Screens | Status |
 |---|---|---|
@@ -19,8 +19,8 @@ inventory, plus the gap register).
 | 1 · Shared vocabulary | — | ✅ **Done for what Phase 2 needed**; 4 pieces deferred (below) |
 | 2 · Inventory | 8 / 8 | ✅ **Done** |
 | 3 · Orders | 4 / 4 | ✅ **Done** |
-| 4 · Customers | 0 / 6 | ⏭️ **Next** |
-| 5 · Work Orders | 0 / 6 | Pending |
+| 4 · Customers | 6 / 6 | ✅ **Done** |
+| 5 · Work Orders | 0 / 6 | ⏭️ **Next** |
 | 6 · Dashboard completion | partial | Blocked on backend |
 | 7 · Retire React frontend | — | Last |
 
@@ -41,6 +41,12 @@ inventory, plus the gap register).
 | Orders list | `455:1577` | render |
 | Order — View (drawer) | `376:1592` / `453:4938` | render |
 | Create Order (+ Advanced) | `335:4233` / `335:4331` | render + frame XML |
+| Customers list | `230:2395` | render |
+| Customers · Analytics | `230:4717` | render |
+| Customer detail · Overview | `231:9336` | render |
+| Customer detail · Pricing / Order History / Komisija | `361:2157` | frame XML |
+| Customer — Create / Edit (drawer) | `316:80` / `316:695` / `322:848` / `231:9592` | render |
+| Merge customers (drawer) | — | not designed; built because the affordance is |
 
 ### Fidelity corrections applied across every built screen
 
@@ -62,10 +68,10 @@ the drift.
 
 None of these blocked Phase 2, so they were left until a screen needs them:
 
-- **`DataTable` extraction** — still inline per screen. Orders was the third list and did not force it: its rows carry stacked line items and a two-line cell, so the shared abstraction would have had to be a slot-per-cell wrapper worth less than the markup it replaced. Revisit at Customers (`230:2395`), whose table is closer to Inventory's.
+- **`DataTable` extraction** — still inline per screen, now across six tables. Customers was meant to force it and did not: the two customer tables are plain, but Inventory groups and bands, Orders stacks line items per row, and the customer detail's "Products bought" groups again. What they actually share is the chrome — the bordered card, the header band, the horizontal scroll container, the empty row — not the cells. **Extract that shell (not a column API) at Phase 5**, and leave the cells to each screen.
 - **Global ⌘K search field** — `Kbd` exists; the field and its behaviour do not.
 - **Collapsed `NavRail`** — the design's second nav state.
-- **Combobox / date picker** — Orders uses the native `Select` for its customer and product pickers, which works but does not type-to-filter as the design's "Search product by name, SKU or vintage…" implies. The date picker is still missing and the Orders period strip's "Custom" tab is a `@todo` because of it.
+- **Combobox / date picker** — still open, and now overdue. Orders uses a native `Select` for its customer and product pickers and Customers uses one for its tier picker; none type-to-filter as the design's "Search product by name, SKU or vintage…" implies, and a winery with a few hundred SKUs will feel it. The date picker is still missing, so the Orders period strip's "Custom" tab and the Customers "Products bought" range are both `@todo`. **Build this before Phase 5.**
 
 ### Open questions
 
@@ -255,24 +261,56 @@ planned — it resolves its tenant from the token, not the session.
 vocabulary, the Channel/Date range/Rep filters, bulk actions and columns, the
 profitability rebate split, and comment reactions.
 
-## Phase 4 — Customers ⏭️ NEXT
+## Phase 4 — Customers ✅ DONE
 
-| Screen | Node | Size |
-|---|---|---|
-| Customers (list) | `230:2395` | M |
-| Individual Customer — Overview | `231:9336` | L (2046px) |
-| Edit Customer | `231:9592` | M |
-| Customer — Create / Edit (drawers) | `316:80` / `316:695` / `322:848` | M |
-| Order History | `361:2157` | M (two states) |
-| Analytics | `230:4717` | M |
+| Screen | Node | Size | Status |
+|---|---|---|---|
+| Customers (list) | `230:2395` | M | ✅ **done** — render-diffed |
+| Analytics | `230:4717` | M | ✅ **done** — render-diffed |
+| Individual Customer — Overview | `231:9336` | L (2046px) | ✅ **done** — render-diffed |
+| Order History | `361:2157` | M | ✅ **done** — a tab of the detail page, not a route |
+| Customer — Create / Edit (drawers) | `316:80` / `316:695` / `322:848` | M | ✅ **done** |
+| Edit Customer | `231:9592` | M | ✅ **done** — this frame's page is a superseded iteration (see below); its drawer is what it contributes |
 
-**DoD:** the nine criteria; pricing-tier and consignment behaviour covered by
-tests, since `05-pricing-engine.md` makes customer pricing the most
-consequential logic in the system.
+**Two frames describe the same customer page.** `231:9592` shows an earlier
+layout behind its Edit drawer — "Realized sales", "YOY Growth", "Annual
+projection" — while `231:9336` is the later, richer Overview with the order
+rhythm strip, the money split, and "Products bought". The build follows
+`231:9336`; `231:9592` contributed only its drawer. **Worth confirming with the
+designer**, since the earlier frame has forecast cards the later one drops.
 
-**Figma budget: 4 calls.**
+What the backend gained, all shared with the API rather than duplicated:
 
-## Phase 5 — Work Orders
+- `CustomerPresenter` — list and detail presentation with revenue gating.
+  `Api\CustomerController` was refactored onto it.
+- `DeleteCustomerAction` — the deactivate-vs-delete rule, which had been inline
+  in the API controller and would have been copied into the web one.
+- `CustomerAttentionQuery` — the overview's three-card band; each card either
+  fires with its numbers or is absent, never a zero.
+- `CustomerRhythmQuery` — the order-rhythm strip, using the same `OrderCadence`
+  the reorder radar uses, so a customer overdue there is overdue here.
+- `CustomerProductsQuery` — "Products bought", including a coverage-derived
+  signal per product.
+- `CustomerFilters`, and a `customer_type` filter on `ListCustomersQuery`.
+
+`Customer::effectiveRebatePercent()` now uses the eager-loaded tier when the
+caller has one; it was costing a query per row on any customer list.
+
+**Pricing is the tab that matters.** It reports what each customer actually
+pays and names the rule that decided it — customer price, tier price or list
+price — by asking `PricingService` rather than re-deriving the precedence, and
+a feature test pins all three cases including that a customer price is absolute
+and takes no rebate.
+
+The Order History tab reuses Phase 3's `ListOrdersQuery` + `OrderPresenter`
+outright, including the shipped-visibility rule.
+
+**Design divergences** (all in the gap register): the Type column's Hotel and
+Restaurant values, the Analytics rebate-performance card, the overview's
+gross-profit split, the price-ladder and concentration cards, and the
+next-3-months forecast.
+
+## Phase 5 — Work Orders ⏭️ NEXT
 
 Seven frames, but they are **states of one screen**, not seven screens: Main
 View, New Task, Existing Task, Filters, Recent Activity, Assign quickly, Search.

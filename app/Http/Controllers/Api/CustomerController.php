@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Actions\Customers\CreateCustomerAction;
+use App\Actions\Customers\DeleteCustomerAction;
 use App\Actions\Customers\OrderTokenAction;
 use App\Actions\Customers\UpdateCustomerAction;
 use App\Authorization\MembershipContext;
@@ -21,13 +22,18 @@ use App\Queries\CustomerOrderAnalyticsQuery;
 use App\Queries\ListCustomersQuery;
 use App\Queries\ReorderRadarQuery;
 use App\Services\Customers\CustomerMergeService;
+use App\Services\Customers\CustomerPresenter;
 use App\Services\Customers\LookupCompanyByVatService;
+use App\Support\CustomerFilters;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    public function __construct(private readonly MembershipContext $membership) {}
+    public function __construct(
+        private readonly MembershipContext $membership,
+        private readonly CustomerPresenter $presenter,
+    ) {}
 
     public function insights(Customer $customer, CustomerInsightsQuery $query): JsonResponse
     {
@@ -100,31 +106,12 @@ class CustomerController extends Controller
 
     public function index(Request $request, ListCustomersQuery $query): JsonResponse
     {
-        $paginator = $query->paginate([
-            'search' => $request->query('search'),
-            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : null,
-            'pricing_tier_id' => $request->query('pricing_tier_id'),
-        ]);
-
-        $showRevenue = $this->membership->canSeeFinancials();
-
-        return response()->json([
-            'data' => array_map(
-                fn (Customer $c) => CustomerData::fromModel($c, $showRevenue)->toArray(),
-                $paginator->items(),
-            ),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-            ],
-        ]);
+        return response()->json($this->presenter->page($query->paginate(CustomerFilters::fromRequest($request))));
     }
 
     public function show(Customer $customer): JsonResponse
     {
-        return response()->json(['data' => CustomerData::fromModel($customer->load('pricingTier'))->toArray()]);
+        return response()->json(['data' => $this->presenter->detail($customer)]);
     }
 
     public function store(StoreCustomerRequest $request, CreateCustomerAction $action): JsonResponse
@@ -142,20 +129,14 @@ class CustomerController extends Controller
         return response()->json(['data' => $action->execute($customer, $request->validated())->toArray()]);
     }
 
-    public function destroy(Customer $customer): JsonResponse
+    public function destroy(Customer $customer, DeleteCustomerAction $action): JsonResponse
     {
-        // Soft-delete (deactivate) when the customer has orders; otherwise hard delete.
-        if ($customer->orders()->exists()) {
-            $customer->is_active = false;
-            $customer->save();
-
+        if ($action->execute($customer)) {
             return response()->json([
                 'data' => CustomerData::fromModel($customer)->toArray(),
                 'message' => 'Customer has orders and was deactivated instead of deleted.',
             ]);
         }
-
-        $customer->delete();
 
         return response()->json(status: 204);
     }

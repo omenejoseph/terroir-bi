@@ -126,6 +126,10 @@ class Customer extends Model
     /**
      * The rebate that actually applies: a customer-level rebate overrides the
      * tier's; otherwise the tier's default applies (pricing engine §5.3).
+     *
+     * Uses the eager-loaded `pricingTier` when the caller has one — a customer
+     * list resolves this per row, and re-querying the tier each time made the
+     * page cost one extra query per customer.
      */
     public function effectiveRebatePercent(): string
     {
@@ -137,7 +141,9 @@ class Customer extends Model
             return '0.00';
         }
 
-        $tier = PricingTier::query()->whereKey($this->pricing_tier_id)->first();
+        $tier = $this->relationLoaded('pricingTier')
+            ? $this->pricingTier
+            : PricingTier::query()->whereKey($this->pricing_tier_id)->first();
 
         if ($tier === null) {
             return '0.00';

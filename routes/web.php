@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Auth\TenantSwitchController;
+use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InventoryController;
 use App\Http\Controllers\Web\OrderController;
@@ -90,4 +91,35 @@ Route::middleware('tenant.web')->group(function () {
     Route::delete('orders/{order}', [OrderController::class, 'destroy'])
         ->middleware('can:orders.delete')
         ->name('orders.destroy');
+
+    /*
+      Customers. Gates mirror routes/api.php: reading needs customers.view,
+      the analytics tab additionally needs financials.view (it is entirely
+      money), writes need customers.manage, and deletion is admin-only via
+      customers.delete.
+    */
+    Route::middleware('can:customers.view')->group(function () {
+        Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+        Route::get('customers-analytics', [CustomerController::class, 'analytics'])
+            ->middleware('can:financials.view')
+            ->name('customers.analytics');
+        Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+    });
+
+    Route::middleware('can:customers.manage')->group(function () {
+        Route::post('customers', [CustomerController::class, 'store'])->name('customers.store');
+        Route::patch('customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+        Route::post('customers/{customer}/contacted', [CustomerController::class, 'markContacted'])
+            ->name('customers.contacted');
+    });
+
+    // Merging destroys records, so it carries the same admin-only gate as
+    // deletion — matching routes/api.php.
+    Route::post('customers/merge', [CustomerController::class, 'merge'])
+        ->middleware('can:customers.delete')
+        ->name('customers.merge');
+
+    Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])
+        ->middleware('can:customers.delete')
+        ->name('customers.destroy');
 });

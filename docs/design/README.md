@@ -130,6 +130,25 @@ Orders (`455:1577`, `376:1592`, `335:4233`) adds five:
 | Profitability's "Rebate · 18%" and "Net revenue" rows | Line totals are stored with the rebate already applied and the gross figure is not kept, so the three-line split cannot be reconstructed without assuming the arithmetic. Shown as Revenue / COGS / Gross profit / Margin |
 | Comment reactions (emoji counts) | No reactions table |
 
+Customers (`230:2395`, `230:4717`, `231:9336`) adds five:
+
+| Design element | Missing backing data |
+|---|---|
+| Type column values "Hotel" and "Restaurant" | `App\Enums\CustomerType` is Wholesale / Retail / Agency / Shipshop / Other. Offering types no customer can hold would make the Type filter return nothing, so the enum's labels are used |
+| Analytics' "Rebate performance" card | No per-line rebate is stored — order lines keep the post-rebate total only — so the cost of rebates across the book cannot be summed. The fourth card reports average order value, which the query does supply |
+| Overview's "Where the money goes" (gross profit vs COGS) | Per-customer COGS is not computed anywhere. The card splits revenue on an axis the data does track: direct sales against consignment |
+| "Price ladder" and "Concentration" cards | Both need per-category revenue-per-bottle and a concentration measure; the products query supplies volume and share, so those two cards are folded into "Products bought" rather than fabricated |
+| "Next 3 months" forecast card | `CustomerOrderAnalyticsQuery` supplies `expected_next_3m`, but only where a prior year exists to compare against; the design's card is the empty state for exactly that case and is deferred with the forecast work |
+
+Two Customers elements are built beyond what the design specifies, because the
+backing existed and the affordance would otherwise be a dead button. **Merge**
+(the selection bar) opens a drawer that asks which record survives — a merge
+needs that decision and the bar cannot express it — then calls
+`CustomerMergeService`. The **"Signal"** column on "Products bought" is derived
+from order coverage rather than written by hand; a product appearing in most of
+a customer's orders earns "In nearly every order", and anything the coverage
+cannot justify gets no label at all.
+
 Two Orders elements are deliberately built differently rather than omitted.
 The **Create Order** drawer shows list prices with a caption saying the
 customer's tier and rebate are applied on submit — `OrderLineWriter` is the

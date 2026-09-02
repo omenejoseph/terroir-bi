@@ -70,7 +70,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
         label: 'Sales',
         items: [
             { label: 'Orders', href: '/orders', icon: ShoppingCart, capability: 'orders.view' },
-            { label: 'Customers', href: null, icon: Users, capability: 'customers.view' },
+            { label: 'Customers', href: '/customers', icon: Users, capability: 'customers.view' },
             { label: 'Work Orders', href: null, icon: ClipboardList, capability: 'production.view' },
             { label: 'Wine Club', href: null, icon: Wine, capability: 'customers.view' },
             { label: 'Agencies', href: null, icon: Building2, capability: 'customers.view' },

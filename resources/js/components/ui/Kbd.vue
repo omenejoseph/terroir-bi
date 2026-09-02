@@ -8,7 +8,7 @@ defineProps<{ keys: string }>();
 
 <template>
     <kbd
-        class="pointer-events-none inline-flex h-5 items-center rounded border border-border bg-muted px-1.5 font-sans text-2xs font-medium text-muted-foreground"
+        class="pointer-events-none inline-flex h-5 items-center border border-border bg-muted px-1.5 font-sans text-2xs font-medium text-muted-foreground"
     >
         {{ keys }}
     </kbd>
