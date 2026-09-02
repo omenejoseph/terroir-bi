@@ -12,12 +12,12 @@ use Illuminate\Database\Eloquent\Collection;
 class ListWorkOrdersQuery
 {
     /**
-     * @param  array{status?: ?string, assignee_id?: ?string, category?: ?string, search?: ?string, due_from?: ?string, due_to?: ?string}  $filters
+     * @param  array{status?: ?string, assignee_id?: ?string, category?: ?string, search?: ?string, due_from?: ?string, due_to?: ?string, uncategorised?: ?bool}  $filters
      * @return Collection<int, WorkOrder>
      */
     public function get(array $filters = []): Collection
     {
-        $query = WorkOrder::query()->with('assignee');
+        $query = WorkOrder::query()->with(['assignee', 'createdBy', 'vessel', 'wineLot']);
 
         if (! empty($filters['status'])) {
             $query->where('status', TaskStatus::from($filters['status']));
@@ -29,6 +29,12 @@ class ListWorkOrdersQuery
 
         if (! empty($filters['category'])) {
             $query->where('category', $filters['category']);
+        }
+
+        // Work with no category has to stay reachable, or it is invisible to a
+        // board picker built out of categories.
+        if (! empty($filters['uncategorised'])) {
+            $query->whereNull('category');
         }
 
         if (! empty($filters['search'])) {

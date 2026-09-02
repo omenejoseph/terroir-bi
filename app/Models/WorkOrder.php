@@ -28,6 +28,8 @@ use Illuminate\Support\Carbon;
  * @property int $sort_order
  * @property string|null $assignee_id
  * @property string $created_by_id
+ * @property string|null $vessel_id
+ * @property string|null $wine_lot_id
  */
 class WorkOrder extends Model
 {
@@ -65,5 +67,33 @@ class WorkOrder extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assignee_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_id');
+    }
+
+    /**
+     * The vessel the work happens in. The columns have existed since the table
+     * was created but had no relation; the board's card names it ("Tank A-2",
+     * "Barrel 042" on 267:1781), which is what finally needed one.
+     *
+     * @return BelongsTo<Vessel, $this>
+     */
+    public function vessel(): BelongsTo
+    {
+        return $this->belongsTo(Vessel::class);
+    }
+
+    /**
+     * @return BelongsTo<WineLot, $this>
+     */
+    public function wineLot(): BelongsTo
+    {
+        return $this->belongsTo(WineLot::class);
     }
 }

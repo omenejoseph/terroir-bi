@@ -120,6 +120,31 @@
 
     --neutral-500: #737373;
     --neutral-600: #525252;
+
+    /*
+      Work Orders is the only screen in the design that uses colour, and it uses
+      it to encode two things a monochrome board cannot: what KIND of work a
+      card is, and how urgently it is wanted. These are sampled from the render
+      of 267:1781 rather than picked, and they are deliberately scoped to that
+      screen — nothing else in the app should reach for them.
+    */
+    --tag-violet: #ede9fe;
+    --tag-violet-foreground: #7008e7;
+    --tag-orange: #ffedd4;
+    --tag-orange-foreground: #ca3500;
+    --tag-red: #ffe2e2;
+    --tag-red-foreground: #c10007;
+    --tag-green: #dcfce7;
+    --tag-green-foreground: #008236;
+    --tag-blue: #dbeafe;
+    --tag-blue-foreground: #1447e6;
+    --tag-slate: #f1f5f9;
+    --tag-slate-foreground: #45556c;
+
+    /* The board's own accents: an overdue card, a completed one, a starred board. */
+    --board-overdue: #fb2c36;
+    --board-done: #00c950;
+    --board-star: #ffdf20;
 }
 
 .dark {
@@ -162,6 +187,24 @@
 
     --neutral-500: #a3a3a3;
     --neutral-600: #d4d4d4;
+
+    /* Tags invert: a dark, desaturated ground with a light glyph. */
+    --tag-violet: #2e1065;
+    --tag-violet-foreground: #ddd6ff;
+    --tag-orange: #431407;
+    --tag-orange-foreground: #ffd6a8;
+    --tag-red: #460809;
+    --tag-red-foreground: #ffc9c9;
+    --tag-green: #0d2818;
+    --tag-green-foreground: #b9f8cf;
+    --tag-blue: #162456;
+    --tag-blue-foreground: #bedbff;
+    --tag-slate: #1d283a;
+    --tag-slate-foreground: #cad5e2;
+
+    --board-overdue: #ff6467;
+    --board-done: #05df72;
+    --board-star: #fdc700;
 }
 
 /*
@@ -195,6 +238,22 @@
     --color-sidebar-foreground: var(--sidebar-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-active: var(--sidebar-active);
+
+    --color-tag-violet: var(--tag-violet);
+    --color-tag-violet-foreground: var(--tag-violet-foreground);
+    --color-tag-orange: var(--tag-orange);
+    --color-tag-orange-foreground: var(--tag-orange-foreground);
+    --color-tag-red: var(--tag-red);
+    --color-tag-red-foreground: var(--tag-red-foreground);
+    --color-tag-green: var(--tag-green);
+    --color-tag-green-foreground: var(--tag-green-foreground);
+    --color-tag-blue: var(--tag-blue);
+    --color-tag-blue-foreground: var(--tag-blue-foreground);
+    --color-tag-slate: var(--tag-slate);
+    --color-tag-slate-foreground: var(--tag-slate-foreground);
+    --color-board-overdue: var(--board-overdue);
+    --color-board-done: var(--board-done);
+    --color-board-star: var(--board-star);
 
     /*
       Figma type ramp. Sizes are fitted from the Figma text nodes' own advance

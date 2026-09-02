@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\DataTransferObjects;
 
 use App\Models\User;
+use App\Models\Vessel;
+use App\Models\WineLot;
 use App\Models\WorkOrder;
 use Illuminate\Contracts\Support\Arrayable;
 use JsonSerializable;
@@ -28,6 +30,8 @@ final class WorkOrderData implements Arrayable, JsonSerializable
     {
         $t = $this->task;
         $assignee = $t->assignee;
+        $vessel = $t->vessel;
+        $lot = $t->wineLot;
 
         return [
             'id' => $t->getKey(),
@@ -43,6 +47,19 @@ final class WorkOrderData implements Arrayable, JsonSerializable
             'assignee' => $assignee instanceof User
                 ? ['id' => $assignee->getKey(), 'name' => trim($assignee->first_name.' '.$assignee->last_name)]
                 : null,
+            // Where the work happens, as the board's card reports it.
+            'vessel' => $vessel instanceof Vessel
+                ? ['id' => $vessel->getKey(), 'name' => $vessel->name]
+                : null,
+            'wine_lot' => $lot instanceof WineLot
+                ? ['id' => $lot->getKey(), 'name' => $lot->name]
+                : null,
+            // Provenance, for the task drawer's Information panel (324:862).
+            'created_by' => $t->createdBy instanceof User
+                ? ['id' => $t->createdBy->getKey(), 'name' => trim($t->createdBy->first_name.' '.$t->createdBy->last_name)]
+                : null,
+            'created_at' => $t->created_at?->toIso8601String(),
+            'updated_at' => $t->updated_at?->toIso8601String(),
         ];
     }
 

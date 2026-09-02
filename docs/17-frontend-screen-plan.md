@@ -11,7 +11,7 @@ inventory, plus the gap register).
 
 ## Where we are
 
-**20 of 42 screens done. Phases 0–4 complete; Phase 5 (Work Orders) is next.**
+**26 of 42 screens done. Phases 0–5 complete; Phase 6 (Dashboard) is next.**
 
 | Phase | Screens | Status |
 |---|---|---|
@@ -20,8 +20,8 @@ inventory, plus the gap register).
 | 2 · Inventory | 8 / 8 | ✅ **Done** |
 | 3 · Orders | 4 / 4 | ✅ **Done** |
 | 4 · Customers | 6 / 6 | ✅ **Done** |
-| 5 · Work Orders | 0 / 6 | ⏭️ **Next** |
-| 6 · Dashboard completion | partial | Blocked on backend |
+| 5 · Work Orders | 6 / 6 | ✅ **Done** |
+| 6 · Dashboard completion | partial | ⏭️ **Next** — still blocked on backend |
 | 7 · Retire React frontend | — | Last |
 
 ### Screens shipped
@@ -47,6 +47,8 @@ inventory, plus the gap register).
 | Customer detail · Pricing / Order History / Komisija | `361:2157` | frame XML |
 | Customer — Create / Edit (drawer) | `316:80` / `316:695` / `322:848` / `231:9592` | render |
 | Merge customers (drawer) | — | not designed; built because the affordance is |
+| Work Orders board + its states | `267:1781` and siblings | render |
+| New / View Task (drawers) | `317:369` / `318:402` / `321:618` / `324:862` | frame XML |
 
 ### Fidelity corrections applied across every built screen
 
@@ -68,7 +70,7 @@ the drift.
 
 None of these blocked Phase 2, so they were left until a screen needs them:
 
-- **`DataTable` extraction** — still inline per screen, now across six tables. Customers was meant to force it and did not: the two customer tables are plain, but Inventory groups and bands, Orders stacks line items per row, and the customer detail's "Products bought" groups again. What they actually share is the chrome — the bordered card, the header band, the horizontal scroll container, the empty row — not the cells. **Extract that shell (not a column API) at Phase 5**, and leave the cells to each screen.
+- **`DataTable` extraction** — deliberately still open. Phase 5 was the nominated moment and turned out to be the wrong one: Work Orders is a board, not a table, so it added no consumer and extracting the shell there would have been refactoring with nothing to prove it. The shape of the extraction is still what the last note said — the chrome (bordered card, header band, scroll container, empty row), not a column API — and Phase 7's React retirement is the honest next candidate, since that is when the remaining tables move.
 - **Global ⌘K search field** — `Kbd` exists; the field and its behaviour do not. `Combobox` is now most of what it needs.
 - **Collapsed `NavRail`** — the design's second nav state.
 - ~~**Combobox / date picker**~~ — ✅ **built**, ahead of Phase 5. `Combobox` is a type-to-filter select matching on hidden `keywords`, so a product is findable by SKU or vintage without either cluttering its label; it is adopted by the Orders customer and product pickers and the Customers tier picker. `Calendar` + `DateRangePicker` complete three controls the design draws but never specifies: the Orders period strip's "Custom" tab, the Orders toolbar's "Date range" filter (which now drives the same window rather than competing with it), and the customer detail's "Products bought" range. Short fixed enum lists (customer type, unit, order status) deliberately keep the native `Select` — five options need no filtering and the native control is better on touch.
@@ -310,20 +312,49 @@ Restaurant values, the Analytics rebate-performance card, the overview's
 gross-profit split, the price-ladder and concentration cards, and the
 next-3-months forecast.
 
-## Phase 5 — Work Orders ⏭️ NEXT
+## Phase 5 — Work Orders ✅ DONE
 
-Seven frames, but they are **states of one screen**, not seven screens: Main
-View, New Task, Existing Task, Filters, Recent Activity, Assign quickly, Search.
+Seven frames, but states of one screen: Main View, New Task, Existing Task,
+Filters, Recent Activity, Assign quickly, Search. All the reachable ones are
+built as states of `/work-orders`.
 
-| Screen | Node |
-|---|---|
-| Main View + its five states | `267:1781` and siblings |
-| New / View Task (drawers) | `317:369`, `318:402`, `321:618`, `324:862`, `325:982` |
+| Screen | Node | Status |
+|---|---|---|
+| Main View | `267:1781` | ✅ **done** — render-diffed |
+| Filters: Due Soon | `267:4000` | ✅ **done** — a board filter, not a screen |
+| Search | `267:6361` | ✅ **done** — same |
+| Assign quickly | `267:5804` | ✅ **done** — the assignee combobox; its `SelectPopup` geometry is what `Combobox` follows |
+| New Task (+ Add details) | `317:369` / `321:618` | ✅ **done** |
+| View Task (+ Add details, actions) | `318:402` / `324:862` / `325:982` | ✅ **done** — one panel with the create form, per the design |
+| Existing Task / Recent Activity | `267:3164` / `267:4526` | ⚠️ Recent Activity is **not built**: work-order status changes are not journalled, so there is nothing to show. The button is rendered with a `@todo` |
 
-**DoD:** the nine criteria; each of the five interaction states reachable and
-visually diffed, not just the default view.
+**This is the largest design-ahead-of-domain gap in the project.** The design is
+a full Trello clone — named boards, user-made lists, recurrence, an URGENT
+priority — and the domain is a flat task list with a category, a priority, a
+status and a sort order. Rather than invent a boards table from a picture, the
+board picker is built from the CATEGORIES that have work and the columns are
+the three real statuses. Every divergence is in
+[`design/README.md`](design/README.md), and **this screen probably needs a
+schema decision before it is finished**, not more frontend.
 
-**Figma budget: 3 calls** — Main View, one filter state, one task drawer.
+What the board does have is the two moves that matter, both backed: dragging a
+card between columns writes STATUS (through `UpdateWorkOrderStatusAction`, so
+dropping on Done stamps `completed_at` exactly as ticking the card does), and
+dragging within a column writes SORT ORDER. Drag and drop is plain HTML5 — a
+board needs "into this column" and "before that card" and nothing else, which
+is not worth a library.
+
+Backend additions, all shared with the API: `WorkOrderBoard` (grouping and the
+board picker, over the same `ListWorkOrdersQuery`), `WorkOrderFilters`, the
+`vessel` / `wineLot` / `createdBy` relations the columns had but the model
+never exposed, and an `uncategorised` filter so work with no category stays
+reachable.
+
+**Work Orders is the only frame with rounded corners and the only one with
+colour.** The colour is followed — it encodes what kind of work a card is and
+how urgent it is, which monochrome cannot say. The rounding is not: eight of
+nine exported screens measure a hard 0, so the app stays square and the
+discrepancy is logged for the designer.
 
 ## Phase 6 — Dashboard completion
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InventoryController;
 use App\Http\Controllers\Web\OrderController;
+use App\Http\Controllers\Web\WorkOrderController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -122,4 +123,18 @@ Route::middleware('tenant.web')->group(function () {
     Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])
         ->middleware('can:customers.delete')
         ->name('customers.destroy');
+
+    /*
+      Work orders. Deliberately ungated, matching routes/api.php: team task
+      planning is open to any member of the tenant. Static segments precede the
+      {workOrder} wildcard.
+    */
+    Route::get('work-orders', [WorkOrderController::class, 'index'])->name('work-orders.index');
+    Route::post('work-orders', [WorkOrderController::class, 'store'])->name('work-orders.store');
+    Route::post('work-orders/reorder', [WorkOrderController::class, 'reorder'])->name('work-orders.reorder');
+    Route::patch('work-orders/{workOrder}/status', [WorkOrderController::class, 'updateStatus'])
+        ->name('work-orders.status.update');
+    Route::patch('work-orders/{workOrder}', [WorkOrderController::class, 'update'])->name('work-orders.update');
+    Route::delete('work-orders/{workOrder}', [WorkOrderController::class, 'destroy'])
+        ->name('work-orders.destroy');
 });

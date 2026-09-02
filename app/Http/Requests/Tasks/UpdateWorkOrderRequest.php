@@ -32,6 +32,10 @@ class UpdateWorkOrderRequest extends FormRequest
             'start_date' => ['sometimes', 'nullable', 'date'],
             'due_date' => ['sometimes', 'nullable', 'date'],
             'assignee_id' => ['sometimes', 'nullable', 'string', Rule::exists('memberships', 'user_id')->where('tenant_id', $tenantId)],
+            // Where the work happens. Both columns have always existed on the
+            // table; the board's card names the vessel, so it is settable now.
+            'vessel_id' => ['sometimes', 'nullable', 'string', Rule::exists('vessels', 'id')->where('tenant_id', $tenantId)],
+            'wine_lot_id' => ['sometimes', 'nullable', 'string', Rule::exists('wine_lots', 'id')->where('tenant_id', $tenantId)],
         ];
     }
 }

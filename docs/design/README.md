@@ -140,6 +140,29 @@ Customers (`230:2395`, `230:4717`, `231:9336`) adds five:
 | "Price ladder" and "Concentration" cards | Both need per-category revenue-per-bottle and a concentration measure; the products query supplies volume and share, so those two cards are folded into "Products bought" rather than fabricated |
 | "Next 3 months" forecast card | `CustomerOrderAnalyticsQuery` supplies `expected_next_3m`, but only where a prior year exists to compare against; the design's card is the empty state for exactly that case and is deferred with the forecast work |
 
+Work Orders (`267:1781` and its six sibling states) is the largest gap in the
+canvas — the design is a full Trello clone and the domain is a flat task list:
+
+| Design element | Missing backing data |
+|---|---|
+| Named boards ("Cellar Operations", "Vineyard & Maintenance"), "+ New Board", the favourite star | There is no board entity. A work order carries a `category` and nothing else that groups it, so the picker lists the CATEGORIES that have work — the same interaction over data that exists |
+| A fourth list, "This Week" | `TaskStatus` is Todo / In Progress / Done. "This Week" is a date window, so dragging a card into it would mean *reschedule*, not *change status*. The board's "Due soon" filter asks the same question honestly |
+| Per-list menus and "Add another list" | Lists are the enum, so a new list would be a new status rather than something a user makes |
+| "URGENT" priority | `TaskPriority` stops at High. Only HIGH is badged — badging Medium and Low too would put a chip on every card and stop it meaning anything |
+| "Recurring" badge, filter and switch | A work order has no recurrence field |
+| "Recent Activity" | Work-order status changes are not journalled the way order status is |
+
+**Work Orders is also the only frame with rounded corners.** Its cards measure
+a ~5px radius, its list containers ~8px, and its board pills are fully rounded,
+while every other exported screen measures a hard 0. The app follows the
+majority and stays square here; if Work Orders is the intended direction, one
+token flips the whole app back. **Worth confirming with the designer.**
+
+It is also the only screen that uses colour, and there the design is followed:
+the sampled violet / orange / red / green live as `--tag-*` tokens because they
+encode what kind of work a card is and how urgently it is wanted, which a
+monochrome board cannot say.
+
 Three controls the design draws but never specifies were built in the app's own
 vocabulary rather than guessed at: the **combobox** behind "Search product by
 name, SKU or vintage…" (`335:4233`), and the **calendar** behind the Orders

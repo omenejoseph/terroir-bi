@@ -71,7 +71,10 @@ export const NAV_CATEGORIES: NavCategory[] = [
         items: [
             { label: 'Orders', href: '/orders', icon: ShoppingCart, capability: 'orders.view' },
             { label: 'Customers', href: '/customers', icon: Users, capability: 'customers.view' },
-            { label: 'Work Orders', href: null, icon: ClipboardList, capability: 'production.view' },
+            // Task planning is open to any member (routes/api.php and routes/web.php
+            // both leave it ungated), so this entry carries no capability — hiding it
+            // from someone the route admits would be the sidebar lying.
+            { label: 'Work Orders', href: '/work-orders', icon: ClipboardList },
             { label: 'Wine Club', href: null, icon: Wine, capability: 'customers.view' },
             { label: 'Agencies', href: null, icon: Building2, capability: 'customers.view' },
             { label: 'Pipeline', href: null, icon: ChartLine, capability: 'customers.view' },
