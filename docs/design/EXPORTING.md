@@ -26,17 +26,22 @@ Measuring them off a PNG would be strictly worse than reading the XML.
 The cache describes geometry but cannot show *appearance* — fills, strokes,
 shadows, states. One PNG per screen closes that.
 
-In Figma: select the frame → Export → **PNG, 2x** → export.
+In Figma: select the frames → Export → **PNG, 2x** → Export.
 
-Drop them here, named to match the frame files so they pair up:
+**Keep whatever filenames Figma gives them.** Figma names each file after its
+layer (`ORDERS - List.png`), and `frames/index.json` maps every layer name to
+its node id, so they can be matched up afterwards. Renaming by hand is wasted
+effort and a chance to introduce mistakes.
+
+Drop them anywhere under:
 
 ```
-docs/design/renders/<section>/<screen-slug>--<node-id>.png
-e.g. docs/design/renders/orders/orders-list--455-1577.png
+docs/design/renders/
 ```
 
-`frames/index.json` lists every section, screen name and node id, so the naming
-can be derived rather than invented.
+Subfolders are optional. Duplicated layer names across sections are the only
+ambiguity, and there are only two (`Analytics`, `New Item`) — if in doubt, put
+those in a subfolder named after their section.
 
 **Priority order** — matching the phases in `../17-frontend-screen-plan.md`:
 
