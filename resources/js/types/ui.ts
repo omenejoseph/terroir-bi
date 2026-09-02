@@ -44,3 +44,18 @@ export interface DateRange {
     from: string | null;
     to: string | null;
 }
+
+/**
+ * One entry in a `DropdownMenu`.
+ *
+ * `destructive` is a property of the ACTION, not of the caller's styling — it
+ * is what makes Delete red in every menu without each one deciding again.
+ */
+export interface MenuItem {
+    key: string;
+    label: string;
+    /** A lucide-vue-next component. */
+    icon?: unknown;
+    destructive?: boolean;
+    disabled?: boolean;
+}

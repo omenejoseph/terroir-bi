@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Plus } from 'lucide-vue-next';
+import { MoreHorizontal, Plus } from 'lucide-vue-next';
 
 import TaskCard from '@/components/work-orders/TaskCard.vue';
 import GripHandle from '@/components/ui/GripHandle.vue';
@@ -94,10 +94,10 @@ function reset(): void {
                  nothing yet for those actions to change. -->
             <button
                 type="button"
-                class="px-1 text-muted-foreground hover:text-foreground"
+                class="grid size-7 shrink-0 place-items-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 :aria-label="`${column.label} actions`"
             >
-                ⋯
+                <MoreHorizontal class="size-4" :stroke-width="1.5" />
             </button>
         </header>
 

@@ -10,8 +10,10 @@ import {
     CircleSlash,
     Download,
     Filter,
+    PencilLine,
     Plus,
     Search,
+    Trash2,
     X,
 } from 'lucide-vue-next';
 
@@ -21,6 +23,7 @@ import MergeCustomersPanel from '@/components/customers/MergeCustomersPanel.vue'
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import Checkbox from '@/components/ui/Checkbox.vue';
+import DropdownMenu from '@/components/ui/DropdownMenu.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
@@ -29,7 +32,7 @@ import { CUSTOMER_TYPES, customerTypeLabel } from '@/lib/customers';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { Customer, CustomerFilters, PricingTierSummary } from '@/types/customers';
 import type { Paginated, SharedProps } from '@/types';
-import type { TabItem } from '@/types/ui';
+import type { MenuItem, TabItem } from '@/types/ui';
 
 /**
  * Customers list, following Figma 230:2395: page header with Export and New
@@ -177,6 +180,48 @@ function edit(customer: Customer): void {
 function create(): void {
     editing.value = null;
     formOpen.value = true;
+}
+
+/*
+  The row's `⋯` menu (Figma `230:3755`). What it offers is a property of the
+  member, not of the row, so it is built once: every row shows the same two
+  entries, and each is drawn only where the capability backing it is held.
+*/
+const rowActions = computed<MenuItem[]>(() => {
+    const items: MenuItem[] = [];
+
+    if (can('customers.manage')) items.push({ key: 'edit', label: 'Edit', icon: PencilLine });
+    if (can('customers.delete')) {
+        items.push({ key: 'delete', label: 'Delete', icon: Trash2, destructive: true });
+    }
+
+    return items;
+});
+
+function onRowAction(key: string, customer: Customer): void {
+    if (key === 'edit') {
+        edit(customer);
+
+        return;
+    }
+
+    if (key === 'delete') destroy(customer);
+}
+
+/**
+ * Deleting is destructive and the menu gives it no second step of its own, so
+ * it asks here. The wording names both outcomes because the server picks
+ * between them: a customer with orders is deactivated, never deleted, since
+ * their orders are the revenue record (DeleteCustomerAction).
+ */
+function destroy(customer: Customer): void {
+    const message =
+        `Delete ${customer.company_name}? ` +
+        'Customers with orders are deactivated instead, so their history survives.';
+
+    if (!confirm(message)) return;
+
+    router.delete(`/customers/${customer.id}`, { preserveScroll: true });
 }
 </script>
 
@@ -423,16 +468,15 @@ function create(): void {
                                         {{ row.is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-right">
-                                    <button
-                                        v-if="can('customers.manage')"
-                                        type="button"
-                                        class="px-1 text-muted-foreground hover:text-foreground"
-                                        :aria-label="`Edit ${row.company_name}`"
-                                        @click="edit(row)"
-                                    >
-                                        Edit
-                                    </button>
+                                <td class="px-4 py-3">
+                                    <div class="flex justify-end">
+                                        <DropdownMenu
+                                            v-if="rowActions.length > 0"
+                                            :items="rowActions"
+                                            :label="`Actions for ${row.company_name}`"
+                                            @select="onRowAction($event, row)"
+                                        />
+                                    </div>
                                 </td>
                             </tr>
 
