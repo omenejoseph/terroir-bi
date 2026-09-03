@@ -51,9 +51,13 @@ function dueLabel(dueDate: string | null, overdue: boolean): string {
                 <Checkbox :model-value="false" label="Mark complete" hide-label disabled class="mt-0.5" />
                 <div class="min-w-0">
                     <p class="truncate text-xs font-medium text-foreground">{{ task.title }}</p>
-                    <p class="text-2xs text-muted-foreground">
-                        {{ categoryLabel(task.category) }} ·
-                        <span :class="task.overdue && 'text-destructive'">{{ dueLabel(task.due_date, task.overdue) }}</span>
+                    <p class="mt-0.5 flex items-center gap-1.5 text-2xs text-muted-foreground">
+                        {{ categoryLabel(task.category) }}
+                        <span
+                            :class="task.overdue ? 'bg-destructive/10 px-1 py-px text-destructive' : 'text-muted-foreground'"
+                        >
+                            {{ dueLabel(task.due_date, task.overdue) }}
+                        </span>
                     </p>
                 </div>
             </li>

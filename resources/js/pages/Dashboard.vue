@@ -18,7 +18,6 @@ import CardHeader from '@/components/ui/CardHeader.vue';
 import CardTitle from '@/components/ui/CardTitle.vue';
 import DateRangePicker from '@/components/ui/DateRangePicker.vue';
 import ProgressBar from '@/components/ui/ProgressBar.vue';
-import StatCard from '@/components/ui/StatCard.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { DashboardFilters, DashboardSummary } from '@/types/dashboard';
@@ -128,18 +127,6 @@ const alerts = computed(() => {
 
     return out;
 });
-
-/**
- * A quick "how's the tenant doing" strip. Not in the design's own frame
- * (208:5577 has no equivalent row), kept because it is the only place
- * Outstanding A/R is visible and it costs nothing the design needs elsewhere.
- */
-const stats = computed(() => [
-    { label: 'Revenue', value: money(props.summary.stats.revenue) },
-    { label: 'Orders', value: count(props.summary.stats.total_orders) },
-    { label: 'Customers', value: count(props.summary.stats.customers) },
-    { label: 'Outstanding A/R', value: money(props.summary.stats.outstanding_ar) },
-]);
 </script>
 
 <template>
@@ -178,10 +165,6 @@ const stats = computed(() => [
                     {{ alert.text }}
                 </span>
             </div>
-
-            <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <StatCard v-for="stat in stats" :key="stat.label" :label="stat.label" :value="stat.value" />
-            </section>
 
             <div class="grid gap-6 lg:grid-cols-2">
                 <!-- Revenue -->
@@ -236,42 +219,20 @@ const stats = computed(() => [
                         <p v-else class="py-6 text-sm text-muted-foreground">No revenue in this period.</p>
                     </CardContent>
                 </Card>
-
-                <!--
-                  @todo Revenue vs. target (Figma 208:5577). The design shows
-                  progress toward an annual revenue target with a pace read.
-                  No target is stored anywhere — needs a tenant setting or a
-                  targets table before this can show a real number.
-                -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Revenue vs. target</CardTitle>
-                        <p class="text-xs text-muted-foreground">Annual target</p>
-                    </CardHeader>
-                    <CardContent>
-                        <p class="text-sm text-muted-foreground">
-                            No annual target is set. Add one in settings to track pace against plan.
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <!--
-                  @todo Target by channel. Same gap as above, per sales channel,
-                  plus the pace commentary the design writes beside each bar.
-                -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Target by channel</CardTitle>
-                        <p class="text-xs text-muted-foreground">Per-channel plan</p>
-                    </CardHeader>
-                    <CardContent>
-                        <p class="text-sm text-muted-foreground">No per-channel targets are set.</p>
-                    </CardContent>
-                </Card>
             </div>
 
-            <!-- Upcoming tasks · Runway · Net cash flow · Reorder pipeline (Figma 208:5577's four-card row) -->
-            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <!--
+              Upcoming tasks · Runway · Net cash flow · Reorder pipeline (Figma
+              208:5577's four-card row). "Revenue vs. target" sits stacked above
+              Reorder pipeline rather than in its own row: it folds in "Target
+              by channel" too, since neither can show a real number yet (no
+              annual or per-channel target is stored anywhere — same shape of
+              gap as Runway below), and a full row for two blocked placeholders
+              would outweigh what they actually say. `items-start` keeps the
+              other three cards at their own height instead of stretching to
+              match this taller column.
+            -->
+            <div class="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <UpcomingTasksCard :tasks="summary.upcoming_tasks" />
 
                 <!--
@@ -288,7 +249,22 @@ const stats = computed(() => [
                 </div>
 
                 <NetCashFlowCard :flow="summary.net_cash_flow" :currency="summary.currency" />
-                <ReorderPipelineCard :pipeline="summary.reorder_pipeline" :currency="summary.currency" />
+
+                <div class="flex flex-col gap-4">
+                    <!--
+                      @todo Revenue vs. target (Figma 208:5577 / 286:781), folding
+                      in "Target by channel". No annual or per-channel target is
+                      stored anywhere — needs a tenant setting or a targets table
+                      before either can show a real number.
+                    -->
+                    <div class="border border-border bg-card p-4">
+                        <h3 class="text-sm font-semibold">Revenue vs. target</h3>
+                        <p class="mt-4 text-xs text-muted-foreground">
+                            No annual or per-channel target is set, so progress can't be calculated yet.
+                        </p>
+                    </div>
+                    <ReorderPipelineCard :pipeline="summary.reorder_pipeline" :currency="summary.currency" />
+                </div>
             </div>
 
             <!-- Key ratios · Low stock (Figma 208:6303 / 286:1024) -->
@@ -296,34 +272,6 @@ const stats = computed(() => [
                 <KeyRatiosGrid :ratios="summary.key_ratios" :currency="summary.currency" />
                 <LowStockCard :items="summary.stock_watch" />
             </div>
-
-            <!-- Recent orders: not part of the captured design frame, kept because it is already useful. -->
-            <Card>
-                <CardHeader>
-                    <CardTitle>Recent orders</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ul v-if="summary.recent_orders.length" class="divide-y divide-border">
-                        <li
-                            v-for="order in summary.recent_orders"
-                            :key="order.id"
-                            class="flex items-center justify-between gap-4 py-3"
-                        >
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-medium">{{ order.order_number }}</p>
-                                <p class="truncate text-xs text-muted-foreground">
-                                    {{ order.customer || '—' }} · {{ order.date }}
-                                </p>
-                            </div>
-                            <div class="flex shrink-0 items-center gap-3">
-                                <Badge variant="outline">{{ order.status }}</Badge>
-                                <span class="text-sm tabular-nums">{{ money(order.total) }}</span>
-                            </div>
-                        </li>
-                    </ul>
-                    <p v-else class="py-6 text-sm text-muted-foreground">No orders in this period.</p>
-                </CardContent>
-            </Card>
         </div>
     </AppLayout>
 </template>
