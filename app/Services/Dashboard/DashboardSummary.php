@@ -17,6 +17,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\WorkOrder;
 use App\Queries\InventoryAnalyticsQuery;
+use App\Queries\ReorderRadarQuery;
 use App\Support\Money\CurrencyRegistry;
 use App\Support\Money\Money;
 use App\Tenancy\Contracts\TenantContext;
@@ -47,6 +48,7 @@ class DashboardSummary
 
     public function __construct(
         private readonly InventoryAnalyticsQuery $analytics,
+        private readonly ReorderRadarQuery $reorderRadar,
         private readonly TenantContext $tenant,
     ) {}
 
@@ -97,6 +99,7 @@ class DashboardSummary
             'currency' => $this->currency(),
             'revenue_summary' => $this->revenueSummary(),
             'revenue_by_channel' => $this->revenueByChannel($since, $until),
+            'revenue_trend' => $this->revenueTrend(),
             'key_ratios' => $this->keyRatios($orders, $since, $until),
             'stats' => [
                 'total_orders' => $orders->count(),
@@ -106,6 +109,7 @@ class DashboardSummary
                 'low_stock' => $this->analytics->lowStockCount(),
                 'outstanding_ar' => $this->outstandingAr(),
                 'tasks_overdue' => $this->overdueTasks(),
+                'ready_to_ship' => $this->readyToShipCount(),
             ],
             'orders' => $this->series(array_values($orderCounts), $step, $until),
             'revenue' => $this->series(array_values($revenueBuckets), $step, $until),
@@ -113,6 +117,9 @@ class DashboardSummary
             'top_products' => $this->topProducts($since, $until),
             'stock_watch' => $this->analytics->stockWatch(6),
             'recent_orders' => $this->recentOrders(),
+            'reorder_pipeline' => $this->reorderPipeline(),
+            'upcoming_tasks' => $this->upcomingTasks(),
+            'net_cash_flow' => $this->netCashFlow($since, $until),
         ];
     }
 
@@ -531,6 +538,184 @@ class DashboardSummary
             ->whereNotNull('due_date')
             ->where('due_date', '<', Carbon::now())
             ->count();
+    }
+
+    /**
+     * Orders currently ready to ship, right now — like `low_stock` and
+     * `tasks_overdue`, this is the tenant's present state, not scoped to the
+     * selected period. The alert band asks "is there something to act on
+     * today", not "how many shipped in the window I'm looking at".
+     */
+    private function readyToShipCount(): int
+    {
+        return Order::query()
+            ->where('status', OrderStatus::ReadyToShip->value)
+            ->where('is_consignment', false)
+            ->whereNotIn('customer_id', $this->excludedCustomers())
+            ->count();
+    }
+
+    /**
+     * Revenue by calendar month for the last 6 months, independent of the
+     * selected period — the design's chart (Figma `208:6043`) always reads
+     * "Feb … Jul", not whatever window the tabs above it are set to.
+     *
+     * @return list<array{label: string, value: int}>
+     */
+    private function revenueTrend(): array
+    {
+        $now = Carbon::now();
+        $from = $now->copy()->subMonthsNoOverflow(5)->startOfMonth();
+
+        /** @var Collection<int, Order> $orders */
+        $orders = Order::query()
+            ->where('is_consignment', false)
+            ->whereNotIn('customer_id', $this->excludedCustomers())
+            ->where('created_at', '>=', $from)
+            ->get(['created_at', 'total_amount']);
+
+        $months = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = $now->copy()->subMonthsNoOverflow($i);
+            $months[$month->format('Y-m')] = ['label' => $month->format('M'), 'value' => 0];
+        }
+
+        foreach ($orders as $order) {
+            $key = $order->created_at?->format('Y-m');
+            if ($key !== null && array_key_exists($key, $months)) {
+                $months[$key]['value'] += $order->total_amount->getMinorAmount();
+            }
+        }
+
+        return array_values($months);
+    }
+
+    /**
+     * The Dashboard's "Reorder pipeline" card (Figma `208:5915`): the same
+     * churn radar the Customers module already surfaces
+     * (`Api\CustomerController::reorderRadar`), read down to what the card has
+     * room for. `total` is the combined average order value across every
+     * flagged account — what the whole pipeline is worth if each reorders at
+     * their usual size — not just the three shown.
+     *
+     * @return array{total: array<string, mixed>, rows: list<array<string, mixed>>}
+     */
+    private function reorderPipeline(): array
+    {
+        $radar = $this->reorderRadar->get();
+
+        $totalMinor = array_sum(array_map(
+            static fn (array $row): int => (int) $row['avg_order_value']['minor'],
+            $radar['rows'],
+        ));
+
+        $rows = array_slice($radar['rows'], 0, 3);
+
+        return [
+            'total' => Money::fromMinor($totalMinor, $this->currency())->jsonSerialize(),
+            'rows' => array_map(static fn (array $row): array => [
+                'customer_id' => $row['customer_id'],
+                'company_name' => $row['company_name'],
+                'days_since_last' => $row['days_since_last'],
+                'avg_order_value' => $row['avg_order_value'],
+            ], $rows),
+        ];
+    }
+
+    /**
+     * The Dashboard's "Upcoming tasks" card (Figma `286:745`): open work,
+     * soonest-due first with undated work last, capped to what the card shows.
+     * `due_this_week` only counts dated work due by the end of this week or
+     * already overdue — that is the headline's "open this week", and it is
+     * deliberately narrower than the row list below it, which also surfaces
+     * undated work worth knowing about even though it has no week to belong to.
+     *
+     * @return array{due_this_week: int, rows: list<array<string, mixed>>}
+     */
+    private function upcomingTasks(): array
+    {
+        $now = Carbon::now();
+        $endOfWeek = $now->copy()->endOfWeek();
+
+        $dueThisWeek = WorkOrder::query()
+            ->where('status', '!=', TaskStatus::Done)
+            ->whereNotNull('due_date')
+            ->where('due_date', '<=', $endOfWeek)
+            ->count();
+
+        /** @var Collection<int, WorkOrder> $open */
+        $open = WorkOrder::query()
+            ->where('status', '!=', TaskStatus::Done)
+            ->orderByRaw('due_date is null') // undated last
+            ->orderBy('due_date')
+            ->limit(3)
+            ->get(['id', 'title', 'category', 'due_date']);
+
+        return [
+            'due_this_week' => $dueThisWeek,
+            'rows' => $open->map(fn (WorkOrder $task): array => [
+                'id' => $task->getKey(),
+                'title' => $task->title,
+                'category' => $task->category?->value,
+                'due_date' => $task->due_date?->toIso8601String(),
+                'overdue' => $task->due_date !== null && $task->due_date->isPast(),
+            ])->all(),
+        ];
+    }
+
+    /**
+     * The Dashboard's "Net cash flow" card (Figma `208:5852`): cash actually
+     * received minus cash actually spent in the window, plus what it went to.
+     * Uses the same cost base as `keyRatios()` (spend by its own `date`,
+     * excluding stats-excluded suppliers) so the two cards cannot disagree
+     * about what counts as spend in this window.
+     *
+     * @return array{net: array<string, mixed>, by_category: list<array<string, mixed>>}
+     */
+    private function netCashFlow(?Carbon $since, Carbon $until): array
+    {
+        $currency = $this->currency();
+        $excluded = $this->excludedCustomers();
+
+        $cashIn = (int) Inflow::query()
+            ->where('status', InflowStatus::Received->value)
+            ->when($since !== null, fn ($q) => $q->where('date', '>=', $since))
+            ->where('date', '<=', $until)
+            ->where(fn ($q) => $q->whereNull('customer_id')->orWhereNotIn('customer_id', $excluded))
+            ->get(['amount', 'is_credit_note'])
+            ->sum(fn (Inflow $i) => $i->is_credit_note ? -$i->amount->getMinorAmount() : $i->amount->getMinorAmount());
+
+        $costBase = fn (): Builder => Cost::query()
+            ->when($since !== null, fn (Builder $q) => $q->where('date', '>=', $since))
+            ->where('date', '<=', $until)
+            ->whereDoesntHave('supplier', fn (Builder $q) => $q->where('exclude_from_stats', true));
+
+        $cashOut = (int) $costBase()->sum('total_amount');
+
+        // Salary and Marketing are broken out because keyRatios() already does
+        // (they back the ratio grid next to this card); Operations is the
+        // design's third named bucket; everything else — including any
+        // tenant's own free-text category — falls into Other rather than
+        // growing an ever-longer legend.
+        $named = [
+            'Salary' => (int) $costBase()->whereRaw('LOWER(category) = ?', [CostCategory::Salary->sqlLower()])->sum('total_amount'),
+            'Marketing' => (int) $costBase()->whereRaw('LOWER(category) = ?', [CostCategory::Marketing->sqlLower()])->sum('total_amount'),
+            'Operations' => (int) $costBase()->whereRaw('LOWER(category) = ?', [CostCategory::Operations->sqlLower()])->sum('total_amount'),
+        ];
+        $named['Other'] = max(0, $cashOut - array_sum($named));
+
+        return [
+            'net' => Money::fromMinor($cashIn - $cashOut, $currency)->jsonSerialize(),
+            'by_category' => array_map(
+                fn (string $label, int $minor): array => [
+                    'label' => $label,
+                    'amount' => Money::fromMinor($minor, $currency)->jsonSerialize(),
+                    'percent' => $cashOut > 0 ? round($minor / $cashOut * 100, 1) : 0.0,
+                ],
+                array_keys($named),
+                array_values($named),
+            ),
+        ];
     }
 
     private function currency(): string

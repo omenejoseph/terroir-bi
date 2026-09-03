@@ -178,27 +178,28 @@ says 12px mono.
 
 ## Gaps — design ahead of the backend
 
-The Dashboard design (`208:5577`) is mostly implementable today — re-audited
-2026-09-03 against `DashboardSummary` field by field. Two rows below were
-wrong: `ReorderRadarQuery` and `keyRatios().dtc_revenue_pct` already exist and
-were simply never read by `Dashboard.vue`. Only the rows marked **missing**
-need a genuine product decision (a stored number, a policy) before a query can
-supply them; everything else is wiring an existing query into a new card:
+The Dashboard design (`208:5577`) was re-audited 2026-09-03 against
+`DashboardSummary` field by field, split into wiring, new-but-unblocked
+aggregations, and what's genuinely missing. Everything except the last three
+rows is now **built** (2026-09-03): the ratio grid, reorder pipeline, low
+stock, the alert band's two real conditions, the Custom tab, net cash flow,
+upcoming tasks, and the trailing-6-month revenue chart. Only a stored number
+or a policy decision can close the rest:
 
 | Design element | Status |
 |---|---|
-| Bottom 8-tile ratio grid (DTC Revenue, Operating Margin, Employee Cost, Marketing Cost, COGS, Revenue/Employee, Avg Order Value, Inventory Turnover) | Wiring only — `keyRatios()` computes all eight already |
-| "Reorder pipeline" | Wiring only — `ReorderRadarQuery` (already live at `Api\CustomerController::reorderRadar`) supplies exactly this |
-| "Low stock" | Wiring + a query tweak — `stockWatch()` needs to filter to items actually below their minimum and select `unit` |
-| Alert band's "N ready to ship" / "N overdue" | Wiring only — `order_status` and `tasks_overdue` are computed; the alert band checks different conditions today |
-| "Custom" period tab | Wiring only — `period=custom&from=&to=` already works server-side |
-| Net cash flow + expense split | New aggregation, no new schema — `Inflow`, `Cost` and `CostAnalyticsQuery::byCategory()` cover it |
-| "Upcoming tasks" | New aggregation, no new schema — `WorkOrder` already has category/due_date/status |
-| Runway's payables line ("Delay payable — Supplier, due soon") | New aggregation, no new schema — `Cost` has `due_date` + `supplier_id` |
-| Revenue chart (monthly, trailing 6 months) | New query shape — the data exists, but `series()` buckets the *selected* period, not a fixed calendar-month window |
+| Bottom 8-tile ratio grid (DTC Revenue, Operating Margin, Employee Cost, Marketing Cost, COGS, Revenue/Employee, Avg Order Value, Inventory Turnover) | ✅ Built — `KeyRatiosGrid.vue`, reading `keyRatios()`, which already computed all eight |
+| "Reorder pipeline" | ✅ Built — `ReorderPipelineCard.vue`, reading `DashboardSummary::reorderPipeline()`, itself `ReorderRadarQuery` (already live at `Api\CustomerController::reorderRadar`) narrowed to card size |
+| "Low stock" | ✅ Built — `LowStockCard.vue`; `stockWatch()` now filters to items actually below their minimum, ranked by shortfall ratio, with a unit for the "12/24 btl" fraction |
+| Alert band's "N ready to ship" / "N overdue" | ✅ Built — `stats.ready_to_ship` (current state, like `low_stock` and `tasks_overdue`) plus the existing overdue count now drive the two real chips |
+| "Custom" period tab | ✅ Built — the same `DateRangePicker` pattern Orders uses, paired with the tab strip; `period=custom&from=&to=` already worked server-side |
+| Net cash flow + expense split | ✅ Built — `NetCashFlowCard.vue`, reading `DashboardSummary::netCashFlow()`: received `Inflow` minus `Cost` in the window, grouped by the same categories `keyRatios()` already names (Salary/Marketing/Operations), everything else folded into Other |
+| "Upcoming tasks" | ✅ Built — `UpcomingTasksCard.vue`, reading `DashboardSummary::upcomingTasks()`: open `WorkOrder`s, soonest-due first, undated last |
+| Revenue chart (monthly, trailing 6 months) | ✅ Built — `AreaChart.vue` plots `revenue_trend`, a fixed trailing-6-calendar-month bucketing independent of the selected period tab |
+| Runway's payables line ("Delay payable — Supplier, due soon") | Not built — `Cost` has `due_date` + `supplier_id` to support it, but see Runway below: a card can't ship half its content, and the card's headline number is blocked |
 | "Revenue vs. target" (68% of annual target) | **Missing: no annual revenue target is stored** |
 | "Target by channel" + pace commentary | **Missing: no per-channel target is stored** |
-| "Runway — 4,2 months" + the receivables-aging line | **Missing: no cash-on-hand figure exists anywhere, and `Order` has no due-date/payment-terms field** — "overdue" can only mean *unpaid*, not *unpaid past its due date* |
+| "Runway — 4,2 months" + the receivables-aging line | **Missing: no cash-on-hand figure exists anywhere, and `Order` has no due-date/payment-terms field** — "overdue" can only mean *unpaid*, not *unpaid past its due date*. The card stays absent rather than shipping a payables feed under a "Runway" heading with no runway number in it |
 
 Inventory (`389:1592`) adds three more:
 

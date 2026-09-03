@@ -12,6 +12,7 @@ use App\Models\StockMovement;
 use App\Support\Money\CurrencyRegistry;
 use App\Support\Money\Money;
 use App\Tenancy\Contracts\TenantContext;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -303,22 +304,41 @@ class InventoryAnalyticsQuery
     }
 
     /**
-     * Items most at risk (lowest stock among those with a minimum set).
+     * Items actually below their minimum, worst shortfall first — the
+     * Dashboard's "Low stock" card (Figma `286:1024`).
      *
-     * @return array<int, array{name: string, stock: string, min: string}>
+     * Distinct from `lowStockCount()`'s all-items count only in that this
+     * returns rows: same `current_stock < min_stock` condition, so the card's
+     * list and its own badge count never disagree.
+     *
+     * @return array<int, array{name: string, stock: string, min: string, unit: string}>
      */
     public function stockWatch(int $limit = 6): array
     {
-        return InventoryItem::query()
+        /** @var Collection<int, InventoryItem> $items */
+        $items = InventoryItem::query()
             ->whereNotNull('min_stock')
-            ->orderBy('current_stock')
-            ->limit($limit)
-            ->get(['name', 'current_stock', 'min_stock'])
+            ->whereColumn('current_stock', '<', 'min_stock')
+            ->get(['name', 'current_stock', 'min_stock', 'sales_unit']);
+
+        // Ranked in PHP rather than in SQL: the decimal columns are cast to
+        // fixed-precision strings, and ordering that arithmetically in a
+        // database-agnostic way is more trouble than it's worth for a list
+        // this small (it's already narrowed to "below minimum").
+        return $items
+            // Furthest below minimum first, as a ratio — a 2-of-20 item
+            // outranks a 200-of-500 one even though its absolute gap is smaller.
+            ->sortBy(fn (InventoryItem $i): float => (float) $i->min_stock > 0
+                ? (float) $i->current_stock / (float) $i->min_stock
+                : 0.0)
+            ->take($limit)
             ->map(fn (InventoryItem $i): array => [
                 'name' => $i->name,
                 'stock' => (string) $i->current_stock,
                 'min' => (string) $i->min_stock,
+                'unit' => $i->sales_unit,
             ])
+            ->values()
             ->all();
     }
 

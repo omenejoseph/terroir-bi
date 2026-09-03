@@ -65,4 +65,39 @@ class WebDashboardTest extends TestCase
                 ->where('summary.range', $period)
                 ->where('filters.period', $period));
     }
+
+    /** The Custom tab (Figma 208:5577's 7th pill) round-trips through the same from/to the server already accepts. */
+    public function test_a_custom_range_resolves_and_is_echoed_back(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/dashboard?period=custom&from=2026-01-01&to=2026-01-31')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('summary.range', 'custom')
+                ->where('filters.from', '2026-01-01')
+                ->where('filters.to', '2026-01-31'));
+    }
+
+    /** Every card added to close the Tier 1/2 gap list actually reaches the page. */
+    public function test_dashboard_carries_the_newly_wired_cards(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('summary.key_ratios.dtc_revenue_pct')
+                ->has('summary.reorder_pipeline.total')
+                ->has('summary.upcoming_tasks.due_this_week')
+                ->has('summary.net_cash_flow.net')
+                ->has('summary.revenue_trend', 6)
+                ->where('summary.stats.ready_to_ship', 0));
+    }
 }

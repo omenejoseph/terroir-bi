@@ -11,7 +11,14 @@ import { Check } from 'lucide-vue-next';
  * selection column has one checkbox per row and no space for nine labels, but
  * "Select Adrion Cliff Hotel" is exactly what a screen reader should announce.
  */
-defineProps<{ modelValue: boolean; label: string; hint?: string; hideLabel?: boolean }>();
+defineProps<{
+    modelValue: boolean;
+    label: string;
+    hint?: string;
+    hideLabel?: boolean;
+    /** For a checkbox that only ever reflects state — e.g. the dashboard's task preview, where ticking work off is the board's job, not this card's. */
+    disabled?: boolean;
+}>();
 
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>();
 
@@ -25,9 +32,11 @@ const id = useId();
             type="button"
             role="checkbox"
             :aria-checked="modelValue"
-            class="mt-0.5 grid size-4 shrink-0 place-items-center border transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+            :aria-disabled="disabled || undefined"
+            :disabled="disabled"
+            class="mt-0.5 grid size-4 shrink-0 place-items-center border transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             :class="modelValue ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-card'"
-            @click="emit('update:modelValue', !modelValue)"
+            @click="!disabled && emit('update:modelValue', !modelValue)"
         >
             <Check v-if="modelValue" class="size-3" :stroke-width="3" />
         </button>

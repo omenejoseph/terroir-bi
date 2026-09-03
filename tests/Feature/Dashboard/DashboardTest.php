@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Tests\Feature\Dashboard;
 
 use App\Enums\CostStatus;
+use App\Enums\InflowStatus;
 use App\Enums\OrderStatus;
 use App\Enums\TenantRole;
 use App\Models\Cost;
 use App\Models\Customer;
+use App\Models\Inflow;
 use App\Models\InventoryItem;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -280,6 +282,144 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.range', '30D');
     }
 
+    /** The 8-tile ratio grid and the reorder pipeline both read off the same service other screens already trust. */
+    public function test_key_ratios_and_reorder_pipeline_are_both_present(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+
+        // Three orders with a 10-day median gap, last one 20 days ago → ratio
+        // 2.0 → "overdue" on the radar (mirrors ReorderRadarQueryTest).
+        $customer = Customer::create(['company_name' => 'Slipping Bar', 'email' => 's@example.com']);
+        foreach ([40, 30, 20] as $daysAgo) {
+            $order = Order::create([
+                'order_number' => 'ORD-'.$daysAgo, 'status' => OrderStatus::Received->value,
+                'total_amount' => 10000, 'customer_id' => $customer->getKey(),
+                'created_by_id' => $admin->getKey(), 'is_consignment' => false,
+            ]);
+            $order->forceFill(['created_at' => now()->subDays($daysAgo)])->save();
+        }
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $data = $this->getJson('/api/v1/dashboard?range=90D', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonStructure([
+                'data' => [
+                    'key_ratios' => [
+                        'dtc_revenue_pct', 'operating_margin_pct', 'employee_cost_pct',
+                        'marketing_cost_pct', 'cogs_pct', 'cogs_amount', 'revenue_per_employee',
+                        'avg_order_value', 'inventory_turnover',
+                    ],
+                    'reorder_pipeline' => ['total', 'rows'],
+                ],
+            ])
+            ->json('data');
+
+        $this->assertSame($customer->getKey(), $data['reorder_pipeline']['rows'][0]['customer_id']);
+        $this->assertSame(10000, $data['reorder_pipeline']['total']['minor']);
+    }
+
+    /** stock_watch only lists items actually below their minimum, worst shortfall first, with a unit. */
+    public function test_stock_watch_lists_only_items_below_minimum(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        InventoryItem::create([
+            'name' => 'Barely low', 'sku' => 'BL', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'sales_unit' => 'bottles', 'current_stock' => '18', 'min_stock' => '20',
+        ]);
+        InventoryItem::create([
+            'name' => 'Critically low', 'sku' => 'CL', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'sales_unit' => 'cases', 'current_stock' => '2', 'min_stock' => '20',
+        ]);
+        InventoryItem::create([
+            'name' => 'Healthy', 'sku' => 'HT', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'sales_unit' => 'bottles', 'current_stock' => '50', 'min_stock' => '20',
+        ]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $rows = $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->json('data.stock_watch');
+
+        $this->assertCount(2, $rows);
+        // Furthest below minimum first: 2/20 (10%) before 18/20 (90%).
+        $this->assertSame('Critically low', $rows[0]['name']);
+        $this->assertSame('cases', $rows[0]['unit']);
+        $this->assertSame('Barely low', $rows[1]['name']);
+    }
+
+    public function test_upcoming_tasks_counts_due_this_week_and_lists_soonest_first(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        WorkOrder::create([
+            'title' => 'Overdue cellar check', 'category' => 'CELLAR', 'status' => 'TODO',
+            'created_by_id' => $admin->getKey(), 'due_date' => now()->subDay(),
+        ]);
+        WorkOrder::create([
+            'title' => 'No due date', 'status' => 'TODO', 'created_by_id' => $admin->getKey(),
+        ]);
+        WorkOrder::create([
+            'title' => 'Next quarter', 'status' => 'TODO', 'created_by_id' => $admin->getKey(),
+            'due_date' => now()->addMonths(3),
+        ]);
+        WorkOrder::create([
+            'title' => 'Already done', 'status' => 'DONE', 'created_by_id' => $admin->getKey(),
+            'due_date' => now()->subDay(),
+        ]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $tasks = $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->json('data.upcoming_tasks');
+
+        // Only the overdue one is due by the end of this week; the done task never counts.
+        $this->assertSame(1, $tasks['due_this_week']);
+        $this->assertSame('Overdue cellar check', $tasks['rows'][0]['title']);
+        $this->assertTrue($tasks['rows'][0]['overdue']);
+    }
+
+    public function test_net_cash_flow_nets_received_inflows_against_costs_by_category(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        Inflow::create([
+            'date' => now(), 'amount' => 5000, 'status' => InflowStatus::Received->value,
+            'created_by_id' => $admin->getKey(),
+        ]);
+        // Pending inflow must not count as cash in.
+        Inflow::create([
+            'date' => now(), 'amount' => 9000, 'status' => InflowStatus::Pending->value,
+            'created_by_id' => $admin->getKey(),
+        ]);
+        Cost::create(['category' => 'Salary', 'description' => 'Payroll', 'total_amount' => 3000, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
+        Cost::create(['category' => 'Marketing', 'description' => 'Ads', 'total_amount' => 1000, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
+        Cost::create(['category' => 'Courier', 'description' => 'Misc', 'total_amount' => 500, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $flow = $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->json('data.net_cash_flow');
+
+        // Cash in 5,000 − cash out 4,500 (3,000 + 1,000 + 500) = 500.
+        $this->assertSame(500, $flow['net']['minor']);
+        $byLabel = collect($flow['by_category'])->keyBy('label');
+        $this->assertSame(3000, $byLabel['Salary']['amount']['minor']);
+        $this->assertSame(1000, $byLabel['Marketing']['amount']['minor']);
+        $this->assertSame(0, $byLabel['Operations']['amount']['minor']);
+        // The free-text "Courier" category falls into Other rather than growing the legend.
+        $this->assertSame(500, $byLabel['Other']['amount']['minor']);
+    }
+
     public function test_summary_reflects_real_orders_ar_and_tasks(): void
     {
         $tenant = $this->createTenant();
@@ -315,5 +455,48 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.top_products.0.name', 'Plavac')
             ->assertJsonPath('data.recent_orders.0.customer', 'Konoba')
             ->assertJsonPath('data.recent_orders.0.total', 24000);
+    }
+
+    /**
+     * `ready_to_ship`, like `low_stock` and `tasks_overdue`, is the tenant's
+     * current state — a SHIPPED order from months ago must not still count.
+     */
+    public function test_ready_to_ship_counts_current_orders_regardless_of_period(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $customer = Customer::create(['company_name' => 'Co', 'email' => 'c@example.com']);
+        Order::create(['order_number' => 'RTS-1', 'status' => OrderStatus::ReadyToShip->value, 'total_amount' => 1000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        Order::create(['order_number' => 'RTS-2', 'status' => OrderStatus::Shipped->value, 'total_amount' => 1000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonPath('data.stats.ready_to_ship', 1);
+    }
+
+    /** The revenue chart is always the trailing 6 calendar months, whatever period tab is selected. */
+    public function test_revenue_trend_buckets_by_calendar_month_regardless_of_period(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $customer = Customer::create(['company_name' => 'Co', 'email' => 'c@example.com']);
+        $order = Order::create(['order_number' => 'OLD', 'status' => OrderStatus::Received->value, 'total_amount' => 5000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        $order->forceFill(['created_at' => now()->subMonthsNoOverflow(2)])->save();
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        // period=today would otherwise report zero revenue for everything.
+        $trend = $this->getJson('/api/v1/dashboard?period=today', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->json('data.revenue_trend');
+
+        $this->assertCount(6, $trend);
+        $this->assertSame(now()->format('M'), $trend[5]['label']);
+        $monthTwoAgo = collect($trend)->firstWhere('label', now()->subMonthsNoOverflow(2)->format('M'));
+        $this->assertSame(5000, $monthTwoAgo['value']);
     }
 }
