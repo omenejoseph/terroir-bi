@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Auth;
 
+use App\Authorization\TenantModules;
 use App\DataTransferObjects\AuthSessionData;
 use App\DataTransferObjects\OrganizationSettingsData;
 use App\DataTransferObjects\TenantMembershipData;
 use App\DataTransferObjects\UserData;
 use App\Enums\MembershipStatus;
-use App\Enums\Module;
 use App\Models\Membership;
 use App\Models\Tenant;
 use App\Models\User;
@@ -50,25 +50,8 @@ class SessionBuilder
             settings: $activeTenant !== null
                 ? OrganizationSettingsData::fromTenant($activeTenant)
                 : null,
-            modules: $this->modulesFor($activeTenant),
+            modules: TenantModules::keysFor($activeTenant),
             access: $activeTenant !== null ? $this->access->for($activeTenant) : null,
         );
-    }
-
-    /**
-     * The module keys the tenant may use. A tenant with no plan is unrestricted
-     * (sees every module), matching the EnforceModuleAccess middleware.
-     *
-     * @return list<string>
-     */
-    private function modulesFor(?Tenant $tenant): array
-    {
-        if ($tenant === null) {
-            return [];
-        }
-
-        $tenant->loadMissing('plan');
-
-        return $tenant->plan !== null ? $tenant->plan->moduleKeys() : Module::values();
     }
 }

@@ -15,9 +15,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Hides modules that are not in the tenant's plan. The owning module is inferred
- * from the request path via ModuleRegistry's path-prefix map (so the finance
- * trio — which share the finance.* capabilities — are gated independently), and
- * a 403 `module_not_in_plan` is returned if the plan does not include it.
+ * from the request path — ModuleRegistry::pathPrefixes() for API requests,
+ * ::webPathPrefixes() for Inertia web requests, since the two route sets don't
+ * share segment names (so the finance trio — which share the finance.*
+ * capabilities — are still gated independently), and a 403 `module_not_in_plan`
+ * is returned if the plan does not include it.
  *
  * Tenants with no plan assigned are treated as unrestricted (internal/legacy);
  * real SaaS tenants always carry a plan. Must run after ResolveTenant.
@@ -49,18 +51,21 @@ class EnforceModuleAccess
         return $next($request);
     }
 
-    /** Resolve the module that owns the request's first path segment under /api/v1. */
+    /** Resolve the module that owns the request's first path segment. */
     private function moduleForPath(Request $request): ?Module
     {
-        $relative = Str::after($request->path(), 'api/v1/');
-        $segment = Str::before($relative, '/');
+        $path = $request->path();
+        $isApi = Str::startsWith($path, 'api/v1/');
+        $segment = Str::before($isApi ? Str::after($path, 'api/v1/') : $path, '/');
 
         if ($segment === '') {
             return null;
         }
 
-        foreach (ModuleRegistry::pathPrefixes() as $module => $prefixes) {
-            if (in_array($segment, $prefixes, true)) {
+        $prefixes = $isApi ? ModuleRegistry::pathPrefixes() : ModuleRegistry::webPathPrefixes();
+
+        foreach ($prefixes as $module => $modulePrefixes) {
+            if (in_array($segment, $modulePrefixes, true)) {
                 return Module::from($module);
             }
         }

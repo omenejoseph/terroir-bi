@@ -7,8 +7,11 @@ use App\Http\Controllers\Web\Auth\TenantSwitchController;
 use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InventoryController;
+use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\OrderController;
+use App\Http\Controllers\Web\SearchController;
 use App\Http\Controllers\Web\ShortcutController;
+use App\Http\Controllers\Web\TeamMembersController;
 use App\Http\Controllers\Web\WorkOrderController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +48,22 @@ Route::middleware('auth')->group(function () {
 // Authenticated + active tenant + verified membership + plan/subscription checks.
 Route::middleware('tenant.web')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+    // The header's global search. Gated per-category inside the controller
+    // (capability + plan module), not by middleware — see SearchController.
+    Route::get('search', SearchController::class)->name('search');
+
+    // The header's notification bell — every member manages only their own feed.
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/read', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::post('notifications/clear', [NotificationController::class, 'clear'])->name('notifications.clear');
+    Route::delete('notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+
+    // The @-mention picker on order comments (and anywhere else that adds one
+    // later). Deliberately as permissive as orders.comments.store itself —
+    // any tenant member may look up a teammate to tag, not just members.view
+    // holders (that capability is for member *management*, not this).
+    Route::get('team-members', [TeamMembersController::class, 'index'])->name('team-members.index');
 
     // Manage Shortcuts (Figma 143:4179). No can:* gate: pinning is a personal
     // preference over nav items the member can already see, not a capability
@@ -94,6 +113,14 @@ Route::middleware('tenant.web')->group(function () {
             ->name('orders.status.update');
         Route::patch('orders/{order}/notes', [OrderController::class, 'updateNotes'])
             ->name('orders.notes.update');
+        Route::post('orders/{order}/items', [OrderController::class, 'addItems'])
+            ->name('orders.items.store');
+        Route::patch('order-items/{orderItem}', [OrderController::class, 'updateItem'])
+            ->name('order-items.update');
+        Route::delete('order-items/{orderItem}', [OrderController::class, 'deleteItem'])
+            ->name('order-items.destroy');
+        Route::post('orders/{order}/duplicate', [OrderController::class, 'duplicate'])
+            ->name('orders.duplicate');
     });
 
     Route::delete('orders/{order}', [OrderController::class, 'destroy'])

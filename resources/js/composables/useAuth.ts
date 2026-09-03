@@ -21,6 +21,7 @@ export function useAuth() {
     const roles = computed(() => page.props.auth.roles);
     const capabilities = computed(() => page.props.auth.capabilities);
     const tenant = computed(() => page.props.tenant);
+    const modules = computed(() => page.props.modules);
     /** Manage Shortcuts' pinned nav-item keys, in pin order (Figma `143:4179`). */
     const shortcuts = computed(() => page.props.auth.shortcuts);
 
@@ -35,5 +36,14 @@ export function useAuth() {
         return wanted.some(can);
     }
 
-    return { user, roles, capabilities, tenant, shortcuts, can, canAny };
+    /**
+     * True when the active tenant's plan includes the given module. Like
+     * `can()`, this is presentation only — `EnforceModuleAccess` is the
+     * actual security boundary.
+     */
+    function hasModule(module: string): boolean {
+        return page.props.modules.includes(module);
+    }
+
+    return { user, roles, capabilities, tenant, modules, shortcuts, can, canAny, hasModule };
 }

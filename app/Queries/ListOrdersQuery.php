@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Queries;
 
+use App\Enums\CustomerType;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ListOrdersQuery
 {
     /**
-     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string, from?: ?string, to?: ?string}  $filters
+     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string, channel?: ?string, from?: ?string, to?: ?string}  $filters
      * @return LengthAwarePaginator<int, Order>
      */
     public function paginate(array $filters = [], int $perPage = 25): LengthAwarePaginator
@@ -28,7 +29,7 @@ class ListOrdersQuery
     }
 
     /**
-     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string, from?: ?string, to?: ?string}  $filters
+     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string, channel?: ?string, from?: ?string, to?: ?string}  $filters
      * @return Builder<Order>
      */
     public function build(array $filters): Builder
@@ -37,6 +38,16 @@ class ListOrdersQuery
 
         if (! empty($filters['customer_id'])) {
             $query->where('customer_id', $filters['customer_id']);
+        }
+
+        // Orders have no channel of their own — "Channel" filters by the
+        // customer's sales channel instead (the design's own framing, per
+        // docs/design/README.md's toolbar-filter note).
+        if (! empty($filters['channel'])) {
+            $channel = CustomerType::tryFrom($filters['channel']);
+            if ($channel !== null) {
+                $query->whereHas('customer', fn (Builder $c) => $c->where('customer_type', $channel));
+            }
         }
 
         // The Orders list's period tabs (Figma 455:1577) narrow the table as

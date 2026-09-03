@@ -23,10 +23,10 @@ const props = defineProps<{ open: boolean; pinnedKeys: string[] }>();
 
 const emit = defineEmits<{ close: [] }>();
 
-const { can } = useAuth();
+const { can, hasModule } = useAuth();
 
 /** The full pinnable catalog, filtered to what this member can even see. */
-const catalog = computed(() => pinnableItemsFor(can));
+const catalog = computed(() => pinnableItemsFor(can, hasModule));
 
 const draft = ref<string[]>([]);
 const recent = ref<string[]>([]);

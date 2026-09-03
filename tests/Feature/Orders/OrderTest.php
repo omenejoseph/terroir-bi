@@ -12,6 +12,7 @@ use App\Models\InventoryItem;
 use App\Models\Order;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Orders\OrderNumberGenerator;
 use App\Services\Uploads\Contracts\ObjectStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -367,6 +368,44 @@ class OrderTest extends TestCase
         $p = OrderData::fromModel($order, true)->toArray()['profitability'];
         $this->assertSame(1500, $p['logistics']['minor']);
         $this->assertSame(12900, $p['gross_profit']['minor']);
+    }
+
+    /**
+     * OrderNumberGenerator has no locking, so two orders created close enough
+     * together can compute the same number — the unique (tenant_id,
+     * order_number) index is what actually catches it. CreateOrderAction must
+     * retry rather than let that surface as a 500.
+     */
+    public function test_a_colliding_order_number_is_retried_rather_than_failing(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        Order::create([
+            'order_number' => 'ORD-00001', 'status' => 'RECEIVED', 'total_amount' => 0,
+            'customer_id' => $this->customer->getKey(), 'created_by_id' => $this->admin->getKey(),
+        ]);
+        $this->forgetTenant();
+
+        // First answer collides with the order just created above; the retry
+        // must ask again and get a free one.
+        $this->app->bind(OrderNumberGenerator::class, fn () => new class extends OrderNumberGenerator
+        {
+            private int $calls = 0;
+
+            public function next(): string
+            {
+                $this->calls++;
+
+                return $this->calls === 1 ? 'ORD-00001' : 'ORD-00002';
+            }
+        });
+
+        Sanctum::actingAs($this->admin);
+        $this->postJson('/api/v1/orders', [
+            'customer_id' => $this->customer->getKey(),
+            'items' => [['inventory_item_id' => $this->wine->getKey(), 'quantity' => 1, 'unit_type' => 'cases']],
+        ], $this->headers())
+            ->assertCreated()
+            ->assertJsonPath('data.order_number', 'ORD-00002');
     }
 
     public function test_customer_with_orders_is_deactivated_not_deleted(): void

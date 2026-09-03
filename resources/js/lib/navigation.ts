@@ -41,8 +41,10 @@ import {
  * matches the design while making the remaining work visible. Give it a path as
  * each module is ported.
  *
- * `capability` mirrors the `can:*` middleware on the matching route. The server
- * is the authority; hiding an item is presentation only.
+ * `capability` mirrors the `can:*` middleware on the matching route, and
+ * `module` mirrors an `App\Enums\Module` key (the billable feature area the
+ * item belongs to, gated server-side by `EnforceModuleAccess`). The server is
+ * the authority for both; hiding an item is presentation only.
  *
  * Icons: the Figma assets could not be exported (the asset host is blocked by
  * this environment's egress policy), so these are the matching Lucide glyphs —
@@ -61,6 +63,8 @@ export interface NavItem {
     href: string | null;
     icon: LucideIcon;
     capability?: string;
+    /** Matches an `App\Enums\Module` key; unset when no module owns the item yet. */
+    module?: string;
 }
 
 export interface NavCategory {
@@ -79,78 +83,88 @@ export const NAV_CATEGORIES: NavCategory[] = [
         label: 'Overview',
         icon: LayoutGrid,
         items: [
-            { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
-            { key: 'cash-system', label: 'Cash System', href: null, icon: Coins, capability: 'finance.view' },
+            { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: LayoutGrid, module: 'dashboard' },
+            { key: 'cash-system', label: 'Cash System', href: null, icon: Coins, capability: 'finance.view', module: 'cash_flow' },
         ],
     },
     {
         label: 'Sales',
         icon: ShoppingCart,
         items: [
-            { key: 'orders', label: 'Orders', href: '/orders', icon: ShoppingCart, capability: 'orders.view' },
-            { key: 'customers', label: 'Customers', href: '/customers', icon: Users, capability: 'customers.view' },
+            { key: 'orders', label: 'Orders', href: '/orders', icon: ShoppingCart, capability: 'orders.view', module: 'orders' },
+            { key: 'customers', label: 'Customers', href: '/customers', icon: Users, capability: 'customers.view', module: 'customers' },
             // Task planning is open to any member (routes/api.php and routes/web.php
             // both leave it ungated), so this entry carries no capability — hiding it
             // from someone the route admits would be the sidebar lying.
-            { key: 'work-orders', label: 'Work Orders', href: '/work-orders', icon: ClipboardList },
-            { key: 'wine-club', label: 'Wine Club', href: null, icon: Wine, capability: 'customers.view' },
-            { key: 'agencies', label: 'Agencies', href: null, icon: Building2, capability: 'customers.view' },
-            { key: 'pipeline', label: 'Pipeline', href: null, icon: ChartLine, capability: 'customers.view' },
+            { key: 'work-orders', label: 'Work Orders', href: '/work-orders', icon: ClipboardList, module: 'work_orders' },
+            // These three don't have a real App\Enums\Module case yet — the
+            // module keys below are forward-looking, not ones any plan can
+            // include today. That's deliberate: the item stays hidden (no
+            // tenant's `modules` will ever contain 'wine_club' etc. until the
+            // enum, ModuleRegistry and a route exist) without a code change
+            // here — add the real module server-side and it starts appearing
+            // for any plan that includes it.
+            { key: 'wine-club', label: 'Wine Club', href: null, icon: Wine, capability: 'customers.view', module: 'wine_club' },
+            { key: 'agencies', label: 'Agencies', href: null, icon: Building2, capability: 'customers.view', module: 'agencies' },
+            { key: 'pipeline', label: 'Pipeline', href: null, icon: ChartLine, capability: 'customers.view', module: 'pipeline' },
         ],
     },
     {
         label: 'Hospitality',
         icon: ConciergeBell,
+        // No App\Enums\Module case exists for hospitality yet (it's deferred
+        // product-side) — same forward-looking-module pattern as Wine Club
+        // above, so this category stays hidden until one does.
         items: [
-            { key: 'accommodation', label: 'Accommodation', href: null, icon: Store },
-            { key: 'kitchen', label: 'Kitchen', href: null, icon: CookingPot },
-            { key: 'hospitality', label: 'Hospitality', href: null, icon: Wine },
+            { key: 'accommodation', label: 'Accommodation', href: null, icon: Store, module: 'hospitality' },
+            { key: 'kitchen', label: 'Kitchen', href: null, icon: CookingPot, module: 'hospitality' },
+            { key: 'hospitality', label: 'Hospitality', href: null, icon: Wine, module: 'hospitality' },
         ],
     },
     {
         label: 'Production',
         icon: Factory,
         items: [
-            { key: 'cellar', label: 'Cellar', href: null, icon: Warehouse, capability: 'cellar.view' },
-            { key: 'harvest', label: 'Harvest', href: null, icon: Grape, capability: 'vineyards.view' },
-            { key: 'production-plan', label: 'Production Plan', href: null, icon: Sprout, capability: 'production.view' },
+            { key: 'cellar', label: 'Cellar', href: null, icon: Warehouse, capability: 'cellar.view', module: 'cellar' },
+            { key: 'harvest', label: 'Harvest', href: null, icon: Grape, capability: 'vineyards.view', module: 'vineyards' },
+            { key: 'production-plan', label: 'Production Plan', href: null, icon: Sprout, capability: 'production.view', module: 'production' },
         ],
     },
     {
         label: 'Supply',
         icon: Boxes,
         items: [
-            { key: 'inventory', label: 'Inventory', href: '/inventory', icon: Package, capability: 'inventory.view' },
-            { key: 'purchase-orders', label: 'Purchase Orders', href: null, icon: FileStack, capability: 'suppliers.view' },
-            { key: 'suppliers', label: 'Suppliers', href: null, icon: Truck, capability: 'suppliers.view' },
+            { key: 'inventory', label: 'Inventory', href: '/inventory', icon: Package, capability: 'inventory.view', module: 'inventory' },
+            { key: 'purchase-orders', label: 'Purchase Orders', href: null, icon: FileStack, capability: 'suppliers.view', module: 'suppliers' },
+            { key: 'suppliers', label: 'Suppliers', href: null, icon: Truck, capability: 'suppliers.view', module: 'suppliers' },
         ],
     },
     {
         label: 'Finance',
         icon: Banknote,
         items: [
-            { key: 'costs', label: 'Costs', href: null, icon: Receipt, capability: 'finance.view' },
-            { key: 'inflow', label: 'Inflow', href: null, icon: CreditCard, capability: 'finance.view' },
-            { key: 'cash-flow', label: 'Cash Flow', href: null, icon: ChartLine, capability: 'financials.view' },
+            { key: 'costs', label: 'Costs', href: null, icon: Receipt, capability: 'finance.view', module: 'costs' },
+            { key: 'inflow', label: 'Inflow', href: null, icon: CreditCard, capability: 'finance.view', module: 'inflows' },
+            { key: 'cash-flow', label: 'Cash Flow', href: null, icon: ChartLine, capability: 'financials.view', module: 'cash_flow' },
         ],
     },
     {
         label: 'Team',
         icon: Users,
         items: [
-            { key: 'employees', label: 'Employees', href: null, icon: Users, capability: 'members.view' },
-            { key: 'schedules', label: 'Schedules', href: null, icon: CalendarDays },
-            { key: 'my-team', label: 'My Team', href: null, icon: UserRound },
-            { key: 'surveys', label: 'Surveys', href: null, icon: ClipboardList },
-            { key: 'my-hours', label: 'My Hours', href: null, icon: Clock },
+            { key: 'employees', label: 'Employees', href: null, icon: Users, capability: 'members.view', module: 'team' },
+            { key: 'schedules', label: 'Schedules', href: null, icon: CalendarDays, module: 'team' },
+            { key: 'my-team', label: 'My Team', href: null, icon: UserRound, module: 'team' },
+            { key: 'surveys', label: 'Surveys', href: null, icon: ClipboardList, module: 'team' },
+            { key: 'my-hours', label: 'My Hours', href: null, icon: Clock, module: 'team' },
         ],
     },
     {
         label: 'System',
         icon: Settings,
         items: [
-            { key: 'settings', label: 'Settings', href: null, icon: Settings, capability: 'settings.manage' },
-            { key: 'whatsapp-bot', label: 'WhatsApp Bot', href: null, icon: MessageCircle, capability: 'settings.manage' },
+            { key: 'settings', label: 'Settings', href: null, icon: Settings, capability: 'settings.manage', module: 'settings' },
+            { key: 'whatsapp-bot', label: 'WhatsApp Bot', href: null, icon: MessageCircle, capability: 'settings.manage', module: 'settings' },
         ],
     },
 ];
@@ -162,11 +176,21 @@ const NAV_ITEMS_BY_KEY: Record<string, NavItem> = Object.fromEntries(
     NAV_CATEGORIES.flatMap((category) => category.items).map((item) => [item.key, item]),
 );
 
-/** Drop items the member has no capability for; keep categories that still have items. */
-export function navigationFor(can: (capability: string) => boolean): NavCategory[] {
+/**
+ * Drop items the member has no capability for, or that aren't in the tenant's
+ * plan; keep categories that still have items.
+ */
+export function navigationFor(
+    can: (capability: string) => boolean,
+    hasModule: (module: string) => boolean,
+): NavCategory[] {
     return NAV_CATEGORIES.map((category) => ({
         ...category,
-        items: category.items.filter((item) => item.capability === undefined || can(item.capability)),
+        items: category.items.filter(
+            (item) =>
+                (item.capability === undefined || can(item.capability)) &&
+                (item.module === undefined || hasModule(item.module)),
+        ),
     })).filter((category) => category.items.length > 0);
 }
 
@@ -174,19 +198,30 @@ export function navigationFor(can: (capability: string) => boolean): NavCategory
  * The design's "Shortcuts" section (Figma `547:1610`) — a user-pinned list
  * sitting above the categories. `pinnedKeys` is the member's own ordered
  * pins from `auth.shortcuts`; unknown keys (a stale pin from a removed nav
- * item) and ones the member has lost the capability for are silently
- * dropped rather than shown broken.
+ * item), ones the member has lost the capability for, and ones outside the
+ * tenant's current plan are silently dropped rather than shown broken.
  */
-export function shortcutsFor(can: (capability: string) => boolean, pinnedKeys: string[]): NavItem[] {
+export function shortcutsFor(
+    can: (capability: string) => boolean,
+    hasModule: (module: string) => boolean,
+    pinnedKeys: string[],
+): NavItem[] {
     return pinnedKeys
         .map((key) => NAV_ITEMS_BY_KEY[key])
-        .filter((item): item is NavItem => item !== undefined && (item.capability === undefined || can(item.capability)));
+        .filter(
+            (item): item is NavItem =>
+                item !== undefined &&
+                (item.capability === undefined || can(item.capability)) &&
+                (item.module === undefined || hasModule(item.module)),
+        );
 }
 
 /** Every pinnable item the member currently has capability for, for the Manage Shortcuts dialog. */
-export function pinnableItemsFor(can: (capability: string) => boolean): NavItem[] {
+export function pinnableItemsFor(can: (capability: string) => boolean, hasModule: (module: string) => boolean): NavItem[] {
     return NAV_CATEGORIES.flatMap((category) => category.items).filter(
-        (item) => item.capability === undefined || can(item.capability),
+        (item) =>
+            (item.capability === undefined || can(item.capability)) &&
+            (item.module === undefined || hasModule(item.module)),
     );
 }
 

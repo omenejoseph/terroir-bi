@@ -12,6 +12,7 @@ use App\Services\Orders\OrderLineWriter;
 use App\Services\Orders\OrderNumberGenerator;
 use App\Services\Orders\OrderTotals;
 use App\Support\Money\Money;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -22,6 +23,14 @@ use Illuminate\Support\Facades\DB;
  */
 class CreateOrderAction
 {
+    /** OrderNumberGenerator::next() has no locking, so two orders created close
+     * together can compute the same number — the unique (tenant_id,
+     * order_number) index is what actually catches it. Retrying the whole
+     * transaction re-reads the (now up to date) last number, so this just
+     * needs to happen more than a handful of times to be effectively never
+     * user-visible. */
+    private const MAX_ATTEMPTS = 5;
+
     public function __construct(
         private readonly OrderNumberGenerator $numbers,
         private readonly OrderLineWriter $lines,
@@ -34,7 +43,36 @@ class CreateOrderAction
      */
     public function execute(Customer $customer, string $createdById, array $data): Order
     {
-        $order = DB::transaction(function () use ($customer, $createdById, $data): Order {
+        $order = $this->createOrder($customer, $createdById, $data);
+
+        // Emitted after the order commits so a notification failure can't roll it back.
+        $this->notifier->orderCreated($order->loadMissing('customer'));
+
+        return $order;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function createOrder(Customer $customer, string $createdById, array $data, int $attempt = 1): Order
+    {
+        try {
+            return $this->createOrderOnce($customer, $createdById, $data);
+        } catch (UniqueConstraintViolationException $e) {
+            if ($attempt >= self::MAX_ATTEMPTS) {
+                throw $e;
+            }
+
+            return $this->createOrder($customer, $createdById, $data, $attempt + 1);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function createOrderOnce(Customer $customer, string $createdById, array $data): Order
+    {
+        return DB::transaction(function () use ($customer, $createdById, $data): Order {
             $status = isset($data['status'])
                 ? OrderStatus::from((string) $data['status'])
                 : OrderStatus::Received;
@@ -84,10 +122,5 @@ class CreateOrderAction
 
             return $order;
         });
-
-        // Emitted after the order commits so a notification failure can't roll it back.
-        $this->notifier->orderCreated($order->loadMissing('customer'));
-
-        return $order;
     }
 }

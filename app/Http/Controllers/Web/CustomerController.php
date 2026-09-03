@@ -16,7 +16,6 @@ use App\Http\Requests\Customers\UpdateCustomerRequest;
 use App\Models\Customer;
 use App\Models\CustomerPrice;
 use App\Models\InventoryItem;
-use App\Models\PricingTier;
 use App\Models\TierPrice;
 use App\Queries\CustomerAnalyticsQuery;
 use App\Queries\CustomerAttentionQuery;
@@ -28,6 +27,7 @@ use App\Queries\ListCustomersQuery;
 use App\Queries\ListOrdersQuery;
 use App\Services\Customers\CustomerMergeService;
 use App\Services\Customers\CustomerPresenter;
+use App\Services\Customers\PricingTierOptions;
 use App\Services\Orders\CustomerConsignmentService;
 use App\Services\Orders\OrderPresenter;
 use App\Services\Pricing\PricingService;
@@ -60,6 +60,7 @@ class CustomerController extends Controller
         Request $request,
         ListCustomersQuery $query,
         CustomerPresenter $presenter,
+        PricingTierOptions $tiers,
     ): Response {
         $filters = CustomerFilters::fromRequest($request);
         $perPage = PerPage::fromRequest($request);
@@ -69,15 +70,7 @@ class CustomerController extends Controller
             'filters' => $filters,
             // Feeds the Tier filter; a small table, but only the filter row
             // needs it, so it is not paid for on every visit.
-            'tiers' => Inertia::optional(fn (): array => PricingTier::query()
-                ->orderBy('name')
-                ->get(['id', 'name', 'rebate_percent'])
-                ->map(fn (PricingTier $tier): array => [
-                    'id' => $tier->getKey(),
-                    'name' => $tier->name,
-                    'rebate_percent' => (string) $tier->rebate_percent,
-                ])
-                ->all()),
+            'tiers' => Inertia::optional(fn (): array => $tiers->list()),
         ]);
     }
 

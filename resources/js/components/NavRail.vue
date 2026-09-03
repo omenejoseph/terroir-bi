@@ -29,10 +29,10 @@ const SHORTCUTS_LABEL = 'Shortcuts';
  * would be nine buttons that reach nothing. The flyout renders the same NavRow
  * as the expanded sidebar, so a category reads identically in both states.
  */
-const { user, can, shortcuts: pinnedShortcuts } = useAuth();
+const { user, can, hasModule, shortcuts: pinnedShortcuts } = useAuth();
 
-const categories = computed(() => navigationFor(can));
-const shortcuts = computed(() => shortcutsFor(can, pinnedShortcuts.value));
+const categories = computed(() => navigationFor(can, hasModule));
+const shortcuts = computed(() => shortcutsFor(can, hasModule, pinnedShortcuts.value));
 
 /**
  * Shortcuts sit second, between Overview and the rest, exactly as the expanded

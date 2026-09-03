@@ -167,6 +167,33 @@ class WebOrdersTest extends TestCase
                 ->where('statusCounts.total', 2));
     }
 
+    /** The toolbar's Channel filter — orders have no channel of their own, so it filters by the customer's (App\Enums\CustomerType). */
+    public function test_index_filters_by_channel(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $wholesale = $this->makeCustomer('Konzum');
+        $wholesale->update(['customer_type' => 'WHOLESALE']);
+        $retail = $this->makeCustomer('Konoba Fjaka');
+        $this->makeOrder($wholesale, $admin);
+        $this->makeOrder($retail, $admin);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/orders?channel=WHOLESALE')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('orders.data', 1)
+                ->where('orders.data.0.customer.company_name', 'Konzum')
+                ->where('filters.channel', 'WHOLESALE')
+                // Matches the status chips' own rule: every other filter
+                // narrows the denominator too, so this isn't a regression —
+                // it's the existing chip-count behavior for search/customer.
+                ->where('statusCounts.total', 1));
+    }
+
     public function test_index_filters_by_search_on_order_number_and_customer(): void
     {
         [$tenant, $admin] = $this->tenantAndAdmin();
@@ -445,5 +472,192 @@ class WebOrdersTest extends TestCase
             ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
             ->post('/orders', ['customer_id' => 'x', 'items' => []])
             ->assertForbidden();
+    }
+
+    /** Places a real order through the same route the Create Order drawer posts to, so its lines are actually priced. */
+    private function createOrderViaWeb(Tenant $tenant, User $admin, Customer $customer, InventoryItem $product, int $quantity = 2): Order
+    {
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/orders', [
+                'customer_id' => $customer->getKey(),
+                'items' => [['inventory_item_id' => $product->getKey(), 'quantity' => $quantity]],
+            ])->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $order = Order::query()->latest('created_at')->firstOrFail();
+        $this->forgetTenant();
+
+        return $order;
+    }
+
+    public function test_adding_a_line_to_an_existing_order(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer();
+        $product = $this->makeProduct();
+        $second = $this->makeProduct('Debit');
+        $this->forgetTenant();
+
+        $order = $this->createOrderViaWeb($tenant, $admin, $customer, $product);
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post("/orders/{$order->getKey()}/items", [
+                'items' => [['inventory_item_id' => $second->getKey(), 'quantity' => 1]],
+            ])->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $this->assertSame(2, $order->items()->count());
+        $this->forgetTenant();
+    }
+
+    public function test_updating_a_lines_quantity_adjusts_the_order_total(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer();
+        $product = $this->makeProduct();
+        $this->forgetTenant();
+
+        $order = $this->createOrderViaWeb($tenant, $admin, $customer, $product, 2);
+
+        $this->actingAsTenant($tenant);
+        $item = $order->items()->firstOrFail();
+        $unitPrice = $item->unit_price->getMinorAmount();
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->patch("/order-items/{$item->getKey()}", ['quantity' => 5])
+            ->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $this->assertSame($unitPrice * 5, $order->refresh()->total_amount->getMinorAmount());
+        $this->forgetTenant();
+    }
+
+    public function test_deleting_the_only_line_is_refused(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer();
+        $product = $this->makeProduct();
+        $this->forgetTenant();
+
+        $order = $this->createOrderViaWeb($tenant, $admin, $customer, $product);
+
+        $this->actingAsTenant($tenant);
+        $item = $order->items()->firstOrFail();
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->delete("/order-items/{$item->getKey()}")
+            ->assertSessionHasErrors(['item']);
+
+        $this->actingAsTenant($tenant);
+        $this->assertSame(1, $order->items()->count());
+        $this->forgetTenant();
+    }
+
+    public function test_deleting_a_line_that_is_not_the_last_succeeds(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer();
+        $product = $this->makeProduct();
+        $second = $this->makeProduct('Debit');
+        $this->forgetTenant();
+
+        $order = $this->createOrderViaWeb($tenant, $admin, $customer, $product);
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post("/orders/{$order->getKey()}/items", [
+                'items' => [['inventory_item_id' => $second->getKey(), 'quantity' => 1]],
+            ])->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $extra = $order->items()->latest('id')->firstOrFail();
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->delete("/order-items/{$extra->getKey()}")
+            ->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $this->assertSame(1, $order->items()->count());
+        $this->forgetTenant();
+    }
+
+    public function test_edit_window_blocks_a_restricted_member_but_not_the_admin(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer();
+        $product = $this->makeProduct();
+        $this->forgetTenant();
+
+        $order = $this->createOrderViaWeb($tenant, $admin, $customer, $product);
+
+        $this->actingAsTenant($tenant);
+        $item = $order->items()->firstOrFail();
+        $order->forceFill(['created_at' => now()->subHours(2)])->save();
+        $this->forgetTenant();
+
+        // Orders holds orders.manage but not the per-membership can_edit_orders flag.
+        $teamMember = $this->createMember($tenant, [TenantRole::Team]);
+        $this->actingAs($teamMember)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->patch("/order-items/{$item->getKey()}", ['quantity' => 1])
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->patch("/order-items/{$item->getKey()}", ['quantity' => 1])
+            ->assertRedirect();
+    }
+
+    public function test_duplicating_an_order_copies_lines_but_starts_a_fresh_order(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer();
+        $product = $this->makeProduct();
+        $this->forgetTenant();
+
+        $order = $this->createOrderViaWeb($tenant, $admin, $customer, $product, 3);
+        $this->actingAsTenant($tenant);
+        $order->orderNotes()->create(['content' => 'Original comment', 'author_id' => $admin->getKey()]);
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post("/orders/{$order->getKey()}/duplicate");
+
+        $this->actingAsTenant($tenant);
+        $duplicate = Order::query()->where('id', '!=', $order->getKey())->firstOrFail();
+        $this->forgetTenant();
+
+        $response->assertRedirect('/orders?order='.$duplicate->getKey());
+
+        $this->actingAsTenant($tenant);
+        $this->assertNotSame($order->order_number, $duplicate->order_number);
+        $this->assertSame(OrderStatus::Received, $duplicate->status);
+        $this->assertSame($customer->getKey(), $duplicate->customer_id);
+        $this->assertSame(1, $duplicate->items()->count());
+        $this->assertSame(3, $duplicate->items()->firstOrFail()->quantity);
+        $this->assertSame(0, $duplicate->orderNotes()->count());
+        $this->assertSame(1, $duplicate->statusHistories()->count());
+        $this->forgetTenant();
     }
 }

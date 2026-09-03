@@ -22,7 +22,7 @@ class OrderStatusCountsQuery
     public function __construct(private readonly ListOrdersQuery $orders) {}
 
     /**
-     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string, from?: ?string, to?: ?string}  $filters
+     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string, channel?: ?string, from?: ?string, to?: ?string}  $filters
      * @return array{total: int, statuses: list<array{key: string, label: string, count: int}>}
      */
     public function get(array $filters): array

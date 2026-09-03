@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { router, useForm, usePage } from '@inertiajs/vue3';
-import { Camera, FileText, Plus, Trash2 } from 'lucide-vue-next';
+import { Camera, Plus } from 'lucide-vue-next';
 
-import QuantityStepper from '@/components/orders/QuantityStepper.vue';
+import OrderLineFields from '@/components/orders/OrderLineFields.vue';
 import Button from '@/components/ui/Button.vue';
 import Combobox from '@/components/ui/Combobox.vue';
 import Disclosure from '@/components/ui/Disclosure.vue';
@@ -13,8 +13,9 @@ import Select from '@/components/ui/Select.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import SwitchRow from '@/components/ui/SwitchRow.vue';
 import Textarea from '@/components/ui/Textarea.vue';
+import { linesToPayload } from '@/lib/orders';
 import { formatMoney } from '@/lib/money';
-import type { MoneyValue } from '@/types/inventory';
+import type { OrderLineDraft, ProductOption } from '@/types/orders';
 import type { ComboboxOption } from '@/types/ui';
 import type { SharedProps } from '@/types';
 
@@ -42,40 +43,6 @@ interface CustomerOption {
     rebate_percent: string;
 }
 
-interface ProductOption {
-    id: string;
-    name: string;
-    sku: string;
-    vintage: number | null;
-    unit_size: string | null;
-    sales_unit: string;
-    bottles_per_case: number | null;
-    list_price: MoneyValue | null;
-}
-
-/** One entry of StoreOrderRequest's `items` array. */
-interface LinePayload {
-    inventory_item_id: string | null;
-    quantity: number;
-    unit_type: string;
-    unit_price?: number;
-    custom_description?: string | null;
-}
-
-interface Line {
-    key: string;
-    inventory_item_id: string | null;
-    custom_description: string | null;
-    quantity: number;
-    unit_type: string;
-    /** Minor units. Only sent for custom lines; the server prices catalog ones. */
-    unit_price: number | null;
-    /** Catalog list price, for the estimate only. */
-    preview: MoneyValue | null;
-    label: string;
-    meta: string | null;
-}
-
 const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
 
@@ -94,13 +61,22 @@ watch(
     () => props.open,
     (open) => {
         if (open && customers.value.length === 0) {
-            router.reload({ only: ['customerOptions', 'productOptions'] });
+            // On the Orders page this panel can be mounted alongside the Order
+            // — View drawer, which keys its own `order` prop off `?order=`.
+            // A plain reload preserves the current URL, but re-sending that
+            // query param explicitly (harmless if absent) keeps this from
+            // ever being the one to drop it.
+            const orderId = page.props.order as { id?: string } | null | undefined;
+
+            router.reload({
+                only: ['customerOptions', 'productOptions'],
+                data: orderId?.id ? { order: orderId.id } : {},
+            });
         }
     },
 );
 
-const lines = ref<Line[]>([]);
-const picked = ref('');
+const lines = ref<OrderLineDraft[]>([]);
 
 const form = useForm({
     customer_id: '',
@@ -110,50 +86,8 @@ const form = useForm({
     is_consignment: false,
     shipping_cost: '',
     shipping_paid_by_us: true,
-    items: [] as LinePayload[],
+    items: [] as ReturnType<typeof linesToPayload>,
 });
-
-let seq = 0;
-const nextKey = (): string => `line-${(seq += 1)}`;
-
-function addProduct(id: string): void {
-    const product = products.value.find((p) => p.id === id);
-    if (!product) return;
-
-    lines.value.push({
-        key: nextKey(),
-        inventory_item_id: product.id,
-        custom_description: null,
-        quantity: 1,
-        // A catalog item can only be ordered in its own sales unit; the server
-        // rejects anything else, so the picker is fixed rather than free.
-        unit_type: product.sales_unit,
-        unit_price: null,
-        preview: product.list_price,
-        label: [product.name, product.vintage].filter(Boolean).join(' '),
-        meta: [product.unit_size, product.sku].filter(Boolean).join(' · '),
-    });
-
-    picked.value = '';
-}
-
-function addCustom(): void {
-    lines.value.push({
-        key: nextKey(),
-        inventory_item_id: null,
-        custom_description: '',
-        quantity: 1,
-        unit_type: 'bottles',
-        unit_price: 0,
-        preview: null,
-        label: '',
-        meta: null,
-    });
-}
-
-function remove(key: string): void {
-    lines.value = lines.value.filter((line) => line.key !== key);
-}
 
 const currency = computed(
     () => lines.value.find((line) => line.preview)?.preview?.currency ?? 'EUR',
@@ -177,22 +111,6 @@ const canSubmit = computed(
         ),
 );
 
-/*
-  The design's placeholder — "Search product by name, SKU or vintage…" — is a
-  promise about what matches. SKU and vintage go in `keywords` so they are
-  searchable without cluttering every label with them.
-*/
-const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
-    products.value
-        .filter((p) => !lines.value.some((line) => line.inventory_item_id === p.id))
-        .map((p) => ({
-            value: p.id,
-            label: [p.name, p.vintage].filter(Boolean).join(' '),
-            description: p.unit_size ?? undefined,
-            keywords: [p.sku, p.vintage === null ? '' : String(p.vintage)].filter(Boolean) as string[],
-        })),
-);
-
 const CUSTOMER_OPTIONS = computed<ComboboxOption[]>(() =>
     customers.value.map((c) => ({
         value: c.id,
@@ -209,11 +127,6 @@ const STATUS_OPTIONS = [
     { value: 'SHIPPED', label: 'Shipped' },
 ];
 
-const UNIT_OPTIONS = [
-    { value: 'bottles', label: 'Bottles' },
-    { value: 'cases', label: 'Cases' },
-];
-
 /** The collapsed disclosure summarises what it hides (Figma 335:4233). */
 const settingsSummary = computed(() =>
     [
@@ -227,16 +140,7 @@ const settingsSummary = computed(() =>
 );
 
 function submit(): void {
-    form.items = lines.value.map((line) => ({
-        inventory_item_id: line.inventory_item_id,
-        quantity: line.quantity,
-        unit_type: line.unit_type,
-        // Only custom lines carry a price; sending one for a catalog line would
-        // override the customer's negotiated price with the list price.
-        ...(line.inventory_item_id === null
-            ? { unit_price: line.unit_price ?? 0, custom_description: line.custom_description }
-            : {}),
-    }));
+    form.items = linesToPayload(lines.value);
 
     form
         .transform((data) => ({
@@ -284,115 +188,20 @@ function submit(): void {
             </FormField>
 
             <section class="flex flex-col gap-3">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <span class="text-sm leading-5 font-medium text-foreground">
-                        Products<span class="ml-1 text-destructive" aria-hidden="true">*</span>
-                    </span>
-                    <div class="flex items-center gap-2">
-                        <Button variant="outline" size="sm" @click="addCustom">
-                            <FileText class="size-3.5" :stroke-width="1.5" />
-                            Custom item
-                        </Button>
+                <span class="text-sm leading-5 font-medium text-foreground">
+                    Products<span class="ml-1 text-destructive" aria-hidden="true">*</span>
+                </span>
+
+                <OrderLineFields v-model="lines" :products="products" :locale="locale">
+                    <template #actions>
                         <!-- @todo Import screenshot. The design offers reading an
                              order off a photo; there is no such endpoint. -->
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" type="button">
                             <Camera class="size-3.5" :stroke-width="1.5" />
                             Import screenshot
                         </Button>
-                    </div>
-                </div>
-
-                <div v-for="line in lines" :key="line.key" class="border border-border p-3">
-                    <div class="flex items-start gap-3">
-                        <span class="size-9 shrink-0 border border-border bg-muted" aria-hidden="true" />
-
-                        <span v-if="line.inventory_item_id" class="min-w-0 flex-1">
-                            <span class="block truncate text-sm">{{ line.label }}</span>
-                            <span class="block truncate text-xs text-muted-foreground">
-                                {{ line.preview ? formatMoney(line.preview.minor, line.preview.currency, locale) : '—' }}
-                                / {{ line.unit_type === 'cases' ? 'case' : 'bottle' }}
-                                <template v-if="line.meta"> · {{ line.meta }}</template>
-                            </span>
-                        </span>
-
-                        <span v-else class="min-w-0 flex-1">
-                            <Input
-                                v-model="line.custom_description!"
-                                placeholder="e.g. Delivery, Packaging, Customs…"
-                                aria-label="Custom line description"
-                            />
-                        </span>
-
-                        <span class="shrink-0 text-sm font-semibold tabular-nums">
-                            {{
-                                formatMoney(
-                                    (line.inventory_item_id ? (line.preview?.minor ?? 0) : (line.unit_price ?? 0)) *
-                                        line.quantity,
-                                    currency,
-                                    locale,
-                                )
-                            }}
-                        </span>
-                    </div>
-
-                    <div class="mt-3 flex flex-wrap items-center gap-2">
-                        <QuantityStepper v-model="line.quantity" />
-
-                        <!-- A catalog line's unit is fixed by the item; only a
-                             custom line may choose. -->
-                        <span
-                            v-if="line.inventory_item_id"
-                            class="inline-flex h-7 items-center border border-border px-2.5 text-xs text-muted-foreground"
-                        >
-                            {{ line.unit_type === 'cases' ? 'Cases' : 'Bottles' }}
-                        </span>
-                        <Select
-                            v-else
-                            v-model="line.unit_type"
-                            :options="UNIT_OPTIONS"
-                            class="h-7 w-24 text-xs"
-                            aria-label="Unit"
-                        />
-
-                        <!--
-                          A custom line must carry its own price — the catalog
-                          cannot supply one — so StoreOrderRequest requires it
-                          and the row asks for it inline.
-                        -->
-                        <input
-                            v-if="!line.inventory_item_id"
-                            :value="(line.unit_price ?? 0) / 100"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder="0,00"
-                            aria-label="Unit price"
-                            class="h-7 w-20 border border-border bg-card px-2 text-xs tabular-nums focus-visible:outline-none"
-                            @input="
-                                line.unit_price = Math.round(
-                                    Number.parseFloat(($event.target as HTMLInputElement).value || '0') * 100,
-                                )
-                            "
-                        />
-
-                        <button
-                            type="button"
-                            class="ml-auto p-1.5 text-muted-foreground transition-colors hover:text-destructive"
-                            :aria-label="`Remove ${line.label || 'line'}`"
-                            @click="remove(line.key)"
-                        >
-                            <Trash2 class="size-4" :stroke-width="1.5" />
-                        </button>
-                    </div>
-                </div>
-
-                <Combobox
-                    :model-value="picked === '' ? null : picked"
-                    placeholder="Search product by name, SKU or vintage…"
-                    empty-text="No product matches."
-                    :options="PRODUCT_OPTIONS"
-                    @update:model-value="$event && addProduct($event)"
-                />
+                    </template>
+                </OrderLineFields>
 
                 <p v-if="form.errors.items" class="text-xs text-destructive" role="alert">{{ form.errors.items }}</p>
             </section>

@@ -128,8 +128,53 @@ export interface OrderFilters {
     status: string | null;
     search: string | null;
     customer_id: string | null;
+    /** The customer's sales channel (App\Enums\CustomerType) — orders have no channel of their own. */
+    channel: string | null;
     period: string | null;
     /** `YYYY-MM-DD`. Set by the Custom tab and beats `period` when present. */
     from: string | null;
     to: string | null;
+}
+
+/** One entry of the Create Order / Orders/{order}/items `items` array. */
+export interface LinePayload {
+    inventory_item_id: string | null;
+    quantity: number;
+    unit_type: string;
+    unit_price?: number;
+    custom_description?: string | null;
+    /** Inertia's payload type requires an index signature on nested objects. */
+    [key: string]: string | number | boolean | null | undefined;
+}
+
+/** A catalog product, as offered by the picker (App\Services\Orders\OrderFormOptions). */
+export interface ProductOption {
+    id: string;
+    name: string;
+    sku: string;
+    vintage: number | null;
+    unit_size: string | null;
+    sales_unit: string;
+    bottles_per_case: number | null;
+    list_price: MoneyValue | null;
+}
+
+/**
+ * A line being drafted client-side — CreateOrderPanel's whole order, or
+ * OrderViewPanel's "Add item" panel on an existing one. Shared by
+ * OrderLineFields.vue, the one place this catalog-vs-custom split (which
+ * StoreOrderRequest/AddOrderItemsRequest both enforce) is drawn.
+ */
+export interface OrderLineDraft {
+    key: string;
+    inventory_item_id: string | null;
+    custom_description: string | null;
+    quantity: number;
+    unit_type: string;
+    /** Minor units. Only sent for custom lines; the server prices catalog ones. */
+    unit_price: number | null;
+    /** Catalog list price, for the estimate only. */
+    preview: MoneyValue | null;
+    label: string;
+    meta: string | null;
 }
