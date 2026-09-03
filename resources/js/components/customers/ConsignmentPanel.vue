@@ -59,7 +59,7 @@ const hasRemaining = computed(() => products.value.some((p) => p.remaining > 0))
 const showFinancials = computed(() => props.consignment?.total_sold_revenue !== null && props.consignment !== undefined);
 
 function money(m: { minor: number; currency: string } | null): string {
-    return m === null ? '—' : formatMoney(m.minor, m.currency, locale.value);
+    return m === null ? '—' : formatMoney(m.minor, m.currency);
 }
 
 watch(mode, (value) => {
