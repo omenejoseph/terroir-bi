@@ -26,10 +26,10 @@ import type { SharedProps } from '@/types';
  * The collapsed counterpart is NavRail; AppLayout picks between them.
  */
 const page = usePage<SharedProps>();
-const { user, can } = useAuth();
+const { user, can, hasModule } = useAuth();
 
-const allCategories = computed(() => navigationFor(can));
-const shortcuts = computed(() => shortcutsFor(can));
+const allCategories = computed(() => navigationFor(can, hasModule));
+const shortcuts = computed(() => shortcutsFor(can, hasModule));
 
 /*
   The design orders the rail: Overview, rule, Shortcuts, rule, then everything

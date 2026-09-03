@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { CircleQuestionMark, Bell, PanelLeft, RefreshCw, Search } from 'lucide-vue-next';
+import { ref } from 'vue';
+import { router } from '@inertiajs/vue3';
+import { CircleQuestionMark, PanelLeft, RefreshCw } from 'lucide-vue-next';
 
-import Kbd from '@/components/ui/Kbd.vue';
+import GlobalSearch from '@/components/GlobalSearch.vue';
+import NotificationsPanel from '@/components/NotificationsPanel.vue';
 import TenantSwitcher from '@/components/TenantSwitcher.vue';
 
 /**
@@ -14,6 +17,16 @@ import TenantSwitcher from '@/components/TenantSwitcher.vue';
  * inset control on this bar, and that is what makes it read as one.
  */
 defineEmits<{ 'toggle-sidebar': [] }>();
+
+/** Re-fetches the current page's own props — no full browser navigation. */
+const refreshing = ref(false);
+
+function refresh(): void {
+    if (refreshing.value) return;
+
+    refreshing.value = true;
+    router.reload({ onFinish: () => (refreshing.value = false) });
+}
 </script>
 
 <template>
@@ -30,24 +43,7 @@ defineEmits<{ 'toggle-sidebar': [] }>();
         </button>
 
         <div class="ml-auto flex items-center gap-2">
-            <!--
-              @todo Global search is not implemented. The field and its ⌘K hint
-              are the design's (389:1679); wire it to a command palette that
-              searches orders, SKUs and partners, and bind ⌘K / Ctrl+K to focus.
-            -->
-            <div class="relative hidden w-72 sm:block">
-                <Search
-                    class="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
-                    :stroke-width="1.5"
-                />
-                <input
-                    type="search"
-                    placeholder="Search orders, SKUs, partners…"
-                    aria-label="Search"
-                    class="h-8 w-full border border-input bg-muted pr-10 pl-8 text-xs placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                />
-                <Kbd keys="⌘K" class="absolute top-1/2 right-2 -translate-y-1/2" />
-            </div>
+            <GlobalSearch />
 
             <TenantSwitcher />
 
@@ -60,30 +56,17 @@ defineEmits<{ 'toggle-sidebar': [] }>();
                 <CircleQuestionMark class="size-4" :stroke-width="1.5" />
             </button>
 
-            <!-- @todo Sync/refresh — no background sync to trigger yet. -->
             <button
                 type="button"
-                class="grid size-8 shrink-0 place-items-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                :disabled="refreshing"
+                class="grid size-8 shrink-0 place-items-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
                 aria-label="Refresh"
+                @click="refresh"
             >
-                <RefreshCw class="size-4" :stroke-width="1.5" />
+                <RefreshCw class="size-4" :class="refreshing && 'animate-spin'" :stroke-width="1.5" />
             </button>
 
-            <!--
-              @todo Notifications — App\Models\Notification and the push
-              subscription endpoints exist; this needs a panel listing them and
-              the dot bound to the unread count instead of being always on.
-            -->
-            <button
-                type="button"
-                class="relative grid size-8 shrink-0 place-items-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                aria-label="Notifications"
-            >
-                <Bell class="size-4" :stroke-width="1.5" />
-                <!-- #636363 in the design (230:2510) — a neutral "there is
-                     something here", not the destructive red. -->
-                <span class="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-neutral-500" aria-hidden="true" />
-            </button>
+            <NotificationsPanel />
         </div>
     </header>
 </template>

@@ -21,6 +21,7 @@ export function useAuth() {
     const roles = computed(() => page.props.auth.roles);
     const capabilities = computed(() => page.props.auth.capabilities);
     const tenant = computed(() => page.props.tenant);
+    const modules = computed(() => page.props.modules);
 
     function can(capability: string): boolean {
         const granted = page.props.auth.capabilities;
@@ -33,5 +34,14 @@ export function useAuth() {
         return wanted.some(can);
     }
 
-    return { user, roles, capabilities, tenant, can, canAny };
+    /**
+     * True when the active tenant's plan includes the given module. Like
+     * `can()`, this is presentation only — `EnforceModuleAccess` is the
+     * actual security boundary.
+     */
+    function hasModule(module: string): boolean {
+        return page.props.modules.includes(module);
+    }
+
+    return { user, roles, capabilities, tenant, modules, can, canAny, hasModule };
 }

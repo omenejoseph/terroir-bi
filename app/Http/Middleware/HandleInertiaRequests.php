@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use App\Authorization\MembershipContext;
 use App\Authorization\RoleCapabilities;
+use App\Authorization\TenantModules;
 use App\DataTransferObjects\TenantMembershipData;
 use App\DataTransferObjects\UserData;
 use App\Enums\MembershipStatus;
@@ -62,6 +63,7 @@ class HandleInertiaRequests extends Middleware
                 'name' => $tenant->name,
                 'slug' => $tenant->slug,
             ],
+            'modules' => TenantModules::keysFor($tenant),
             // Only serialised when the tenant switcher actually asks for it.
             'tenants' => fn () => $user instanceof User ? $this->memberships($user) : [],
             'flash' => [

@@ -25,10 +25,10 @@ import { navigationFor, shortcutsFor, SHORTCUTS_ICON, type NavCategory } from '@
  * would be nine buttons that reach nothing. The flyout renders the same NavRow
  * as the expanded sidebar, so a category reads identically in both states.
  */
-const { user, can } = useAuth();
+const { user, can, hasModule } = useAuth();
 
-const categories = computed(() => navigationFor(can));
-const shortcuts = computed(() => shortcutsFor(can));
+const categories = computed(() => navigationFor(can, hasModule));
+const shortcuts = computed(() => shortcutsFor(can, hasModule));
 
 /**
  * Shortcuts sit second, between Overview and the rest, exactly as the expanded

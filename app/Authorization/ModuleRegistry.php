@@ -72,6 +72,26 @@ final class ModuleRegistry
         ];
     }
 
+    /**
+     * Module → the Inertia web path prefixes (routes/web.php) it owns. Kept
+     * separate from pathPrefixes() because the web routes were not designed
+     * to mirror the API's segment names 1:1 (e.g. `/inventory` on the web app
+     * vs `/api/v1/inventory-items`) — extend this as more modules are ported
+     * from frontend/ (see routes/web.php).
+     *
+     * @return array<string, list<string>>
+     */
+    public static function webPathPrefixes(): array
+    {
+        return [
+            Module::Dashboard->value => ['dashboard'],
+            Module::Inventory->value => ['inventory', 'inventory-analytics', 'inventory-check', 'inventory-spend', 'inventory-bulk'],
+            Module::Orders->value => ['orders'],
+            Module::Customers->value => ['customers', 'customers-analytics'],
+            Module::WorkOrders->value => ['work-orders'],
+        ];
+    }
+
     /** @return list<string> */
     public static function capabilitiesFor(Module $module): array
     {

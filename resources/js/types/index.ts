@@ -43,6 +43,8 @@ export interface SharedProps {
     auth: Auth;
     tenant: TenantSummary | null;
     tenants: TenantMembership[];
+    /** Module keys the active tenant's plan includes (see App\Enums\Module). */
+    modules: string[];
     flash: Flash;
     locale: string;
     errors: Record<string, string>;

@@ -7,7 +7,9 @@ use App\Http\Controllers\Web\Auth\TenantSwitchController;
 use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InventoryController;
+use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\OrderController;
+use App\Http\Controllers\Web\SearchController;
 use App\Http\Controllers\Web\WorkOrderController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +46,16 @@ Route::middleware('auth')->group(function () {
 // Authenticated + active tenant + verified membership + plan/subscription checks.
 Route::middleware('tenant.web')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+    // The header's global search. Gated per-category inside the controller
+    // (capability + plan module), not by middleware — see SearchController.
+    Route::get('search', SearchController::class)->name('search');
+
+    // The header's notification bell — every member manages only their own feed.
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/read', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::post('notifications/clear', [NotificationController::class, 'clear'])->name('notifications.clear');
+    Route::delete('notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
     Route::middleware('can:inventory.view')->group(function () {
         Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');

@@ -9,6 +9,7 @@ use App\Enums\TenantRole;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Auth\ActiveTenantSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\InteractsWithTenancy;
@@ -71,5 +72,37 @@ class EnforceModuleAccessTest extends TestCase
         Sanctum::actingAs($this->createMember($tenant, [TenantRole::Admin]));
 
         $this->getJson('/api/v1/costs', $this->tenantHeader($tenant))->assertOk();
+    }
+
+    /**
+     * Regression test: /inventory (and its siblings) share no path segment
+     * with their API prefix (`inventory-items`), so moduleForPath() must
+     * consult ModuleRegistry::webPathPrefixes() for web requests rather than
+     * only ever matching against the API map.
+     */
+    public function test_web_route_not_in_plan_is_forbidden(): void
+    {
+        $tenant = $this->createTenant([
+            'plan_id' => $this->plan('web-basic', [Module::Dashboard->value, Module::Orders->value])->getKey(),
+        ]);
+        $user = $this->createMember($tenant, [TenantRole::Admin]);
+
+        $this->actingAs($user)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory')
+            ->assertStatus(403);
+    }
+
+    public function test_web_route_in_plan_is_reachable(): void
+    {
+        $tenant = $this->createTenant([
+            'plan_id' => $this->plan('web-full', Module::values())->getKey(),
+        ]);
+        $user = $this->createMember($tenant, [TenantRole::Admin]);
+
+        $this->actingAs($user)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory')
+            ->assertOk();
     }
 }
