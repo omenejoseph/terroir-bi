@@ -41,9 +41,6 @@ const submitting = ref(false);
 const submitError = ref<string | null>(null);
 const placedOrderNumber = ref<string | null>(null);
 
-/** The customer's own browser locale — nothing tenant-specific is available to an unauthenticated visitor. */
-const locale = typeof navigator === 'undefined' ? 'en' : navigator.language;
-
 onMounted(async () => {
     try {
         const response = await fetch(`/api/v1/public/${props.token}/catalog`, {
@@ -209,7 +206,7 @@ async function submit(): Promise<void> {
                                 <p class="truncate text-xs text-muted-foreground">
                                     {{ t('per') }} {{ unitLabel(product) }}
                                     <template v-if="showPrices && product.price">
-                                        · {{ formatMoney(unitPriceMinor(product), product.price.currency, locale) }}
+                                        · {{ formatMoney(unitPriceMinor(product), product.price.currency) }}
                                     </template>
                                 </p>
                             </div>
@@ -236,7 +233,7 @@ async function submit(): Promise<void> {
 
                 <div class="flex items-center justify-between gap-3">
                     <p v-if="showPrices" class="text-sm">
-                        {{ t('Total') }} <span class="font-semibold tabular-nums">{{ formatMoney(totalMinor, currency, locale) }}</span>
+                        {{ t('Total') }} <span class="font-semibold tabular-nums">{{ formatMoney(totalMinor, currency) }}</span>
                     </p>
                     <span v-else />
                     <Button type="button" :disabled="submitting" @click="submit">

@@ -47,7 +47,7 @@ const { can } = useAuth();
 const { t } = useTranslations();
 
 const locale = computed(() => page.props.locale);
-const money = (m: MoneyValue | null) => (m ? formatMoney(m.minor, m.currency, locale.value) : '—');
+const money = (m: MoneyValue | null) => (m ? formatMoney(m.minor, m.currency) : '—');
 const num = (n: number) => formatNumber(n, locale.value);
 const qty = (q: string | null) => formatQuantity(q, locale.value);
 

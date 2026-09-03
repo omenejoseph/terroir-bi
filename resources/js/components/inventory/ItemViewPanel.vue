@@ -33,7 +33,7 @@ const emit = defineEmits<{ close: [] }>();
 const page = usePage<SharedProps>();
 const { t } = useTranslations();
 const locale = computed(() => page.props.locale);
-const money = (m: MoneyValue | null) => (m ? formatMoney(m.minor, m.currency, locale.value) : null);
+const money = (m: MoneyValue | null) => (m ? formatMoney(m.minor, m.currency) : null);
 const qty = (q: string | null) => formatQuantity(q, locale.value);
 
 /** Pull this item's movements only once the drawer is actually open. */

@@ -45,7 +45,6 @@ interface CustomerOption {
 }
 
 const page = usePage<SharedProps>();
-const locale = computed(() => page.props.locale);
 const { t } = useTranslations();
 
 const customers = computed<CustomerOption[]>(
@@ -194,7 +193,7 @@ function submit(): void {
                     {{ t('Products') }}<span class="ml-1 text-destructive" aria-hidden="true">*</span>
                 </span>
 
-                <OrderLineFields v-model="lines" :products="products" :locale="locale">
+                <OrderLineFields v-model="lines" :products="products">
                     <template #actions>
                         <!-- @todo Import screenshot. The design offers reading an
                              order off a photo; there is no such endpoint. -->
@@ -211,7 +210,7 @@ function submit(): void {
             <div class="flex items-baseline justify-between gap-3 border-t border-border pt-4">
                 <span class="text-sm">{{ t('Subtotal · excl. VAT') }}</span>
                 <span class="text-lg font-semibold tabular-nums">
-                    {{ formatMoney(subtotal, currency, locale) }}
+                    {{ formatMoney(subtotal, currency) }}
                 </span>
             </div>
             <p class="-mt-3 text-xs text-muted-foreground">

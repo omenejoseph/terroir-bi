@@ -44,7 +44,7 @@ const { can } = useAuth();
 const { t } = useTranslations();
 
 const money = (m: MoneyValue | null | undefined): string =>
-    m ? formatMoney(m.minor, m.currency, locale.value) : '—';
+    m ? formatMoney(m.minor, m.currency) : '—';
 
 /** The four order statuses, in workflow order — the stepper's steps. */
 const STEPS = computed<{ key: OrderStatusKey; label: string }[]>(() => [
@@ -422,7 +422,7 @@ function destroy(): void {
                 </ul>
 
                 <template v-if="can('orders.manage')">
-                    <OrderLineFields v-if="addingItems" v-model="newLines" :products="products" :locale="locale">
+                    <OrderLineFields v-if="addingItems" v-model="newLines" :products="products">
                         <template #actions>
                             <Button size="sm" variant="ghost" type="button" @click="cancelAddItems">{{ t('Cancel') }}</Button>
                             <Button size="sm" type="button" :disabled="newLines.length === 0" @click="submitNewLines">

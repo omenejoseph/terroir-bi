@@ -162,7 +162,7 @@ const rebate = (customer: Customer): string => {
 };
 
 const revenue = (customer: Customer): string =>
-    customer.revenue_minor === null ? '—' : formatMoney(customer.revenue_minor, 'EUR', locale.value);
+    customer.revenue_minor === null ? '—' : formatMoney(customer.revenue_minor, 'EUR');
 
 function goToPage(page: number): void {
     reload({ page });

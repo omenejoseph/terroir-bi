@@ -22,7 +22,7 @@ const props = defineProps<{ pipeline: ReorderPipeline; currency: string }>();
 const page = usePage<SharedProps>();
 const { t } = useTranslations();
 
-const money = (minor: number) => formatMoney(minor, props.currency, page.props.locale);
+const money = (minor: number) => formatMoney(minor, props.currency);
 
 /**
  * "94 days ago", matching the design's wording (`208:10179`).

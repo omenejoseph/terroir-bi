@@ -27,7 +27,7 @@ import type { ComboboxOption } from '@/types/ui';
  * one-way data flow warns against — so every change goes through `patch()`
  * and is emitted back up.
  */
-const props = defineProps<{ modelValue: OrderLineDraft[]; products: ProductOption[]; locale: string }>();
+const props = defineProps<{ modelValue: OrderLineDraft[]; products: ProductOption[] }>();
 const emit = defineEmits<{ 'update:modelValue': [OrderLineDraft[]] }>();
 
 const { t } = useTranslations();
@@ -127,7 +127,7 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
                 <span v-if="line.inventory_item_id" class="min-w-0 flex-1">
                     <span class="block truncate text-sm">{{ line.label }}</span>
                     <span class="block truncate text-xs text-muted-foreground">
-                        {{ line.preview ? formatMoney(line.preview.minor, line.preview.currency, locale) : '—' }}
+                        {{ line.preview ? formatMoney(line.preview.minor, line.preview.currency) : '—' }}
                         / {{ line.unit_type === 'cases' ? t('case') : t('bottle') }}
                         <template v-if="line.meta"> · {{ line.meta }}</template>
                     </span>
@@ -147,7 +147,6 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
                         formatMoney(
                             (line.inventory_item_id ? (line.preview?.minor ?? 0) : (line.unit_price ?? 0)) * line.quantity,
                             currency,
-                            locale,
                         )
                     }}
                 </span>
