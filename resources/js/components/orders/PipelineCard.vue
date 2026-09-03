@@ -87,7 +87,7 @@ const isFilter = (key: string): boolean => props.filterable.includes(key);
                         {{ formatNumber(stage.count, locale) }}
                     </span>
                     <span class="text-xs text-muted-foreground tabular-nums">
-                        {{ formatMoney(stage.value.minor, stage.value.currency, locale) }}
+                        {{ formatMoney(stage.value.minor, stage.value.currency) }}
                     </span>
                     <span class="mt-1 h-1 w-full bg-muted" aria-hidden="true">
                         <span class="block h-full bg-foreground" :style="{ width: `${stage.share * 100}%` }" />

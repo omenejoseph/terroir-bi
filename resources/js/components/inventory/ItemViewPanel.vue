@@ -34,7 +34,7 @@ const emit = defineEmits<{ close: []; edit: [item: InventoryItem] }>();
 const page = usePage<SharedProps>();
 const { t } = useTranslations();
 const locale = computed(() => page.props.locale);
-const money = (m: MoneyValue | null) => (m ? formatMoney(m.minor, m.currency, locale.value) : null);
+const money = (m: MoneyValue | null) => (m ? formatMoney(m.minor, m.currency) : null);
 const qty = (q: string | null) => formatQuantity(q, locale.value);
 
 /** Toggled by "Adjust" — an inline QuickStockEntry rather than a second drawer. */

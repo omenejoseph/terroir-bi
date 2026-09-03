@@ -1,25 +1,11 @@
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
-import { formatMoney, formatNumber, formatQuantity } from '@/lib/money';
+import { formatCurrencyParts, formatMoney, formatNumber, formatQuantity } from '@/lib/money';
 import type { SharedProps } from '@/types';
 
 const DEFAULT_CURRENCY = 'EUR';
 const DEFAULT_TIMEZONE = 'Europe/Zagreb';
-
-/**
- * Money is formatted in its currency's own regional convention, independent of
- * the UI language, so a price always reads correctly. The euro, for example,
- * is written with the symbol after the amount and a comma decimal —
- * "1.234,56 €" — across the Eurozone (incl. Croatia), not "€1,234.56".
- */
-const CURRENCY_LOCALE: Record<string, string> = {
-    EUR: 'hr-HR',
-};
-
-function moneyLocale(currencyCode: string, uiLocale: string): string {
-    return CURRENCY_LOCALE[currencyCode] ?? uiLocale;
-}
 
 /**
  * Locale/currency/timezone-aware formatters, driven by the active locale
@@ -50,10 +36,6 @@ export function useFormatters() {
     const currency = computed(() => page.props.org?.default_currency || DEFAULT_CURRENCY);
     const timeZone = computed(() => page.props.org?.timezone || DEFAULT_TIMEZONE);
 
-    function curLocale(): string {
-        return moneyLocale(currency.value, locale.value);
-    }
-
     return {
         locale,
         currency,
@@ -62,19 +44,13 @@ export function useFormatters() {
         number: (n: number) => formatNumber(n, locale.value),
         /** A decimal-string quantity (see lib/money.ts) in the active locale. */
         quantity: (value: string | number | null) => formatQuantity(value, locale.value),
-        /** Minor units → currency, in the org's currency and its own regional convention. */
-        money: (minor: number) => formatMoney(minor, currency.value, curLocale()),
+        /** Minor units → currency, in the org's own fixed convention (lib/money.ts) — never the viewer's UI language. */
+        money: (minor: number) => formatMoney(minor, currency.value),
         /** Minor units → currency, always 2 decimals (matches the prototype). */
-        money2: (minor: number) =>
-            new Intl.NumberFormat(curLocale(), { style: 'currency', currency: currency.value }).format(minor / 100),
+        money2: (minor: number) => formatCurrencyParts(minor / 100, { currency: currency.value }),
         /** Minor units → compact currency for chart axes (e.g. €15K). */
         moneyAxis: (minor: number) =>
-            new Intl.NumberFormat(curLocale(), {
-                style: 'currency',
-                currency: currency.value,
-                notation: 'compact',
-                maximumFractionDigits: 0,
-            }).format(minor / 100),
+            formatCurrencyParts(minor / 100, { currency: currency.value, notation: 'compact', maximumFractionDigits: 0 }),
         /** ISO/date → medium date in the org timezone. */
         date: (value: string | number | Date) =>
             new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeZone: timeZone.value }).format(

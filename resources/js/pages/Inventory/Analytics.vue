@@ -38,7 +38,7 @@ const { t } = useTranslations();
 
 const locale = computed(() => page.props.locale);
 const num = (n: number) => formatNumber(n, locale.value);
-const money = (minor: number, currency: string) => formatMoney(minor, currency, locale.value);
+const money = (minor: number, currency: string) => formatMoney(minor, currency);
 
 const summary = computed(() => props.analytics.summary);
 const exits = computed(() => props.analytics.portfolio_exits);

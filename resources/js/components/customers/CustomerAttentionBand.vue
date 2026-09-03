@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
 
 import Button from '@/components/ui/Button.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney } from '@/lib/money';
 import type { AttentionCard } from '@/types/customers';
 import type { MoneyValue } from '@/types/inventory';
-import type { SharedProps } from '@/types';
 
 /**
  * "Needs attention" on a customer's overview (Figma 231:9336).
@@ -20,12 +18,10 @@ import type { SharedProps } from '@/types';
 const props = defineProps<{ cards: AttentionCard[]; customerId: string; canManage: boolean }>();
 const emit = defineEmits<{ act: [action: AttentionCard['action']] }>();
 
-const page = usePage<SharedProps>();
-const locale = computed(() => page.props.locale);
 const { t } = useTranslations();
 
 const text = (value: string | MoneyValue): string =>
-    typeof value === 'string' ? value : formatMoney(value.minor, value.currency, locale.value);
+    typeof value === 'string' ? value : formatMoney(value.minor, value.currency);
 
 const ACTION_LABELS = computed<Record<AttentionCard['action'], string>>(() => ({
     contact: t('Call · repeat order'),

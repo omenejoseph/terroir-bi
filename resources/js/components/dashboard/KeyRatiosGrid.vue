@@ -24,7 +24,7 @@ const page = usePage<SharedProps>();
 const { t } = useTranslations();
 
 const money = (value: { minor: number } | null) =>
-    value === null ? '—' : formatMoney(value.minor, props.currency, page.props.locale);
+    value === null ? '—' : formatMoney(value.minor, props.currency);
 
 const pct = (value: number | null) => (value === null ? '—' : `${value.toLocaleString(page.props.locale)}%`);
 

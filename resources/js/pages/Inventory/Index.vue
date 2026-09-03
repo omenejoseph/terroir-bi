@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import { ChevronDown, PencilLine, Upload, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -342,7 +342,7 @@ function flags(item: InventoryItem): string[] {
                                 </th>
                                 <td colspan="4" class="px-3 py-2 text-right text-xs text-muted-foreground">
                                     {{ qty(String(group.onHand)) }} {{ t('on hand') }}<template v-if="group.currency">
-                                        · {{ formatMoney(group.value, group.currency, page.props.locale) }}</template
+                                        · {{ formatMoney(group.value, group.currency) }}</template
                                     >
                                 </td>
                             </tr>
@@ -380,7 +380,13 @@ function flags(item: InventoryItem): string[] {
                                                 class="size-7 shrink-0 border border-border bg-muted"
                                                 aria-hidden="true"
                                             />
-                                            <span class="font-medium">{{ item.name }}</span>
+                                            <Link
+                                                :href="`/inventory/${item.id}`"
+                                                class="font-medium hover:underline"
+                                                @click.stop
+                                            >
+                                                {{ item.name }}
+                                            </Link>
                                         </div>
                                     </td>
                                     <td class="px-3 py-3 text-muted-foreground">{{ item.unit_size ?? '—' }}</td>

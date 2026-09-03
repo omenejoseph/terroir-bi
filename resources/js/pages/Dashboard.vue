@@ -87,7 +87,7 @@ function selectRange(range: DateRange): void {
     reload({ period: undefined, from: range.from ?? undefined, to: range.to ?? undefined });
 }
 
-const money = (minor: number) => formatMoney(minor, props.summary.currency, page.props.locale);
+const money = (minor: number) => formatMoney(minor, props.summary.currency);
 const count = (value: number) => formatNumber(value, page.props.locale);
 
 /** Percentage change vs the comparison window, when one exists. */

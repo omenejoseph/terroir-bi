@@ -40,7 +40,7 @@ const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
 const { t } = useTranslations();
 const num = (n: number) => formatNumber(n, locale.value);
-const money = (minor: number, currency: string) => formatMoney(minor, currency, locale.value);
+const money = (minor: number, currency: string) => formatMoney(minor, currency);
 
 const MODULE_TABS: TabItem[] = [
     { label: t('Inventory'), href: '/inventory' },

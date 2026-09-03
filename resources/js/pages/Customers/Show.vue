@@ -90,7 +90,7 @@ const confirmingDelete = ref(false);
 const orderLinkOpen = ref(false);
 
 const money = (m: MoneyValue | null | undefined): string =>
-    m ? formatMoney(m.minor, m.currency, locale.value) : '—';
+    m ? formatMoney(m.minor, m.currency) : '—';
 
 const subtitle = computed(() => {
     const rebate = Number.parseFloat(props.customer.effective_rebate_percent);

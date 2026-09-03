@@ -413,7 +413,7 @@ function setPerPage(perPage: number): void {
 
                                 <td class="px-4 py-4 text-right">
                                     <span class="block text-sm font-semibold tabular-nums">
-                                        {{ formatMoney(row.total_amount.minor, row.total_amount.currency, locale) }}
+                                        {{ formatMoney(row.total_amount.minor, row.total_amount.currency) }}
                                     </span>
                                     <span class="text-muted-foreground">{{ t('excl. VAT') }}</span>
                                 </td>

@@ -48,7 +48,7 @@ const rows = computed(() => {
 });
 
 const money = (m: { minor: number; currency: string }): string =>
-    formatMoney(m.minor, m.currency, locale.value);
+    formatMoney(m.minor, m.currency);
 
 /**
  * The design's "Rebate performance" card reports what rebates cost across the
