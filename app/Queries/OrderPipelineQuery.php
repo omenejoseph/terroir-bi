@@ -30,6 +30,10 @@ use Illuminate\Support\Carbon;
  * Invoiced and Paid overlap the fulfilment stages by construction — an order
  * can be Shipped *and* Paid. That is a property of order-to-cash, not a bug:
  * the first four stages say where the goods are, the last two where the money is.
+ *
+ * `$customerId` narrows every stage to one customer's orders, for the same
+ * card scoped onto a customer's own Order History (Figma 361:2157) — the
+ * shape and the vocabulary are identical, only the population changes.
  */
 class OrderPipelineQuery
 {
@@ -38,18 +42,18 @@ class OrderPipelineQuery
     /**
      * @return array{stages: list<array{key: string, label: string, count: int, value: array<string, mixed>, share: float}>, currency: string}
      */
-    public function get(Carbon $from, Carbon $to): array
+    public function get(Carbon $from, Carbon $to, ?string $customerId = null): array
     {
         $currency = $this->currency();
 
         $stages = [];
 
-        foreach ($this->byStatus($from, $to) as $status) {
+        foreach ($this->byStatus($from, $to, $customerId) as $status) {
             $stages[] = $status;
         }
 
-        $stages[] = $this->invoiced($from, $to);
-        $stages[] = $this->paid($from, $to);
+        $stages[] = $this->invoiced($from, $to, $customerId);
+        $stages[] = $this->paid($from, $to, $customerId);
 
         $largest = max(1, ...array_map(static fn (array $s): int => $s['minor'], $stages));
 
@@ -74,10 +78,11 @@ class OrderPipelineQuery
      *
      * @return list<array{key: string, label: string, count: int, minor: int}>
      */
-    private function byStatus(Carbon $from, Carbon $to): array
+    private function byStatus(Carbon $from, Carbon $to, ?string $customerId): array
     {
         $rows = Order::query()
             ->whereBetween('created_at', [$from, $to])
+            ->when($customerId !== null, fn ($q) => $q->where('customer_id', $customerId))
             ->groupBy('status')
             ->selectRaw('status, COUNT(*) as orders, COALESCE(SUM(total_amount), 0) as value')
             ->get()
@@ -101,10 +106,11 @@ class OrderPipelineQuery
      *
      * @return array{key: string, label: string, count: int, minor: int}
      */
-    private function invoiced(Carbon $from, Carbon $to): array
+    private function invoiced(Carbon $from, Carbon $to, ?string $customerId): array
     {
         $orders = Order::query()
             ->whereBetween('created_at', [$from, $to])
+            ->when($customerId !== null, fn ($q) => $q->where('customer_id', $customerId))
             ->whereHas('inflows')
             ->selectRaw('COUNT(*) as orders, COALESCE(SUM(total_amount), 0) as value')
             ->first();
@@ -124,7 +130,7 @@ class OrderPipelineQuery
      *
      * @return array{key: string, label: string, count: int, minor: int}
      */
-    private function paid(Carbon $from, Carbon $to): array
+    private function paid(Carbon $from, Carbon $to, ?string $customerId): array
     {
         $received = Inflow::query()
             ->select('order_id')
@@ -135,6 +141,7 @@ class OrderPipelineQuery
 
         $row = Order::query()
             ->whereBetween('orders.created_at', [$from, $to])
+            ->when($customerId !== null, fn ($q) => $q->where('orders.customer_id', $customerId))
             ->joinSub($received, 'settled', 'settled.order_id', '=', 'orders.id')
             ->whereColumn('settled.paid', '>=', 'orders.total_amount')
             ->where('orders.total_amount', '>', 0)

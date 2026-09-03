@@ -16,7 +16,7 @@ use App\Http\Requests\Customers\UpdateCustomerRequest;
 use App\Models\Customer;
 use App\Models\CustomerPrice;
 use App\Models\InventoryItem;
-use App\Models\TierPrice;
+use App\Models\Order;
 use App\Queries\CustomerAnalyticsQuery;
 use App\Queries\CustomerAttentionQuery;
 use App\Queries\CustomerInsightsQuery;
@@ -25,15 +25,20 @@ use App\Queries\CustomerProductsQuery;
 use App\Queries\CustomerRhythmQuery;
 use App\Queries\ListCustomersQuery;
 use App\Queries\ListOrdersQuery;
+use App\Queries\OrderPipelineQuery;
+use App\Queries\OrderStatusCountsQuery;
 use App\Services\Customers\CustomerMergeService;
 use App\Services\Customers\CustomerPresenter;
 use App\Services\Customers\PricingTierOptions;
 use App\Services\Orders\CustomerConsignmentService;
+use App\Services\Orders\OrderFormOptions;
 use App\Services\Orders\OrderPresenter;
-use App\Services\Pricing\PricingService;
 use App\Support\CustomerFilters;
+use App\Support\Money\CurrencyRegistry;
+use App\Support\Money\Money;
 use App\Support\Period;
 use App\Support\PerPage;
+use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -121,19 +126,64 @@ class CustomerController extends Controller
                 'to' => $productsTo?->toDateString(),
             ],
 
-            // Pricing tab: what this customer actually pays for each sellable
-            // item, and which rule decided it. Resolution is PricingService's,
-            // never re-derived here — docs/05-pricing-engine.md is the contract.
+            // Pricing tab: this customer's own negotiated prices only — not
+            // the whole catalogue's list/tier prices, which say nothing about
+            // this customer specifically. "Add price" (pricingCatalog) offers
+            // the full sellable catalogue to pick from.
             'pricing' => Inertia::optional(fn (): array => $this->pricing($customer)),
+            'pricingCatalog' => Inertia::optional(fn (): array => app(OrderFormOptions::class)->products()),
 
             'orderHistory' => Inertia::optional(
                 fn (): array => app(OrderPresenter::class)->page(
-                    app(ListOrdersQuery::class)->paginate([
-                        'customer_id' => $customer->getKey(),
-                        'hide_shipped' => ! $this->membership->canSeeShippedOrders(),
-                    ], PerPage::fromRequest($request)),
+                    app(ListOrdersQuery::class)->paginate($this->orderHistoryFilters($request, $customer), PerPage::fromRequest($request)),
                 ),
             ),
+            // The order-to-cash pipeline (Figma 361:2157), narrowed to this
+            // customer's own orders in the chosen window — same card, same
+            // query, as the main Orders list.
+            'orderPipeline' => Inertia::optional(function () use ($customer, $request): ?array {
+                if (! $this->membership->canSeeFinancials()) {
+                    return null;
+                }
+
+                [$from, $to] = $this->orderHistoryWindow($request);
+
+                // OrderPipelineQuery wants concrete bounds; "lifetime" (no
+                // lower bound) widens to the customer's very first order
+                // instead, rather than every OTHER tenant's orders too.
+                if ($from === null) {
+                    $earliest = Order::query()->where('customer_id', $customer->getKey())->min('created_at');
+                    $from = is_string($earliest) ? Carbon::parse($earliest) : Carbon::now();
+                }
+
+                return app(OrderPipelineQuery::class)->get($from, $to ?? Carbon::now(), $customer->getKey());
+            }),
+            // The status chip row above the table — counts ignore the status
+            // filter itself so switching chips doesn't zero the others out.
+            'orderStatusCounts' => Inertia::optional(
+                fn (): array => app(OrderStatusCountsQuery::class)->get($this->orderHistoryFilters($request, $customer)),
+            ),
+            'orderHistoryRange' => $this->orderHistoryPreset($request),
+            // Hydrates the toolbar on load/refresh and lets reloads carry the
+            // current search/status forward the same way Orders/Index does.
+            'orderHistoryFilters' => [
+                'search' => $request->query('order_search'),
+                'status' => $request->query('order_status'),
+            ],
+            // The footer's "Total" (Figma 361:2157) — the whole filtered set's
+            // sum, not just the visible page, so paging never changes what it
+            // claims. Withheld like every other money figure on this page.
+            'orderHistoryTotal' => Inertia::optional(function () use ($request, $customer): ?array {
+                if (! $this->membership->canSeeFinancials()) {
+                    return null;
+                }
+
+                $minor = (int) app(ListOrdersQuery::class)
+                    ->build($this->orderHistoryFilters($request, $customer))
+                    ->sum('total_amount');
+
+                return Money::fromMinor($minor, $this->currency())->jsonSerialize();
+            }),
 
             'consignment' => Inertia::optional(
                 fn (): array => app(CustomerConsignmentService::class)->summary($customer),
@@ -234,61 +284,92 @@ class CustomerController extends Controller
     }
 
     /**
-     * Every sellable item priced for this customer, with the rule that decided
-     * it. `source` is derived from which inputs exist rather than from a second
-     * copy of the precedence, so it can only describe what PricingService did.
+     * This customer's own negotiated prices — an absolute override per item,
+     * set via "Add price" (Web\CustomerPriceController) — not the whole
+     * catalogue's list or tier prices, which are not decisions about this
+     * customer at all. Every row here has `source: 'customer'` by
+     * construction; the tab's "Pricing (N)" count is just `count($rows)`.
      *
      * @return array{rows: list<array<string, mixed>>, override_count: int}
      */
     private function pricing(Customer $customer): array
     {
-        $items = InventoryItem::query()
-            ->where('is_active', true)
-            ->where('is_for_sale', true)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
-
-        $resolved = app(PricingService::class)->resolveForCustomer($customer, $items);
-
-        $customPrices = CustomerPrice::query()
+        $rows = CustomerPrice::query()
             ->where('customer_id', $customer->getKey())
-            ->pluck('inventory_item_id')
-            ->flip();
-
-        $tierPriced = $customer->pricing_tier_id === null
-            ? collect()
-            : TierPrice::query()
-                ->where('pricing_tier_id', $customer->pricing_tier_id)
-                ->pluck('inventory_item_id')
-                ->flip();
-
-        $rows = $items->map(function (InventoryItem $item) use ($resolved, $customPrices, $tierPriced): array {
-            $id = (string) $item->getKey();
-
-            return [
-                'inventory_item_id' => $id,
-                'name' => $item->name,
-                'sku' => $item->sku,
-                'vintage' => $item->vintage,
-                'unit_size' => $item->unit_size,
-                'list_price' => $item->default_price?->jsonSerialize(),
-                'price' => $resolved[$id]?->jsonSerialize(),
-                'source' => match (true) {
-                    $customPrices->has($id) => 'customer',
-                    $tierPriced->has($id) => 'tier',
-                    $item->default_price !== null => 'list',
-                    default => 'none',
-                },
-            ];
-        })->all();
+            ->with('inventoryItem')
+            ->get()
+            ->filter(fn (CustomerPrice $override): bool => $override->inventoryItem instanceof InventoryItem)
+            ->sortBy(fn (CustomerPrice $override): string => $override->inventoryItem->name)
+            ->map(fn (CustomerPrice $override): array => [
+                'inventory_item_id' => $override->inventory_item_id,
+                'name' => $override->inventoryItem->name,
+                'sku' => $override->inventoryItem->sku,
+                'vintage' => $override->inventoryItem->vintage,
+                'unit_size' => $override->inventoryItem->unit_size,
+                'list_price' => $override->inventoryItem->default_price?->jsonSerialize(),
+                'price' => $override->price->jsonSerialize(),
+                'source' => 'customer',
+            ])
+            ->values()
+            ->all();
 
         return [
             'rows' => $rows,
-            // The tab's badge counts the rules that exist for this customer,
-            // which is what the design's "Pricing (0)" reports.
-            'override_count' => $customPrices->count(),
+            'override_count' => count($rows),
         ];
+    }
+
+    /**
+     * Filters shared by the Order History table and its status-chip counts,
+     * so the two can never disagree about what set they're both describing.
+     *
+     * @return array<string, mixed>
+     */
+    private function orderHistoryFilters(Request $request, Customer $customer): array
+    {
+        [$from, $to] = $this->orderHistoryWindow($request);
+
+        return [
+            'customer_id' => $customer->getKey(),
+            'hide_shipped' => ! $this->membership->canSeeShippedOrders(),
+            'search' => $request->query('order_search'),
+            'status' => $request->query('order_status'),
+            'from' => $from?->toDateString(),
+            'to' => $to?->toDateString(),
+        ];
+    }
+
+    /**
+     * The Order History tab's own window (Figma 361:2157: "Last 3 months ▾"),
+     * independent of "Products bought"'s. `lifetime` means no bounds.
+     *
+     * @return array{0: ?Carbon, 1: ?Carbon}
+     */
+    private function orderHistoryWindow(Request $request): array
+    {
+        $preset = $this->orderHistoryPreset($request);
+        $to = Carbon::now();
+
+        return match ($preset) {
+            '6m' => [$to->copy()->subMonths(6)->startOfDay(), null],
+            'ytd' => [$to->copy()->startOfYear(), null],
+            'lifetime' => [null, null],
+            default => [$to->copy()->subMonths(3)->startOfDay(), null],
+        };
+    }
+
+    private function orderHistoryPreset(Request $request): string
+    {
+        $preset = $request->query('order_period');
+        $allowed = ['3m', '6m', 'ytd', 'lifetime'];
+
+        return is_string($preset) && in_array($preset, $allowed, true) ? $preset : '3m';
+    }
+
+    private function currency(): string
+    {
+        return app(TenantContext::class)->current()?->settings()->first()?->default_currency
+            ?? CurrencyRegistry::default()->code;
     }
 
     /**

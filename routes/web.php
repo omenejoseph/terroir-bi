@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Auth\TenantSwitchController;
 use App\Http\Controllers\Web\CustomerController;
+use App\Http\Controllers\Web\CustomerPriceController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InventoryController;
 use App\Http\Controllers\Web\LocaleController;
@@ -178,6 +179,15 @@ Route::middleware('tenant.web')->group(function () {
             ->name('customers.order-token.generate');
         Route::delete('customers/{customer}/order-token', [CustomerController::class, 'revokeToken'])
             ->name('customers.order-token.revoke');
+    });
+
+    // A customer's own negotiated prices (Pricing tab · "Add price"). Gates
+    // mirror routes/api.php's pricing.manage on the same endpoint shape.
+    Route::middleware('can:pricing.manage')->group(function () {
+        Route::patch('customers/{customer}/prices/{item}', [CustomerPriceController::class, 'update'])
+            ->name('customers.prices.update');
+        Route::delete('customers/{customer}/prices/{item}', [CustomerPriceController::class, 'destroy'])
+            ->name('customers.prices.destroy');
     });
 
     /*
