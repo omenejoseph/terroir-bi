@@ -39,6 +39,7 @@ class CustomerOrderAnalyticsQuery
         $thisYear = (int) $base()->whereYear('created_at', $now->year)->sum('total_amount');
         $lastYear = (int) $base()->whereYear('created_at', $now->year - 1)->sum('total_amount');
         $lastOrderAt = $base()->max('created_at');
+        $firstOrderAt = $base()->min('created_at');
 
         // YoY growth: trailing 3 months vs. the same 3 months a year earlier.
         $recent = $this->revenueBetween($base(), $now->copy()->subMonths(3), $now);
@@ -92,6 +93,10 @@ class CustomerOrderAnalyticsQuery
             'this_year' => Money::fromMinor($thisYear, $currency)->jsonSerialize(),
             'last_year' => Money::fromMinor($lastYear, $currency)->jsonSerialize(),
             'last_order_date' => is_string($lastOrderAt) ? $lastOrderAt : null,
+            // Feeds "Next 3 months" (231:9336): the forecast compares each
+            // month to the same month a year earlier, so it has nothing to
+            // show until a full year of history exists.
+            'first_order_date' => is_string($firstOrderAt) ? $firstOrderAt : null,
             'yoy_growth_percent' => number_format($yoy * 100, 2, '.', ''),
             'annual_projection' => Money::fromMinor($annualProjection, $currency)->jsonSerialize(),
             'expected_next_order_date' => $this->expectedNext($customer)?->toIso8601String(),

@@ -99,6 +99,7 @@ export interface CustomerOrderAnalytics {
     this_year: MoneyValue;
     last_year: MoneyValue;
     last_order_date: string | null;
+    first_order_date: string | null;
     /** Decimal string percentage. */
     yoy_growth_percent: string;
     annual_projection: MoneyValue;

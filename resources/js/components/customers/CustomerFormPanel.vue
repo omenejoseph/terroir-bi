@@ -162,6 +162,14 @@ function submit(): void {
     const options = {
         preserveScroll: true,
         onSuccess: () => emit('close'),
+        // Editing lands back on the same Customer — Show page, which may
+        // already have Pricing/Order History/Komisija/the order link loaded
+        // from earlier in this visit. Without `only`, this would be a full
+        // (non-partial) visit, and a full visit never resolves Optional
+        // props — it would silently reset all of those to unloaded. Creating
+        // navigates to a brand-new page instead, so no such prop survives to
+        // lose.
+        ...(isEdit.value ? { only: ['customer'] } : {}),
     };
 
     // Blank optional fields are sent as null rather than "", so clearing a

@@ -219,16 +219,17 @@ Orders (`455:1577`, `376:1592`, `335:4233`) adds five:
 | Profitability's "Rebate · 18%" and "Net revenue" rows | Line totals are stored with the rebate already applied and the gross figure is not kept, so the three-line split cannot be reconstructed without assuming the arithmetic. Shown as Revenue / COGS / Gross profit / Margin |
 | Comment reactions (emoji counts) | No reactions table |
 
-Customers (`230:2395`, `230:4717`, `231:9336`) adds five:
+Customers (`230:2395`, `230:4717`, `231:9336`) adds seven:
 
 | Design element | Missing backing data |
 |---|---|
 | Type column values "Hotel" and "Restaurant" | `App\Enums\CustomerType` is Wholesale / Retail / Agency / Shipshop / Other. Offering types no customer can hold would make the Type filter return nothing, so the enum's labels are used |
 | Analytics' "Rebate performance" card | No per-line rebate is stored — order lines keep the post-rebate total only — so the cost of rebates across the book cannot be summed. The fourth card reports average order value, which the query does supply |
 | Overview's "Where the money goes" (gross profit vs COGS) | Per-customer COGS is not computed anywhere. The card splits revenue on an axis the data does track: direct sales against consignment |
-| "Price ladder" and "Concentration" cards | Both need per-category revenue-per-bottle and a concentration measure; the products query supplies volume and share, so those two cards are folded into "Products bought" rather than fabricated |
-| "Next 3 months" forecast card | `CustomerOrderAnalyticsQuery` supplies `expected_next_3m`, but only where a prior year exists to compare against; the design's card is the empty state for exactly that case and is deferred with the forecast work |
-
+| "Price ladder" and "Concentration" cards' 5th bucket "Red Reserve" | `InventoryItem.subcategory` is free text with no "reserve" tier in this schema (`App\Enums\WineType` stops at Red/White/Rosé/Orange/Sparkling/Dessert) — both cards are ✅ built (`CustomerProductsQuery`'s rows already carry revenue and units) grouped by whatever subcategories the customer actually bought, not the design's example taxonomy |
+| "Next 3 months" forecast card | ✅ Built. `CustomerOrderAnalyticsQuery` now also returns `first_order_date`; the empty state (design's own state for this example customer) shows until a full year of orders exists, then the real 3-month bars render |
+| "Generate Order Link" | ✅ Built — a dialog on the same button (Figma draws no destination for it), mirroring the outgoing React app's `OrderLinkSection` and the API's `customers.tokens` endpoints exactly. The link itself resolves nowhere yet: the public catalog + order form at `/order/:token` exists only in `frontend/src/app/order/[token]`, not ported to this app |
+| "Change range" (Revenue trend), "Suggest upsell" (Price ladder), "Suggest order" (Products bought) | Rendered, matching copy and placement, but inert — none names what it should do beyond what's already on the card, and no suggestion engine exists to back the latter two |
 Work Orders (`267:1781` and its six sibling states) is the largest gap in the
 canvas — the design is a full Trello clone and the domain is a flat task list:
 

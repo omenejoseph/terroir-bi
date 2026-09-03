@@ -131,6 +131,15 @@ Route::middleware('tenant.web')->group(function () {
         ->middleware('can:customers.delete')
         ->name('customers.destroy');
 
+    // The self-service order link (Figma 231:9336's "Generate Order Link").
+    // Admin-only, matching routes/api.php's customers.tokens gate.
+    Route::middleware('can:customers.tokens')->group(function () {
+        Route::post('customers/{customer}/order-token', [CustomerController::class, 'generateToken'])
+            ->name('customers.order-token.generate');
+        Route::delete('customers/{customer}/order-token', [CustomerController::class, 'revokeToken'])
+            ->name('customers.order-token.revoke');
+    });
+
     /*
       Work orders. Deliberately ungated, matching routes/api.php: team task
       planning is open to any member of the tenant. Static segments precede the

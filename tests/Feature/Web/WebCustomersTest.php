@@ -530,4 +530,113 @@ class WebCustomersTest extends TestCase
         $this->assertNotNull($customer->refresh()->reorder_contacted_at);
         $this->forgetTenant();
     }
+
+    /** The Show page never evaluates orderToken until a partial reload asks for it. */
+    public function test_order_token_is_absent_from_a_full_page_load(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/customers/'.$customer->getKey())
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page->missing('orderToken'));
+    }
+
+    public function test_generating_an_order_token_creates_one_and_it_is_readable_via_partial_reload(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $this->forgetTenant();
+
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+
+        $this->actingAs($admin)
+            ->withSession($session)
+            ->post('/customers/'.$customer->getKey().'/order-token')
+            ->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $this->assertNotNull($customer->refresh()->order_token);
+        $token = $customer->order_token;
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession($session)
+            ->get(
+                '/customers/'.$customer->getKey(),
+                $this->inertiaPartial('Customers/Show', 'orderToken'),
+            );
+
+        $response->assertOk();
+        $this->assertSame($token, $response->json('props.orderToken'));
+    }
+
+    public function test_regenerating_replaces_the_previous_token(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $this->forgetTenant();
+
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+
+        $this->actingAs($admin)->withSession($session)->post('/customers/'.$customer->getKey().'/order-token');
+
+        $this->actingAsTenant($tenant);
+        $first = $customer->refresh()->order_token;
+        $this->forgetTenant();
+
+        $this->actingAs($admin)->withSession($session)->post('/customers/'.$customer->getKey().'/order-token');
+
+        $this->actingAsTenant($tenant);
+        $second = $customer->refresh()->order_token;
+        $this->forgetTenant();
+
+        $this->assertNotNull($first);
+        $this->assertNotNull($second);
+        $this->assertNotSame($first, $second);
+    }
+
+    public function test_revoking_clears_the_token(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran', ['order_token' => 'a-real-token']);
+        $this->forgetTenant();
+
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+
+        $this->actingAs($admin)
+            ->withSession($session)
+            ->delete('/customers/'.$customer->getKey().'/order-token')
+            ->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $this->assertNull($customer->refresh()->order_token);
+        $this->forgetTenant();
+    }
+
+    public function test_order_token_endpoints_are_closed_to_a_non_admin(): void
+    {
+        [$tenant] = [$this->createTenant()];
+        $orders = $this->createMember($tenant, [TenantRole::Orders]);
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $this->forgetTenant();
+
+        $this->actingAs($orders)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/customers/'.$customer->getKey().'/order-token')
+            ->assertForbidden();
+    }
 }

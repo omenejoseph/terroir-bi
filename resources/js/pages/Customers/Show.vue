@@ -6,11 +6,13 @@ import { ArrowLeft, Link2, PencilLine, Trash2 } from 'lucide-vue-next';
 import AppLayout from '@/layouts/AppLayout.vue';
 import CustomerAttentionBand from '@/components/customers/CustomerAttentionBand.vue';
 import CustomerFormPanel from '@/components/customers/CustomerFormPanel.vue';
+import OrderLinkDialog from '@/components/customers/OrderLinkDialog.vue';
 import OrderRhythm from '@/components/customers/OrderRhythm.vue';
 import BarChart from '@/components/ui/BarChart.vue';
 import DateRangePicker from '@/components/ui/DateRangePicker.vue';
 import Button from '@/components/ui/Button.vue';
 import Pagination from '@/components/ui/Pagination.vue';
+import ProgressBar from '@/components/ui/ProgressBar.vue';
 import SectionHeader from '@/components/ui/SectionHeader.vue';
 import StackedBar from '@/components/ui/StackedBar.vue';
 import StatCard from '@/components/ui/StatCard.vue';
@@ -58,6 +60,8 @@ const props = defineProps<{
     pricing?: CustomerPricing;
     orderHistory?: Paginated<Order>;
     consignment?: Record<string, unknown>;
+    /** Undefined until the Order link dialog opens and asks for it. */
+    orderToken?: string | null;
 }>();
 
 const page = usePage<SharedProps>();
@@ -66,6 +70,7 @@ const { can } = useAuth();
 
 const editOpen = ref(false);
 const confirmingDelete = ref(false);
+const orderLinkOpen = ref(false);
 
 const money = (m: MoneyValue | null | undefined): string =>
     m ? formatMoney(m.minor, m.currency, locale.value) : '—';
@@ -147,7 +152,15 @@ watch(
 
 function act(action: AttentionCard['action']): void {
     if (action === 'contact') {
-        router.post(`/customers/${props.customer.id}/contacted`, { contacted: true }, { preserveScroll: true });
+        // `only` keeps this a partial reload — a plain post would be a full
+        // visit, and a full visit never resolves Optional props, silently
+        // resetting Pricing/Order History/Komisija/the order link back to
+        // unloaded if any had already been fetched this visit.
+        router.post(
+            `/customers/${props.customer.id}/contacted`,
+            { contacted: true },
+            { preserveScroll: true, only: ['attention'] },
+        );
 
         return;
     }
@@ -197,6 +210,120 @@ const revenueTrend = computed(() =>
     })),
 );
 
+/**
+ * "Next 3 months" (Figma 231:9336). The forecast compares each month to the
+ * same month a year earlier, so it stays the design's own empty state until a
+ * full year of history exists — never a projection built on nothing to
+ * compare against.
+ */
+const forecast = computed(() => {
+    const analytics = props.orderAnalytics;
+    if (analytics === null || analytics.first_order_date === null) return null;
+
+    const first = new Date(analytics.first_order_date);
+    const oneYearOn = new Date(first);
+    oneYearOn.setFullYear(oneYearOn.getFullYear() + 1);
+
+    if (oneYearOn.getTime() > Date.now()) {
+        return {
+            ready: false as const,
+            availableFrom: oneYearOn.toLocaleDateString(locale.value, { month: 'short', year: 'numeric' }),
+        };
+    }
+
+    return {
+        ready: true as const,
+        months: analytics.expected_next_3m.map((point) => ({
+            label: new Date(`${point.month}-01`).toLocaleDateString(locale.value, {
+                month: 'short',
+                year: '2-digit',
+            }),
+            values: [point.expected.minor / 100],
+        })),
+    };
+});
+
+/**
+ * "Price ladder" (Figma 231:9336): revenue per bottle by product subcategory,
+ * ranked highest first. Built entirely from CustomerProductsQuery's rows,
+ * which already carry revenue and units per product — no new backend data.
+ *
+ * The design's four buckets (White / Rosé / Red / "Red Reserve") are example
+ * content, not a real taxonomy: `InventoryItem.subcategory` is free text, and
+ * this tenant's schema has no "reserve" tier. Buckets are whatever
+ * subcategories this customer has actually bought, which is what the data can
+ * honestly support.
+ */
+const priceLadder = computed(() => {
+    const buckets = new Map<string, { units: number; revenueMinor: number; currency: string }>();
+
+    for (const row of props.products.rows) {
+        const key = row.subcategory ?? row.group ?? 'Other';
+        const bucket = buckets.get(key) ?? { units: 0, revenueMinor: 0, currency: row.revenue.currency };
+        bucket.units += row.units;
+        bucket.revenueMinor += row.revenue.minor;
+        buckets.set(key, bucket);
+    }
+
+    const rows = [...buckets.entries()]
+        .map(([key, bucket]) => ({
+            key,
+            label: subcategoryLabel(key),
+            units: bucket.units,
+            pricePerBottle: bucket.units > 0 ? bucket.revenueMinor / bucket.units : 0,
+            currency: bucket.currency,
+        }))
+        .filter((row) => row.units > 0)
+        .sort((a, b) => b.pricePerBottle - a.pricePerBottle);
+
+    const max = rows.reduce((m, row) => Math.max(m, row.pricePerBottle), 0);
+    const totalUnits = props.products.total_units;
+
+    return {
+        rows: rows.map((row) => ({
+            ...row,
+            barPct: max > 0 ? (row.pricePerBottle / max) * 100 : 0,
+            sharePct: totalUnits > 0 ? Math.round((row.units / totalUnits) * 100) : 0,
+        })),
+        /** "{top} earns {ratio}× {bottom}" — only claimed when there are two buckets to compare. */
+        ratio:
+            rows.length >= 2 && rows[rows.length - 1]!.pricePerBottle > 0
+                ? {
+                      top: rows[0]!.label,
+                      bottom: rows[rows.length - 1]!.label,
+                      multiple: rows[0]!.pricePerBottle / rows[rows.length - 1]!.pricePerBottle,
+                  }
+                : null,
+    };
+});
+
+/** "RED_RESERVE" -> "Red reserve"; whatever free text is on file, titled. */
+function subcategoryLabel(value: string): string {
+    return value
+        .toLowerCase()
+        .split(/[\s_-]+/)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+/**
+ * "Concentration" (Figma 231:9336): the customer's top products by volume,
+ * with how much of their bottles the top 3 account for. CustomerProductsQuery
+ * already ranks `rows` by units descending — this just takes the head of it.
+ */
+const concentration = computed(() => {
+    const rows = props.products.rows;
+    const top = rows.slice(0, 6);
+    const max = top.reduce((m, row) => Math.max(m, row.units), 0);
+    const totalUnits = props.products.total_units;
+    const top3Units = rows.slice(0, 3).reduce((sum, row) => sum + row.units, 0);
+
+    return {
+        rows: top.map((row) => ({ ...row, barPct: max > 0 ? (row.units / max) * 100 : 0 })),
+        top3SharePct: totalUnits > 0 ? Math.round((top3Units / totalUnits) * 100) : 0,
+    };
+});
+
 /*
   "Products bought" has its own window (Figma 231:9336). It reloads only that
   card's data, so changing the range does not re-run the rhythm strip and the
@@ -233,7 +360,11 @@ function selectProductCustomRange(range: DateRange): void {
     });
 }
 
-/** Products bought, grouped the way the design groups them: by product group. */
+/**
+ * Products bought, grouped the way the design groups them: by product group,
+ * then by subcategory within it (231:9336 shows "Wine" over "White" / "Rosé" /
+ * "Red" as two nesting levels, not one flat list under "Wine").
+ */
 const productGroups = computed(() => {
     const byGroup = new Map<string, CustomerProducts['rows']>();
 
@@ -242,11 +373,25 @@ const productGroups = computed(() => {
         byGroup.set(key, [...(byGroup.get(key) ?? []), row]);
     }
 
-    return [...byGroup.entries()].map(([label, rows]) => ({
-        label,
-        rows,
-        units: rows.reduce((sum, r) => sum + r.units, 0),
-    }));
+    return [...byGroup.entries()].map(([label, rows]) => {
+        const bySubcategory = new Map<string, CustomerProducts['rows']>();
+
+        for (const row of rows) {
+            const key = row.subcategory ?? '';
+            bySubcategory.set(key, [...(bySubcategory.get(key) ?? []), row]);
+        }
+
+        return {
+            label,
+            units: rows.reduce((sum, r) => sum + r.units, 0),
+            productCount: rows.length,
+            subcategories: [...bySubcategory.entries()].map(([key, subRows]) => ({
+                key,
+                label: key === '' ? null : subcategoryLabel(key),
+                rows: subRows,
+            })),
+        };
+    });
 });
 
 function shortDate(iso: string | null): string {
@@ -303,10 +448,7 @@ const orderStatusLabel: Record<string, string> = {
 
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <Tabs :items="TABS" :current="tab" @select="selectTab" />
-                <!-- @todo Generate Order Link. The token endpoints exist on the
-                     API behind customers.tokens; this needs its own confirm +
-                     copy surface, which the design does not specify. -->
-                <Button variant="outline" size="sm">
+                <Button v-if="can('customers.tokens')" variant="outline" size="sm" @click="orderLinkOpen = true">
                     <Link2 class="size-3.5" :stroke-width="1.5" />
                     Generate Order Link
                 </Button>
@@ -355,9 +497,10 @@ const orderStatusLabel: Record<string, string> = {
 
                 <OrderRhythm :rhythm="rhythm" />
 
+                <!-- Revenue trend · Next 3 months (Figma 231:9336's top row) -->
                 <div class="grid gap-4 xl:grid-cols-3">
                     <div v-if="orderAnalytics" class="border border-border bg-card xl:col-span-2">
-                        <div class="border-b border-border px-6 py-4">
+                        <div class="flex items-center justify-between gap-3 border-b border-border px-6 py-4">
                             <SectionHeader
                                 title="Revenue trend · 12 months"
                                 :description="
@@ -366,12 +509,46 @@ const orderStatusLabel: Record<string, string> = {
                                         : 'No orders recorded yet'
                                 "
                             />
+                            <!-- @todo Change range. The design draws this control but
+                                 doesn't specify what alternate window it opens; the
+                                 chart's own 12-month window matches the header. -->
+                            <button type="button" class="shrink-0 text-xs text-muted-foreground hover:text-foreground">
+                                Change range
+                            </button>
                         </div>
                         <div class="p-6">
                             <BarChart :points="revenueTrend" :height="220" />
                         </div>
                     </div>
 
+                    <div v-if="orderAnalytics" class="flex flex-col border border-border bg-card">
+                        <div class="border-b border-border px-6 py-4">
+                            <SectionHeader title="Next 3 months" />
+                        </div>
+
+                        <div v-if="forecast?.ready" class="flex-1 p-6">
+                            <BarChart :points="forecast.months" :height="160" />
+                        </div>
+
+                        <div v-else class="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+                            <span class="size-6 bg-muted" aria-hidden="true" />
+                            <p class="text-sm font-semibold">No forecast yet</p>
+                            <p class="text-xs text-muted-foreground">
+                                Forecasting compares each month to the same month last year, and this customer
+                                doesn't have a full year of orders yet.
+                            </p>
+                            <span
+                                v-if="forecast"
+                                class="mt-1 inline-flex items-center border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground"
+                            >
+                                Available from {{ forecast.availableFrom }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Where the money goes · Price ladder · Concentration (Figma 231:9336's second row) -->
+                <div class="grid gap-4 xl:grid-cols-3">
                     <div v-if="moneySplit" class="border border-border bg-card">
                         <div class="border-b border-border px-6 py-4">
                             <SectionHeader
@@ -398,25 +575,93 @@ const orderStatusLabel: Record<string, string> = {
                             />
                         </div>
                     </div>
+
+                    <div v-if="priceLadder.rows.length > 0" class="border border-border bg-card">
+                        <div class="flex items-start justify-between gap-3 border-b border-border px-6 py-4">
+                            <SectionHeader
+                                title="Price ladder"
+                                :description="
+                                    priceLadder.ratio
+                                        ? `Revenue per bottle · ${priceLadder.ratio.top} earns ${priceLadder.ratio.multiple.toFixed(1)}× ${priceLadder.ratio.bottom}`
+                                        : 'Revenue per bottle'
+                                "
+                            />
+                            <!-- @todo Suggest upsell. No suggestion engine exists yet
+                                 to back this — the ladder itself is real. -->
+                            <button type="button" class="shrink-0 text-xs text-muted-foreground hover:text-foreground">
+                                Suggest upsell
+                            </button>
+                        </div>
+                        <ul class="space-y-4 p-6">
+                            <li v-for="row in priceLadder.rows" :key="row.key" class="space-y-1.5">
+                                <div class="flex items-baseline justify-between gap-3">
+                                    <span class="text-sm font-medium">{{ row.label }}</span>
+                                    <span class="text-xs text-muted-foreground tabular-nums">
+                                        {{ formatNumber(row.units, locale) }} btl · {{ row.sharePct }}%
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <ProgressBar class="flex-1" :value="row.barPct" :label="row.label" />
+                                    <span class="w-16 shrink-0 text-right text-sm font-semibold tabular-nums">
+                                        {{ money({ minor: Math.round(row.pricePerBottle), currency: row.currency, formatted: '' }) }}
+                                    </span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div v-if="concentration.rows.length > 0" class="border border-border bg-card">
+                        <div class="border-b border-border px-6 py-4">
+                            <SectionHeader title="Concentration" />
+                        </div>
+                        <ul class="space-y-4 p-6">
+                            <li
+                                v-for="row in concentration.rows"
+                                :key="row.inventory_item_id"
+                                class="space-y-1.5"
+                            >
+                                <div class="flex items-baseline justify-between gap-3">
+                                    <span class="min-w-0 truncate text-sm font-medium">{{ row.name }}</span>
+                                    <span class="shrink-0 text-sm tabular-nums">
+                                        {{ formatNumber(row.units, locale) }} btl
+                                    </span>
+                                </div>
+                                <ProgressBar :value="row.barPct" :label="row.name" />
+                            </li>
+                        </ul>
+                        <p class="border-t border-border px-6 py-3 text-xs text-muted-foreground">
+                            Top 3 = {{ concentration.top3SharePct }}% of bottles · only
+                            {{ formatNumber(products.product_count, locale) }} SKUs bought
+                        </p>
+                    </div>
                 </div>
 
                 <div class="border border-border bg-card">
                     <div class="flex flex-col gap-3 border-b border-border px-6 py-4">
-                        <SectionHeader
-                            title="Products bought"
-                            :description="`${formatNumber(products.total_units, locale)} bottles · ${formatNumber(products.product_count, locale)} products`"
-                        />
-                        <div class="flex flex-wrap items-center gap-2">
-                            <Tabs
-                                :items="PRODUCT_RANGE_TABS"
-                                :current="productRange.preset === 'custom' ? '' : productRange.preset"
-                                @select="selectProductRange"
+                        <div class="flex items-start justify-between gap-3">
+                            <SectionHeader
+                                title="Products bought"
+                                :description="`${formatNumber(products.total_units, locale)} bottles · ${formatNumber(products.product_count, locale)} products`"
                             />
-                            <DateRangePicker
-                                :model-value="productCustomRange"
-                                label="Custom"
-                                @update:model-value="selectProductCustomRange"
-                            />
+                            <!-- @todo Suggest order. No suggestion engine exists yet. -->
+                            <button type="button" class="shrink-0 text-xs text-muted-foreground hover:text-foreground">
+                                Suggest order
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <Tabs
+                                    :items="PRODUCT_RANGE_TABS"
+                                    :current="productRange.preset === 'custom' ? '' : productRange.preset"
+                                    @select="selectProductRange"
+                                />
+                                <DateRangePicker
+                                    :model-value="productCustomRange"
+                                    label="Custom"
+                                    @update:model-value="selectProductCustomRange"
+                                />
+                            </div>
+                            <span class="text-xs text-muted-foreground">Grouped by category</span>
                         </div>
                     </div>
 
@@ -440,48 +685,61 @@ const orderStatusLabel: Record<string, string> = {
                                             scope="colgroup"
                                             class="px-6 py-2 text-left text-xs font-semibold"
                                         >
-                                            {{ group.label }}
+                                            · {{ group.label }}
                                         </th>
                                         <td class="px-6 py-2 text-right text-muted-foreground tabular-nums">
-                                            {{ formatNumber(group.units, locale) }} bottles
+                                            {{ formatNumber(group.units, locale) }} bottles ·
+                                            {{ formatNumber(group.productCount, locale) }} products
                                         </td>
                                     </tr>
 
-                                    <tr
-                                        v-for="row in group.rows"
-                                        :key="row.inventory_item_id"
-                                        class="border-b border-border last:border-b-0"
-                                    >
-                                        <td class="px-6 py-3">
-                                            <Link
-                                                :href="`/inventory/${row.inventory_item_id}`"
-                                                class="font-medium hover:underline"
+                                    <template v-for="subcategory in group.subcategories" :key="subcategory.key">
+                                        <tr v-if="subcategory.label" class="border-b border-border">
+                                            <th
+                                                colspan="5"
+                                                scope="colgroup"
+                                                class="px-6 py-1.5 text-left text-2xs font-medium tracking-wide text-muted-foreground uppercase"
                                             >
-                                                {{ row.name }}
-                                            </Link>
-                                            <span class="mt-0.5 block text-muted-foreground">
-                                                {{ [row.vintage, row.unit_size].filter(Boolean).join(' · ') || '—' }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-3 text-right font-semibold tabular-nums">
-                                            {{ formatNumber(row.units, locale) }}
-                                        </td>
-                                        <td class="px-6 py-3">
-                                            <span class="block h-2 w-32 bg-muted" aria-hidden="true">
-                                                <span
-                                                    class="block h-full bg-foreground"
-                                                    :style="{ width: `${row.share * 100}%` }"
-                                                />
-                                            </span>
-                                            <span class="mt-1 block text-muted-foreground tabular-nums">
-                                                {{ Math.round(row.share * 100) }} %
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-3 text-muted-foreground">
-                                            {{ shortDate(row.last_ordered) }}
-                                        </td>
-                                        <td class="px-6 py-3 text-muted-foreground">{{ row.signal ?? '—' }}</td>
-                                    </tr>
+                                                {{ subcategory.label }}
+                                            </th>
+                                        </tr>
+
+                                        <tr
+                                            v-for="row in subcategory.rows"
+                                            :key="row.inventory_item_id"
+                                            class="border-b border-border last:border-b-0"
+                                        >
+                                            <td class="px-6 py-3">
+                                                <Link
+                                                    :href="`/inventory/${row.inventory_item_id}`"
+                                                    class="font-medium hover:underline"
+                                                >
+                                                    {{ row.name }}
+                                                </Link>
+                                                <span class="mt-0.5 block text-muted-foreground">
+                                                    {{ [row.vintage, row.unit_size].filter(Boolean).join(' · ') || '—' }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-3 text-right font-semibold tabular-nums">
+                                                {{ formatNumber(row.units, locale) }}
+                                            </td>
+                                            <td class="px-6 py-3">
+                                                <span class="block h-2 w-32 bg-muted" aria-hidden="true">
+                                                    <span
+                                                        class="block h-full bg-foreground"
+                                                        :style="{ width: `${row.share * 100}%` }"
+                                                    />
+                                                </span>
+                                                <span class="mt-1 block text-muted-foreground tabular-nums">
+                                                    {{ Math.round(row.share * 100) }} %
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-3 text-muted-foreground">
+                                                {{ shortDate(row.last_ordered) }}
+                                            </td>
+                                            <td class="px-6 py-3 text-muted-foreground">{{ row.signal ?? '—' }}</td>
+                                        </tr>
+                                    </template>
                                 </template>
 
                                 <tr v-if="products.rows.length === 0">
@@ -653,6 +911,14 @@ const orderStatusLabel: Record<string, string> = {
             :open="editOpen"
             :customer="customer"
             @close="editOpen = false"
+        />
+
+        <OrderLinkDialog
+            v-if="can('customers.tokens')"
+            :open="orderLinkOpen"
+            :customer-id="customer.id"
+            :token="orderToken"
+            @close="orderLinkOpen = false"
         />
     </AppLayout>
 </template>

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Actions\Customers\CreateCustomerAction;
 use App\Actions\Customers\DeleteCustomerAction;
+use App\Actions\Customers\OrderTokenAction;
 use App\Actions\Customers\UpdateCustomerAction;
 use App\Authorization\MembershipContext;
 use App\Http\Controllers\Controller;
@@ -144,6 +145,14 @@ class CustomerController extends Controller
             'consignment' => Inertia::optional(
                 fn (): array => app(CustomerConsignmentService::class)->summary($customer),
             ),
+
+            // The self-service order link (231:9336's "Generate Order Link").
+            // Only fetched once that dialog opens, and only for someone who
+            // could actually generate one — the button itself is hidden
+            // otherwise, so a request for it here would just be wasted.
+            'orderToken' => Inertia::optional(
+                fn (): ?string => $this->membership->can('customers.tokens') ? $customer->order_token : null,
+            ),
         ]);
     }
 
@@ -176,6 +185,26 @@ class CustomerController extends Controller
         return back()->with('success', $customer->reorder_contacted_at !== null
             ? __('Marked as contacted.')
             : __('Contact flag cleared.'));
+    }
+
+    /**
+     * Issues a self-service order link, replacing any existing one — the same
+     * OrderTokenAction the API's customers.tokens endpoints use. The token
+     * itself travels back only via the `orderToken` optional prop, refetched
+     * with `only` right after this redirect, not embedded in the flash message.
+     */
+    public function generateToken(Customer $customer, OrderTokenAction $action): RedirectResponse
+    {
+        $action->generate($customer);
+
+        return back();
+    }
+
+    public function revokeToken(Customer $customer, OrderTokenAction $action): RedirectResponse
+    {
+        $action->revoke($customer);
+
+        return back()->with('success', __('Order link revoked.'));
     }
 
     /**
