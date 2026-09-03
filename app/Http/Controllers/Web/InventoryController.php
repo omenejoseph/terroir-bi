@@ -9,6 +9,7 @@ use App\Actions\Inventory\ApplyInventoryCheckAction;
 use App\Actions\Inventory\BulkUpdateInventoryItemsAction;
 use App\Actions\Inventory\CreateInventoryItemAction;
 use App\Actions\Inventory\DeleteInventoryItemAction;
+use App\Actions\Inventory\DuplicateInventoryItemAction;
 use App\Actions\Inventory\UpdateInventoryItemAction;
 use App\DataTransferObjects\InventoryCheckData;
 use App\Enums\StockMovementType;
@@ -275,6 +276,18 @@ class InventoryController extends Controller
         $action->execute($item, $request->validated());
 
         return back()->with('success', __('Item updated.'));
+    }
+
+    /**
+     * Clone an item (Figma 449:1577's "Duplicate") — the same
+     * DuplicateInventoryItemAction the API's duplicate endpoint calls: new SKU,
+     * " (Copy)" name, zero stock, recipe copied.
+     */
+    public function duplicate(InventoryItem $item, DuplicateInventoryItemAction $action): RedirectResponse
+    {
+        $copy = $action->execute($item);
+
+        return redirect('/inventory/'.$copy->id)->with('success', __('Item duplicated.'));
     }
 
     public function destroy(InventoryItem $item, DeleteInventoryItemAction $action): RedirectResponse

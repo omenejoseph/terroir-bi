@@ -123,11 +123,9 @@ const visibleMovements = computed(() => {
 
 const form = useForm({});
 
-/**
- * @todo Duplicate. DuplicateInventoryItemAction exists and the API exposes it;
- * this needs a web route before the button can call anything.
- */
-function duplicate(): void {}
+function duplicate(): void {
+    form.post(`/inventory/${props.item.id}/duplicate`);
+}
 
 function destroy(): void {
     if (!confirm(t('Delete :name? Items referenced by orders are deactivated instead.', { name: props.item.name }))) return;

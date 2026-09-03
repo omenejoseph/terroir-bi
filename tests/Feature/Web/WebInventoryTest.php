@@ -605,4 +605,46 @@ class WebInventoryTest extends TestCase
         $this->assertNull(InventoryItem::query()->find($item->getKey()));
         $this->forgetTenant();
     }
+
+    /**
+     * Product Detail's "Duplicate" (Figma 449:1577) — the same
+     * DuplicateInventoryItemAction the JSON API's duplicate endpoint calls.
+     */
+    public function test_duplicate_clones_the_item_and_redirects_to_the_copy(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/inventory/'.$item->getKey().'/duplicate')
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->actingAsTenant($tenant);
+        $copy = InventoryItem::query()->where('sku', 'CORK-1-COPY')->first();
+        self::assertNotNull($copy);
+        self::assertSame('Cork (Copy)', $copy->name);
+        $response->assertRedirect('/inventory/'.$copy->getKey());
+        $this->forgetTenant();
+    }
+
+    public function test_duplicating_an_item_requires_the_manage_capability(): void
+    {
+        [$tenant] = $this->tenantAndAdmin();
+        // SALES grants finance only — no inventory.manage.
+        $member = $this->createMember($tenant, [TenantRole::Sales]);
+
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        $this->actingAs($member)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/inventory/'.$item->getKey().'/duplicate')
+            ->assertForbidden();
+    }
 }

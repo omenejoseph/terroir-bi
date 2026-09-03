@@ -103,6 +103,8 @@ Route::middleware('tenant.web')->group(function () {
             ->name('inventory.stock.adjust');
         Route::patch('inventory-bulk', [InventoryController::class, 'bulkUpdate'])->name('inventory.bulk-update');
         Route::post('inventory-check', [InventoryController::class, 'applyCheck'])->name('inventory.check.apply');
+        Route::post('inventory/{item}/duplicate', [InventoryController::class, 'duplicate'])
+            ->name('inventory.duplicate');
     });
 
     Route::delete('inventory/{item}', [InventoryController::class, 'destroy'])
