@@ -29,6 +29,11 @@ const emit = defineEmits<{ close: [] }>();
 const generating = ref(false);
 const revoking = ref(false);
 const copied = ref(false);
+/** True when the Clipboard API itself failed (blocked by permissions policy —
+ *  common in a sandboxed/embedded preview) and the field was selected as a
+ *  fallback instead. */
+const copyBlocked = ref(false);
+const linkInput = ref<HTMLInputElement | null>(null);
 
 watch(
     () => props.open,
@@ -75,12 +80,34 @@ function revoke(): void {
     });
 }
 
+/**
+ * The Clipboard API silently rejects (no thrown UI, no console noise a user
+ * would see) when the page's permissions policy blocks it — which a
+ * sandboxed or embedded preview commonly does. Awaiting it without a
+ * fallback meant the button did nothing at all in that case: no error, no
+ * "Copied", nothing. Falling back to selecting the field's text at least
+ * gives the user a working Ctrl/Cmd+C, and either way the button always
+ * says what happened.
+ */
 async function copy(): Promise<void> {
     if (!url.value) return;
 
-    await navigator.clipboard.writeText(url.value);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 1500);
+    try {
+        if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+
+        await navigator.clipboard.writeText(url.value);
+        copied.value = true;
+        copyBlocked.value = false;
+    } catch {
+        linkInput.value?.select();
+        copyBlocked.value = true;
+        copied.value = false;
+    }
+
+    setTimeout(() => {
+        copied.value = false;
+        copyBlocked.value = false;
+    }, 2000);
 }
 </script>
 
@@ -103,6 +130,7 @@ async function copy(): Promise<void> {
             <template v-else>
                 <div class="flex items-center gap-2">
                     <input
+                        ref="linkInput"
                         readonly
                         :value="url"
                         aria-label="Order link"
@@ -111,9 +139,12 @@ async function copy(): Promise<void> {
                     />
                     <Button variant="outline" size="sm" @click="copy">
                         <component :is="copied ? Check : Copy" class="size-3.5" :stroke-width="1.5" />
-                        {{ copied ? 'Copied' : 'Copy' }}
+                        {{ copied ? 'Copied' : copyBlocked ? 'Selected' : 'Copy' }}
                     </Button>
                 </div>
+                <p v-if="copyBlocked" class="text-2xs text-muted-foreground">
+                    Couldn't copy automatically — the link is selected, press Ctrl/Cmd+C.
+                </p>
 
                 <div class="flex gap-2">
                     <Button variant="outline" size="sm" :disabled="generating" @click="generate">
