@@ -166,73 +166,88 @@ const alerts = computed(() => {
                 </span>
             </div>
 
-            <div class="grid gap-6 lg:grid-cols-2">
-                <!-- Revenue -->
-                <Card>
-                    <CardHeader>
-                        <div class="flex items-baseline justify-between gap-3">
-                            <CardTitle>Revenue</CardTitle>
-                            <p class="text-xs text-muted-foreground">Year to Date</p>
-                        </div>
-                    </CardHeader>
-                    <CardContent class="space-y-4">
-                        <div class="flex items-baseline gap-3">
-                            <span class="text-3xl font-semibold tabular-nums">{{ money(revenue.current) }}</span>
-                            <Badge
-                                v-if="revenueDelta !== null"
-                                :variant="revenueDelta >= 0 ? 'success' : 'destructive'"
-                                class="gap-1"
-                            >
-                                <component
-                                    :is="revenueDelta >= 0 ? TrendingUp : TrendingDown"
-                                    class="size-3"
-                                    :stroke-width="1.5"
-                                />
-                                {{ Math.abs(revenueDelta).toFixed(1) }}%
-                            </Badge>
-                        </div>
-                        <AreaChart :points="summary.revenue_trend" />
-                    </CardContent>
-                </Card>
+            <!--
+              Revenue + Revenue breakdown stacked in the left column, "Revenue
+              vs. target" to the right spanning their combined height — matches
+              the design's actual layout (208:6043 at 908 wide, 286:781 at 293
+              wide, same column). "Target by channel" folds into this one
+              placeholder rather than getting a card of its own: both are
+              blocked on the same missing input (no target is stored anywhere,
+              annual or per-channel), so one honest placeholder says as much as
+              two would.
+            -->
+            <div class="grid gap-6 lg:grid-cols-3">
+                <div class="flex flex-col gap-6 lg:col-span-2">
+                    <!-- Revenue -->
+                    <Card>
+                        <CardHeader>
+                            <div class="flex items-baseline justify-between gap-3">
+                                <CardTitle>Revenue</CardTitle>
+                                <p class="text-xs text-muted-foreground">Year to Date</p>
+                            </div>
+                        </CardHeader>
+                        <CardContent class="space-y-4">
+                            <div class="flex items-baseline gap-3">
+                                <span class="text-3xl font-semibold tabular-nums">{{ money(revenue.current) }}</span>
+                                <Badge
+                                    v-if="revenueDelta !== null"
+                                    :variant="revenueDelta >= 0 ? 'success' : 'destructive'"
+                                    class="gap-1"
+                                >
+                                    <component
+                                        :is="revenueDelta >= 0 ? TrendingUp : TrendingDown"
+                                        class="size-3"
+                                        :stroke-width="1.5"
+                                    />
+                                    {{ Math.abs(revenueDelta).toFixed(1) }}%
+                                </Badge>
+                            </div>
+                            <AreaChart :points="summary.revenue_trend" />
+                        </CardContent>
+                    </Card>
 
-                <!-- Revenue breakdown by channel -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Revenue breakdown</CardTitle>
-                        <p class="text-xs text-muted-foreground">
-                            By channel · {{ money(channelTotal) }} attributed
-                        </p>
-                    </CardHeader>
-                    <CardContent>
-                        <ul v-if="channels.length" class="space-y-4">
-                            <li v-for="row in channels" :key="row.key" class="space-y-1.5">
-                                <div class="flex items-baseline justify-between gap-3">
-                                    <span class="text-sm font-medium">{{ row.label }}</span>
-                                    <span class="text-sm tabular-nums">{{ money(row.current) }}</span>
-                                </div>
-                                <ProgressBar
-                                    :value="channelTotal > 0 ? (row.current / channelTotal) * 100 : 0"
-                                    :label="row.label"
-                                />
-                            </li>
-                        </ul>
-                        <p v-else class="py-6 text-sm text-muted-foreground">No revenue in this period.</p>
-                    </CardContent>
-                </Card>
+                    <!-- Revenue breakdown by channel -->
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Revenue breakdown</CardTitle>
+                            <p class="text-xs text-muted-foreground">
+                                By channel · {{ money(channelTotal) }} attributed
+                            </p>
+                        </CardHeader>
+                        <CardContent>
+                            <ul v-if="channels.length" class="space-y-4">
+                                <li v-for="row in channels" :key="row.key" class="space-y-1.5">
+                                    <div class="flex items-baseline justify-between gap-3">
+                                        <span class="text-sm font-medium">{{ row.label }}</span>
+                                        <span class="text-sm tabular-nums">{{ money(row.current) }}</span>
+                                    </div>
+                                    <ProgressBar
+                                        :value="channelTotal > 0 ? (row.current / channelTotal) * 100 : 0"
+                                        :label="row.label"
+                                    />
+                                </li>
+                            </ul>
+                            <p v-else class="py-6 text-sm text-muted-foreground">No revenue in this period.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <!--
+                  @todo Revenue vs. target (Figma 208:5577 / 286:781), folding in
+                  "Target by channel". No annual or per-channel target is stored
+                  anywhere — needs a tenant setting or a targets table before
+                  either can show a real number.
+                -->
+                <div class="flex h-full flex-col border border-border bg-card p-4">
+                    <h3 class="text-sm font-semibold">Revenue vs. target</h3>
+                    <p class="mt-4 text-xs text-muted-foreground">
+                        No annual or per-channel target is set, so progress can't be calculated yet.
+                    </p>
+                </div>
             </div>
 
-            <!--
-              Upcoming tasks · Runway · Net cash flow · Reorder pipeline (Figma
-              208:5577's four-card row). "Revenue vs. target" sits stacked above
-              Reorder pipeline rather than in its own row: it folds in "Target
-              by channel" too, since neither can show a real number yet (no
-              annual or per-channel target is stored anywhere — same shape of
-              gap as Runway below), and a full row for two blocked placeholders
-              would outweigh what they actually say. `items-start` keeps the
-              other three cards at their own height instead of stretching to
-              match this taller column.
-            -->
-            <div class="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <!-- Upcoming tasks · Runway · Net cash flow · Reorder pipeline (Figma 208:5577's four-card row) -->
+            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <UpcomingTasksCard :tasks="summary.upcoming_tasks" />
 
                 <!--
@@ -241,7 +256,7 @@ const alerts = computed(() => {
                   cash-on-hand figure is stored anywhere, so months-of-runway
                   cannot be computed — see docs/design/README.md.
                 -->
-                <div class="border border-border bg-card p-4">
+                <div class="flex h-full flex-col border border-border bg-card p-4">
                     <h3 class="text-sm font-semibold">Runway</h3>
                     <p class="mt-4 text-xs text-muted-foreground">
                         No cash balance is on file, so runway can't be calculated yet.
@@ -249,22 +264,7 @@ const alerts = computed(() => {
                 </div>
 
                 <NetCashFlowCard :flow="summary.net_cash_flow" :currency="summary.currency" />
-
-                <div class="flex flex-col gap-4">
-                    <!--
-                      @todo Revenue vs. target (Figma 208:5577 / 286:781), folding
-                      in "Target by channel". No annual or per-channel target is
-                      stored anywhere — needs a tenant setting or a targets table
-                      before either can show a real number.
-                    -->
-                    <div class="border border-border bg-card p-4">
-                        <h3 class="text-sm font-semibold">Revenue vs. target</h3>
-                        <p class="mt-4 text-xs text-muted-foreground">
-                            No annual or per-channel target is set, so progress can't be calculated yet.
-                        </p>
-                    </div>
-                    <ReorderPipelineCard :pipeline="summary.reorder_pipeline" :currency="summary.currency" />
-                </div>
+                <ReorderPipelineCard :pipeline="summary.reorder_pipeline" :currency="summary.currency" />
             </div>
 
             <!-- Key ratios · Low stock (Figma 208:6303 / 286:1024) -->
