@@ -11,8 +11,10 @@ use App\DataTransferObjects\UserData;
 use App\Enums\MembershipStatus;
 use App\Models\Membership;
 use App\Models\User;
+use App\Queries\UserShortcutsQuery;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 
@@ -33,6 +35,7 @@ class HandleInertiaRequests extends Middleware
     public function __construct(
         private readonly TenantContext $tenants,
         private readonly MembershipContext $membership,
+        private readonly UserShortcutsQuery $shortcuts,
     ) {}
 
     /**
@@ -56,6 +59,10 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user instanceof User ? UserData::fromModel($user)->toArray() : null,
                 'roles' => array_map(fn ($role) => $role->value, $this->membership->roles()),
                 'capabilities' => $this->capabilities(),
+                // Manage Shortcuts' pinned keys (Figma 143:4179) — eager,
+                // since the sidebar on every tenant page needs them; the
+                // "Recent" list below is the one that waits for the dialog.
+                'shortcuts' => fn () => $this->pinnedShortcuts($user),
             ],
             'tenant' => $tenant === null ? null : [
                 'id' => $tenant->getKey(),
@@ -69,6 +76,11 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
             ],
             'locale' => app()->getLocale(),
+            // Manage Shortcuts' "Recent" list — only fetched when the dialog
+            // that shows it actually opens (a partial reload asking for it).
+            'recentNavVisits' => Inertia::optional(fn () => $user instanceof User && $this->tenants->check()
+                ? $this->shortcuts->recent($user)
+                : []),
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
@@ -95,6 +107,18 @@ class HandleInertiaRequests extends Middleware
         }
 
         return array_keys($capabilities);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function pinnedShortcuts(?User $user): array
+    {
+        if (! $user instanceof User || ! $this->tenants->check()) {
+            return [];
+        }
+
+        return $this->shortcuts->pinned($user);
     }
 
     /**

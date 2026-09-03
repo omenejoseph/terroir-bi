@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InventoryController;
 use App\Http\Controllers\Web\OrderController;
+use App\Http\Controllers\Web\ShortcutController;
 use App\Http\Controllers\Web\WorkOrderController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +45,12 @@ Route::middleware('auth')->group(function () {
 // Authenticated + active tenant + verified membership + plan/subscription checks.
 Route::middleware('tenant.web')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+    // Manage Shortcuts (Figma 143:4179). No can:* gate: pinning is a personal
+    // preference over nav items the member can already see, not a capability
+    // of its own.
+    Route::patch('shortcuts', [ShortcutController::class, 'update'])->name('shortcuts.update');
+    Route::delete('shortcuts/recent', [ShortcutController::class, 'clearRecent'])->name('shortcuts.clear-recent');
 
     Route::middleware('can:inventory.view')->group(function () {
         Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');

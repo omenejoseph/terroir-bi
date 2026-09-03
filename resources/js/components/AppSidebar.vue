@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import { ChevronDown, ChevronsUpDown } from 'lucide-vue-next';
+import { ChevronDown, ChevronsUpDown, Settings2 } from 'lucide-vue-next';
 
 import AppLogo from '@/components/AppLogo.vue';
+import ManageShortcutsDialog from '@/components/ManageShortcutsDialog.vue';
 import NavRow from '@/components/NavRow.vue';
 import Avatar from '@/components/ui/Avatar.vue';
 import Separator from '@/components/ui/Separator.vue';
@@ -26,10 +27,10 @@ import type { SharedProps } from '@/types';
  * The collapsed counterpart is NavRail; AppLayout picks between them.
  */
 const page = usePage<SharedProps>();
-const { user, can } = useAuth();
+const { user, can, shortcuts: pinnedShortcuts } = useAuth();
 
 const allCategories = computed(() => navigationFor(can));
-const shortcuts = computed(() => shortcutsFor(can));
+const shortcuts = computed(() => shortcutsFor(can, pinnedShortcuts.value));
 
 /*
   The design orders the rail: Overview, rule, Shortcuts, rule, then everything
@@ -49,6 +50,7 @@ const roleLabel = computed(() => {
 /** Categories collapse; all start open, matching the design's default state. */
 const collapsed = ref<Record<string, boolean>>({});
 const shortcutsCollapsed = ref(false);
+const manageShortcutsOpen = ref(false);
 
 function toggle(label: string): void {
     collapsed.value[label] = !collapsed.value[label];
@@ -88,29 +90,46 @@ function toggle(label: string): void {
                 </ul>
             </section>
 
-            <div v-if="overview.length && shortcuts.length" class="py-2">
+            <div v-if="overview.length" class="py-2">
                 <Separator class="bg-sidebar-border" />
             </div>
 
-            <!-- Shortcuts -->
-            <section v-if="shortcuts.length">
-                <button
-                    type="button"
-                    class="flex w-full items-center gap-1.5 rounded-nav px-1.5 py-1 text-13 text-muted-foreground"
-                    :aria-expanded="!shortcutsCollapsed"
-                    @click="shortcutsCollapsed = !shortcutsCollapsed"
-                >
-                    <ChevronDown
-                        class="size-3 shrink-0 transition-transform"
-                        :class="shortcutsCollapsed && '-rotate-90'"
-                    />
-                    <span>Shortcuts</span>
-                </button>
-                <ul v-show="!shortcutsCollapsed" class="space-y-px pt-0.5">
+            <!--
+              Shortcuts (Figma 547:1610): stays visible even with nothing
+              pinned yet — its "manage" trigger is the only way to pin a
+              first one.
+            -->
+            <section>
+                <div class="flex items-center gap-1.5">
+                    <button
+                        type="button"
+                        class="flex flex-1 items-center gap-1.5 rounded-nav px-1.5 py-1 text-13 text-muted-foreground"
+                        :aria-expanded="!shortcutsCollapsed"
+                        @click="shortcutsCollapsed = !shortcutsCollapsed"
+                    >
+                        <ChevronDown
+                            class="size-3 shrink-0 transition-transform"
+                            :class="shortcutsCollapsed && '-rotate-90'"
+                        />
+                        <span>Shortcuts</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="mr-1.5 grid size-5 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground"
+                        aria-label="Manage shortcuts"
+                        @click="manageShortcutsOpen = true"
+                    >
+                        <Settings2 class="size-3" :stroke-width="1.5" />
+                    </button>
+                </div>
+                <ul v-if="shortcuts.length" v-show="!shortcutsCollapsed" class="space-y-px pt-0.5">
                     <li v-for="item in shortcuts" :key="`shortcut-${item.label}`">
                         <NavRow :item="item" />
                     </li>
                 </ul>
+                <p v-else-if="!shortcutsCollapsed" class="px-1.5 pt-0.5 text-xs text-muted-foreground">
+                    Nothing pinned yet.
+                </p>
             </section>
 
             <div class="py-2"><Separator class="bg-sidebar-border" /></div>
@@ -156,5 +175,11 @@ function toggle(label: string): void {
                 <ChevronsUpDown class="size-4 shrink-0 text-muted-foreground" :stroke-width="1.5" />
             </Link>
         </div>
+
+        <ManageShortcutsDialog
+            :open="manageShortcutsOpen"
+            :pinned-keys="pinnedShortcuts"
+            @close="manageShortcutsOpen = false"
+        />
     </div>
 </template>

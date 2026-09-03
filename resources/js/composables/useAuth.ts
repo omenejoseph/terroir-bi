@@ -21,6 +21,8 @@ export function useAuth() {
     const roles = computed(() => page.props.auth.roles);
     const capabilities = computed(() => page.props.auth.capabilities);
     const tenant = computed(() => page.props.tenant);
+    /** Manage Shortcuts' pinned nav-item keys, in pin order (Figma `143:4179`). */
+    const shortcuts = computed(() => page.props.auth.shortcuts);
 
     function can(capability: string): boolean {
         const granted = page.props.auth.capabilities;
@@ -33,5 +35,5 @@ export function useAuth() {
         return wanted.some(can);
     }
 
-    return { user, roles, capabilities, tenant, can, canAny };
+    return { user, roles, capabilities, tenant, shortcuts, can, canAny };
 }

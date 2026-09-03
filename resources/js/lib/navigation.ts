@@ -47,9 +47,15 @@ import {
  * Icons: the Figma assets could not be exported (the asset host is blocked by
  * this environment's egress policy), so these are the matching Lucide glyphs —
  * the same icon set the outgoing React app used. See docs/design/README.md.
+ *
+ * `key` is the stable identifier Manage Shortcuts pins against — it must match
+ * `App\Support\NavCatalog` on the backend (kebab-case of the label, checked
+ * for uniqueness across every category since two categories both happening to
+ * have a "Harvest" would collide).
  */
 
 export interface NavItem {
+    key: string;
     label: string;
     /** null = designed but not yet implemented; renders disabled. */
     href: string | null;
@@ -73,95 +79,88 @@ export const NAV_CATEGORIES: NavCategory[] = [
         label: 'Overview',
         icon: LayoutGrid,
         items: [
-            { label: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
-            { label: 'Cash System', href: null, icon: Coins, capability: 'finance.view' },
+            { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
+            { key: 'cash-system', label: 'Cash System', href: null, icon: Coins, capability: 'finance.view' },
         ],
     },
     {
         label: 'Sales',
         icon: ShoppingCart,
         items: [
-            { label: 'Orders', href: '/orders', icon: ShoppingCart, capability: 'orders.view' },
-            { label: 'Customers', href: '/customers', icon: Users, capability: 'customers.view' },
+            { key: 'orders', label: 'Orders', href: '/orders', icon: ShoppingCart, capability: 'orders.view' },
+            { key: 'customers', label: 'Customers', href: '/customers', icon: Users, capability: 'customers.view' },
             // Task planning is open to any member (routes/api.php and routes/web.php
             // both leave it ungated), so this entry carries no capability — hiding it
             // from someone the route admits would be the sidebar lying.
-            { label: 'Work Orders', href: '/work-orders', icon: ClipboardList },
-            { label: 'Wine Club', href: null, icon: Wine, capability: 'customers.view' },
-            { label: 'Agencies', href: null, icon: Building2, capability: 'customers.view' },
-            { label: 'Pipeline', href: null, icon: ChartLine, capability: 'customers.view' },
+            { key: 'work-orders', label: 'Work Orders', href: '/work-orders', icon: ClipboardList },
+            { key: 'wine-club', label: 'Wine Club', href: null, icon: Wine, capability: 'customers.view' },
+            { key: 'agencies', label: 'Agencies', href: null, icon: Building2, capability: 'customers.view' },
+            { key: 'pipeline', label: 'Pipeline', href: null, icon: ChartLine, capability: 'customers.view' },
         ],
     },
     {
         label: 'Hospitality',
         icon: ConciergeBell,
         items: [
-            { label: 'Accommodation', href: null, icon: Store },
-            { label: 'Kitchen', href: null, icon: CookingPot },
-            { label: 'Hospitality', href: null, icon: Wine },
+            { key: 'accommodation', label: 'Accommodation', href: null, icon: Store },
+            { key: 'kitchen', label: 'Kitchen', href: null, icon: CookingPot },
+            { key: 'hospitality', label: 'Hospitality', href: null, icon: Wine },
         ],
     },
     {
         label: 'Production',
         icon: Factory,
         items: [
-            { label: 'Cellar', href: null, icon: Warehouse, capability: 'cellar.view' },
-            { label: 'Harvest', href: null, icon: Grape, capability: 'vineyards.view' },
-            { label: 'Production Plan', href: null, icon: Sprout, capability: 'production.view' },
+            { key: 'cellar', label: 'Cellar', href: null, icon: Warehouse, capability: 'cellar.view' },
+            { key: 'harvest', label: 'Harvest', href: null, icon: Grape, capability: 'vineyards.view' },
+            { key: 'production-plan', label: 'Production Plan', href: null, icon: Sprout, capability: 'production.view' },
         ],
     },
     {
         label: 'Supply',
         icon: Boxes,
         items: [
-            { label: 'Inventory', href: '/inventory', icon: Package, capability: 'inventory.view' },
-            { label: 'Purchase Orders', href: null, icon: FileStack, capability: 'suppliers.view' },
-            { label: 'Suppliers', href: null, icon: Truck, capability: 'suppliers.view' },
+            { key: 'inventory', label: 'Inventory', href: '/inventory', icon: Package, capability: 'inventory.view' },
+            { key: 'purchase-orders', label: 'Purchase Orders', href: null, icon: FileStack, capability: 'suppliers.view' },
+            { key: 'suppliers', label: 'Suppliers', href: null, icon: Truck, capability: 'suppliers.view' },
         ],
     },
     {
         label: 'Finance',
         icon: Banknote,
         items: [
-            { label: 'Costs', href: null, icon: Receipt, capability: 'finance.view' },
-            { label: 'Inflow', href: null, icon: CreditCard, capability: 'finance.view' },
-            { label: 'Cash Flow', href: null, icon: ChartLine, capability: 'financials.view' },
+            { key: 'costs', label: 'Costs', href: null, icon: Receipt, capability: 'finance.view' },
+            { key: 'inflow', label: 'Inflow', href: null, icon: CreditCard, capability: 'finance.view' },
+            { key: 'cash-flow', label: 'Cash Flow', href: null, icon: ChartLine, capability: 'financials.view' },
         ],
     },
     {
         label: 'Team',
         icon: Users,
         items: [
-            { label: 'Employees', href: null, icon: Users, capability: 'members.view' },
-            { label: 'Schedules', href: null, icon: CalendarDays },
-            { label: 'My Team', href: null, icon: UserRound },
-            { label: 'Surveys', href: null, icon: ClipboardList },
-            { label: 'My Hours', href: null, icon: Clock },
+            { key: 'employees', label: 'Employees', href: null, icon: Users, capability: 'members.view' },
+            { key: 'schedules', label: 'Schedules', href: null, icon: CalendarDays },
+            { key: 'my-team', label: 'My Team', href: null, icon: UserRound },
+            { key: 'surveys', label: 'Surveys', href: null, icon: ClipboardList },
+            { key: 'my-hours', label: 'My Hours', href: null, icon: Clock },
         ],
     },
     {
         label: 'System',
         icon: Settings,
         items: [
-            { label: 'Settings', href: null, icon: Settings, capability: 'settings.manage' },
-            { label: 'WhatsApp Bot', href: null, icon: MessageCircle, capability: 'settings.manage' },
+            { key: 'settings', label: 'Settings', href: null, icon: Settings, capability: 'settings.manage' },
+            { key: 'whatsapp-bot', label: 'WhatsApp Bot', href: null, icon: MessageCircle, capability: 'settings.manage' },
         ],
     },
 ];
 
-/**
- * The design's "Shortcuts" section — a user-pinned list sitting above the
- * categories. Pinning is not implemented yet, so this renders the design's
- * default set.
- */
 export const SHORTCUTS_ICON = Pin;
 
-export const SHORTCUTS: NavItem[] = [
-    { label: 'Cash System', href: null, icon: Coins },
-    { label: 'Orders', href: '/orders', icon: ShoppingCart },
-    { label: 'Harvest', href: null, icon: Grape },
-    { label: 'Inventory', href: '/inventory', icon: Boxes, capability: 'inventory.view' },
-];
+/** Every nav item, keyed for Manage Shortcuts' pin/unpin and the visit tracker's lookup. */
+const NAV_ITEMS_BY_KEY: Record<string, NavItem> = Object.fromEntries(
+    NAV_CATEGORIES.flatMap((category) => category.items).map((item) => [item.key, item]),
+);
 
 /** Drop items the member has no capability for; keep categories that still have items. */
 export function navigationFor(can: (capability: string) => boolean): NavCategory[] {
@@ -171,6 +170,26 @@ export function navigationFor(can: (capability: string) => boolean): NavCategory
     })).filter((category) => category.items.length > 0);
 }
 
-export function shortcutsFor(can: (capability: string) => boolean): NavItem[] {
-    return SHORTCUTS.filter((item) => item.capability === undefined || can(item.capability));
+/**
+ * The design's "Shortcuts" section (Figma `547:1610`) — a user-pinned list
+ * sitting above the categories. `pinnedKeys` is the member's own ordered
+ * pins from `auth.shortcuts`; unknown keys (a stale pin from a removed nav
+ * item) and ones the member has lost the capability for are silently
+ * dropped rather than shown broken.
+ */
+export function shortcutsFor(can: (capability: string) => boolean, pinnedKeys: string[]): NavItem[] {
+    return pinnedKeys
+        .map((key) => NAV_ITEMS_BY_KEY[key])
+        .filter((item): item is NavItem => item !== undefined && (item.capability === undefined || can(item.capability)));
+}
+
+/** Every pinnable item the member currently has capability for, for the Manage Shortcuts dialog. */
+export function pinnableItemsFor(can: (capability: string) => boolean): NavItem[] {
+    return NAV_CATEGORIES.flatMap((category) => category.items).filter(
+        (item) => item.capability === undefined || can(item.capability),
+    );
+}
+
+export function navItemByKey(key: string): NavItem | undefined {
+    return NAV_ITEMS_BY_KEY[key];
 }
