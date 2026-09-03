@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InventoryController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\OrderController;
+use App\Http\Controllers\Web\PublicOrderController;
 use App\Http\Controllers\Web\SearchController;
 use App\Http\Controllers\Web\ShortcutController;
 use App\Http\Controllers\Web\TeamMembersController;
@@ -31,6 +32,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::redirect('/', '/dashboard');
+
+// The self-service order page a customer reaches via their order token
+// (Customers · "Generate Order Link"). No auth, no tenant middleware — the
+// token itself authenticates and selects the tenant, resolved client-side
+// against the same public API endpoints (routes/api.php) the token was
+// always meant to authenticate against. See Web\PublicOrderController.
+Route::get('order/{token}', [PublicOrderController::class, 'show'])->name('public.order');
 
 // Guests only — an authenticated visit to /login bounces to the dashboard.
 Route::middleware('guest')->group(function () {

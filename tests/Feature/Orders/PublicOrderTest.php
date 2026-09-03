@@ -104,4 +104,44 @@ class PublicOrderTest extends TestCase
 
         $this->assertDatabaseCount('orders', 0);
     }
+
+    /**
+     * A cases-only customer (`allow_single_bottle: false`) can only ever
+     * submit `unit_type: cases` (Api\PublicOrderController::validatePayload),
+     * but OrderLineWriter still rejects that for a bottles-only item — so the
+     * catalog must not offer one to them in the first place.
+     */
+    public function test_a_bottles_only_item_is_hidden_from_a_cases_only_customer(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        $this->customer->update(['allow_single_bottle' => false]);
+        $this->forgetTenant();
+
+        $response = $this->getJson('/api/v1/public/TOKEN-ABC-123/catalog')->assertOk();
+        $response->assertJsonCount(0, 'data.products');
+    }
+
+    public function test_a_cases_only_item_is_offered_and_orderable_by_a_cases_only_customer(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        $this->customer->update(['allow_single_bottle' => false]);
+        $case = InventoryItem::create([
+            'name' => 'Case Wine', 'sku' => 'CASE', 'category' => 'FINISHED', 'unit' => 'cases',
+            'sales_unit' => 'cases', 'current_stock' => '50.000', 'bottles_per_case' => 6,
+            'is_for_sale' => true, 'default_price' => 6000,
+        ]);
+        $this->forgetTenant();
+
+        $this->getJson('/api/v1/public/TOKEN-ABC-123/catalog')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.products')
+            ->assertJsonPath('data.products.0.sales_unit', 'cases');
+
+        // Omitting unit_type must default to the item's own sales_unit, not
+        // a customer-wide guess — this used to default to Bottles/Cases off
+        // allow_single_bottle alone, which could conflict with the item.
+        $this->postJson('/api/v1/public/TOKEN-ABC-123/orders', [
+            'items' => [['inventory_item_id' => $case->getKey(), 'quantity' => 2]],
+        ])->assertCreated();
+    }
 }

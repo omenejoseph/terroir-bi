@@ -40,6 +40,11 @@ class PublicOrderController extends Controller
                 'sku' => $item->sku,
                 'vintage' => $item->vintage,
                 'unit' => $item->unit,
+                // What this specific item must be ordered in — strict, per
+                // SalesUnit's own contract. PublicCatalogQuery has already
+                // excluded anything this customer isn't allowed to submit
+                // that unit for.
+                'sales_unit' => $item->sales_unit,
                 'bottles_per_case' => $item->bottles_per_case,
             ];
 
@@ -74,14 +79,18 @@ class PublicOrderController extends Controller
         RateLimiter::hit($key, 3600);
 
         $validated = $this->validatePayload($request, $customer);
-        $defaultUnit = $customer->allow_single_bottle ? SalesUnit::Bottles->value : SalesUnit::Cases->value;
 
         // Server is the source of truth on price: reject any client mismatch and
         // strip client prices so the order is created at resolved values.
         $items = [];
         foreach ($validated['items'] as $line) {
             $item = InventoryItem::query()->whereKey((string) $line['inventory_item_id'])->firstOrFail();
-            $unitType = $line['unit_type'] ?? $defaultUnit;
+            // Default to the item's OWN sales unit, not a customer-wide
+            // guess: `allow_single_bottle` says what this customer may
+            // submit, not what any given item actually is sold in, and
+            // OrderLineWriter rejects a mismatch between the two regardless
+            // of what the portal allowed the request to say.
+            $unitType = $line['unit_type'] ?? $item->sales_unit;
             $resolved = $this->resolvedUnitPrice($pricing, $customer, $item, $unitType);
 
             if (isset($line['unit_price']) && (int) $line['unit_price'] !== $resolved) {
