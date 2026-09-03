@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { AlertTriangle, PackageCheck, TrendingDown, TrendingUp } from 'lucide-vue-next';
+import { AlertTriangle, PackageCheck, Plus, TrendingDown, TrendingUp } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
+import CustomerFormPanel from '@/components/customers/CustomerFormPanel.vue';
 import KeyRatiosGrid from '@/components/dashboard/KeyRatiosGrid.vue';
 import LowStockCard from '@/components/dashboard/LowStockCard.vue';
 import NetCashFlowCard from '@/components/dashboard/NetCashFlowCard.vue';
 import ReorderPipelineCard from '@/components/dashboard/ReorderPipelineCard.vue';
 import UpcomingTasksCard from '@/components/dashboard/UpcomingTasksCard.vue';
+import CreateOrderPanel from '@/components/orders/CreateOrderPanel.vue';
 import AreaChart from '@/components/ui/AreaChart.vue';
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
@@ -19,6 +21,7 @@ import CardTitle from '@/components/ui/CardTitle.vue';
 import DateRangePicker from '@/components/ui/DateRangePicker.vue';
 import ProgressBar from '@/components/ui/ProgressBar.vue';
 import Tabs from '@/components/ui/Tabs.vue';
+import { useAuth } from '@/composables/useAuth';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { DashboardFilters, DashboardSummary } from '@/types/dashboard';
 import type { SharedProps } from '@/types';
@@ -39,6 +42,10 @@ import type { DateRange, TabItem } from '@/types/ui';
 const props = defineProps<{ summary: DashboardSummary; filters: DashboardFilters }>();
 
 const page = usePage<SharedProps>();
+const { can } = useAuth();
+
+const createOrderOpen = ref(false);
+const createCustomerOpen = ref(false);
 
 /** The design's period strip (Figma 208:5577); values are tokens the server accepts. */
 const PERIOD_TABS: TabItem[] = [
@@ -136,10 +143,14 @@ const alerts = computed(() => {
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 class="text-xl font-semibold text-foreground">Dashboard</h2>
                 <div class="flex items-center gap-2">
-                    <!-- @todo Opens the Create Order drawer (335:4233) once Orders is ported. -->
-                    <Button variant="outline" size="sm">New order</Button>
-                    <!-- @todo Opens the Customer — Create drawer (316:80) once Customers is ported. -->
-                    <Button size="sm">New customer</Button>
+                    <Button v-if="can('orders.manage')" variant="outline" size="sm" @click="createOrderOpen = true">
+                        <Plus class="size-3.5" :stroke-width="1.5" />
+                        New order
+                    </Button>
+                    <Button v-if="can('customers.manage')" size="sm" @click="createCustomerOpen = true">
+                        <Plus class="size-3.5" :stroke-width="1.5" />
+                        New customer
+                    </Button>
                 </div>
             </div>
 
@@ -281,5 +292,14 @@ const alerts = computed(() => {
                 <LowStockCard :items="summary.stock_watch" />
             </div>
         </div>
+
+        <!-- Same drawers Orders/Customers open from their own "New" button. -->
+        <CreateOrderPanel v-if="can('orders.manage')" :open="createOrderOpen" @close="createOrderOpen = false" />
+        <CustomerFormPanel
+            v-if="can('customers.manage')"
+            :open="createCustomerOpen"
+            :customer="null"
+            @close="createCustomerOpen = false"
+        />
     </AppLayout>
 </template>

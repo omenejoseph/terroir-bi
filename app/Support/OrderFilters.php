@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 final class OrderFilters
 {
     /**
-     * @return array{status: ?string, search: ?string, customer_id: ?string, period: ?string, from: ?string, to: ?string}
+     * @return array{status: ?string, search: ?string, customer_id: ?string, channel: ?string, period: ?string, from: ?string, to: ?string}
      */
     public static function fromRequest(Request $request): array
     {
@@ -25,6 +25,9 @@ final class OrderFilters
             'status' => self::str($request->query('status')),
             'search' => self::str($request->query('search')),
             'customer_id' => self::str($request->query('customer_id')),
+            // The customer's sales channel (App\Enums\CustomerType) — orders
+            // have no channel of their own, so this filters by the customer's.
+            'channel' => self::str($request->query('channel')),
             'period' => self::str($request->query('period')),
             // An explicit range beats the preset — the design's "Custom" tab.
             // Period::resolve applies that precedence; both are carried so the

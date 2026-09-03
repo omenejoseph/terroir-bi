@@ -1,0 +1,603 @@
+- generic [ref=f7e3]:
+  - complementary [ref=f7e4]:
+    - generic [ref=f7e5]:
+      - generic [ref=f7e18]:
+        - paragraph [ref=f7e19]: Terroir
+        - paragraph [ref=f7e20]: Business Intelligence
+      - navigation "Main" [ref=f7e21]:
+        - generic [ref=f7e22]:
+          - button "Overview" [expanded] [ref=f7e23]
+          - list [ref=f7e27]:
+            - listitem [ref=f7e28]:
+              - link "Dashboard" [ref=f7e29] [cursor=pointer]:
+                - /url: /dashboard
+        - separator [ref=f7e37]
+        - generic [ref=f7e38]:
+          - generic [ref=f7e39]:
+            - button "Shortcuts" [expanded] [ref=f7e40]
+            - button "Manage shortcuts" [ref=f7e44]
+          - paragraph [ref=f7e48]: Nothing pinned yet.
+        - separator [ref=f7e50]
+        - generic [ref=f7e51]:
+          - button "Sales" [expanded] [ref=f7e52]
+          - list [ref=f7e56]:
+            - listitem [ref=f7e57]:
+              - link "Orders" [ref=f7e58] [cursor=pointer]:
+                - /url: /orders
+            - listitem [ref=f7e65]:
+              - link "Customers" [ref=f7e66] [cursor=pointer]:
+                - /url: /customers
+            - listitem [ref=f7e73]:
+              - link "Work Orders" [ref=f7e74] [cursor=pointer]:
+                - /url: /work-orders
+        - generic [ref=f7e79]:
+          - button "Supply" [expanded] [ref=f7e80]
+          - list [ref=f7e84]:
+            - listitem [ref=f7e85]:
+              - link "Inventory" [ref=f7e86] [cursor=pointer]:
+                - /url: /inventory
+      - button "Filip Bibić Admin" [ref=f7e93]:
+        - generic [aria-hidden] [ref=f7e94]: FB
+        - generic [ref=f7e95]:
+          - generic [ref=f7e96]: Filip Bibić
+          - generic [ref=f7e97]: Admin
+  - generic [ref=f7e101]:
+    - banner [ref=f7e102]:
+      - button "Toggle navigation" [ref=f7e103]
+      - generic [ref=f7e106]:
+        - generic [ref=f7e107]:
+          - combobox "Search" [ref=f7e108]
+          - generic: ⌘K
+        - button "Demo Winery" [ref=f7e110]
+        - button "Help" [ref=f7e111]
+        - button "Refresh" [ref=f7e115]
+        - button "Notifications" [ref=f7e122]:
+          - generic [ref=f7e126]: 9+
+    - main [ref=f7e127]:
+      - generic [ref=f7e128]:
+        - generic [ref=f7e129]:
+          - heading "Orders" [level=2] [ref=f7e131]
+          - generic [ref=f7e132]:
+            - button "New order" [ref=f7e133]
+            - button "Export" [ref=f7e135]
+        - generic [ref=f7e139]:
+          - tablist [ref=f7e140]:
+            - tab "Today" [ref=f7e141]
+            - tab "Yesterday" [ref=f7e142]
+            - tab "This Week" [ref=f7e143]
+            - tab "This Month" [ref=f7e144]
+            - tab "This Quarter" [ref=f7e145]
+            - tab "Year to Date" [selected] [ref=f7e146]
+          - button "Custom" [ref=f7e148]
+        - generic [ref=f7e152]:
+          - generic [ref=f7e153]:
+            - generic [ref=f7e154]:
+              - heading "Order-to-cash pipeline" [level=3] [ref=f7e155]
+              - paragraph [ref=f7e156]: Open orders by stage · click a stage to filter the table below
+            - button "This period" [ref=f7e158]
+          - generic [ref=f7e159]:
+            - button "Received 2 €3,551.00" [ref=f7e160]:
+              - generic [ref=f7e161]: Received
+              - generic [ref=f7e162]: "2"
+              - generic [ref=f7e163]: €3,551.00
+            - button "In Process 1 €1,233.12" [ref=f7e166]:
+              - generic [ref=f7e167]: In Process
+              - generic [ref=f7e168]: "1"
+              - generic [ref=f7e169]: €1,233.12
+            - button "Ready to Ship 1 €96.00" [ref=f7e172]:
+              - generic [ref=f7e173]: Ready to Ship
+              - generic [ref=f7e174]: "1"
+              - generic [ref=f7e175]: €96.00
+            - button "Shipped 53 €14,673.80" [ref=f7e178]:
+              - generic [ref=f7e179]: Shipped
+              - generic [ref=f7e180]: "53"
+              - generic [ref=f7e181]: €14,673.80
+            - generic [ref=f7e184]:
+              - generic [ref=f7e185]: Invoiced
+              - generic [ref=f7e186]: "30"
+              - generic [ref=f7e187]: €8,434.92
+            - generic [ref=f7e190]:
+              - generic [ref=f7e191]: Paid
+              - generic [ref=f7e192]: "29"
+              - generic [ref=f7e193]: €7,201.80
+        - generic [ref=f7e196]:
+          - generic [ref=f7e197]:
+            - searchbox "Search orders" [ref=f7e199]
+            - button "Date range" [ref=f7e201]
+            - generic [ref=f7e204]:
+              - button "Channel" [active] [ref=f7e205]:
+                - text: Channel
+                - generic [aria-hidden] [ref=f7e206]: ▾
+              - generic [ref=f7e774]:
+                - button "Any channel" [ref=f7e775]
+                - button "Wholesale" [ref=f7e776]
+                - button "Retail" [ref=f7e777]
+                - button "Agency" [ref=f7e778]
+                - button "Ship shop" [ref=f7e779]
+                - button "Other" [ref=f7e780]
+            - button "Rep" [ref=f7e207]:
+              - text: Rep
+              - generic [aria-hidden] [ref=f7e208]: ▾
+            - generic [ref=f7e209]:
+              - button "Bulk actions" [ref=f7e210]:
+                - text: Bulk actions
+                - generic [aria-hidden] [ref=f7e211]: ▾
+              - button "Columns" [ref=f7e212]
+          - group "Filter by status" [ref=f7e216]:
+            - button "All 57" [pressed] [ref=f7e217]:
+              - generic [ref=f7e218]: All
+              - generic [ref=f7e219]: "57"
+            - button "Received 2" [ref=f7e220]:
+              - generic [ref=f7e222]: Received
+              - generic [ref=f7e223]: "2"
+            - button "In Process 1" [ref=f7e224]:
+              - generic [ref=f7e226]: In Process
+              - generic [ref=f7e227]: "1"
+            - button "Ready to Ship 1" [ref=f7e228]:
+              - generic [ref=f7e230]: Ready to Ship
+              - generic [ref=f7e231]: "1"
+            - button "Shipped 53" [ref=f7e232]:
+              - generic [ref=f7e234]: Shipped
+              - generic [ref=f7e235]: "53"
+          - table [ref=f7e237]:
+            - rowgroup [ref=f7e238]:
+              - row [ref=f7e239]:
+                - columnheader "Order" [ref=f7e240]
+                - columnheader "Items" [ref=f7e241]
+                - columnheader "Total" [ref=f7e242]
+                - columnheader "Status" [ref=f7e243]
+                - columnheader "Date" [ref=f7e244]
+            - rowgroup [ref=f7e245]:
+              - row [ref=f7e246] [cursor=pointer]:
+                - cell "#TREND-001 Trend · Wholesale" [ref=f7e247]:
+                  - generic [ref=f7e248]: "#TREND-001"
+                  - generic [ref=f7e252]: Trend · Wholesale
+                - cell "1× BIBICh Ambra Prošek 500ml 1× BIBICh Ambra Prošek 500ml 1# x BIBICh Crno 750ml + 1 more" [ref=f7e253]:
+                  - generic [ref=f7e254]:
+                    - generic [ref=f7e255]: 1×
+                    - generic [ref=f7e256]: BIBICh Ambra Prošek
+                    - generic [ref=f7e257]: 500ml
+                  - generic [ref=f7e258]:
+                    - generic [ref=f7e259]: 1×
+                    - generic [ref=f7e260]: BIBICh Ambra Prošek
+                    - generic [ref=f7e261]: 500ml
+                  - generic [ref=f7e262]:
+                    - generic [ref=f7e263]: 1#
+                    - generic [ref=f7e264]: x BIBICh Crno
+                    - generic [ref=f7e265]: 750ml
+                  - generic [ref=f7e266]: + 1 more
+                - cell "€280.00 excl. VAT" [ref=f7e267]:
+                  - generic [ref=f7e268]: €280.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e269]
+                - cell "06/19/26 Filip Bibić" [ref=f7e272]:
+                  - generic [ref=f7e273]: 06/19/26
+                  - text: Filip Bibić
+              - row [ref=f7e274] [cursor=pointer]:
+                - cell "#TREND-002 Trend · Retail" [ref=f7e275]:
+                  - generic [ref=f7e276]: "#TREND-002"
+                  - generic [ref=f7e280]: Trend · Retail
+                - cell [ref=f7e281]
+                - cell "€40.00 excl. VAT" [ref=f7e282]:
+                  - generic [ref=f7e283]: €40.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e284]
+                - cell "06/19/26 Filip Bibić" [ref=f7e287]:
+                  - generic [ref=f7e288]: 06/19/26
+                  - text: Filip Bibić
+              - row [ref=f7e289] [cursor=pointer]:
+                - cell "#ORD-00001 Konzum d.d." [ref=f7e290]:
+                  - generic [ref=f7e291]: "#ORD-00001"
+                  - generic [ref=f7e295]: Konzum d.d.
+                - cell "120× BIBICh Debit 750ml 60× BIBICh Plavina 750ml 24× BIBICh R6 Riserva 750ml + 2 more" [ref=f7e296]:
+                  - generic [ref=f7e297]:
+                    - generic [ref=f7e298]: 120×
+                    - generic [ref=f7e299]: BIBICh Debit
+                    - generic [ref=f7e300]: 750ml
+                  - generic [ref=f7e301]:
+                    - generic [ref=f7e302]: 60×
+                    - generic [ref=f7e303]: BIBICh Plavina
+                    - generic [ref=f7e304]: 750ml
+                  - generic [ref=f7e305]:
+                    - generic [ref=f7e306]: 24×
+                    - generic [ref=f7e307]: BIBICh R6 Riserva
+                    - generic [ref=f7e308]: 750ml
+                  - generic [ref=f7e309]: + 2 more
+                - cell "€4,681.80 excl. VAT" [ref=f7e310]:
+                  - generic [ref=f7e311]: €4,681.80
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e312]
+                - cell "06/19/26 Filip Bibić" [ref=f7e315]:
+                  - generic [ref=f7e316]: 06/19/26
+                  - text: Filip Bibić
+              - row [ref=f7e317] [cursor=pointer]:
+                - cell "#ORD-00002 Restaurant Noel" [ref=f7e318]:
+                  - generic [ref=f7e319]: "#ORD-00002"
+                  - generic [ref=f7e323]: Restaurant Noel
+                - cell "12× BIBICh R6 Riserva 750ml 18× BIBICh Babić 750ml 12× BIBICh Brut 750ml + 2 more" [ref=f7e324]:
+                  - generic [ref=f7e325]:
+                    - generic [ref=f7e326]: 12×
+                    - generic [ref=f7e327]: BIBICh R6 Riserva
+                    - generic [ref=f7e328]: 750ml
+                  - generic [ref=f7e329]:
+                    - generic [ref=f7e330]: 18×
+                    - generic [ref=f7e331]: BIBICh Babić
+                    - generic [ref=f7e332]: 750ml
+                  - generic [ref=f7e333]:
+                    - generic [ref=f7e334]: 12×
+                    - generic [ref=f7e335]: BIBICh Brut
+                    - generic [ref=f7e336]: 750ml
+                  - generic [ref=f7e337]: + 2 more
+                - cell "€1,233.12 excl. VAT" [ref=f7e338]:
+                  - generic [ref=f7e339]: €1,233.12
+                  - text: excl. VAT
+                - cell "In Process" [ref=f7e340]
+                - cell "06/19/26 Filip Bibić" [ref=f7e343]:
+                  - generic [ref=f7e344]: 06/19/26
+                  - text: Filip Bibić
+              - row [ref=f7e345] [cursor=pointer]:
+                - cell "#ORD-00003 Vinoteka Bornstein" [ref=f7e346]:
+                  - generic [ref=f7e347]: "#ORD-00003"
+                  - generic [ref=f7e351]: Vinoteka Bornstein
+                - cell "24× BIBICh Pošip 750ml 24× BIBICh Think Pink Rosé 750ml 8# x BIBICh Crno 750ml + 2 more" [ref=f7e352]:
+                  - generic [ref=f7e353]:
+                    - generic [ref=f7e354]: 24×
+                    - generic [ref=f7e355]: BIBICh Pošip
+                    - generic [ref=f7e356]: 750ml
+                  - generic [ref=f7e357]:
+                    - generic [ref=f7e358]: 24×
+                    - generic [ref=f7e359]: BIBICh Think Pink Rosé
+                    - generic [ref=f7e360]: 750ml
+                  - generic [ref=f7e361]:
+                    - generic [ref=f7e362]: 8#
+                    - generic [ref=f7e363]: x BIBICh Crno
+                    - generic [ref=f7e364]: 750ml
+                  - generic [ref=f7e365]: + 2 more
+                - cell "€1,766.00 excl. VAT" [ref=f7e366]:
+                  - generic [ref=f7e367]: €1,766.00
+                  - text: excl. VAT
+                - cell "Received" [ref=f7e368]
+                - cell "06/19/26 Filip Bibić" [ref=f7e371]:
+                  - generic [ref=f7e372]: 06/19/26
+                  - text: Filip Bibić
+              - row [ref=f7e373] [cursor=pointer]:
+                - cell "#ORD-00004 Wine Ship Shop Split" [ref=f7e374]:
+                  - generic [ref=f7e375]: "#ORD-00004"
+                  - generic [ref=f7e379]: Wine Ship Shop Split
+                - cell "1× BIBICh Ambra Prošek 500ml 2× BIBICh Bas de Bas 750ml 2 lines · 3 units" [ref=f7e380]:
+                  - generic [ref=f7e381]:
+                    - generic [ref=f7e382]: 1×
+                    - generic [ref=f7e383]: BIBICh Ambra Prošek
+                    - generic [ref=f7e384]: 500ml
+                  - generic [ref=f7e385]:
+                    - generic [ref=f7e386]: 2×
+                    - generic [ref=f7e387]: BIBICh Bas de Bas
+                    - generic [ref=f7e388]: 750ml
+                  - generic [ref=f7e389]: 2 lines · 3 units
+                - cell "€96.00 excl. VAT" [ref=f7e390]:
+                  - generic [ref=f7e391]: €96.00
+                  - text: excl. VAT
+                - cell "Ready to Ship" [ref=f7e392]
+                - cell "06/19/26 Filip Bibić" [ref=f7e395]:
+                  - generic [ref=f7e396]: 06/19/26
+                  - text: Filip Bibić
+              - row [ref=f7e397] [cursor=pointer]:
+                - cell "#ORD-00005 Adriatica Wine Agency2" [ref=f7e398]:
+                  - generic [ref=f7e399]: "#ORD-00005"
+                  - generic [ref=f7e403]: Adriatica Wine Agency2
+                - cell "36× BIBICh Pošip 750ml 48× BIBICh Debit 750ml 2 lines · 84 units" [ref=f7e404]:
+                  - generic [ref=f7e405]:
+                    - generic [ref=f7e406]: 36×
+                    - generic [ref=f7e407]: BIBICh Pošip
+                    - generic [ref=f7e408]: 750ml
+                  - generic [ref=f7e409]:
+                    - generic [ref=f7e410]: 48×
+                    - generic [ref=f7e411]: BIBICh Debit
+                    - generic [ref=f7e412]: 750ml
+                  - generic [ref=f7e413]: 2 lines · 84 units
+                - cell "€1,248.00 excl. VAT" [ref=f7e414]:
+                  - generic [ref=f7e415]: €1,248.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e416]
+                - cell "06/19/26 Filip Bibić" [ref=f7e419]:
+                  - generic [ref=f7e420]: 06/19/26
+                  - text: Filip Bibić
+              - row [ref=f7e421] [cursor=pointer]:
+                - cell "#ORD-00006 Private Buyer — Đela" [ref=f7e422]:
+                  - generic [ref=f7e423]: "#ORD-00006"
+                  - generic [ref=f7e427]: Private Buyer — Đela
+                - cell "2# x BIBICh Crno 750ml 3× BIBICh Think Pink Rosé 750ml 2 lines · 5 units" [ref=f7e428]:
+                  - generic [ref=f7e429]:
+                    - generic [ref=f7e430]: 2#
+                    - generic [ref=f7e431]: x BIBICh Crno
+                    - generic [ref=f7e432]: 750ml
+                  - generic [ref=f7e433]:
+                    - generic [ref=f7e434]: 3×
+                    - generic [ref=f7e435]: BIBICh Think Pink Rosé
+                    - generic [ref=f7e436]: 750ml
+                  - generic [ref=f7e437]: 2 lines · 5 units
+                - cell "€285.00 excl. VAT" [ref=f7e438]:
+                  - generic [ref=f7e439]: €285.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e440]
+                - cell "06/19/26 Filip Bibić" [ref=f7e443]:
+                  - generic [ref=f7e444]: 06/19/26
+                  - text: Filip Bibić
+              - row [ref=f7e445] [cursor=pointer]:
+                - cell "#ORD-00007 Estate Tasting Room (internal)" [ref=f7e446]:
+                  - generic [ref=f7e447]: "#ORD-00007"
+                  - generic [ref=f7e451]: Estate Tasting Room (internal)
+                - cell "24× BIBICh Debit 750ml 12× BIBICh Babić 750ml 2 lines · 36 units" [ref=f7e452]:
+                  - generic [ref=f7e453]:
+                    - generic [ref=f7e454]: 24×
+                    - generic [ref=f7e455]: BIBICh Debit
+                    - generic [ref=f7e456]: 750ml
+                  - generic [ref=f7e457]:
+                    - generic [ref=f7e458]: 12×
+                    - generic [ref=f7e459]: BIBICh Babić
+                    - generic [ref=f7e460]: 750ml
+                  - generic [ref=f7e461]: 2 lines · 36 units
+                - cell "€600.00 excl. VAT" [ref=f7e462]:
+                  - generic [ref=f7e463]: €600.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e464]
+                - cell "06/19/26 Filip Bibić" [ref=f7e467]:
+                  - generic [ref=f7e468]: 06/19/26
+                  - text: Filip Bibić
+              - row [ref=f7e469] [cursor=pointer]:
+                - cell "#ORD-00008 Konzum d.d." [ref=f7e470]:
+                  - generic [ref=f7e471]: "#ORD-00008"
+                  - generic [ref=f7e475]: Konzum d.d.
+                - cell "60× BIBICh R5 Riserva 750ml 1 lines · 60 units" [ref=f7e476]:
+                  - generic [ref=f7e477]:
+                    - generic [ref=f7e478]: 60×
+                    - generic [ref=f7e479]: BIBICh R5 Riserva
+                    - generic [ref=f7e480]: 750ml
+                  - generic [ref=f7e481]: 1 lines · 60 units
+                - cell "€1,785.00 excl. VAT" [ref=f7e482]:
+                  - generic [ref=f7e483]: €1,785.00
+                  - text: excl. VAT
+                - cell "Received" [ref=f7e484]
+                - cell "06/19/26 Filip Bibić" [ref=f7e487]:
+                  - generic [ref=f7e488]: 06/19/26
+                  - text: Filip Bibić
+              - row [ref=f7e489] [cursor=pointer]:
+                - cell "#ORD-00009 Adriatica Wine Agency2" [ref=f7e490]:
+                  - generic [ref=f7e491]: "#ORD-00009"
+                  - generic [ref=f7e495]: Adriatica Wine Agency2
+                - cell "36× BIBICh Sangreal Merlot 750ml 24× BIBICh Sangreal Shiraz 750ml 2 lines · 60 units" [ref=f7e496]:
+                  - generic [ref=f7e497]:
+                    - generic [ref=f7e498]: 36×
+                    - generic [ref=f7e499]: BIBICh Sangreal Merlot
+                    - generic [ref=f7e500]: 750ml
+                  - generic [ref=f7e501]:
+                    - generic [ref=f7e502]: 24×
+                    - generic [ref=f7e503]: BIBICh Sangreal Shiraz
+                    - generic [ref=f7e504]: 750ml
+                  - generic [ref=f7e505]: 2 lines · 60 units
+                - cell "€2,772.00 excl. VAT" [ref=f7e506]:
+                  - generic [ref=f7e507]: €2,772.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e508]
+                - cell "06/19/26 Filip Bibić" [ref=f7e511]:
+                  - generic [ref=f7e512]: 06/19/26
+                  - text: Filip Bibić
+              - row [ref=f7e513] [cursor=pointer]:
+                - cell "#ORD-00010 Adriatica Wine Agency2" [ref=f7e514]:
+                  - generic [ref=f7e515]: "#ORD-00010"
+                  - generic [ref=f7e519]: Adriatica Wine Agency2
+                - cell "12× BIBICh Lasin 750ml 1 lines · 12 units" [ref=f7e520]:
+                  - generic [ref=f7e521]:
+                    - generic [ref=f7e522]: 12×
+                    - generic [ref=f7e523]: BIBICh Lasin
+                    - generic [ref=f7e524]: 750ml
+                  - generic [ref=f7e525]: 1 lines · 12 units
+                - cell "€288.00 excl. VAT" [ref=f7e526]:
+                  - generic [ref=f7e527]: €288.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e528]
+                - cell "06/19/26 Filip Bibić" [ref=f7e531]:
+                  - generic [ref=f7e532]: 06/19/26
+                  - text: Filip Bibić
+              - row [ref=f7e533] [cursor=pointer]:
+                - cell "#TREND-003 Trend · Retail" [ref=f7e534]:
+                  - generic [ref=f7e535]: "#TREND-003"
+                  - generic [ref=f7e539]: Trend · Retail
+                - cell [ref=f7e540]
+                - cell "€90.00 excl. VAT" [ref=f7e541]:
+                  - generic [ref=f7e542]: €90.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e543]
+                - cell "06/13/26 Filip Bibić" [ref=f7e546]:
+                  - generic [ref=f7e547]: 06/13/26
+                  - text: Filip Bibić
+              - row [ref=f7e548] [cursor=pointer]:
+                - cell "#TREND-004 Trend · Agency" [ref=f7e549]:
+                  - generic [ref=f7e550]: "#TREND-004"
+                  - generic [ref=f7e554]: Trend · Agency
+                - cell [ref=f7e555]
+                - cell "€30.00 excl. VAT" [ref=f7e556]:
+                  - generic [ref=f7e557]: €30.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e558]
+                - cell "06/07/26 Filip Bibić" [ref=f7e561]:
+                  - generic [ref=f7e562]: 06/07/26
+                  - text: Filip Bibić
+              - row [ref=f7e563] [cursor=pointer]:
+                - cell "#TREND-005 Trend · Wholesale" [ref=f7e564]:
+                  - generic [ref=f7e565]: "#TREND-005"
+                  - generic [ref=f7e569]: Trend · Wholesale
+                - cell [ref=f7e570]
+                - cell "€80.00 excl. VAT" [ref=f7e571]:
+                  - generic [ref=f7e572]: €80.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e573]
+                - cell "05/30/26 Filip Bibić" [ref=f7e576]:
+                  - generic [ref=f7e577]: 05/30/26
+                  - text: Filip Bibić
+              - row [ref=f7e578] [cursor=pointer]:
+                - cell "#TREND-006 Trend · Wholesale" [ref=f7e579]:
+                  - generic [ref=f7e580]: "#TREND-006"
+                  - generic [ref=f7e584]: Trend · Wholesale
+                - cell [ref=f7e585]
+                - cell "€260.00 excl. VAT" [ref=f7e586]:
+                  - generic [ref=f7e587]: €260.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e588]
+                - cell "05/12/26 Filip Bibić" [ref=f7e591]:
+                  - generic [ref=f7e592]: 05/12/26
+                  - text: Filip Bibić
+              - row [ref=f7e593] [cursor=pointer]:
+                - cell "#ORD-00018 Konoba More" [ref=f7e594]:
+                  - generic [ref=f7e595]: "#ORD-00018"
+                  - generic [ref=f7e599]: Konoba More
+                - cell "6× BIBICh Pošip 750ml 1 lines · 6 units" [ref=f7e600]:
+                  - generic [ref=f7e601]:
+                    - generic [ref=f7e602]: 6×
+                    - generic [ref=f7e603]: BIBICh Pošip
+                    - generic [ref=f7e604]: 750ml
+                  - generic [ref=f7e605]: 1 lines · 6 units
+                - cell "€96.00 excl. VAT" [ref=f7e606]:
+                  - generic [ref=f7e607]: €96.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e608]
+                - cell "05/08/26 Filip Bibić" [ref=f7e611]:
+                  - generic [ref=f7e612]: 05/08/26
+                  - text: Filip Bibić
+              - row [ref=f7e613] [cursor=pointer]:
+                - cell "#TREND-007 Trend · Retail" [ref=f7e614]:
+                  - generic [ref=f7e615]: "#TREND-007"
+                  - generic [ref=f7e619]: Trend · Retail
+                - cell [ref=f7e620]
+                - cell "€20.00 excl. VAT" [ref=f7e621]:
+                  - generic [ref=f7e622]: €20.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e623]
+                - cell "05/05/26 Filip Bibić" [ref=f7e626]:
+                  - generic [ref=f7e627]: 05/05/26
+                  - text: Filip Bibić
+              - row [ref=f7e628] [cursor=pointer]:
+                - cell "#TREND-008 Trend · Agency" [ref=f7e629]:
+                  - generic [ref=f7e630]: "#TREND-008"
+                  - generic [ref=f7e634]: Trend · Agency
+                - cell [ref=f7e635]
+                - cell "€15.00 excl. VAT" [ref=f7e636]:
+                  - generic [ref=f7e637]: €15.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e638]
+                - cell "04/28/26 Filip Bibić" [ref=f7e641]:
+                  - generic [ref=f7e642]: 04/28/26
+                  - text: Filip Bibić
+              - row [ref=f7e643] [cursor=pointer]:
+                - cell "#ORD-00023 Demo Account 01" [ref=f7e644]:
+                  - generic [ref=f7e645]: "#ORD-00023"
+                  - generic [ref=f7e649]: Demo Account 01
+                - cell "5× Demo Reserve (filler) 1 lines · 5 units" [ref=f7e650]:
+                  - generic [ref=f7e651]:
+                    - generic [ref=f7e652]: 5×
+                    - generic [ref=f7e653]: Demo Reserve (filler)
+                  - generic [ref=f7e654]: 1 lines · 5 units
+                - cell "€75.00 excl. VAT" [ref=f7e655]:
+                  - generic [ref=f7e656]: €75.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e657]
+                - cell "04/20/26 Filip Bibić" [ref=f7e660]:
+                  - generic [ref=f7e661]: 04/20/26
+                  - text: Filip Bibić
+              - row [ref=f7e662] [cursor=pointer]:
+                - cell "#ORD-00024 Demo Account 02" [ref=f7e663]:
+                  - generic [ref=f7e664]: "#ORD-00024"
+                  - generic [ref=f7e668]: Demo Account 02
+                - cell "6× Demo Reserve (filler) 1 lines · 6 units" [ref=f7e669]:
+                  - generic [ref=f7e670]:
+                    - generic [ref=f7e671]: 6×
+                    - generic [ref=f7e672]: Demo Reserve (filler)
+                  - generic [ref=f7e673]: 1 lines · 6 units
+                - cell "€90.00 excl. VAT" [ref=f7e674]:
+                  - generic [ref=f7e675]: €90.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e676]
+                - cell "04/16/26 Filip Bibić" [ref=f7e679]:
+                  - generic [ref=f7e680]: 04/16/26
+                  - text: Filip Bibić
+              - row [ref=f7e681] [cursor=pointer]:
+                - cell "#ORD-00025 Demo Account 03" [ref=f7e682]:
+                  - generic [ref=f7e683]: "#ORD-00025"
+                  - generic [ref=f7e687]: Demo Account 03
+                - cell "7× Demo Reserve (filler) 1 lines · 7 units" [ref=f7e688]:
+                  - generic [ref=f7e689]:
+                    - generic [ref=f7e690]: 7×
+                    - generic [ref=f7e691]: Demo Reserve (filler)
+                  - generic [ref=f7e692]: 1 lines · 7 units
+                - cell "€105.00 excl. VAT" [ref=f7e693]:
+                  - generic [ref=f7e694]: €105.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e695]
+                - cell "04/12/26 Filip Bibić" [ref=f7e698]:
+                  - generic [ref=f7e699]: 04/12/26
+                  - text: Filip Bibić
+              - row [ref=f7e700] [cursor=pointer]:
+                - cell "#ORD-00017 Konoba More" [ref=f7e701]:
+                  - generic [ref=f7e702]: "#ORD-00017"
+                  - generic [ref=f7e706]: Konoba More
+                - cell "6× BIBICh Pošip 750ml 1 lines · 6 units" [ref=f7e707]:
+                  - generic [ref=f7e708]:
+                    - generic [ref=f7e709]: 6×
+                    - generic [ref=f7e710]: BIBICh Pošip
+                    - generic [ref=f7e711]: 750ml
+                  - generic [ref=f7e712]: 1 lines · 6 units
+                - cell "€96.00 excl. VAT" [ref=f7e713]:
+                  - generic [ref=f7e714]: €96.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e715]
+                - cell "04/10/26 Filip Bibić" [ref=f7e718]:
+                  - generic [ref=f7e719]: 04/10/26
+                  - text: Filip Bibić
+              - row [ref=f7e720] [cursor=pointer]:
+                - cell "#ORD-00026 Demo Account 04" [ref=f7e721]:
+                  - generic [ref=f7e722]: "#ORD-00026"
+                  - generic [ref=f7e726]: Demo Account 04
+                - cell "8× Demo Reserve (filler) 1 lines · 8 units" [ref=f7e727]:
+                  - generic [ref=f7e728]:
+                    - generic [ref=f7e729]: 8×
+                    - generic [ref=f7e730]: Demo Reserve (filler)
+                  - generic [ref=f7e731]: 1 lines · 8 units
+                - cell "€120.00 excl. VAT" [ref=f7e732]:
+                  - generic [ref=f7e733]: €120.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e734]
+                - cell "04/08/26 Filip Bibić" [ref=f7e737]:
+                  - generic [ref=f7e738]: 04/08/26
+                  - text: Filip Bibić
+              - row [ref=f7e739] [cursor=pointer]:
+                - cell "#ORD-00027 Demo Account 05" [ref=f7e740]:
+                  - generic [ref=f7e741]: "#ORD-00027"
+                  - generic [ref=f7e745]: Demo Account 05
+                - cell "4× Demo Reserve (filler) 1 lines · 4 units" [ref=f7e746]:
+                  - generic [ref=f7e747]:
+                    - generic [ref=f7e748]: 4×
+                    - generic [ref=f7e749]: Demo Reserve (filler)
+                  - generic [ref=f7e750]: 1 lines · 4 units
+                - cell "€60.00 excl. VAT" [ref=f7e751]:
+                  - generic [ref=f7e752]: €60.00
+                  - text: excl. VAT
+                - cell "Shipped" [ref=f7e753]
+                - cell "04/04/26 Filip Bibić" [ref=f7e756]:
+                  - generic [ref=f7e757]: 04/04/26
+                  - text: Filip Bibić
+          - generic [ref=f7e758]:
+            - paragraph [ref=f7e759]: Showing 1–25 of 57 orders
+            - generic [ref=f7e760]:
+              - generic [ref=f7e761]:
+                - generic [ref=f7e762]: Rows per page
+                - combobox "Rows per page" [ref=f7e764]:
+                  - option "10"
+                  - option "25" [selected]
+                  - option "50"
+                  - option "100"
+              - paragraph [ref=f7e765]: Page 1 of 3
+              - generic [ref=f7e766]:
+                - button "First page" [disabled]
+                - button "Previous page" [disabled]
+                - button "Next page" [ref=f7e767]
+                - button "Last page" [ref=f7e770]

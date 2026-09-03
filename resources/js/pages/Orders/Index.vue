@@ -14,6 +14,8 @@ import Pagination from '@/components/ui/Pagination.vue';
 import StatusChips from '@/components/ui/StatusChips.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
+import { usePopover } from '@/composables/usePopover';
+import { CUSTOMER_TYPES, customerTypeLabel } from '@/lib/customers';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { Paginated, SharedProps } from '@/types';
 import type { Order, OrderFilters, OrderPipeline, OrderStatusCounts } from '@/types/orders';
@@ -67,6 +69,7 @@ function reload(overrides: Record<string, unknown>): void {
         {
             search: props.filters.search ?? undefined,
             status: props.filters.status ?? undefined,
+            channel: props.filters.channel ?? undefined,
             period: props.filters.period ?? undefined,
             from: props.filters.from ?? undefined,
             to: props.filters.to ?? undefined,
@@ -77,6 +80,15 @@ function reload(overrides: Record<string, unknown>): void {
         },
         { preserveState: true, preserveScroll: true, replace: true, only: ['orders', 'filters', 'statusCounts', 'pipeline'] },
     );
+}
+
+/** The toolbar's Channel filter — filters by the customer's sales channel (App\Enums\CustomerType); Rep has no backing order-owner column, so it stays a dead stub. */
+const channelFilterAnchor = ref<HTMLElement | null>(null);
+const { open: channelFilterOpen, close: closeChannelFilter, toggle: toggleChannelFilter } = usePopover(channelFilterAnchor);
+
+function selectChannel(value: string | null): void {
+    closeChannelFilter();
+    reload({ channel: value ?? undefined });
 }
 
 /** Figma 455:1577's period strip. `custom` needs a date picker — see below. */
@@ -254,18 +266,53 @@ function setPerPage(perPage: number): void {
                         @update:model-value="selectRange"
                     />
 
-                    <!-- @todo Channel / Rep filters. Neither has a backing
-                         field: channel would have to be inferred from the
-                         customer's type (a different axis), and there is no
-                         order-owner column for Rep. Rendered so the toolbar
-                         matches 455:1577. -->
+                    <!-- Channel filters by the customer's sales channel — orders
+                         have no channel of their own (docs/design/README.md). -->
+                    <div ref="channelFilterAnchor" class="relative">
+                        <button
+                            type="button"
+                            class="inline-flex h-[30px] shrink-0 items-center gap-1 border px-2.5 text-xs transition-colors"
+                            :class="
+                                filters.channel === null
+                                    ? 'border-border bg-card text-foreground hover:border-foreground/40'
+                                    : 'border-primary bg-primary text-primary-foreground'
+                            "
+                            @click="toggleChannelFilter"
+                        >
+                            Channel
+                            <template v-if="filters.channel">· {{ customerTypeLabel(filters.channel) }}</template>
+                            <span aria-hidden="true" class="text-muted-foreground">▾</span>
+                        </button>
+                        <div
+                            v-if="channelFilterOpen"
+                            class="absolute top-9 left-0 z-20 min-w-40 border border-border bg-card p-1 shadow-lg"
+                        >
+                            <button
+                                type="button"
+                                class="block w-full px-2 py-1.5 text-left text-xs hover:bg-muted"
+                                @click="selectChannel(null)"
+                            >
+                                Any channel
+                            </button>
+                            <button
+                                v-for="type in CUSTOMER_TYPES"
+                                :key="type.value"
+                                type="button"
+                                class="block w-full px-2 py-1.5 text-left text-xs hover:bg-muted"
+                                @click="selectChannel(type.value)"
+                            >
+                                {{ type.label }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- @todo Rep filter. There is no order-owner column to
+                         filter by yet. Rendered so the toolbar matches 455:1577. -->
                     <button
-                        v-for="label in ['Channel', 'Rep']"
-                        :key="label"
                         type="button"
                         class="inline-flex h-[30px] shrink-0 items-center gap-1 border border-border bg-card px-2.5 text-xs text-foreground hover:border-foreground/40"
                     >
-                        {{ label }}
+                        Rep
                         <span aria-hidden="true" class="text-muted-foreground">▾</span>
                     </button>
 
@@ -334,11 +381,18 @@ function setPerPage(perPage: number): void {
                                 </td>
 
                                 <td class="px-4 py-4">
+                                    <!--
+                                      Cases read "N# x Name" — the # marks the
+                                      unit as cases rather than bottles, which
+                                      this row otherwise has no way to show.
+                                    -->
                                     <span v-for="line in preview(row)" :key="line.id" class="flex items-baseline gap-2">
                                         <span class="w-10 shrink-0 text-right font-semibold tabular-nums">
-                                            {{ formatNumber(line.quantity, locale) }}×
+                                            {{ formatNumber(line.quantity, locale) }}{{ line.unit_type === 'cases' ? '#' : '×' }}
                                         </span>
-                                        <span class="text-foreground">{{ line.name }}</span>
+                                        <span class="text-foreground">
+                                            <template v-if="line.unit_type === 'cases'">x </template>{{ line.name }}
+                                        </span>
                                         <span v-if="line.unit_size" class="text-muted-foreground">
                                             {{ line.unit_size }}
                                         </span>

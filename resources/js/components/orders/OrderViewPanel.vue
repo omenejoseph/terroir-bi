@@ -1,19 +1,25 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { router, useForm, usePage } from '@inertiajs/vue3';
-import { ArrowRight, MoreHorizontal } from 'lucide-vue-next';
+import { computed, onMounted, ref, watch } from 'vue';
+import { Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { ArrowRight, Copy, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 
+import OrderLineFields from '@/components/orders/OrderLineFields.vue';
+import QuantityStepper from '@/components/orders/QuantityStepper.vue';
 import StatusStepper from '@/components/orders/StatusStepper.vue';
 import Avatar from '@/components/ui/Avatar.vue';
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
+import MentionInput from '@/components/ui/MentionInput.vue';
+import type { Mentionable } from '@/components/ui/MentionInput.vue';
 import SectionHeader from '@/components/ui/SectionHeader.vue';
+import Select from '@/components/ui/Select.vue';
 import Separator from '@/components/ui/Separator.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import { useAuth } from '@/composables/useAuth';
 import { formatMoney, formatNumber } from '@/lib/money';
+import { linesToPayload, UNIT_OPTIONS } from '@/lib/orders';
 import type { MoneyValue } from '@/types/inventory';
-import type { Order, OrderLine, OrderStatusKey } from '@/types/orders';
+import type { Order, OrderLine, OrderLineDraft, OrderStatusKey, ProductOption } from '@/types/orders';
 import type { SharedProps } from '@/types';
 
 /**
@@ -130,7 +136,7 @@ function moveTo(status: string): void {
     );
 }
 
-const comment = useForm({ content: '' });
+const comment = useForm({ content: '', mentions: [] as string[] });
 
 function postComment(): void {
     const id = order.value?.id;
@@ -148,6 +154,128 @@ function postComment(): void {
 
 /** Clear a half-typed comment when the drawer moves to another order. */
 watch(() => order.value?.id, () => comment.reset());
+
+/**
+ * The @-mention picker's member list — fetched once, filtered locally
+ * (Web\TeamMembersController), same "any order viewer may @ a teammate"
+ * permissiveness as commenting itself.
+ */
+const members = ref<Mentionable[]>([]);
+
+onMounted(() => {
+    void fetch('/team-members', { headers: { Accept: 'application/json' } })
+        .then((response) => (response.ok ? response.json() : { data: [] }))
+        .then((body: { data: Mentionable[] }) => {
+            members.value = body.data;
+        });
+});
+
+/*
+  Per-line edit (Api\OrderController@updateItem / DeleteOrderItemAction, the
+  same 1-hour edit window as the API — never checked here, it just surfaces as
+  a failed request past the window, same as the API and the outgoing React
+  app both leave it).
+*/
+const editingLineId = ref<string | null>(null);
+const editQuantity = ref(1);
+const editUnitType = ref('bottles');
+
+function startEdit(line: OrderLine): void {
+    editingLineId.value = line.id;
+    editQuantity.value = line.quantity;
+    editUnitType.value = line.unit_type;
+}
+
+function cancelEdit(): void {
+    editingLineId.value = null;
+}
+
+/** Every write here redirects `back()` to /orders?order=…, but `order` is an Inertia::optional prop — a followed redirect's full visit omits it, so it needs its own reload, same as moveTo()/postComment() above. */
+/**
+ * `id` is a plain string captured by the caller BEFORE the mutation starts —
+ * not re-read from `order.value` inside here. The mutation itself is a full
+ * (non-partial) visit that follows its own `back()` redirect; since `order`
+ * is an Inertia::optional (IgnoreFirstLoad) prop, that full visit's response
+ * replaces `page.props` wholesale without it, so by the time `onSuccess`
+ * runs `order.value` is already null. Re-reading it here would hit that same
+ * null and silently no-op, leaving the drawer stuck on "Loading order…".
+ */
+function reloadOrder(id: string): void {
+    router.reload({ only: ['order'], data: { order: id } });
+}
+
+function saveEdit(line: OrderLine): void {
+    const id = order.value?.id;
+    if (id === undefined) return;
+
+    router.patch(
+        `/order-items/${line.id}`,
+        { quantity: editQuantity.value, unit_type: editUnitType.value },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                editingLineId.value = null;
+                reloadOrder(id);
+            },
+        },
+    );
+}
+
+function removeLine(line: OrderLine): void {
+    const id = order.value?.id;
+    if (id === undefined) return;
+    if (!confirm(`Remove ${line.name || line.custom_description || 'this line'}?`)) return;
+
+    router.delete(`/order-items/${line.id}`, { preserveScroll: true, onSuccess: () => reloadOrder(id) });
+}
+
+/** Appending lines, reusing the same picker CreateOrderPanel builds a whole order from. */
+const products = computed<ProductOption[]>(() => (page.props.productOptions as ProductOption[] | undefined) ?? []);
+const addingItems = ref(false);
+const newLines = ref<OrderLineDraft[]>([]);
+
+watch(addingItems, (adding) => {
+    const id = order.value?.id;
+
+    // Without `data: { order: id }` this drops the ?order= query param the
+    // drawer is keyed on — the response then carries no `order` (it isn't in
+    // `only`, and nothing tells the server which one to resolve), and unlike
+    // every other reload in this file, this one was missing it: `order`
+    // reads null and the drawer sticks on "Loading order…".
+    if (adding && products.value.length === 0 && id !== undefined) {
+        router.reload({ only: ['productOptions'], data: { order: id } });
+    }
+});
+
+function cancelAddItems(): void {
+    addingItems.value = false;
+    newLines.value = [];
+}
+
+function submitNewLines(): void {
+    const id = order.value?.id;
+    if (id === undefined || newLines.value.length === 0) return;
+
+    router.post(
+        `/orders/${id}/items`,
+        { items: linesToPayload(newLines.value) },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                cancelAddItems();
+                reloadOrder(id);
+            },
+        },
+    );
+}
+
+/** Clones this order's customer, notes, shipping and lines into a fresh draft — no confirmation, it's additive, not destructive. */
+function duplicateOrder(): void {
+    const id = order.value?.id;
+    if (id === undefined) return;
+
+    router.post(`/orders/${id}/duplicate`, {});
+}
 
 const confirmingDelete = ref(false);
 
@@ -228,31 +356,83 @@ function destroy(): void {
                     <li
                         v-for="line in order.items"
                         :key="line.id"
-                        class="flex items-center gap-3 border-b border-border py-3 last:border-b-0"
+                        class="flex flex-col gap-2 border-b border-border py-3 last:border-b-0"
                     >
-                        <img
-                            v-if="line.image_url"
-                            :src="line.image_url"
-                            alt=""
-                            class="size-9 shrink-0 border border-border object-cover"
-                        />
-                        <span v-else class="size-9 shrink-0 border border-border bg-muted" aria-hidden="true" />
+                        <div class="flex items-center gap-3">
+                            <img
+                                v-if="line.image_url"
+                                :src="line.image_url"
+                                alt=""
+                                class="size-9 shrink-0 border border-border object-cover"
+                            />
+                            <span v-else class="size-9 shrink-0 border border-border bg-muted" aria-hidden="true" />
 
-                        <span class="min-w-0 flex-1">
-                            <span class="block truncate text-sm">
-                                {{ line.name }}
-                                <span v-if="line.custom_description && line.inventory_item_id" class="text-muted-foreground">
-                                    {{ line.custom_description }}
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate text-sm">
+                                    {{ line.name }}
+                                    <span v-if="line.custom_description && line.inventory_item_id" class="text-muted-foreground">
+                                        {{ line.custom_description }}
+                                    </span>
                                 </span>
+                                <span class="block truncate text-xs text-muted-foreground">{{ lineMeta(line) }}</span>
                             </span>
-                            <span class="block truncate text-xs text-muted-foreground">{{ lineMeta(line) }}</span>
-                        </span>
 
-                        <span class="shrink-0 text-sm whitespace-nowrap">
-                            {{ formatNumber(line.quantity, locale) }} {{ line.unit_type }}
-                        </span>
+                            <span v-if="editingLineId !== line.id" class="shrink-0 text-sm whitespace-nowrap">
+                                {{ formatNumber(line.quantity, locale) }} {{ line.unit_type }}
+                            </span>
+
+                            <template v-if="can('orders.manage') && editingLineId !== line.id">
+                                <button
+                                    type="button"
+                                    class="shrink-0 p-1.5 text-muted-foreground transition-colors hover:text-foreground"
+                                    :aria-label="`Edit ${line.name}`"
+                                    @click="startEdit(line)"
+                                >
+                                    <Pencil class="size-3.5" :stroke-width="1.5" />
+                                </button>
+                                <button
+                                    type="button"
+                                    class="shrink-0 p-1.5 text-muted-foreground transition-colors hover:text-destructive"
+                                    :aria-label="`Remove ${line.name}`"
+                                    @click="removeLine(line)"
+                                >
+                                    <Trash2 class="size-3.5" :stroke-width="1.5" />
+                                </button>
+                            </template>
+                        </div>
+
+                        <div v-if="editingLineId === line.id" class="flex flex-wrap items-center gap-2 pl-12">
+                            <QuantityStepper v-model="editQuantity" />
+
+                            <!-- A catalog line's unit is fixed by the item — the server rejects anything else. -->
+                            <span
+                                v-if="line.inventory_item_id"
+                                class="inline-flex h-7 items-center border border-border px-2.5 text-xs text-muted-foreground"
+                            >
+                                {{ line.unit_type === 'cases' ? 'Cases' : 'Bottles' }}
+                            </span>
+                            <Select v-else v-model="editUnitType" :options="UNIT_OPTIONS" class="h-7 w-24 text-xs" aria-label="Unit" />
+
+                            <Button size="sm" @click="saveEdit(line)">Save</Button>
+                            <Button size="sm" variant="ghost" @click="cancelEdit">Cancel</Button>
+                        </div>
                     </li>
                 </ul>
+
+                <template v-if="can('orders.manage')">
+                    <OrderLineFields v-if="addingItems" v-model="newLines" :products="products" :locale="locale">
+                        <template #actions>
+                            <Button size="sm" variant="ghost" type="button" @click="cancelAddItems">Cancel</Button>
+                            <Button size="sm" type="button" :disabled="newLines.length === 0" @click="submitNewLines">
+                                Add {{ newLines.length || '' }}
+                            </Button>
+                        </template>
+                    </OrderLineFields>
+                    <Button v-else variant="outline" size="sm" class="self-start" @click="addingItems = true">
+                        <Plus class="size-3.5" :stroke-width="1.5" />
+                        Add item
+                    </Button>
+                </template>
 
                 <div class="flex items-baseline justify-between gap-3 pt-1">
                     <span class="text-sm">Total · excl. VAT</span>
@@ -319,9 +499,12 @@ function destroy(): void {
                 <section class="flex flex-col gap-3">
                     <SectionHeader title="Customer">
                         <template #actions>
-                            <!-- @todo Link to the customer profile once Phase 4
-                                 ports the Customers module. -->
-                            <span class="text-xs text-muted-foreground">View profile</span>
+                            <Link
+                                :href="`/customers/${order.customer.id}`"
+                                class="text-xs text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                                View profile
+                            </Link>
                         </template>
                     </SectionHeader>
 
@@ -417,12 +600,13 @@ function destroy(): void {
 
                 <form class="flex items-center gap-2 border border-input p-1" @submit.prevent="postComment">
                     <label class="sr-only" :for="`comment-${order.id}`">Write a comment</label>
-                    <input
+                    <MentionInput
                         :id="`comment-${order.id}`"
                         v-model="comment.content"
-                        type="text"
+                        :members="members"
                         placeholder="Write a comment… use @ to tag"
-                        class="h-8 min-w-0 flex-1 bg-transparent px-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none"
+                        class="h-8 px-2 text-sm placeholder:text-muted-foreground"
+                        @mentions="comment.mentions = $event"
                     />
                     <button
                         type="submit"
@@ -446,14 +630,10 @@ function destroy(): void {
             >
                 {{ confirmingDelete ? 'Confirm delete' : 'Delete' }}
             </Button>
-            <!-- @todo Duplicate. Needs a "copy this order's lines into a new
-                 draft" action; CreateOrderAction takes lines, so this is a
-                 controller away, but it has no endpoint yet. -->
-            <Button variant="outline">Duplicate</Button>
-            <!-- @todo Edit order. Line editing has API endpoints
-                 (addItems / updateItem / deleteItem) but no designed edit
-                 surface in this drawer yet. -->
-            <Button v-if="can('orders.manage')">Edit order</Button>
+            <Button v-if="can('orders.manage')" variant="outline" @click="duplicateOrder">
+                <Copy class="size-3.5" :stroke-width="1.5" />
+                Duplicate
+            </Button>
         </template>
     </SidePanel>
 </template>

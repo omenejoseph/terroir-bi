@@ -5,19 +5,26 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Actions\Orders\AddOrderCommentAction;
+use App\Actions\Orders\AddOrderItemsAction;
 use App\Actions\Orders\CreateOrderAction;
 use App\Actions\Orders\DeleteOrderAction;
+use App\Actions\Orders\DeleteOrderItemAction;
+use App\Actions\Orders\DuplicateOrderAction;
+use App\Actions\Orders\UpdateOrderItemAction;
 use App\Actions\Orders\UpdateOrderNotesAction;
 use App\Actions\Orders\UpdateOrderStatusAction;
 use App\Authorization\MembershipContext;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\AddOrderCommentRequest;
+use App\Http\Requests\Orders\AddOrderItemsRequest;
 use App\Http\Requests\Orders\StoreOrderRequest;
+use App\Http\Requests\Orders\UpdateOrderItemRequest;
 use App\Http\Requests\Orders\UpdateOrderNotesRequest;
 use App\Http\Requests\Orders\UpdateOrderStatusRequest;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\User;
 use App\Queries\ListOrdersQuery;
 use App\Queries\OrderPipelineQuery;
@@ -164,6 +171,50 @@ class OrderController extends Controller
         $action->execute($order, (string) $request->validated('content'), $mentions, $this->userId($request));
 
         return back();
+    }
+
+    /**
+     * Add lines to an existing order. Guarded by the same 1-hour edit window
+     * as the API (App\Services\Orders\OrderEditGuard, called from inside the
+     * Action), so this needs no extra check here.
+     */
+    public function addItems(AddOrderItemsRequest $request, Order $order, AddOrderItemsAction $action): RedirectResponse
+    {
+        /** @var list<array<string, mixed>> $items */
+        $items = (array) $request->validated('items', []);
+        $action->execute($order, $items);
+
+        return back()->with('success', __('Items added.'));
+    }
+
+    public function updateItem(UpdateOrderItemRequest $request, OrderItem $orderItem, UpdateOrderItemAction $action): RedirectResponse
+    {
+        $action->execute(
+            $orderItem,
+            $request->has('quantity') ? (int) $request->validated('quantity') : null,
+            $request->has('unit_type') ? (string) $request->validated('unit_type') : null,
+        );
+
+        return back()->with('success', __('Item updated.'));
+    }
+
+    public function deleteItem(OrderItem $orderItem, DeleteOrderItemAction $action): RedirectResponse
+    {
+        $action->execute($orderItem);
+
+        return back()->with('success', __('Item removed.'));
+    }
+
+    /**
+     * Clone this order into a new draft: same customer, notes, shipping and
+     * lines, but a fresh order number, status and history — see
+     * DuplicateOrderAction. Lands on the new order the same way store() does.
+     */
+    public function duplicate(Request $request, Order $order, DuplicateOrderAction $action): RedirectResponse
+    {
+        $duplicate = $action->execute($order, $this->userId($request));
+
+        return redirect('/orders?order='.$duplicate->getKey())->with('success', __('Order duplicated.'));
     }
 
     public function destroy(Order $order, DeleteOrderAction $action): RedirectResponse
