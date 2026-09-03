@@ -178,17 +178,27 @@ says 12px mono.
 
 ## Gaps — design ahead of the backend
 
-The Dashboard design (`208:5577`) specifies cards the API cannot yet supply.
-These are deliberately **absent** from the Vue page rather than filled with
-invented numbers:
+The Dashboard design (`208:5577`) is mostly implementable today — re-audited
+2026-09-03 against `DashboardSummary` field by field. Two rows below were
+wrong: `ReorderRadarQuery` and `keyRatios().dtc_revenue_pct` already exist and
+were simply never read by `Dashboard.vue`. Only the rows marked **missing**
+need a genuine product decision (a stored number, a policy) before a query can
+supply them; everything else is wiring an existing query into a new card:
 
-| Design element | Missing backing data |
+| Design element | Status |
 |---|---|
-| "Revenue vs. target" (68% of annual target) | No annual revenue target is stored |
-| "Target by channel" + pace commentary | No per-channel targets |
-| "Runway — 4,2 months", net cash flow, expense split | No runway/expense-category aggregate |
-| "Reorder pipeline" | No reorder-pipeline query |
-| "DTC Revenue" | No direct-to-consumer channel |
+| Bottom 8-tile ratio grid (DTC Revenue, Operating Margin, Employee Cost, Marketing Cost, COGS, Revenue/Employee, Avg Order Value, Inventory Turnover) | Wiring only — `keyRatios()` computes all eight already |
+| "Reorder pipeline" | Wiring only — `ReorderRadarQuery` (already live at `Api\CustomerController::reorderRadar`) supplies exactly this |
+| "Low stock" | Wiring + a query tweak — `stockWatch()` needs to filter to items actually below their minimum and select `unit` |
+| Alert band's "N ready to ship" / "N overdue" | Wiring only — `order_status` and `tasks_overdue` are computed; the alert band checks different conditions today |
+| "Custom" period tab | Wiring only — `period=custom&from=&to=` already works server-side |
+| Net cash flow + expense split | New aggregation, no new schema — `Inflow`, `Cost` and `CostAnalyticsQuery::byCategory()` cover it |
+| "Upcoming tasks" | New aggregation, no new schema — `WorkOrder` already has category/due_date/status |
+| Runway's payables line ("Delay payable — Supplier, due soon") | New aggregation, no new schema — `Cost` has `due_date` + `supplier_id` |
+| Revenue chart (monthly, trailing 6 months) | New query shape — the data exists, but `series()` buckets the *selected* period, not a fixed calendar-month window |
+| "Revenue vs. target" (68% of annual target) | **Missing: no annual revenue target is stored** |
+| "Target by channel" + pace commentary | **Missing: no per-channel target is stored** |
+| "Runway — 4,2 months" + the receivables-aging line | **Missing: no cash-on-hand figure exists anywhere, and `Order` has no due-date/payment-terms field** — "overdue" can only mean *unpaid*, not *unpaid past its due date* |
 
 Inventory (`389:1592`) adds three more:
 

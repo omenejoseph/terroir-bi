@@ -358,24 +358,34 @@ discrepancy is logged for the designer.
 
 ## Phase 6 — Dashboard completion
 
-**Blocked on backend work, not on design.** The design specifies cards that no
-query can currently supply. Each needs scoping as a feature before the screen
-can be finished:
+**Re-audited 2026-09-03 — most of this is wiring, not backend work.** Two
+rows below were wrong: `ReorderRadarQuery` and the `dtc_revenue_pct` in
+`DashboardSummary::keyRatios()` already exist and were simply never read by
+`Dashboard.vue`. The real gaps are the three rows marked **missing** — those
+need a product decision (a number, a policy) before any query can supply them.
 
-| Card | Missing |
+| Card | Status |
 |---|---|
-| Revenue vs. target | No annual revenue target is stored |
-| Target by channel + pace | No per-channel targets |
-| Runway, net cash flow, expense split | No runway or expense-category aggregate |
-| Reorder pipeline | No reorder-pipeline query |
-| DTC Revenue | No direct-to-consumer channel |
+| Bottom 8-tile ratio grid (DTC Revenue, Operating Margin, Employee Cost, Marketing Cost, COGS, Revenue/Employee, Avg Order Value, Inventory Turnover) | **Wiring only.** `DashboardSummary::keyRatios()` computes all eight; none are rendered |
+| Reorder pipeline | **Wiring only.** `ReorderRadarQuery` (used by `Api\CustomerController::reorderRadar`) supplies customer, days-since-last-order and avg order value — never called from the dashboard |
+| Low stock | **Wiring + a query tweak.** `InventoryAnalyticsQuery::stockWatch()` orders by lowest stock among items with a min set, not specifically *below* min, and does not select `unit` for the "12/24 btl" fraction |
+| "N orders ready to ship" / "N tasks overdue" alerts | **Wiring only.** `order_status` and `tasks_overdue` are already computed; the alert band currently checks different conditions (low stock, outstanding A/R) |
+| Custom period tab | **Wiring only.** `period=custom&from=&to=` already works server-side (`DashboardSummary::customWindow()`); the tab and its date picker are the same pattern already built for Orders |
+| Net cash flow + expense split (Salary/Marketing/Operations/Other) | **New aggregation, no new schema.** `Inflow` (cash in) and `Cost` with `CostCategory` (cash out, already grouped by `CostAnalyticsQuery::byCategory()`) cover it; needs a small dashboard-facing query, not a new table |
+| Upcoming tasks | **New aggregation, no new schema.** `WorkOrder` already has `category`, `due_date`, `status`; needs a "due this week / overdue" query mirroring the Work Orders board's own |
+| Runway's "Delay payable — Supplier, €X due soon" line | **New aggregation, no new schema.** `Cost` has `due_date`, `status`, `supplier_id` |
+| Revenue chart (monthly points, Feb–Jul) | **New query shape.** `Order.created_at` is enough, but the existing `series()` buckets the *selected* period; the chart wants a fixed trailing-6-months-by-calendar-month view regardless of which period tab is active |
+| Revenue vs. target (68% of annual target) | **Missing: no annual revenue target is stored anywhere** |
+| Target by channel + pace | **Missing: no per-channel target is stored**, and the design's channels (Wholesale / Accommodation / Agencies) don't match `revenue_by_channel`'s (wholesale/retail/agency/shipshop/other) — same taxonomy question as below |
+| Runway ("4,2 months") + the "Collect €X — Customer, Overdue N days" line | **Missing: no cash-on-hand figure is stored anywhere**, so months-of-runway can't be computed; and `Order` has no due-date/payment-terms field, so "overdue" can only mean *unpaid*, not *unpaid past when it was due* |
 | Free to sell / Cover (Inventory) | No order-line reservations; no exit-rate model |
 | Max stock (Level bar) | Only `min_stock` exists, so the bar reads against the minimum |
 
 Also unresolved: `revenue_by_channel` returns
 `wholesale / retail / agency / shipshop / other`, but the design shows
 `Wholesale / Accommodation / Agencies`. **The channel taxonomy needs a product
-decision before that card can be exact.**
+decision before "Revenue vs. target" and "Revenue breakdown" can use the
+design's own channel names.**
 
 **DoD:** each row above is either implemented with a real query and a test, or
 explicitly cancelled and struck from the design. No card ships with invented data.
