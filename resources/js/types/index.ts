@@ -32,6 +32,8 @@ export interface Auth {
     roles: string[];
     /** Resolved server-side from RoleCapabilities; may contain the '*' wildcard. */
     capabilities: string[];
+    /** Ordered nav-item keys pinned via Manage Shortcuts (Figma `143:4179`). */
+    shortcuts: string[];
 }
 
 export interface Flash {
@@ -48,6 +50,13 @@ export interface SharedProps {
     flash: Flash;
     locale: string;
     errors: Record<string, string>;
+    /**
+     * Recently-visited nav-item keys, newest first — `Inertia::optional`, so it
+     * is only present after a partial reload asks for it (Manage Shortcuts
+     * opening). Undefined otherwise, never an empty array standing in for
+     * "not fetched yet".
+     */
+    recentNavVisits?: string[];
     [key: string]: unknown;
 }
 

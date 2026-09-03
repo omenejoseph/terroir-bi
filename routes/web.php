@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\InventoryController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\OrderController;
 use App\Http\Controllers\Web\SearchController;
+use App\Http\Controllers\Web\ShortcutController;
 use App\Http\Controllers\Web\WorkOrderController;
 use Illuminate\Support\Facades\Route;
 
@@ -56,6 +57,12 @@ Route::middleware('tenant.web')->group(function () {
     Route::post('notifications/read', [NotificationController::class, 'read'])->name('notifications.read');
     Route::post('notifications/clear', [NotificationController::class, 'clear'])->name('notifications.clear');
     Route::delete('notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+
+    // Manage Shortcuts (Figma 143:4179). No can:* gate: pinning is a personal
+    // preference over nav items the member can already see, not a capability
+    // of its own.
+    Route::patch('shortcuts', [ShortcutController::class, 'update'])->name('shortcuts.update');
+    Route::delete('shortcuts/recent', [ShortcutController::class, 'clearRecent'])->name('shortcuts.clear-recent');
 
     Route::middleware('can:inventory.view')->group(function () {
         Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');

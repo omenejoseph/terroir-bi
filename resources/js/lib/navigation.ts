@@ -49,9 +49,15 @@ import {
  * Icons: the Figma assets could not be exported (the asset host is blocked by
  * this environment's egress policy), so these are the matching Lucide glyphs —
  * the same icon set the outgoing React app used. See docs/design/README.md.
+ *
+ * `key` is the stable identifier Manage Shortcuts pins against — it must match
+ * `App\Support\NavCatalog` on the backend (kebab-case of the label, checked
+ * for uniqueness across every category since two categories both happening to
+ * have a "Harvest" would collide).
  */
 
 export interface NavItem {
+    key: string;
     label: string;
     /** null = designed but not yet implemented; renders disabled. */
     href: string | null;
@@ -77,20 +83,20 @@ export const NAV_CATEGORIES: NavCategory[] = [
         label: 'Overview',
         icon: LayoutGrid,
         items: [
-            { label: 'Dashboard', href: '/dashboard', icon: LayoutGrid, module: 'dashboard' },
-            { label: 'Cash System', href: null, icon: Coins, capability: 'finance.view', module: 'cash_flow' },
+            { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: LayoutGrid, module: 'dashboard' },
+            { key: 'cash-system', label: 'Cash System', href: null, icon: Coins, capability: 'finance.view', module: 'cash_flow' },
         ],
     },
     {
         label: 'Sales',
         icon: ShoppingCart,
         items: [
-            { label: 'Orders', href: '/orders', icon: ShoppingCart, capability: 'orders.view', module: 'orders' },
-            { label: 'Customers', href: '/customers', icon: Users, capability: 'customers.view', module: 'customers' },
+            { key: 'orders', label: 'Orders', href: '/orders', icon: ShoppingCart, capability: 'orders.view', module: 'orders' },
+            { key: 'customers', label: 'Customers', href: '/customers', icon: Users, capability: 'customers.view', module: 'customers' },
             // Task planning is open to any member (routes/api.php and routes/web.php
             // both leave it ungated), so this entry carries no capability — hiding it
             // from someone the route admits would be the sidebar lying.
-            { label: 'Work Orders', href: '/work-orders', icon: ClipboardList, module: 'work_orders' },
+            { key: 'work-orders', label: 'Work Orders', href: '/work-orders', icon: ClipboardList, module: 'work_orders' },
             // These three don't have a real App\Enums\Module case yet — the
             // module keys below are forward-looking, not ones any plan can
             // include today. That's deliberate: the item stays hidden (no
@@ -98,9 +104,9 @@ export const NAV_CATEGORIES: NavCategory[] = [
             // enum, ModuleRegistry and a route exist) without a code change
             // here — add the real module server-side and it starts appearing
             // for any plan that includes it.
-            { label: 'Wine Club', href: null, icon: Wine, capability: 'customers.view', module: 'wine_club' },
-            { label: 'Agencies', href: null, icon: Building2, capability: 'customers.view', module: 'agencies' },
-            { label: 'Pipeline', href: null, icon: ChartLine, capability: 'customers.view', module: 'pipeline' },
+            { key: 'wine-club', label: 'Wine Club', href: null, icon: Wine, capability: 'customers.view', module: 'wine_club' },
+            { key: 'agencies', label: 'Agencies', href: null, icon: Building2, capability: 'customers.view', module: 'agencies' },
+            { key: 'pipeline', label: 'Pipeline', href: null, icon: ChartLine, capability: 'customers.view', module: 'pipeline' },
         ],
     },
     {
@@ -110,72 +116,65 @@ export const NAV_CATEGORIES: NavCategory[] = [
         // product-side) — same forward-looking-module pattern as Wine Club
         // above, so this category stays hidden until one does.
         items: [
-            { label: 'Accommodation', href: null, icon: Store, module: 'hospitality' },
-            { label: 'Kitchen', href: null, icon: CookingPot, module: 'hospitality' },
-            { label: 'Hospitality', href: null, icon: Wine, module: 'hospitality' },
+            { key: 'accommodation', label: 'Accommodation', href: null, icon: Store, module: 'hospitality' },
+            { key: 'kitchen', label: 'Kitchen', href: null, icon: CookingPot, module: 'hospitality' },
+            { key: 'hospitality', label: 'Hospitality', href: null, icon: Wine, module: 'hospitality' },
         ],
     },
     {
         label: 'Production',
         icon: Factory,
         items: [
-            { label: 'Cellar', href: null, icon: Warehouse, capability: 'cellar.view', module: 'cellar' },
-            { label: 'Harvest', href: null, icon: Grape, capability: 'vineyards.view', module: 'vineyards' },
-            { label: 'Production Plan', href: null, icon: Sprout, capability: 'production.view', module: 'production' },
+            { key: 'cellar', label: 'Cellar', href: null, icon: Warehouse, capability: 'cellar.view', module: 'cellar' },
+            { key: 'harvest', label: 'Harvest', href: null, icon: Grape, capability: 'vineyards.view', module: 'vineyards' },
+            { key: 'production-plan', label: 'Production Plan', href: null, icon: Sprout, capability: 'production.view', module: 'production' },
         ],
     },
     {
         label: 'Supply',
         icon: Boxes,
         items: [
-            { label: 'Inventory', href: '/inventory', icon: Package, capability: 'inventory.view', module: 'inventory' },
-            { label: 'Purchase Orders', href: null, icon: FileStack, capability: 'suppliers.view', module: 'suppliers' },
-            { label: 'Suppliers', href: null, icon: Truck, capability: 'suppliers.view', module: 'suppliers' },
+            { key: 'inventory', label: 'Inventory', href: '/inventory', icon: Package, capability: 'inventory.view', module: 'inventory' },
+            { key: 'purchase-orders', label: 'Purchase Orders', href: null, icon: FileStack, capability: 'suppliers.view', module: 'suppliers' },
+            { key: 'suppliers', label: 'Suppliers', href: null, icon: Truck, capability: 'suppliers.view', module: 'suppliers' },
         ],
     },
     {
         label: 'Finance',
         icon: Banknote,
         items: [
-            { label: 'Costs', href: null, icon: Receipt, capability: 'finance.view', module: 'costs' },
-            { label: 'Inflow', href: null, icon: CreditCard, capability: 'finance.view', module: 'inflows' },
-            { label: 'Cash Flow', href: null, icon: ChartLine, capability: 'financials.view', module: 'cash_flow' },
+            { key: 'costs', label: 'Costs', href: null, icon: Receipt, capability: 'finance.view', module: 'costs' },
+            { key: 'inflow', label: 'Inflow', href: null, icon: CreditCard, capability: 'finance.view', module: 'inflows' },
+            { key: 'cash-flow', label: 'Cash Flow', href: null, icon: ChartLine, capability: 'financials.view', module: 'cash_flow' },
         ],
     },
     {
         label: 'Team',
         icon: Users,
         items: [
-            { label: 'Employees', href: null, icon: Users, capability: 'members.view', module: 'team' },
-            { label: 'Schedules', href: null, icon: CalendarDays, module: 'team' },
-            { label: 'My Team', href: null, icon: UserRound, module: 'team' },
-            { label: 'Surveys', href: null, icon: ClipboardList, module: 'team' },
-            { label: 'My Hours', href: null, icon: Clock, module: 'team' },
+            { key: 'employees', label: 'Employees', href: null, icon: Users, capability: 'members.view', module: 'team' },
+            { key: 'schedules', label: 'Schedules', href: null, icon: CalendarDays, module: 'team' },
+            { key: 'my-team', label: 'My Team', href: null, icon: UserRound, module: 'team' },
+            { key: 'surveys', label: 'Surveys', href: null, icon: ClipboardList, module: 'team' },
+            { key: 'my-hours', label: 'My Hours', href: null, icon: Clock, module: 'team' },
         ],
     },
     {
         label: 'System',
         icon: Settings,
         items: [
-            { label: 'Settings', href: null, icon: Settings, capability: 'settings.manage', module: 'settings' },
-            { label: 'WhatsApp Bot', href: null, icon: MessageCircle, capability: 'settings.manage', module: 'settings' },
+            { key: 'settings', label: 'Settings', href: null, icon: Settings, capability: 'settings.manage', module: 'settings' },
+            { key: 'whatsapp-bot', label: 'WhatsApp Bot', href: null, icon: MessageCircle, capability: 'settings.manage', module: 'settings' },
         ],
     },
 ];
 
-/**
- * The design's "Shortcuts" section — a user-pinned list sitting above the
- * categories. Pinning is not implemented yet, so this renders the design's
- * default set.
- */
 export const SHORTCUTS_ICON = Pin;
 
-export const SHORTCUTS: NavItem[] = [
-    { label: 'Cash System', href: null, icon: Coins, capability: 'finance.view', module: 'cash_flow' },
-    { label: 'Orders', href: '/orders', icon: ShoppingCart, capability: 'orders.view', module: 'orders' },
-    { label: 'Harvest', href: null, icon: Grape, capability: 'vineyards.view', module: 'vineyards' },
-    { label: 'Inventory', href: '/inventory', icon: Boxes, capability: 'inventory.view', module: 'inventory' },
-];
+/** Every nav item, keyed for Manage Shortcuts' pin/unpin and the visit tracker's lookup. */
+const NAV_ITEMS_BY_KEY: Record<string, NavItem> = Object.fromEntries(
+    NAV_CATEGORIES.flatMap((category) => category.items).map((item) => [item.key, item]),
+);
 
 /**
  * Drop items the member has no capability for, or that aren't in the tenant's
@@ -195,10 +194,37 @@ export function navigationFor(
     })).filter((category) => category.items.length > 0);
 }
 
-export function shortcutsFor(can: (capability: string) => boolean, hasModule: (module: string) => boolean): NavItem[] {
-    return SHORTCUTS.filter(
+/**
+ * The design's "Shortcuts" section (Figma `547:1610`) — a user-pinned list
+ * sitting above the categories. `pinnedKeys` is the member's own ordered
+ * pins from `auth.shortcuts`; unknown keys (a stale pin from a removed nav
+ * item), ones the member has lost the capability for, and ones outside the
+ * tenant's current plan are silently dropped rather than shown broken.
+ */
+export function shortcutsFor(
+    can: (capability: string) => boolean,
+    hasModule: (module: string) => boolean,
+    pinnedKeys: string[],
+): NavItem[] {
+    return pinnedKeys
+        .map((key) => NAV_ITEMS_BY_KEY[key])
+        .filter(
+            (item): item is NavItem =>
+                item !== undefined &&
+                (item.capability === undefined || can(item.capability)) &&
+                (item.module === undefined || hasModule(item.module)),
+        );
+}
+
+/** Every pinnable item the member currently has capability for, for the Manage Shortcuts dialog. */
+export function pinnableItemsFor(can: (capability: string) => boolean, hasModule: (module: string) => boolean): NavItem[] {
+    return NAV_CATEGORIES.flatMap((category) => category.items).filter(
         (item) =>
             (item.capability === undefined || can(item.capability)) &&
             (item.module === undefined || hasModule(item.module)),
     );
+}
+
+export function navItemByKey(key: string): NavItem | undefined {
+    return NAV_ITEMS_BY_KEY[key];
 }

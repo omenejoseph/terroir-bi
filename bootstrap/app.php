@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnforceModuleAccess;
 use App\Http\Middleware\EnforceTenantAccess;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RecordNavVisit;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -47,6 +48,9 @@ return Application::configure(basePath: dirname(__DIR__))
             EnforceModuleAccess::class,
             EnforceTenantAccess::class,
             SetLocale::class,
+            // Feeds Manage Shortcuts' "Recent" list; needs the tenant + user
+            // ResolveTenant and 'auth' have already resolved by this point.
+            RecordNavVisit::class,
         ]);
 
         // Shared props for every Inertia response (auth, tenant, flash, ziggy).

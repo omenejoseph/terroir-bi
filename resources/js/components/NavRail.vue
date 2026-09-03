@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
+import { Settings2 } from 'lucide-vue-next';
 
 import AppLogo from '@/components/AppLogo.vue';
+import ManageShortcutsDialog from '@/components/ManageShortcutsDialog.vue';
 import NavRow from '@/components/NavRow.vue';
 import Avatar from '@/components/ui/Avatar.vue';
 import { useAuth } from '@/composables/useAuth';
 import { usePopover } from '@/composables/usePopover';
 import { cn } from '@/lib/cn';
 import { navigationFor, shortcutsFor, SHORTCUTS_ICON, type NavCategory } from '@/lib/navigation';
+
+const SHORTCUTS_LABEL = 'Shortcuts';
 
 /**
  * The collapsed navigation (Figma `230:2399`, "NavRail") — the state every
@@ -25,25 +29,28 @@ import { navigationFor, shortcutsFor, SHORTCUTS_ICON, type NavCategory } from '@
  * would be nine buttons that reach nothing. The flyout renders the same NavRow
  * as the expanded sidebar, so a category reads identically in both states.
  */
-const { user, can, hasModule } = useAuth();
+const { user, can, hasModule, shortcuts: pinnedShortcuts } = useAuth();
 
 const categories = computed(() => navigationFor(can, hasModule));
-const shortcuts = computed(() => shortcutsFor(can, hasModule));
+const shortcuts = computed(() => shortcutsFor(can, hasModule, pinnedShortcuts.value));
 
 /**
  * Shortcuts sit second, between Overview and the rest, exactly as the expanded
  * nav orders them. Modelling it as a pseudo-category keeps the rail one list
  * instead of a special case wedged into the middle.
+ *
+ * Unlike every other group, this one stays even with no items: its flyout is
+ * the rail's only way to reach Manage Shortcuts, so a first-time member with
+ * nothing pinned still needs a target to open it from.
  */
 const groups = computed<NavCategory[]>(() => {
     const [overview, ...rest] = categories.value;
-    const pinned: NavCategory[] =
-        shortcuts.value.length > 0
-            ? [{ label: 'Shortcuts', icon: SHORTCUTS_ICON, items: shortcuts.value }]
-            : [];
+    const pinned: NavCategory = { label: SHORTCUTS_LABEL, icon: SHORTCUTS_ICON, items: shortcuts.value };
 
-    return overview === undefined ? pinned : [overview, ...pinned, ...rest];
+    return overview === undefined ? [pinned] : [overview, pinned, ...rest];
 });
+
+const manageShortcutsOpen = ref(false);
 
 const rail = ref<HTMLElement | null>(null);
 const { open, show, close } = usePopover(rail);
@@ -167,12 +174,26 @@ function isCurrent(group: NavCategory, url: string): boolean {
                     class="fixed z-40 w-56 rounded-nav border border-sidebar-border bg-sidebar p-2 shadow-lg"
                     :style="{ top: `${flyout.top}px`, left: `${flyout.left}px` }"
                 >
-                    <p class="px-2 pb-1 text-13 text-muted-foreground">{{ group.label }}</p>
-                    <ul class="space-y-px">
+                    <div class="flex items-center justify-between gap-2 px-2 pb-1">
+                        <p class="text-13 text-muted-foreground">{{ group.label }}</p>
+                        <button
+                            v-if="group.label === SHORTCUTS_LABEL"
+                            type="button"
+                            class="grid size-5 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground"
+                            aria-label="Manage shortcuts"
+                            @click="manageShortcutsOpen = true"
+                        >
+                            <Settings2 class="size-3" :stroke-width="1.5" />
+                        </button>
+                    </div>
+                    <ul v-if="group.items.length" class="space-y-px">
                         <li v-for="item in group.items" :key="item.label">
                             <NavRow :item="item" />
                         </li>
                     </ul>
+                    <p v-else-if="group.label === SHORTCUTS_LABEL" class="px-2 pb-1 text-xs text-muted-foreground">
+                        Nothing pinned yet.
+                    </p>
                 </div>
             </div>
         </nav>
@@ -190,5 +211,11 @@ function isCurrent(group: NavCategory, url: string): boolean {
                 <Avatar :name="user?.name" tone="primary" />
             </Link>
         </div>
+
+        <ManageShortcutsDialog
+            :open="manageShortcutsOpen"
+            :pinned-keys="pinnedShortcuts"
+            @close="manageShortcutsOpen = false"
+        />
     </div>
 </template>
