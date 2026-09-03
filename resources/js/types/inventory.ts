@@ -18,6 +18,7 @@ export interface InventoryItem {
     name: string;
     sku: string;
     category: string;
+    description: string | null;
     group: string | null;
     subcategory: string | null;
     vintage: number | null;

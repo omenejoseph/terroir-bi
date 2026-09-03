@@ -18,7 +18,19 @@ import { useTranslations } from '@/composables/useTranslations';
  * correction sets `is_reconciliation`, which excludes it from velocity and
  * cover exactly as the design's helper text promises.
  */
-const props = defineProps<{ itemId: string; unit: string }>();
+const props = defineProps<{
+    itemId: string;
+    unit: string;
+    /**
+     * Restricts the follow-up reload to these props. Product Detail's own
+     * props are all eager-loaded, so a full reload there is harmless and this
+     * is left undefined; a host with `Inertia::optional` props (the Item —
+     * View drawer's `itemMovements`) must pass its own, or a bare `.post()`
+     * silently drops them — see OrderViewPanel.vue's reloadOrder() for the
+     * same gotcha.
+     */
+    only?: string[];
+}>();
 const { t } = useTranslations();
 
 const form = useForm({
@@ -49,6 +61,7 @@ function submit(): void {
         })
         .post(`/inventory/${props.itemId}/stock`, {
             preserveScroll: true,
+            only: props.only,
             onSuccess: () => form.reset(),
         });
 }

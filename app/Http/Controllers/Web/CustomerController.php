@@ -186,7 +186,7 @@ class CustomerController extends Controller
             }),
 
             'consignment' => Inertia::optional(
-                fn (): array => app(CustomerConsignmentService::class)->summary($customer),
+                fn (): array => $this->consignment($customer, $financials),
             ),
 
             // The self-service order link (231:9336's "Generate Order Link").
@@ -317,6 +317,38 @@ class CustomerController extends Controller
             'rows' => $rows,
             'override_count' => count($rows),
         ];
+    }
+
+    /**
+     * The Consignment tab (Figma 231:9336's "Komisija"). Bottle counts (placed
+     * / sold / returned / remaining) stay visible to everyone the same way the
+     * board picker's counts do; only the money CustomerConsignmentService
+     * always computes — sold revenue, gross profit, margin — is withheld from
+     * a viewer without financials.view, the same "withheld rather than zeroed"
+     * stance orderHistoryTotal above takes.
+     *
+     * @return array<string, mixed>
+     */
+    private function consignment(Customer $customer, bool $financials): array
+    {
+        $summary = app(CustomerConsignmentService::class)->summary($customer);
+
+        if ($financials) {
+            return $summary;
+        }
+
+        $summary['products'] = array_map(function (array $product): array {
+            $product['sold_revenue'] = null;
+            $product['margin_percent'] = null;
+
+            return $product;
+        }, $summary['products']);
+
+        $summary['total_sold_revenue'] = null;
+        $summary['total_sold_gross_profit'] = null;
+        $summary['total_sold_margin_percent'] = null;
+
+        return $summary;
     }
 
     /**

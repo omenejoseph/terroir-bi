@@ -52,6 +52,7 @@ final class InventoryItemData implements Arrayable, JsonSerializable
             'name' => $this->name,
             'sku' => $this->sku,
             'category' => $this->category,
+            'description' => $item?->description,
             'group' => $item?->group,
             'subcategory' => $item?->subcategory,
             'vintage' => $item?->vintage,

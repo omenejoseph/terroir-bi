@@ -4,6 +4,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import { ArrowLeft, ChevronRight, Link2, PencilLine, Plus, Search, Trash2 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
+import ConsignmentPanel from '@/components/customers/ConsignmentPanel.vue';
 import CustomerAttentionBand from '@/components/customers/CustomerAttentionBand.vue';
 import CustomerFormPanel from '@/components/customers/CustomerFormPanel.vue';
 import CustomerPriceDialog from '@/components/customers/CustomerPriceDialog.vue';
@@ -26,6 +27,7 @@ import { formatMoney, formatNumber } from '@/lib/money';
 import type {
     AttentionCard,
     Customer,
+    CustomerConsignment,
     CustomerInsights,
     CustomerOrderAnalytics,
     CustomerPriceRow,
@@ -73,7 +75,7 @@ const props = defineProps<{
     orderHistoryFilters: { search: string | null; status: string | null };
     /** Null when the viewer may not see financials. */
     orderHistoryTotal?: MoneyValue | null;
-    consignment?: Record<string, unknown>;
+    consignment?: CustomerConsignment;
     /** Undefined until the Order link dialog opens and asks for it. */
     orderToken?: string | null;
 }>();
@@ -1179,26 +1181,12 @@ function removePrice(row: CustomerPriceRow): void {
 
             <!-- ==================== Komisija ==================== -->
             <template v-else>
-                <div class="border border-border bg-card p-6">
-                    <SectionHeader
-                        :title="t('Consignment')"
-                        :description="t('Goods placed with this customer that are still ours until sold')"
-                    />
-
-                    <pre
-                        v-if="consignment && Object.keys(consignment).length > 0"
-                        class="mt-4 overflow-x-auto text-xs text-muted-foreground"
-                        >{{ consignment }}</pre
-                    >
-                    <p v-else class="mt-4 text-xs text-muted-foreground">
-                        {{ t('Nothing on consignment with this customer.') }}
-                    </p>
-
-                    <!-- @todo Place / record sale / record return. The service
-                         and endpoints exist (CustomerConsignmentService); the
-                         design does not specify this tab's layout, so it
-                         reports the rollup and stops short of inventing one. -->
-                </div>
+                <ConsignmentPanel
+                    :customer-id="customer.id"
+                    :consignment="consignment"
+                    :catalog="pricingCatalog"
+                    :can-manage="can('orders.manage')"
+                />
             </template>
         </div>
 

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import Callout from '@/components/ui/Callout.vue';
 import MetaStrip from '@/components/ui/MetaStrip.vue';
+import QuickStockEntry from '@/components/inventory/QuickStockEntry.vue';
 import SectionHeader from '@/components/ui/SectionHeader.vue';
 import Separator from '@/components/ui/Separator.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
@@ -28,7 +29,7 @@ import type { SharedProps } from '@/types';
  * set, so it wants a visual diff once a render exists.
  */
 const props = defineProps<{ item: InventoryItem | null; movements: StockMovement[] }>();
-const emit = defineEmits<{ close: [] }>();
+const emit = defineEmits<{ close: []; edit: [item: InventoryItem] }>();
 
 const page = usePage<SharedProps>();
 const { t } = useTranslations();
@@ -36,10 +37,15 @@ const locale = computed(() => page.props.locale);
 const money = (m: MoneyValue | null) => (m ? formatMoney(m.minor, m.currency, locale.value) : null);
 const qty = (q: string | null) => formatQuantity(q, locale.value);
 
+/** Toggled by "Adjust" — an inline QuickStockEntry rather than a second drawer. */
+const adjusting = ref(false);
+
 /** Pull this item's movements only once the drawer is actually open. */
 watch(
     () => props.item?.id,
     (id) => {
+        adjusting.value = false;
+
         if (id) router.reload({ only: ['itemMovements'], data: { item: id } });
     },
 );
@@ -120,8 +126,17 @@ const details = computed(() => {
                             }}<template v-if="cases !== null"> · {{ t(':count cases', { count: cases }) }}</template>
                         </span>
                     </div>
-                    <Button variant="outline" size="sm" :href="`/inventory/${item.id}`">{{ t('Adjust') }}</Button>
+                    <Button variant="outline" size="sm" @click="adjusting = !adjusting">
+                        {{ adjusting ? t('Cancel') : t('Adjust') }}
+                    </Button>
                 </div>
+
+                <QuickStockEntry
+                    v-if="adjusting"
+                    :item-id="item.id"
+                    :unit="item.unit"
+                    :only="['items', 'itemMovements']"
+                />
 
                 <!--
                   The design leads with free-to-sell. We cannot compute it, so
@@ -166,10 +181,10 @@ const details = computed(() => {
             <section class="flex flex-col gap-3">
                 <SectionHeader :title="t('Pricing & margin')">
                     <template #actions>
-                        <!-- @todo Inline pricing edit; for now it opens the item. -->
-                        <Link :href="`/inventory/${item.id}`" class="text-xs text-muted-foreground hover:text-foreground">
+                        <!-- @todo Inline pricing edit; for now it opens the shared item form. -->
+                        <button type="button" class="text-xs text-muted-foreground hover:text-foreground" @click="emit('edit', item)">
                             {{ t('Edit') }}
-                        </Link>
+                        </button>
                     </template>
                 </SectionHeader>
 
@@ -191,7 +206,7 @@ const details = computed(() => {
                 <Callout v-if="!item.cost_per_unit" :title="t('Margin unavailable')">
                     {{ t('Needs a cost per unit, or a recipe to calculate from.') }}
                     <template #action>
-                        <Button variant="outline" size="sm" :href="`/inventory/${item.id}`">{{ t('Add cost') }}</Button>
+                        <Button variant="outline" size="sm" @click="emit('edit', item)">{{ t('Add cost') }}</Button>
                     </template>
                 </Callout>
             </section>
@@ -202,10 +217,10 @@ const details = computed(() => {
             <section class="flex flex-col gap-3">
                 <SectionHeader :title="t('Item details')">
                     <template #actions>
-                        <!-- @todo Inline details edit; for now it opens the item. -->
-                        <Link :href="`/inventory/${item.id}`" class="text-xs text-muted-foreground hover:text-foreground">
+                        <!-- @todo Inline details edit; for now it opens the shared item form. -->
+                        <button type="button" class="text-xs text-muted-foreground hover:text-foreground" @click="emit('edit', item)">
                             {{ t('Edit') }}
-                        </Link>
+                        </button>
                     </template>
                 </SectionHeader>
                 <dl class="divide-y divide-border text-sm">
@@ -300,8 +315,8 @@ const details = computed(() => {
             <Button v-if="item" variant="outline" class="mr-auto border-destructive/40 text-destructive" :href="`/inventory/${item.id}`">
                 {{ t('Delete') }}
             </Button>
-            <Button v-if="item" variant="outline" :href="`/inventory/${item.id}`">{{ t('Adjust stock') }}</Button>
-            <Button v-if="item" :href="`/inventory/${item.id}`">{{ t('Edit item') }}</Button>
+            <Button v-if="item" variant="outline" @click="adjusting = !adjusting">{{ t('Adjust stock') }}</Button>
+            <Button v-if="item" @click="emit('edit', item)">{{ t('Edit item') }}</Button>
         </template>
     </SidePanel>
 </template>

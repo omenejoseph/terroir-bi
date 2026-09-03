@@ -468,6 +468,170 @@ class WebCustomersTest extends TestCase
                 ->where('productRange.preset', 'custom'));
     }
 
+    /**
+     * The Consignment tab's whole point is a running ledger of what is still
+     * out there — a placement that has nothing left AND was formally closed
+     * has nothing more to say, so it must drop out rather than clutter the
+     * list forever. One still-open placement (nothing sold yet) and one fully
+     * sold-through and closed prove the filter, not just its absence.
+     */
+    public function test_the_consignment_tab_only_shows_open_placements(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $product = $this->makeProduct('Kosa Plavac', 3000);
+
+        $open = Order::create([
+            'order_number' => 'VT-'.fake()->unique()->numerify('########'),
+            'status' => OrderStatus::Received,
+            'customer_id' => $customer->getKey(),
+            'created_by_id' => $admin->getKey(),
+            'is_consignment' => true,
+            'total_amount' => Money::fromMinor(3000, 'EUR'),
+        ]);
+        $open->items()->create([
+            'inventory_item_id' => $product->getKey(),
+            'quantity' => 1,
+            'unit_type' => 'bottles',
+            'unit_price' => Money::fromMinor(3000, 'EUR'),
+            'total' => Money::fromMinor(3000, 'EUR'),
+        ]);
+
+        $settled = Order::create([
+            'order_number' => 'VT-'.fake()->unique()->numerify('########'),
+            'status' => OrderStatus::Received,
+            'customer_id' => $customer->getKey(),
+            'created_by_id' => $admin->getKey(),
+            'is_consignment' => true,
+            'consignment_closed_at' => now(),
+            'total_amount' => Money::fromMinor(3000, 'EUR'),
+        ]);
+        $settledItem = $settled->items()->create([
+            'inventory_item_id' => $product->getKey(),
+            'quantity' => 1,
+            'unit_type' => 'bottles',
+            'unit_price' => Money::fromMinor(3000, 'EUR'),
+            'total' => Money::fromMinor(3000, 'EUR'),
+        ]);
+        $settled->consignmentReports()->create([
+            'kind' => 'SALE',
+            'date' => now(),
+            'created_by_id' => $admin->getKey(),
+        ])->items()->create([
+            'order_item_id' => $settledItem->getKey(),
+            'quantity' => 1,
+            'unit_price' => Money::fromMinor(3000, 'EUR'),
+            'total' => Money::fromMinor(3000, 'EUR'),
+        ]);
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get(
+                '/customers/'.$customer->getKey().'?tab=consignment',
+                $this->inertiaPartial('Customers/Show', 'consignment'),
+            );
+
+        $response->assertOk();
+
+        $placements = collect($response->json('props.consignment.placements'))->keyBy('order_id');
+
+        $this->assertCount(1, $placements);
+        $this->assertTrue($placements->has($open->getKey()));
+        $this->assertFalse($placements->has($settled->getKey()));
+
+        // Both placements' work is still in the product rollup — placed 2,
+        // sold 1, remaining 1 — only the settled placement's own chip drops.
+        $product = collect($response->json('props.consignment.products'))->first();
+        $this->assertSame(2, $product['placed']);
+        $this->assertSame(1, $product['sold']);
+        $this->assertSame(1, $product['remaining']);
+        $this->assertSame(3000, $product['sold_revenue']['minor']);
+    }
+
+    public function test_placing_goods_creates_a_consignment_order(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $product = $this->makeProduct('Kosa Plavac', 3000);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/customers/'.$customer->getKey().'/consignment/place', [
+                'items' => [['inventory_item_id' => $product->getKey(), 'quantity' => 6]],
+            ])
+            ->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $this->assertDatabaseHas('orders', [
+            'customer_id' => $customer->getKey(),
+            'is_consignment' => true,
+        ]);
+        $this->forgetTenant();
+    }
+
+    /** Selling then returning the remainder walks the placement back to zero, FIFO — the same allocation the API tests exercise. */
+    public function test_recording_a_sale_and_return_via_the_web_routes(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $product = $this->makeProduct('Kosa Plavac', 3000);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)->withSession($session)
+            ->post('/customers/'.$customer->getKey().'/consignment/place', [
+                'items' => [['inventory_item_id' => $product->getKey(), 'quantity' => 10]],
+            ])->assertRedirect();
+
+        $this->actingAs($admin)->withSession($session)
+            ->post('/customers/'.$customer->getKey().'/consignment/sale', [
+                'items' => [['inventory_item_id' => $product->getKey(), 'quantity' => 6]],
+            ])->assertRedirect();
+
+        $this->actingAs($admin)->withSession($session)
+            ->post('/customers/'.$customer->getKey().'/consignment/return', [
+                'items' => [['inventory_item_id' => $product->getKey(), 'quantity' => 4]],
+            ])->assertRedirect();
+
+        $response = $this->actingAs($admin)->withSession($session)
+            ->get(
+                '/customers/'.$customer->getKey().'?tab=consignment',
+                $this->inertiaPartial('Customers/Show', 'consignment'),
+            );
+
+        $row = collect($response->json('props.consignment.products'))->first();
+        $this->assertSame(10, $row['placed']);
+        $this->assertSame(6, $row['sold']);
+        $this->assertSame(4, $row['returned']);
+        $this->assertSame(0, $row['remaining']);
+    }
+
+    public function test_consignment_writes_are_closed_to_a_viewer_without_orders_manage(): void
+    {
+        $tenant = $this->createTenant();
+        $cellar = $this->createMember($tenant, [TenantRole::Cellar]);
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $product = $this->makeProduct('Kosa Plavac', 3000);
+        $this->forgetTenant();
+
+        $this->actingAs($cellar)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/customers/'.$customer->getKey().'/consignment/place', [
+                'items' => [['inventory_item_id' => $product->getKey(), 'quantity' => 1]],
+            ])
+            ->assertForbidden();
+    }
+
     public function test_store_creates_a_customer_and_redirects_to_it(): void
     {
         [$tenant, $admin] = $this->tenantAndAdmin();

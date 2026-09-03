@@ -5,8 +5,8 @@ import { ChevronDown, PencilLine, Upload, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import BulkEditTable from '@/components/inventory/BulkEditTable.vue';
+import ItemFormPanel from '@/components/inventory/ItemFormPanel.vue';
 import ItemViewPanel from '@/components/inventory/ItemViewPanel.vue';
-import NewItemPanel from '@/components/inventory/NewItemPanel.vue';
 import AttentionBand from '@/components/ui/AttentionBand.vue';
 import Button from '@/components/ui/Button.vue';
 import GripHandle from '@/components/ui/GripHandle.vue';
@@ -50,8 +50,21 @@ const { t } = useTranslations();
 
 const search = ref(props.filters.search ?? '');
 
-/* The design opens New Item as a drawer over the list, not as its own page. */
-const newItemOpen = ref(false);
+/* The design opens New Item as a drawer over the list, not as its own page.
+   The same drawer edits an existing one — see ItemFormPanel. */
+const itemFormOpen = ref(false);
+const editingItem = ref<InventoryItem | null>(null);
+
+function openNewItem(): void {
+    editingItem.value = null;
+    itemFormOpen.value = true;
+}
+
+function openEdit(item: InventoryItem): void {
+    viewingId.value = null;
+    editingItem.value = item;
+    itemFormOpen.value = true;
+}
 
 /*
   Bulk edit is a MODE of this page rather than a route (Figma 270:9646): the
@@ -59,8 +72,14 @@ const newItemOpen = ref(false);
 */
 const bulkEditing = ref(false);
 
-/* Clicking a row opens the design's Item — View drawer rather than navigating. */
-const viewing = ref<InventoryItem | null>(null);
+/*
+  Clicking a row opens the design's Item — View drawer rather than navigating.
+  Held as an id rather than the row's own object so the drawer always reflects
+  the freshest `items` prop — after an edit or stock adjustment reloads it,
+  the same object reference from before would otherwise go stale.
+*/
+const viewingId = ref<string | null>(null);
+const viewing = computed(() => props.items.data.find((item) => item.id === viewingId.value) ?? null);
 const bulkTable = ref<InstanceType<typeof BulkEditTable> | null>(null);
 
 /* Debounced server-side search; `preserveState` keeps focus and the typed value
@@ -233,7 +252,7 @@ function flags(item: InventoryItem): string[] {
                             <Upload class="size-4" :stroke-width="1.5" />
                             {{ t('Bulk Import') }}
                         </Button>
-                        <Button v-if="can('inventory.manage')" size="sm" @click="newItemOpen = true">{{ t('New Item') }}</Button>
+                        <Button v-if="can('inventory.manage')" size="sm" @click="openNewItem">{{ t('New Item') }}</Button>
                     </template>
                 </template>
             </PageHeader>
@@ -345,7 +364,7 @@ function flags(item: InventoryItem): string[] {
                                     v-for="item in band.rows"
                                     :key="item.id"
                                     class="cursor-pointer hover:bg-accent/50"
-                                    @click="viewing = item"
+                                    @click="viewingId = item.id"
                                 >
                                     <td class="py-3 pl-3"><GripHandle /></td>
                                     <td class="px-3 py-3">
@@ -414,7 +433,7 @@ function flags(item: InventoryItem): string[] {
             </div>
         </div>
 
-        <NewItemPanel :open="newItemOpen" @close="newItemOpen = false" />
-        <ItemViewPanel :item="viewing" :movements="itemMovements ?? []" @close="viewing = null" />
+        <ItemFormPanel :open="itemFormOpen" :item="editingItem" @close="itemFormOpen = false" />
+        <ItemViewPanel :item="viewing" :movements="itemMovements ?? []" @close="viewingId = null" @edit="openEdit" />
     </AppLayout>
 </template>

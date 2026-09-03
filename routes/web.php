@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Auth\TenantSwitchController;
+use App\Http\Controllers\Web\CustomerConsignmentController;
 use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\CustomerPriceController;
 use App\Http\Controllers\Web\DashboardController;
@@ -188,6 +189,20 @@ Route::middleware('tenant.web')->group(function () {
             ->name('customers.prices.update');
         Route::delete('customers/{customer}/prices/{item}', [CustomerPriceController::class, 'destroy'])
             ->name('customers.prices.destroy');
+    });
+
+    // Customer-level consignment (Consignment tab): place new goods, and
+    // record sales/returns FIFO across the customer's open placements. Reads
+    // ride along with the tab's own Inertia::optional prop, gated like the
+    // rest of Customer — Show by customers.view; only the writes need their
+    // own gate, matching routes/api.php's orders.manage on the same shape.
+    Route::middleware('can:orders.manage')->group(function () {
+        Route::post('customers/{customer}/consignment/place', [CustomerConsignmentController::class, 'place'])
+            ->name('customers.consignment.place');
+        Route::post('customers/{customer}/consignment/sale', [CustomerConsignmentController::class, 'sale'])
+            ->name('customers.consignment.sale');
+        Route::post('customers/{customer}/consignment/return', [CustomerConsignmentController::class, 'recordReturn'])
+            ->name('customers.consignment.return');
     });
 
     /*

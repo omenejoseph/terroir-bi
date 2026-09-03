@@ -165,6 +165,40 @@ export interface CustomerPricing {
     override_count: number;
 }
 
+/** One product's rollup across all of a customer's consignment placements. */
+export interface CustomerConsignmentProduct {
+    inventory_item_id: string;
+    name: string;
+    placed: number;
+    sold: number;
+    returned: number;
+    remaining: number;
+    /** Null unless the viewer may see financials. */
+    sold_revenue: MoneyValue | null;
+    /** Null when nothing has sold yet, or the viewer may not see financials. */
+    margin_percent: string | null;
+}
+
+/** One consignment order still open — nothing outstanding and formally closed drops out. */
+export interface CustomerConsignmentPlacement {
+    order_id: string;
+    order_number: string;
+    placed_at: string | null;
+    closed_at: string | null;
+    remaining: number;
+}
+
+/** App\Services\Orders\CustomerConsignmentService::summary() — the Consignment tab. */
+export interface CustomerConsignment {
+    products: CustomerConsignmentProduct[];
+    placements: CustomerConsignmentPlacement[];
+    total_remaining: number;
+    /** Null unless the viewer may see financials. */
+    total_sold_revenue: MoneyValue | null;
+    total_sold_gross_profit: MoneyValue | null;
+    total_sold_margin_percent: string | null;
+}
+
 /** One card in the customer overview's "Needs attention" band. */
 export interface AttentionCard {
     key: string;
