@@ -294,9 +294,12 @@ exists on the model, but drag-to-reorder is not wired and
 (the design's rhythm depends on that column) but carries no interaction and is
 hidden from assistive tech rather than announcing a control that does nothing.
 
-The list also omits two columns the design shows: **Free to sell** (no order
-reservations) and **Cover** (computable per item, but only via the spend query
-— worth wiring when the list gains a per-item exit rate).
+The list omits one column the design shows: **Free to sell** (no order
+reservations to subtract). **Cover** is ✅ built — `InventoryCoverQuery` sums
+stock movements for the whole page in one grouped query rather than one
+per-item query per row, and reports days-of-stock-left in the design's own
+prose ("No exits recorded" / ":count days" / "About :count months" / "Beyond
+horizon"), same figure and window (`30d`) as Product Detail's own Cover.
 
 ### Item — View: two sections not built
 

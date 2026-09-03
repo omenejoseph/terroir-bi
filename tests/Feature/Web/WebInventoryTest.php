@@ -6,6 +6,7 @@ namespace Tests\Feature\Web;
 
 use App\Enums\TenantRole;
 use App\Models\InventoryItem;
+use App\Models\StockMovement;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Auth\ActiveTenantSession;
@@ -67,6 +68,31 @@ class WebInventoryTest extends TestCase
                 ->has('items.data.0.image_url')
                 ->has('attention')
                 ->where('filters.search', null));
+    }
+
+    /**
+     * "Cover" (Figma 389:1592's list column) — a days-of-stock-left figure per
+     * item, added alongside `items` rather than into the shared presenter
+     * (InventoryCoverQuery's own tests cover the math itself).
+     */
+    public function test_index_carries_cover_days_left_per_item(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1');
+        $untouched = $this->makeItem('Label', 'LBL-1');
+        StockMovement::create(['inventory_item_id' => $item->getKey(), 'type' => 'MANUAL_OUT', 'quantity' => -5]);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                // 10 in stock, 5 exited in the last 30 days -> round(10×30/5) = 60.
+                ->where("cover.{$item->getKey()}", 60)
+                ->where("cover.{$untouched->getKey()}", null));
     }
 
     /**

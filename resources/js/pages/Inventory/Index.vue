@@ -28,15 +28,18 @@ import type { AttentionItem, TabItem } from '@/types/ui';
  * actions, module tabs, the "Needs attention" band, a search field, category
  * tabs, then the table grouped by product group.
  *
- * The design's "Free to sell" and "Cover" columns are omitted: neither has
- * backing data (no order-line reservations, no exit-rate model). Showing an
- * empty column would read as a bug, and inventing the figures would be worse.
- * Both are listed in docs/design/README.md.
+ * The design's "Free to sell" column is omitted: it has no backing data (order
+ * lines do not reserve stock), and an empty column would read as a bug. This
+ * is documented in docs/design/README.md. "Cover" (days of stock left at the
+ * trailing 30-day exit rate — the same figure and window Product Detail's own
+ * Cover uses) IS backed, by `cover`.
  */
 const props = defineProps<{
     items: Paginated<InventoryItem>;
     filters: InventoryFilters;
     attention: AttentionItem[];
+    /** Item id -> days of stock left, null when nothing exited in the window. */
+    cover: Record<string, number | null>;
     /** Only present while the Item — View drawer has asked for them. */
     itemMovements?: StockMovement[];
 }>();
@@ -175,6 +178,22 @@ const listSummary = computed(() => {
 
 const qty = (v: string | null) => formatQuantity(v, page.props.locale);
 
+/**
+ * "Cover" (Figma 389:1592): days of stock left at the trailing 30-day exit
+ * rate, in the design's own prose rather than a raw day count — "No exits
+ * recorded" when nothing moved in the window, "About :count months" once it
+ * runs past a couple of months, otherwise ":count days".
+ */
+function cover(item: InventoryItem): string {
+    const days = props.cover[item.id] ?? null;
+
+    if (days === null) return t('No exits recorded');
+    if (days > 365) return t('Beyond horizon');
+    if (days >= 60) return t('About :count months', { count: Math.round(days / 30) });
+
+    return t(':count days', { count: days });
+}
+
 /** Derived row badges, matching the design's "Flags" column. */
 /**
  * The design renders flags as quiet stacked lines, not pills — the first at
@@ -285,6 +304,7 @@ function flags(item: InventoryItem): string[] {
                                 <th scope="col" class="px-3 py-2.5 font-medium">{{ t('SKU') }}</th>
                                 <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Vintage') }}</th>
                                 <th scope="col" class="px-3 py-2.5 text-right font-medium">{{ t('On hand') }}</th>
+                                <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Cover') }}</th>
                                 <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Level') }}</th>
                                 <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Flags') }}</th>
                             </tr>
@@ -301,7 +321,7 @@ function flags(item: InventoryItem): string[] {
                                         <span class="text-xs text-muted-foreground">({{ group.count }})</span>
                                     </span>
                                 </th>
-                                <td colspan="3" class="px-3 py-2 text-right text-xs text-muted-foreground">
+                                <td colspan="4" class="px-3 py-2 text-right text-xs text-muted-foreground">
                                     {{ qty(String(group.onHand)) }} {{ t('on hand') }}<template v-if="group.currency">
                                         · {{ formatMoney(group.value, group.currency, page.props.locale) }}</template
                                     >
@@ -313,7 +333,7 @@ function flags(item: InventoryItem): string[] {
                                 <tr v-if="band.sub" class="bg-muted/20">
                                     <td class="py-1.5 pl-3"><GripHandle /></td>
                                     <th
-                                        colspan="7"
+                                        colspan="8"
                                         scope="colgroup"
                                         class="px-3 py-1.5 text-left text-3xs font-medium tracking-[0.08em] text-muted-foreground uppercase"
                                     >
@@ -350,6 +370,7 @@ function flags(item: InventoryItem): string[] {
                                     <td class="px-3 py-3 text-right font-semibold tabular-nums">
                                         {{ qty(item.current_stock) }}
                                     </td>
+                                    <td class="px-3 py-3 text-muted-foreground">{{ cover(item) }}</td>
                                     <td class="px-3 py-3">
                                         <LevelBar :value="item.current_stock" :min="item.min_stock">
                                             <template v-if="item.min_stock">
@@ -375,7 +396,7 @@ function flags(item: InventoryItem): string[] {
 
                         <tbody v-if="!groups.length">
                             <tr>
-                                <td colspan="8" class="px-4 py-10 text-center text-muted-foreground">
+                                <td colspan="9" class="px-4 py-10 text-center text-muted-foreground">
                                     {{ t('No items match these filters.') }}
                                 </td>
                             </tr>

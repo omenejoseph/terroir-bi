@@ -22,6 +22,7 @@ use App\Models\InventoryCheck;
 use App\Models\InventoryItem;
 use App\Queries\InventoryAnalyticsQuery;
 use App\Queries\InventoryAttentionQuery;
+use App\Queries\InventoryCoverQuery;
 use App\Queries\InventoryItemStockAnalyticsQuery;
 use App\Queries\InventorySpendQuery;
 use App\Queries\InventoryTaxonomyQuery;
@@ -54,12 +55,21 @@ class InventoryController extends Controller
         InventoryTaxonomyQuery $taxonomy,
         InventoryAttentionQuery $attention,
         ItemMovementsQuery $movements,
+        InventoryCoverQuery $cover,
     ): Response {
         $filters = InventoryItemFilters::fromRequest($request);
+        $paginated = $query->paginate($filters, PerPage::fromRequest($request));
 
         return Inertia::render('Inventory/Index', [
-            'items' => $presenter->page($query->paginate($filters, PerPage::fromRequest($request))),
+            'items' => $presenter->page($paginated),
             'filters' => $filters,
+            // "Cover" (Figma 389:1592) — one grouped query over the page's own
+            // items rather than the whole tenant, so it stays cheap regardless
+            // of catalogue size. See InventoryCoverQuery for the omitted
+            // "Free to sell" column's reasoning (still no order-line
+            // reservations to subtract, unlike Cover which is honestly
+            // computable from stock movements).
+            'cover' => $cover->forItems($paginated->items()),
             // The "Needs attention" band (Figma 389:1592). Counts span the whole
             // tenant, not the filtered page, so they stay stable as you filter.
             'attention' => $attention->get(),
