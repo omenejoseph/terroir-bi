@@ -32,6 +32,7 @@ use App\Services\Orders\OrderPresenter;
 use App\Services\Pricing\PricingService;
 use App\Support\CustomerFilters;
 use App\Support\Period;
+use App\Support\PerPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -60,9 +61,10 @@ class CustomerController extends Controller
         CustomerPresenter $presenter,
     ): Response {
         $filters = CustomerFilters::fromRequest($request);
+        $perPage = PerPage::fromRequest($request);
 
         return Inertia::render('Customers/Index', [
-            'customers' => $presenter->page($query->paginate($filters)),
+            'customers' => $presenter->page($query->paginate($filters, $perPage)),
             'filters' => $filters,
             // Feeds the Tier filter; a small table, but only the filter row
             // needs it, so it is not paid for on every visit.
@@ -135,7 +137,7 @@ class CustomerController extends Controller
                     app(ListOrdersQuery::class)->paginate([
                         'customer_id' => $customer->getKey(),
                         'hide_shipped' => ! $this->membership->canSeeShippedOrders(),
-                    ]),
+                    ], PerPage::fromRequest($request)),
                 ),
             ),
 

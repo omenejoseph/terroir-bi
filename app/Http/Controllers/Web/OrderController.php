@@ -26,6 +26,7 @@ use App\Services\Orders\OrderFormOptions;
 use App\Services\Orders\OrderPresenter;
 use App\Support\OrderFilters;
 use App\Support\Period;
+use App\Support\PerPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -80,7 +81,7 @@ class OrderController extends Controller
         ];
 
         return Inertia::render('Orders/Index', [
-            'orders' => $presenter->page($query->paginate($scoped)),
+            'orders' => $presenter->page($query->paginate($scoped, PerPage::fromRequest($request))),
             'filters' => $filters,
             // Chip counts describe the whole filtered set, so they stay stable
             // while you switch between statuses.

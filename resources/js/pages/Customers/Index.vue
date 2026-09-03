@@ -2,10 +2,6 @@
 import { computed, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import {
-    ChevronLeft,
-    ChevronRight,
-    ChevronsLeft,
-    ChevronsRight,
     CircleCheck,
     CircleSlash,
     Download,
@@ -25,6 +21,7 @@ import Button from '@/components/ui/Button.vue';
 import Checkbox from '@/components/ui/Checkbox.vue';
 import DropdownMenu from '@/components/ui/DropdownMenu.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import Pagination from '@/components/ui/Pagination.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { usePopover } from '@/composables/usePopover';
@@ -91,6 +88,9 @@ function reload(overrides: Record<string, unknown>): void {
             is_active: props.filters.is_active ?? undefined,
             pricing_tier_id: props.filters.pricing_tier_id ?? undefined,
             customer_type: props.filters.customer_type ?? undefined,
+            // Carried forward so changing a filter does not silently reset the
+            // page size back to the server default.
+            per_page: props.customers.meta.per_page,
             ...overrides,
         },
         { preserveState: true, preserveScroll: true, replace: true, only: ['customers', 'filters'] },
@@ -162,14 +162,14 @@ const rebate = (customer: Customer): string => {
 const revenue = (customer: Customer): string =>
     customer.revenue_minor === null ? '—' : formatMoney(customer.revenue_minor, 'EUR', locale.value);
 
-const showing = computed(() => {
-    const { current_page: current, last_page: last } = props.customers.meta;
+function goToPage(page: number): void {
+    reload({ page });
+}
 
-    return `Page ${current} of ${Math.max(1, last)}`;
-});
-
-function goToPage(n: number): void {
-    reload({ page: Math.min(Math.max(1, n), props.customers.meta.last_page) });
+function setPerPage(perPage: number): void {
+    // Changing the page size while sitting on, say, page 4 of a now-shorter
+    // list would silently show nothing — reset to page 1 with it.
+    reload({ per_page: perPage, page: 1 });
 }
 
 function edit(customer: Customer): void {
@@ -494,47 +494,11 @@ function destroy(customer: Customer): void {
                         {{ selected.length }} of {{ formatNumber(customers.meta.total, locale) }} row(s) selected
                     </p>
 
-                    <div class="flex items-center gap-3">
-                        <p class="text-xs text-muted-foreground">{{ showing }}</p>
-                        <div class="flex items-center gap-1">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                :disabled="customers.meta.current_page === 1"
-                                aria-label="First page"
-                                @click="goToPage(1)"
-                            >
-                                <ChevronsLeft class="size-3.5" :stroke-width="1.5" />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                :disabled="customers.meta.current_page === 1"
-                                aria-label="Previous page"
-                                @click="goToPage(customers.meta.current_page - 1)"
-                            >
-                                <ChevronLeft class="size-3.5" :stroke-width="1.5" />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                :disabled="customers.meta.current_page === customers.meta.last_page"
-                                aria-label="Next page"
-                                @click="goToPage(customers.meta.current_page + 1)"
-                            >
-                                <ChevronRight class="size-3.5" :stroke-width="1.5" />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                :disabled="customers.meta.current_page === customers.meta.last_page"
-                                aria-label="Last page"
-                                @click="goToPage(customers.meta.last_page)"
-                            >
-                                <ChevronsRight class="size-3.5" :stroke-width="1.5" />
-                            </Button>
-                        </div>
-                    </div>
+                    <Pagination
+                        :meta="customers.meta"
+                        @update:page="goToPage"
+                        @update:per-page="setPerPage"
+                    />
                 </div>
             </div>
         </div>

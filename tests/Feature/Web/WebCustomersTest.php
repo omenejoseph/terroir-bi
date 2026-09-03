@@ -101,6 +101,41 @@ class WebCustomersTest extends TestCase
                 ->missing('tiers'));
     }
 
+    /**
+     * The size of a page is a request, not a filter: it changes how the same
+     * result set is sliced, and an out-of-range value must fall back rather
+     * than let `?per_page=100000` force a whole-table scan.
+     */
+    public function test_index_honours_per_page_and_ignores_an_invalid_value(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        for ($i = 0; $i < 12; $i++) {
+            $this->makeCustomer(sprintf('Customer %02d', $i));
+        }
+        $this->forgetTenant();
+
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+
+        $this->actingAs($admin)->withSession($session)->get('/customers?per_page=10')
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('customers.data', 10)
+                ->where('customers.meta.per_page', 10)
+                ->where('customers.meta.last_page', 2));
+
+        $this->actingAs($admin)->withSession($session)->get('/customers?per_page=10&page=2')
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('customers.data', 2)
+                ->where('customers.meta.current_page', 2));
+
+        // Not on the allow-list — falls back to the default rather than
+        // erroring or scanning the whole table.
+        $this->actingAs($admin)->withSession($session)->get('/customers?per_page=999')
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('customers.meta.per_page', 25));
+    }
+
     public function test_index_filters_by_search_type_and_status(): void
     {
         [$tenant, $admin] = $this->tenantAndAdmin();
@@ -285,6 +320,31 @@ class WebCustomersTest extends TestCase
 
         $response->assertOk();
         $this->assertCount(2, $response->json('props.orderHistory.data'));
+    }
+
+    /** The Order History tab's own pager, independent of the customer list's. */
+    public function test_the_order_history_tab_honours_per_page(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        for ($i = 0; $i < 12; $i++) {
+            $this->makeOrder($customer, $admin);
+        }
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get(
+                '/customers/'.$customer->getKey().'?tab=orders&per_page=10',
+                $this->inertiaPartial('Customers/Show', 'orderHistory'),
+            );
+
+        $response->assertOk();
+        $this->assertCount(10, $response->json('props.orderHistory.data'));
+        $this->assertSame(10, $response->json('props.orderHistory.meta.per_page'));
+        $this->assertSame(2, $response->json('props.orderHistory.meta.last_page'));
     }
 
     /**

@@ -132,6 +132,22 @@ standalone brand asset. Confirmed by rendering `230:2401` and matching it
 against Lucide's `grape` (8 circles plus the `M22 5V2l-5.89 5.89` stem). The
 Figma SVG itself could not be exported — same egress block as the other icons.
 
+**Pagination now has a "Rows per page" control.** The design's `PaginationBar`
+(`230:3000`, `Customers`; `230:4629`, `Analytics`) draws a "Rows per page"
+select alongside "Page X of Y" and four 28px nav buttons — only the Customers
+list had the four buttons, nothing had the select, and the Order History tab on
+a customer had no pager at all. `Pagination.vue` is that whole bar, adopted by
+all four paginated surfaces (Customers, Orders, Inventory, Order History).
+
+The two captured frames disagree on the default (Customers shows "10", the
+order-history table on Analytics shows "20"), and neither opens its dropdown in
+a static render, so there is no captured option list to match exactly. Rather
+than guess a screen-specific default from what is probably illustrative sample
+data, every surface keeps the existing server default of 25 until it is
+touched, and the option list is `App\Support\PerPage::OPTIONS` — 10, 25, 50,
+100 — a value outside it falls back to 25 rather than letting `?per_page=`
+force a whole-table scan.
+
 ## Type scale — verified exact
 
 The ramp in `app.css` is the design's, and the app's computed styles were

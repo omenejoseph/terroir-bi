@@ -31,6 +31,7 @@ use App\Queries\VintageCoverageQuery;
 use App\Services\Inventory\InventoryItemPresenter;
 use App\Support\InventoryItemFilters;
 use App\Support\Period;
+use App\Support\PerPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -57,7 +58,7 @@ class InventoryController extends Controller
         $filters = InventoryItemFilters::fromRequest($request);
 
         return Inertia::render('Inventory/Index', [
-            'items' => $presenter->page($query->paginate($filters)),
+            'items' => $presenter->page($query->paginate($filters, PerPage::fromRequest($request))),
             'filters' => $filters,
             // The "Needs attention" band (Figma 389:1592). Counts span the whole
             // tenant, not the filtered page, so they stay stable as you filter.

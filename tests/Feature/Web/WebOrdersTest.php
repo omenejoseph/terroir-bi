@@ -111,6 +111,39 @@ class WebOrdersTest extends TestCase
                 ->where('filters.status', null));
     }
 
+    /**
+     * The size of a page is a request, not a filter, and an out-of-range value
+     * must fall back rather than let `?per_page=` force a whole-table scan.
+     */
+    public function test_index_honours_per_page_and_ignores_an_invalid_value(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer();
+        for ($i = 0; $i < 12; $i++) {
+            $this->makeOrder($customer, $admin);
+        }
+        $this->forgetTenant();
+
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+
+        $this->actingAs($admin)->withSession($session)->get('/orders?per_page=10')
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('orders.data', 10)
+                ->where('orders.meta.per_page', 10)
+                ->where('orders.meta.last_page', 2));
+
+        $this->actingAs($admin)->withSession($session)->get('/orders?per_page=10&page=2')
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('orders.data', 2)
+                ->where('orders.meta.current_page', 2));
+
+        $this->actingAs($admin)->withSession($session)->get('/orders?per_page=999')
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('orders.meta.per_page', 25));
+    }
+
     public function test_index_filters_by_status_but_chip_counts_still_show_every_status(): void
     {
         [$tenant, $admin] = $this->tenantAndAdmin();

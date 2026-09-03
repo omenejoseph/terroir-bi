@@ -10,6 +10,7 @@ import PipelineCard from '@/components/orders/PipelineCard.vue';
 import Button from '@/components/ui/Button.vue';
 import DateRangePicker from '@/components/ui/DateRangePicker.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import Pagination from '@/components/ui/Pagination.vue';
 import StatusChips from '@/components/ui/StatusChips.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
@@ -69,6 +70,9 @@ function reload(overrides: Record<string, unknown>): void {
             period: props.filters.period ?? undefined,
             from: props.filters.from ?? undefined,
             to: props.filters.to ?? undefined,
+            // Carried forward so changing a filter does not silently reset the
+            // page size back to the server default.
+            per_page: props.orders.meta.per_page,
             ...overrides,
         },
         { preserveState: true, preserveScroll: true, replace: true, only: ['orders', 'filters', 'statusCounts', 'pipeline'] },
@@ -178,11 +182,11 @@ function goToPage(pageNumber: number): void {
     reload({ page: pageNumber });
 }
 
-const pages = computed(() => {
-    const last = props.orders.meta.last_page;
-
-    return Array.from({ length: Math.min(last, 5) }, (_, i) => i + 1);
-});
+function setPerPage(perPage: number): void {
+    // Changing the page size while sitting on a later page would silently
+    // show nothing if the list is now shorter — reset to page 1 with it.
+    reload({ per_page: perPage, page: 1 });
+}
 </script>
 
 <template>
@@ -385,33 +389,7 @@ const pages = computed(() => {
                 <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
                     <p class="text-xs text-muted-foreground">{{ showing }}</p>
 
-                    <div v-if="orders.meta.last_page > 1" class="flex items-center gap-1">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            :disabled="orders.meta.current_page === 1"
-                            @click="goToPage(orders.meta.current_page - 1)"
-                        >
-                            Previous
-                        </Button>
-                        <Button
-                            v-for="n in pages"
-                            :key="n"
-                            :variant="n === orders.meta.current_page ? 'primary' : 'outline'"
-                            size="sm"
-                            @click="goToPage(n)"
-                        >
-                            {{ n }}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            :disabled="orders.meta.current_page === orders.meta.last_page"
-                            @click="goToPage(orders.meta.current_page + 1)"
-                        >
-                            Next
-                        </Button>
-                    </div>
+                    <Pagination :meta="orders.meta" @update:page="goToPage" @update:per-page="setPerPage" />
                 </div>
             </div>
         </div>

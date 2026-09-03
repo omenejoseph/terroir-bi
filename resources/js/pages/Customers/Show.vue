@@ -10,6 +10,7 @@ import OrderRhythm from '@/components/customers/OrderRhythm.vue';
 import BarChart from '@/components/ui/BarChart.vue';
 import DateRangePicker from '@/components/ui/DateRangePicker.vue';
 import Button from '@/components/ui/Button.vue';
+import Pagination from '@/components/ui/Pagination.vue';
 import SectionHeader from '@/components/ui/SectionHeader.vue';
 import StackedBar from '@/components/ui/StackedBar.vue';
 import StatCard from '@/components/ui/StatCard.vue';
@@ -104,6 +105,29 @@ function selectTab(value: string): void {
             only: ['tab', ...(only[value] ?? [])],
         },
     );
+}
+
+/** Paging the Order History tab without disturbing the rest of the page. */
+function reloadOrderHistory(overrides: Record<string, unknown>): void {
+    router.get(
+        `/customers/${props.customer.id}`,
+        {
+            tab: 'orders',
+            // Carried forward so moving between pages does not silently reset
+            // the page size back to the server default.
+            per_page: props.orderHistory?.meta.per_page,
+            ...overrides,
+        },
+        { preserveState: true, preserveScroll: true, replace: true, only: ['tab', 'orderHistory'] },
+    );
+}
+
+function goToOrderHistoryPage(page: number): void {
+    reloadOrderHistory({ page });
+}
+
+function setOrderHistoryPerPage(perPage: number): void {
+    reloadOrderHistory({ per_page: perPage, page: 1 });
 }
 
 /*
@@ -587,6 +611,14 @@ const orderStatusLabel: Record<string, string> = {
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <div v-if="orderHistory && orderHistory.meta.total > 0" class="flex justify-end border-t border-border px-4 py-3">
+                        <Pagination
+                            :meta="orderHistory.meta"
+                            @update:page="goToOrderHistoryPage"
+                            @update:per-page="setOrderHistoryPerPage"
+                        />
                     </div>
                 </div>
             </template>

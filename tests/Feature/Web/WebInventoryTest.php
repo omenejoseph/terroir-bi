@@ -69,6 +69,38 @@ class WebInventoryTest extends TestCase
                 ->where('filters.search', null));
     }
 
+    /**
+     * The size of a page is a request, not a filter, and an out-of-range value
+     * must fall back rather than let `?per_page=` force a whole-table scan.
+     */
+    public function test_index_honours_per_page_and_ignores_an_invalid_value(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        for ($i = 0; $i < 12; $i++) {
+            $this->makeItem(sprintf('Item %02d', $i), sprintf('SKU-%02d', $i));
+        }
+        $this->forgetTenant();
+
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+
+        $this->actingAs($admin)->withSession($session)->get('/inventory?per_page=10')
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('items.data', 10)
+                ->where('items.meta.per_page', 10)
+                ->where('items.meta.last_page', 2));
+
+        $this->actingAs($admin)->withSession($session)->get('/inventory?per_page=10&page=2')
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('items.data', 2)
+                ->where('items.meta.current_page', 2));
+
+        $this->actingAs($admin)->withSession($session)->get('/inventory?per_page=999')
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('items.meta.per_page', 25));
+    }
+
     public function test_index_filters_by_search(): void
     {
         [$tenant, $admin] = $this->tenantAndAdmin();

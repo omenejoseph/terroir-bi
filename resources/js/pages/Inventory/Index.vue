@@ -12,6 +12,7 @@ import Button from '@/components/ui/Button.vue';
 import GripHandle from '@/components/ui/GripHandle.vue';
 import LevelBar from '@/components/ui/LevelBar.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import Pagination from '@/components/ui/Pagination.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { cn } from '@/lib/cn';
@@ -69,9 +70,22 @@ watch(search, (value) => {
 function reload(overrides: Record<string, unknown>): void {
     router.get(
         '/inventory',
-        { search: props.filters.search ?? undefined, category: props.filters.category ?? undefined, ...overrides },
+        {
+            search: props.filters.search ?? undefined,
+            category: props.filters.category ?? undefined,
+            // Carried forward so changing a filter does not silently reset the
+            // page size back to the server default.
+            per_page: props.items.meta.per_page,
+            ...overrides,
+        },
         { preserveState: true, replace: true, only: ['items', 'filters'] },
     );
+}
+
+function setPerPage(perPage: number): void {
+    // Changing the page size while sitting on a later page would silently
+    // show nothing if the list is now shorter — reset to page 1 with it.
+    reload({ per_page: perPage, page: 1 });
 }
 
 const MODULE_TABS: TabItem[] = [
@@ -368,28 +382,12 @@ function flags(item: InventoryItem): string[] {
                 </div>
             </div>
 
-            <div v-if="items.meta.last_page > 1 && !bulkEditing" class="flex items-center justify-between text-sm">
-                <span class="text-muted-foreground">
-                    Page {{ items.meta.current_page }} of {{ items.meta.last_page }}
-                </span>
-                <div class="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        :disabled="items.meta.current_page <= 1"
-                        @click="reload({ page: items.meta.current_page - 1 })"
-                    >
-                        Previous
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        :disabled="items.meta.current_page >= items.meta.last_page"
-                        @click="reload({ page: items.meta.current_page + 1 })"
-                    >
-                        Next
-                    </Button>
-                </div>
+            <div v-if="!bulkEditing && items.meta.total > 0" class="flex items-center justify-end">
+                <Pagination
+                    :meta="items.meta"
+                    @update:page="(pageNumber) => reload({ page: pageNumber })"
+                    @update:per-page="setPerPage"
+                />
             </div>
         </div>
 
