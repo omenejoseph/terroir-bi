@@ -259,7 +259,12 @@ class WebCustomersTest extends TestCase
      * The Pricing tab must name the rule that decided each price, and it must
      * agree with PricingService rather than re-deriving the precedence.
      */
-    public function test_the_pricing_tab_names_the_rule_behind_each_price(): void
+    /**
+     * The Pricing tab lists this customer's own negotiated prices only — not
+     * the whole catalogue's list/tier prices, which are not a decision about
+     * this customer at all.
+     */
+    public function test_the_pricing_tab_only_lists_this_customers_own_overrides(): void
     {
         [$tenant, $admin] = $this->tenantAndAdmin();
 
@@ -267,7 +272,7 @@ class WebCustomersTest extends TestCase
         $tier = PricingTier::create(['name' => 'Gold', 'rebate_percent' => '10']);
         $customer = $this->makeCustomer('Restoran Mediteran', ['pricing_tier_id' => $tier->getKey()]);
 
-        $listed = $this->makeProduct('Velika Bjelica', 2000);
+        $this->makeProduct('Velika Bjelica', 2000); // list-priced only — must not appear
         $overridden = $this->makeProduct('Kosa Plavac', 3000);
         CustomerPrice::create([
             'customer_id' => $customer->getKey(),
@@ -287,16 +292,74 @@ class WebCustomersTest extends TestCase
 
         $rows = collect($response->json('props.pricing.rows'))->keyBy('name');
 
+        $this->assertCount(1, $rows);
         // A customer price is absolute: no rebate, and named as the customer's.
         $this->assertSame('customer', $rows['Kosa Plavac']['source']);
         $this->assertSame(1500, $rows['Kosa Plavac']['price']['minor']);
 
-        // No tier price exists for this item, so the list price applies with
-        // the tier's 10% rebate taken off.
-        $this->assertSame('list', $rows['Velika Bjelica']['source']);
-        $this->assertSame(1800, $rows['Velika Bjelica']['price']['minor']);
-
         $this->assertSame(1, $response->json('props.pricing.override_count'));
+    }
+
+    public function test_adding_a_price_creates_a_customer_override(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $product = $this->makeProduct('Kosa Plavac', 3000);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->patch('/customers/'.$customer->getKey().'/prices/'.$product->getKey(), ['price' => 2500])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('customer_prices', [
+            'customer_id' => $customer->getKey(),
+            'inventory_item_id' => $product->getKey(),
+            'price' => 2500,
+        ]);
+    }
+
+    public function test_removing_a_price_deletes_the_override(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $product = $this->makeProduct('Kosa Plavac', 3000);
+        CustomerPrice::create([
+            'customer_id' => $customer->getKey(),
+            'inventory_item_id' => $product->getKey(),
+            'price' => Money::fromMinor(2500, 'EUR'),
+        ]);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->delete('/customers/'.$customer->getKey().'/prices/'.$product->getKey())
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('customer_prices', [
+            'customer_id' => $customer->getKey(),
+            'inventory_item_id' => $product->getKey(),
+        ]);
+    }
+
+    public function test_adding_a_price_is_closed_to_a_viewer_without_pricing_manage(): void
+    {
+        [$tenant] = [$this->createTenant()];
+        $orders = $this->createMember($tenant, [TenantRole::Orders]);
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $product = $this->makeProduct('Kosa Plavac', 3000);
+        $this->forgetTenant();
+
+        $this->actingAs($orders)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->patch('/customers/'.$customer->getKey().'/prices/'.$product->getKey(), ['price' => 2500])
+            ->assertForbidden();
     }
 
     public function test_the_order_history_tab_reuses_the_order_listing(): void
