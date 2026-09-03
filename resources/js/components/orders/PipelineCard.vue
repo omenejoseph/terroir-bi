@@ -27,6 +27,14 @@ const props = defineProps<{
     current: string | null;
     /** Stage keys that filter the table; the rest render as figures only. */
     filterable: string[];
+    /**
+     * Orders/Index's own card (Figma 455:1577) — "Order-to-cash pipeline" — is
+     * the default. The Customer — Show Order History tab (361:2157) reuses
+     * this same card under a different name and a dynamic count/value
+     * subtitle, so both are overridable rather than forked into two components.
+     */
+    title?: string;
+    description?: string;
 }>();
 
 const emit = defineEmits<{ select: [key: string | null] }>();
@@ -41,8 +49,8 @@ const isFilter = (key: string): boolean => props.filterable.includes(key);
     <Card>
         <CardContent class="flex flex-col gap-4 p-6">
             <SectionHeader
-                :title="t('Order-to-cash pipeline')"
-                :description="t('Open orders by stage · click a stage to filter the table below')"
+                :title="title ?? t('Order-to-cash pipeline')"
+                :description="description ?? t('Open orders by stage · click a stage to filter the table below')"
             >
                 <template #actions>
                     <!-- @todo Stage period picker. The card follows the page's

@@ -42,13 +42,24 @@ export function useTranslations() {
  * (`__()`) or client-side (`t()`): `:name`, `:Name`, and `:NAME` all match.
  */
 function interpolate(line: string, replace: Record<string, string | number>): string {
+    const pairs: [string, string][] = [];
+
     for (const [key, value] of Object.entries(replace)) {
         const raw = String(value);
 
-        line = line
-            .replaceAll(`:${key}`, raw)
-            .replaceAll(`:${ucfirst(key)}`, ucfirst(raw))
-            .replaceAll(`:${key.toUpperCase()}`, raw.toUpperCase());
+        pairs.push([`:${key}`, raw], [`:${ucfirst(key)}`, ucfirst(raw)], [`:${key.toUpperCase()}`, raw.toUpperCase()]);
+    }
+
+    // Longest placeholder first: a shorter one that is a literal prefix of a
+    // longer one (":to" inside ":total") would otherwise get replaced first
+    // and clip the longer placeholder into garbage — e.g. "Showing :from–:to
+    // of :total orders" turning ":total" into "3tal" once ":to" -> "3" ran.
+    // PHP's strtr() (the server-side mirror) already does this internally;
+    // replaceAll() does not, so it is done explicitly here.
+    pairs.sort(([a], [b]) => b.length - a.length);
+
+    for (const [needle, raw] of pairs) {
+        line = line.replaceAll(needle, raw);
     }
 
     return line;

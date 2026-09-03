@@ -88,10 +88,19 @@ class TranslationService implements TranslationServiceInterface
      */
     private function makeReplacements(string $line, array $replace): string
     {
+        $pairs = [];
+
         foreach ($replace as $key => $value) {
-            $line = str_replace([':'.$key, ':'.ucfirst($key), ':'.strtoupper($key)], [$value, ucfirst((string) $value), strtoupper((string) $value)], $line);
+            $pairs[':'.$key] = (string) $value;
+            $pairs[':'.ucfirst($key)] = ucfirst((string) $value);
+            $pairs[':'.strtoupper($key)] = strtoupper((string) $value);
         }
 
-        return $line;
+        // strtr() (unlike sequential str_replace calls) matches the longest
+        // key first at each position, so a placeholder that is a literal
+        // prefix of another (":to" inside ":total") cannot clip it into
+        // garbage — see interpolate() in resources/js/composables/useTranslations.ts
+        // for the client-side mirror of this same fix.
+        return strtr($line, $pairs);
     }
 }

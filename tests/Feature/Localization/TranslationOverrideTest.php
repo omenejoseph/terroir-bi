@@ -77,4 +77,27 @@ class TranslationOverrideTest extends TestCase
 
         $this->assertSame('Bok Ana', $this->service()->get('welcome', ['name' => 'Ana'], 'hr'));
     }
+
+    /**
+     * A shorter placeholder that is a literal prefix of a longer one (":to"
+     * inside ":total") must not be substituted first and clip the longer one
+     * into garbage — sequential str_replace calls did exactly that, turning
+     * "Showing :from–:to of :total orders" into "Showing 1–3 of 3tal orders"
+     * once ":to" -> "3" ran before ":total" got its turn.
+     */
+    public function test_a_placeholder_that_prefixes_another_is_not_clipped(): void
+    {
+        $this->actingAsTenant($this->createTenant());
+
+        TranslationOverride::create([
+            'locale' => 'hr',
+            'key' => 'Showing :from–:to of :total orders',
+            'value' => 'Showing :from–:to of :total orders',
+        ]);
+
+        $this->assertSame(
+            'Showing 1–3 of 3 orders',
+            $this->service()->get('Showing :from–:to of :total orders', ['from' => 1, 'to' => 3, 'total' => 3], 'hr'),
+        );
+    }
 }

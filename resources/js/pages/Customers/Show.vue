@@ -190,6 +190,27 @@ function selectOrderHistoryRange(preset: string): void {
     reloadOrderHistory({ order_period: preset, page: 1 });
 }
 
+/**
+ * "Order status" (Figma 361:2157) — the same pipeline card Orders/Index uses,
+ * but titled and subtitled for this one customer's window rather than the
+ * whole tenant's: "11 orders · 30.007,11 € in the last 3 months — click a
+ * status to filter the table below".
+ */
+const ORDER_HISTORY_PERIOD_PHRASE = computed<Record<string, string>>(() => ({
+    '3m': t('in the last 3 months'),
+    '6m': t('in the last 6 months'),
+    ytd: t('so far this year'),
+    lifetime: t("over this customer's lifetime"),
+}));
+
+const orderStatusDescription = computed(() =>
+    t(':count orders · :total :period — click a status to filter the table below', {
+        count: props.orderStatusCounts?.total ?? 0,
+        total: props.orderHistoryTotal ? money(props.orderHistoryTotal) : '—',
+        period: ORDER_HISTORY_PERIOD_PHRASE.value[props.orderHistoryRange] ?? ORDER_HISTORY_PERIOD_PHRASE.value['3m']!,
+    }),
+);
+
 /*
   The tab counts live in the labels, so Pricing and Order History are fetched
   once on arrival even when their tab is closed — two cheap counts against a
@@ -1029,6 +1050,8 @@ function removePrice(row: CustomerPriceRow): void {
             <template v-else-if="tab === 'orders'">
                 <PipelineCard
                     v-if="orderPipeline"
+                    :title="t('Order status')"
+                    :description="orderStatusDescription"
                     :pipeline="orderPipeline"
                     :current="orderHistoryFilters.status"
                     :filterable="orderStatusCounts?.statuses.map((s) => s.key) ?? []"
