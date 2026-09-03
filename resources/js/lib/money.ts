@@ -8,17 +8,20 @@
  * must not read differently to an English-UI viewer than a Croatian-UI one.
  * `MONEY_FORMAT` is that one convention, and the only thing worth overriding
  * from `Intl`'s own `hr-HR` data (which otherwise gets grouping/decimal
- * separators right) is where the currency symbol sits: this org leads with it
- * ("€ 7.071,69"), not trails it ("7.071,69 €"). When a differently-formatted
- * country's book is added, this is the one place to change — either adjust
- * `MONEY_FORMAT` directly, or turn it into a lookup once there is more than
- * one convention to choose between.
+ * separators right) is where the currency symbol sits: this org, like the
+ * rest of the Eurozone (Croatia included), trails the amount with it
+ * ("7.071,69 €"), not leads with it ("€ 7.071,69") — `Intl` itself already
+ * gets this right for `hr-HR`; `symbolPosition` exists to pin the behaviour
+ * explicitly rather than rely on an engine's locale data staying that way.
+ * When a differently-formatted country's book is added, this is the one
+ * place to change — either adjust `MONEY_FORMAT` directly, or turn it into a
+ * lookup once there is more than one convention to choose between.
  */
 const MONEY_FORMAT = {
     /** The base locale for digit grouping and the decimal separator. */
     locale: 'hr-HR',
     /** Where the currency symbol sits relative to the number. */
-    symbolPosition: 'before' as 'before' | 'after',
+    symbolPosition: 'after' as 'before' | 'after',
 };
 
 /** Currencies whose smallest unit is the major unit, so cents never apply. */
