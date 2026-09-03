@@ -16,6 +16,7 @@ import Select from '@/components/ui/Select.vue';
 import Separator from '@/components/ui/Separator.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import { useAuth } from '@/composables/useAuth';
+import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber } from '@/lib/money';
 import { linesToPayload, UNIT_OPTIONS } from '@/lib/orders';
 import type { MoneyValue } from '@/types/inventory';
@@ -40,17 +41,18 @@ const emit = defineEmits<{ close: [] }>();
 const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
 const { can } = useAuth();
+const { t } = useTranslations();
 
 const money = (m: MoneyValue | null | undefined): string =>
     m ? formatMoney(m.minor, m.currency, locale.value) : '—';
 
 /** The four order statuses, in workflow order — the stepper's steps. */
-const STEPS: { key: OrderStatusKey; label: string }[] = [
-    { key: 'RECEIVED', label: 'Received' },
-    { key: 'IN_PROCESS', label: 'In Process' },
-    { key: 'READY_TO_SHIP', label: 'Ready to Ship' },
-    { key: 'SHIPPED', label: 'Shipped' },
-];
+const STEPS = computed<{ key: OrderStatusKey; label: string }[]>(() => [
+    { key: 'RECEIVED', label: t('Received') },
+    { key: 'IN_PROCESS', label: t('In Process') },
+    { key: 'READY_TO_SHIP', label: t('Ready to Ship') },
+    { key: 'SHIPPED', label: t('Shipped') },
+]);
 
 const order = computed(() => props.order);
 
@@ -106,12 +108,12 @@ const itemSummary = computed(() => {
     const items = order.value?.items ?? [];
     const units = items.reduce((sum, line) => sum + line.quantity, 0);
 
-    return `${items.length} lines · ${formatNumber(units, locale.value)} units`;
+    return t(':count lines · :units units', { count: items.length, units: formatNumber(units, locale.value) });
 });
 
 /** "25,48 € / bottle · 0.75 L" under each line. */
 function lineMeta(line: OrderLine): string {
-    const unit = line.unit_type === 'cases' ? 'case' : 'bottle';
+    const unit = line.unit_type === 'cases' ? t('case') : t('bottle');
 
     return [`${money(line.unit_price)} / ${unit}`, line.unit_size].filter(Boolean).join(' · ');
 }
@@ -224,7 +226,7 @@ function saveEdit(line: OrderLine): void {
 function removeLine(line: OrderLine): void {
     const id = order.value?.id;
     if (id === undefined) return;
-    if (!confirm(`Remove ${line.name || line.custom_description || 'this line'}?`)) return;
+    if (!confirm(t('Remove :item?', { item: line.name || line.custom_description || t('this line') }))) return;
 
     router.delete(`/order-items/${line.id}`, { preserveScroll: true, onSuccess: () => reloadOrder(id) });
 }
@@ -288,14 +290,14 @@ function destroy(): void {
 </script>
 
 <template>
-    <SidePanel :open="open" :title="order?.customer?.company_name ?? 'Order'" :subtitle="subtitle" @close="emit('close')">
+    <SidePanel :open="open" :title="order?.customer?.company_name ?? t('Order')" :subtitle="subtitle" @close="emit('close')">
         <template #header-actions>
             <!-- @todo Overflow menu. The design offers per-order actions here
                  (print, resend, mark paid); none has an endpoint yet. -->
             <button
                 type="button"
                 class="p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                aria-label="More actions"
+                :aria-label="t('More actions')"
             >
                 <MoreHorizontal class="size-4" :stroke-width="1.5" />
             </button>
@@ -307,30 +309,30 @@ function destroy(): void {
                     {{ STEPS.find((s) => s.key === order!.status)?.label ?? order!.status }}
                 </Badge>
                 <Badge v-if="customerChip" variant="outline">{{ customerChip }}</Badge>
-                <Badge v-if="rebate !== null" variant="outline">Rebate {{ rebate }}%</Badge>
-                <Badge v-if="order!.is_backorder" variant="warning">Backorder</Badge>
-                <Badge v-if="order!.is_consignment" variant="outline">Consignment</Badge>
+                <Badge v-if="rebate !== null" variant="outline">{{ t('Rebate :percent%', { percent: rebate }) }}</Badge>
+                <Badge v-if="order!.is_backorder" variant="warning">{{ t('Backorder') }}</Badge>
+                <Badge v-if="order!.is_consignment" variant="outline">{{ t('Consignment') }}</Badge>
             </div>
             <p class="mt-2 text-xs text-muted-foreground">
-                Received {{ dateTime(order!.created_at) }}
+                {{ t('Received') }} {{ dateTime(order!.created_at) }}
                 <template v-if="order!.status_history.length">
-                    · Updated {{ dateTime(order!.status_history[order!.status_history.length - 1]!.created_at) }}
+                    · {{ t('Updated') }} {{ dateTime(order!.status_history[order!.status_history.length - 1]!.created_at) }}
                     <template v-if="order!.status_history[order!.status_history.length - 1]!.changed_by">
-                        by {{ order!.status_history[order!.status_history.length - 1]!.changed_by!.name }}
+                        {{ t('by :name', { name: order!.status_history[order!.status_history.length - 1]!.changed_by!.name }) }}
                     </template>
                 </template>
             </p>
         </template>
 
-        <p v-if="!order" class="text-xs text-muted-foreground">Loading order…</p>
+        <p v-if="!order" class="text-xs text-muted-foreground">{{ t('Loading order…') }}</p>
 
         <div v-else class="flex flex-col gap-6">
             <!-- Status -->
             <section class="flex flex-col gap-3">
-                <SectionHeader title="Status">
+                <SectionHeader :title="t('Status')">
                     <template #actions>
                         <span class="text-xs text-muted-foreground">
-                            {{ can('orders.manage') ? 'Tap to update' : 'Read only' }}
+                            {{ can('orders.manage') ? t('Tap to update') : t('Read only') }}
                         </span>
                     </template>
                 </SectionHeader>
@@ -346,7 +348,7 @@ function destroy(): void {
 
             <!-- Items -->
             <section class="flex flex-col gap-3">
-                <SectionHeader title="Items">
+                <SectionHeader :title="t('Items')">
                     <template #actions>
                         <span class="text-xs text-muted-foreground">{{ itemSummary }}</span>
                     </template>
@@ -385,7 +387,7 @@ function destroy(): void {
                                 <button
                                     type="button"
                                     class="shrink-0 p-1.5 text-muted-foreground transition-colors hover:text-foreground"
-                                    :aria-label="`Edit ${line.name}`"
+                                    :aria-label="t('Edit :item', { item: line.name })"
                                     @click="startEdit(line)"
                                 >
                                     <Pencil class="size-3.5" :stroke-width="1.5" />
@@ -393,7 +395,7 @@ function destroy(): void {
                                 <button
                                     type="button"
                                     class="shrink-0 p-1.5 text-muted-foreground transition-colors hover:text-destructive"
-                                    :aria-label="`Remove ${line.name}`"
+                                    :aria-label="t('Remove :item', { item: line.name })"
                                     @click="removeLine(line)"
                                 >
                                     <Trash2 class="size-3.5" :stroke-width="1.5" />
@@ -409,12 +411,12 @@ function destroy(): void {
                                 v-if="line.inventory_item_id"
                                 class="inline-flex h-7 items-center border border-border px-2.5 text-xs text-muted-foreground"
                             >
-                                {{ line.unit_type === 'cases' ? 'Cases' : 'Bottles' }}
+                                {{ line.unit_type === 'cases' ? t('Cases') : t('Bottles') }}
                             </span>
-                            <Select v-else v-model="editUnitType" :options="UNIT_OPTIONS" class="h-7 w-24 text-xs" aria-label="Unit" />
+                            <Select v-else v-model="editUnitType" :options="UNIT_OPTIONS" class="h-7 w-24 text-xs" :aria-label="t('Unit')" />
 
-                            <Button size="sm" @click="saveEdit(line)">Save</Button>
-                            <Button size="sm" variant="ghost" @click="cancelEdit">Cancel</Button>
+                            <Button size="sm" @click="saveEdit(line)">{{ t('Save') }}</Button>
+                            <Button size="sm" variant="ghost" @click="cancelEdit">{{ t('Cancel') }}</Button>
                         </div>
                     </li>
                 </ul>
@@ -422,20 +424,20 @@ function destroy(): void {
                 <template v-if="can('orders.manage')">
                     <OrderLineFields v-if="addingItems" v-model="newLines" :products="products" :locale="locale">
                         <template #actions>
-                            <Button size="sm" variant="ghost" type="button" @click="cancelAddItems">Cancel</Button>
+                            <Button size="sm" variant="ghost" type="button" @click="cancelAddItems">{{ t('Cancel') }}</Button>
                             <Button size="sm" type="button" :disabled="newLines.length === 0" @click="submitNewLines">
-                                Add {{ newLines.length || '' }}
+                                {{ t('Add :count', { count: newLines.length || '' }) }}
                             </Button>
                         </template>
                     </OrderLineFields>
                     <Button v-else variant="outline" size="sm" class="self-start" @click="addingItems = true">
                         <Plus class="size-3.5" :stroke-width="1.5" />
-                        Add item
+                        {{ t('Add item') }}
                     </Button>
                 </template>
 
                 <div class="flex items-baseline justify-between gap-3 pt-1">
-                    <span class="text-sm">Total · excl. VAT</span>
+                    <span class="text-sm">{{ t('Total · excl. VAT') }}</span>
                     <span class="text-lg font-semibold tabular-nums">{{ money(order.total_amount) }}</span>
                 </div>
             </section>
@@ -445,7 +447,7 @@ function destroy(): void {
 
                 <!-- Profitability -->
                 <section class="flex flex-col gap-3">
-                    <SectionHeader title="Profitability" />
+                    <SectionHeader :title="t('Profitability')" />
 
                     <!--
                       The design splits revenue into gross, rebate and net. The
@@ -457,28 +459,28 @@ function destroy(): void {
                     -->
                     <dl class="grid grid-cols-2 gap-x-8 border border-border bg-muted/40 p-4 text-xs">
                         <div class="flex justify-between gap-3 py-1">
-                            <dt class="text-muted-foreground">Revenue</dt>
+                            <dt class="text-muted-foreground">{{ t('Revenue') }}</dt>
                             <dd class="tabular-nums">{{ money(order.profitability.revenue) }}</dd>
                         </div>
                         <div class="flex justify-between gap-3 py-1">
-                            <dt class="text-muted-foreground">COGS</dt>
+                            <dt class="text-muted-foreground">{{ t('COGS') }}</dt>
                             <dd class="tabular-nums">−{{ money(order.profitability.cogs) }}</dd>
                         </div>
 
                         <div v-if="order.profitability.logistics" class="flex justify-between gap-3 py-1">
-                            <dt class="text-muted-foreground">Logistics</dt>
+                            <dt class="text-muted-foreground">{{ t('Logistics') }}</dt>
                             <dd class="tabular-nums">−{{ money(order.profitability.logistics) }}</dd>
                         </div>
                         <div v-if="order.profitability.logistics" aria-hidden="true" />
 
                         <div class="mt-1 flex justify-between gap-3 border-t border-border pt-2">
-                            <dt class="font-medium">Gross profit</dt>
+                            <dt class="font-medium">{{ t('Gross profit') }}</dt>
                             <dd class="text-sm font-semibold tabular-nums">
                                 {{ money(order.profitability.gross_profit) }}
                             </dd>
                         </div>
                         <div class="mt-1 flex justify-between gap-3 border-t border-border pt-2">
-                            <dt class="font-medium">Margin</dt>
+                            <dt class="font-medium">{{ t('Margin') }}</dt>
                             <dd class="text-sm font-semibold tabular-nums">
                                 {{ order.profitability.margin_percent }}%
                             </dd>
@@ -486,8 +488,11 @@ function destroy(): void {
                     </dl>
 
                     <p v-if="!order.profitability.complete" class="text-xs text-destructive">
-                        No cost recorded for {{ order.profitability.missing_cost_items.join(', ') }} — margin is
-                        overstated until they are costed.
+                        {{
+                            t('No cost recorded for :items — margin is overstated until they are costed.', {
+                                items: order.profitability.missing_cost_items.join(', '),
+                            })
+                        }}
                     </p>
                 </section>
             </template>
@@ -497,13 +502,13 @@ function destroy(): void {
 
                 <!-- Customer -->
                 <section class="flex flex-col gap-3">
-                    <SectionHeader title="Customer">
+                    <SectionHeader :title="t('Customer')">
                         <template #actions>
                             <Link
                                 :href="`/customers/${order.customer.id}`"
                                 class="text-xs text-muted-foreground transition-colors hover:text-foreground"
                             >
-                                View profile
+                                {{ t('View profile') }}
                             </Link>
                         </template>
                     </SectionHeader>
@@ -523,19 +528,19 @@ function destroy(): void {
 
                         <dl class="mt-3 text-xs">
                             <div class="flex justify-between gap-3 py-1">
-                                <dt class="text-muted-foreground">Contact</dt>
+                                <dt class="text-muted-foreground">{{ t('Contact') }}</dt>
                                 <dd class="truncate">{{ order.customer.contact_name ?? '—' }}</dd>
                             </div>
                             <div class="flex justify-between gap-3 py-1">
-                                <dt class="text-muted-foreground">Email</dt>
+                                <dt class="text-muted-foreground">{{ t('Email') }}</dt>
                                 <dd class="truncate">{{ order.customer.email ?? '—' }}</dd>
                             </div>
                             <div class="flex justify-between gap-3 py-1">
-                                <dt class="text-muted-foreground">Phone</dt>
+                                <dt class="text-muted-foreground">{{ t('Phone') }}</dt>
                                 <dd class="truncate">{{ order.customer.phone ?? '—' }}</dd>
                             </div>
                             <div class="flex justify-between gap-3 py-1">
-                                <dt class="text-muted-foreground">Standing rebate</dt>
+                                <dt class="text-muted-foreground">{{ t('Standing rebate') }}</dt>
                                 <dd class="tabular-nums">{{ rebate !== null ? `${rebate}%` : '—' }}</dd>
                             </div>
                         </dl>
@@ -547,7 +552,7 @@ function destroy(): void {
 
             <!-- Timeline -->
             <section class="flex flex-col gap-3">
-                <SectionHeader title="Timeline" />
+                <SectionHeader :title="t('Timeline')" />
 
                 <ul class="flex flex-col gap-3">
                     <li
@@ -565,7 +570,7 @@ function destroy(): void {
                                 {{ STEPS.find((s) => s.key === event.status)?.label ?? event.status }}
                             </span>
                             <span v-if="event.changed_by" class="block text-xs text-muted-foreground">
-                                by {{ event.changed_by.name }}
+                                {{ t('by :name', { name: event.changed_by.name }) }}
                             </span>
                         </span>
                         <span class="shrink-0 text-xs text-muted-foreground">{{ dateTime(event.created_at) }}</span>
@@ -577,7 +582,7 @@ function destroy(): void {
 
             <!-- Comments -->
             <section class="flex flex-col gap-3">
-                <SectionHeader title="Comments">
+                <SectionHeader :title="t('Comments')">
                     <template #actions>
                         <span class="text-xs text-muted-foreground tabular-nums">{{ order.comments.length }}</span>
                     </template>
@@ -588,7 +593,7 @@ function destroy(): void {
                         <Avatar :name="note.author?.name" size="sm" />
                         <span class="min-w-0 flex-1">
                             <span class="flex flex-wrap items-baseline gap-2 text-xs">
-                                <span class="font-medium text-foreground">{{ note.author?.name ?? 'Someone' }}</span>
+                                <span class="font-medium text-foreground">{{ note.author?.name ?? t('Someone') }}</span>
                                 <span class="text-muted-foreground">{{ dateTime(note.created_at) }}</span>
                             </span>
                             <span class="mt-0.5 block text-sm break-words">{{ note.content }}</span>
@@ -599,12 +604,12 @@ function destroy(): void {
                 </ul>
 
                 <form class="flex items-center gap-2 border border-input p-1" @submit.prevent="postComment">
-                    <label class="sr-only" :for="`comment-${order.id}`">Write a comment</label>
+                    <label class="sr-only" :for="`comment-${order.id}`">{{ t('Write a comment') }}</label>
                     <MentionInput
                         :id="`comment-${order.id}`"
                         v-model="comment.content"
                         :members="members"
-                        placeholder="Write a comment… use @ to tag"
+                        :placeholder="t('Write a comment… use @ to tag')"
                         class="h-8 px-2 text-sm placeholder:text-muted-foreground"
                         @mentions="comment.mentions = $event"
                     />
@@ -612,7 +617,7 @@ function destroy(): void {
                         type="submit"
                         class="inline-flex size-7 shrink-0 items-center justify-center bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
                         :disabled="comment.processing || comment.content.trim() === ''"
-                        aria-label="Post comment"
+                        :aria-label="t('Post comment')"
                     >
                         <ArrowRight class="size-3.5" :stroke-width="2" />
                     </button>
@@ -628,11 +633,11 @@ function destroy(): void {
                 class="mr-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
                 @click="confirmingDelete ? destroy() : (confirmingDelete = true)"
             >
-                {{ confirmingDelete ? 'Confirm delete' : 'Delete' }}
+                {{ confirmingDelete ? t('Confirm delete') : t('Delete') }}
             </Button>
             <Button v-if="can('orders.manage')" variant="outline" @click="duplicateOrder">
                 <Copy class="size-3.5" :stroke-width="1.5" />
-                Duplicate
+                {{ t('Duplicate') }}
             </Button>
         </template>
     </SidePanel>

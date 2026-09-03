@@ -22,6 +22,7 @@ import DateRangePicker from '@/components/ui/DateRangePicker.vue';
 import ProgressBar from '@/components/ui/ProgressBar.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
+import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { DashboardFilters, DashboardSummary } from '@/types/dashboard';
 import type { SharedProps } from '@/types';
@@ -43,19 +44,20 @@ const props = defineProps<{ summary: DashboardSummary; filters: DashboardFilters
 
 const page = usePage<SharedProps>();
 const { can } = useAuth();
+const { t } = useTranslations();
 
 const createOrderOpen = ref(false);
 const createCustomerOpen = ref(false);
 
 /** The design's period strip (Figma 208:5577); values are tokens the server accepts. */
-const PERIOD_TABS: TabItem[] = [
-    { value: 'today', label: 'Today' },
-    { value: 'yesterday', label: 'Yesterday' },
-    { value: 'week', label: 'This Week' },
-    { value: 'mtd', label: 'This Month' },
-    { value: 'qtd', label: 'This Quarter' },
-    { value: 'ytd', label: 'Year to Date' },
-];
+const PERIOD_TABS = computed<TabItem[]>(() => [
+    { value: 'today', label: t('Today') },
+    { value: 'yesterday', label: t('Yesterday') },
+    { value: 'week', label: t('This Week') },
+    { value: 'mtd', label: t('This Month') },
+    { value: 'qtd', label: t('This Quarter') },
+    { value: 'ytd', label: t('Year to Date') },
+]);
 
 function reload(overrides: Record<string, unknown>): void {
     router.get(
@@ -126,10 +128,10 @@ const alerts = computed(() => {
     const s = props.summary.stats;
 
     if (s.ready_to_ship > 0) {
-        out.push({ icon: PackageCheck, text: `${count(s.ready_to_ship)} orders ready to ship` });
+        out.push({ icon: PackageCheck, text: t('Orders ready to ship: :count', { count: count(s.ready_to_ship) }) });
     }
     if (s.tasks_overdue > 0) {
-        out.push({ icon: AlertTriangle, text: `${count(s.tasks_overdue)} task${s.tasks_overdue === 1 ? '' : 's'} overdue` });
+        out.push({ icon: AlertTriangle, text: t('Tasks overdue: :count', { count: count(s.tasks_overdue) }) });
     }
 
     return out;
@@ -137,19 +139,19 @@ const alerts = computed(() => {
 </script>
 
 <template>
-    <AppLayout title="Dashboard">
+    <AppLayout :title="t('Dashboard')">
         <div class="space-y-6">
             <!-- Title row + primary actions -->
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <h2 class="text-xl font-semibold text-foreground">Dashboard</h2>
+                <h2 class="text-xl font-semibold text-foreground">{{ t('Dashboard') }}</h2>
                 <div class="flex items-center gap-2">
                     <Button v-if="can('orders.manage')" variant="outline" size="sm" @click="createOrderOpen = true">
                         <Plus class="size-3.5" :stroke-width="1.5" />
-                        New order
+                        {{ t('New order') }}
                     </Button>
                     <Button v-if="can('customers.manage')" size="sm" @click="createCustomerOpen = true">
                         <Plus class="size-3.5" :stroke-width="1.5" />
-                        New customer
+                        {{ t('New customer') }}
                     </Button>
                 </div>
             </div>
@@ -162,7 +164,7 @@ const alerts = computed(() => {
                     variant="segmented"
                     @select="selectPeriod"
                 />
-                <DateRangePicker :model-value="customRange" label="Custom" @update:model-value="selectRange" />
+                <DateRangePicker :model-value="customRange" :label="t('Custom')" @update:model-value="selectRange" />
             </div>
 
             <!-- Alert band -->
@@ -201,8 +203,8 @@ const alerts = computed(() => {
                     <Card>
                         <CardHeader>
                             <div class="flex items-baseline justify-between gap-3">
-                                <CardTitle>Revenue</CardTitle>
-                                <p class="text-xs text-muted-foreground">Year to Date</p>
+                                <CardTitle>{{ t('Revenue') }}</CardTitle>
+                                <p class="text-xs text-muted-foreground">{{ t('Year to Date') }}</p>
                             </div>
                         </CardHeader>
                         <CardContent class="space-y-4">
@@ -228,9 +230,9 @@ const alerts = computed(() => {
                     <!-- Revenue breakdown by channel -->
                     <Card>
                         <CardHeader>
-                            <CardTitle>Revenue breakdown</CardTitle>
+                            <CardTitle>{{ t('Revenue breakdown') }}</CardTitle>
                             <p class="text-xs text-muted-foreground">
-                                By channel · {{ money(channelTotal) }} attributed
+                                {{ t('By channel · :amount attributed', { amount: money(channelTotal) }) }}
                             </p>
                         </CardHeader>
                         <CardContent>
@@ -246,7 +248,7 @@ const alerts = computed(() => {
                                     />
                                 </li>
                             </ul>
-                            <p v-else class="py-6 text-sm text-muted-foreground">No revenue in this period.</p>
+                            <p v-else class="py-6 text-sm text-muted-foreground">{{ t('No revenue in this period.') }}</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -258,9 +260,9 @@ const alerts = computed(() => {
                   either can show a real number.
                 -->
                 <div class="flex h-full flex-col border border-border bg-card p-4">
-                    <h3 class="text-sm font-semibold">Revenue vs. target</h3>
+                    <h3 class="text-sm font-semibold">{{ t('Revenue vs. target') }}</h3>
                     <p class="mt-4 text-xs text-muted-foreground">
-                        No annual or per-channel target is set, so progress can't be calculated yet.
+                        {{ t("No annual or per-channel target is set, so progress can't be calculated yet.") }}
                     </p>
                 </div>
             </div>
@@ -276,9 +278,9 @@ const alerts = computed(() => {
                   cannot be computed — see docs/design/README.md.
                 -->
                 <div class="flex h-full flex-col border border-border bg-card p-4">
-                    <h3 class="text-sm font-semibold">Runway</h3>
+                    <h3 class="text-sm font-semibold">{{ t('Runway') }}</h3>
                     <p class="mt-4 text-xs text-muted-foreground">
-                        No cash balance is on file, so runway can't be calculated yet.
+                        {{ t("No cash balance is on file, so runway can't be calculated yet.") }}
                     </p>
                 </div>
 

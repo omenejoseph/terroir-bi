@@ -18,6 +18,7 @@ import StackedBar from '@/components/ui/StackedBar.vue';
 import StatCard from '@/components/ui/StatCard.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
+import { useTranslations } from '@/composables/useTranslations';
 import { PRICE_SOURCE_LABELS } from '@/lib/customers';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type {
@@ -67,6 +68,7 @@ const props = defineProps<{
 const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
 const { can } = useAuth();
+const { t } = useTranslations();
 
 const editOpen = ref(false);
 const confirmingDelete = ref(false);
@@ -79,16 +81,18 @@ const subtitle = computed(() => {
     const rebate = Number.parseFloat(props.customer.effective_rebate_percent);
     const parts = [props.customer.contact_name];
 
-    if (Number.isFinite(rebate) && rebate > 0) parts.push(`${Number(rebate.toFixed(2))}% rebate`);
+    if (Number.isFinite(rebate) && rebate > 0) {
+        parts.push(t(':rebate% rebate', { rebate: Number(rebate.toFixed(2)) }));
+    }
 
     return parts.filter(Boolean).join(' · ');
 });
 
 const TABS = computed<TabItem[]>(() => [
-    { value: 'overview', label: 'Overview' },
-    { value: 'pricing', label: `Pricing (${props.pricing?.override_count ?? 0})` },
-    { value: 'orders', label: `Order History (${props.orderHistory?.meta.total ?? 0})` },
-    { value: 'consignment', label: 'Komisija' },
+    { value: 'overview', label: t('Overview') },
+    { value: 'pricing', label: t('Pricing (:count)', { count: props.pricing?.override_count ?? 0 }) },
+    { value: 'orders', label: t('Order History (:count)', { count: props.orderHistory?.meta.total ?? 0 }) },
+    { value: 'consignment', label: t('Consignment') },
 ]);
 
 /** Switching tabs asks the server for only that tab's data. */
@@ -194,8 +198,8 @@ const moneySplit = computed(() => {
         revenue,
         currency: insights.total_spend.currency,
         segments: [
-            { label: 'Direct sales', value: Math.max(0, revenue - consignment) },
-            { label: 'Consignment', value: consignment },
+            { label: t('Direct sales'), value: Math.max(0, revenue - consignment) },
+            { label: t('Consignment'), value: consignment },
         ].filter((s) => s.value > 0),
     };
 });
@@ -258,7 +262,7 @@ const priceLadder = computed(() => {
     const buckets = new Map<string, { units: number; revenueMinor: number; currency: string }>();
 
     for (const row of props.products.rows) {
-        const key = row.subcategory ?? row.group ?? 'Other';
+        const key = row.subcategory ?? row.group ?? t('Other');
         const bucket = buckets.get(key) ?? { units: 0, revenueMinor: 0, currency: row.revenue.currency };
         bucket.units += row.units;
         bucket.revenueMinor += row.revenue.minor;
@@ -329,11 +333,11 @@ const concentration = computed(() => {
   card's data, so changing the range does not re-run the rhythm strip and the
   revenue trend, which do not depend on it.
 */
-const PRODUCT_RANGE_TABS: TabItem[] = [
-    { value: 'lifetime', label: 'Lifetime' },
-    { value: 'year', label: 'This year' },
-    { value: 'month', label: 'This month' },
-];
+const PRODUCT_RANGE_TABS = computed<TabItem[]>(() => [
+    { value: 'lifetime', label: t('Lifetime') },
+    { value: 'year', label: t('This year') },
+    { value: 'month', label: t('This month') },
+]);
 
 const productCustomRange = computed<DateRange>(() => ({
     from: props.productRange.preset === 'custom' ? props.productRange.from : null,
@@ -369,7 +373,7 @@ const productGroups = computed(() => {
     const byGroup = new Map<string, CustomerProducts['rows']>();
 
     for (const row of props.products.rows) {
-        const key = row.group ?? 'Ungrouped';
+        const key = row.group ?? t('Ungrouped');
         byGroup.set(key, [...(byGroup.get(key) ?? []), row]);
     }
 
@@ -404,12 +408,12 @@ function shortDate(iso: string | null): string {
     });
 }
 
-const orderStatusLabel: Record<string, string> = {
-    RECEIVED: 'Received',
-    IN_PROCESS: 'In Process',
-    READY_TO_SHIP: 'Ready to Ship',
-    SHIPPED: 'Shipped',
-};
+const orderStatusLabel = computed<Record<string, string>>(() => ({
+    RECEIVED: t('Received'),
+    IN_PROCESS: t('In Process'),
+    READY_TO_SHIP: t('Ready to Ship'),
+    SHIPPED: t('Shipped'),
+}));
 </script>
 
 <template>
@@ -420,7 +424,7 @@ const orderStatusLabel: Record<string, string> = {
                 class="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
             >
                 <ArrowLeft class="size-3.5" :stroke-width="1.5" />
-                Customers
+                {{ t('Customers') }}
             </Link>
 
             <div class="flex flex-wrap items-start justify-between gap-3">
@@ -431,7 +435,7 @@ const orderStatusLabel: Record<string, string> = {
                 <div class="flex shrink-0 items-center gap-2">
                     <Button v-if="can('customers.manage')" variant="outline" size="sm" @click="editOpen = true">
                         <PencilLine class="size-3.5" :stroke-width="1.5" />
-                        Edit
+                        {{ t('Edit') }}
                     </Button>
                     <Button
                         v-if="can('customers.delete')"
@@ -441,7 +445,7 @@ const orderStatusLabel: Record<string, string> = {
                         @click="confirmingDelete ? destroy() : (confirmingDelete = true)"
                     >
                         <Trash2 class="size-3.5" :stroke-width="1.5" />
-                        {{ confirmingDelete ? 'Confirm delete' : 'Delete' }}
+                        {{ confirmingDelete ? t('Confirm delete') : t('Delete') }}
                     </Button>
                 </div>
             </div>
@@ -450,7 +454,7 @@ const orderStatusLabel: Record<string, string> = {
                 <Tabs :items="TABS" :current="tab" @select="selectTab" />
                 <Button v-if="can('customers.tokens')" variant="outline" size="sm" @click="orderLinkOpen = true">
                     <Link2 class="size-3.5" :stroke-width="1.5" />
-                    Generate Order Link
+                    {{ t('Generate Order Link') }}
                 </Button>
             </div>
 
@@ -465,34 +469,39 @@ const orderStatusLabel: Record<string, string> = {
 
                 <section v-if="insights" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <StatCard
-                        label="Lifetime revenue"
+                        :label="t('Lifetime revenue')"
                         :value="money(insights.total_spend)"
-                        :hint="`${formatNumber(insights.order_count, locale)} orders · avg ${money(insights.avg_order_value)}`"
+                        :hint="
+                            t(':count orders · avg :avg', {
+                                count: formatNumber(insights.order_count, locale),
+                                avg: money(insights.avg_order_value),
+                            })
+                        "
                     />
                     <StatCard
-                        label="Bottles sold"
+                        :label="t('Bottles sold')"
                         :value="formatNumber(products.total_units, locale)"
-                        :hint="`across ${formatNumber(products.product_count, locale)} products`"
+                        :hint="t('across :count products', { count: formatNumber(products.product_count, locale) })"
                     />
                     <StatCard
-                        label="Consignment revenue"
+                        :label="t('Consignment revenue')"
                         :value="money(insights.consignment_revenue)"
-                        hint="goods sold on komisija"
+                        :hint="t('goods sold on komisija')"
                     />
                     <StatCard
-                        label="Days since last order"
+                        :label="t('Days since last order')"
                         :value="rhythm.days_since_last === null ? '—' : String(rhythm.days_since_last)"
                         :hint="
                             rhythm.median_gap_days === null
-                                ? 'no rhythm established yet'
-                                : `typical gap is ${rhythm.median_gap_days} days`
+                                ? t('no rhythm established yet')
+                                : t('typical gap is :days days', { days: rhythm.median_gap_days })
                         "
                         :alert="rhythm.overdue"
                     />
                 </section>
 
                 <p v-else class="border border-border bg-card p-4 text-xs text-muted-foreground">
-                    Revenue figures are hidden — they need the financials capability.
+                    {{ t('Revenue figures are hidden — they need the financials capability.') }}
                 </p>
 
                 <OrderRhythm :rhythm="rhythm" />
@@ -502,18 +511,18 @@ const orderStatusLabel: Record<string, string> = {
                     <div v-if="orderAnalytics" class="border border-border bg-card xl:col-span-2">
                         <div class="flex items-center justify-between gap-3 border-b border-border px-6 py-4">
                             <SectionHeader
-                                title="Revenue trend · 12 months"
+                                :title="t('Revenue trend · 12 months')"
                                 :description="
                                     orderAnalytics.last_order_date
-                                        ? `Last order ${shortDate(orderAnalytics.last_order_date)}`
-                                        : 'No orders recorded yet'
+                                        ? t('Last order :date', { date: shortDate(orderAnalytics.last_order_date) })
+                                        : t('No orders recorded yet')
                                 "
                             />
                             <!-- @todo Change range. The design draws this control but
                                  doesn't specify what alternate window it opens; the
                                  chart's own 12-month window matches the header. -->
                             <button type="button" class="shrink-0 text-xs text-muted-foreground hover:text-foreground">
-                                Change range
+                                {{ t('Change range') }}
                             </button>
                         </div>
                         <div class="p-6">
@@ -523,7 +532,7 @@ const orderStatusLabel: Record<string, string> = {
 
                     <div v-if="orderAnalytics" class="flex flex-col border border-border bg-card">
                         <div class="border-b border-border px-6 py-4">
-                            <SectionHeader title="Next 3 months" />
+                            <SectionHeader :title="t('Next 3 months')" />
                         </div>
 
                         <div v-if="forecast?.ready" class="flex-1 p-6">
@@ -532,16 +541,19 @@ const orderStatusLabel: Record<string, string> = {
 
                         <div v-else class="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
                             <span class="size-6 bg-muted" aria-hidden="true" />
-                            <p class="text-sm font-semibold">No forecast yet</p>
+                            <p class="text-sm font-semibold">{{ t('No forecast yet') }}</p>
                             <p class="text-xs text-muted-foreground">
-                                Forecasting compares each month to the same month last year, and this customer
-                                doesn't have a full year of orders yet.
+                                {{
+                                    t(
+                                        "Forecasting compares each month to the same month last year, and this customer doesn't have a full year of orders yet.",
+                                    )
+                                }}
                             </p>
                             <span
                                 v-if="forecast"
                                 class="mt-1 inline-flex items-center border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground"
                             >
-                                Available from {{ forecast.availableFrom }}
+                                {{ t('Available from :date', { date: forecast.availableFrom }) }}
                             </span>
                         </div>
                     </div>
@@ -552,8 +564,8 @@ const orderStatusLabel: Record<string, string> = {
                     <div v-if="moneySplit" class="border border-border bg-card">
                         <div class="border-b border-border px-6 py-4">
                             <SectionHeader
-                                title="Where the money comes from"
-                                description="Direct sales against goods sold on komisija"
+                                :title="t('Where the money comes from')"
+                                :description="t('Direct sales against goods sold on komisija')"
                             />
                         </div>
                         <div class="flex flex-col gap-4 p-6">
@@ -579,17 +591,21 @@ const orderStatusLabel: Record<string, string> = {
                     <div v-if="priceLadder.rows.length > 0" class="border border-border bg-card">
                         <div class="flex items-start justify-between gap-3 border-b border-border px-6 py-4">
                             <SectionHeader
-                                title="Price ladder"
+                                :title="t('Price ladder')"
                                 :description="
                                     priceLadder.ratio
-                                        ? `Revenue per bottle · ${priceLadder.ratio.top} earns ${priceLadder.ratio.multiple.toFixed(1)}× ${priceLadder.ratio.bottom}`
-                                        : 'Revenue per bottle'
+                                        ? t('Revenue per bottle · :top earns :multiple× :bottom', {
+                                              top: priceLadder.ratio.top,
+                                              multiple: priceLadder.ratio.multiple.toFixed(1),
+                                              bottom: priceLadder.ratio.bottom,
+                                          })
+                                        : t('Revenue per bottle')
                                 "
                             />
                             <!-- @todo Suggest upsell. No suggestion engine exists yet
                                  to back this — the ladder itself is real. -->
                             <button type="button" class="shrink-0 text-xs text-muted-foreground hover:text-foreground">
-                                Suggest upsell
+                                {{ t('Suggest upsell') }}
                             </button>
                         </div>
                         <ul class="space-y-4 p-6">
@@ -612,7 +628,7 @@ const orderStatusLabel: Record<string, string> = {
 
                     <div v-if="concentration.rows.length > 0" class="border border-border bg-card">
                         <div class="border-b border-border px-6 py-4">
-                            <SectionHeader title="Concentration" />
+                            <SectionHeader :title="t('Concentration')" />
                         </div>
                         <ul class="space-y-4 p-6">
                             <li
@@ -630,8 +646,12 @@ const orderStatusLabel: Record<string, string> = {
                             </li>
                         </ul>
                         <p class="border-t border-border px-6 py-3 text-xs text-muted-foreground">
-                            Top 3 = {{ concentration.top3SharePct }}% of bottles · only
-                            {{ formatNumber(products.product_count, locale) }} SKUs bought
+                            {{
+                                t('Top 3 = :pct% of bottles · only :count SKUs bought', {
+                                    pct: concentration.top3SharePct,
+                                    count: formatNumber(products.product_count, locale),
+                                })
+                            }}
                         </p>
                     </div>
                 </div>
@@ -640,12 +660,17 @@ const orderStatusLabel: Record<string, string> = {
                     <div class="flex flex-col gap-3 border-b border-border px-6 py-4">
                         <div class="flex items-start justify-between gap-3">
                             <SectionHeader
-                                title="Products bought"
-                                :description="`${formatNumber(products.total_units, locale)} bottles · ${formatNumber(products.product_count, locale)} products`"
+                                :title="t('Products bought')"
+                                :description="
+                                    t(':units bottles · :count products', {
+                                        units: formatNumber(products.total_units, locale),
+                                        count: formatNumber(products.product_count, locale),
+                                    })
+                                "
                             />
                             <!-- @todo Suggest order. No suggestion engine exists yet. -->
                             <button type="button" class="shrink-0 text-xs text-muted-foreground hover:text-foreground">
-                                Suggest order
+                                {{ t('Suggest order') }}
                             </button>
                         </div>
                         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -657,11 +682,11 @@ const orderStatusLabel: Record<string, string> = {
                                 />
                                 <DateRangePicker
                                     :model-value="productCustomRange"
-                                    label="Custom"
+                                    :label="t('Custom')"
                                     @update:model-value="selectProductCustomRange"
                                 />
                             </div>
-                            <span class="text-xs text-muted-foreground">Grouped by category</span>
+                            <span class="text-xs text-muted-foreground">{{ t('Grouped by category') }}</span>
                         </div>
                     </div>
 
@@ -669,11 +694,11 @@ const orderStatusLabel: Record<string, string> = {
                         <table class="w-full min-w-[52rem] text-xs">
                             <thead class="border-b border-border bg-muted/40 text-left text-xs text-muted-foreground">
                                 <tr>
-                                    <th scope="col" class="px-6 py-2.5 font-medium">Product</th>
-                                    <th scope="col" class="px-6 py-2.5 text-right font-medium">Bottles</th>
-                                    <th scope="col" class="px-6 py-2.5 font-medium">Share</th>
-                                    <th scope="col" class="px-6 py-2.5 font-medium">Last ordered</th>
-                                    <th scope="col" class="px-6 py-2.5 font-medium">Signal</th>
+                                    <th scope="col" class="px-6 py-2.5 font-medium">{{ t('Product') }}</th>
+                                    <th scope="col" class="px-6 py-2.5 text-right font-medium">{{ t('Bottles') }}</th>
+                                    <th scope="col" class="px-6 py-2.5 font-medium">{{ t('Share') }}</th>
+                                    <th scope="col" class="px-6 py-2.5 font-medium">{{ t('Last ordered') }}</th>
+                                    <th scope="col" class="px-6 py-2.5 font-medium">{{ t('Signal') }}</th>
                                 </tr>
                             </thead>
 
@@ -688,8 +713,12 @@ const orderStatusLabel: Record<string, string> = {
                                             · {{ group.label }}
                                         </th>
                                         <td class="px-6 py-2 text-right text-muted-foreground tabular-nums">
-                                            {{ formatNumber(group.units, locale) }} bottles ·
-                                            {{ formatNumber(group.productCount, locale) }} products
+                                            {{
+                                                t(':units bottles · :count products', {
+                                                    units: formatNumber(group.units, locale),
+                                                    count: formatNumber(group.productCount, locale),
+                                                })
+                                            }}
                                         </td>
                                     </tr>
 
@@ -749,8 +778,8 @@ const orderStatusLabel: Record<string, string> = {
                                              the wrong thing. -->
                                         {{
                                             productRange.preset === 'lifetime'
-                                                ? 'This customer has not ordered anything yet.'
-                                                : 'Nothing bought in this range.'
+                                                ? t('This customer has not ordered anything yet.')
+                                                : t('Nothing bought in this range.')
                                         }}
                                     </td>
                                 </tr>
@@ -765,11 +794,14 @@ const orderStatusLabel: Record<string, string> = {
                 <div class="border border-border bg-card">
                     <div class="border-b border-border px-6 py-4">
                         <SectionHeader
-                            title="Prices for this customer"
+                            :title="t('Prices for this customer')"
                             :description="
                                 customer.pricing_tier
-                                    ? `Tier ${customer.pricing_tier.name} · ${customer.effective_rebate_percent}% rebate`
-                                    : `No tier · ${customer.effective_rebate_percent}% rebate`
+                                    ? t('Tier :tier · :rebate% rebate', {
+                                          tier: customer.pricing_tier.name,
+                                          rebate: customer.effective_rebate_percent,
+                                      })
+                                    : t('No tier · :rebate% rebate', { rebate: customer.effective_rebate_percent })
                             "
                         />
                     </div>
@@ -778,10 +810,10 @@ const orderStatusLabel: Record<string, string> = {
                         <table class="w-full min-w-[44rem] text-xs">
                             <thead class="border-b border-border bg-muted/40 text-left text-xs text-muted-foreground">
                                 <tr>
-                                    <th scope="col" class="px-6 py-2.5 font-medium">Product</th>
-                                    <th scope="col" class="px-6 py-2.5 text-right font-medium">List price</th>
-                                    <th scope="col" class="px-6 py-2.5 text-right font-medium">They pay</th>
-                                    <th scope="col" class="px-6 py-2.5 font-medium">Decided by</th>
+                                    <th scope="col" class="px-6 py-2.5 font-medium">{{ t('Product') }}</th>
+                                    <th scope="col" class="px-6 py-2.5 text-right font-medium">{{ t('List price') }}</th>
+                                    <th scope="col" class="px-6 py-2.5 text-right font-medium">{{ t('They pay') }}</th>
+                                    <th scope="col" class="px-6 py-2.5 font-medium">{{ t('Decided by') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -806,7 +838,7 @@ const orderStatusLabel: Record<string, string> = {
                                 </tr>
                                 <tr v-if="(pricing?.rows ?? []).length === 0">
                                     <td colspan="4" class="px-6 py-12 text-center text-muted-foreground">
-                                        No sellable products to price yet.
+                                        {{ t('No sellable products to price yet.') }}
                                     </td>
                                 </tr>
                             </tbody>
@@ -826,11 +858,11 @@ const orderStatusLabel: Record<string, string> = {
                         <table class="w-full min-w-[44rem] text-xs">
                             <thead class="border-b border-border bg-muted/40 text-left text-xs text-muted-foreground">
                                 <tr>
-                                    <th scope="col" class="px-6 py-2.5 font-medium">Order</th>
-                                    <th scope="col" class="px-6 py-2.5 font-medium">Items</th>
-                                    <th scope="col" class="px-6 py-2.5 text-right font-medium">Total</th>
-                                    <th scope="col" class="px-6 py-2.5 font-medium">Status</th>
-                                    <th scope="col" class="px-6 py-2.5 text-right font-medium">Date</th>
+                                    <th scope="col" class="px-6 py-2.5 font-medium">{{ t('Order') }}</th>
+                                    <th scope="col" class="px-6 py-2.5 font-medium">{{ t('Items') }}</th>
+                                    <th scope="col" class="px-6 py-2.5 text-right font-medium">{{ t('Total') }}</th>
+                                    <th scope="col" class="px-6 py-2.5 font-medium">{{ t('Status') }}</th>
+                                    <th scope="col" class="px-6 py-2.5 text-right font-medium">{{ t('Date') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -848,9 +880,15 @@ const orderStatusLabel: Record<string, string> = {
                                         </Link>
                                     </td>
                                     <td class="px-6 py-3 text-muted-foreground">
-                                        {{ order.items.length }} lines ·
-                                        {{ formatNumber(order.items.reduce((s, i) => s + i.quantity, 0), locale) }}
-                                        units
+                                        {{
+                                            t(':lines lines · :units units', {
+                                                lines: order.items.length,
+                                                units: formatNumber(
+                                                    order.items.reduce((s, i) => s + i.quantity, 0),
+                                                    locale,
+                                                ),
+                                            })
+                                        }}
                                     </td>
                                     <td class="px-6 py-3 text-right font-semibold tabular-nums">
                                         {{ money(order.total_amount) }}
@@ -864,7 +902,7 @@ const orderStatusLabel: Record<string, string> = {
                                 </tr>
                                 <tr v-if="(orderHistory?.data ?? []).length === 0">
                                     <td colspan="5" class="px-6 py-12 text-center text-muted-foreground">
-                                        No orders yet.
+                                        {{ t('No orders yet.') }}
                                     </td>
                                 </tr>
                             </tbody>
@@ -885,8 +923,8 @@ const orderStatusLabel: Record<string, string> = {
             <template v-else>
                 <div class="border border-border bg-card p-6">
                     <SectionHeader
-                        title="Komisija"
-                        description="Goods placed with this customer that are still ours until sold"
+                        :title="t('Consignment')"
+                        :description="t('Goods placed with this customer that are still ours until sold')"
                     />
 
                     <pre
@@ -895,7 +933,7 @@ const orderStatusLabel: Record<string, string> = {
                         >{{ consignment }}</pre
                     >
                     <p v-else class="mt-4 text-xs text-muted-foreground">
-                        Nothing on consignment with this customer.
+                        {{ t('Nothing on consignment with this customer.') }}
                     </p>
 
                     <!-- @todo Place / record sale / record return. The service

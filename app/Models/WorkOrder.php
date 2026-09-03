@@ -30,6 +30,7 @@ use Illuminate\Support\Carbon;
  * @property string $created_by_id
  * @property string|null $vessel_id
  * @property string|null $wine_lot_id
+ * @property string|null $board_id
  */
 class WorkOrder extends Model
 {
@@ -39,7 +40,7 @@ class WorkOrder extends Model
     protected $fillable = [
         'title', 'description', 'category', 'priority', 'status',
         'start_date', 'due_date', 'completed_at', 'sort_order', 'assignee_id', 'created_by_id',
-        'wine_lot_id', 'vessel_id',
+        'wine_lot_id', 'vessel_id', 'board_id',
     ];
 
     protected $attributes = [
@@ -75,6 +76,17 @@ class WorkOrder extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_id');
+    }
+
+    /**
+     * Which named board this task is organized under — independent of
+     * `category` (what kind of work it is).
+     *
+     * @return BelongsTo<WorkOrderBoard, $this>
+     */
+    public function board(): BelongsTo
+    {
+        return $this->belongsTo(WorkOrderBoard::class, 'board_id');
     }
 
     /**

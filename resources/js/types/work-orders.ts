@@ -24,6 +24,8 @@ export interface NamedRef {
 export interface WorkOrder {
     id: string;
     title: string;
+    /** Which board this task is organized under — independent of category. */
+    board_id: string | null;
     description: string | null;
     category: WorkOrderCategoryKey | null;
     priority: TaskPriorityKey;
@@ -53,19 +55,20 @@ export interface Board {
     total: number;
 }
 
-/**
- * One entry in the board picker. Built from the categories that have work —
- * this domain has no board entity; see App\Services\Tasks\WorkOrderBoard.
- */
+/** One entry in the board picker — a real, user-created board. */
 export interface BoardOption {
     key: string;
     label: string;
     count: number;
+    /** At most one board is ever favourited per member. */
+    favorite: boolean;
 }
 
 export interface WorkOrderFilters {
     search: string | null;
     category: string | null;
+    /** The picker's selection — independent of category. */
+    board_id: string | null;
     status: string | null;
     assignee_id: string | null;
     due_soon: boolean;

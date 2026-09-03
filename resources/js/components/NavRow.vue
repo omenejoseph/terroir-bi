@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 
+import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/cn';
 import type { NavItem } from '@/lib/navigation';
 import type { SharedProps } from '@/types';
@@ -17,6 +18,7 @@ import type { SharedProps } from '@/types';
 const props = defineProps<{ item: NavItem }>();
 
 const page = usePage<SharedProps>();
+const { t } = useTranslations();
 
 /**
  * Longest-prefix match, so /inventory/123 highlights Inventory without
@@ -47,7 +49,7 @@ const active = (): boolean => {
         "
     >
         <component :is="item.icon" class="size-[15px] shrink-0" :stroke-width="1.5" />
-        <span class="truncate">{{ item.label }}</span>
+        <span class="truncate">{{ t(item.label) }}</span>
         <span
             v-if="active()"
             class="absolute left-0 h-4 w-0.5 rounded-full bg-foreground"

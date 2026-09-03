@@ -9,6 +9,7 @@ import NavRow from '@/components/NavRow.vue';
 import Avatar from '@/components/ui/Avatar.vue';
 import { useAuth } from '@/composables/useAuth';
 import { usePopover } from '@/composables/usePopover';
+import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/cn';
 import { navigationFor, shortcutsFor, SHORTCUTS_ICON, type NavCategory } from '@/lib/navigation';
 
@@ -30,6 +31,7 @@ const SHORTCUTS_LABEL = 'Shortcuts';
  * as the expanded sidebar, so a category reads identically in both states.
  */
 const { user, can, hasModule, shortcuts: pinnedShortcuts } = useAuth();
+const { t } = useTranslations();
 
 const categories = computed(() => navigationFor(can, hasModule));
 const shortcuts = computed(() => shortcutsFor(can, hasModule, pinnedShortcuts.value));
@@ -129,12 +131,12 @@ function isCurrent(group: NavCategory, url: string): boolean {
 <template>
     <div ref="rail" class="flex h-full w-14 flex-col items-center border-r border-sidebar-border bg-sidebar">
         <div class="flex h-12 shrink-0 items-center justify-center">
-            <Link href="/dashboard" aria-label="Terroir — Business Intelligence">
+            <Link href="/dashboard" :aria-label="t('Terroir — Business Intelligence')">
                 <AppLogo />
             </Link>
         </div>
 
-        <nav class="flex min-h-0 w-10 flex-1 flex-col items-center gap-1 overflow-y-auto py-2" aria-label="Main">
+        <nav class="flex min-h-0 w-10 flex-1 flex-col items-center gap-1 overflow-y-auto py-2" :aria-label="t('Main')">
             <div
                 v-for="group in groups"
                 :key="group.label"
@@ -146,7 +148,7 @@ function isCurrent(group: NavCategory, url: string): boolean {
             >
                 <button
                     type="button"
-                    :aria-label="group.label"
+                    :aria-label="t(group.label)"
                     :aria-expanded="open && openLabel === group.label"
                     aria-haspopup="menu"
                     :class="
@@ -170,17 +172,17 @@ function isCurrent(group: NavCategory, url: string): boolean {
                 <div
                     v-if="open && openLabel === group.label && flyout"
                     role="menu"
-                    :aria-label="group.label"
+                    :aria-label="t(group.label)"
                     class="fixed z-40 w-56 rounded-nav border border-sidebar-border bg-sidebar p-2 shadow-lg"
                     :style="{ top: `${flyout.top}px`, left: `${flyout.left}px` }"
                 >
                     <div class="flex items-center justify-between gap-2 px-2 pb-1">
-                        <p class="text-13 text-muted-foreground">{{ group.label }}</p>
+                        <p class="text-13 text-muted-foreground">{{ t(group.label) }}</p>
                         <button
                             v-if="group.label === SHORTCUTS_LABEL"
                             type="button"
                             class="grid size-5 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground"
-                            aria-label="Manage shortcuts"
+                            :aria-label="t('Manage shortcuts')"
                             @click="manageShortcutsOpen = true"
                         >
                             <Settings2 class="size-3" :stroke-width="1.5" />
@@ -192,7 +194,7 @@ function isCurrent(group: NavCategory, url: string): boolean {
                         </li>
                     </ul>
                     <p v-else-if="group.label === SHORTCUTS_LABEL" class="px-2 pb-1 text-xs text-muted-foreground">
-                        Nothing pinned yet.
+                        {{ t('Nothing pinned yet.') }}
                     </p>
                 </div>
             </div>
@@ -204,7 +206,7 @@ function isCurrent(group: NavCategory, url: string): boolean {
                 method="post"
                 as="button"
                 class="grid size-10 place-items-center"
-                aria-label="Sign out"
+                :aria-label="t('Sign out')"
             >
                 <!-- The nav's own avatar is the round dark one (230:2472), not
                      the square muted tile the tables use. -->

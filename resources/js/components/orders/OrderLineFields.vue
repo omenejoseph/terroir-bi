@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button.vue';
 import Combobox from '@/components/ui/Combobox.vue';
 import Input from '@/components/ui/Input.vue';
 import Select from '@/components/ui/Select.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney } from '@/lib/money';
 import { UNIT_OPTIONS } from '@/lib/orders';
 import type { OrderLineDraft, ProductOption } from '@/types/orders';
@@ -28,6 +29,8 @@ import type { ComboboxOption } from '@/types/ui';
  */
 const props = defineProps<{ modelValue: OrderLineDraft[]; products: ProductOption[]; locale: string }>();
 const emit = defineEmits<{ 'update:modelValue': [OrderLineDraft[]] }>();
+
+const { t } = useTranslations();
 
 const picked = ref('');
 let seq = 0;
@@ -112,7 +115,7 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
         <div class="flex flex-wrap items-center justify-end gap-2">
             <Button variant="outline" size="sm" type="button" @click="addCustom">
                 <FileText class="size-3.5" :stroke-width="1.5" />
-                Custom item
+                {{ t('Custom item') }}
             </Button>
             <slot name="actions" />
         </div>
@@ -125,7 +128,7 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
                     <span class="block truncate text-sm">{{ line.label }}</span>
                     <span class="block truncate text-xs text-muted-foreground">
                         {{ line.preview ? formatMoney(line.preview.minor, line.preview.currency, locale) : '—' }}
-                        / {{ line.unit_type === 'cases' ? 'case' : 'bottle' }}
+                        / {{ line.unit_type === 'cases' ? t('case') : t('bottle') }}
                         <template v-if="line.meta"> · {{ line.meta }}</template>
                     </span>
                 </span>
@@ -133,8 +136,8 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
                 <span v-else class="min-w-0 flex-1">
                     <Input
                         :model-value="line.custom_description ?? ''"
-                        placeholder="e.g. Delivery, Packaging, Customs…"
-                        aria-label="Custom line description"
+                        :placeholder="t('e.g. Delivery, Packaging, Customs…')"
+                        :aria-label="t('Custom line description')"
                         @update:model-value="patch(line.key, { custom_description: $event })"
                     />
                 </span>
@@ -158,14 +161,14 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
                     v-if="line.inventory_item_id"
                     class="inline-flex h-7 items-center border border-border px-2.5 text-xs text-muted-foreground"
                 >
-                    {{ line.unit_type === 'cases' ? 'Cases' : 'Bottles' }}
+                    {{ line.unit_type === 'cases' ? t('Cases') : t('Bottles') }}
                 </span>
                 <Select
                     v-else
                     :model-value="line.unit_type"
                     :options="UNIT_OPTIONS"
                     class="h-7 w-24 text-xs"
-                    aria-label="Unit"
+                    :aria-label="t('Unit')"
                     @update:model-value="patch(line.key, { unit_type: $event })"
                 />
 
@@ -180,8 +183,8 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="0,00"
-                    aria-label="Unit price"
+                    :placeholder="t('0,00')"
+                    :aria-label="t('Unit price')"
                     class="h-7 w-20 border border-border bg-card px-2 text-xs tabular-nums focus-visible:outline-none"
                     @input="
                         patch(line.key, {
@@ -193,7 +196,7 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
                 <button
                     type="button"
                     class="ml-auto p-1.5 text-muted-foreground transition-colors hover:text-destructive"
-                    :aria-label="`Remove ${line.label || 'line'}`"
+                    :aria-label="t('Remove :item', { item: line.label || t('line') })"
                     @click="remove(line.key)"
                 >
                     <Trash2 class="size-4" :stroke-width="1.5" />
@@ -203,8 +206,8 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
 
         <Combobox
             :model-value="picked === '' ? null : picked"
-            placeholder="Search product by name, SKU or vintage…"
-            empty-text="No product matches."
+            :placeholder="t('Search product by name, SKU or vintage…')"
+            :empty-text="t('No product matches.')"
             :options="PRODUCT_OPTIONS"
             @update:model-value="$event && addProduct($event)"
         />

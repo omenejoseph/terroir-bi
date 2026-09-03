@@ -5,6 +5,7 @@ import { Check, Copy, Link2, RefreshCw } from 'lucide-vue-next';
 
 import Button from '@/components/ui/Button.vue';
 import Dialog from '@/components/ui/Dialog.vue';
+import { useTranslations } from '@/composables/useTranslations';
 
 /**
  * "Generate Order Link" (Figma 231:9336's tab-row button) — a self-service
@@ -25,6 +26,7 @@ import Dialog from '@/components/ui/Dialog.vue';
 const props = defineProps<{ open: boolean; customerId: string; token: string | null | undefined }>();
 
 const emit = defineEmits<{ close: [] }>();
+const { t } = useTranslations();
 
 const generating = ref(false);
 const revoking = ref(false);
@@ -70,7 +72,7 @@ function generate(): void {
 }
 
 function revoke(): void {
-    if (!confirm('Revoke this order link? The customer will no longer be able to use it.')) return;
+    if (!confirm(t('Revoke this order link? The customer will no longer be able to use it.'))) return;
 
     revoking.value = true;
     router.delete(`/customers/${props.customerId}/order-token`, {
@@ -112,18 +114,18 @@ async function copy(): Promise<void> {
 </script>
 
 <template>
-    <Dialog :open="open" title="Order link" @close="emit('close')">
+    <Dialog :open="open" :title="t('Order link')" @close="emit('close')">
         <div class="space-y-4">
             <p class="text-xs text-muted-foreground">
-                A link this customer can use to place orders themselves, without an account.
+                {{ t('A link this customer can use to place orders themselves, without an account.') }}
             </p>
 
-            <p v-if="token === undefined" class="text-xs text-muted-foreground">Loading…</p>
+            <p v-if="token === undefined" class="text-xs text-muted-foreground">{{ t('Loading…') }}</p>
 
             <template v-else-if="token === null">
                 <Button size="sm" :disabled="generating" @click="generate">
                     <Link2 class="size-3.5" :stroke-width="1.5" />
-                    {{ generating ? 'Generating…' : 'Generate link' }}
+                    {{ generating ? t('Generating…') : t('Generate link') }}
                 </Button>
             </template>
 
@@ -133,23 +135,23 @@ async function copy(): Promise<void> {
                         ref="linkInput"
                         readonly
                         :value="url"
-                        aria-label="Order link"
+                        :aria-label="t('Order link')"
                         class="h-8 min-w-0 flex-1 border border-input bg-muted/40 px-2.5 font-mono text-xs"
                         @focus="($event.target as HTMLInputElement).select()"
                     />
                     <Button variant="outline" size="sm" @click="copy">
                         <component :is="copied ? Check : Copy" class="size-3.5" :stroke-width="1.5" />
-                        {{ copied ? 'Copied' : copyBlocked ? 'Selected' : 'Copy' }}
+                        {{ copied ? t('Copied') : copyBlocked ? t('Selected') : t('Copy') }}
                     </Button>
                 </div>
                 <p v-if="copyBlocked" class="text-2xs text-muted-foreground">
-                    Couldn't copy automatically — the link is selected, press Ctrl/Cmd+C.
+                    {{ t("Couldn't copy automatically — the link is selected, press Ctrl/Cmd+C.") }}
                 </p>
 
                 <div class="flex gap-2">
                     <Button variant="outline" size="sm" :disabled="generating" @click="generate">
                         <RefreshCw class="size-3.5" :stroke-width="1.5" />
-                        Regenerate
+                        {{ t('Regenerate') }}
                     </Button>
                     <Button
                         variant="outline"
@@ -158,14 +160,14 @@ async function copy(): Promise<void> {
                         class="border-destructive/40 text-destructive hover:bg-destructive/10"
                         @click="revoke"
                     >
-                        Revoke
+                        {{ t('Revoke') }}
                     </Button>
                 </div>
             </template>
         </div>
 
         <template #footer>
-            <Button variant="outline" @click="emit('close')">Close</Button>
+            <Button variant="outline" @click="emit('close')">{{ t('Close') }}</Button>
         </template>
     </Dialog>
 </template>

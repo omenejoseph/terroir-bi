@@ -7,12 +7,14 @@ namespace App\Http\Middleware;
 use App\Authorization\MembershipContext;
 use App\Authorization\RoleCapabilities;
 use App\Authorization\TenantModules;
+use App\DataTransferObjects\OrganizationSettingsData;
 use App\DataTransferObjects\TenantMembershipData;
 use App\DataTransferObjects\UserData;
 use App\Enums\MembershipStatus;
 use App\Models\Membership;
 use App\Models\User;
 use App\Queries\UserShortcutsQuery;
+use App\Services\Localization\TranslationServiceInterface;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -37,6 +39,7 @@ class HandleInertiaRequests extends Middleware
         private readonly TenantContext $tenants,
         private readonly MembershipContext $membership,
         private readonly UserShortcutsQuery $shortcuts,
+        private readonly TranslationServiceInterface $translations,
     ) {}
 
     /**
@@ -77,7 +80,18 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
-            'locale' => app()->getLocale(),
+            // Closures so these read the locale SetLocale resolved for THIS
+            // request, evaluated when Inertia builds the response (after the
+            // full middleware stack has run) rather than at share()-call time.
+            'locale' => fn () => app()->getLocale(),
+            'locales' => (array) config('app.supported_locales', []),
+            'localeLabels' => ['hr' => 'Hrvatski', 'en' => 'English'],
+            // The merged file+DB-override UI-copy catalog for the current
+            // locale — see TranslationService. Cached per locale server-side,
+            // so this is cheap; LanguageSwitcher.vue triggers a fresh value by
+            // making a full Inertia visit (a locale change re-renders anyway).
+            'translations' => fn () => $this->translations->all(app()->getLocale()),
+            'org' => $tenant === null ? null : OrganizationSettingsData::fromTenant($tenant)->toArray(),
             // Manage Shortcuts' "Recent" list — only fetched when the dialog
             // that shows it actually opens (a partial reload asking for it).
             'recentNavVisits' => Inertia::optional(fn () => $user instanceof User && $this->tenants->check()

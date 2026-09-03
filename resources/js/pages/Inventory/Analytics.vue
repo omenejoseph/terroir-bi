@@ -15,6 +15,7 @@ import Separator from '@/components/ui/Separator.vue';
 import StatCard from '@/components/ui/StatCard.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
+import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber, formatQuantity } from '@/lib/money';
 import { categoryLabel, channelLabel, formatMonth } from '@/lib/stock';
 import type { InventoryAnalytics } from '@/types/stock';
@@ -33,6 +34,7 @@ const props = defineProps<{ analytics: InventoryAnalytics }>();
 
 const page = usePage<SharedProps>();
 const { can } = useAuth();
+const { t } = useTranslations();
 
 const locale = computed(() => page.props.locale);
 const num = (n: number) => formatNumber(n, locale.value);
@@ -43,10 +45,10 @@ const exits = computed(() => props.analytics.portfolio_exits);
 const value = computed(() => props.analytics.value);
 
 const MODULE_TABS: TabItem[] = [
-    { label: 'Inventory', href: '/inventory' },
-    { label: 'Analytics', href: '/inventory-analytics' },
-    { label: 'Inventory Spend', href: '/inventory-spend' },
-    { label: 'Inventory Check', href: '/inventory-check' },
+    { label: t('Inventory'), href: '/inventory' },
+    { label: t('Analytics'), href: '/inventory-analytics' },
+    { label: t('Inventory Spend'), href: '/inventory-spend' },
+    { label: t('Inventory Check'), href: '/inventory-check' },
 ];
 
 /**
@@ -57,12 +59,12 @@ const cover = computed(() => {
     const days = exits.value.period_days || 1;
     const perDay = exits.value.external.units_exited / days;
 
-    if (perDay <= 0) return { text: 'no exits', implausible: true };
+    if (perDay <= 0) return { text: t('no exits'), implausible: true };
 
     const coverDays = summary.value.finished_units / perDay;
 
     if (coverDays > 730) {
-        return { text: `${Math.round(coverDays / 365)} years`, implausible: true };
+        return { text: t(':n years', { n: Math.round(coverDays / 365) }), implausible: true };
     }
 
     return { text: `${Math.round(coverDays)} d`, implausible: false };
@@ -79,45 +81,45 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
 </script>
 
 <template>
-    <AppLayout title="Inventory analytics">
+    <AppLayout :title="t('Inventory analytics')">
         <div class="flex flex-col gap-5">
-            <PageHeader title="Inventory">
+            <PageHeader :title="t('Inventory')">
                 <template #actions>
                     <!-- @todo Bulk Import — no CSV/XLSX import pipeline yet. -->
                     <Button v-if="can('inventory.manage')" variant="outline" size="sm">
                         <Upload class="size-4" :stroke-width="1.5" />
-                        Bulk Import
+                        {{ t('Bulk Import') }}
                     </Button>
                     <Button v-if="can('inventory.manage')" size="sm" href="/inventory">
                         <Plus class="size-4" :stroke-width="1.5" />
-                        New Item
+                        {{ t('New Item') }}
                     </Button>
                 </template>
             </PageHeader>
-            <Tabs :items="MODULE_TABS" current="Analytics" />
+            <Tabs :items="MODULE_TABS" :current="t('Analytics')" />
 
             <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard
-                    label="Stock on hand"
+                    :label="t('Stock on hand')"
                     :value="num(summary.finished_units)"
-                    :hint="`finished goods · ${num(summary.finished_products)} products`"
+                    :hint="t('finished goods · :count products', { count: num(summary.finished_products) })"
                 />
                 <StatCard
-                    label="Stock value"
+                    :label="t('Stock value')"
                     :value="money(value.total, value.currency)"
-                    hint="finished goods · portfolio only"
+                    :hint="t('finished goods · portfolio only')"
                 />
                 <StatCard
-                    :label="`Left the cellar · ${exits.period_days} days`"
+                    :label="t('Left the cellar · :days days', { days: exits.period_days })"
                     :value="num(exits.external.units_exited)"
-                    :hint="`${num(exits.channels.length)} ${exits.channels.length === 1 ? 'channel' : 'channels'} moved`"
+                    :hint="t(':count :channels moved', { count: num(exits.channels.length), channels: exits.channels.length === 1 ? t('channel') : t('channels') })"
                 />
                 <div
                     class="rounded-lg border p-5"
                     :class="cover.implausible ? 'border-destructive/40 bg-destructive/5' : 'border-border bg-card'"
                 >
                     <div class="flex items-start justify-between gap-2">
-                        <p class="text-sm font-medium text-muted-foreground">Cover at that rate</p>
+                        <p class="text-sm font-medium text-muted-foreground">{{ t('Cover at that rate') }}</p>
                         <AlertTriangle
                             v-if="cover.implausible"
                             class="size-4 shrink-0 text-destructive"
@@ -131,7 +133,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                         {{ cover.text }}
                     </p>
                     <p class="mt-1 text-xs text-muted-foreground">
-                        {{ cover.implausible ? 'too little movement to be meaningful' : 'at the observed exit rate' }}
+                        {{ cover.implausible ? t('too little movement to be meaningful') : t('at the observed exit rate') }}
                     </p>
                 </div>
             </section>
@@ -140,8 +142,8 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                 <Card>
                     <CardContent class="flex flex-col gap-4 p-6">
                         <SectionHeader
-                            title="In and out · 12 months"
-                            description="Units received against units shipped."
+                            :title="t('In and out · 12 months')"
+                            :description="t('Units received against units shipped.')"
                         >
                             <template #actions>
                                 <!--
@@ -151,7 +153,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                                   anything.
                                 -->
                                 <button type="button" class="text-xs text-muted-foreground hover:text-foreground">
-                                    Change range
+                                    {{ t('Change range') }}
                                 </button>
                             </template>
                         </SectionHeader>
@@ -162,7 +164,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                                     values: [m.in, m.out],
                                 }))
                             "
-                            :series="['In · bottling and receipts', 'Out · shipped']"
+                            :series="[t('In · bottling and receipts'), t('Out · shipped')]"
                         />
                     </CardContent>
                 </Card>
@@ -170,8 +172,8 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                 <Card>
                     <CardContent class="flex flex-col gap-4 p-6">
                         <SectionHeader
-                            title="Where it went"
-                            :description="`Of the ${num(exits.external.units_exited)} units that moved.`"
+                            :title="t('Where it went')"
+                            :description="t('Of the :count units that moved.', { count: num(exits.external.units_exited) })"
                         />
 
                         <ul v-if="exits.channels.length" class="flex flex-col gap-3">
@@ -180,7 +182,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                                     <span class="truncate text-sm font-medium">{{ channelLabel(channel.key) }}</span>
                                     <span class="shrink-0 text-xs tabular-nums">
                                         {{ num(channel.units) }} ·
-                                        {{ channel.revenue ? money(channel.revenue.minor, channel.revenue.currency) : 'no revenue' }}
+                                        {{ channel.revenue ? money(channel.revenue.minor, channel.revenue.currency) : t('no revenue') }}
                                     </span>
                                 </div>
                                 <div class="h-1.5 w-full overflow-hidden bg-muted">
@@ -191,7 +193,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                                 </div>
                             </li>
                         </ul>
-                        <p v-else class="text-sm text-muted-foreground">Nothing left the cellar in this window.</p>
+                        <p v-else class="text-sm text-muted-foreground">{{ t('Nothing left the cellar in this window.') }}</p>
 
                         <Separator v-if="analytics.by_group.length" />
 
@@ -201,9 +203,9 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                                 :key="group.group ?? 'ungrouped'"
                                 class="flex items-baseline justify-between gap-3 text-sm"
                             >
-                                <span class="truncate">{{ group.group ?? 'Ungrouped' }}</span>
+                                <span class="truncate">{{ group.group ?? t('Ungrouped') }}</span>
                                 <span class="shrink-0 text-muted-foreground tabular-nums">
-                                    {{ num(group.count) }} {{ group.count === 1 ? 'product' : 'products' }}
+                                    {{ num(group.count) }} {{ group.count === 1 ? t('product') : t('products') }}
                                 </span>
                             </li>
                         </ul>
@@ -213,8 +215,8 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                 <Card>
                     <CardContent class="flex flex-col gap-4 p-6">
                         <SectionHeader
-                            title="Stock against movement"
-                            description="Bar is what we hold. Per-product exits are not attributed yet, so no movement notch is drawn."
+                            :title="t('Stock against movement')"
+                            :description="t('Bar is what we hold. Per-product exits are not attributed yet, so no movement notch is drawn.')"
                         >
                             <template #actions>
                                 <!--
@@ -223,7 +225,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                                   row before the bars can be re-scaled.
                                 -->
                                 <button type="button" class="text-xs text-muted-foreground hover:text-foreground">
-                                    By bottles
+                                    {{ t('By bottles') }}
                                 </button>
                             </template>
                         </SectionHeader>
@@ -233,7 +235,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                                 <div class="flex items-baseline justify-between gap-3">
                                     <span class="truncate text-sm font-medium">{{ level.name }}</span>
                                     <span class="shrink-0 text-xs tabular-nums text-muted-foreground">
-                                        {{ formatQuantity(level.stock, locale) }} held
+                                        {{ formatQuantity(level.stock, locale) }} {{ t('held') }}
                                     </span>
                                 </div>
                                 <div class="h-2 w-full overflow-hidden bg-muted">
@@ -246,17 +248,17 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                                 </div>
                             </li>
                         </ul>
-                        <p v-else class="text-sm text-muted-foreground">No active stock to show.</p>
+                        <p v-else class="text-sm text-muted-foreground">{{ t('No active stock to show.') }}</p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardContent class="flex flex-col gap-4 p-6">
-                        <SectionHeader title="Stock value" />
+                        <SectionHeader :title="t('Stock value')" />
 
                         <p class="text-3xl font-semibold tabular-nums">{{ money(value.total, value.currency) }}</p>
                         <p class="-mt-2 text-xs text-muted-foreground">
-                            Finished goods · {{ num(summary.finished_units) }} units
+                            {{ t('Finished goods · :count units', { count: num(summary.finished_units) }) }}
                         </p>
 
                         <ul class="flex flex-col gap-2">
@@ -267,7 +269,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                             >
                                 <span class="truncate">{{ categoryLabel(category.category) }}</span>
                                 <span class="shrink-0 tabular-nums">
-                                    {{ category.value > 0 ? money(category.value, value.currency) : 'not valued' }}
+                                    {{ category.value > 0 ? money(category.value, value.currency) : t('not valued') }}
                                 </span>
                             </li>
                         </ul>
@@ -279,21 +281,19 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                           design whatever the data says.
                         -->
                         <Callout
-                            :title="nothingCosted ? 'No value per product' : 'Value is only as good as the costs'"
+                            :title="nothingCosted ? t('No value per product') : t('Value is only as good as the costs')"
                             :tone="nothingCosted ? 'warning' : 'neutral'"
                         >
                             <template v-if="nothingCosted">
-                                Cost per unit is empty on every active item, so value can only be totalled at
-                                portfolio level.
+                                {{ t('Cost per unit is empty on every active item, so value can only be totalled at portfolio level.') }}
                             </template>
                             <template v-else>
-                                {{ num(summary.costed_count) }} of {{ num(summary.total_active) }} active items
-                                carry a cost per unit. The rest fall back to list price.
+                                {{ t(':costed of :total active items carry a cost per unit. The rest fall back to list price.', { costed: num(summary.costed_count), total: num(summary.total_active) }) }}
                             </template>
                             <template #action>
                                 <!-- @todo Deep-link to the items missing a cost, rather than the whole list. -->
                                 <Button v-if="can('inventory.manage')" variant="outline" size="sm" href="/inventory">
-                                    Add costs
+                                    {{ t('Add costs') }}
                                 </Button>
                             </template>
                         </Callout>

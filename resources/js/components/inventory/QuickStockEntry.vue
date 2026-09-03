@@ -7,6 +7,7 @@ import Checkbox from '@/components/ui/Checkbox.vue';
 import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
 import Select from '@/components/ui/Select.vue';
+import { useTranslations } from '@/composables/useTranslations';
 
 /**
  * "Quick stock entry" (Figma `449:1577`) — records one ledger movement without
@@ -18,6 +19,7 @@ import Select from '@/components/ui/Select.vue';
  * cover exactly as the design's helper text promises.
  */
 const props = defineProps<{ itemId: string; unit: string }>();
+const { t } = useTranslations();
 
 const form = useForm({
     type: 'MANUAL_IN',
@@ -27,9 +29,9 @@ const form = useForm({
 });
 
 const TYPES = [
-    { value: 'MANUAL_IN', label: 'Stock In' },
-    { value: 'MANUAL_OUT', label: 'Stock Out' },
-    { value: 'ADJUSTMENT', label: 'Adjustment' },
+    { value: 'MANUAL_IN', label: t('Stock In') },
+    { value: 'MANUAL_OUT', label: t('Stock Out') },
+    { value: 'ADJUSTMENT', label: t('Adjustment') },
 ];
 
 const isOutbound = computed(() => form.type === 'MANUAL_OUT');
@@ -55,27 +57,27 @@ function submit(): void {
 <template>
     <form class="flex flex-col gap-4" @submit.prevent="submit">
         <div class="grid gap-4 sm:grid-cols-[minmax(0,10rem)_minmax(0,10rem)_1fr_auto] sm:items-end">
-            <FormField v-slot="{ id, invalid }" label="Type" :error="form.errors.type">
+            <FormField v-slot="{ id, invalid }" :label="t('Type')" :error="form.errors.type">
                 <Select :id="id" v-model="form.type" :invalid="invalid" :options="TYPES" />
             </FormField>
 
-            <FormField v-slot="{ id, invalid }" :label="`Quantity (${unit})`" :error="form.errors.quantity">
+            <FormField v-slot="{ id, invalid }" :label="t('Quantity (:unit)', { unit })" :error="form.errors.quantity">
                 <Input :id="id" v-model="form.quantity" :invalid="invalid" placeholder="0" inputmode="decimal" />
             </FormField>
 
-            <FormField v-slot="{ id, invalid }" label="Note" :error="form.errors.note">
-                <Input :id="id" v-model="form.note" :invalid="invalid" placeholder="Optional note…" />
+            <FormField v-slot="{ id, invalid }" :label="t('Note')" :error="form.errors.note">
+                <Input :id="id" v-model="form.note" :invalid="invalid" :placeholder="t('Optional note…')" />
             </FormField>
 
             <Button type="submit" :disabled="form.processing || form.quantity === ''">
-                {{ form.processing ? 'Adding…' : 'Add' }}
+                {{ form.processing ? t('Adding…') : t('Add') }}
             </Button>
         </div>
 
         <Checkbox
             v-model="form.is_reconciliation"
-            label="Inventory-count correction — won't count as a sale or exit"
-            hint="Use when matching the book to a physical count. Corrections are excluded from velocity and cover."
+            :label="t('Inventory-count correction — won\'t count as a sale or exit')"
+            :hint="t('Use when matching the book to a physical count. Corrections are excluded from velocity and cover.')"
         />
     </form>
 </template>

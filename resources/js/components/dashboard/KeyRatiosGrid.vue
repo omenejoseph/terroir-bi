@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
+import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney } from '@/lib/money';
 import type { DashboardKeyRatios } from '@/types/dashboard';
 import type { SharedProps } from '@/types';
@@ -20,6 +21,7 @@ import type { SharedProps } from '@/types';
 const props = defineProps<{ ratios: DashboardKeyRatios; currency: string }>();
 
 const page = usePage<SharedProps>();
+const { t } = useTranslations();
 
 const money = (value: { minor: number } | null) =>
     value === null ? '—' : formatMoney(value.minor, props.currency, page.props.locale);
@@ -29,14 +31,14 @@ const pct = (value: number | null) => (value === null ? '—' : `${value.toLocal
 const times = (value: number | null) => (value === null ? '—' : `${value.toLocaleString(page.props.locale)}×`);
 
 const tiles = computed(() => [
-    { label: 'DTC Revenue', value: pct(props.ratios.dtc_revenue_pct) },
-    { label: 'Operating Margin', value: pct(props.ratios.operating_margin_pct) },
-    { label: 'Employee Cost', value: pct(props.ratios.employee_cost_pct) },
-    { label: 'Marketing Cost', value: pct(props.ratios.marketing_cost_pct) },
-    { label: 'COGS', value: pct(props.ratios.cogs_pct) },
-    { label: 'Revenue / Employee', value: money(props.ratios.revenue_per_employee) },
-    { label: 'Avg Order Value', value: money(props.ratios.avg_order_value) },
-    { label: 'Inventory Turnover', value: times(props.ratios.inventory_turnover) },
+    { label: t('DTC Revenue'), value: pct(props.ratios.dtc_revenue_pct) },
+    { label: t('Operating Margin'), value: pct(props.ratios.operating_margin_pct) },
+    { label: t('Employee Cost'), value: pct(props.ratios.employee_cost_pct) },
+    { label: t('Marketing Cost'), value: pct(props.ratios.marketing_cost_pct) },
+    { label: t('COGS'), value: pct(props.ratios.cogs_pct) },
+    { label: t('Revenue / Employee'), value: money(props.ratios.revenue_per_employee) },
+    { label: t('Avg Order Value'), value: money(props.ratios.avg_order_value) },
+    { label: t('Inventory Turnover'), value: times(props.ratios.inventory_turnover) },
 ]);
 </script>
 

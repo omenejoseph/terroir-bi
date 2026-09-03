@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/vue3';
 import { WalletCards } from 'lucide-vue-next';
 
 import ProgressBar from '@/components/ui/ProgressBar.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney } from '@/lib/money';
 import type { NetCashFlow } from '@/types/dashboard';
 import type { SharedProps } from '@/types';
@@ -17,6 +18,7 @@ import type { SharedProps } from '@/types';
 const props = defineProps<{ flow: NetCashFlow; currency: string }>();
 
 const page = usePage<SharedProps>();
+const { t } = useTranslations();
 
 const money = (minor: number) => formatMoney(minor, props.currency, page.props.locale);
 </script>
@@ -25,7 +27,7 @@ const money = (minor: number) => formatMoney(minor, props.currency, page.props.l
     <div class="flex h-full flex-col border border-border bg-card p-4">
         <div class="flex items-center gap-1.5 text-sm font-semibold">
             <WalletCards class="size-4 text-muted-foreground" :stroke-width="1.5" />
-            Net cash flow
+            {{ t('Net cash flow') }}
         </div>
 
         <p

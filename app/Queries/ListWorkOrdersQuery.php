@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 class ListWorkOrdersQuery
 {
     /**
-     * @param  array{status?: ?string, assignee_id?: ?string, category?: ?string, search?: ?string, due_from?: ?string, due_to?: ?string, uncategorised?: ?bool}  $filters
+     * @param  array{status?: ?string, assignee_id?: ?string, category?: ?string, board_id?: ?string, search?: ?string, due_from?: ?string, due_to?: ?string, uncategorised?: ?bool}  $filters
      * @return Collection<int, WorkOrder>
      */
     public function get(array $filters = []): Collection
@@ -29,6 +29,11 @@ class ListWorkOrdersQuery
 
         if (! empty($filters['category'])) {
             $query->where('category', $filters['category']);
+        }
+
+        // Which board a task is organized under — independent of category.
+        if (! empty($filters['board_id'])) {
+            $query->where('board_id', $filters['board_id']);
         }
 
         // Work with no category has to stay reachable, or it is invisible to a

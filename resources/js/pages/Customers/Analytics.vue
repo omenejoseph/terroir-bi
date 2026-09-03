@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import StatCard from '@/components/ui/StatCard.vue';
 import Tabs from '@/components/ui/Tabs.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { CustomerAnalytics } from '@/types/customers';
 import type { SharedProps } from '@/types';
@@ -25,11 +26,12 @@ const props = defineProps<{ analytics: CustomerAnalytics }>();
 
 const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
+const { t } = useTranslations();
 
-const MODULE_TABS: TabItem[] = [
-    { label: 'Customers', href: '/customers' },
-    { label: 'Analytics', href: '/customers-analytics' },
-];
+const MODULE_TABS = computed<TabItem[]>(() => [
+    { label: t('Customers'), href: '/customers' },
+    { label: t('Analytics'), href: '/customers-analytics' },
+]);
 
 const filter = ref('');
 
@@ -74,10 +76,10 @@ const avgOrderValue = computed(() => {
 });
 
 function relativeDays(days: number | null): string {
-    if (days === null) return 'never';
-    if (days === 0) return 'today';
+    if (days === null) return t('never');
+    if (days === 0) return t('today');
 
-    return `${formatNumber(days, locale.value)} days ago`;
+    return t(':count days ago', { count: formatNumber(days, locale.value) });
 }
 
 function shortDate(iso: string | null): string {
@@ -92,48 +94,48 @@ function shortDate(iso: string | null): string {
 </script>
 
 <template>
-    <AppLayout title="Customer analytics">
+    <AppLayout :title="t('Customer analytics')">
         <div class="space-y-5">
-            <PageHeader title="Customers">
+            <PageHeader :title="t('Customers')">
                 <template #actions>
                     <!-- @todo Export all — no customer export endpoint yet. -->
                     <Button variant="outline" size="sm">
                         <Download class="size-3.5" :stroke-width="1.5" />
-                        Export all
+                        {{ t('Export all') }}
                     </Button>
                     <Button size="sm" href="/customers">
                         <Plus class="size-3.5" :stroke-width="1.5" />
-                        New Customer
+                        {{ t('New Customer') }}
                     </Button>
                 </template>
             </PageHeader>
 
-            <Tabs :items="MODULE_TABS" current="Analytics" />
+            <Tabs :items="MODULE_TABS" :current="t('Analytics')" />
 
             <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard
-                    label="Active customers"
+                    :label="t('Active customers')"
                     :value="formatNumber(analytics.summary.active_customers, locale)"
-                    hint="at least one order"
+                    :hint="t('at least one order')"
                 />
                 <StatCard
-                    label="Revenue last 12 months"
+                    :label="t('Revenue last 12 months')"
                     :value="money(analytics.summary.revenue_12m)"
-                    hint="across all customers"
+                    :hint="t('across all customers')"
                 />
                 <StatCard
-                    label="Top customer (12m)"
+                    :label="t('Top customer (12m)')"
                     :value="analytics.summary.top_customer?.company_name ?? '—'"
                     :hint="
                         analytics.summary.top_customer
                             ? money(analytics.summary.top_customer.revenue_12m)
-                            : 'no revenue in the window'
+                            : t('no revenue in the window')
                     "
                 />
                 <StatCard
-                    label="Average order value"
+                    :label="t('Average order value')"
                     :value="money({ minor: avgOrderValue.minor, currency: avgOrderValue.currency })"
-                    :hint="`across ${formatNumber(avgOrderValue.orders, locale)} orders in 12 months`"
+                    :hint="t('across :count orders in 12 months', { count: formatNumber(avgOrderValue.orders, locale) })"
                 />
             </section>
 
@@ -145,8 +147,8 @@ function shortDate(iso: string | null): string {
                 <input
                     v-model="filter"
                     type="search"
-                    placeholder="Filter customers…"
-                    aria-label="Filter customers"
+                    :placeholder="t('Filter customers…')"
+                    :aria-label="t('Filter customers')"
                     class="h-8 w-full border border-input bg-card pr-3 pl-8 text-xs placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 />
             </div>
@@ -156,28 +158,28 @@ function shortDate(iso: string | null): string {
                     <table class="w-full min-w-[64rem] text-xs">
                         <thead class="border-b border-border bg-muted/40 text-left text-xs text-muted-foreground">
                             <tr>
-                                <th scope="col" class="px-4 py-2.5 font-medium">Company</th>
-                                <th scope="col" class="px-4 py-2.5 font-medium">Contact</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Company') }}</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Contact') }}</th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium">
-                                    Revenue last 12m ↓
+                                    {{ t('Revenue last 12m ↓') }}
                                 </th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium">
-                                    All-time
+                                    {{ t('All-time') }}
                                 </th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium">
-                                    Orders (12m)
+                                    {{ t('Orders (12m)') }}
                                 </th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium">
-                                    Avg order
+                                    {{ t('Avg order') }}
                                 </th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium">
-                                    Last order
+                                    {{ t('Last order') }}
                                 </th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium">
-                                    Typical gap
+                                    {{ t('Typical gap') }}
                                 </th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium">
-                                    Expected by
+                                    {{ t('Expected by') }}
                                 </th>
                             </tr>
                         </thead>
@@ -211,7 +213,7 @@ function shortDate(iso: string | null): string {
                                     {{ relativeDays(row.days_since_last_order) }}
                                 </td>
                                 <td class="px-4 py-3 text-right tabular-nums">
-                                    {{ row.median_gap_days === null ? '—' : `${row.median_gap_days}d` }}
+                                    {{ row.median_gap_days === null ? '—' : t(':count d', { count: row.median_gap_days }) }}
                                 </td>
                                 <td class="px-4 py-3 text-right tabular-nums">
                                     {{ shortDate(row.expected_next_order_date) }}
@@ -220,7 +222,7 @@ function shortDate(iso: string | null): string {
 
                             <tr v-if="rows.length === 0">
                                 <td colspan="9" class="px-4 py-12 text-center text-muted-foreground">
-                                    No customers with orders yet.
+                                    {{ t('No customers with orders yet.') }}
                                 </td>
                             </tr>
                         </tbody>

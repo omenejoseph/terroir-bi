@@ -9,6 +9,7 @@ import MetaStrip from '@/components/ui/MetaStrip.vue';
 import SectionHeader from '@/components/ui/SectionHeader.vue';
 import Separator from '@/components/ui/Separator.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/cn';
 import { formatMoney, formatQuantity } from '@/lib/money';
 import { categoryLabel, formatMovementDate, movementTypeLabel } from '@/lib/stock';
@@ -30,6 +31,7 @@ const props = defineProps<{ item: InventoryItem | null; movements: StockMovement
 const emit = defineEmits<{ close: [] }>();
 
 const page = usePage<SharedProps>();
+const { t } = useTranslations();
 const locale = computed(() => page.props.locale);
 const money = (m: MoneyValue | null) => (m ? formatMoney(m.minor, m.currency, locale.value) : null);
 const qty = (q: string | null) => formatQuantity(q, locale.value);
@@ -56,9 +58,9 @@ const cases = computed(() => {
  * which is a claim the data cannot make.
  */
 const deductions = [
-    { label: 'Allocated', note: 'allocations are not tracked' },
-    { label: 'Reserved by open orders', note: 'order lines do not reserve stock' },
-    { label: 'On consignment', note: 'consignment is not attributed per item' },
+    { label: t('Allocated'), note: t('allocations are not tracked') },
+    { label: t('Reserved by open orders'), note: t('order lines do not reserve stock') },
+    { label: t('On consignment'), note: t('consignment is not attributed per item') },
 ];
 
 const details = computed(() => {
@@ -67,17 +69,17 @@ const details = computed(() => {
     if (!item) return [];
 
     return [
-        { label: 'Type', value: categoryLabel(item.category) },
-        { label: 'Category', value: [item.group, item.subcategory].filter(Boolean).join(' · ') || '—' },
-        { label: 'Unit size / unit', value: [item.unit_size, item.unit].filter(Boolean).join(' · ') },
-        { label: 'Sales unit', value: item.sales_unit ?? '—' },
-        { label: 'Vintage', value: item.vintage ? String(item.vintage) : '—' },
+        { label: t('Type'), value: categoryLabel(item.category) },
+        { label: t('Category'), value: [item.group, item.subcategory].filter(Boolean).join(' · ') || '—' },
+        { label: t('Unit size / unit'), value: [item.unit_size, item.unit].filter(Boolean).join(' · ') },
+        { label: t('Sales unit'), value: item.sales_unit ?? '—' },
+        { label: t('Vintage'), value: item.vintage ? String(item.vintage) : '—' },
         {
-            label: 'Min stock',
-            value: item.min_stock ? qty(item.min_stock) : 'Not set — no low-stock alert',
+            label: t('Min stock'),
+            value: item.min_stock ? qty(item.min_stock) : t('Not set — no low-stock alert'),
             warn: !item.min_stock,
         },
-        { label: 'Available for sale', value: item.is_for_sale ? 'Yes' : 'No' },
+        { label: t('Available for sale'), value: item.is_for_sale ? t('Yes') : t('No') },
     ];
 });
 </script>
@@ -93,9 +95,9 @@ const details = computed(() => {
                     <Badge v-if="item.group" variant="outline">
                         {{ [item.group, item.subcategory].filter(Boolean).join(' · ') }}
                     </Badge>
-                    <Badge v-if="item.is_for_sale" variant="outline">Available for sale</Badge>
+                    <Badge v-if="item.is_for_sale" variant="outline">{{ t('Available for sale') }}</Badge>
                     <!-- The design flags a data-quality problem with a red outline. -->
-                    <Badge v-if="!item.min_stock" variant="warning">No min stock</Badge>
+                    <Badge v-if="!item.min_stock" variant="warning">{{ t('No min stock') }}</Badge>
                 </div>
             </div>
 
@@ -112,13 +114,13 @@ const details = computed(() => {
             <section class="flex flex-col gap-3">
                 <div class="flex flex-wrap items-baseline justify-between gap-3">
                     <div class="flex flex-wrap items-baseline gap-2">
-                        <h3 class="text-base font-semibold text-foreground">Stock</h3>
+                        <h3 class="text-base font-semibold text-foreground">{{ t('Stock') }}</h3>
                         <span class="text-xs text-muted-foreground">
                             {{ qty(item.current_stock) }} {{ item.unit
-                            }}<template v-if="cases !== null"> · {{ cases }} cases</template>
+                            }}<template v-if="cases !== null"> · {{ t(':count cases', { count: cases }) }}</template>
                         </span>
                     </div>
-                    <Button variant="outline" size="sm" :href="`/inventory/${item.id}`">Adjust</Button>
+                    <Button variant="outline" size="sm" :href="`/inventory/${item.id}`">{{ t('Adjust') }}</Button>
                 </div>
 
                 <!--
@@ -129,7 +131,7 @@ const details = computed(() => {
                 -->
                 <p class="flex items-baseline gap-2">
                     <span class="text-3xl font-semibold tabular-nums">{{ qty(item.current_stock) }}</span>
-                    <span class="text-sm text-muted-foreground">physical stock</span>
+                    <span class="text-sm text-muted-foreground">{{ t('physical stock') }}</span>
                 </p>
 
                 <!--
@@ -141,7 +143,7 @@ const details = computed(() => {
                 -->
                 <dl class="divide-y divide-border text-sm">
                     <div class="flex items-start justify-between gap-3 py-3">
-                        <dt>Physical stock</dt>
+                        <dt>{{ t('Physical stock') }}</dt>
                         <dd class="shrink-0 font-medium tabular-nums">{{ qty(item.current_stock) }}</dd>
                     </div>
                     <div v-for="row in deductions" :key="row.label" class="flex items-start justify-between gap-3 py-3">
@@ -152,8 +154,8 @@ const details = computed(() => {
                         <dd class="shrink-0 text-xs text-muted-foreground">—</dd>
                     </div>
                     <div class="flex items-start justify-between gap-3 py-3">
-                        <dt class="font-medium">= Free to sell</dt>
-                        <dd class="shrink-0 text-xs text-muted-foreground">needs order reservations</dd>
+                        <dt class="font-medium">{{ t('= Free to sell') }}</dt>
+                        <dd class="shrink-0 text-xs text-muted-foreground">{{ t('needs order reservations') }}</dd>
                     </div>
                 </dl>
             </section>
@@ -162,34 +164,34 @@ const details = computed(() => {
 
             <!-- Pricing -->
             <section class="flex flex-col gap-3">
-                <SectionHeader title="Pricing &amp; margin">
+                <SectionHeader :title="t('Pricing & margin')">
                     <template #actions>
                         <!-- @todo Inline pricing edit; for now it opens the item. -->
                         <Link :href="`/inventory/${item.id}`" class="text-xs text-muted-foreground hover:text-foreground">
-                            Edit
+                            {{ t('Edit') }}
                         </Link>
                     </template>
                 </SectionHeader>
 
                 <dl class="divide-y divide-border rounded-lg border border-border bg-muted/40 px-4 text-sm">
                     <div class="flex items-baseline justify-between gap-3 py-3">
-                        <dt class="text-muted-foreground">Default price</dt>
+                        <dt class="text-muted-foreground">{{ t('Default price') }}</dt>
                         <dd :class="cn('font-medium tabular-nums', !item.default_price && 'text-destructive')">
-                            {{ money(item.default_price) ?? 'Not set' }}
+                            {{ money(item.default_price) ?? t('Not set') }}
                         </dd>
                     </div>
                     <div class="flex items-baseline justify-between gap-3 py-3">
-                        <dt class="text-muted-foreground">Cost per unit</dt>
+                        <dt class="text-muted-foreground">{{ t('Cost per unit') }}</dt>
                         <dd :class="cn('font-medium tabular-nums', !item.cost_per_unit && 'text-destructive')">
-                            {{ money(item.cost_per_unit) ?? 'Not set' }}
+                            {{ money(item.cost_per_unit) ?? t('Not set') }}
                         </dd>
                     </div>
                 </dl>
 
-                <Callout v-if="!item.cost_per_unit" title="Margin unavailable">
-                    Needs a cost per unit, or a recipe to calculate from.
+                <Callout v-if="!item.cost_per_unit" :title="t('Margin unavailable')">
+                    {{ t('Needs a cost per unit, or a recipe to calculate from.') }}
                     <template #action>
-                        <Button variant="outline" size="sm" :href="`/inventory/${item.id}`">Add cost</Button>
+                        <Button variant="outline" size="sm" :href="`/inventory/${item.id}`">{{ t('Add cost') }}</Button>
                     </template>
                 </Callout>
             </section>
@@ -198,11 +200,11 @@ const details = computed(() => {
 
             <!-- Item details -->
             <section class="flex flex-col gap-3">
-                <SectionHeader title="Item details">
+                <SectionHeader :title="t('Item details')">
                     <template #actions>
                         <!-- @todo Inline details edit; for now it opens the item. -->
                         <Link :href="`/inventory/${item.id}`" class="text-xs text-muted-foreground hover:text-foreground">
-                            Edit
+                            {{ t('Edit') }}
                         </Link>
                     </template>
                 </SectionHeader>
@@ -224,10 +226,10 @@ const details = computed(() => {
 
             <!-- Who's buying it -->
             <section class="flex flex-col gap-3">
-                <SectionHeader title="Who's buying it">
+                <SectionHeader :title="t('Who\'s buying it')">
                     <template #actions>
                         <!-- @todo Filter Orders by this item once Orders is ported. -->
-                        <span class="text-xs text-muted-foreground">Open in Orders</span>
+                        <span class="text-xs text-muted-foreground">{{ t('Open in Orders') }}</span>
                     </template>
                 </SectionHeader>
                 <!--
@@ -236,17 +238,17 @@ const details = computed(() => {
                   Needs order lines rolled up by customer for this item — the
                   data exists on OrderItem, but no query aggregates it per item.
                 -->
-                <p class="text-xs text-muted-foreground">Per-customer demand is not attributed yet.</p>
+                <p class="text-xs text-muted-foreground">{{ t('Per-customer demand is not attributed yet.') }}</p>
             </section>
 
             <Separator />
 
             <!-- Stock movements -->
             <section class="flex flex-col gap-3">
-                <SectionHeader title="Stock movements">
+                <SectionHeader :title="t('Stock movements')">
                     <template #actions>
                         <Link :href="`/inventory/${item.id}`" class="text-xs text-muted-foreground hover:text-foreground">
-                            View all
+                            {{ t('View all') }}
                         </Link>
                     </template>
                 </SectionHeader>
@@ -276,30 +278,30 @@ const details = computed(() => {
                         </span>
                     </li>
                 </ul>
-                <p v-else class="text-xs text-muted-foreground">No movements recorded yet.</p>
+                <p v-else class="text-xs text-muted-foreground">{{ t('No movements recorded yet.') }}</p>
             </section>
 
             <Separator />
 
             <!-- Timeline -->
             <section class="flex flex-col gap-3">
-                <SectionHeader title="Timeline" />
+                <SectionHeader :title="t('Timeline')" />
                 <!--
                   @todo Audit trail. The design shows "Stock adjusted to 420 by
                   Iva Šimić" and "Item created by Iva Šimić" with timestamps.
                   Movements cover adjustments, but creation and field edits are
                   not recorded anywhere.
                 -->
-                <p class="text-xs text-muted-foreground">Item history is not recorded yet.</p>
+                <p class="text-xs text-muted-foreground">{{ t('Item history is not recorded yet.') }}</p>
             </section>
         </div>
 
         <template #footer>
             <Button v-if="item" variant="outline" class="mr-auto border-destructive/40 text-destructive" :href="`/inventory/${item.id}`">
-                Delete
+                {{ t('Delete') }}
             </Button>
-            <Button v-if="item" variant="outline" :href="`/inventory/${item.id}`">Adjust stock</Button>
-            <Button v-if="item" :href="`/inventory/${item.id}`">Edit item</Button>
+            <Button v-if="item" variant="outline" :href="`/inventory/${item.id}`">{{ t('Adjust stock') }}</Button>
+            <Button v-if="item" :href="`/inventory/${item.id}`">{{ t('Edit item') }}</Button>
         </template>
     </SidePanel>
 </template>

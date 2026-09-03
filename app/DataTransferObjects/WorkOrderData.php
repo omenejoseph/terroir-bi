@@ -36,6 +36,7 @@ final class WorkOrderData implements Arrayable, JsonSerializable
         return [
             'id' => $t->getKey(),
             'title' => $t->title,
+            'board_id' => $t->board_id,
             'description' => $t->description,
             'category' => $t->category?->value,
             'priority' => $t->priority->value,

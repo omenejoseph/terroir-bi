@@ -2,6 +2,7 @@
 import { usePage } from '@inertiajs/vue3';
 import { RotateCcw } from 'lucide-vue-next';
 
+import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { ReorderPipeline } from '@/types/dashboard';
 import type { SharedProps } from '@/types';
@@ -19,6 +20,7 @@ import type { SharedProps } from '@/types';
 const props = defineProps<{ pipeline: ReorderPipeline; currency: string }>();
 
 const page = usePage<SharedProps>();
+const { t } = useTranslations();
 
 const money = (minor: number) => formatMoney(minor, props.currency, page.props.locale);
 
@@ -34,10 +36,10 @@ const money = (minor: number) => formatMoney(minor, props.currency, page.props.l
 function daysAgo(days: number): string {
     const whole = Math.round(days);
 
-    if (whole <= 0) return 'Today';
-    if (whole === 1) return '1 day ago';
+    if (whole <= 0) return t('Today');
+    if (whole === 1) return t('1 day ago');
 
-    return `${formatNumber(whole, page.props.locale)} days ago`;
+    return t(':count days ago', { count: formatNumber(whole, page.props.locale) });
 }
 </script>
 
@@ -45,7 +47,7 @@ function daysAgo(days: number): string {
     <div class="flex h-full flex-col border border-border bg-card p-4">
         <div class="flex items-center gap-1.5 text-sm font-semibold">
             <RotateCcw class="size-4 text-muted-foreground" :stroke-width="1.5" />
-            Reorder pipeline
+            {{ t('Reorder pipeline') }}
         </div>
 
         <p class="mt-3 text-2xl font-semibold tabular-nums">{{ money(pipeline.total.minor) }}</p>
@@ -59,6 +61,6 @@ function daysAgo(days: number): string {
                 <span class="shrink-0 text-xs tabular-nums">{{ money(row.avg_order_value.minor) }}</span>
             </li>
         </ul>
-        <p v-else class="mt-4 flex-1 text-xs text-muted-foreground">No accounts are due to reorder.</p>
+        <p v-else class="mt-4 flex-1 text-xs text-muted-foreground">{{ t('No accounts are due to reorder.') }}</p>
     </div>
 </template>

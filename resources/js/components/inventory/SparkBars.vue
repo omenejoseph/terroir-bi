@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
+import { useTranslations } from '@/composables/useTranslations';
+
 /**
  * The daily exit histogram on Product Detail (Figma `449:1577`,
  * `ChartContainer`). Bars above the mean are emphasised, the rest sit back —
@@ -10,6 +12,7 @@ import { computed } from 'vue';
  * with no axes, so a dependency would cost more than it explains.
  */
 const props = defineProps<{ values: number[]; unit: string }>();
+const { t } = useTranslations();
 
 const max = computed(() => Math.max(1, ...props.values));
 const mean = computed(() =>
@@ -18,7 +21,7 @@ const mean = computed(() =>
 </script>
 
 <template>
-    <div v-if="values.length" class="flex h-20 items-end gap-[3px]" role="img" :aria-label="`Daily ${unit} exited`">
+    <div v-if="values.length" class="flex h-20 items-end gap-[3px]" role="img" :aria-label="t('Daily :unit exited', { unit })">
         <div
             v-for="(value, i) in values"
             :key="i"
@@ -28,5 +31,5 @@ const mean = computed(() =>
             :title="`${value}`"
         />
     </div>
-    <p v-else class="py-6 text-sm text-muted-foreground">No movements in this period.</p>
+    <p v-else class="py-6 text-sm text-muted-foreground">{{ t('No movements in this period.') }}</p>
 </template>

@@ -15,6 +15,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import Pagination from '@/components/ui/Pagination.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
+import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/cn';
 import { formatMoney, formatQuantity } from '@/lib/money';
 import type { InventoryFilters, InventoryItem } from '@/types/inventory';
@@ -42,6 +43,7 @@ const props = defineProps<{
 
 const page = usePage<SharedProps>();
 const { can } = useAuth();
+const { t } = useTranslations();
 
 const search = ref(props.filters.search ?? '');
 
@@ -89,17 +91,17 @@ function setPerPage(perPage: number): void {
 }
 
 const MODULE_TABS: TabItem[] = [
-    { label: 'Inventory', href: '/inventory' },
-    { label: 'Analytics', href: '/inventory-analytics' },
-    { label: 'Inventory Spend', href: '/inventory-spend' },
-    { label: 'Inventory Check', href: '/inventory-check' },
+    { label: t('Inventory'), href: '/inventory' },
+    { label: t('Analytics'), href: '/inventory-analytics' },
+    { label: t('Inventory Spend'), href: '/inventory-spend' },
+    { label: t('Inventory Check'), href: '/inventory-check' },
 ];
 
 /** Mirrors the InventoryCategory enum; the design shows exactly these three. */
 const CATEGORY_TABS: TabItem[] = [
-    { value: 'FINISHED', label: 'Finished' },
-    { value: 'SEMI_FINISHED', label: 'Semi-Finished' },
-    { value: 'RAW_MATERIAL', label: 'Raw Materials' },
+    { value: 'FINISHED', label: t('Finished') },
+    { value: 'SEMI_FINISHED', label: t('Semi-Finished') },
+    { value: 'RAW_MATERIAL', label: t('Raw Materials') },
 ];
 
 /** The design shows no "All" chip; pressing the active category clears it. */
@@ -124,7 +126,7 @@ const groups = computed(() => {
     const byGroup = new Map<string, InventoryItem[]>();
 
     for (const item of visibleRows.value) {
-        const key = item.group ?? 'Ungrouped';
+        const key = item.group ?? t('Ungrouped');
         byGroup.set(key, [...(byGroup.get(key) ?? []), item]);
     }
 
@@ -168,7 +170,7 @@ const visibleRows = computed(() => {
 const listSummary = computed(() => {
     const total = visibleRows.value.reduce((sum, r) => sum + (Number.parseFloat(r.current_stock) || 0), 0);
 
-    return `${visibleRows.value.length} products · ${qty(String(total))} on hand`;
+    return t(':count products · :onHand on hand', { count: visibleRows.value.length, onHand: qty(String(total)) });
 });
 
 const qty = (v: string | null) => formatQuantity(v, page.props.locale);
@@ -181,43 +183,43 @@ const qty = (v: string | null) => formatQuantity(v, page.props.locale);
 function flags(item: InventoryItem): string[] {
     const out: string[] = [];
 
-    if (item.min_stock === null) out.push('No min stock');
-    if (item.cost_per_unit === null) out.push('No cost per unit');
-    if ((Number.parseFloat(item.current_stock) || 0) <= 0) out.push('Zero stock');
+    if (item.min_stock === null) out.push(t('No min stock'));
+    if (item.cost_per_unit === null) out.push(t('No cost per unit'));
+    if ((Number.parseFloat(item.current_stock) || 0) <= 0) out.push(t('Zero stock'));
 
     return out;
 }
 </script>
 
 <template>
-    <AppLayout title="Inventory">
+    <AppLayout :title="t('Inventory')">
         <div class="space-y-5">
-            <PageHeader title="Inventory">
+            <PageHeader :title="t('Inventory')">
                 <template #actions>
                     <template v-if="bulkEditing">
                         <Button variant="outline" size="sm" @click="bulkEditing = false">
                             <X class="size-4" :stroke-width="1.5" />
-                            Cancel
+                            {{ t('Cancel') }}
                         </Button>
                         <Button
                             size="sm"
                             :disabled="!bulkTable?.dirtyCount"
                             @click="bulkTable?.save()"
                         >
-                            Save Changes<template v-if="bulkTable?.dirtyCount"> ({{ bulkTable.dirtyCount }})</template>
+                            {{ t('Save Changes') }}<template v-if="bulkTable?.dirtyCount"> ({{ bulkTable.dirtyCount }})</template>
                         </Button>
                     </template>
                     <template v-else>
                         <Button v-if="can('inventory.manage')" variant="outline" size="sm">
                             <Upload class="size-4" :stroke-width="1.5" />
-                            Bulk Import
+                            {{ t('Bulk Import') }}
                         </Button>
-                        <Button v-if="can('inventory.manage')" size="sm" @click="newItemOpen = true">New Item</Button>
+                        <Button v-if="can('inventory.manage')" size="sm" @click="newItemOpen = true">{{ t('New Item') }}</Button>
                     </template>
                 </template>
             </PageHeader>
 
-            <Tabs :items="MODULE_TABS" current="Inventory" />
+            <Tabs :items="MODULE_TABS" :current="t('Inventory')" />
 
             <AttentionBand :items="attention" :active="attentionFilter" @select="attentionFilter = $event" />
 
@@ -231,7 +233,7 @@ function flags(item: InventoryItem): string[] {
                     <input
                         v-model="search"
                         type="search"
-                        placeholder="Search name, SKU or vintage…"
+                        :placeholder="t('Search name, SKU or vintage…')"
                         class="h-9 w-full rounded-lg border border-input bg-card pr-3 pl-9 text-sm placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                     />
                 </div>
@@ -252,7 +254,7 @@ function flags(item: InventoryItem): string[] {
                     @click="bulkEditing = true"
                 >
                     <PencilLine class="size-4" :stroke-width="1.5" />
-                    Bulk edit
+                    {{ t('Bulk edit') }}
                 </Button>
             </div>
 
@@ -268,7 +270,7 @@ function flags(item: InventoryItem): string[] {
             <div v-else class="overflow-hidden rounded-lg border border-border bg-card">
                 <div class="border-b border-border px-4 py-3">
                     <h3 class="text-sm font-semibold">
-                        {{ filters.category ? CATEGORY_TABS.find((c) => c.value === filters.category)?.label : 'All products' }}
+                        {{ filters.category ? CATEGORY_TABS.find((c) => c.value === filters.category)?.label : t('All products') }}
                     </h3>
                     <p class="mt-0.5 text-xs text-muted-foreground">{{ listSummary }}</p>
                 </div>
@@ -277,14 +279,14 @@ function flags(item: InventoryItem): string[] {
                     <table class="w-full min-w-[64rem] text-sm">
                         <thead class="border-b border-border text-left text-3xs text-muted-foreground">
                             <tr>
-                                <th scope="col" class="w-8 py-2.5 pl-3"><span class="sr-only">Reorder</span></th>
-                                <th scope="col" class="px-3 py-2.5 font-medium">Name</th>
-                                <th scope="col" class="px-3 py-2.5 font-medium">Size</th>
-                                <th scope="col" class="px-3 py-2.5 font-medium">SKU</th>
-                                <th scope="col" class="px-3 py-2.5 font-medium">Vintage</th>
-                                <th scope="col" class="px-3 py-2.5 text-right font-medium">On hand</th>
-                                <th scope="col" class="px-3 py-2.5 font-medium">Level</th>
-                                <th scope="col" class="px-3 py-2.5 font-medium">Flags</th>
+                                <th scope="col" class="w-8 py-2.5 pl-3"><span class="sr-only">{{ t('Reorder') }}</span></th>
+                                <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Name') }}</th>
+                                <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Size') }}</th>
+                                <th scope="col" class="px-3 py-2.5 font-medium">{{ t('SKU') }}</th>
+                                <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Vintage') }}</th>
+                                <th scope="col" class="px-3 py-2.5 text-right font-medium">{{ t('On hand') }}</th>
+                                <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Level') }}</th>
+                                <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Flags') }}</th>
                             </tr>
                         </thead>
 
@@ -300,7 +302,7 @@ function flags(item: InventoryItem): string[] {
                                     </span>
                                 </th>
                                 <td colspan="3" class="px-3 py-2 text-right text-xs text-muted-foreground">
-                                    {{ qty(String(group.onHand)) }} on hand<template v-if="group.currency">
+                                    {{ qty(String(group.onHand)) }} {{ t('on hand') }}<template v-if="group.currency">
                                         · {{ formatMoney(group.value, group.currency, page.props.locale) }}</template
                                     >
                                 </td>
@@ -351,9 +353,9 @@ function flags(item: InventoryItem): string[] {
                                     <td class="px-3 py-3">
                                         <LevelBar :value="item.current_stock" :min="item.min_stock">
                                             <template v-if="item.min_stock">
-                                                {{ qty(item.current_stock) }} of {{ qty(item.min_stock) }} min
+                                                {{ t(':stock of :min min', { stock: qty(item.current_stock), min: qty(item.min_stock) }) }}
                                             </template>
-                                            <template v-else>No min stock set</template>
+                                            <template v-else>{{ t('No min stock set') }}</template>
                                         </LevelBar>
                                     </td>
                                     <td class="px-3 py-3">
@@ -374,7 +376,7 @@ function flags(item: InventoryItem): string[] {
                         <tbody v-if="!groups.length">
                             <tr>
                                 <td colspan="8" class="px-4 py-10 text-center text-muted-foreground">
-                                    No items match these filters.
+                                    {{ t('No items match these filters.') }}
                                 </td>
                             </tr>
                         </tbody>

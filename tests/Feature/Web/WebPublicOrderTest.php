@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Web;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
@@ -13,9 +14,15 @@ use Tests\TestCase;
  * JSON API, which tests/Feature/Orders/PublicOrderTest already covers in
  * full — this only asserts the page renders, unauthenticated, for any token
  * shape, and shares nothing that assumes a signed-in member.
+ *
+ * RefreshDatabase: every Inertia response now shares a `translations` prop
+ * (HandleInertiaRequests), which reads the translation_overrides table even
+ * for a guest with no tenant.
  */
 class WebPublicOrderTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_the_page_renders_for_a_guest_with_no_active_tenant(): void
     {
         $this->get('/order/some-token-value')

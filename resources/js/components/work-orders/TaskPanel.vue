@@ -33,6 +33,8 @@ const props = defineProps<{
     task: WorkOrder | null;
     /** Which column a card started from, so a new one lands where it was asked for. */
     defaultStatus: TaskStatusKey | null;
+    /** Which board was selected when a new task was started, so it lands there too. */
+    defaultBoardId: string | null;
 }>();
 
 const emit = defineEmits<{ close: [] }>();
@@ -59,6 +61,7 @@ const form = useForm({
     due_date: '',
     assignee_id: '',
     vessel_id: '',
+    board_id: '',
 });
 
 /** `YYYY-MM-DD` for a date input, from the ISO string the server sends. */
@@ -83,6 +86,7 @@ watch(
             due_date: dateInput(t?.due_date ?? null),
             assignee_id: t?.assignee?.id ?? '',
             vessel_id: t?.vessel?.id ?? '',
+            board_id: t?.board_id ?? props.defaultBoardId ?? '',
         });
         form.reset();
         form.clearErrors();
@@ -154,7 +158,7 @@ function submit(): void {
     const transform = (data: Record<string, unknown>): Record<string, unknown> => {
         const out = { ...data };
 
-        for (const key of ['description', 'category', 'start_date', 'due_date', 'assignee_id', 'vessel_id']) {
+        for (const key of ['description', 'category', 'start_date', 'due_date', 'assignee_id', 'vessel_id', 'board_id']) {
             if (out[key] === '') out[key] = null;
         }
 

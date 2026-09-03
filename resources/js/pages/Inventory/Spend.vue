@@ -15,6 +15,7 @@ import SectionHeader from '@/components/ui/SectionHeader.vue';
 import Separator from '@/components/ui/Separator.vue';
 import StatCard from '@/components/ui/StatCard.vue';
 import Tabs from '@/components/ui/Tabs.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber } from '@/lib/money';
 import { coverPhrase, spendSignal } from '@/lib/stock';
 import type { InventoryAnalytics, InventorySpend } from '@/types/stock';
@@ -37,14 +38,15 @@ const props = defineProps<{
 
 const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
+const { t } = useTranslations();
 const num = (n: number) => formatNumber(n, locale.value);
 const money = (minor: number, currency: string) => formatMoney(minor, currency, locale.value);
 
 const MODULE_TABS: TabItem[] = [
-    { label: 'Inventory', href: '/inventory' },
-    { label: 'Analytics', href: '/inventory-analytics' },
-    { label: 'Inventory Spend', href: '/inventory-spend' },
-    { label: 'Inventory Check', href: '/inventory-check' },
+    { label: t('Inventory'), href: '/inventory' },
+    { label: t('Analytics'), href: '/inventory-analytics' },
+    { label: t('Inventory Spend'), href: '/inventory-spend' },
+    { label: t('Inventory Check'), href: '/inventory-check' },
 ];
 
 const currency = computed(() => props.portfolio.value.currency);
@@ -109,43 +111,43 @@ const dateRange = computed(() => {
 </script>
 
 <template>
-    <AppLayout title="Inventory spend">
+    <AppLayout :title="t('Inventory spend')">
         <div class="flex flex-col gap-5">
-            <PageHeader title="Inventory">
+            <PageHeader :title="t('Inventory')">
                 <template #actions>
                     <!-- @todo Bulk Import — no import pipeline yet. -->
                     <Button variant="outline" size="sm">
                         <Upload class="size-4" :stroke-width="1.5" />
-                        Bulk Import
+                        {{ t('Bulk Import') }}
                     </Button>
                     <Button size="sm" href="/inventory">
                         <Plus class="size-4" :stroke-width="1.5" />
-                        New Item
+                        {{ t('New Item') }}
                     </Button>
                 </template>
             </PageHeader>
-            <Tabs :items="MODULE_TABS" current="Inventory Spend" />
+            <Tabs :items="MODULE_TABS" :current="t('Inventory Spend')" />
 
             <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard
-                    label="Capital tied up"
+                    :label="t('Capital tied up')"
                     :value="money(portfolio.value.total, currency)"
-                    hint="in finished goods on hand"
+                    :hint="t('in finished goods on hand')"
                 />
                 <StatCard
-                    :label="`Returned in ${windowLabel} days`"
+                    :label="t('Returned in :days days', { days: windowLabel })"
                     :value="money(summary.revenue.minor, summary.revenue.currency)"
                     :alert="returnIsLow"
                     :hint="
                         returnShare !== null
-                            ? `${returnShare.toFixed(1)} % of the stock value`
-                            : 'no stock value to compare'
+                            ? t(':percent % of the stock value', { percent: returnShare.toFixed(1) })
+                            : t('no stock value to compare')
                     "
                 />
                 <StatCard
-                    label="Cost of what left"
+                    :label="t('Cost of what left')"
                     :value="money(summary.cost_value.minor, summary.cost_value.currency)"
-                    :hint="`against ${money(summary.revenue.minor, summary.revenue.currency)} revenue`"
+                    :hint="t('against :revenue revenue', { revenue: money(summary.revenue.minor, summary.revenue.currency) })"
                 />
                 <!--
                   The design states this as capital, not a count: "148.000 EUR of
@@ -154,10 +156,10 @@ const dateRange = computed(() => {
                   the stock were worthless.
                 -->
                 <StatCard
-                    label="Sitting untouched"
+                    :label="t('Sitting untouched')"
                     :value="untouchedIsValued ? money(untouchedValue, currency) : num(untouched.length)"
                     :alert="tooManyUntouched"
-                    :hint="`${num(untouched.length)} of ${num(spend.per_product.length)} products, no exits`"
+                    :hint="t(':untouched of :total products, no exits', { untouched: num(untouched.length), total: num(spend.per_product.length) })"
                 />
             </section>
 
@@ -165,8 +167,8 @@ const dateRange = computed(() => {
                 <Card>
                     <CardContent class="flex flex-col gap-4 p-6">
                         <SectionHeader
-                            title="Units leaving per day"
-                            :description="`${num(summary.units_exited)} units across ${windowLabel} days — the whole cellar`"
+                            :title="t('Units leaving per day')"
+                            :description="t(':count units across :days days — the whole cellar', { count: num(summary.units_exited), days: windowLabel })"
                         >
                             <template #actions>
                                 <span class="text-xs text-muted-foreground">{{ dateRange }}</span>
@@ -178,7 +180,7 @@ const dateRange = computed(() => {
 
                 <Card>
                     <CardContent class="flex flex-col gap-4 p-6">
-                        <SectionHeader title="What it earned" />
+                        <SectionHeader :title="t('What it earned')" />
 
                         <p class="text-3xl font-semibold tabular-nums">
                             {{ money(summary.revenue.minor, summary.revenue.currency) }}
@@ -187,12 +189,12 @@ const dateRange = computed(() => {
                         <StackedBar
                             :segments="[
                                 {
-                                    label: 'Gross profit',
+                                    label: t('Gross profit'),
                                     value: grossProfit,
                                     caption: money(grossProfit, currency),
                                 },
                                 {
-                                    label: 'Cost of goods',
+                                    label: t('Cost of goods'),
                                     value: summary.cost_value.minor,
                                     caption: money(summary.cost_value.minor, summary.cost_value.currency),
                                 },
@@ -205,8 +207,8 @@ const dateRange = computed(() => {
             <Card>
                 <CardContent class="flex flex-col gap-4 p-6">
                     <SectionHeader
-                        title="Depletion and return by product"
-                        description="Runout forecast and per-product exit, merged into one table."
+                        :title="t('Depletion and return by product')"
+                        :description="t('Runout forecast and per-product exit, merged into one table.')"
                     >
                         <template #actions>
                             <!--
@@ -216,7 +218,7 @@ const dateRange = computed(() => {
                             -->
                             <Button variant="outline" size="sm">
                                 <Download class="size-4" :stroke-width="1.5" />
-                                Export
+                                {{ t('Export') }}
                             </Button>
                         </template>
                     </SectionHeader>
@@ -225,17 +227,17 @@ const dateRange = computed(() => {
                         <table class="w-full min-w-[60rem] text-sm">
                             <thead class="border-b border-border text-left text-3xs text-muted-foreground">
                                 <tr>
-                                    <th scope="col" class="py-2.5 pr-4 font-medium">Product</th>
-                                    <th scope="col" class="py-2.5 pr-4 font-medium">SKU</th>
-                                    <th scope="col" class="py-2.5 pr-4 text-right font-medium">On hand</th>
+                                    <th scope="col" class="py-2.5 pr-4 font-medium">{{ t('Product') }}</th>
+                                    <th scope="col" class="py-2.5 pr-4 font-medium">{{ t('SKU') }}</th>
+                                    <th scope="col" class="py-2.5 pr-4 text-right font-medium">{{ t('On hand') }}</th>
                                     <th scope="col" class="py-2.5 pr-4 text-right font-medium">
-                                        Left {{ windowLabel }}d
+                                        {{ t('Left :days d', { days: windowLabel }) }}
                                     </th>
-                                    <th scope="col" class="py-2.5 pr-4 text-right font-medium">Per day</th>
-                                    <th scope="col" class="py-2.5 pr-4 font-medium">Cover</th>
-                                    <th scope="col" class="py-2.5 pr-4 text-right font-medium">Cost</th>
-                                    <th scope="col" class="py-2.5 pr-4 text-right font-medium">Revenue</th>
-                                    <th scope="col" class="py-2.5 font-medium">Signal</th>
+                                    <th scope="col" class="py-2.5 pr-4 text-right font-medium">{{ t('Per day') }}</th>
+                                    <th scope="col" class="py-2.5 pr-4 font-medium">{{ t('Cover') }}</th>
+                                    <th scope="col" class="py-2.5 pr-4 text-right font-medium">{{ t('Cost') }}</th>
+                                    <th scope="col" class="py-2.5 pr-4 text-right font-medium">{{ t('Revenue') }}</th>
+                                    <th scope="col" class="py-2.5 font-medium">{{ t('Signal') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">
@@ -278,23 +280,22 @@ const dateRange = computed(() => {
                         </table>
                     </div>
                     <p v-else class="py-6 text-sm text-muted-foreground">
-                        Nothing left the cellar in this window.
+                        {{ t('Nothing left the cellar in this window.') }}
                     </p>
 
                     <Callout
                         v-if="untouched.length"
-                        :title="`${num(untouched.length)} of ${num(spend.per_product.length)} products have no spend or return to report`"
+                        :title="t(':untouched of :total products have no spend or return to report', { untouched: num(untouched.length), total: num(spend.per_product.length) })"
                         tone="warning"
                     >
-                        They may still appear in shipped orders — an exit that never reached the ledger looks
-                        identical to no trade at all. Check the order → stock link before reading this as idle stock.
+                        {{ t('They may still appear in shipped orders — an exit that never reached the ledger looks identical to no trade at all. Check the order → stock link before reading this as idle stock.') }}
                         <template #action>
                             <!--
                               @todo "Check order → stock link" — needs a
                               reconciliation view comparing shipped order lines
                               against recorded stock movements.
                             -->
-                            <Button variant="outline" size="sm">Check order → stock link</Button>
+                            <Button variant="outline" size="sm">{{ t('Check order → stock link') }}</Button>
                         </template>
                     </Callout>
                 </CardContent>

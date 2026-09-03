@@ -9,6 +9,7 @@ import NavRow from '@/components/NavRow.vue';
 import Avatar from '@/components/ui/Avatar.vue';
 import Separator from '@/components/ui/Separator.vue';
 import { useAuth } from '@/composables/useAuth';
+import { useTranslations } from '@/composables/useTranslations';
 import { navigationFor, shortcutsFor } from '@/lib/navigation';
 import type { SharedProps } from '@/types';
 
@@ -28,6 +29,7 @@ import type { SharedProps } from '@/types';
  */
 const page = usePage<SharedProps>();
 const { user, can, hasModule, shortcuts: pinnedShortcuts } = useAuth();
+const { t } = useTranslations();
 
 const allCategories = computed(() => navigationFor(can, hasModule));
 const shortcuts = computed(() => shortcutsFor(can, hasModule, pinnedShortcuts.value));
@@ -44,7 +46,7 @@ const categories = computed(() => allCategories.value.filter((c) => c.label !== 
 const roleLabel = computed(() => {
     const role = page.props.auth.roles[0];
 
-    return role ? role.charAt(0) + role.slice(1).toLowerCase() : 'Member';
+    return role ? role.charAt(0) + role.slice(1).toLowerCase() : t('Member');
 });
 
 /** Categories collapse; all start open, matching the design's default state. */
@@ -64,11 +66,11 @@ function toggle(label: string): void {
             <AppLogo />
             <div class="min-w-0 flex-1">
                 <p class="truncate text-13 leading-[16.25px] font-semibold text-foreground">Terroir</p>
-                <p class="truncate text-2xs text-muted-foreground">Business Intelligence</p>
+                <p class="truncate text-2xs text-muted-foreground">{{ t('Business Intelligence') }}</p>
             </div>
         </div>
 
-        <nav class="min-h-0 flex-1 overflow-y-auto p-2" aria-label="Main">
+        <nav class="min-h-0 flex-1 overflow-y-auto p-2" :aria-label="t('Main')">
             <!-- Overview -->
             <section v-for="category in overview" :key="category.label">
                 <button
@@ -81,7 +83,7 @@ function toggle(label: string): void {
                         class="size-3 shrink-0 transition-transform"
                         :class="collapsed[category.label] && '-rotate-90'"
                     />
-                    <span>{{ category.label }}</span>
+                    <span>{{ t(category.label) }}</span>
                 </button>
                 <ul v-show="!collapsed[category.label]" class="space-y-px pt-0.5">
                     <li v-for="item in category.items" :key="item.label">
@@ -111,12 +113,12 @@ function toggle(label: string): void {
                             class="size-3 shrink-0 transition-transform"
                             :class="shortcutsCollapsed && '-rotate-90'"
                         />
-                        <span>Shortcuts</span>
+                        <span>{{ t('Shortcuts') }}</span>
                     </button>
                     <button
                         type="button"
                         class="mr-1.5 grid size-5 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground"
-                        aria-label="Manage shortcuts"
+                        :aria-label="t('Manage shortcuts')"
                         @click="manageShortcutsOpen = true"
                     >
                         <Settings2 class="size-3" :stroke-width="1.5" />
@@ -128,7 +130,7 @@ function toggle(label: string): void {
                     </li>
                 </ul>
                 <p v-else-if="!shortcutsCollapsed" class="px-1.5 pt-0.5 text-xs text-muted-foreground">
-                    Nothing pinned yet.
+                    {{ t('Nothing pinned yet.') }}
                 </p>
             </section>
 
@@ -146,7 +148,7 @@ function toggle(label: string): void {
                         class="size-3 shrink-0 transition-transform"
                         :class="collapsed[category.label] && '-rotate-90'"
                     />
-                    <span>{{ category.label }}</span>
+                    <span>{{ t(category.label) }}</span>
                 </button>
 
                 <ul v-show="!collapsed[category.label]" class="space-y-px pt-0.5">

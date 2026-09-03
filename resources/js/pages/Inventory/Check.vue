@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Tabs from '@/components/ui/Tabs.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/cn';
 import { formatQuantity } from '@/lib/money';
 import { categoryLabel } from '@/lib/stock';
@@ -33,12 +34,13 @@ const props = defineProps<{
 
 const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
+const { t } = useTranslations();
 
 const MODULE_TABS: TabItem[] = [
-    { label: 'Inventory', href: '/inventory' },
-    { label: 'Analytics', href: '/inventory-analytics' },
-    { label: 'Inventory Spend', href: '/inventory-spend' },
-    { label: 'Inventory Check', href: '/inventory-check' },
+    { label: t('Inventory'), href: '/inventory' },
+    { label: t('Analytics'), href: '/inventory-analytics' },
+    { label: t('Inventory Spend'), href: '/inventory-spend' },
+    { label: t('Inventory Check'), href: '/inventory-check' },
 ];
 
 const search = ref('');
@@ -68,7 +70,7 @@ const sections = computed(() => {
     const byCategory = new Map<string, Map<string, InventoryItem[]>>();
 
     for (const item of visible.value) {
-        const band = [item.group, item.subcategory].filter(Boolean).join(' — ') || 'Ungrouped';
+        const band = [item.group, item.subcategory].filter(Boolean).join(' — ') || t('Ungrouped');
         const bands = byCategory.get(item.category) ?? new Map<string, InventoryItem[]>();
         bands.set(band, [...(bands.get(band) ?? []), item]);
         byCategory.set(item.category, bands);
@@ -110,9 +112,9 @@ function save(): void {
 </script>
 
 <template>
-    <AppLayout title="Inventory check">
+    <AppLayout :title="t('Inventory check')">
         <div class="flex flex-col gap-5">
-            <PageHeader title="Inventory">
+            <PageHeader :title="t('Inventory')">
                 <template #actions>
                     <!--
                       @todo History panel. Past stocktakes are already loaded in
@@ -121,27 +123,27 @@ function save(): void {
                     -->
                     <Button variant="outline" size="sm">
                         <History class="size-4" :stroke-width="1.5" />
-                        History<template v-if="history.length"> ({{ history.length }})</template>
+                        {{ t('History') }}<template v-if="history.length"> ({{ history.length }})</template>
                     </Button>
                 </template>
             </PageHeader>
 
-            <Tabs :items="MODULE_TABS" current="Inventory Check" />
+            <Tabs :items="MODULE_TABS" :current="t('Inventory Check')" />
 
             <div class="flex flex-wrap items-center gap-3">
                 <input
                     v-model="search"
                     type="search"
-                    placeholder="Search name or SKU…"
+                    :placeholder="t('Search name or SKU…')"
                     class="h-9 max-w-xs flex-1 rounded-lg border border-input bg-card px-3 text-sm placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 />
                 <div class="ml-auto flex items-center gap-2">
                     <Button variant="outline" size="sm" :disabled="!changed.length" @click="reset">
                         <X class="size-4" :stroke-width="1.5" />
-                        Cancel
+                        {{ t('Cancel') }}
                     </Button>
                     <Button size="sm" :disabled="!changed.length || saving" @click="save">
-                        {{ saving ? 'Saving…' : 'Save Changes' }}<template v-if="changed.length">
+                        {{ saving ? t('Saving…') : t('Save Changes') }}<template v-if="changed.length">
                             ({{ changed.length }})</template
                         >
                     </Button>
@@ -157,13 +159,13 @@ function save(): void {
                     <table class="w-full min-w-[48rem] text-sm">
                         <thead class="border-b border-border text-left text-3xs text-muted-foreground">
                             <tr>
-                                <th scope="col" class="px-6 py-2.5 font-medium">Product</th>
-                                <th scope="col" class="px-4 py-2.5 font-medium">Size</th>
-                                <th scope="col" class="px-4 py-2.5 font-medium">Vintage</th>
-                                <th scope="col" class="px-4 py-2.5 font-medium">Unit</th>
-                                <th scope="col" class="px-4 py-2.5 text-right font-medium">System</th>
-                                <th scope="col" class="px-4 py-2.5 text-right font-medium">Physical Count</th>
-                                <th scope="col" class="px-6 py-2.5 text-right font-medium">Difference</th>
+                                <th scope="col" class="px-6 py-2.5 font-medium">{{ t('Product') }}</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Size') }}</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Vintage') }}</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Unit') }}</th>
+                                <th scope="col" class="px-4 py-2.5 text-right font-medium">{{ t('System') }}</th>
+                                <th scope="col" class="px-4 py-2.5 text-right font-medium">{{ t('Physical Count') }}</th>
+                                <th scope="col" class="px-6 py-2.5 text-right font-medium">{{ t('Difference') }}</th>
                             </tr>
                         </thead>
 
@@ -195,7 +197,7 @@ function save(): void {
                                     <input
                                         v-model="counts[item.id]"
                                         inputmode="decimal"
-                                        :aria-label="`Physical count for ${item.name}`"
+                                        :aria-label="t('Physical count for :name', { name: item.name })"
                                         class="h-8 w-28 rounded-md border border-input bg-card px-2 text-right text-sm tabular-nums focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                                     />
                                 </td>
@@ -223,13 +225,12 @@ function save(): void {
                     v-if="section.bands.some((b) => b.rows.some((r) => difference(r) !== null))"
                     class="border-t border-border bg-[color-mix(in_oklch,var(--color-primary)_5%,transparent)] px-6 py-2.5 text-xs font-medium"
                 >
-                    {{ section.bands.flatMap((b) => b.rows).filter((r) => difference(r) !== null).length }} item(s)
-                    modified
+                    {{ t(':count item(s) modified', { count: section.bands.flatMap((b) => b.rows).filter((r) => difference(r) !== null).length }) }}
                 </p>
             </Card>
 
             <p v-if="!sections.length" class="py-10 text-center text-sm text-muted-foreground">
-                No active items to count.
+                {{ t('No active items to count.') }}
             </p>
         </div>
     </AppLayout>

@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
 import Button from '@/components/ui/Button.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney } from '@/lib/money';
 import type { AttentionCard } from '@/types/customers';
 import type { MoneyValue } from '@/types/inventory';
@@ -21,20 +22,21 @@ const emit = defineEmits<{ act: [action: AttentionCard['action']] }>();
 
 const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
+const { t } = useTranslations();
 
 const text = (value: string | MoneyValue): string =>
     typeof value === 'string' ? value : formatMoney(value.minor, value.currency, locale.value);
 
-const ACTION_LABELS: Record<AttentionCard['action'], string> = {
-    contact: 'Call · repeat order',
-    orders: 'Open in Orders',
-    pricing: 'Configure pricing',
-};
+const ACTION_LABELS = computed<Record<AttentionCard['action'], string>>(() => ({
+    contact: t('Call · repeat order'),
+    orders: t('Open in Orders'),
+    pricing: t('Configure pricing'),
+}));
 </script>
 
 <template>
     <section v-if="cards.length > 0" class="flex flex-col gap-3">
-        <h2 class="text-sm font-semibold">Needs attention</h2>
+        <h2 class="text-sm font-semibold">{{ t('Needs attention') }}</h2>
 
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <div

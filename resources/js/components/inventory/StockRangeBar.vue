@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
+import { useTranslations } from '@/composables/useTranslations';
+
 /**
  * The stock range bar on Product Detail (Figma `449:1577`): a full-width track
  * with a tick at the minimum, captioned "minimum N" on the left and the
@@ -11,6 +13,7 @@ import { computed } from 'vue';
  * somewhere meaningful rather than pinned to an edge.
  */
 const props = defineProps<{ stock: number; min: number; unit: string }>();
+const { t } = useTranslations();
 
 const ceiling = computed(() => Math.max(props.stock, props.min * 2, 1));
 const minPct = computed(() => Math.min(100, (props.min / ceiling.value) * 100));
@@ -34,9 +37,9 @@ const headroom = computed(() => props.stock - props.min);
             />
         </div>
         <div class="flex items-baseline justify-between gap-4 text-2xs text-muted-foreground">
-            <span>{{ min > 0 ? `minimum ${min} ${unit}` : 'no minimum set' }}</span>
+            <span>{{ min > 0 ? t('minimum :min :unit', { min, unit }) : t('no minimum set') }}</span>
             <span v-if="min > 0" :class="belowMin && 'text-destructive'">
-                {{ Math.abs(headroom) }} {{ unit }} {{ belowMin ? 'below minimum' : 'above minimum' }}
+                {{ Math.abs(headroom) }} {{ unit }} {{ belowMin ? t('below minimum') : t('above minimum') }}
             </span>
         </div>
     </div>

@@ -5,7 +5,10 @@ import { Search } from 'lucide-vue-next';
 
 import Kbd from '@/components/ui/Kbd.vue';
 import { usePopover } from '@/composables/usePopover';
+import { useTranslations } from '@/composables/useTranslations';
 import type { SearchResult, SearchResults } from '@/types/search';
+
+const { t } = useTranslations();
 
 /**
  * The header's global search (Figma 389:1679): searches orders, customers and
@@ -43,9 +46,9 @@ const groups = computed(() => {
 
     return (
         [
-            { label: 'Orders', items: results.value.orders },
-            { label: 'Customers', items: results.value.customers },
-            { label: 'Inventory', items: results.value.inventory },
+            { label: t('Orders'), items: results.value.orders },
+            { label: t('Customers'), items: results.value.customers },
+            { label: t('Inventory'), items: results.value.inventory },
         ] satisfies { label: string; items: SearchResult[] }[]
     )
         .filter((group) => group.items.length > 0)
@@ -160,8 +163,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKeydown));
             ref="input"
             v-model="query"
             type="search"
-            placeholder="Search orders, SKUs, partners…"
-            aria-label="Search"
+            :placeholder="t('Search orders, SKUs, partners…')"
+            :aria-label="t('Search')"
             role="combobox"
             aria-autocomplete="list"
             :aria-expanded="showDropdown"
@@ -180,7 +183,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKeydown));
             role="listbox"
             class="absolute top-10 right-0 left-0 z-30 max-h-96 overflow-y-auto border border-border bg-card shadow-lg"
         >
-            <p v-if="loading" class="px-3 py-3 text-xs text-muted-foreground">Searching…</p>
+            <p v-if="loading" class="px-3 py-3 text-xs text-muted-foreground">{{ t('Searching…') }}</p>
 
             <template v-else-if="flat.length > 0">
                 <div v-for="group in groups" :key="group.label">
@@ -206,7 +209,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKeydown));
                 </div>
             </template>
 
-            <p v-else class="px-3 py-3 text-xs text-muted-foreground">Nothing matches "{{ query }}".</p>
+            <p v-else class="px-3 py-3 text-xs text-muted-foreground">{{ t('Nothing matches ":query".', { query }) }}</p>
         </div>
     </div>
 </template>

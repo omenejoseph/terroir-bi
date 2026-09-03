@@ -5,6 +5,7 @@ import { useForm } from '@inertiajs/vue3';
 import Button from '@/components/ui/Button.vue';
 import Callout from '@/components/ui/Callout.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { customerSubtitle } from '@/lib/customers';
 import type { Customer } from '@/types/customers';
 
@@ -21,6 +22,7 @@ import type { Customer } from '@/types/customers';
  */
 const props = defineProps<{ open: boolean; customers: Customer[] }>();
 const emit = defineEmits<{ close: []; merged: [] }>();
+const { t } = useTranslations();
 
 const winner = ref<string | null>(null);
 
@@ -46,15 +48,18 @@ function submit(): void {
 </script>
 
 <template>
-    <SidePanel :open="open" title="Merge customers" @close="emit('close')">
+    <SidePanel :open="open" :title="t('Merge customers')" @close="emit('close')">
         <div class="flex flex-col gap-5">
             <p class="text-xs text-muted-foreground">
-                Pick the record to keep. Every order, price and order link belonging to the others moves onto it,
-                and the others are deleted.
+                {{
+                    t(
+                        'Pick the record to keep. Every order, price and order link belonging to the others moves onto it, and the others are deleted.',
+                    )
+                }}
             </p>
 
             <fieldset class="flex flex-col gap-2">
-                <legend class="sr-only">Customer to keep</legend>
+                <legend class="sr-only">{{ t('Customer to keep') }}</legend>
                 <label
                     v-for="customer in customers"
                     :key="customer.id"
@@ -68,21 +73,24 @@ function submit(): void {
                             {{ customerSubtitle(customer.customer_type, customer.city) ?? customer.email }}
                         </span>
                         <span class="mt-1 block text-xs text-muted-foreground tabular-nums">
-                            {{ customer.order_count ?? 0 }} orders
+                            {{ t(':count orders', { count: customer.order_count ?? 0 }) }}
                         </span>
                     </span>
                     <span
                         v-if="winner === customer.id"
                         class="shrink-0 bg-primary px-2 py-0.5 text-2xs font-medium text-primary-foreground"
                     >
-                        Keeps
+                        {{ t('Keeps') }}
                     </span>
                 </label>
             </fieldset>
 
-            <Callout v-if="losers.length > 0" variant="warning" title="This cannot be undone">
-                {{ losers.map((c) => c.company_name).join(', ') }}
-                {{ losers.length === 1 ? 'will be deleted' : 'will be deleted' }} once their records have moved.
+            <Callout v-if="losers.length > 0" variant="warning" :title="t('This cannot be undone')">
+                {{
+                    t(':names will be deleted once their records have moved.', {
+                        names: losers.map((c) => c.company_name).join(', '),
+                    })
+                }}
             </Callout>
 
             <p v-if="form.errors.winner_id" class="text-xs text-destructive" role="alert">
@@ -94,9 +102,9 @@ function submit(): void {
         </div>
 
         <template #footer>
-            <Button variant="outline" @click="emit('close')">Cancel</Button>
+            <Button variant="outline" @click="emit('close')">{{ t('Cancel') }}</Button>
             <Button :disabled="form.processing || losers.length === 0" @click="submit">
-                Merge {{ losers.length }} into this one
+                {{ t('Merge :count into this one', { count: losers.length }) }}
             </Button>
         </template>
     </SidePanel>

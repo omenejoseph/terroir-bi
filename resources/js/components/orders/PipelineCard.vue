@@ -5,6 +5,7 @@ import { usePage } from '@inertiajs/vue3';
 import Card from '@/components/ui/Card.vue';
 import CardContent from '@/components/ui/CardContent.vue';
 import SectionHeader from '@/components/ui/SectionHeader.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { OrderPipeline } from '@/types/orders';
 import type { SharedProps } from '@/types';
@@ -30,6 +31,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ select: [key: string | null] }>();
 
+const { t } = useTranslations();
 const locale = computed(() => usePage<SharedProps>().props.locale);
 
 const isFilter = (key: string): boolean => props.filterable.includes(key);
@@ -39,15 +41,15 @@ const isFilter = (key: string): boolean => props.filterable.includes(key);
     <Card>
         <CardContent class="flex flex-col gap-4 p-6">
             <SectionHeader
-                title="Order-to-cash pipeline"
-                description="Open orders by stage · click a stage to filter the table below"
+                :title="t('Order-to-cash pipeline')"
+                :description="t('Open orders by stage · click a stage to filter the table below')"
             >
                 <template #actions>
                     <!-- @todo Stage period picker. The card follows the page's
                          period tabs today; the design offers a second, card-local
                          range ("This month ▾") that needs its own control. -->
                     <button type="button" class="text-xs text-muted-foreground hover:text-foreground">
-                        This period
+                        {{ t('This period') }}
                     </button>
                 </template>
             </SectionHeader>

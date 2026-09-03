@@ -29,6 +29,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $last_name
  * @property string $email
  * @property bool $is_platform_admin
+ * @property string|null $locale
  */
 class User extends Authenticatable implements FilamentUser, HasName
 {
@@ -47,6 +48,7 @@ class User extends Authenticatable implements FilamentUser, HasName
         'last_name',
         'email',
         'password',
+        'locale',
     ];
 
     protected $hidden = [

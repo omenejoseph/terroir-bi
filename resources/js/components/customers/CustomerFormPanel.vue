@@ -13,6 +13,7 @@ import Select from '@/components/ui/Select.vue';
 import Separator from '@/components/ui/Separator.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import SwitchRow from '@/components/ui/SwitchRow.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { CUSTOMER_TYPES } from '@/lib/customers';
 import type { Customer, PricingTierSummary } from '@/types/customers';
 import type { SharedProps } from '@/types';
@@ -30,6 +31,7 @@ const props = defineProps<{ open: boolean; customer: Customer | null }>();
 const emit = defineEmits<{ close: [] }>();
 
 const page = usePage<SharedProps>();
+const { t } = useTranslations();
 
 const tiers = computed<PricingTierSummary[]>(
     () => (page.props.tiers as PricingTierSummary[] | undefined) ?? [],
@@ -121,7 +123,7 @@ async function lookUp(): Promise<void> {
         const body = await response.json();
 
         if (!response.ok) {
-            lookupError.value = typeof body.message === 'string' ? body.message : 'Lookup failed.';
+            lookupError.value = typeof body.message === 'string' ? body.message : t('Lookup failed.');
 
             return;
         }
@@ -135,7 +137,7 @@ async function lookUp(): Promise<void> {
         if (form.zip === '' && typeof data.zip === 'string') form.zip = data.zip;
         if (form.country === '' && typeof data.country === 'string') form.country = data.country;
     } catch {
-        lookupError.value = 'Could not reach the lookup service.';
+        lookupError.value = t('Could not reach the lookup service.');
     } finally {
         lookingUp.value = false;
     }
@@ -151,10 +153,10 @@ const TIER_OPTIONS = computed(() =>
 
 const settingsSummary = computed(() =>
     [
-        form.exclude_from_stats ? 'Excluded from stats' : 'Counted in stats',
-        form.hide_prices ? 'Prices hidden' : 'Prices shown',
-        form.is_agency ? 'Agency' : 'Not an agency',
-        form.allow_single_bottle ? 'Single bottles allowed' : 'Cases only',
+        form.exclude_from_stats ? t('Excluded from stats') : t('Counted in stats'),
+        form.hide_prices ? t('Prices hidden') : t('Prices shown'),
+        form.is_agency ? t('Agency') : t('Not an agency'),
+        form.allow_single_bottle ? t('Single bottles allowed') : t('Cases only'),
     ].join(' · '),
 );
 
@@ -193,12 +195,12 @@ function submit(): void {
 </script>
 
 <template>
-    <SidePanel :open="open" :title="isEdit ? 'Edit customer' : 'New customer'" @close="emit('close')">
+    <SidePanel :open="open" :title="isEdit ? t('Edit customer') : t('New customer')" @close="emit('close')">
         <form id="customer-form" class="flex flex-col gap-6" @submit.prevent="submit">
-            <FormSection label="Identity">
+            <FormSection :label="t('Identity')">
                 <FormField
-                    label="OIB / VAT"
-                    hint="Enter a Croatian OIB or EU VAT number to auto-fill name and address."
+                    :label="t('OIB / VAT')"
+                    :hint="t('Enter a Croatian OIB or EU VAT number to auto-fill name and address.')"
                     :error="form.errors.oib ?? lookupError ?? undefined"
                 >
                     <template #default="{ id, invalid }">
@@ -209,7 +211,7 @@ function submit(): void {
                                 :disabled="lookingUp || form.oib.trim() === ''"
                                 @click="lookUp"
                             >
-                                {{ lookingUp ? 'Looking up…' : 'Look up' }}
+                                {{ lookingUp ? t('Looking up…') : t('Look up') }}
                             </Button>
                         </div>
                     </template>
@@ -218,38 +220,38 @@ function submit(): void {
 
             <Separator />
 
-            <FormSection label="Contact">
-                <FormField label="Company name" required :error="form.errors.company_name">
+            <FormSection :label="t('Contact')">
+                <FormField :label="t('Company name')" required :error="form.errors.company_name">
                     <template #default="{ id, invalid }">
                         <Input :id="id" v-model="form.company_name" :invalid="invalid" />
                     </template>
                 </FormField>
 
-                <FormField label="Contact name" :error="form.errors.contact_name">
+                <FormField :label="t('Contact name')" :error="form.errors.contact_name">
                     <template #default="{ id, invalid }">
                         <Input :id="id" v-model="form.contact_name" :invalid="invalid" />
                     </template>
                 </FormField>
 
-                <FormField label="Email" required :error="form.errors.email">
+                <FormField :label="t('Email')" required :error="form.errors.email">
                     <template #default="{ id, invalid }">
                         <Input :id="id" v-model="form.email" type="email" :invalid="invalid" />
                     </template>
                 </FormField>
 
                 <FieldRow>
-                    <FormField label="Phone" :error="form.errors.phone">
+                    <FormField :label="t('Phone')" :error="form.errors.phone">
                         <template #default="{ id, invalid }">
                             <Input :id="id" v-model="form.phone" :invalid="invalid" />
                         </template>
                     </FormField>
-                    <FormField label="Customer type" :error="form.errors.customer_type">
+                    <FormField :label="t('Customer type')" :error="form.errors.customer_type">
                         <template #default="{ id }">
                             <Select
                                 :id="id"
                                 v-model="form.customer_type"
-                                placeholder="Not set"
-                                :options="CUSTOMER_TYPES.map((t) => ({ value: t.value, label: t.label }))"
+                                :placeholder="t('Not set')"
+                                :options="CUSTOMER_TYPES.map((ct) => ({ value: ct.value, label: ct.label }))"
                             />
                         </template>
                     </FormField>
@@ -258,20 +260,20 @@ function submit(): void {
 
             <Separator />
 
-            <FormSection label="Address">
-                <FormField label="Street address" :error="form.errors.address">
+            <FormSection :label="t('Address')">
+                <FormField :label="t('Street address')" :error="form.errors.address">
                     <template #default="{ id, invalid }">
                         <Input :id="id" v-model="form.address" :invalid="invalid" />
                     </template>
                 </FormField>
 
                 <FieldRow>
-                    <FormField label="City" :error="form.errors.city">
+                    <FormField :label="t('City')" :error="form.errors.city">
                         <template #default="{ id, invalid }">
                             <Input :id="id" v-model="form.city" :invalid="invalid" />
                         </template>
                     </FormField>
-                    <FormField label="ZIP" :error="form.errors.zip">
+                    <FormField :label="t('ZIP')" :error="form.errors.zip">
                         <template #default="{ id, invalid }">
                             <Input :id="id" v-model="form.zip" :invalid="invalid" />
                         </template>
@@ -279,12 +281,12 @@ function submit(): void {
                 </FieldRow>
 
                 <FieldRow>
-                    <FormField label="Region" :error="form.errors.state">
+                    <FormField :label="t('Region')" :error="form.errors.state">
                         <template #default="{ id, invalid }">
                             <Input :id="id" v-model="form.state" :invalid="invalid" />
                         </template>
                     </FormField>
-                    <FormField label="Country" :error="form.errors.country">
+                    <FormField :label="t('Country')" :error="form.errors.country">
                         <template #default="{ id, invalid }">
                             <Input :id="id" v-model="form.country" :invalid="invalid" />
                         </template>
@@ -294,15 +296,15 @@ function submit(): void {
 
             <Separator />
 
-            <FormSection label="Pricing">
+            <FormSection :label="t('Pricing')">
                 <FieldRow>
-                    <FormField label="Pricing tier" :error="form.errors.pricing_tier_id">
+                    <FormField :label="t('Pricing tier')" :error="form.errors.pricing_tier_id">
                         <template #default="{ id }">
                             <Combobox
                                 :id="id"
                                 :model-value="form.pricing_tier_id === '' ? null : form.pricing_tier_id"
-                                placeholder="No tier"
-                                empty-text="No tier matches."
+                                :placeholder="t('No tier')"
+                                :empty-text="t('No tier matches.')"
                                 clearable
                                 :options="TIER_OPTIONS"
                                 @update:model-value="form.pricing_tier_id = $event ?? ''"
@@ -310,8 +312,8 @@ function submit(): void {
                         </template>
                     </FormField>
                     <FormField
-                        label="Rebate %"
-                        hint="Overrides the tier default."
+                        :label="t('Rebate %')"
+                        :hint="t('Overrides the tier default.')"
                         :error="form.errors.rebate_percent"
                     >
                         <template #default="{ id, invalid }">
@@ -329,34 +331,34 @@ function submit(): void {
                 </FieldRow>
             </FormSection>
 
-            <Disclosure title="Advanced settings" :summary="settingsSummary">
+            <Disclosure :title="t('Advanced settings')" :summary="settingsSummary">
                 <SwitchRow
                     v-model="form.exclude_from_stats"
-                    label="Exclude from statistics"
-                    hint="Orders won't count in dashboard analytics."
+                    :label="t('Exclude from statistics')"
+                    :hint="t('Orders won\'t count in dashboard analytics.')"
                 />
                 <SwitchRow
                     v-model="form.hide_prices"
-                    label="Hide prices on order link"
-                    hint="Prices won't show on the self-service order page."
+                    :label="t('Hide prices on order link')"
+                    :hint="t('Prices won\'t show on the self-service order page.')"
                 />
                 <SwitchRow
                     v-model="form.is_agency"
-                    label="Agency"
-                    hint="This customer is a hospitality booking agency."
+                    :label="t('Agency')"
+                    :hint="t('This customer is a hospitality booking agency.')"
                 />
                 <SwitchRow
                     v-model="form.allow_single_bottle"
-                    label="Allow single bottle orders"
-                    hint="Customer can choose case or single bottle on the portal."
+                    :label="t('Allow single bottle orders')"
+                    :hint="t('Customer can choose case or single bottle on the portal.')"
                 />
             </Disclosure>
         </form>
 
         <template #footer>
-            <Button variant="outline" @click="emit('close')">Cancel</Button>
+            <Button variant="outline" @click="emit('close')">{{ t('Cancel') }}</Button>
             <Button type="submit" form="customer-form" :disabled="form.processing">
-                {{ isEdit ? 'Save changes' : 'Create customer' }}
+                {{ isEdit ? t('Save changes') : t('Create customer') }}
             </Button>
         </template>
     </SidePanel>

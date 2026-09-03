@@ -13,6 +13,7 @@ import Select from '@/components/ui/Select.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import SwitchRow from '@/components/ui/SwitchRow.vue';
 import Textarea from '@/components/ui/Textarea.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { linesToPayload } from '@/lib/orders';
 import { formatMoney } from '@/lib/money';
 import type { OrderLineDraft, ProductOption } from '@/types/orders';
@@ -45,6 +46,7 @@ interface CustomerOption {
 
 const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
+const { t } = useTranslations();
 
 const customers = computed<CustomerOption[]>(
     () => (page.props.customerOptions as CustomerOption[] | undefined) ?? [],
@@ -120,20 +122,20 @@ const CUSTOMER_OPTIONS = computed<ComboboxOption[]>(() =>
     })),
 );
 
-const STATUS_OPTIONS = [
-    { value: 'RECEIVED', label: 'Received' },
-    { value: 'IN_PROCESS', label: 'In Process' },
-    { value: 'READY_TO_SHIP', label: 'Ready to Ship' },
-    { value: 'SHIPPED', label: 'Shipped' },
-];
+const STATUS_OPTIONS = computed(() => [
+    { value: 'RECEIVED', label: t('Received') },
+    { value: 'IN_PROCESS', label: t('In Process') },
+    { value: 'READY_TO_SHIP', label: t('Ready to Ship') },
+    { value: 'SHIPPED', label: t('Shipped') },
+]);
 
 /** The collapsed disclosure summarises what it hides (Figma 335:4233). */
 const settingsSummary = computed(() =>
     [
-        STATUS_OPTIONS.find((s) => s.value === form.status)?.label ?? form.status,
-        form.is_backorder ? 'Backorder' : 'Not backorder',
-        form.is_consignment ? 'Consignment' : null,
-        form.shipping_paid_by_us ? 'We pay logistics' : 'Customer pays logistics',
+        STATUS_OPTIONS.value.find((s) => s.value === form.status)?.label ?? form.status,
+        form.is_backorder ? t('Backorder') : t('Not backorder'),
+        form.is_consignment ? t('Consignment') : null,
+        form.shipping_paid_by_us ? t('We pay logistics') : t('Customer pays logistics'),
     ]
         .filter(Boolean)
         .join(' · '),
@@ -158,17 +160,17 @@ function submit(): void {
 </script>
 
 <template>
-    <SidePanel :open="open" title="Create order" @close="emit('close')">
+    <SidePanel :open="open" :title="t('Create order')" @close="emit('close')">
         <form id="create-order" class="flex flex-col gap-5" @submit.prevent="submit">
-            <FormField label="Customer" required :error="form.errors.customer_id">
+            <FormField :label="t('Customer')" required :error="form.errors.customer_id">
                 <template #default="{ id, invalid }">
                     <div class="flex items-center gap-2">
                         <Combobox
                             :id="id"
                             :model-value="form.customer_id === '' ? null : form.customer_id"
                             :invalid="invalid"
-                            placeholder="Select a customer…"
-                            empty-text="No customer matches."
+                            :placeholder="t('Select a customer…')"
+                            :empty-text="t('No customer matches.')"
                             :options="CUSTOMER_OPTIONS"
                             class="flex-1"
                             @update:model-value="form.customer_id = $event ?? ''"
@@ -179,7 +181,7 @@ function submit(): void {
                         <button
                             type="button"
                             class="inline-flex size-9 shrink-0 items-center justify-center border border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
-                            aria-label="New customer"
+                            :aria-label="t('New customer')"
                         >
                             <Plus class="size-4" :stroke-width="1.5" />
                         </button>
@@ -189,7 +191,7 @@ function submit(): void {
 
             <section class="flex flex-col gap-3">
                 <span class="text-sm leading-5 font-medium text-foreground">
-                    Products<span class="ml-1 text-destructive" aria-hidden="true">*</span>
+                    {{ t('Products') }}<span class="ml-1 text-destructive" aria-hidden="true">*</span>
                 </span>
 
                 <OrderLineFields v-model="lines" :products="products" :locale="locale">
@@ -198,7 +200,7 @@ function submit(): void {
                              order off a photo; there is no such endpoint. -->
                         <Button variant="outline" size="sm" type="button">
                             <Camera class="size-3.5" :stroke-width="1.5" />
-                            Import screenshot
+                            {{ t('Import screenshot') }}
                         </Button>
                     </template>
                 </OrderLineFields>
@@ -207,23 +209,23 @@ function submit(): void {
             </section>
 
             <div class="flex items-baseline justify-between gap-3 border-t border-border pt-4">
-                <span class="text-sm">Subtotal · excl. VAT</span>
+                <span class="text-sm">{{ t('Subtotal · excl. VAT') }}</span>
                 <span class="text-lg font-semibold tabular-nums">
                     {{ formatMoney(subtotal, currency, locale) }}
                 </span>
             </div>
             <p class="-mt-3 text-xs text-muted-foreground">
-                At list price. The customer's tier and rebate are applied when the order is placed.
+                {{ t("At list price. The customer's tier and rebate are applied when the order is placed.") }}
             </p>
 
-            <FormField label="Notes" :error="form.errors.notes">
+            <FormField :label="t('Notes')" :error="form.errors.notes">
                 <template #default="{ id }">
-                    <Textarea :id="id" v-model="form.notes" placeholder="Add any notes for this order…" :rows="3" />
+                    <Textarea :id="id" v-model="form.notes" :placeholder="t('Add any notes for this order…')" :rows="3" />
                 </template>
             </FormField>
 
-            <Disclosure title="Order settings" :summary="settingsSummary">
-                <FormField label="Status" :error="form.errors.status">
+            <Disclosure :title="t('Order settings')" :summary="settingsSummary">
+                <FormField :label="t('Status')" :error="form.errors.status">
                     <template #default="{ id }">
                         <Select :id="id" v-model="form.status" :options="STATUS_OPTIONS" />
                     </template>
@@ -231,42 +233,42 @@ function submit(): void {
 
                 <SwitchRow
                     v-model="form.is_backorder"
-                    label="Backorder"
-                    hint="Stock isn't available yet — reserve and fulfil later."
+                    :label="t('Backorder')"
+                    :hint="t('Stock isn\'t available yet — reserve and fulfil later.')"
                 />
 
                 <SwitchRow
                     v-model="form.is_consignment"
-                    label="Consignment (komisija)"
-                    hint="Goods stay ours until the customer sells them."
+                    :label="t('Consignment (komisija)')"
+                    :hint="t('Goods stay ours until the customer sells them.')"
                 />
 
                 <SwitchRow
                     v-model="form.shipping_paid_by_us"
-                    label="We pay logistics"
-                    hint="Freight is deducted from this order's margin only when we pay it."
+                    :label="t('We pay logistics')"
+                    :hint="t('Freight is deducted from this order\'s margin only when we pay it.')"
                 />
 
                 <FormField
-                    label="Shipping cost"
-                    hint="Leave empty if there is no freight on this order."
+                    :label="t('Shipping cost')"
+                    :hint="t('Leave empty if there is no freight on this order.')"
                     :error="form.errors.shipping_cost"
                 >
                     <template #default="{ id }">
-                        <Input :id="id" v-model="form.shipping_cost" type="number" step="0.01" min="0" placeholder="0,00" />
+                        <Input :id="id" v-model="form.shipping_cost" type="number" step="0.01" min="0" :placeholder="t('0,00')" />
                     </template>
                 </FormField>
             </Disclosure>
         </form>
 
         <template #footer>
-            <Button variant="outline" @click="emit('close')">Cancel</Button>
+            <Button variant="outline" @click="emit('close')">{{ t('Cancel') }}</Button>
             <Button
                 type="submit"
                 form="create-order"
                 :disabled="!canSubmit || form.processing"
             >
-                Place order
+                {{ t('Place order') }}
             </Button>
         </template>
     </SidePanel>

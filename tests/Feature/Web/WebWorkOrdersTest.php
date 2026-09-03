@@ -12,8 +12,10 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Vessel;
 use App\Models\WorkOrder;
+use App\Models\WorkOrderBoard;
 use App\Services\Auth\ActiveTenantSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia;
 use Tests\Concerns\InteractsWithTenancy;
 use Tests\TestCase;
@@ -23,9 +25,9 @@ use Tests\TestCase;
  *
  * Reads go through the same ListWorkOrdersQuery as the JSON API and writes
  * through the same Actions, so these tests are about the board's own decisions:
- * how tasks are grouped into columns, how the category-derived board picker
- * counts, what the two toggles resolve to, and that these routes stay open to
- * any member exactly as routes/api.php has them.
+ * how tasks are grouped into columns, how the real board picker counts and
+ * favourites, what the two toggles resolve to, and that these routes stay open
+ * to any member exactly as routes/api.php has them.
  */
 class WebWorkOrdersTest extends TestCase
 {
@@ -93,53 +95,161 @@ class WebWorkOrdersTest extends TestCase
     }
 
     /**
-     * The design's named boards do not exist in this domain, so the picker is
-     * built from the categories that have work. Counts ignore the selected
-     * board so you can still see what you would switch to.
+     * The picker is now built from real boards, not the category enum. Counts
+     * ignore the selected board so you can still see what you would switch to.
      */
-    public function test_the_board_picker_lists_categories_and_counts_across_them(): void
+    public function test_the_board_picker_lists_real_boards_and_counts_across_them(): void
     {
         [$tenant, $admin] = $this->tenantAndMember();
 
         $this->actingAsTenant($tenant);
-        $this->makeTask($admin, 'Rack Malvazija', category: WorkOrderCategory::Cellar);
-        $this->makeTask($admin, 'Prune block 4', category: WorkOrderCategory::Vineyard);
-        $this->makeTask($admin, 'Service destemmer', category: WorkOrderCategory::Vineyard);
+        $cellar = WorkOrderBoard::create(['name' => 'Cellar Operations', 'created_by_id' => $admin->getKey()]);
+        $vineyard = WorkOrderBoard::create(['name' => 'Vineyard & Maintenance', 'created_by_id' => $admin->getKey()]);
+        $task = $this->makeTask($admin, 'Rack Malvazija');
+        $task->forceFill(['board_id' => $cellar->getKey()])->save();
+        foreach (['Prune block 4', 'Service destemmer'] as $title) {
+            $other = $this->makeTask($admin, $title);
+            $other->forceFill(['board_id' => $vineyard->getKey()])->save();
+        }
         $this->forgetTenant();
 
         $this->actingAs($admin)->withSession($this->tenantSession($tenant))
-            ->get('/work-orders?category=CELLAR')
+            ->get('/work-orders?board_id='.$cellar->getKey())
             ->assertOk()
-            ->assertInertia(function (AssertableInertia $page) {
+            ->assertInertia(function (AssertableInertia $page) use ($cellar, $vineyard) {
                 // Only the chosen board's work is on the board itself…
                 $this->assertSame(1, $page->toArray()['props']['board']['total']);
 
                 // …but the picker still shows both, or you could not switch.
                 $boards = collect($page->toArray()['props']['boards'])->keyBy('key');
-                $this->assertSame(1, $boards['CELLAR']['count']);
-                $this->assertSame(2, $boards['VINEYARD']['count']);
+                $this->assertSame(1, $boards[$cellar->getKey()]['count']);
+                $this->assertSame(2, $boards[$vineyard->getKey()]['count']);
             });
     }
 
-    /** Work with no category must stay reachable, or it is invisible. */
-    public function test_uncategorised_work_gets_its_own_board(): void
+    /** A newly-created board with no work on it yet must not vanish from the picker. */
+    public function test_an_empty_board_still_appears_in_the_picker(): void
     {
         [$tenant, $admin] = $this->tenantAndMember();
 
         $this->actingAsTenant($tenant);
-        $this->makeTask($admin, 'Something loose', category: null);
-        $this->makeTask($admin, 'Rack Malvazija', category: WorkOrderCategory::Cellar);
+        $empty = WorkOrderBoard::create(['name' => 'Bottling Line', 'created_by_id' => $admin->getKey()]);
         $this->forgetTenant();
 
         $this->actingAs($admin)->withSession($this->tenantSession($tenant))
-            ->get('/work-orders?category=none')
+            ->get('/work-orders')
             ->assertOk()
-            ->assertInertia(function (AssertableInertia $page) {
-                $props = $page->toArray()['props'];
-
-                $this->assertSame(1, $props['board']['total']);
-                $this->assertContains('none', array_column($props['boards'], 'key'));
+            ->assertInertia(function (AssertableInertia $page) use ($empty) {
+                $boards = collect($page->toArray()['props']['boards'])->keyBy('key');
+                $this->assertSame(0, $boards[$empty->getKey()]['count']);
             });
+    }
+
+    /** "+ New Board" lands you straight on the board it just made. */
+    public function test_creating_a_board_redirects_to_it_and_it_appears_in_the_picker(): void
+    {
+        [$tenant, $admin] = $this->tenantAndMember();
+
+        $this->actingAs($admin)->withSession($this->tenantSession($tenant))
+            ->post('/work-order-boards', ['name' => 'Bottling Line'])
+            ->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $board = WorkOrderBoard::query()->where('name', 'Bottling Line')->firstOrFail();
+        $this->forgetTenant();
+
+        $this->actingAs($admin)->withSession($this->tenantSession($tenant))
+            ->get('/work-orders?board_id='.$board->getKey())
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('filters.board_id', $board->getKey())
+                ->has('boards', 1)
+                ->where('boards.0.key', $board->getKey()));
+    }
+
+    /** Setting a favourite always replaces whichever board was favourited before. */
+    public function test_favoriting_a_board_replaces_any_previous_favorite(): void
+    {
+        [$tenant, $admin] = $this->tenantAndMember();
+
+        $this->actingAsTenant($tenant);
+        $first = WorkOrderBoard::create(['name' => 'Cellar Operations', 'created_by_id' => $admin->getKey()]);
+        $second = WorkOrderBoard::create(['name' => 'Vineyard & Maintenance', 'created_by_id' => $admin->getKey()]);
+        $this->forgetTenant();
+
+        $session = $this->tenantSession($tenant);
+
+        $this->actingAs($admin)->withSession($session)
+            ->patch('/work-order-boards/favorite', ['board_id' => $first->getKey()])
+            ->assertRedirect();
+
+        $this->actingAs($admin)->withSession($session)
+            ->patch('/work-order-boards/favorite', ['board_id' => $second->getKey()])
+            ->assertRedirect();
+
+        $this->actingAs($admin)->withSession($session)
+            ->get('/work-orders')
+            ->assertOk()
+            ->assertInertia(function (AssertableInertia $page) use ($first, $second) {
+                $boards = collect($page->toArray()['props']['boards'])->keyBy('key');
+                $this->assertFalse($boards[$first->getKey()]['favorite']);
+                $this->assertTrue($boards[$second->getKey()]['favorite']);
+            });
+
+        $this->actingAsTenant($tenant);
+        $this->assertSame(
+            1,
+            DB::table('user_work_order_board_favorites')
+                ->where('tenant_id', $tenant->getKey())
+                ->where('user_id', $admin->getKey())
+                ->count(),
+        );
+        $this->forgetTenant();
+    }
+
+    /** A task created while a board is selected lands on that board — same as columns default to the status you created from. */
+    public function test_a_task_created_while_a_board_is_selected_gets_that_board(): void
+    {
+        [$tenant, $admin] = $this->tenantAndMember();
+
+        $this->actingAsTenant($tenant);
+        $board = WorkOrderBoard::create(['name' => 'Cellar Operations', 'created_by_id' => $admin->getKey()]);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)->withSession($this->tenantSession($tenant))
+            ->post('/work-orders', [
+                'title' => 'Sulfite addition',
+                'board_id' => $board->getKey(),
+                'priority' => 'HIGH',
+                'status' => 'TODO',
+            ])
+            ->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $task = WorkOrder::query()->firstOrFail();
+        $this->assertSame($board->getKey(), $task->board_id);
+        $this->forgetTenant();
+    }
+
+    /**
+     * Boards are as ungated as the work orders themselves — any member of the
+     * tenant may create one and favourite one.
+     */
+    public function test_the_board_routes_are_open_to_any_member(): void
+    {
+        [$tenant, $employee] = $this->tenantAndMember(TenantRole::Employee);
+
+        $this->actingAs($employee)->withSession($this->tenantSession($tenant))
+            ->post('/work-order-boards', ['name' => 'Bottling Line'])
+            ->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $board = WorkOrderBoard::query()->where('name', 'Bottling Line')->firstOrFail();
+        $this->forgetTenant();
+
+        $this->actingAs($employee)->withSession($this->tenantSession($tenant))
+            ->patch('/work-order-boards/favorite', ['board_id' => $board->getKey()])
+            ->assertRedirect();
     }
 
     public function test_my_tasks_narrows_to_the_signed_in_member(): void

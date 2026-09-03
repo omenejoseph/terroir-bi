@@ -18,6 +18,7 @@ import Separator from '@/components/ui/Separator.vue';
 import StatCard from '@/components/ui/StatCard.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
+import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber, formatQuantity } from '@/lib/money';
 import { channelLabel, formatMovementDate, MOVEMENT_GROUPS, movementTypeLabel } from '@/lib/stock';
 import type { InventoryItem, MoneyValue } from '@/types/inventory';
@@ -43,6 +44,7 @@ const props = defineProps<{
 
 const page = usePage<SharedProps>();
 const { can } = useAuth();
+const { t } = useTranslations();
 
 const locale = computed(() => page.props.locale);
 const money = (m: MoneyValue | null) => (m ? formatMoney(m.minor, m.currency, locale.value) : '—');
@@ -68,23 +70,23 @@ const realized = computed(() => props.analytics.realized);
  * @todo Analysis — BottleAnalysisController exists; needs the results view.
  */
 const DETAIL_TABS: TabItem[] = [
-    { label: 'Stock', value: 'stock' },
-    { label: 'Details' },
-    { label: 'Recipe' },
-    { label: 'Produce' },
-    { label: 'Images' },
-    { label: 'Docs' },
-    { label: 'Pricing' },
-    { label: 'Analysis' },
+    { label: t('Stock'), value: 'stock' },
+    { label: t('Details') },
+    { label: t('Recipe') },
+    { label: t('Produce') },
+    { label: t('Images') },
+    { label: t('Docs') },
+    { label: t('Pricing') },
+    { label: t('Analysis') },
 ];
 
 /** The design's exit-period strip; these are the tokens the query accepts. */
 const PERIOD_TABS: TabItem[] = [
-    { value: 'today', label: 'Today' },
-    { value: 'mtd', label: 'MTD' },
-    { value: 'ytd', label: 'YTD' },
-    { value: '30d', label: '30d' },
-    { value: '90d', label: '90d' },
+    { value: 'today', label: t('Today') },
+    { value: 'mtd', label: t('MTD') },
+    { value: 'ytd', label: t('YTD') },
+    { value: '30d', label: t('30d') },
+    { value: '90d', label: t('90d') },
 ];
 
 function selectPeriod(period: string): void {
@@ -128,7 +130,7 @@ const form = useForm({});
 function duplicate(): void {}
 
 function destroy(): void {
-    if (!confirm(`Delete ${props.item.name}? Items referenced by orders are deactivated instead.`)) return;
+    if (!confirm(t('Delete :name? Items referenced by orders are deactivated instead.', { name: props.item.name }))) return;
 
     form.delete(`/inventory/${props.item.id}`);
 }
@@ -144,7 +146,7 @@ function destroy(): void {
                         <Link
                             href="/inventory"
                             class="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                            aria-label="Back to inventory"
+                            :aria-label="t('Back to inventory')"
                         >
                             <ArrowLeft class="size-5" :stroke-width="1.5" />
                         </Link>
@@ -162,41 +164,41 @@ function destroy(): void {
                 </div>
 
                 <div v-if="can('inventory.manage')" class="flex shrink-0 items-center gap-2">
-                    <Button variant="outline" size="sm" @click="duplicate">Duplicate</Button>
+                    <Button variant="outline" size="sm" @click="duplicate">{{ t('Duplicate') }}</Button>
                     <Button v-if="can('inventory.delete')" variant="outline" size="sm" @click="destroy">
                         <Trash2 class="size-4 text-destructive" :stroke-width="1.5" />
-                        <span class="text-destructive">Delete</span>
+                        <span class="text-destructive">{{ t('Delete') }}</span>
                     </Button>
                 </div>
             </div>
 
-            <Tabs :items="DETAIL_TABS" current="Stock" variant="segmented" />
+            <Tabs :items="DETAIL_TABS" :current="t('Stock')" variant="segmented" />
 
             <!-- Stat tiles -->
             <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard
-                    label="On hand"
+                    :label="t('On hand')"
                     :value="num(current.stock_bottles)"
                     :hint="
                         [
                             current.unit,
-                            cases !== null ? `${num(cases)} cases` : null,
-                            current.min_stock_bottles > 0 ? `min ${num(current.min_stock_bottles)}` : null,
+                            cases !== null ? t(':count cases', { count: num(cases) }) : null,
+                            current.min_stock_bottles > 0 ? t('min :count', { count: num(current.min_stock_bottles) }) : null,
                         ]
                             .filter(Boolean)
                             .join(' · ')
                     "
                 />
                 <StatCard
-                    label="Cover"
+                    :label="t('Cover')"
                     :value="exits.days_of_stock_left !== null ? `${exits.days_of_stock_left} d` : '—'"
-                    hint="at this period's exit rate"
+                    :hint="t('at this period\'s exit rate')"
                 />
-                <StatCard label="Value on hand" :value="money(valueOnHand)" hint="at cost" />
+                <StatCard :label="t('Value on hand')" :value="money(valueOnHand)" :hint="t('at cost')" />
                 <StatCard
-                    label="Realised margin"
+                    :label="t('Realised margin')"
                     :value="realized.margin_percent !== null ? `${realized.margin_percent} %` : '—'"
-                    :hint="realized.bottles_sold > 0 ? `12 months · ${num(realized.bottles_sold)} sold` : '12 months'"
+                    :hint="realized.bottles_sold > 0 ? t('12 months · :sold sold', { sold: num(realized.bottles_sold) }) : t('12 months')"
                 />
             </section>
 
@@ -204,14 +206,14 @@ function destroy(): void {
             <Card>
                 <CardContent class="flex flex-col gap-5 p-6">
                     <SectionHeader
-                        title="Current stock"
-                        description="What is in the warehouse, what it cost, and what it is worth once it sells."
+                        :title="t('Current stock')"
+                        :description="t('What is in the warehouse, what it cost, and what it is worth once it sells.')"
                     />
 
                     <div class="flex items-baseline gap-3">
                         <span class="text-3xl font-semibold tabular-nums">{{ num(current.stock_bottles) }}</span>
                         <span class="text-sm text-muted-foreground">{{ current.unit }}</span>
-                        <span v-if="cases !== null" class="text-sm text-muted-foreground">{{ num(cases) }} cases</span>
+                        <span v-if="cases !== null" class="text-sm text-muted-foreground">{{ t(':count cases', { count: num(cases) }) }}</span>
                     </div>
 
                     <StockRangeBar
@@ -222,14 +224,14 @@ function destroy(): void {
 
                     <Separator />
 
-                    <FormSection label="Cost basis">
+                    <FormSection :label="t('Cost basis')">
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div>
-                                <p class="text-xs text-muted-foreground">Cost per unit</p>
+                                <p class="text-xs text-muted-foreground">{{ t('Cost per unit') }}</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(current.cost_per_bottle) }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-muted-foreground">Value on hand</p>
+                                <p class="text-xs text-muted-foreground">{{ t('Value on hand') }}</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(valueOnHand) }}</p>
                             </div>
                         </div>
@@ -237,18 +239,18 @@ function destroy(): void {
 
                     <Separator />
 
-                    <FormSection label="Selling">
+                    <FormSection :label="t('Selling')">
                         <div class="grid gap-4 sm:grid-cols-3">
                             <div>
-                                <p class="text-xs text-muted-foreground">List price</p>
+                                <p class="text-xs text-muted-foreground">{{ t('List price') }}</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(current.selling_per_bottle) }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-muted-foreground">Mean price (realised, 12m)</p>
+                                <p class="text-xs text-muted-foreground">{{ t('Mean price (realised, 12m)') }}</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(realized.mean_price) }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-muted-foreground">Margin (realised, 12m)</p>
+                                <p class="text-xs text-muted-foreground">{{ t('Margin (realised, 12m)') }}</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">
                                     {{ realized.margin_percent !== null ? `${realized.margin_percent} %` : '—' }}
                                     <span v-if="realized.margin_amount" class="font-normal text-muted-foreground">
@@ -257,13 +259,13 @@ function destroy(): void {
                                 </p>
                             </div>
                             <div>
-                                <p class="text-xs text-muted-foreground">Mean realised rebate</p>
+                                <p class="text-xs text-muted-foreground">{{ t('Mean realised rebate') }}</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">
                                     {{ realized.rebate_percent !== null ? `${realized.rebate_percent} %` : '—' }}
                                 </p>
                             </div>
                             <div>
-                                <p class="text-xs text-muted-foreground">Sales value (at realised price)</p>
+                                <p class="text-xs text-muted-foreground">{{ t('Sales value (at realised price)') }}</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(realized.sales_value) }}</p>
                             </div>
                         </div>
@@ -276,8 +278,8 @@ function destroy(): void {
                 <Card>
                     <CardContent class="flex flex-col gap-4 p-6">
                         <SectionHeader
-                            title="Inventory spend"
-                            description="Warehouse exit — every unit, regardless of channel."
+                            :title="t('Inventory spend')"
+                            :description="t('Warehouse exit — every unit, regardless of channel.')"
                         >
                             <template #actions>
                                 <Tabs
@@ -291,9 +293,9 @@ function destroy(): void {
 
                         <div class="flex items-baseline gap-3">
                             <span class="text-3xl font-semibold tabular-nums">{{ num(exits.bottles_exited) }}</span>
-                            <span class="text-sm text-muted-foreground">{{ current.unit }} exited</span>
+                            <span class="text-sm text-muted-foreground">{{ current.unit }} {{ t('exited') }}</span>
                             <span class="text-xs text-muted-foreground">
-                                · {{ num(exits.movements_count) }} movements
+                                · {{ num(exits.movements_count) }} {{ t('movements') }}
                             </span>
                         </div>
 
@@ -301,30 +303,30 @@ function destroy(): void {
 
                         <div class="grid gap-4 sm:grid-cols-3 xl:grid-cols-5">
                             <div>
-                                <p class="text-xs text-muted-foreground">Cost of exits</p>
+                                <p class="text-xs text-muted-foreground">{{ t('Cost of exits') }}</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(exits.cost_of_exits) }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-muted-foreground">Revenue (realised)</p>
+                                <p class="text-xs text-muted-foreground">{{ t('Revenue (realised)') }}</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">{{ money(exits.revenue_realized) }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-muted-foreground">Mean margin</p>
+                                <p class="text-xs text-muted-foreground">{{ t('Mean margin') }}</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">
                                     {{ exits.mean_margin_percent !== null ? `${exits.mean_margin_percent} %` : '—' }}
                                 </p>
                             </div>
                             <div>
-                                <p class="text-xs text-muted-foreground">Velocity</p>
+                                <p class="text-xs text-muted-foreground">{{ t('Velocity') }}</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">
                                     {{ exits.velocity_per_day }}
                                     <span class="text-xs font-normal text-muted-foreground">
-                                        {{ current.unit }}/day
+                                        {{ t(':unit/day', { unit: current.unit }) }}
                                     </span>
                                 </p>
                             </div>
                             <div>
-                                <p class="text-xs text-muted-foreground">Days of stock left</p>
+                                <p class="text-xs text-muted-foreground">{{ t('Days of stock left') }}</p>
                                 <p class="mt-0.5 font-semibold tabular-nums">
                                     {{ exits.days_of_stock_left !== null ? `${exits.days_of_stock_left} d` : '—' }}
                                 </p>
@@ -332,9 +334,14 @@ function destroy(): void {
                         </div>
 
                         <p v-if="exits.internal" class="text-xs text-muted-foreground">
-                            of which Internal / POS: {{ num(exits.internal.bottles) }} {{ current.unit }} · cost
-                            {{ money(exits.internal.cost) }} · revenue {{ money(exits.internal.revenue) }}
-                            (excluded from margin)
+                            {{
+                                t('of which Internal / POS: :bottles :unit · cost :cost · revenue :revenue (excluded from margin)', {
+                                    bottles: num(exits.internal.bottles),
+                                    unit: current.unit,
+                                    cost: money(exits.internal.cost),
+                                    revenue: money(exits.internal.revenue),
+                                })
+                            }}
                         </p>
                     </CardContent>
                 </Card>
@@ -342,7 +349,7 @@ function destroy(): void {
                 <!-- Exit by channel -->
                 <Card>
                     <CardContent class="flex flex-col gap-4 p-6">
-                        <SectionHeader title="Exit by channel" description="Where the units went this period." />
+                        <SectionHeader :title="t('Exit by channel')" :description="t('Where the units went this period.')" />
 
                         <ul v-if="analytics.channels.length" class="flex flex-col gap-4">
                             <li v-for="channel in analytics.channels" :key="channel.channel" class="flex flex-col gap-1.5">
@@ -363,12 +370,12 @@ function destroy(): void {
                                 </p>
                             </li>
                         </ul>
-                        <p v-else class="py-6 text-sm text-muted-foreground">No exits in this period.</p>
+                        <p v-else class="py-6 text-sm text-muted-foreground">{{ t('No exits in this period.') }}</p>
 
                         <template v-if="analytics.channels.length">
                             <Separator />
                             <div class="flex items-baseline justify-between gap-3">
-                                <span class="text-sm font-medium">Total exited</span>
+                                <span class="text-sm font-medium">{{ t('Total exited') }}</span>
                                 <span class="text-sm font-semibold tabular-nums">
                                     {{ num(channelTotal) }} {{ current.unit }}
                                 </span>
@@ -381,7 +388,7 @@ function destroy(): void {
             <!-- Quick stock entry -->
             <Card v-if="can('inventory.manage')">
                 <CardContent class="flex flex-col gap-4 p-6">
-                    <SectionHeader title="Quick stock entry" />
+                    <SectionHeader :title="t('Quick stock entry')" />
                     <QuickStockEntry :item-id="item.id" :unit="current.unit" />
                 </CardContent>
             </Card>
@@ -390,14 +397,14 @@ function destroy(): void {
             <Card>
                 <CardContent class="flex flex-col gap-4 p-6">
                     <SectionHeader
-                        title="Movement history"
-                        :description="`${movements.length} movements · running balance so you can see stock rebuild then drain`"
+                        :title="t('Movement history')"
+                        :description="t(':count movements · running balance so you can see stock rebuild then drain', { count: movements.length })"
                     >
                         <template #actions>
                             <!-- @todo Export — needs a CSV endpoint for the ledger. -->
                             <Button variant="outline" size="sm">
                                 <Download class="size-4" :stroke-width="1.5" />
-                                Export
+                                {{ t('Export') }}
                             </Button>
                         </template>
                     </SectionHeader>
@@ -414,13 +421,13 @@ function destroy(): void {
                         <table class="w-full min-w-[44rem] text-sm">
                             <thead class="border-b border-border text-left text-3xs text-muted-foreground">
                                 <tr>
-                                    <th scope="col" class="py-2.5 pr-4 font-medium">Date</th>
-                                    <th scope="col" class="py-2.5 pr-4 font-medium">Type</th>
-                                    <th scope="col" class="py-2.5 pr-4 text-right font-medium">Quantity</th>
-                                    <th scope="col" class="py-2.5 pr-4 text-right font-medium">Balance</th>
-                                    <th scope="col" class="py-2.5 pr-4 font-medium">Reference</th>
-                                    <th scope="col" class="py-2.5 pr-4 font-medium">Note</th>
-                                    <th scope="col" class="py-2.5 font-medium">By</th>
+                                    <th scope="col" class="py-2.5 pr-4 font-medium">{{ t('Date') }}</th>
+                                    <th scope="col" class="py-2.5 pr-4 font-medium">{{ t('Type') }}</th>
+                                    <th scope="col" class="py-2.5 pr-4 text-right font-medium">{{ t('Quantity') }}</th>
+                                    <th scope="col" class="py-2.5 pr-4 text-right font-medium">{{ t('Balance') }}</th>
+                                    <th scope="col" class="py-2.5 pr-4 font-medium">{{ t('Reference') }}</th>
+                                    <th scope="col" class="py-2.5 pr-4 font-medium">{{ t('Note') }}</th>
+                                    <th scope="col" class="py-2.5 font-medium">{{ t('By') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">
@@ -431,7 +438,7 @@ function destroy(): void {
                                     <td class="py-3 pr-4">
                                         <div class="flex flex-wrap items-center gap-1.5">
                                             <Badge variant="outline">{{ movementTypeLabel(movement.type) }}</Badge>
-                                            <Badge v-if="movement.is_reconciliation">correction</Badge>
+                                            <Badge v-if="movement.is_reconciliation">{{ t('correction') }}</Badge>
                                         </div>
                                     </td>
                                     <td
@@ -449,7 +456,7 @@ function destroy(): void {
                         </table>
                     </div>
                     <p v-else class="py-6 text-sm text-muted-foreground">
-                        {{ movements.length ? 'No movements of this kind.' : 'No stock movements recorded yet.' }}
+                        {{ movements.length ? t('No movements of this kind.') : t('No stock movements recorded yet.') }}
                     </p>
                 </CardContent>
             </Card>

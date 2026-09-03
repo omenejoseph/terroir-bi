@@ -2,6 +2,7 @@
 import { TicketCheck } from 'lucide-vue-next';
 
 import Checkbox from '@/components/ui/Checkbox.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { categoryLabel } from '@/lib/work-orders';
 import type { UpcomingTasks } from '@/types/dashboard';
 
@@ -20,17 +21,19 @@ import type { UpcomingTasks } from '@/types/dashboard';
  */
 defineProps<{ tasks: UpcomingTasks }>();
 
+const { t } = useTranslations();
+
 /** "Overdue 3d" / "Due today" / "Due tomorrow" / "Due in 5d" / "No due date". */
 function dueLabel(dueDate: string | null, overdue: boolean): string {
-    if (dueDate === null) return 'No due date';
+    if (dueDate === null) return t('No due date');
 
     const days = Math.round((new Date(dueDate).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86_400_000);
 
-    if (overdue) return `Overdue ${Math.abs(days)}d`;
-    if (days === 0) return 'Due today';
-    if (days === 1) return 'Due tomorrow';
+    if (overdue) return t('Overdue :countd', { count: Math.abs(days) });
+    if (days === 0) return t('Due today');
+    if (days === 1) return t('Due tomorrow');
 
-    return `Due in ${days}d`;
+    return t('Due in :countd', { count: days });
 }
 </script>
 
@@ -38,17 +41,17 @@ function dueLabel(dueDate: string | null, overdue: boolean): string {
     <div class="flex h-full flex-col border border-border bg-card p-4">
         <div class="flex items-center gap-1.5 text-sm font-semibold">
             <TicketCheck class="size-4 text-muted-foreground" :stroke-width="1.5" />
-            Upcoming tasks
+            {{ t('Upcoming tasks') }}
         </div>
 
         <div class="mt-3 flex items-baseline gap-2">
             <span class="text-2xl font-semibold tabular-nums">{{ tasks.due_this_week }}</span>
-            <span class="text-xs text-muted-foreground">open this week</span>
+            <span class="text-xs text-muted-foreground">{{ t('open this week') }}</span>
         </div>
 
         <ul v-if="tasks.rows.length" class="mt-4 flex-1 space-y-3">
             <li v-for="task in tasks.rows" :key="task.id" class="flex items-start gap-2.5">
-                <Checkbox :model-value="false" label="Mark complete" hide-label disabled class="mt-0.5" />
+                <Checkbox :model-value="false" :label="t('Mark complete')" hide-label disabled class="mt-0.5" />
                 <div class="min-w-0">
                     <p class="truncate text-xs font-medium text-foreground">{{ task.title }}</p>
                     <p class="mt-0.5 flex items-center gap-1.5 text-2xs text-muted-foreground">
@@ -62,6 +65,6 @@ function dueLabel(dueDate: string | null, overdue: boolean): string {
                 </div>
             </li>
         </ul>
-        <p v-else class="mt-4 flex-1 text-xs text-muted-foreground">Nothing open.</p>
+        <p v-else class="mt-4 flex-1 text-xs text-muted-foreground">{{ t('Nothing open.') }}</p>
     </div>
 </template>

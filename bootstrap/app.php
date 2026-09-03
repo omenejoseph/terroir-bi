@@ -53,8 +53,16 @@ return Application::configure(basePath: dirname(__DIR__))
             RecordNavVisit::class,
         ]);
 
+        // Locale resolution for every web route, not just the tenant-gated ones —
+        // the login/accept-invite screens (no tenant, sometimes no user yet) still
+        // need SetLocale to run so a guest's terroir_locale cookie is honoured.
+        // 'tenant'/'tenant.web' also carry their own SetLocale after ResolveTenant
+        // resolves the tenant; app()->setLocale() just gets called (harmlessly)
+        // twice on those routes, and the later, tenant-aware call wins.
+        //
         // Shared props for every Inertia response (auth, tenant, flash, ziggy).
         $middleware->web(append: [
+            SetLocale::class,
             HandleInertiaRequests::class,
         ]);
 

@@ -4,6 +4,7 @@ import { router, usePage } from '@inertiajs/vue3';
 import { Bell, Trash2 } from 'lucide-vue-next';
 
 import { usePopover } from '@/composables/usePopover';
+import { useTranslations } from '@/composables/useTranslations';
 import { csrfHeader } from '@/lib/csrf';
 import { relativeNotificationTime, resolveNotificationRoute } from '@/lib/notifications';
 import type { SharedProps } from '@/types';
@@ -23,6 +24,7 @@ const POLL_MS = 30_000;
 const page = usePage<SharedProps>();
 const anchor = ref<HTMLElement | null>(null);
 const { open, close, toggle } = usePopover(anchor);
+const { t } = useTranslations();
 
 const items = ref<NotificationItem[]>([]);
 const loading = ref(true);
@@ -80,7 +82,7 @@ async function remove(item: NotificationItem): Promise<void> {
 }
 
 async function clearAll(): Promise<void> {
-    if (!confirm('Clear all notifications? This cannot be undone.')) return;
+    if (!confirm(t('Clear all notifications? This cannot be undone.'))) return;
 
     items.value = [];
     await fetch('/notifications/clear', { method: 'POST', headers: csrfHeader() });
@@ -92,7 +94,7 @@ async function clearAll(): Promise<void> {
         <button
             type="button"
             class="relative grid size-8 shrink-0 place-items-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label="Notifications"
+            :aria-label="t('Notifications')"
             aria-haspopup="true"
             :aria-expanded="open"
             @click="toggle"
@@ -113,7 +115,7 @@ async function clearAll(): Promise<void> {
             class="absolute top-10 right-0 z-30 flex w-80 flex-col border border-border bg-card shadow-lg"
         >
             <div class="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
-                <p class="text-xs font-medium">Notifications</p>
+                <p class="text-xs font-medium">{{ t('Notifications') }}</p>
                 <div class="flex items-center gap-3">
                     <button
                         v-if="unreadCount > 0"
@@ -121,7 +123,7 @@ async function clearAll(): Promise<void> {
                         class="text-[11px] text-muted-foreground hover:text-foreground"
                         @click="markAllRead"
                     >
-                        Mark all read
+                        {{ t('Mark all read') }}
                     </button>
                     <button
                         v-if="items.length > 0"
@@ -129,16 +131,16 @@ async function clearAll(): Promise<void> {
                         class="text-[11px] text-muted-foreground hover:text-destructive"
                         @click="clearAll"
                     >
-                        Clear all
+                        {{ t('Clear all') }}
                     </button>
                 </div>
             </div>
 
             <div class="max-h-96 overflow-y-auto">
-                <p v-if="loading" class="px-3 py-4 text-xs text-muted-foreground">Loading…</p>
+                <p v-if="loading" class="px-3 py-4 text-xs text-muted-foreground">{{ t('Loading…') }}</p>
 
                 <p v-else-if="items.length === 0" class="px-3 py-6 text-center text-xs text-muted-foreground">
-                    No notifications yet.
+                    {{ t('No notifications yet.') }}
                 </p>
 
                 <button
@@ -162,7 +164,7 @@ async function clearAll(): Promise<void> {
                         role="button"
                         tabindex="-1"
                         class="shrink-0 p-1 text-muted-foreground hover:text-destructive"
-                        aria-label="Delete notification"
+                        :aria-label="t('Delete notification')"
                         @click.stop="remove(item)"
                     >
                         <Trash2 class="size-3.5" :stroke-width="1.5" />

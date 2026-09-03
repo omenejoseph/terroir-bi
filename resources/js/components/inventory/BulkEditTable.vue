@@ -4,6 +4,7 @@ import { router } from '@inertiajs/vue3';
 
 import Badge from '@/components/ui/Badge.vue';
 import Checkbox from '@/components/ui/Checkbox.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/cn';
 import { formatQuantity } from '@/lib/money';
 import { categoryLabel } from '@/lib/stock';
@@ -22,6 +23,7 @@ import type { InventoryItem } from '@/types/inventory';
  */
 const props = defineProps<{ items: InventoryItem[]; locale: string }>();
 const emit = defineEmits<{ cancel: [] }>();
+const { t } = useTranslations();
 
 interface Draft {
     name: string;
@@ -138,14 +140,14 @@ const cellInput =
             <table class="w-full min-w-[64rem] text-sm">
                 <thead class="border-b border-border text-left text-3xs text-muted-foreground">
                     <tr>
-                        <th scope="col" class="w-[22rem] px-4 py-2.5 font-medium">Name</th>
-                        <th scope="col" class="px-4 py-2.5 font-medium">SKU</th>
-                        <th scope="col" class="px-4 py-2.5 font-medium">Category</th>
-                        <th scope="col" class="px-4 py-2.5 text-right font-medium">Stock</th>
-                        <th scope="col" class="px-4 py-2.5 text-right font-medium">Min Stock</th>
-                        <th scope="col" class="px-4 py-2.5 text-right font-medium">Price</th>
-                        <th scope="col" class="px-4 py-2.5 text-right font-medium">Cost/Unit</th>
-                        <th scope="col" class="px-4 py-2.5 font-medium">Active</th>
+                        <th scope="col" class="w-[22rem] px-4 py-2.5 font-medium">{{ t('Name') }}</th>
+                        <th scope="col" class="px-4 py-2.5 font-medium">{{ t('SKU') }}</th>
+                        <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Category') }}</th>
+                        <th scope="col" class="px-4 py-2.5 text-right font-medium">{{ t('Stock') }}</th>
+                        <th scope="col" class="px-4 py-2.5 text-right font-medium">{{ t('Min Stock') }}</th>
+                        <th scope="col" class="px-4 py-2.5 text-right font-medium">{{ t('Price') }}</th>
+                        <th scope="col" class="px-4 py-2.5 text-right font-medium">{{ t('Cost/Unit') }}</th>
+                        <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Active') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border">
@@ -155,14 +157,14 @@ const cellInput =
                         :class="cn(isDirty(item) && 'bg-[color-mix(in_oklch,var(--color-primary)_5%,transparent)]')"
                     >
                         <td class="px-2 py-1.5">
-                            <input v-model="drafts[item.id]!.name" :class="cellInput" aria-label="Name" />
+                            <input v-model="drafts[item.id]!.name" :class="cellInput" :aria-label="t('Name')" />
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-muted-foreground">{{ item.sku }}</td>
                         <td class="px-4 py-3"><Badge variant="outline">{{ categoryLabel(item.category) }}</Badge></td>
                         <!-- Read-only: stock is owned by the movement ledger. -->
                         <td
                             class="px-4 py-3 text-right tabular-nums text-muted-foreground"
-                            title="Stock is derived from stock movements — use Inventory Check to reconcile a physical count"
+                            :title="t('Stock is derived from stock movements — use Inventory Check to reconcile a physical count')"
                         >
                             {{ formatQuantity(item.current_stock, locale) }}
                         </td>
@@ -171,7 +173,7 @@ const cellInput =
                                 v-model="drafts[item.id]!.min_stock"
                                 :class="cn(cellInput, 'text-right tabular-nums')"
                                 inputmode="decimal"
-                                aria-label="Minimum stock"
+                                :aria-label="t('Minimum stock')"
                             />
                         </td>
                         <td class="px-2 py-1.5">
@@ -179,7 +181,7 @@ const cellInput =
                                 v-model="drafts[item.id]!.default_price"
                                 :class="cn(cellInput, 'text-right tabular-nums')"
                                 inputmode="decimal"
-                                aria-label="Price"
+                                :aria-label="t('Price')"
                             />
                         </td>
                         <td class="px-2 py-1.5">
@@ -187,7 +189,7 @@ const cellInput =
                                 v-model="drafts[item.id]!.cost_per_unit"
                                 :class="cn(cellInput, 'text-right tabular-nums')"
                                 inputmode="decimal"
-                                aria-label="Cost per unit"
+                                :aria-label="t('Cost per unit')"
                             />
                         </td>
                         <td class="px-4 py-3">
@@ -202,7 +204,7 @@ const cellInput =
             v-if="dirtyItems.length"
             class="border border-t-0 border-border bg-[color-mix(in_oklch,var(--color-primary)_5%,transparent)] px-4 py-2.5 text-xs font-medium"
         >
-            {{ dirtyItems.length }} item(s) modified
+            {{ t(':count item(s) modified', { count: dirtyItems.length }) }}
         </p>
     </div>
 </template>

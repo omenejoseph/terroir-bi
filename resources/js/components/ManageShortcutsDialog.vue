@@ -6,6 +6,7 @@ import { Pin, PinOff } from 'lucide-vue-next';
 import Button from '@/components/ui/Button.vue';
 import Dialog from '@/components/ui/Dialog.vue';
 import { useAuth } from '@/composables/useAuth';
+import { useTranslations } from '@/composables/useTranslations';
 import { navItemByKey, pinnableItemsFor } from '@/lib/navigation';
 
 /**
@@ -24,6 +25,7 @@ const props = defineProps<{ open: boolean; pinnedKeys: string[] }>();
 const emit = defineEmits<{ close: [] }>();
 
 const { can, hasModule } = useAuth();
+const { t } = useTranslations();
 
 /** The full pinnable catalog, filtered to what this member can even see. */
 const catalog = computed(() => pinnableItemsFor(can, hasModule));
@@ -95,10 +97,10 @@ const otherPinnable = computed(() =>
 </script>
 
 <template>
-    <Dialog :open="open" title="Manage shortcuts" @close="emit('close')">
+    <Dialog :open="open" :title="t('Manage shortcuts')" @close="emit('close')">
         <div class="space-y-5">
             <section>
-                <h3 class="text-xs font-medium text-muted-foreground">Pinned</h3>
+                <h3 class="text-xs font-medium text-muted-foreground">{{ t('Pinned') }}</h3>
                 <ul v-if="pinnedItems.length" class="mt-2 space-y-px">
                     <li
                         v-for="item in pinnedItems"
@@ -106,30 +108,30 @@ const otherPinnable = computed(() =>
                         class="flex items-center gap-2 py-1.5"
                     >
                         <component :is="item.icon" class="size-4 shrink-0 text-muted-foreground" :stroke-width="1.5" />
-                        <span class="min-w-0 flex-1 truncate text-sm text-foreground">{{ item.label }}</span>
+                        <span class="min-w-0 flex-1 truncate text-sm text-foreground">{{ t(item.label) }}</span>
                         <button
                             type="button"
                             class="grid size-5 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground"
-                            :aria-label="`Unpin ${item.label}`"
+                            :aria-label="t('Unpin :item', { item: t(item.label) })"
                             @click="unpin(item.key)"
                         >
                             <PinOff class="size-4" :stroke-width="1.5" />
                         </button>
                     </li>
                 </ul>
-                <p v-else class="mt-2 text-xs text-muted-foreground">Nothing pinned yet.</p>
+                <p v-else class="mt-2 text-xs text-muted-foreground">{{ t('Nothing pinned yet.') }}</p>
             </section>
 
             <section>
                 <div class="flex items-center justify-between gap-3">
-                    <h3 class="text-xs font-medium text-muted-foreground">Recent</h3>
+                    <h3 class="text-xs font-medium text-muted-foreground">{{ t('Recent') }}</h3>
                     <button
                         v-if="recentItems.length"
                         type="button"
                         class="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                         @click="clearRecent"
                     >
-                        Clear all
+                        {{ t('Clear all') }}
                     </button>
                 </div>
                 <ul v-if="recentItems.length" class="mt-2 space-y-px">
@@ -139,11 +141,11 @@ const otherPinnable = computed(() =>
                         class="flex items-center gap-2 py-1.5"
                     >
                         <component :is="item.icon" class="size-4 shrink-0 text-muted-foreground" :stroke-width="1.5" />
-                        <span class="min-w-0 flex-1 truncate text-sm text-foreground">{{ item.label }}</span>
+                        <span class="min-w-0 flex-1 truncate text-sm text-foreground">{{ t(item.label) }}</span>
                         <button
                             type="button"
                             class="grid size-5 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground"
-                            :aria-label="`Pin ${item.label}`"
+                            :aria-label="t('Pin :item', { item: t(item.label) })"
                             @click="pin(item.key)"
                         >
                             <Pin class="size-4" :stroke-width="1.5" />
@@ -162,24 +164,24 @@ const otherPinnable = computed(() =>
                         class="flex items-center gap-2 py-1.5"
                     >
                         <component :is="item.icon" class="size-4 shrink-0 text-muted-foreground" :stroke-width="1.5" />
-                        <span class="min-w-0 flex-1 truncate text-sm text-foreground">{{ item.label }}</span>
+                        <span class="min-w-0 flex-1 truncate text-sm text-foreground">{{ t(item.label) }}</span>
                         <button
                             type="button"
                             class="grid size-5 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground"
-                            :aria-label="`Pin ${item.label}`"
+                            :aria-label="t('Pin :item', { item: t(item.label) })"
                             @click="pin(item.key)"
                         >
                             <Pin class="size-4" :stroke-width="1.5" />
                         </button>
                     </li>
                 </ul>
-                <p v-else class="mt-2 text-xs text-muted-foreground">Nothing visited recently.</p>
+                <p v-else class="mt-2 text-xs text-muted-foreground">{{ t('Nothing visited recently.') }}</p>
             </section>
         </div>
 
         <template #footer>
-            <Button variant="outline" @click="emit('close')">Cancel</Button>
-            <Button :disabled="saving" @click="save">Save</Button>
+            <Button variant="outline" @click="emit('close')">{{ t('Cancel') }}</Button>
+            <Button :disabled="saving" @click="save">{{ t('Save') }}</Button>
         </template>
     </Dialog>
 </template>

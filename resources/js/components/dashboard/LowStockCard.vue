@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/vue3';
 
 import Badge from '@/components/ui/Badge.vue';
 import ProgressBar from '@/components/ui/ProgressBar.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { formatQuantity } from '@/lib/money';
 import type { StockWatchItem } from '@/types/dashboard';
 import type { SharedProps } from '@/types';
@@ -17,6 +18,7 @@ import type { SharedProps } from '@/types';
 const props = defineProps<{ items: StockWatchItem[] }>();
 
 const page = usePage<SharedProps>();
+const { t } = useTranslations();
 
 const qty = (value: string) => formatQuantity(value, page.props.locale);
 
@@ -34,7 +36,7 @@ function pct(item: StockWatchItem): number {
 <template>
     <div class="flex h-full flex-col border border-border bg-card p-4">
         <div class="flex items-center gap-1.5">
-            <h3 class="text-sm font-semibold">Low stock</h3>
+            <h3 class="text-sm font-semibold">{{ t('Low stock') }}</h3>
             <Badge v-if="items.length">{{ items.length }}</Badge>
         </div>
 
@@ -49,6 +51,6 @@ function pct(item: StockWatchItem): number {
                 <ProgressBar :value="pct(item)" :label="item.name" />
             </li>
         </ul>
-        <p v-else class="mt-4 flex-1 text-xs text-muted-foreground">Nothing is below its minimum.</p>
+        <p v-else class="mt-4 flex-1 text-xs text-muted-foreground">{{ t('Nothing is below its minimum.') }}</p>
     </div>
 </template>

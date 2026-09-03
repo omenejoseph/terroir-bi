@@ -6,22 +6,18 @@ namespace App\Services\Tasks;
 
 use App\DataTransferObjects\WorkOrderData;
 use App\Enums\TaskStatus;
-use App\Enums\WorkOrderCategory;
 use App\Models\WorkOrder;
+use App\Models\WorkOrderBoard;
 use App\Queries\ListWorkOrdersQuery;
 use Illuminate\Support\Carbon;
 
 /**
- * The Work Orders board (Figma 267:1781): tasks grouped into columns, plus the
- * board picker above them.
- *
- * A note on what a "board" is here. The design shows named boards — "Cellar
- * Operations", "Vineyard & Maintenance", "Events & Hospitality" — with a
- * favourite star and a "New Board" button. This domain has no board entity: a
- * work order carries a `category` and nothing else that groups it. Rather than
- * invent a boards table from a picture, the picker lists the CATEGORIES that
- * have work, which gives the same interaction (pick one, the columns narrow)
- * over data that exists. The gap is recorded in docs/design/README.md.
+ * The Work Orders board (Figma 267:1781): tasks grouped into columns, plus
+ * the board picker above them — now backed by real, user-created boards
+ * (App\Models\WorkOrderBoard), not the category-derived stand-in this class
+ * used before one existed. `category` (what kind of work a task is) is a
+ * separate axis from `board_id` (which board it's organized under) and is
+ * untouched here.
  *
  * Likewise the columns. The design draws four lists — This Week, To Do, In
  * Progress, Done — but `TaskStatus` has three, and "This Week" is a date
@@ -29,12 +25,12 @@ use Illuminate\Support\Carbon;
  * "reschedule", not "change status", so it is not offered as a column; the
  * board's "Due soon" filter is the honest version of the same question.
  */
-class WorkOrderBoard
+class WorkOrderBoardPresenter
 {
     public function __construct(private readonly ListWorkOrdersQuery $query) {}
 
     /**
-     * @param  array{status?: ?string, assignee_id?: ?string, category?: ?string, search?: ?string, due_from?: ?string, due_to?: ?string}  $filters
+     * @param  array{status?: ?string, assignee_id?: ?string, category?: ?string, board_id?: ?string, search?: ?string, due_from?: ?string, due_to?: ?string}  $filters
      * @return array{
      *     columns: list<array{key: string, label: string, count: int, tasks: list<array<string, mixed>>}>,
      *     total: int,
@@ -66,35 +62,31 @@ class WorkOrderBoard
      * The board picker. Counts ignore the selected board for the same reason
      * the orders status chips ignore the selected status: otherwise choosing
      * one board zeroes the others and you cannot see what you would switch to.
+     * Every board shows regardless of count — unlike the old category picker
+     * (which hid empty categories), a board someone just created must not
+     * vanish from the picker before anything is on it.
      *
      * @param  array<string, mixed>  $filters
-     * @return list<array{key: string, label: string, count: int}>
+     * @return list<array{key: string, label: string, count: int, favorite: bool}>
      */
-    public function boards(array $filters): array
+    public function boards(array $filters, ?string $favoriteBoardId): array
     {
-        unset($filters['category']);
+        unset($filters['board_id']);
 
         $counts = $this->query->get($filters)
-            ->groupBy(fn (WorkOrder $task): string => $task->category?->value ?? 'UNCATEGORISED')
+            ->groupBy(fn (WorkOrder $task): string => $task->board_id ?? 'NONE')
             ->map(fn ($group): int => $group->count());
 
-        $boards = array_values(array_filter(array_map(
-            static fn (WorkOrderCategory $category): ?array => ($counts[$category->value] ?? 0) > 0
-                ? [
-                    'key' => $category->value,
-                    'label' => self::categoryLabel($category),
-                    'count' => $counts[$category->value],
-                ]
-                : null,
-            WorkOrderCategory::cases(),
-        )));
-
-        // Work with no category still has to be reachable, or it is invisible.
-        if (($counts['UNCATEGORISED'] ?? 0) > 0) {
-            $boards[] = ['key' => 'none', 'label' => 'Uncategorised', 'count' => $counts['UNCATEGORISED']];
-        }
-
-        return $boards;
+        return WorkOrderBoard::query()
+            ->orderBy('sort_order')
+            ->get()
+            ->map(fn (WorkOrderBoard $board): array => [
+                'key' => $board->getKey(),
+                'label' => $board->name,
+                'count' => $counts[$board->getKey()] ?? 0,
+                'favorite' => $board->getKey() === $favoriteBoardId,
+            ])
+            ->all();
     }
 
     /** "Due soon" means inside the next seven days, including anything overdue. */
@@ -109,19 +101,6 @@ class WorkOrderBoard
             TaskStatus::Todo => 'To Do',
             TaskStatus::InProgress => 'In Progress',
             TaskStatus::Done => 'Done',
-        };
-    }
-
-    public static function categoryLabel(WorkOrderCategory $category): string
-    {
-        return match ($category) {
-            WorkOrderCategory::Cellar => 'Cellar',
-            WorkOrderCategory::Vineyard => 'Vineyard',
-            WorkOrderCategory::Maintenance => 'Maintenance',
-            WorkOrderCategory::Admin => 'Admin',
-            WorkOrderCategory::Delivery => 'Delivery',
-            WorkOrderCategory::Event => 'Events',
-            WorkOrderCategory::Other => 'Other',
         };
     }
 }

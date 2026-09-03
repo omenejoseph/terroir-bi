@@ -4,8 +4,12 @@ import { router } from '@inertiajs/vue3';
 import { CircleQuestionMark, PanelLeft, RefreshCw } from 'lucide-vue-next';
 
 import GlobalSearch from '@/components/GlobalSearch.vue';
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import NotificationsPanel from '@/components/NotificationsPanel.vue';
 import TenantSwitcher from '@/components/TenantSwitcher.vue';
+import { useTranslations } from '@/composables/useTranslations';
+
+const { t } = useTranslations();
 
 /**
  * The application header (Figma `389:1672`, and `230:2478` in context).
@@ -36,7 +40,7 @@ function refresh(): void {
         <button
             type="button"
             class="grid size-8 shrink-0 place-items-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label="Toggle navigation"
+            :aria-label="t('Toggle navigation')"
             @click="$emit('toggle-sidebar')"
         >
             <PanelLeft class="size-4" :stroke-width="1.5" />
@@ -45,13 +49,15 @@ function refresh(): void {
         <div class="ml-auto flex items-center gap-2">
             <GlobalSearch />
 
+            <LanguageSwitcher />
+
             <TenantSwitcher />
 
             <!-- @todo Help centre — no destination yet. -->
             <button
                 type="button"
                 class="grid size-8 shrink-0 place-items-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                aria-label="Help"
+                :aria-label="t('Help')"
             >
                 <CircleQuestionMark class="size-4" :stroke-width="1.5" />
             </button>
@@ -60,7 +66,7 @@ function refresh(): void {
                 type="button"
                 :disabled="refreshing"
                 class="grid size-8 shrink-0 place-items-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-                aria-label="Refresh"
+                :aria-label="t('Refresh')"
                 @click="refresh"
             >
                 <RefreshCw class="size-4" :class="refreshing && 'animate-spin'" :stroke-width="1.5" />

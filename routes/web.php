@@ -7,6 +7,7 @@ use App\Http\Controllers\Web\Auth\TenantSwitchController;
 use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InventoryController;
+use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\OrderController;
 use App\Http\Controllers\Web\PublicOrderController;
@@ -39,6 +40,10 @@ Route::redirect('/', '/dashboard');
 // against the same public API endpoints (routes/api.php) the token was
 // always meant to authenticate against. See Web\PublicOrderController.
 Route::get('order/{token}', [PublicOrderController::class, 'show'])->name('public.order');
+
+// LanguageSwitcher.vue — no auth requirement, since it's mounted on the guest
+// login screen as well as the authenticated app shell. See LocaleController.
+Route::patch('locale', [LocaleController::class, 'update'])->name('locale.update');
 
 // Guests only — an authenticated visit to /login bounces to the dashboard.
 Route::middleware('guest')->group(function () {
@@ -188,4 +193,9 @@ Route::middleware('tenant.web')->group(function () {
     Route::patch('work-orders/{workOrder}', [WorkOrderController::class, 'update'])->name('work-orders.update');
     Route::delete('work-orders/{workOrder}', [WorkOrderController::class, 'destroy'])
         ->name('work-orders.destroy');
+
+    // Boards — same ungated stance as work orders themselves.
+    Route::post('work-order-boards', [WorkOrderController::class, 'storeBoard'])->name('work-order-boards.store');
+    Route::patch('work-order-boards/favorite', [WorkOrderController::class, 'setFavoriteBoard'])
+        ->name('work-order-boards.favorite');
 });

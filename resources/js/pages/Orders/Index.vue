@@ -15,6 +15,7 @@ import StatusChips from '@/components/ui/StatusChips.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { usePopover } from '@/composables/usePopover';
+import { useTranslations } from '@/composables/useTranslations';
 import { CUSTOMER_TYPES, customerTypeLabel } from '@/lib/customers';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { Paginated, SharedProps } from '@/types';
@@ -44,6 +45,7 @@ const props = defineProps<{
 const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
 const { can } = useAuth();
+const { t } = useTranslations();
 
 const search = ref(props.filters.search ?? '');
 const createOpen = ref(false);
@@ -92,14 +94,14 @@ function selectChannel(value: string | null): void {
 }
 
 /** Figma 455:1577's period strip. `custom` needs a date picker — see below. */
-const PERIOD_TABS: TabItem[] = [
-    { value: 'today', label: 'Today' },
-    { value: 'yesterday', label: 'Yesterday' },
-    { value: 'week', label: 'This Week' },
-    { value: 'this_month', label: 'This Month' },
-    { value: 'qtd', label: 'This Quarter' },
-    { value: 'ytd', label: 'Year to Date' },
-];
+const PERIOD_TABS = computed<TabItem[]>(() => [
+    { value: 'today', label: t('Today') },
+    { value: 'yesterday', label: t('Yesterday') },
+    { value: 'week', label: t('This Week') },
+    { value: 'this_month', label: t('This Month') },
+    { value: 'qtd', label: t('This Quarter') },
+    { value: 'ytd', label: t('Year to Date') },
+]);
 
 /*
   The period strip and the custom range are one control with two faces: picking
@@ -159,7 +161,7 @@ function remaining(order: Order): number {
 function lineSummary(order: Order): string {
     const bottles = order.items.reduce((sum, item) => sum + item.quantity, 0);
 
-    return `${order.items.length} lines · ${formatNumber(bottles, locale.value)} units`;
+    return t(':count lines · :units units', { count: order.items.length, units: formatNumber(bottles, locale.value) });
 }
 
 function orderDate(order: Order): string {
@@ -187,7 +189,11 @@ const showing = computed(() => {
     const { current_page: current, per_page: per, total } = props.orders.meta;
     const first = total === 0 ? 0 : (current - 1) * per + 1;
 
-    return `Showing ${first}–${Math.min(current * per, total)} of ${formatNumber(total, locale.value)} orders`;
+    return t('Showing :from–:to of :total orders', {
+        from: first,
+        to: Math.min(current * per, total),
+        total: formatNumber(total, locale.value),
+    });
 });
 
 function goToPage(pageNumber: number): void {
@@ -202,19 +208,19 @@ function setPerPage(perPage: number): void {
 </script>
 
 <template>
-    <AppLayout title="Orders">
+    <AppLayout :title="t('Orders')">
         <div class="space-y-5">
-            <PageHeader title="Orders">
+            <PageHeader :title="t('Orders')">
                 <template #actions>
                     <Button v-if="can('orders.manage')" size="sm" @click="createOpen = true">
                         <Plus class="size-3.5" :stroke-width="1.5" />
-                        New order
+                        {{ t('New order') }}
                     </Button>
                     <!-- @todo Export. No order export endpoint exists yet; the
                          button is here because the design's header has it. -->
                     <Button variant="outline" size="sm">
                         <Download class="size-3.5" :stroke-width="1.5" />
-                        Export
+                        {{ t('Export') }}
                     </Button>
                 </template>
             </PageHeader>
@@ -227,7 +233,7 @@ function setPerPage(perPage: number): void {
                 />
                 <DateRangePicker
                     :model-value="customRange"
-                    label="Custom"
+                    :label="t('Custom')"
                     @update:model-value="selectRange"
                 />
             </div>
@@ -251,8 +257,8 @@ function setPerPage(perPage: number): void {
                         <input
                             v-model="search"
                             type="search"
-                            placeholder="Search order no., customer, SKU…"
-                            aria-label="Search orders"
+                            :placeholder="t('Search order no., customer, SKU…')"
+                            :aria-label="t('Search orders')"
                             class="h-[30px] w-full border border-input bg-card pr-3 pl-8 text-xs placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                         />
                     </div>
@@ -262,7 +268,7 @@ function setPerPage(perPage: number): void {
                          rather than being a second, competing window. -->
                     <DateRangePicker
                         :model-value="customRange"
-                        label="Date range"
+                        :label="t('Date range')"
                         @update:model-value="selectRange"
                     />
 
@@ -279,7 +285,7 @@ function setPerPage(perPage: number): void {
                             "
                             @click="toggleChannelFilter"
                         >
-                            Channel
+                            {{ t('Channel') }}
                             <template v-if="filters.channel">· {{ customerTypeLabel(filters.channel) }}</template>
                             <span aria-hidden="true" class="text-muted-foreground">▾</span>
                         </button>
@@ -292,7 +298,7 @@ function setPerPage(perPage: number): void {
                                 class="block w-full px-2 py-1.5 text-left text-xs hover:bg-muted"
                                 @click="selectChannel(null)"
                             >
-                                Any channel
+                                {{ t('Any channel') }}
                             </button>
                             <button
                                 v-for="type in CUSTOMER_TYPES"
@@ -312,7 +318,7 @@ function setPerPage(perPage: number): void {
                         type="button"
                         class="inline-flex h-[30px] shrink-0 items-center gap-1 border border-border bg-card px-2.5 text-xs text-foreground hover:border-foreground/40"
                     >
-                        Rep
+                        {{ t('Rep') }}
                         <span aria-hidden="true" class="text-muted-foreground">▾</span>
                     </button>
 
@@ -323,7 +329,7 @@ function setPerPage(perPage: number): void {
                             type="button"
                             class="inline-flex h-[30px] items-center gap-1 border border-border bg-card px-2.5 text-xs hover:border-foreground/40"
                         >
-                            Bulk actions
+                            {{ t('Bulk actions') }}
                             <span aria-hidden="true" class="text-muted-foreground">▾</span>
                         </button>
                         <!-- @todo Column chooser. -->
@@ -332,7 +338,7 @@ function setPerPage(perPage: number): void {
                             class="inline-flex h-[30px] items-center gap-1.5 border border-border bg-card px-2.5 text-xs hover:border-foreground/40"
                         >
                             <Columns3 class="size-3.5" :stroke-width="1.5" />
-                            Columns
+                            {{ t('Columns') }}
                         </button>
                     </div>
                 </div>
@@ -351,14 +357,14 @@ function setPerPage(perPage: number): void {
                     <table class="w-full min-w-[60rem] text-xs">
                         <thead class="border-b border-border bg-muted/40 text-left text-3xs text-muted-foreground">
                             <tr>
-                                <th scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">Order</th>
-                                <th scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">Items</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">{{ t('Order') }}</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">{{ t('Items') }}</th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium tracking-[0.08em] uppercase">
-                                    Total
+                                    {{ t('Total') }}
                                 </th>
-                                <th scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">Status</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">{{ t('Status') }}</th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium tracking-[0.08em] uppercase">
-                                    Date
+                                    {{ t('Date') }}
                                 </th>
                             </tr>
                         </thead>
@@ -398,7 +404,7 @@ function setPerPage(perPage: number): void {
                                         </span>
                                     </span>
                                     <span v-if="remaining(row)" class="mt-1 block pl-12 text-muted-foreground">
-                                        + {{ remaining(row) }} more
+                                        {{ t('+ :count more', { count: remaining(row) }) }}
                                     </span>
                                     <span v-else-if="row.items.length" class="mt-1 block pl-12 text-muted-foreground">
                                         {{ lineSummary(row) }}
@@ -409,7 +415,7 @@ function setPerPage(perPage: number): void {
                                     <span class="block text-sm font-semibold tabular-nums">
                                         {{ formatMoney(row.total_amount.minor, row.total_amount.currency, locale) }}
                                     </span>
-                                    <span class="text-muted-foreground">excl. VAT</span>
+                                    <span class="text-muted-foreground">{{ t('excl. VAT') }}</span>
                                 </td>
 
                                 <td class="px-4 py-4">
@@ -433,7 +439,7 @@ function setPerPage(perPage: number): void {
 
                             <tr v-if="orders.data.length === 0">
                                 <td colspan="5" class="px-4 py-12 text-center text-muted-foreground">
-                                    No orders in this period.
+                                    {{ t('No orders in this period.') }}
                                 </td>
                             </tr>
                         </tbody>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
+import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/cn';
 
 /**
@@ -26,6 +27,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{ select: [key: string] }>();
 
+const { t } = useTranslations();
+
 const currentIndex = computed(() => props.steps.findIndex((step) => step.key === props.current));
 </script>
 
@@ -42,7 +45,7 @@ const currentIndex = computed(() => props.steps.findIndex((step) => step.key ===
                     :is="editable ? 'button' : 'div'"
                     :type="editable ? 'button' : undefined"
                     :aria-current="i === currentIndex ? 'step' : undefined"
-                    :aria-label="editable ? `Move to ${step.label}` : step.label"
+                    :aria-label="editable ? t('Move to :step', { step: step.label }) : step.label"
                     :class="
                         cn(
                             'flex size-6 shrink-0 items-center justify-center border text-2xs font-semibold tabular-nums',

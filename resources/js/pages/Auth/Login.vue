@@ -10,6 +10,9 @@ import CardTitle from '@/components/ui/CardTitle.vue';
 import Input from '@/components/ui/Input.vue';
 import InputError from '@/components/ui/InputError.vue';
 import Label from '@/components/ui/Label.vue';
+import { useTranslations } from '@/composables/useTranslations';
+
+const { t } = useTranslations();
 
 /**
  * `useForm` keeps the password out of Inertia's history state and surfaces
@@ -30,17 +33,17 @@ function submit(): void {
 </script>
 
 <template>
-    <AuthLayout title="Sign in">
+    <AuthLayout :title="t('Sign in')">
         <Card>
             <CardHeader>
-                <CardTitle>Sign in to Terroir</CardTitle>
-                <p class="text-sm text-muted-foreground">Use your work email address.</p>
+                <CardTitle>{{ t('Sign in to Terroir') }}</CardTitle>
+                <p class="text-sm text-muted-foreground">{{ t('Use your work email address.') }}</p>
             </CardHeader>
 
             <CardContent>
                 <form class="space-y-4" @submit.prevent="submit">
                     <div class="space-y-2">
-                        <Label for="email">Email</Label>
+                        <Label for="email">{{ t('Email') }}</Label>
                         <Input
                             id="email"
                             v-model="form.email"
@@ -52,7 +55,7 @@ function submit(): void {
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="password">Password</Label>
+                        <Label for="password">{{ t('Password') }}</Label>
                         <Input
                             id="password"
                             v-model="form.password"
@@ -65,11 +68,11 @@ function submit(): void {
 
                     <label class="flex items-center gap-2 text-sm">
                         <input v-model="form.remember" type="checkbox" class="border-input" />
-                        Keep me signed in
+                        {{ t('Keep me signed in') }}
                     </label>
 
                     <Button type="submit" class="w-full" :disabled="form.processing">
-                        {{ form.processing ? 'Signing in…' : 'Sign in' }}
+                        {{ form.processing ? t('Signing in…') : t('Sign in') }}
                     </Button>
                 </form>
             </CardContent>

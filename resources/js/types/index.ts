@@ -41,6 +41,15 @@ export interface Flash {
     error: string | null;
 }
 
+/** Org-wide settings (App\DataTransferObjects\OrganizationSettingsData). */
+export interface Org {
+    name: string;
+    default_locale: string;
+    default_currency: string;
+    timezone: string;
+    company_oib: string | null;
+}
+
 export interface SharedProps {
     auth: Auth;
     tenant: TenantSummary | null;
@@ -49,6 +58,18 @@ export interface SharedProps {
     modules: string[];
     flash: Flash;
     locale: string;
+    /** config('app.supported_locales') — drives LanguageSwitcher's options. */
+    locales: string[];
+    /** Display label per locale code, e.g. { hr: 'Hrvatski', en: 'English' }. */
+    localeLabels: Record<string, string>;
+    /**
+     * The merged file+DB-override UI-copy catalog for the current locale
+     * (App\Services\Localization\TranslationService::all()), keyed by
+     * English source string — see useTranslations().
+     */
+    translations: Record<string, string>;
+    /** Null when there's no active tenant (e.g. a guest on the login page). */
+    org: Org | null;
     errors: Record<string, string>;
     /**
      * Recently-visited nav-item keys, newest first — `Inertia::optional`, so it

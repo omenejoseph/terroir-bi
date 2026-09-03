@@ -18,7 +18,7 @@ final class WorkOrderFilters
 {
     /**
      * @return array{
-     *     search: ?string, category: ?string, status: ?string, assignee_id: ?string,
+     *     search: ?string, category: ?string, board_id: ?string, status: ?string, assignee_id: ?string,
      *     due_soon: bool, mine: bool, recurring: bool,
      * }
      */
@@ -27,6 +27,8 @@ final class WorkOrderFilters
         return [
             'search' => self::str($request->query('search')),
             'category' => self::str($request->query('category')),
+            // Which board is selected in the picker — independent of category.
+            'board_id' => self::str($request->query('board_id')),
             'status' => self::str($request->query('status')),
             'assignee_id' => self::str($request->query('assignee_id')),
             'due_soon' => $request->boolean('due_soon'),

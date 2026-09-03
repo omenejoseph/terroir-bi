@@ -25,6 +25,7 @@ import Pagination from '@/components/ui/Pagination.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { usePopover } from '@/composables/usePopover';
+import { useTranslations } from '@/composables/useTranslations';
 import { CUSTOMER_TYPES, customerTypeLabel } from '@/lib/customers';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { Customer, CustomerFilters, PricingTierSummary } from '@/types/customers';
@@ -52,6 +53,7 @@ const props = defineProps<{
 const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
 const { can } = useAuth();
+const { t } = useTranslations();
 
 const search = ref(props.filters.search ?? '');
 const selected = ref<string[]>([]);
@@ -97,10 +99,10 @@ function reload(overrides: Record<string, unknown>): void {
     );
 }
 
-const MODULE_TABS: TabItem[] = [
-    { label: 'Customers', href: '/customers' },
-    { label: 'Analytics', href: '/customers-analytics' },
-];
+const MODULE_TABS = computed<TabItem[]>(() => [
+    { label: t('Customers'), href: '/customers' },
+    { label: t('Analytics'), href: '/customers-analytics' },
+]);
 
 /** Tiers are only fetched when the Tier filter is first opened. */
 function toggleFilter(which: 'status' | 'tier' | 'type'): void {
@@ -190,9 +192,9 @@ function create(): void {
 const rowActions = computed<MenuItem[]>(() => {
     const items: MenuItem[] = [];
 
-    if (can('customers.manage')) items.push({ key: 'edit', label: 'Edit', icon: PencilLine });
+    if (can('customers.manage')) items.push({ key: 'edit', label: t('Edit'), icon: PencilLine });
     if (can('customers.delete')) {
-        items.push({ key: 'delete', label: 'Delete', icon: Trash2, destructive: true });
+        items.push({ key: 'delete', label: t('Delete'), icon: Trash2, destructive: true });
     }
 
     return items;
@@ -215,9 +217,10 @@ function onRowAction(key: string, customer: Customer): void {
  * their orders are the revenue record (DeleteCustomerAction).
  */
 function destroy(customer: Customer): void {
-    const message =
-        `Delete ${customer.company_name}? ` +
-        'Customers with orders are deactivated instead, so their history survives.';
+    const message = t(
+        'Delete :name? Customers with orders are deactivated instead, so their history survives.',
+        { name: customer.company_name },
+    );
 
     if (!confirm(message)) return;
 
@@ -226,23 +229,23 @@ function destroy(customer: Customer): void {
 </script>
 
 <template>
-    <AppLayout title="Customers">
+    <AppLayout :title="t('Customers')">
         <div class="space-y-5">
-            <PageHeader title="Customers">
+            <PageHeader :title="t('Customers')">
                 <template #actions>
                     <!-- @todo Export all. No customer export endpoint exists. -->
                     <Button variant="outline" size="sm">
                         <Download class="size-3.5" :stroke-width="1.5" />
-                        Export all
+                        {{ t('Export all') }}
                     </Button>
                     <Button v-if="can('customers.manage')" size="sm" @click="create">
                         <Plus class="size-3.5" :stroke-width="1.5" />
-                        New Customer
+                        {{ t('New Customer') }}
                     </Button>
                 </template>
             </PageHeader>
 
-            <Tabs :items="MODULE_TABS" current="Customers" />
+            <Tabs :items="MODULE_TABS" :current="t('Customers')" />
 
             <!-- Filter row -->
             <div ref="filterRow" class="flex flex-wrap items-center gap-2">
@@ -254,8 +257,8 @@ function destroy(customer: Customer): void {
                     <input
                         v-model="search"
                         type="search"
-                        placeholder="Filter customers…"
-                        aria-label="Filter customers"
+                        :placeholder="t('Filter customers…')"
+                        :aria-label="t('Filter customers')"
                         class="h-8 w-full border border-input bg-card pr-3 pl-8 text-xs placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                     />
                 </div>
@@ -275,9 +278,9 @@ function destroy(customer: Customer): void {
                         @click="toggleFilter('status')"
                     >
                         <Filter class="size-3.5" :stroke-width="1.5" />
-                        Status
+                        {{ t('Status') }}
                         <template v-if="filters.is_active !== null">
-                            · {{ filters.is_active ? 'Active' : 'Inactive' }}
+                            · {{ filters.is_active ? t('Active') : t('Inactive') }}
                         </template>
                     </button>
                     <div
@@ -286,9 +289,9 @@ function destroy(customer: Customer): void {
                     >
                         <button
                             v-for="option in [
-                                { label: 'Any status', value: null },
-                                { label: 'Active', value: true },
-                                { label: 'Inactive', value: false },
+                                { label: t('Any status'), value: null },
+                                { label: t('Active'), value: true },
+                                { label: t('Inactive'), value: false },
                             ]"
                             :key="String(option.value)"
                             type="button"
@@ -312,7 +315,7 @@ function destroy(customer: Customer): void {
                         @click="toggleFilter('tier')"
                     >
                         <Filter class="size-3.5" :stroke-width="1.5" />
-                        Tier
+                        {{ t('Tier') }}
                     </button>
                     <div
                         v-if="filterOpen && openFilter === 'tier'"
@@ -323,7 +326,7 @@ function destroy(customer: Customer): void {
                             class="block w-full px-2 py-1.5 text-left text-xs hover:bg-muted"
                             @click="setFilter('pricing_tier_id', null)"
                         >
-                            Any tier
+                            {{ t('Any tier') }}
                         </button>
                         <button
                             v-for="tier in tiers ?? []"
@@ -335,7 +338,7 @@ function destroy(customer: Customer): void {
                             {{ tier.name }}
                         </button>
                         <p v-if="(tiers ?? []).length === 0" class="px-2 py-1.5 text-xs text-muted-foreground">
-                            No pricing tiers yet.
+                            {{ t('No pricing tiers yet.') }}
                         </p>
                     </div>
                 </div>
@@ -352,7 +355,7 @@ function destroy(customer: Customer): void {
                         @click="toggleFilter('type')"
                     >
                         <Filter class="size-3.5" :stroke-width="1.5" />
-                        Type
+                        {{ t('Type') }}
                         <template v-if="filters.customer_type">
                             · {{ customerTypeLabel(filters.customer_type) }}
                         </template>
@@ -366,7 +369,7 @@ function destroy(customer: Customer): void {
                             class="block w-full px-2 py-1.5 text-left text-xs hover:bg-muted"
                             @click="setFilter('customer_type', null)"
                         >
-                            Any type
+                            {{ t('Any type') }}
                         </button>
                         <button
                             v-for="type in CUSTOMER_TYPES"
@@ -387,7 +390,7 @@ function destroy(customer: Customer): void {
                     @click="reload({ is_active: undefined, pricing_tier_id: undefined, customer_type: undefined })"
                 >
                     <X class="size-3.5" :stroke-width="1.5" />
-                    Clear
+                    {{ t('Clear') }}
                 </button>
             </div>
 
@@ -399,26 +402,26 @@ function destroy(customer: Customer): void {
                                 <th scope="col" class="w-10 px-4 py-2.5">
                                     <Checkbox
                                         :model-value="allSelected"
-                                        label="Select all customers on this page"
+                                        :label="t('Select all customers on this page')"
                                         hide-label
                                         @update:model-value="toggleAll"
                                     />
                                 </th>
-                                <th scope="col" class="px-4 py-2.5 font-medium">Company <span aria-hidden="true">↑</span></th>
-                                <th scope="col" class="px-4 py-2.5 font-medium">Contact</th>
-                                <th scope="col" class="px-4 py-2.5 font-medium">Type</th>
-                                <th scope="col" class="px-4 py-2.5 font-medium">Tier</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Company') }} <span aria-hidden="true">↑</span></th>
+                                <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Contact') }}</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Type') }}</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Tier') }}</th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium">
-                                    Rebate
+                                    {{ t('Rebate') }}
                                 </th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium">
-                                    Orders
+                                    {{ t('Orders') }}
                                 </th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium">
-                                    Revenue
+                                    {{ t('Revenue') }}
                                 </th>
-                                <th scope="col" class="px-4 py-2.5 font-medium">Status</th>
-                                <th scope="col" class="w-16 px-4 py-2.5"><span class="sr-only">Actions</span></th>
+                                <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Status') }}</th>
+                                <th scope="col" class="w-16 px-4 py-2.5"><span class="sr-only">{{ t('Actions') }}</span></th>
                             </tr>
                         </thead>
 
@@ -431,7 +434,7 @@ function destroy(customer: Customer): void {
                                 <td class="px-4 py-3">
                                     <Checkbox
                                         :model-value="selected.includes(row.id)"
-                                        :label="`Select ${row.company_name}`"
+                                        :label="t('Select :name', { name: row.company_name })"
                                         hide-label
                                         @update:model-value="toggleOne(row.id)"
                                     />
@@ -465,7 +468,7 @@ function destroy(customer: Customer): void {
                                             :stroke-width="1.5"
                                         />
                                         <CircleSlash v-else class="size-3.5 text-muted-foreground" :stroke-width="1.5" />
-                                        {{ row.is_active ? 'Active' : 'Inactive' }}
+                                        {{ row.is_active ? t('Active') : t('Inactive') }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
@@ -473,7 +476,7 @@ function destroy(customer: Customer): void {
                                         <DropdownMenu
                                             v-if="rowActions.length > 0"
                                             :items="rowActions"
-                                            :label="`Actions for ${row.company_name}`"
+                                            :label="t('Actions for :name', { name: row.company_name })"
                                             @select="onRowAction($event, row)"
                                         />
                                     </div>
@@ -482,7 +485,7 @@ function destroy(customer: Customer): void {
 
                             <tr v-if="customers.data.length === 0">
                                 <td colspan="10" class="px-4 py-12 text-center text-muted-foreground">
-                                    No customers match these filters.
+                                    {{ t('No customers match these filters.') }}
                                 </td>
                             </tr>
                         </tbody>
@@ -491,7 +494,12 @@ function destroy(customer: Customer): void {
 
                 <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
                     <p class="text-xs text-muted-foreground">
-                        {{ selected.length }} of {{ formatNumber(customers.meta.total, locale) }} row(s) selected
+                        {{
+                            t(':count of :total row(s) selected', {
+                                count: selected.length,
+                                total: formatNumber(customers.meta.total, locale),
+                            })
+                        }}
                     </p>
 
                     <Pagination
@@ -508,11 +516,11 @@ function destroy(customer: Customer): void {
             v-if="selected.length > 0"
             class="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 border border-border bg-card px-3 py-2 shadow-lg"
         >
-            <span class="px-2 text-xs">{{ selected.length }} selected</span>
+            <span class="px-2 text-xs">{{ t(':count selected', { count: selected.length }) }}</span>
             <!-- @todo Export selection. Same missing endpoint as Export all. -->
             <Button variant="ghost" size="sm">
                 <Download class="size-3.5" :stroke-width="1.5" />
-                Export
+                {{ t('Export') }}
             </Button>
             <Button
                 v-if="can('customers.delete')"
@@ -521,12 +529,12 @@ function destroy(customer: Customer): void {
                 :disabled="selected.length < 2"
                 @click="mergeOpen = true"
             >
-                Merge
+                {{ t('Merge') }}
             </Button>
             <button
                 type="button"
                 class="ml-1 p-1.5 text-muted-foreground hover:text-foreground"
-                aria-label="Clear selection"
+                :aria-label="t('Clear selection')"
                 @click="selected = []"
             >
                 <X class="size-3.5" :stroke-width="1.5" />

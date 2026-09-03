@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 
+import { useTranslations } from '@/composables/useTranslations';
 import type { SharedProps } from '@/types';
 
 /**
@@ -10,6 +11,7 @@ import type { SharedProps } from '@/types';
  * on every page visit.
  */
 const page = usePage<SharedProps>();
+const { t } = useTranslations();
 
 const open = ref(false);
 const switching = ref(false);
@@ -71,7 +73,7 @@ function select(tenantId: string): void {
                     {{ membership.name }}
                 </button>
             </li>
-            <li v-if="page.props.tenants.length === 0" class="px-3 py-2 text-sm text-muted-foreground">Loading…</li>
+            <li v-if="page.props.tenants.length === 0" class="px-3 py-2 text-sm text-muted-foreground">{{ t('Loading…') }}</li>
         </ul>
     </div>
 </template>

@@ -11,8 +11,11 @@ import CardContent from '@/components/ui/CardContent.vue';
 import Input from '@/components/ui/Input.vue';
 import Label from '@/components/ui/Label.vue';
 import Textarea from '@/components/ui/Textarea.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney } from '@/lib/money';
 import type { PublicCatalog, PublicCatalogProduct } from '@/types/publicOrder';
+
+const { t } = useTranslations();
 
 /**
  * The self-service order page a customer reaches via their order token
@@ -83,11 +86,11 @@ function unitPriceMinor(product: PublicCatalogProduct): number {
 }
 
 function unitLabel(product: PublicCatalogProduct): string {
-    if (product.sales_unit !== 'cases') return 'bottle';
+    if (product.sales_unit !== 'cases') return t('bottle');
 
     return product.bottles_per_case && product.bottles_per_case > 1
-        ? `case of ${product.bottles_per_case}`
-        : 'case';
+        ? t('case of :count', { count: product.bottles_per_case })
+        : t('case');
 }
 
 const lines = computed(() => {
@@ -108,7 +111,7 @@ async function submit(): Promise<void> {
     submitError.value = null;
 
     if (lines.value.length === 0) {
-        submitError.value = 'Add a quantity to at least one product before submitting.';
+        submitError.value = t('Add a quantity to at least one product before submitting.');
 
         return;
     }
@@ -133,14 +136,14 @@ async function submit(): Promise<void> {
         });
 
         if (response.status === 429) {
-            submitError.value = 'Too many orders from this link recently. Please try again later.';
+            submitError.value = t('Too many orders from this link recently. Please try again later.');
 
             return;
         }
 
         if (!response.ok) {
             const body = (await response.json().catch(() => null)) as { message?: string } | null;
-            submitError.value = body?.message ?? 'Something went wrong placing this order. Please try again.';
+            submitError.value = body?.message ?? t('Something went wrong placing this order. Please try again.');
 
             return;
         }
@@ -149,7 +152,7 @@ async function submit(): Promise<void> {
         placedOrderNumber.value = body.data.order_number;
         status.value = 'placed';
     } catch {
-        submitError.value = 'Something went wrong placing this order. Please try again.';
+        submitError.value = t('Something went wrong placing this order. Please try again.');
     } finally {
         submitting.value = false;
     }
@@ -157,7 +160,7 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-    <Head title="Place an order" />
+    <Head :title="t('Place an order')" />
 
     <div class="min-h-screen bg-muted/30 px-4 py-12">
         <div class="mx-auto w-full max-w-2xl space-y-6">
@@ -172,28 +175,28 @@ async function submit(): Promise<void> {
 
             <Card v-else-if="status === 'invalid'">
                 <CardContent class="py-16 text-center text-sm text-muted-foreground">
-                    This link isn't valid. It may have been regenerated or revoked — ask for a new one.
+                    {{ t("This link isn't valid. It may have been regenerated or revoked — ask for a new one.") }}
                 </CardContent>
             </Card>
 
             <Card v-else-if="status === 'placed'">
                 <CardContent class="flex flex-col items-center gap-3 py-16 text-center">
                     <CheckCircle2 class="size-10 text-emerald-600" :stroke-width="1.5" />
-                    <h1 class="text-lg font-semibold">Thanks for your order</h1>
-                    <p class="text-sm text-muted-foreground">Order #{{ placedOrderNumber }} has been placed.</p>
+                    <h1 class="text-lg font-semibold">{{ t('Thanks for your order') }}</h1>
+                    <p class="text-sm text-muted-foreground">{{ t('Order #:number has been placed.', { number: placedOrderNumber ?? '' }) }}</p>
                 </CardContent>
             </Card>
 
             <template v-else-if="catalog">
                 <div>
-                    <h1 class="text-2xl font-semibold tracking-tight">Place an order</h1>
+                    <h1 class="text-2xl font-semibold tracking-tight">{{ t('Place an order') }}</h1>
                     <p class="text-sm text-muted-foreground">{{ catalog.customer.company_name }}</p>
                 </div>
 
                 <Card>
                     <CardContent class="divide-y divide-border p-0">
                         <p v-if="catalog.products.length === 0" class="px-4 py-8 text-center text-sm text-muted-foreground">
-                            Nothing is available to order right now.
+                            {{ t('Nothing is available to order right now.') }}
                         </p>
 
                         <div
@@ -204,7 +207,7 @@ async function submit(): Promise<void> {
                             <div class="min-w-0">
                                 <p class="truncate text-sm font-medium">{{ product.name }}</p>
                                 <p class="truncate text-xs text-muted-foreground">
-                                    per {{ unitLabel(product) }}
+                                    {{ t('per') }} {{ unitLabel(product) }}
                                     <template v-if="showPrices && product.price">
                                         · {{ formatMoney(unitPriceMinor(product), product.price.currency, locale) }}
                                     </template>
@@ -215,7 +218,7 @@ async function submit(): Promise<void> {
                                 type="number"
                                 min="0"
                                 inputmode="numeric"
-                                :aria-label="`Quantity for ${product.name}`"
+                                :aria-label="t('Quantity for :product', { product: product.name })"
                                 class="w-20 shrink-0 text-right"
                             />
                         </div>
@@ -223,21 +226,21 @@ async function submit(): Promise<void> {
                 </Card>
 
                 <div class="space-y-2">
-                    <Label for="po-notes">Notes (optional)</Label>
-                    <Textarea id="po-notes" v-model="notes" :rows="3" placeholder="Delivery instructions, anything else we should know…" />
+                    <Label for="po-notes">{{ t('Notes (optional)') }}</Label>
+                    <Textarea id="po-notes" v-model="notes" :rows="3" :placeholder="t('Delivery instructions, anything else we should know…')" />
                 </div>
 
-                <Callout v-if="submitError" title="Couldn't submit that order" tone="warning">
+                <Callout v-if="submitError" :title="t(`Couldn't submit that order`)" tone="warning">
                     {{ submitError }}
                 </Callout>
 
                 <div class="flex items-center justify-between gap-3">
                     <p v-if="showPrices" class="text-sm">
-                        Total <span class="font-semibold tabular-nums">{{ formatMoney(totalMinor, currency, locale) }}</span>
+                        {{ t('Total') }} <span class="font-semibold tabular-nums">{{ formatMoney(totalMinor, currency, locale) }}</span>
                     </p>
                     <span v-else />
                     <Button type="button" :disabled="submitting" @click="submit">
-                        {{ submitting ? 'Placing order…' : 'Place order' }}
+                        {{ submitting ? t('Placing order…') : t('Place order') }}
                     </Button>
                 </div>
             </template>

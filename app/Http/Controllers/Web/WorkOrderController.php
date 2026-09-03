@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Actions\Tasks\CreateWorkOrderAction;
+use App\Actions\Tasks\CreateWorkOrderBoardAction;
 use App\Actions\Tasks\ReorderWorkOrdersAction;
+use App\Actions\Tasks\SetFavoriteWorkOrderBoardAction;
 use App\Actions\Tasks\UpdateWorkOrderAction;
 use App\Actions\Tasks\UpdateWorkOrderStatusAction;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tasks\ReorderTasksRequest;
+use App\Http\Requests\Tasks\SetFavoriteWorkOrderBoardRequest;
+use App\Http\Requests\Tasks\StoreWorkOrderBoardRequest;
 use App\Http\Requests\Tasks\StoreWorkOrderRequest;
 use App\Http\Requests\Tasks\UpdateTaskStatusRequest;
 use App\Http\Requests\Tasks\UpdateWorkOrderRequest;
@@ -18,7 +22,8 @@ use App\Models\Membership;
 use App\Models\User;
 use App\Models\Vessel;
 use App\Models\WorkOrder;
-use App\Services\Tasks\WorkOrderBoard;
+use App\Queries\FavoriteWorkOrderBoardQuery;
+use App\Services\Tasks\WorkOrderBoardPresenter;
 use App\Support\WorkOrderFilters;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,20 +44,41 @@ use Inertia\Response;
 class WorkOrderController extends Controller
 {
     /** The board (Figma 267:1781). */
-    public function index(Request $request, WorkOrderBoard $board): Response
-    {
+    public function index(
+        Request $request,
+        WorkOrderBoardPresenter $board,
+        FavoriteWorkOrderBoardQuery $favorites,
+    ): Response {
         $filters = WorkOrderFilters::fromRequest($request);
         $scoped = $this->scoped($filters, $request);
+        $favoriteBoardId = $favorites->get($this->userId($request));
 
         return Inertia::render('WorkOrders/Index', [
             'board' => $board->columns($scoped),
             // The picker's counts deliberately ignore the chosen board.
-            'boards' => $board->boards($scoped),
+            'boards' => $board->boards($scoped, $favoriteBoardId),
             'filters' => $filters,
             // The task drawer's two pickers, only paid for when it opens.
             'assigneeOptions' => Inertia::optional(fn (): array => $this->assignees()),
             'vesselOptions' => Inertia::optional(fn (): array => $this->vessels()),
         ]);
+    }
+
+    /** "+ New Board" (Figma 267:1781) — lands on the new board immediately. */
+    public function storeBoard(StoreWorkOrderBoardRequest $request, CreateWorkOrderBoardAction $action): RedirectResponse
+    {
+        $board = $action->execute((string) $request->validated('name'), $this->userId($request));
+
+        return redirect('/work-orders?board_id='.$board->getKey())->with('success', __('Board created.'));
+    }
+
+    /** The favourite star — setting one always replaces whichever board was favourited before. */
+    public function setFavoriteBoard(SetFavoriteWorkOrderBoardRequest $request, SetFavoriteWorkOrderBoardAction $action): RedirectResponse
+    {
+        $boardId = $request->validated('board_id');
+        $action->execute($this->userId($request), is_string($boardId) ? $boardId : null);
+
+        return back();
     }
 
     public function store(StoreWorkOrderRequest $request, CreateWorkOrderAction $action): RedirectResponse
@@ -118,7 +144,7 @@ class WorkOrderController extends Controller
         $scoped = $filters;
 
         if ($filters['due_soon'] === true) {
-            $scoped['due_to'] = WorkOrderBoard::dueSoonWindow();
+            $scoped['due_to'] = WorkOrderBoardPresenter::dueSoonWindow();
         }
 
         if ($filters['mine'] === true) {
