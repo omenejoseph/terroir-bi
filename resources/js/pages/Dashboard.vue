@@ -176,8 +176,15 @@ const alerts = computed(() => {
               annual or per-channel), so one honest placeholder says as much as
               two would.
             -->
-            <!-- Column widths mirror the design's own 908:293 split (908:293 ~ 3:1), not an even 2:1. -->
-            <div class="grid gap-6 lg:grid-cols-4">
+            <!--
+              Column widths mirror the design's own 908:293 split (908:293 ~
+              3:1), not an even 2:1. The gap is gap-4 (16px), matching the
+              operational row below it (208:5852 etc. are all 16px apart) —
+              gap-6 here made this row's columns wider than that row's,
+              throwing the two grids out of alignment and widening the gap
+              beside "Revenue vs. target" past the gap under it.
+            -->
+            <div class="grid gap-4 lg:grid-cols-4">
                 <div class="flex flex-col gap-6 lg:col-span-3">
                     <!-- Revenue -->
                     <Card>
