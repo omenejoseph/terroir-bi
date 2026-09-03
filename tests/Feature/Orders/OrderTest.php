@@ -408,6 +408,39 @@ class OrderTest extends TestCase
             ->assertJsonPath('data.order_number', 'ORD-00002');
     }
 
+    /**
+     * DemoSeeder creates "TREND-NNN" orders (revenue history) alongside real
+     * "ORD-NNNNN" ones in the same tenant. OrderNumberGenerator used to find
+     * the "last" order by sorting order_number as a STRING — since 'T' > 'O',
+     * any TREND- row always sorted after every real ORD- row, so its
+     * unrelated digits became the next ORD- number regardless of how many
+     * real orders already existed, producing an already-taken number every
+     * single time (not a one-off race CreateOrderAction's retry could fix).
+     */
+    public function test_order_numbering_ignores_differently_prefixed_rows(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        Order::create([
+            'order_number' => 'TREND-001', 'status' => 'SHIPPED', 'total_amount' => 0,
+            'customer_id' => $this->customer->getKey(), 'created_by_id' => $this->admin->getKey(),
+        ]);
+        for ($i = 1; $i <= 3; $i++) {
+            Order::create([
+                'order_number' => sprintf('ORD-%05d', $i), 'status' => 'RECEIVED', 'total_amount' => 0,
+                'customer_id' => $this->customer->getKey(), 'created_by_id' => $this->admin->getKey(),
+            ]);
+        }
+        $this->forgetTenant();
+
+        Sanctum::actingAs($this->admin);
+        $this->postJson('/api/v1/orders', [
+            'customer_id' => $this->customer->getKey(),
+            'items' => [['inventory_item_id' => $this->wine->getKey(), 'quantity' => 1, 'unit_type' => 'cases']],
+        ], $this->headers())
+            ->assertCreated()
+            ->assertJsonPath('data.order_number', 'ORD-00004');
+    }
+
     public function test_customer_with_orders_is_deactivated_not_deleted(): void
     {
         $id = $this->createOrderViaApi();
