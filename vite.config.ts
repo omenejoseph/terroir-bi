@@ -7,7 +7,7 @@ import { fileURLToPath, URL } from 'node:url';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.ts', 'resources/css/filament/admin/theme.css'],
+            input: ['resources/css/app.css', 'resources/js/app.ts'],
             refresh: true,
             // The build-time bunny('Instrument Sans') font fetch was removed so the
             // asset build is hermetic (no external network call at build time, which

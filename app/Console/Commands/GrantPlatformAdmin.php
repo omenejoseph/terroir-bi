@@ -9,14 +9,14 @@ use App\Models\User;
 use Illuminate\Console\Command;
 
 /**
- * Grants (or revokes) platform-admin access so a user can reach the Filament
- * back office at /admin. Bootstraps the first super-admin.
+ * Grants (or revokes) platform-admin access so a user can reach the back
+ * office at /admin. Bootstraps the first super-admin.
  */
 class GrantPlatformAdmin extends Command
 {
     protected $signature = 'admin:grant {email : The user email} {--revoke : Revoke instead of grant}';
 
-    protected $description = 'Grant or revoke Filament back-office (platform admin) access for a user';
+    protected $description = 'Grant or revoke back-office (platform admin) access for a user';
 
     public function handle(SetPlatformAdminAction $action): int
     {

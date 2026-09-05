@@ -19,6 +19,7 @@ final class UserData implements Arrayable, JsonSerializable
         public readonly ?string $middleName,
         public readonly string $lastName,
         public readonly string $email,
+        public readonly bool $isPlatformAdmin,
     ) {}
 
     public static function fromModel(User $user): self
@@ -29,6 +30,7 @@ final class UserData implements Arrayable, JsonSerializable
             middleName: $user->middle_name,
             lastName: $user->last_name,
             email: $user->email,
+            isPlatformAdmin: $user->is_platform_admin === true,
         );
     }
 
@@ -49,6 +51,10 @@ final class UserData implements Arrayable, JsonSerializable
             'last_name' => $this->lastName,
             'name' => $this->fullName(),
             'email' => $this->email,
+            // Drives the "Admin" link into /admin (AppSidebar.vue) and the
+            // post-login redirect (LoginController) — presentation only, every
+            // /admin route is still gated server-side by EnsurePlatformAdmin.
+            'is_platform_admin' => $this->isPlatformAdmin,
         ];
     }
 

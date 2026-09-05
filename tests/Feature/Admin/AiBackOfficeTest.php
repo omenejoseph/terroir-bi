@@ -7,18 +7,25 @@ namespace Tests\Feature\Admin;
 use App\Actions\Tenancy\SetPlatformAdminAction;
 use App\Enums\AiCapability;
 use App\Enums\TenantStatus;
-use App\Filament\Pages\AiSettings;
-use App\Filament\Pages\AiSpend;
 use App\Models\AiUsageLog;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Queries\AiSpendQuery;
 use App\Support\Ai\AiModelConfig;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Ai\AnonymousAgent;
-use Livewire\Livewire;
 use RuntimeException;
 use Tests\TestCase;
 
+/**
+ * The Inertia /admin/ai-settings and /admin/ai-spend screens
+ * (App\Http\Controllers\Web\Admin\{AiSettings,AiSpend}Controller) — the
+ * replacement for the Livewire/Filament-driven version of this test. Tests
+ * that only ever exercised AiModelConfig/AiSpendQuery directly (no Filament
+ * dependency) are unchanged.
+ */
 class AiBackOfficeTest extends TestCase
 {
     use RefreshDatabase;
@@ -32,8 +39,9 @@ class AiBackOfficeTest extends TestCase
     private function modelData(): array
     {
         $data = [];
-        // Pick the first catalog option for each capability (the dropdown only
-        // accepts listed values).
+        // Pick the first catalog option for each capability (the datalist
+        // only suggests listed values, but the field accepts any string —
+        // mirror what a real submission would send).
         foreach (AiCapability::cases() as $capability) {
             $options = (array) config('ai.model_options.'.$capability->value, []);
             $data[$capability->value] = $options[0];
@@ -46,25 +54,25 @@ class AiBackOfficeTest extends TestCase
     {
         $this->actingAs($this->admin());
 
-        Livewire::test(AiSpend::class)->assertOk();
+        $this->get('/admin/ai-spend')->assertSuccessful();
 
         // The required-keys section reflects the providers of the selected models.
         app(AiModelConfig::class)->setModel(AiCapability::Vision, 'anthropic/claude-sonnet-4-5');
 
-        Livewire::test(AiSettings::class)
-            ->assertOk()
-            ->assertSee('CLOUDFLARE_API_TOKEN')
-            ->assertSee('OpenAI')      // default text model
-            ->assertSee('Anthropic');  // selected vision model
+        $this->get('/admin/ai-settings')
+            ->assertSuccessful()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/AiSettings/Index')
+                ->has('requiredKeys')
+                ->where('capabilities.text.model', 'openai/gpt-4o-mini') // default text model
+                ->where('capabilities.vision.model', 'anthropic/claude-sonnet-4-5'));
     }
 
     public function test_configure_action_saves_models_only(): void
     {
-        $this->actingAs($this->admin());
-
-        Livewire::test(AiSettings::class)
-            ->callAction('configure', $this->modelData())
-            ->assertHasNoActionErrors();
+        $this->actingAs($this->admin())
+            ->post('/admin/ai-settings/configure', $this->modelData())
+            ->assertRedirect();
 
         $models = app(AiModelConfig::class);
         $this->assertSame('openai/gpt-4o-mini', $models->modelFor(AiCapability::Text));
@@ -75,9 +83,9 @@ class AiBackOfficeTest extends TestCase
     public function test_capability_is_enabled_only_when_its_check_passes(): void
     {
         AnonymousAgent::fake(['ok']); // the text health check passes
-        $this->actingAs($this->admin());
-
-        Livewire::test(AiSettings::class)->call('enableCapability', 'text');
+        $this->actingAs($this->admin())
+            ->post('/admin/ai-settings/text/enable')
+            ->assertRedirect();
 
         $models = app(AiModelConfig::class);
         $this->assertTrue($models->capabilityEnabled(AiCapability::Text));
@@ -87,21 +95,21 @@ class AiBackOfficeTest extends TestCase
     public function test_enable_is_refused_when_the_capability_check_fails(): void
     {
         AnonymousAgent::fake(fn () => throw new RuntimeException('no key'));
-        $this->actingAs($this->admin());
-
-        Livewire::test(AiSettings::class)
-            ->call('enableCapability', 'text')
-            ->assertSet('testResults.text.ok', false);
+        $this->actingAs($this->admin())
+            ->post('/admin/ai-settings/text/enable')
+            ->assertRedirect()
+            ->assertSessionHas('error');
 
         $this->assertFalse(app(AiModelConfig::class)->capabilityEnabled(AiCapability::Text));
     }
 
     public function test_a_capability_can_be_disabled(): void
     {
-        $this->actingAs($this->admin());
         app(AiModelConfig::class)->setCapabilityEnabled(AiCapability::Text, true);
 
-        Livewire::test(AiSettings::class)->call('disableCapability', 'text');
+        $this->actingAs($this->admin())
+            ->post('/admin/ai-settings/text/disable')
+            ->assertRedirect();
 
         $this->assertFalse(app(AiModelConfig::class)->capabilityEnabled(AiCapability::Text));
     }
@@ -142,17 +150,24 @@ class AiBackOfficeTest extends TestCase
         AiUsageLog::create(['tenant_id' => $alpha->id, 'capability' => 'text', 'prompt_tokens' => 10, 'completion_tokens' => 5, 'ok' => true]);
         AiUsageLog::create(['tenant_id' => $beta->id, 'capability' => 'text', 'prompt_tokens' => 20, 'completion_tokens' => 8, 'ok' => true]);
 
-        // All tenants → both rows, resolved to their names (paginated result).
-        $this->assertSame(2, (new AiSpend)->perTenant()->total());
+        $query = app(AiSpendQuery::class);
+        $now = Carbon::now();
+
+        // All tenants → both rows.
+        $this->assertSame(2, $query->perTenant($now->copy()->subDay(), $now)->total());
 
         // Filtered to one tenant → just that tenant's usage.
-        $page = new AiSpend;
-        $page->tenantId = $alpha->id;
-        $filtered = $page->perTenant();
-
+        $filtered = $query->perTenant($now->copy()->subDay(), $now, $alpha->id);
         $this->assertSame(1, $filtered->total());
         $this->assertSame('Alpha Co', $filtered->items()[0]['tenant']);
         $this->assertSame(10, $filtered->items()[0]['prompt_tokens']);
+
+        // The Inertia page renders the same filtered rollup.
+        $this->actingAs($this->admin())
+            ->get("/admin/ai-spend?tenant_id={$alpha->id}")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('perTenant.data.0.tenant', 'Alpha Co')
+                ->where('perTenant.data.0.prompt_tokens', 10));
     }
 
     public function test_ai_spend_period_excludes_older_usage(): void
@@ -163,11 +178,10 @@ class AiBackOfficeTest extends TestCase
         $old->created_at = now()->subDays(200);
         $old->save();
 
-        $page = new AiSpend;
-        $page->period = '7d';
-        $totals = $page->totals();
-
-        $this->assertSame(1, $totals['requests']); // the 200-day-old row is outside the window
-        $this->assertSame(5, $totals['prompt_tokens']);
+        $this->actingAs($this->admin())
+            ->get('/admin/ai-spend?period=7d')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('totals.requests', 1) // the 200-day-old row is outside the window
+                ->where('totals.prompt_tokens', 5));
     }
 }

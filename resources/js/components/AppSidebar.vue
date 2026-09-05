@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import { ChevronDown, ChevronsUpDown, Settings2 } from 'lucide-vue-next';
+import { ChevronDown, ChevronsUpDown, ShieldCheck, Settings2 } from 'lucide-vue-next';
 
 import AppLogo from '@/components/AppLogo.vue';
 import ManageShortcutsDialog from '@/components/ManageShortcutsDialog.vue';
@@ -10,6 +10,7 @@ import Avatar from '@/components/ui/Avatar.vue';
 import Separator from '@/components/ui/Separator.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
+import { ADMIN_BASE } from '@/lib/adminNavigation';
 import { navigationFor, shortcutsFor } from '@/lib/navigation';
 import type { SharedProps } from '@/types';
 
@@ -28,7 +29,7 @@ import type { SharedProps } from '@/types';
  * The collapsed counterpart is NavRail; AppLayout picks between them.
  */
 const page = usePage<SharedProps>();
-const { user, can, hasModule, shortcuts: pinnedShortcuts } = useAuth();
+const { user, can, hasModule, shortcuts: pinnedShortcuts, isPlatformAdmin } = useAuth();
 const { t } = useTranslations();
 
 const allCategories = computed(() => navigationFor(can, hasModule));
@@ -160,7 +161,17 @@ function toggle(label: string): void {
         </nav>
 
         <!-- Footer: avatar + identity -->
-        <div class="shrink-0 border-t border-sidebar-border p-3">
+        <div class="shrink-0 space-y-1 border-t border-sidebar-border p-3">
+            <!-- Platform admins only (App\Models\User::is_platform_admin) — the
+                 escape hatch into the back office being ported off Filament. -->
+            <Link
+                v-if="isPlatformAdmin"
+                :href="ADMIN_BASE"
+                class="flex items-center gap-2.5 rounded-nav p-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-active hover:text-foreground"
+            >
+                <ShieldCheck class="size-[15px] shrink-0" :stroke-width="1.5" />
+                <span>{{ t('Admin') }}</span>
+            </Link>
             <Link
                 href="/logout"
                 method="post"
