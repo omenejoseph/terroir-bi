@@ -28,11 +28,8 @@ import type { NavCategory } from '@/lib/navigation';
  * lib/navigation.ts — filled in as each tier lands.
  */
 
-/**
- * TEMP: matches routes/admin.php's prefix while Filament still owns /admin.
- * Update this alongside that file's prefix at the Tier 4 cutover.
- */
-export const ADMIN_BASE = '/admin-new';
+/** Matches routes/admin.php's prefix. */
+export const ADMIN_BASE = '/admin';
 
 export const ADMIN_NAV_CATEGORIES: NavCategory[] = [
     {

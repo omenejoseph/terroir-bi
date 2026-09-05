@@ -22,21 +22,15 @@ use Illuminate\Support\Facades\Route;
 | Platform-admin routes — the Inertia "/admin" back office
 |--------------------------------------------------------------------------
 |
-| Replaces the Filament panel currently mounted at /admin (app/Filament/**,
-| App\Providers\Filament\AdminPanelProvider) — retired once every screen below
-| is ported and verified, per the retirement plan. Gated by the platform.admin
-| middleware group (bootstrap/app.php): auth + is_platform_admin only. This is
-| intentionally NOT routes/web.php's tenant.web chain — a platform admin need
-| not be a member of any tenant, and ResolveTenant would 400/403 one who isn't.
-|
-| TEMP: mounted at /admin-new while Filament still owns /admin, so both can be
-| reviewed side by side. Renamed to /admin in the same step that unregisters
-| AdminPanelProvider (see the plan's Tier 4 cutover) — search the codebase for
-| "admin-new" when that day comes; resources/js/lib/adminNavigation.ts carries
-| the matching frontend constant.
+| Replaces the Filament panel that used to be mounted at /admin
+| (app/Filament/**, App\Providers\Filament\AdminPanelProvider — both
+| retired). Gated by the platform.admin middleware group (bootstrap/app.php):
+| auth + is_platform_admin only. This is intentionally NOT routes/web.php's
+| tenant.web chain — a platform admin need not be a member of any tenant, and
+| ResolveTenant would 400/403 one who isn't.
 */
 
-Route::middleware('platform.admin')->prefix('admin-new')->name('admin.')->group(function () {
+Route::middleware('platform.admin')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
 
     Route::get('translation-overrides', [TranslationOverrideController::class, 'index'])

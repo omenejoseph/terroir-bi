@@ -73,21 +73,21 @@ class BddScenarioController extends Controller
     {
         $scenario = $action->execute($request->validated(), CurrentOperator::id());
 
-        return redirect('/admin-new/bdd-scenarios/'.$scenario->getKey())->with('success', __('Scenario created.'));
+        return redirect('/admin/bdd-scenarios/'.$scenario->getKey())->with('success', __('Scenario created.'));
     }
 
     public function update(UpdateBddScenarioRequest $request, BddScenario $bddScenario, SaveBddScenarioAction $action): RedirectResponse
     {
         $action->execute($request->validated(), CurrentOperator::id(), $bddScenario);
 
-        return redirect('/admin-new/bdd-scenarios/'.$bddScenario->getKey())->with('success', __('Scenario updated.'));
+        return redirect('/admin/bdd-scenarios/'.$bddScenario->getKey())->with('success', __('Scenario updated.'));
     }
 
     public function destroy(BddScenario $bddScenario): RedirectResponse
     {
         $bddScenario->delete();
 
-        return redirect('/admin-new/bdd-scenarios')->with('success', __('Scenario deleted.'));
+        return redirect('/admin/bdd-scenarios')->with('success', __('Scenario deleted.'));
     }
 
     /** Queue a live AI run — port of ScenarioActions::run(). */

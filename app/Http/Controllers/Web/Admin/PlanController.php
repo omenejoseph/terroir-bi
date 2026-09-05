@@ -84,7 +84,7 @@ class PlanController extends Controller
     {
         $plan = $action->execute($this->normalizePrice($request->validated()));
 
-        return redirect('/admin-new/plans/'.$plan->getKey())->with('success', __('Plan created.'));
+        return redirect('/admin/plans/'.$plan->getKey())->with('success', __('Plan created.'));
     }
 
     public function update(UpdatePlanRequest $request, Plan $plan, UpdatePlanAction $action): RedirectResponse
@@ -98,7 +98,7 @@ class PlanController extends Controller
     {
         $action->execute($plan);
 
-        return redirect('/admin-new/plans')->with('success', __('Plan deleted.'));
+        return redirect('/admin/plans')->with('success', __('Plan deleted.'));
     }
 
     /**

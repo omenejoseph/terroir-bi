@@ -105,7 +105,7 @@ class TenantController extends Controller
             ],
         ]);
 
-        return redirect('/admin-new/tenants/'.$result['tenant']->getKey())->with('success', __('Tenant created.'));
+        return redirect('/admin/tenants/'.$result['tenant']->getKey())->with('success', __('Tenant created.'));
     }
 
     public function updateStatus(UpdateTenantStatusRequest $request, Tenant $tenant, UpdateTenantStatusAction $action): RedirectResponse

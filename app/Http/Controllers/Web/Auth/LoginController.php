@@ -41,7 +41,7 @@ class LoginController extends Controller
         // some hold no tenant membership at all, and /dashboard's tenant.web
         // middleware would 400/403 them. redirect()->intended() still wins
         // when the visit was bounced here from a deep link (e.g. /admin/plans).
-        return redirect()->intended($user->is_platform_admin ? '/admin-new' : '/dashboard');
+        return redirect()->intended($user->is_platform_admin ? '/admin' : '/dashboard');
     }
 
     public function destroy(
