@@ -16,6 +16,7 @@ use App\Http\Controllers\Web\PublicOrderController;
 use App\Http\Controllers\Web\SearchController;
 use App\Http\Controllers\Web\ShortcutController;
 use App\Http\Controllers\Web\TeamMembersController;
+use App\Http\Controllers\Web\WelcomeController;
 use App\Http\Controllers\Web\WorkOrderController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,7 +35,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::redirect('/', '/dashboard');
+// The public marketing home page. Guests see the pitch; a signed-in visitor
+// is bounced to their dashboard by the controller itself. See WelcomeController.
+Route::get('/', WelcomeController::class)->name('home');
 
 // The self-service order page a customer reaches via their order token
 // (Customers · "Generate Order Link"). No auth, no tenant middleware — the
