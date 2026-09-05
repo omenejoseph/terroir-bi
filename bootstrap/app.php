@@ -65,7 +65,16 @@ return Application::configure(basePath: dirname(__DIR__))
         // not belong to any tenant, and ResolveTenant/EnforceTenantAccess would
         // 400/403 one who doesn't. EnsurePlatformAdmin already existed as the
         // Filament panel's defence-in-depth guard; it's the real gate here too.
+        //
+        // 'web' is explicit here (unlike tenant.web's group, which gets it for
+        // free from living in routes/web.php): routes/admin.php is registered
+        // via withRouting's `then` callback above, which does NOT get the
+        // automatic 'web' wrapping a `web:`-parameter file does. Without it,
+        // these routes ran with no session/cookies/CSRF and no Inertia shared
+        // props at all — auth() never saw a logged-in user and every page's
+        // useAuth()/useTranslations() would have been reading nothing.
         $middleware->group('platform.admin', [
+            'web',
             'auth',
             EnsurePlatformAdmin::class,
             SetLocale::class,
