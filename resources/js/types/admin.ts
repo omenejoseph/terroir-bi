@@ -150,6 +150,44 @@ export interface AdminBddOperationSpec {
     granted?: boolean;
 }
 
+export interface ChartPoint {
+    label: string;
+    value: number;
+}
+
+export interface AdminDashboardStats {
+    tenants: {
+        total: number;
+        trial: number;
+        active: number;
+        suspended: number;
+        canceled: number;
+        new_this_month: number;
+    };
+    trials_ending_soon: number;
+    mrr: { major: string; currency: string; paying_tenants: number };
+    active_users: number;
+    order_activity: { total: number; per_day: number[] };
+}
+
+export interface AdminAttentionTenant {
+    id: string;
+    name: string;
+    plan_name: string | null;
+    stripe_status: string | null;
+    trial_ends_at: string | null;
+    current_period_end: string | null;
+}
+
+export interface AdminActiveTenant {
+    id: string;
+    name: string;
+    plan_name: string | null;
+    orders_recent_count: number;
+    members_count: number;
+    last_order_at: string | null;
+}
+
 export interface AdminAiRequiredKeys {
     provider: string;
     label: string;
