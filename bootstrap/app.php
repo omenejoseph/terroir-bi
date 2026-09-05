@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnforceModuleAccess;
 use App\Http\Middleware\EnforceTenantAccess;
+use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RecordNavVisit;
 use App\Http\Middleware\ResolveTenant;
@@ -19,6 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        // The Inertia "/admin" back office (routes/admin.php), replacing the
+        // Filament panel of the same path — see that file's own header for
+        // why it's registered separately from routes/web.php.
+        then: function (): void {
+            require __DIR__.'/../routes/admin.php';
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
@@ -51,6 +58,17 @@ return Application::configure(basePath: dirname(__DIR__))
             // Feeds Manage Shortcuts' "Recent" list; needs the tenant + user
             // ResolveTenant and 'auth' have already resolved by this point.
             RecordNavVisit::class,
+        ]);
+
+        // The Inertia "/admin" back office: platform admins only, and
+        // deliberately NOT the tenant.web chain above — a platform admin need
+        // not belong to any tenant, and ResolveTenant/EnforceTenantAccess would
+        // 400/403 one who doesn't. EnsurePlatformAdmin already existed as the
+        // Filament panel's defence-in-depth guard; it's the real gate here too.
+        $middleware->group('platform.admin', [
+            'auth',
+            EnsurePlatformAdmin::class,
+            SetLocale::class,
         ]);
 
         // Locale resolution for every web route, not just the tenant-gated ones —

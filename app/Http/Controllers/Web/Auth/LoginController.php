@@ -30,14 +30,18 @@ class LoginController extends Controller
 
     public function store(LoginRequest $request, StartWebSessionAction $action): RedirectResponse
     {
-        $action->execute(
+        $user = $action->execute(
             $request->string('email')->value(),
             $request->string('password')->value(),
             $request->boolean('remember'),
             $request->has('tenant_id') ? $request->string('tenant_id')->value() : null,
         );
 
-        return redirect()->intended('/dashboard');
+        // Platform admins land in the back office, not the tenant dashboard —
+        // some hold no tenant membership at all, and /dashboard's tenant.web
+        // middleware would 400/403 them. redirect()->intended() still wins
+        // when the visit was bounced here from a deep link (e.g. /admin/plans).
+        return redirect()->intended($user->is_platform_admin ? '/admin-new' : '/dashboard');
     }
 
     public function destroy(

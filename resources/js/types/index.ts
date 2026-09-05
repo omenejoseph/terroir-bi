@@ -10,6 +10,8 @@ export interface User {
     id: string;
     name: string;
     email: string;
+    /** Gates the "Admin" link into /admin (AppSidebar.vue) — see useAuth().isPlatformAdmin. */
+    is_platform_admin: boolean;
 }
 
 export interface TenantSummary {

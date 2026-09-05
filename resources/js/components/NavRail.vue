@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
-import { Settings2 } from 'lucide-vue-next';
+import { Settings2, ShieldCheck } from 'lucide-vue-next';
 
 import AppLogo from '@/components/AppLogo.vue';
 import ManageShortcutsDialog from '@/components/ManageShortcutsDialog.vue';
@@ -10,6 +10,7 @@ import Avatar from '@/components/ui/Avatar.vue';
 import { useAuth } from '@/composables/useAuth';
 import { usePopover } from '@/composables/usePopover';
 import { useTranslations } from '@/composables/useTranslations';
+import { ADMIN_BASE } from '@/lib/adminNavigation';
 import { cn } from '@/lib/cn';
 import { navigationFor, shortcutsFor, SHORTCUTS_ICON, type NavCategory } from '@/lib/navigation';
 
@@ -30,7 +31,7 @@ const SHORTCUTS_LABEL = 'Shortcuts';
  * would be nine buttons that reach nothing. The flyout renders the same NavRow
  * as the expanded sidebar, so a category reads identically in both states.
  */
-const { user, can, hasModule, shortcuts: pinnedShortcuts } = useAuth();
+const { user, can, hasModule, shortcuts: pinnedShortcuts, isPlatformAdmin } = useAuth();
 const { t } = useTranslations();
 
 const categories = computed(() => navigationFor(can, hasModule));
@@ -200,7 +201,17 @@ function isCurrent(group: NavCategory, url: string): boolean {
             </div>
         </nav>
 
-        <div class="flex h-12 w-full shrink-0 items-center justify-center border-t border-sidebar-border">
+        <div class="flex w-full shrink-0 flex-col items-center border-t border-sidebar-border">
+            <!-- Platform admins only — collapsed-rail counterpart of the
+                 "Admin" row in AppSidebar.vue's footer. -->
+            <Link
+                v-if="isPlatformAdmin"
+                :href="ADMIN_BASE"
+                class="grid size-10 place-items-center text-muted-foreground transition-colors hover:bg-sidebar-active hover:text-foreground"
+                :aria-label="t('Admin')"
+            >
+                <ShieldCheck class="size-[18px]" :stroke-width="1.5" />
+            </Link>
             <Link
                 href="/logout"
                 method="post"

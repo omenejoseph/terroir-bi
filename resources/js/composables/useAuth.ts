@@ -24,6 +24,8 @@ export function useAuth() {
     const modules = computed(() => page.props.modules);
     /** Manage Shortcuts' pinned nav-item keys, in pin order (Figma `143:4179`). */
     const shortcuts = computed(() => page.props.auth.shortcuts);
+    /** Gates the "Admin" link into /admin — presentation only, see EnsurePlatformAdmin. */
+    const isPlatformAdmin = computed(() => page.props.auth.user?.is_platform_admin === true);
 
     function can(capability: string): boolean {
         const granted = page.props.auth.capabilities;
@@ -45,5 +47,5 @@ export function useAuth() {
         return page.props.modules.includes(module);
     }
 
-    return { user, roles, capabilities, tenant, modules, shortcuts, can, canAny, hasModule };
+    return { user, roles, capabilities, tenant, modules, shortcuts, isPlatformAdmin, can, canAny, hasModule };
 }
