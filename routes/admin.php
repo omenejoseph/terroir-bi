@@ -2,9 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Web\Admin\AiSettingsController;
+use App\Http\Controllers\Web\Admin\AiSpendController;
+use App\Http\Controllers\Web\Admin\BddAccessController;
+use App\Http\Controllers\Web\Admin\BddScenarioController;
+use App\Http\Controllers\Web\Admin\BroadcastController;
 use App\Http\Controllers\Web\Admin\DashboardController;
 use App\Http\Controllers\Web\Admin\PlanController;
 use App\Http\Controllers\Web\Admin\PlatformAdminController;
+use App\Http\Controllers\Web\Admin\StripeSettingsController;
 use App\Http\Controllers\Web\Admin\TenantController;
 use App\Http\Controllers\Web\Admin\TenantMemberController;
 use App\Http\Controllers\Web\Admin\TranslationOverrideController;
@@ -76,6 +82,43 @@ Route::middleware('platform.admin')->prefix('admin-new')->name('admin.')->group(
     Route::delete('tenants/{tenant}/members/{member}', [TenantMemberController::class, 'destroy'])
         ->name('tenant-members.destroy');
 
-    // Tier 3+: bdd-scenarios, bdd-access, ai-settings, ai-spend,
-    // stripe-settings, broadcast — added as each tier lands (see the plan).
+    Route::get('bdd-scenarios', [BddScenarioController::class, 'index'])->name('bdd-scenarios.index');
+    Route::post('bdd-scenarios', [BddScenarioController::class, 'store'])->name('bdd-scenarios.store');
+    Route::post('bdd-scenarios/run-all', [BddScenarioController::class, 'runAll'])->name('bdd-scenarios.run-all');
+    Route::get('bdd-scenarios/{bddScenario}', [BddScenarioController::class, 'show'])->name('bdd-scenarios.show');
+    Route::get('bdd-scenarios/{bddScenario}/status', [BddScenarioController::class, 'status'])
+        ->name('bdd-scenarios.status');
+    Route::patch('bdd-scenarios/{bddScenario}', [BddScenarioController::class, 'update'])->name('bdd-scenarios.update');
+    Route::delete('bdd-scenarios/{bddScenario}', [BddScenarioController::class, 'destroy'])
+        ->name('bdd-scenarios.destroy');
+    Route::post('bdd-scenarios/{bddScenario}/run', [BddScenarioController::class, 'run'])->name('bdd-scenarios.run');
+    Route::post('bdd-scenarios/{bddScenario}/grant-access', [BddScenarioController::class, 'grantAccess'])
+        ->name('bdd-scenarios.grant-access');
+
+    Route::get('bdd-access', [BddAccessController::class, 'index'])->name('bdd-access.index');
+    Route::post('bdd-access/grant', [BddAccessController::class, 'grant'])->name('bdd-access.grant');
+    Route::post('bdd-access/revoke', [BddAccessController::class, 'revoke'])->name('bdd-access.revoke');
+
+    Route::get('ai-settings', [AiSettingsController::class, 'index'])->name('ai-settings.index');
+    Route::post('ai-settings/configure', [AiSettingsController::class, 'configure'])->name('ai-settings.configure');
+    Route::post('ai-settings/test-all', [AiSettingsController::class, 'testAll'])->name('ai-settings.test-all');
+    Route::post('ai-settings/{capability}/test', [AiSettingsController::class, 'testCapability'])
+        ->name('ai-settings.test-capability');
+    Route::post('ai-settings/{capability}/enable', [AiSettingsController::class, 'enableCapability'])
+        ->name('ai-settings.enable-capability');
+    Route::post('ai-settings/{capability}/disable', [AiSettingsController::class, 'disableCapability'])
+        ->name('ai-settings.disable-capability');
+
+    Route::get('ai-spend', [AiSpendController::class, 'index'])->name('ai-spend.index');
+    Route::get('ai-spend/cloudflare-cost', [AiSpendController::class, 'loadCloudflareCost'])
+        ->name('ai-spend.cloudflare-cost');
+
+    Route::get('stripe-settings', [StripeSettingsController::class, 'index'])->name('stripe-settings.index');
+    Route::post('stripe-settings/test-connection', [StripeSettingsController::class, 'testConnection'])
+        ->name('stripe-settings.test-connection');
+
+    Route::get('broadcast', [BroadcastController::class, 'index'])->name('broadcast.index');
+    Route::post('broadcast', [BroadcastController::class, 'store'])->name('broadcast.store');
+
+    // Tier 3 (remaining): the platform dashboard's widgets — see the plan.
 });

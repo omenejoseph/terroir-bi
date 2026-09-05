@@ -46,7 +46,7 @@ export const ADMIN_NAV_CATEGORIES: NavCategory[] = [
         items: [
             { key: 'admin-tenants', label: 'Tenants', href: `${ADMIN_BASE}/tenants`, icon: Building2 },
             { key: 'admin-plans', label: 'Plans', href: `${ADMIN_BASE}/plans`, icon: CreditCard },
-            { key: 'admin-stripe-settings', label: 'Stripe Settings', href: null, icon: Receipt },
+            { key: 'admin-stripe-settings', label: 'Stripe Settings', href: `${ADMIN_BASE}/stripe-settings`, icon: Receipt },
         ],
     },
     {
@@ -66,8 +66,8 @@ export const ADMIN_NAV_CATEGORIES: NavCategory[] = [
         label: 'Quality',
         icon: FlaskConical,
         items: [
-            { key: 'admin-bdd-scenarios', label: 'BDD Scenarios', href: null, icon: FlaskConical },
-            { key: 'admin-bdd-access', label: 'BDD Access', href: null, icon: KeyRound },
+            { key: 'admin-bdd-scenarios', label: 'BDD Scenarios', href: `${ADMIN_BASE}/bdd-scenarios`, icon: FlaskConical },
+            { key: 'admin-bdd-access', label: 'BDD Access', href: `${ADMIN_BASE}/bdd-access`, icon: KeyRound },
         ],
     },
     {
@@ -86,13 +86,13 @@ export const ADMIN_NAV_CATEGORIES: NavCategory[] = [
         label: 'AI',
         icon: Bot,
         items: [
-            { key: 'admin-ai-settings', label: 'AI Settings', href: null, icon: Bot },
-            { key: 'admin-ai-spend', label: 'AI Spend', href: null, icon: Receipt },
+            { key: 'admin-ai-settings', label: 'AI Settings', href: `${ADMIN_BASE}/ai-settings`, icon: Bot },
+            { key: 'admin-ai-spend', label: 'AI Spend', href: `${ADMIN_BASE}/ai-spend`, icon: Receipt },
         ],
     },
     {
         label: 'Communications',
         icon: Megaphone,
-        items: [{ key: 'admin-broadcast', label: 'Broadcast', href: null, icon: Megaphone }],
+        items: [{ key: 'admin-broadcast', label: 'Broadcast', href: `${ADMIN_BASE}/broadcast`, icon: Megaphone }],
     },
 ];

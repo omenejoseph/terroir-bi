@@ -111,6 +111,85 @@ export interface AdminTenant {
     needs_subscription: boolean;
 }
 
+/** One row of Admin/BddScenarios/Index.vue — App\Http\Controllers\Web\Admin\BddScenarioController::row(). */
+export interface AdminBddScenarioSummary {
+    id: string;
+    title: string;
+    /** App\Enums\BddScenarioStatus value. */
+    status: string;
+    /** App\Enums\BddRunStatus value, or null if never run. */
+    last_run_status: string | null;
+    last_run_at: string | null;
+    is_active: boolean;
+    is_runnable: boolean;
+    in_flight: boolean;
+}
+
+/**
+ * The full scenario payload — App\Http\Controllers\Web\Admin\BddScenarioController::present(),
+ * shared by the Show page's initial props and its 2s status poll.
+ */
+export interface AdminBddScenarioDetail extends AdminBddScenarioSummary {
+    gherkin: string;
+    live_log: string[];
+    denied_operations: string[];
+    last_run_steps: string[];
+    run_log: string[];
+    transcript: string | null;
+}
+
+/** App\Services\Bdd\OperationSpec::toArray(). */
+export interface AdminBddOperationSpec {
+    key: string;
+    /** 'seed' | 'action' | 'probe'. */
+    kind: string;
+    summary: string;
+    parameters: Record<string, string>;
+    requires_grant: boolean;
+    /** Only present on discoverable actions (Admin/BddAccess::actions), not built-ins. */
+    granted?: boolean;
+}
+
+export interface AdminAiRequiredKeys {
+    provider: string;
+    label: string;
+    byok: boolean;
+    capabilities: string[];
+    models: string[];
+}
+
+export interface AdminAiCapabilityRow {
+    label: string;
+    model: string;
+    enabled: boolean;
+}
+
+export interface AdminAiSpendTotals {
+    requests: number;
+    prompt_tokens: number;
+    completion_tokens: number;
+    /** Only present once "Load Cloudflare cost" has run — not persisted. */
+    cost_usd?: number | null;
+}
+
+export interface AdminAiSpendTenantRow {
+    tenant_id: string | null;
+    tenant: string;
+    requests: number;
+    prompt_tokens: number;
+    completion_tokens: number;
+    cost_usd?: number | null;
+}
+
+export interface AdminStripeAccount {
+    id: string;
+    business_name: string | null;
+    country: string | null;
+    default_currency: string | null;
+    charges_enabled: boolean;
+    livemode: boolean;
+}
+
 export interface AdminTenantMember {
     id: string;
     name: string;
