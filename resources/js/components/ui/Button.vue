@@ -13,11 +13,18 @@ const props = withDefaults(
         size?: Size;
         /** Renders an Inertia <Link> instead of a <button> when set. */
         href?: string;
+        /**
+         * With `href`, renders a plain `<a download>` instead of an Inertia
+         * `<Link>` — for a file download, which needs a real browser
+         * navigation so the response's `Content-Disposition: attachment`
+         * header is handled natively, rather than an XHR-based Inertia visit.
+         */
+        download?: boolean;
         type?: 'button' | 'submit' | 'reset';
         disabled?: boolean;
         class?: string;
     }>(),
-    { variant: 'primary', size: 'md', type: 'button', disabled: false },
+    { variant: 'primary', size: 'md', type: 'button', disabled: false, download: false },
 );
 
 /*
@@ -60,7 +67,10 @@ const classes = computed(() =>
 </script>
 
 <template>
-    <Link v-if="href" :href="href" :class="classes">
+    <a v-if="href && download" :href="href" download :class="classes">
+        <slot />
+    </a>
+    <Link v-else-if="href" :href="href" :class="classes">
         <slot />
     </Link>
     <button v-else :type="type" :disabled="disabled" :class="classes">

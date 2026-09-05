@@ -8,4 +8,9 @@ return [
     'invitation_invalid' => 'This invitation is invalid or has expired.',
     'invitation_email_taken' => 'An account with this email is already a member.',
     'invitation_profile_required' => 'A first name, last name, and password are required to create your account.',
+    'suspend_self' => 'You cannot suspend your own account.',
+    'impersonate_self' => 'You cannot impersonate yourself.',
+    'impersonate_admin' => 'You cannot impersonate another platform admin.',
+    'impersonate_suspended' => 'You cannot impersonate a suspended user.',
+    'impersonate_already_active' => 'Stop your current impersonation before starting another.',
 ];

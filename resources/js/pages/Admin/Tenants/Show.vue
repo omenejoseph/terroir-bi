@@ -5,6 +5,7 @@ import { ArrowLeft, Link as LinkIcon, Mail, PencilLine, Plus, Trash2 } from 'luc
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import OnboardingLinkDialog from '@/components/admin/OnboardingLinkDialog.vue';
+import TenantDetailsFormPanel from '@/components/admin/TenantDetailsFormPanel.vue';
 import TenantMemberFormPanel from '@/components/admin/TenantMemberFormPanel.vue';
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
@@ -21,7 +22,9 @@ import type { MenuItem } from '@/types/ui';
  * Tenant — Show. Port of App\Filament\Resources\Tenants\Schemas\TenantInfolist
  * + the Members relation manager. Status/plan changes live here (inline
  * selects + a dedicated PATCH each) rather than a separate Edit form, since
- * Filament's Edit form had only those two fields.
+ * Filament's Edit form had only those two fields; name/slug/locale get their
+ * own side panel instead (TenantDetailsFormPanel) rather than three more
+ * inline row-pairs crowding this grid.
  */
 const props = defineProps<{
     tenant: AdminTenant;
@@ -29,6 +32,7 @@ const props = defineProps<{
     statusOptions: AdminOption[];
     planOptions: AdminOption[];
     roleOptions: AdminOption[];
+    localeOptions: AdminOption[];
 }>();
 
 const { t } = useTranslations();
@@ -46,6 +50,7 @@ function updatePlan(): void {
         .patch(`${ADMIN_BASE}/tenants/${props.tenant.id}/plan`, { preserveScroll: true });
 }
 
+const detailsFormOpen = ref(false);
 const onboardingOpen = ref(false);
 
 function emailLink(): void {
@@ -115,13 +120,22 @@ function removeMember(member: AdminTenantMember): void {
             </PageHeader>
 
             <Card class="p-6">
-                <h3 class="mb-4 text-sm font-semibold text-foreground">{{ t('Tenant') }}</h3>
+                <div class="mb-4 flex items-center justify-between">
+                    <h3 class="text-sm font-semibold text-foreground">{{ t('Tenant') }}</h3>
+                    <Button variant="outline" size="sm" @click="detailsFormOpen = true">
+                        <PencilLine class="size-3.5" :stroke-width="1.5" />
+                        {{ t('Edit') }}
+                    </Button>
+                </div>
                 <dl class="grid grid-cols-2 gap-4 text-sm">
                     <div>
                         <dt class="text-xs text-muted-foreground">{{ t('Slug') }}</dt>
                         <dd class="mt-0.5 text-foreground">{{ tenant.slug }}</dd>
                     </div>
-                    <div />
+                    <div>
+                        <dt class="text-xs text-muted-foreground">{{ t('Locale') }}</dt>
+                        <dd class="mt-0.5 text-foreground">{{ tenant.default_locale }}</dd>
+                    </div>
                     <div>
                         <dt class="mb-1 text-xs text-muted-foreground">{{ t('Status') }}</dt>
                         <dd class="flex items-center gap-2">
@@ -261,6 +275,13 @@ function removeMember(member: AdminTenantMember): void {
                 </div>
             </Card>
         </div>
+
+        <TenantDetailsFormPanel
+            :open="detailsFormOpen"
+            :tenant="tenant"
+            :locale-options="localeOptions"
+            @close="detailsFormOpen = false"
+        />
 
         <TenantMemberFormPanel
             :open="memberFormOpen"

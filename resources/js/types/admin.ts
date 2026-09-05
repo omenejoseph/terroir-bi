@@ -12,6 +12,18 @@ export interface TranslationOverride {
     updated_at?: string;
 }
 
+/**
+ * One row of Admin/TranslationOverrides/Index.vue's browsable catalog —
+ * App\Http\Controllers\Web\Admin\TranslationOverrideController::index().
+ * `value` is the effective string (override, when one exists, else bundled).
+ */
+export interface TranslationCatalogRow {
+    key: string;
+    value: string;
+    is_overridden: boolean;
+    override_id: string | null;
+}
+
 export interface PlatformAdmin {
     id: string;
     name: string;
@@ -25,6 +37,7 @@ export interface AdminUserSummary {
     name: string;
     email: string;
     is_platform_admin: boolean;
+    is_suspended: boolean;
     tenants_count: number;
     created_at: string | null;
 }
@@ -102,6 +115,8 @@ export interface AdminTenant {
     slug: string;
     /** App\Enums\TenantStatus value. */
     status: string;
+    /** e.g. 'hr' | 'en' — App\Support\config('app.supported_locales'). */
+    default_locale: string;
     plan: AdminTenantPlan | null;
     plan_id: string | null;
     /** App\Enums\AccessLevel value, computed server-side. */
@@ -226,6 +241,22 @@ export interface AdminStripeAccount {
     default_currency: string | null;
     charges_enabled: boolean;
     livemode: boolean;
+}
+
+/**
+ * One row of Admin/AuditLogs/Index.vue — App\Http\Controllers\Web\Admin\
+ * AuditLogController::index(). Currently written only by this task's
+ * security-sensitive actions (suspend/unsuspend, password-reset trigger,
+ * impersonation start/stop) — see App\Services\Audit\AuditLogger.
+ */
+export interface AdminAuditLog {
+    id: string;
+    actor_name: string | null;
+    action: string;
+    subject_type: string | null;
+    subject_id: string | null;
+    metadata: Record<string, unknown> | null;
+    created_at: string | null;
 }
 
 export interface AdminTenantMember {

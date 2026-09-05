@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\InventoryCategory;
 use App\Enums\SalesUnit;
+use App\Services\Audit\Auditable;
 use App\Support\Money\Money;
 use App\Support\Money\MoneyCast;
 use App\Tenancy\BelongsToTenant;
@@ -39,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 class InventoryItem extends Model
 {
+    use Auditable;
     use BelongsToTenant;
     use HasUlids;
 
@@ -179,5 +181,18 @@ class InventoryItem extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(InventoryDocument::class);
+    }
+
+    /**
+     * Stock changes get their own richer `inventory_item.stock_adjusted`
+     * entry (type/quantity/reference/note) via StockLedger::record() — skip
+     * the generic one here so the trail doesn't carry two entries for the
+     * same change.
+     *
+     * @return list<string>
+     */
+    protected static function auditIgnoreOnUpdate(): array
+    {
+        return ['current_stock'];
     }
 }

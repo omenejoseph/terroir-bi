@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { ChevronRight, Columns3, Download, Plus, Search } from 'lucide-vue-next';
+import { ChevronRight, Columns3, Download, Plus, Search, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import CreateOrderPanel from '@/components/orders/CreateOrderPanel.vue';
 import OrderViewPanel from '@/components/orders/OrderViewPanel.vue';
 import PipelineCard from '@/components/orders/PipelineCard.vue';
 import Button from '@/components/ui/Button.vue';
+import Checkbox from '@/components/ui/Checkbox.vue';
 import DateRangePicker from '@/components/ui/DateRangePicker.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Pagination from '@/components/ui/Pagination.vue';
@@ -205,6 +206,60 @@ function setPerPage(perPage: number): void {
     // show nothing if the list is now shorter — reset to page 1 with it.
     reload({ per_page: perPage, page: 1 });
 }
+
+/* ---- export -------------------------------------------------------------- */
+
+/** The header's "Export" (Figma 455:1577) — honours whatever the toolbar is currently filtering by. */
+const exportHref = computed(() => {
+    const params = new URLSearchParams();
+
+    if (props.filters.search) params.set('search', props.filters.search);
+    if (props.filters.status) params.set('status', props.filters.status);
+    if (props.filters.channel) params.set('channel', props.filters.channel);
+    if (props.filters.period) params.set('period', props.filters.period);
+    if (props.filters.from) params.set('from', props.filters.from);
+    if (props.filters.to) params.set('to', props.filters.to);
+
+    const query = params.toString();
+
+    return query === '' ? '/orders/export' : `/orders/export?${query}`;
+});
+
+/* ---- selection + bulk status change --------------------------------------- */
+
+const selected = ref<string[]>([]);
+const pageIds = computed(() => props.orders.data.map((o) => o.id));
+const allSelected = computed(
+    () => pageIds.value.length > 0 && pageIds.value.every((id) => selected.value.includes(id)),
+);
+
+function toggleAll(): void {
+    selected.value = allSelected.value ? [] : [...pageIds.value];
+}
+
+function toggleOne(id: string): void {
+    selected.value = selected.value.includes(id)
+        ? selected.value.filter((s) => s !== id)
+        : [...selected.value, id];
+}
+
+/**
+ * Bulk status change (Figma 455:1577's "Bulk actions"). Offered statuses come
+ * from `statusCounts` — the same set the status chips filter by — rather than
+ * every App\Enums\OrderStatus case, so a member without shipped-order
+ * visibility is never offered "Shipped" here either.
+ */
+const bulkActionsAnchor = ref<HTMLElement | null>(null);
+const { open: bulkActionsOpen, close: closeBulkActions, toggle: toggleBulkActions } = usePopover(bulkActionsAnchor);
+
+function bulkChangeStatus(status: string): void {
+    closeBulkActions();
+    router.patch(
+        '/orders-bulk/status',
+        { order_ids: selected.value, status },
+        { preserveScroll: true, onSuccess: () => (selected.value = []) },
+    );
+}
 </script>
 
 <template>
@@ -216,9 +271,7 @@ function setPerPage(perPage: number): void {
                         <Plus class="size-3.5" :stroke-width="1.5" />
                         {{ t('New order') }}
                     </Button>
-                    <!-- @todo Export. No order export endpoint exists yet; the
-                         button is here because the design's header has it. -->
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" :href="exportHref" download>
                         <Download class="size-3.5" :stroke-width="1.5" />
                         {{ t('Export') }}
                     </Button>
@@ -323,15 +376,51 @@ function setPerPage(perPage: number): void {
                     </button>
 
                     <div class="ml-auto flex items-center gap-2">
-                        <!-- @todo Bulk actions. Multi-select on orders is not
-                             built; the design offers status changes in bulk. -->
-                        <button
-                            type="button"
-                            class="inline-flex h-[30px] items-center gap-1 border border-border bg-card px-2.5 text-xs hover:border-foreground/40"
-                        >
-                            {{ t('Bulk actions') }}
-                            <span aria-hidden="true" class="text-muted-foreground">▾</span>
-                        </button>
+                        <span v-if="selected.length > 0" class="flex items-center gap-1 text-xs text-muted-foreground">
+                            {{ t(':count selected', { count: selected.length }) }}
+                            <button
+                                type="button"
+                                class="p-1 hover:text-foreground"
+                                :aria-label="t('Clear selection')"
+                                @click="selected = []"
+                            >
+                                <X class="size-3.5" :stroke-width="1.5" />
+                            </button>
+                        </span>
+
+                        <!-- The design offers status changes in bulk (Figma
+                             455:1577); options come from the same statusCounts
+                             the chip row filters by, so a member without
+                             shipped-order visibility is never offered it here. -->
+                        <div v-if="can('orders.manage')" ref="bulkActionsAnchor" class="relative">
+                            <button
+                                type="button"
+                                class="inline-flex h-[30px] items-center gap-1 border border-border bg-card px-2.5 text-xs transition-colors hover:border-foreground/40 disabled:pointer-events-none disabled:opacity-40"
+                                :disabled="selected.length === 0"
+                                @click="toggleBulkActions"
+                            >
+                                {{ t('Bulk actions') }}
+                                <span aria-hidden="true" class="text-muted-foreground">▾</span>
+                            </button>
+                            <div
+                                v-if="bulkActionsOpen"
+                                class="absolute top-9 right-0 z-20 min-w-40 border border-border bg-card p-1 shadow-lg"
+                            >
+                                <p class="px-2 py-1 text-3xs tracking-[0.08em] text-muted-foreground uppercase">
+                                    {{ t('Move to') }}
+                                </p>
+                                <button
+                                    v-for="status in statusCounts.statuses"
+                                    :key="status.key"
+                                    type="button"
+                                    class="block w-full px-2 py-1.5 text-left text-xs hover:bg-muted"
+                                    @click="bulkChangeStatus(status.key)"
+                                >
+                                    {{ status.label }}
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- @todo Column chooser. -->
                         <button
                             type="button"
@@ -357,6 +446,14 @@ function setPerPage(perPage: number): void {
                     <table class="w-full min-w-[60rem] text-xs">
                         <thead class="border-b border-border bg-muted/40 text-left text-3xs text-muted-foreground">
                             <tr>
+                                <th scope="col" class="w-10 px-4 py-2.5">
+                                    <Checkbox
+                                        :model-value="allSelected"
+                                        :label="t('Select all orders on this page')"
+                                        hide-label
+                                        @update:model-value="toggleAll"
+                                    />
+                                </th>
                                 <th scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">{{ t('Order') }}</th>
                                 <th scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">{{ t('Items') }}</th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium tracking-[0.08em] uppercase">
@@ -376,6 +473,14 @@ function setPerPage(perPage: number): void {
                                 class="cursor-pointer border-b border-border align-top transition-colors last:border-b-0 hover:bg-muted/40"
                                 @click="open(row)"
                             >
+                                <td class="px-4 py-4" @click.stop>
+                                    <Checkbox
+                                        :model-value="selected.includes(row.id)"
+                                        :label="t('Select order :number', { number: row.order_number })"
+                                        hide-label
+                                        @update:model-value="toggleOne(row.id)"
+                                    />
+                                </td>
                                 <td class="px-4 py-4">
                                     <span class="flex items-center gap-1.5">
                                         <ChevronRight class="size-3 shrink-0 text-muted-foreground" :stroke-width="2" />
@@ -438,7 +543,7 @@ function setPerPage(perPage: number): void {
                             </tr>
 
                             <tr v-if="orders.data.length === 0">
-                                <td colspan="5" class="px-4 py-12 text-center text-muted-foreground">
+                                <td colspan="6" class="px-4 py-12 text-center text-muted-foreground">
                                     {{ t('No orders in this period.') }}
                                 </td>
                             </tr>

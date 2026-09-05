@@ -123,7 +123,7 @@ class CustomerConsignmentService
             $remainingByOrder[$orderId] = ($remainingByOrder[$orderId] ?? 0) + $line['remaining'];
         }
 
-        return $customer->orders()
+        return array_values($customer->orders()
             ->where('is_consignment', true)
             ->orderByDesc('created_at')
             ->get(['id', 'order_number', 'created_at', 'consignment_closed_at'])
@@ -135,8 +135,7 @@ class CustomerConsignmentService
                 'remaining' => $remainingByOrder[$o->getKey()] ?? 0,
             ])
             ->filter(fn (array $p): bool => $p['remaining'] > 0 || $p['closed_at'] === null)
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**

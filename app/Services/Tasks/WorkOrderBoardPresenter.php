@@ -49,9 +49,9 @@ class WorkOrderBoardPresenter
                 'key' => $status->value,
                 'label' => self::statusLabel($status),
                 'count' => $inColumn->count(),
-                'tasks' => $inColumn
+                'tasks' => array_values($inColumn
                     ->map(fn (WorkOrder $task): array => WorkOrderData::fromModel($task)->toArray())
-                    ->all(),
+                    ->all()),
             ];
         }, TaskStatus::cases());
 
@@ -77,7 +77,7 @@ class WorkOrderBoardPresenter
             ->groupBy(fn (WorkOrder $task): string => $task->board_id ?? 'NONE')
             ->map(fn ($group): int => $group->count());
 
-        return WorkOrderBoard::query()
+        return array_values(WorkOrderBoard::query()
             ->orderBy('sort_order')
             ->get()
             ->map(fn (WorkOrderBoard $board): array => [
@@ -86,7 +86,7 @@ class WorkOrderBoardPresenter
                 'count' => $counts[$board->getKey()] ?? 0,
                 'favorite' => $board->getKey() === $favoriteBoardId,
             ])
-            ->all();
+            ->all());
     }
 
     /** "Due soon" means inside the next seven days, including anything overdue. */

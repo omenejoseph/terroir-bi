@@ -8,6 +8,8 @@ use App\Models\Customer;
 use App\Models\CustomerPrice;
 use App\Models\CustomerProductOverride;
 use App\Models\Order;
+use App\Services\Audit\AuditLogger;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,6 +20,8 @@ use Illuminate\Support\Facades\DB;
  */
 class CustomerMergeService
 {
+    public function __construct(private readonly AuditLogger $audit) {}
+
     /**
      * @param  list<string>  $loserIds
      * @return array<string, mixed>
@@ -64,6 +68,20 @@ class CustomerMergeService
             $override = $this->foldPerItem(CustomerProductOverride::query()->where('customer_id', $loser->getKey())->get(), $winnerOverrideItems, $winner, $apply);
 
             if ($apply) {
+                // A merge deletes one row and reassigns relations across
+                // several tables — Customer's own Auditable listener logs the
+                // deletion, but this is the entry that ties it to where
+                // everything went, which the generic floor can't tell.
+                $this->audit->record(Auth::user(), 'customer.merged', $loser, [
+                    'into_customer_id' => $winner->getKey(),
+                    'into_company_name' => $winner->company_name,
+                    'orders_moved' => $orders,
+                    'price_reassigned' => $price['reassign'],
+                    'price_dropped' => $price['drop'],
+                    'override_reassigned' => $override['reassign'],
+                    'override_dropped' => $override['drop'],
+                ]);
+
                 $loser->delete();
             }
 

@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Web\Auth\LoginController;
+use App\Http\Controllers\Web\Auth\PasswordResetController;
+use App\Http\Controllers\Web\Auth\StopImpersonationController;
 use App\Http\Controllers\Web\Auth\TenantSwitchController;
 use App\Http\Controllers\Web\CustomerConsignmentController;
 use App\Http\Controllers\Web\CustomerController;
@@ -10,6 +12,7 @@ use App\Http\Controllers\Web\CustomerPriceController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InventoryController;
 use App\Http\Controllers\Web\LocaleController;
+use App\Http\Controllers\Web\LogController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\OrderController;
 use App\Http\Controllers\Web\PublicOrderController;
@@ -54,13 +57,23 @@ Route::patch('locale', [LocaleController::class, 'update'])->name('locale.update
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store']);
+
+    // The landing page an admin-triggered reset email points to
+    // (UserController::sendPasswordReset) — see PasswordResetController.
+    Route::get('reset-password/{token}', [PasswordResetController::class, 'create'])->name('password.reset');
+    Route::post('reset-password', [PasswordResetController::class, 'store'])->name('password.update');
 });
 
 // Authenticated, but no active tenant required: a user whose current tenant
 // context is unusable must still be able to sign out or switch away from it.
+// impersonation/stop belongs here for the same reason as tenant/switch: while
+// impersonating, the session's user is the impersonation TARGET (an ordinary
+// tenant member, not a platform admin), so this can only require plain auth —
+// see StopImpersonationController's docblock.
 Route::middleware('auth')->group(function () {
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
     Route::post('tenant/switch', [TenantSwitchController::class, 'store'])->name('tenant.switch');
+    Route::post('impersonation/stop', [StopImpersonationController::class, 'store'])->name('impersonation.stop');
 });
 
 // Authenticated + active tenant + verified membership + plan/subscription checks.
@@ -89,6 +102,12 @@ Route::middleware('tenant.web')->group(function () {
     Route::patch('shortcuts', [ShortcutController::class, 'update'])->name('shortcuts.update');
     Route::delete('shortcuts/recent', [ShortcutController::class, 'clearRecent'])->name('shortcuts.clear-recent');
 
+    // A tenant's own audit trail — scoped to this tenant only, unlike the
+    // platform-admin /admin/audit-logs view. See Web\LogController.
+    Route::middleware('can:logs.view')->group(function () {
+        Route::get('logs', [LogController::class, 'index'])->name('logs.index');
+    });
+
     Route::middleware('can:inventory.view')->group(function () {
         Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
         Route::get('inventory-analytics', [InventoryController::class, 'analytics'])->name('inventory.analytics');
@@ -96,7 +115,12 @@ Route::middleware('tenant.web')->group(function () {
         Route::get('inventory-spend', [InventoryController::class, 'spend'])
             ->middleware('can:financials.view')
             ->name('inventory.spend');
+        Route::get('inventory-spend/export', [InventoryController::class, 'exportSpend'])
+            ->middleware('can:financials.view')
+            ->name('inventory.spend.export');
         Route::get('inventory/{item}', [InventoryController::class, 'show'])->name('inventory.show');
+        Route::get('inventory/{item}/movements/export', [InventoryController::class, 'exportMovements'])
+            ->name('inventory.movements.export');
     });
 
     Route::middleware('can:inventory.manage')->group(function () {
@@ -122,6 +146,7 @@ Route::middleware('tenant.web')->group(function () {
     */
     Route::middleware('can:orders.view')->group(function () {
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
         // Participation, not management: any order viewer may comment.
         Route::post('orders/{order}/comments', [OrderController::class, 'storeComment'])
             ->name('orders.comments.store');
@@ -131,6 +156,8 @@ Route::middleware('tenant.web')->group(function () {
         Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])
             ->name('orders.status.update');
+        Route::patch('orders-bulk/status', [OrderController::class, 'bulkUpdateStatus'])
+            ->name('orders.bulk-status.update');
         Route::patch('orders/{order}/notes', [OrderController::class, 'updateNotes'])
             ->name('orders.notes.update');
         Route::post('orders/{order}/items', [OrderController::class, 'addItems'])
@@ -155,6 +182,7 @@ Route::middleware('tenant.web')->group(function () {
     */
     Route::middleware('can:customers.view')->group(function () {
         Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+        Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');
         Route::get('customers-analytics', [CustomerController::class, 'analytics'])
             ->middleware('can:financials.view')
             ->name('customers.analytics');

@@ -8,12 +8,14 @@ use App\Actions\Billing\CreateBillingCheckoutLinkAction;
 use App\Actions\Billing\SendBillingSetupLinkAction;
 use App\Actions\Tenancy\AssignPlanToTenantAction;
 use App\Actions\Tenancy\CreateTenantAction;
+use App\Actions\Tenancy\UpdateTenantDetailsAction;
 use App\Actions\Tenancy\UpdateTenantStatusAction;
 use App\Enums\TenantRole;
 use App\Enums\TenantStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Tenants\AssignPlanRequest;
 use App\Http\Requests\Admin\Tenants\StoreTenantRequest;
+use App\Http\Requests\Admin\Tenants\UpdateTenantDetailsRequest;
 use App\Http\Requests\Admin\Tenants\UpdateTenantStatusRequest;
 use App\Models\Membership;
 use App\Models\Tenant;
@@ -84,6 +86,7 @@ class TenantController extends Controller
             'statusOptions' => array_map(fn (TenantStatus $s) => ['value' => $s->value, 'label' => $s->name], TenantStatus::cases()),
             'planOptions' => $this->planOptions(),
             'roleOptions' => $this->roleOptions(),
+            'localeOptions' => $this->localeOptions(),
         ]);
     }
 
@@ -120,6 +123,19 @@ class TenantController extends Controller
         $action->execute($tenant, $request->validated('plan_id'));
 
         return back()->with('success', __('Tenant plan updated.'));
+    }
+
+    public function updateDetails(UpdateTenantDetailsRequest $request, Tenant $tenant, UpdateTenantDetailsAction $action): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $action->execute($tenant, [
+            'name' => $data['name'],
+            'slug' => $data['slug'],
+            'default_locale' => $data['default_locale'],
+        ]);
+
+        return back()->with('success', __('Tenant details updated.'));
     }
 
     /**
@@ -159,6 +175,7 @@ class TenantController extends Controller
             'id' => $tenant->getKey(),
             'name' => $tenant->name,
             'slug' => $tenant->slug,
+            'default_locale' => $tenant->default_locale,
             'status' => $tenant->status->value,
             'plan' => $plan === null ? null : [
                 'id' => $plan->getKey(),
@@ -192,10 +209,9 @@ class TenantController extends Controller
      */
     private function planOptions(): array
     {
-        return collect(app(ListPlansQuery::class)->options())
+        return array_values(collect(app(ListPlansQuery::class)->options())
             ->map(fn (string $name, string $id): array => ['value' => $id, 'label' => $name])
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**
@@ -233,9 +249,9 @@ class TenantController extends Controller
     {
         $labels = ['hr' => 'Hrvatski (Croatian)', 'en' => 'English'];
 
-        return array_map(
+        return array_values(array_map(
             fn ($code): array => ['value' => (string) $code, 'label' => $labels[$code] ?? strtoupper((string) $code)],
             (array) config('app.supported_locales', []),
-        );
+        ));
     }
 }

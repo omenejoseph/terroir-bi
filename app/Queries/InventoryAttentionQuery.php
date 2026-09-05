@@ -56,6 +56,9 @@ class InventoryAttentionQuery
         return $out;
     }
 
+    /**
+     * @return Builder<InventoryItem>
+     */
     private function baseQuery(): Builder
     {
         return InventoryItem::query()->where('is_active', true);

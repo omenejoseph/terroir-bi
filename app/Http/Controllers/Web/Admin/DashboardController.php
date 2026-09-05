@@ -60,7 +60,7 @@ class DashboardController extends Controller
      */
     private function needingAttention(Carbon $now): array
     {
-        return app(ListTenantsNeedingAttentionQuery::class)->builder($now)
+        return array_values(app(ListTenantsNeedingAttentionQuery::class)->builder($now)
             ->get()
             ->map(fn (Tenant $tenant): array => [
                 'id' => $tenant->getKey(),
@@ -70,8 +70,7 @@ class DashboardController extends Controller
                 'trial_ends_at' => $tenant->subscription?->trial_ends_at?->toIso8601String(),
                 'current_period_end' => $tenant->subscription?->current_period_end?->toIso8601String(),
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**

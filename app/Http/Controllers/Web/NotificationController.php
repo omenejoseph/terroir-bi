@@ -38,7 +38,7 @@ class NotificationController extends Controller
     {
         $ids = $request->input('ids');
 
-        $action->execute($this->userId($request), is_array($ids) ? $ids : null);
+        $action->execute($this->userId($request), is_array($ids) ? array_values(array_map('strval', $ids)) : null);
 
         return response()->json(status: 204);
     }

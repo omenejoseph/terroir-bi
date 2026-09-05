@@ -8,7 +8,9 @@ use App\Enums\StockMovementType;
 use App\Enums\SupplierOrderStatus;
 use App\Models\InventoryItem;
 use App\Models\SupplierOrder;
+use App\Services\Audit\AuditLogger;
 use App\Services\Inventory\StockLedger;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,11 +20,16 @@ use Illuminate\Support\Facades\DB;
  */
 class UpdateSupplierOrderStatusAction
 {
-    public function __construct(private readonly StockLedger $ledger) {}
+    public function __construct(
+        private readonly StockLedger $ledger,
+        private readonly AuditLogger $audit,
+    ) {}
 
     public function execute(SupplierOrder $order, SupplierOrderStatus $status): SupplierOrder
     {
-        return DB::transaction(function () use ($order, $status): SupplierOrder {
+        $from = $order->status;
+
+        return DB::transaction(function () use ($order, $status, $from): SupplierOrder {
             $wasReceived = $order->status === SupplierOrderStatus::Received;
 
             if ($status === SupplierOrderStatus::Sent && $order->sent_at === null) {
@@ -36,6 +43,15 @@ class UpdateSupplierOrderStatusAction
 
             $order->status = $status;
             $order->save();
+
+            // SupplierOrder's own Auditable listener ignores `status` (see
+            // its auditIgnoreOnUpdate()) so this is the only entry for the
+            // transition itself; a RECEIVED transition additionally gets one
+            // inventory_item.stock_adjusted entry per line from StockLedger.
+            $this->audit->record(Auth::user(), 'supplier_order.status_changed', $order, [
+                'from' => $from->value,
+                'to' => $status->value,
+            ]);
 
             return $order;
         });

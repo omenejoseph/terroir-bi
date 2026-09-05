@@ -72,6 +72,11 @@ export interface SharedProps {
     translations: Record<string, string>;
     /** Null when there's no active tenant (e.g. a guest on the login page). */
     org: Org | null;
+    /**
+     * Set only while a platform admin is "logged in as" the current user —
+     * see App\Actions\Auth\StartImpersonationAction. Drives ImpersonationBanner.
+     */
+    impersonating: { impersonator_name: string; target_name: string } | null;
     errors: Record<string, string>;
     /**
      * Recently-visited nav-item keys, newest first — `Inertia::optional`, so it

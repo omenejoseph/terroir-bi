@@ -16,14 +16,14 @@ class PricingTierOptions
     /** @return list<array{id: string, name: string, rebate_percent: string}> */
     public function list(): array
     {
-        return PricingTier::query()
+        return array_values(PricingTier::query()
             ->orderBy('name')
             ->get(['id', 'name', 'rebate_percent'])
             ->map(fn (PricingTier $tier): array => [
-                'id' => $tier->getKey(),
+                'id' => (string) $tier->getKey(),
                 'name' => $tier->name,
                 'rebate_percent' => (string) $tier->rebate_percent,
             ])
-            ->all();
+            ->all());
     }
 }

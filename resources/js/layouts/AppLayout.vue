@@ -4,6 +4,7 @@ import { Head } from '@inertiajs/vue3';
 
 import AppHeader from '@/components/AppHeader.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
+import ImpersonationBanner from '@/components/ImpersonationBanner.vue';
 import NavRail from '@/components/NavRail.vue';
 import FlashMessages from '@/components/ui/FlashMessages.vue';
 import { cn } from '@/lib/cn';
@@ -58,42 +59,46 @@ function toggleNav(): void {
 <template>
     <Head :title="title" />
 
-    <div class="flex min-h-screen bg-background">
-        <aside
-            :class="
-                cn(
-                    'fixed inset-y-0 left-0 z-40 transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
-                    mobileOpen ? 'translate-x-0' : '-translate-x-full',
-                )
-            "
-        >
-            <!-- Collapsing is a desktop affordance: off-canvas there is no rail
-                 to collapse to, so the drawer always carries the full nav. The
-                 wrappers do the switching so neither nav has to fight its own
-                 display class. -->
-            <template v-if="collapsed">
-                <div class="hidden h-full lg:block"><NavRail /></div>
-                <div class="h-full lg:hidden"><AppSidebar /></div>
-            </template>
-            <AppSidebar v-else />
-        </aside>
+    <div class="flex min-h-screen flex-col bg-background">
+        <ImpersonationBanner />
 
-        <!-- Scrim closes the mobile drawer. -->
-        <div
-            v-if="mobileOpen"
-            class="fixed inset-0 z-30 bg-black/40 lg:hidden"
-            aria-hidden="true"
-            @click="mobileOpen = false"
-        />
+        <div class="flex flex-1">
+            <aside
+                :class="
+                    cn(
+                        'fixed inset-y-0 left-0 z-40 transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
+                        mobileOpen ? 'translate-x-0' : '-translate-x-full',
+                    )
+                "
+            >
+                <!-- Collapsing is a desktop affordance: off-canvas there is no
+                     rail to collapse to, so the drawer always carries the
+                     full nav. The wrappers do the switching so neither nav
+                     has to fight its own display class. -->
+                <template v-if="collapsed">
+                    <div class="hidden h-full lg:block"><NavRail /></div>
+                    <div class="h-full lg:hidden"><AppSidebar /></div>
+                </template>
+                <AppSidebar v-else />
+            </aside>
 
-        <div class="flex min-w-0 flex-1 flex-col">
-            <AppHeader @toggle-sidebar="toggleNav" />
+            <!-- Scrim closes the mobile drawer. -->
+            <div
+                v-if="mobileOpen"
+                class="fixed inset-0 z-30 bg-black/40 lg:hidden"
+                aria-hidden="true"
+                @click="mobileOpen = false"
+            />
 
-            <!-- overflow-x-hidden keeps wide tables from widening the page itself. -->
-            <main class="min-w-0 flex-1 overflow-x-hidden px-4 py-6 lg:px-6">
-                <FlashMessages class="mb-6" />
-                <slot />
-            </main>
+            <div class="flex min-w-0 flex-1 flex-col">
+                <AppHeader @toggle-sidebar="toggleNav" />
+
+                <!-- overflow-x-hidden keeps wide tables from widening the page itself. -->
+                <main class="min-w-0 flex-1 overflow-x-hidden px-4 py-6 lg:px-6">
+                    <FlashMessages class="mb-6" />
+                    <slot />
+                </main>
+            </div>
         </div>
     </div>
 </template>

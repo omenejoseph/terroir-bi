@@ -85,7 +85,7 @@ class WebWorkOrdersTest extends TestCase
                     ->has('board.columns', 3)
                     ->where('board.total', 3);
 
-                $columns = collect($page->toArray()['props']['board']['columns'])->keyBy('key');
+                $columns = collect((array) $page->toArray()['props']['board']['columns'])->keyBy('key');
 
                 $this->assertSame(1, $columns['TODO']['count']);
                 $this->assertSame(1, $columns['IN_PROGRESS']['count']);
@@ -121,7 +121,7 @@ class WebWorkOrdersTest extends TestCase
                 $this->assertSame(1, $page->toArray()['props']['board']['total']);
 
                 // …but the picker still shows both, or you could not switch.
-                $boards = collect($page->toArray()['props']['boards'])->keyBy('key');
+                $boards = collect((array) $page->toArray()['props']['boards'])->keyBy('key');
                 $this->assertSame(1, $boards[$cellar->getKey()]['count']);
                 $this->assertSame(2, $boards[$vineyard->getKey()]['count']);
             });
@@ -140,7 +140,7 @@ class WebWorkOrdersTest extends TestCase
             ->get('/work-orders')
             ->assertOk()
             ->assertInertia(function (AssertableInertia $page) use ($empty) {
-                $boards = collect($page->toArray()['props']['boards'])->keyBy('key');
+                $boards = collect((array) $page->toArray()['props']['boards'])->keyBy('key');
                 $this->assertSame(0, $boards[$empty->getKey()]['count']);
             });
     }
@@ -191,7 +191,7 @@ class WebWorkOrdersTest extends TestCase
             ->get('/work-orders')
             ->assertOk()
             ->assertInertia(function (AssertableInertia $page) use ($first, $second) {
-                $boards = collect($page->toArray()['props']['boards'])->keyBy('key');
+                $boards = collect((array) $page->toArray()['props']['boards'])->keyBy('key');
                 $this->assertFalse($boards[$first->getKey()]['favorite']);
                 $this->assertTrue($boards[$second->getKey()]['favorite']);
             });

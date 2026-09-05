@@ -98,8 +98,7 @@ function shortDate(iso: string | null): string {
         <div class="space-y-5">
             <PageHeader :title="t('Customers')">
                 <template #actions>
-                    <!-- @todo Export all — no customer export endpoint yet. -->
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" href="/customers/export" download>
                         <Download class="size-3.5" :stroke-width="1.5" />
                         {{ t('Export all') }}
                     </Button>

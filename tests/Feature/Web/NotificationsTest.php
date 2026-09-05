@@ -89,8 +89,12 @@ class NotificationsTest extends TestCase
 
         $this->postJson('/notifications/read', ['ids' => [$a->getKey()]])->assertStatus(204);
 
-        $this->assertTrue($a->fresh()->is_read);
-        $this->assertFalse($b->fresh()->is_read);
+        $freshA = $a->fresh();
+        $freshB = $b->fresh();
+        $this->assertInstanceOf(Notification::class, $freshA);
+        $this->assertInstanceOf(Notification::class, $freshB);
+        $this->assertTrue($freshA->is_read);
+        $this->assertFalse($freshB->is_read);
     }
 
     public function test_destroy_removes_one_notification(): void

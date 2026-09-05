@@ -8,6 +8,7 @@ import {
     Languages,
     Megaphone,
     Receipt,
+    ScrollText,
     ShieldCheck,
     Users,
 } from 'lucide-vue-next';
@@ -57,6 +58,7 @@ export const ADMIN_NAV_CATEGORIES: NavCategory[] = [
                 icon: ShieldCheck,
             },
             { key: 'admin-users', label: 'Users', href: `${ADMIN_BASE}/users`, icon: Users },
+            { key: 'admin-audit-logs', label: 'Audit Logs', href: `${ADMIN_BASE}/audit-logs`, icon: ScrollText },
         ],
     },
     {

@@ -399,8 +399,7 @@ function destroy(): void {
                         :description="t(':count movements · running balance so you can see stock rebuild then drain', { count: movements.length })"
                     >
                         <template #actions>
-                            <!-- @todo Export — needs a CSV endpoint for the ledger. -->
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" :href="`/inventory/${item.id}/movements/export`" download>
                                 <Download class="size-4" :stroke-width="1.5" />
                                 {{ t('Export') }}
                             </Button>

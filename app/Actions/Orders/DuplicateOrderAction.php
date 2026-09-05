@@ -6,6 +6,7 @@ namespace App\Actions\Orders;
 
 use App\Models\Order;
 use App\Models\OrderItem;
+use RuntimeException;
 
 /**
  * Clone an order into a new draft: same customer, notes, shipping and lines,
@@ -29,7 +30,15 @@ class DuplicateOrderAction
     {
         $order->loadMissing(['customer', 'items']);
 
-        return $this->create->execute($order->customer, $actingUserId, [
+        // customer_id is a required, restrict-on-delete FK — an order without
+        // a customer would mean the referenced row was somehow removed out
+        // from under a live order, a real data-integrity problem worth
+        // surfacing loudly rather than silently duplicating an orphan.
+        $customer = $order->customer ?? throw new RuntimeException(
+            'Order '.$order->getKey().' has no customer to duplicate onto.',
+        );
+
+        return $this->create->execute($customer, $actingUserId, [
             'notes' => $order->notes,
             'shipping_cost' => $order->shipping_cost?->getMinorAmount(),
             'shipping_paid_by_us' => $order->shipping_paid_by_us,

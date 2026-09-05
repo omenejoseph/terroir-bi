@@ -14,6 +14,7 @@ use App\Enums\MembershipStatus;
 use App\Models\Membership;
 use App\Models\User;
 use App\Queries\UserShortcutsQuery;
+use App\Services\Auth\ImpersonationSession;
 use App\Services\Localization\TranslationServiceInterface;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Http\Request;
@@ -40,6 +41,7 @@ class HandleInertiaRequests extends Middleware
         private readonly MembershipContext $membership,
         private readonly UserShortcutsQuery $shortcuts,
         private readonly TranslationServiceInterface $translations,
+        private readonly ImpersonationSession $impersonation,
     ) {}
 
     /**
@@ -74,6 +76,12 @@ class HandleInertiaRequests extends Middleware
                 'slug' => $tenant->slug,
             ],
             'modules' => TenantModules::keysFor($tenant),
+            // Set only while a platform admin is "logged in as" $user — see
+            // StartImpersonationAction/StopImpersonationAction. Drives the
+            // persistent banner in AppLayout.vue; the middleware chain itself
+            // (not this prop) is what actually restricts what an impersonated
+            // session can do.
+            'impersonating' => fn () => $this->impersonating($user),
             // Only serialised when the tenant switcher actually asks for it.
             'tenants' => fn () => $user instanceof User ? $this->memberships($user) : [],
             'flash' => [
@@ -126,6 +134,29 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
+     * @return array{impersonator_name: string, target_name: string}|null
+     */
+    private function impersonating(?User $user): ?array
+    {
+        $impersonatorId = $this->impersonation->get();
+
+        if ($impersonatorId === null || ! $user instanceof User) {
+            return null;
+        }
+
+        $impersonator = User::query()->find($impersonatorId);
+
+        if ($impersonator === null) {
+            return null;
+        }
+
+        return [
+            'impersonator_name' => $impersonator->fullName(),
+            'target_name' => $user->fullName(),
+        ];
+    }
+
+    /**
      * @return list<string>
      */
     private function pinnedShortcuts(?User $user): array
@@ -142,12 +173,11 @@ class HandleInertiaRequests extends Middleware
      */
     private function memberships(User $user): array
     {
-        return $user->memberships()
+        return array_values($user->memberships()
             ->where('status', MembershipStatus::Active->value)
             ->with('tenant')
             ->get()
             ->map(fn (Membership $membership) => TenantMembershipData::fromModel($membership)->toArray())
-            ->values()
-            ->all();
+            ->all());
     }
 }

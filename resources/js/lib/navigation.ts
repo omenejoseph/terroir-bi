@@ -19,6 +19,7 @@ import {
     Package,
     Pin,
     Receipt,
+    ScrollText,
     Settings,
     ShoppingCart,
     Sprout,
@@ -165,6 +166,9 @@ export const NAV_CATEGORIES: NavCategory[] = [
         items: [
             { key: 'settings', label: 'Settings', href: null, icon: Settings, capability: 'settings.manage', module: 'settings' },
             { key: 'whatsapp-bot', label: 'WhatsApp Bot', href: null, icon: MessageCircle, capability: 'settings.manage', module: 'settings' },
+            // Its own module (not 'settings') so a plan can include or
+            // exclude the audit trail independently — see App\Enums\Module.
+            { key: 'logs', label: 'Logs', href: '/logs', icon: ScrollText, capability: 'logs.view', module: 'audit_log' },
         ],
     },
 ];

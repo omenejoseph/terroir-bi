@@ -170,19 +170,18 @@ class WorkOrderController extends Controller
      */
     private function assignees(): array
     {
-        return Membership::query()
+        return array_values(Membership::query()
             ->with('user')
             ->get()
             ->map(fn (Membership $membership): ?array => $membership->user instanceof User
                 ? [
-                    'value' => $membership->user->getKey(),
+                    'value' => (string) $membership->user->getKey(),
                     'label' => trim($membership->user->first_name.' '.$membership->user->last_name),
                 ]
                 : null)
             ->filter()
             ->sortBy('label')
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**
@@ -190,16 +189,16 @@ class WorkOrderController extends Controller
      */
     private function vessels(): array
     {
-        return Vessel::query()
+        return array_values(Vessel::query()
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'type'])
             ->map(fn (Vessel $vessel): array => [
-                'value' => $vessel->getKey(),
+                'value' => (string) $vessel->getKey(),
                 'label' => $vessel->name,
-                'description' => $vessel->type,
+                'description' => $vessel->type->value,
             ])
-            ->all();
+            ->all());
     }
 
     private function userId(Request $request): string

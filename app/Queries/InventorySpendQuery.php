@@ -430,6 +430,8 @@ class InventorySpendQuery
      * Capital held in one product, at cost where known and at list price
      * otherwise. Null when the item carries neither, so the caller can tell
      * "worth nothing" from "not valued".
+     *
+     * @return array{minor: int, currency: string, formatted: string}|null
      */
     private function stockValue(InventoryItem $item, float $onHand, string $currency): ?array
     {

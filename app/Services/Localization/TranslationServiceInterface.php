@@ -16,7 +16,7 @@ interface TranslationServiceInterface
     /**
      * Translate a key, preferring a tenant DB override over file translations.
      *
-     * @param  array<string, string>  $replace
+     * @param  array<string, string|int|float>  $replace
      */
     public function get(string $key, array $replace = [], ?string $locale = null): string;
 

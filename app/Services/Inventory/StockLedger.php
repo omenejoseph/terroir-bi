@@ -9,7 +9,9 @@ use App\Enums\StockMovementType;
 use App\Exceptions\InsufficientStockException;
 use App\Models\InventoryItem;
 use App\Models\StockMovement;
+use App\Services\Audit\AuditLogger;
 use App\Support\Quantity;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,6 +21,8 @@ use Illuminate\Support\Facades\DB;
  */
 class StockLedger
 {
+    public function __construct(private readonly AuditLogger $audit) {}
+
     public function record(
         InventoryItem $item,
         StockMovementType $type,
@@ -42,6 +46,19 @@ class StockLedger
 
             $item->current_stock = Quantity::add((string) $item->current_stock, $signedQuantity);
             $item->save();
+
+            // The single sink for every stock change, so this one call site
+            // covers deduct/withdraw/restore too — a richer entry than the
+            // generic InventoryItem "updated" App\Services\Audit\Auditable
+            // would write for a bare current_stock diff (see InventoryItem's
+            // auditIgnoreOnUpdate()).
+            $this->audit->record(Auth::user(), 'inventory_item.stock_adjusted', $item, [
+                'type' => $type->value,
+                'signed_quantity' => $signedQuantity,
+                'reference' => $reference,
+                'note' => $note,
+                'is_reconciliation' => $isReconciliation,
+            ]);
 
             return $movement;
         });

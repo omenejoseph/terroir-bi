@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ArrowLeft, ShieldCheck } from 'lucide-vue-next';
-import { Link } from '@inertiajs/vue3';
+import { ArrowLeft, KeyRound, ShieldCheck, UserCog } from 'lucide-vue-next';
+import { Link, router } from '@inertiajs/vue3';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import Badge from '@/components/ui/Badge.vue';
+import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import { useTranslations } from '@/composables/useTranslations';
@@ -13,11 +14,38 @@ import type { AdminUserDetail } from '@/types/admin';
 /**
  * User — Show. Port of App\Filament\Resources\Users\UserResource::infolist():
  * a summary section plus a repeatable "Tenants" section over the user's
- * memberships.
+ * memberships, plus the account-level actions Filament never had.
  */
-defineProps<{ user: AdminUserDetail }>();
+const props = defineProps<{ user: AdminUserDetail }>();
 
 const { t } = useTranslations();
+
+function toggleSuspension(): void {
+    const suspending = !props.user.is_suspended;
+    const message = suspending
+        ? t('Suspend :name? They will be signed out immediately and cannot sign back in.', { name: props.user.name })
+        : t('Unsuspend :name?', { name: props.user.name });
+
+    if (!confirm(message)) return;
+
+    router.patch(
+        `${ADMIN_BASE}/users/${props.user.id}/suspension`,
+        { suspended: suspending },
+        { preserveScroll: true },
+    );
+}
+
+function sendPasswordReset(): void {
+    if (!confirm(t('Email :name a password reset link?', { name: props.user.name }))) return;
+
+    router.post(`${ADMIN_BASE}/users/${props.user.id}/send-password-reset`, {}, { preserveScroll: true });
+}
+
+function impersonate(): void {
+    if (!confirm(t('Log in as :name?', { name: props.user.name }))) return;
+
+    router.post(`${ADMIN_BASE}/users/${props.user.id}/impersonate`);
+}
 </script>
 
 <template>
@@ -32,6 +60,21 @@ const { t } = useTranslations();
                         <ArrowLeft class="size-3.5" :stroke-width="1.5" />
                         {{ t('Back to users') }}
                     </Link>
+                    <Button variant="outline" size="sm" @click="sendPasswordReset">
+                        <KeyRound class="size-3.5" :stroke-width="1.5" />
+                        {{ t('Send password reset') }}
+                    </Button>
+                    <Button v-if="!user.is_platform_admin" variant="outline" size="sm" @click="impersonate">
+                        <UserCog class="size-3.5" :stroke-width="1.5" />
+                        {{ t('Log in as') }}
+                    </Button>
+                    <Button
+                        :variant="user.is_suspended ? 'outline' : 'destructive'"
+                        size="sm"
+                        @click="toggleSuspension"
+                    >
+                        {{ user.is_suspended ? t('Unsuspend') : t('Suspend') }}
+                    </Button>
                 </template>
             </PageHeader>
 
@@ -51,6 +94,13 @@ const { t } = useTranslations();
                                 :stroke-width="1.5"
                             />
                             <span v-else class="text-muted-foreground">{{ t('No') }}</span>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-muted-foreground">{{ t('Status') }}</dt>
+                        <dd class="mt-0.5">
+                            <Badge v-if="user.is_suspended" variant="outline">{{ t('Suspended') }}</Badge>
+                            <span v-else class="text-muted-foreground">{{ t('Active') }}</span>
                         </dd>
                     </div>
                     <div>

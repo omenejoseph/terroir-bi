@@ -8,7 +8,6 @@ use App\Actions\Customers\CreateCustomerAction;
 use App\Actions\Customers\DeleteCustomerAction;
 use App\Actions\Customers\OrderTokenAction;
 use App\Actions\Customers\UpdateCustomerAction;
-use App\Authorization\MembershipContext;
 use App\DataTransferObjects\CustomerData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customers\MergeCustomersRequest;
@@ -30,10 +29,7 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    public function __construct(
-        private readonly MembershipContext $membership,
-        private readonly CustomerPresenter $presenter,
-    ) {}
+    public function __construct(private readonly CustomerPresenter $presenter) {}
 
     public function insights(Customer $customer, CustomerInsightsQuery $query): JsonResponse
     {

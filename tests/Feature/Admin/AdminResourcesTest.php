@@ -9,6 +9,7 @@ use App\Actions\Tenancy\SetPlatformAdminAction;
 use App\Enums\Module;
 use App\Enums\TenantRole;
 use App\Enums\TenantStatus;
+use App\Models\Membership;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\TenantSubscription;
@@ -49,6 +50,74 @@ class AdminResourcesTest extends TestCase
         $override = TranslationOverride::query()->where('key', 'orders.title')->firstOrFail();
         $this->assertSame('Narudžbe', $override->value);
         $this->assertSame('hr', $override->locale);
+    }
+
+    /**
+     * The catalog page: every bundled JSON string is browsable, marked with
+     * whether it's overridden, so an admin can override any of them without
+     * knowing its exact key up front (rather than only listing overrides
+     * already made).
+     */
+    /** @return array<string, mixed> */
+    private function catalogRow(string $key, string $locale, string $search): array
+    {
+        $rows = (array) $this->actingAs($this->admin())
+            ->get(
+                "/admin/translation-overrides?locale={$locale}&search=".urlencode($search),
+                $this->inertiaPartial('Admin/TranslationOverrides/Index', 'catalog'),
+            )
+            ->json('props.catalog.data');
+
+        foreach ($rows as $row) {
+            if (($row['key'] ?? null) === $key) {
+                return $row;
+            }
+        }
+
+        $this->fail("No catalog row found for key \"{$key}\".");
+    }
+
+    public function test_translation_catalog_lists_bundled_strings_and_reflects_new_overrides(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->get('/admin/translation-overrides?locale=hr')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/TranslationOverrides/Index')
+                ->where('filters.locale', 'hr')
+                ->where('catalog.data.0.is_overridden', false));
+
+        $before = $this->catalogRow('Today', 'hr', 'Today');
+        $this->assertSame('Danas', $before['value']);
+        $this->assertFalse($before['is_overridden']);
+
+        // Creating an override must show up immediately — regression guard for
+        // the missing cache flush this catalog view would otherwise need.
+        $this->actingAs($admin)
+            ->post('/admin/translation-overrides', ['locale' => 'hr', 'key' => 'Today', 'value' => 'Baš danas'])
+            ->assertRedirect();
+
+        $after = $this->catalogRow('Today', 'hr', 'Today');
+        $this->assertSame('Baš danas', $after['value']);
+        $this->assertTrue($after['is_overridden']);
+
+        // Deleting the override must also show up immediately.
+        $override = TranslationOverride::query()->where('key', 'Today')->where('locale', 'hr')->firstOrFail();
+        $this->actingAs($admin)
+            ->delete("/admin/translation-overrides/{$override->getKey()}")
+            ->assertRedirect();
+
+        $reset = $this->catalogRow('Today', 'hr', 'Today');
+        $this->assertSame('Danas', $reset['value']);
+        $this->assertFalse($reset['is_overridden']);
+    }
+
+    public function test_translation_catalog_switches_between_locales(): void
+    {
+        $row = $this->catalogRow('Today', 'en', 'Today');
+        $this->assertSame('Today', $row['value']);
     }
 
     public function test_plan_form_stores_the_price_entered_in_major_units(): void
@@ -151,6 +220,92 @@ class AdminResourcesTest extends TestCase
         $this->assertSame($plan->getKey(), $tenant->refresh()->plan_id);
     }
 
+    public function test_tenant_details_can_be_updated_from_the_show_page(): void
+    {
+        $tenant = $this->createTenant(['name' => 'Old Name', 'slug' => 'old-slug', 'default_locale' => 'hr']);
+
+        $this->actingAs($this->admin())
+            ->patch("/admin/tenants/{$tenant->getKey()}/details", [
+                'name' => 'New Name',
+                'slug' => 'new-slug',
+                'default_locale' => 'en',
+            ])
+            ->assertRedirect();
+
+        $tenant->refresh();
+        $this->assertSame('New Name', $tenant->name);
+        $this->assertSame('new-slug', $tenant->slug);
+        $this->assertSame('en', $tenant->default_locale);
+    }
+
+    public function test_tenant_details_slug_must_stay_globally_unique(): void
+    {
+        $this->createTenant(['slug' => 'taken-slug']);
+        $tenant = $this->createTenant(['slug' => 'free-slug']);
+
+        $this->actingAs($this->admin())
+            ->patch("/admin/tenants/{$tenant->getKey()}/details", [
+                'name' => $tenant->name,
+                'slug' => 'taken-slug',
+                'default_locale' => 'hr',
+            ])
+            ->assertSessionHasErrors('slug');
+
+        $this->assertSame('free-slug', $tenant->fresh()?->slug);
+    }
+
+    /**
+     * The bug being fixed: the admin's member update/remove now goes through
+     * UpdateMemberAction/RemoveMemberAction + MembershipGuard, the same
+     * "keep at least one active admin" protection the tenant's own
+     * self-service member API already enforces.
+     */
+    public function test_admin_cannot_demote_or_remove_a_tenants_last_active_admin(): void
+    {
+        $tenant = $this->createTenant();
+        $lastAdmin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->createMember($tenant, [TenantRole::Team]);
+
+        $this->actingAsTenant($tenant);
+        $membership = Membership::query()->where('tenant_id', $tenant->getKey())
+            ->where('user_id', $lastAdmin->getKey())->firstOrFail();
+        $this->forgetTenant();
+
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->patch("/admin/tenants/{$tenant->getKey()}/members/{$membership->getKey()}", [
+                'roles' => ['TEAM'],
+                'status' => 'active',
+            ])
+            ->assertSessionHasErrors('roles');
+        $this->assertTrue($membership->fresh()?->hasRole(TenantRole::Admin));
+
+        $this->actingAs($admin)
+            ->delete("/admin/tenants/{$tenant->getKey()}/members/{$membership->getKey()}")
+            ->assertSessionHasErrors('roles');
+        $this->assertDatabaseHas('memberships', ['id' => $membership->getKey()]);
+    }
+
+    /** With a second admin present, the guard no longer applies. */
+    public function test_admin_can_remove_a_member_when_another_admin_remains(): void
+    {
+        $tenant = $this->createTenant();
+        $this->createMember($tenant, [TenantRole::Admin]);
+        $this->createMember($tenant, [TenantRole::Team]);
+
+        $this->actingAsTenant($tenant);
+        $membership = Membership::query()->where('tenant_id', $tenant->getKey())
+            ->whereJsonContains('roles', TenantRole::Team->value)->firstOrFail();
+        $this->forgetTenant();
+
+        $this->actingAs($this->admin())
+            ->delete("/admin/tenants/{$tenant->getKey()}/members/{$membership->getKey()}")
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('memberships', ['id' => $membership->getKey()]);
+    }
+
     public function test_admin_pages_render(): void
     {
         $admin = $this->admin();
@@ -161,6 +316,7 @@ class AdminResourcesTest extends TestCase
         $this->get('/admin')->assertSuccessful();
         $this->get('/admin/platform-admins')->assertSuccessful();
         $this->get('/admin/users')->assertSuccessful();
+        $this->get('/admin/audit-logs')->assertSuccessful();
         $this->get('/admin/translation-overrides')->assertSuccessful();
         // List pages render the row actions (incl. the subscription-link dialog config).
         $this->get('/admin/plans')->assertSuccessful();

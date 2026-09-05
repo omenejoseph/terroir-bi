@@ -219,7 +219,7 @@ class WebInventoryTest extends TestCase
             ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
             ->get('/inventory')
             ->assertInertia(function (AssertableInertia $page) {
-                $keys = collect($page->toArray()['props']['attention'])->pluck('key')->all();
+                $keys = collect((array) $page->toArray()['props']['attention'])->pluck('key')->all();
 
                 self::assertContains('no_min_stock', $keys);
                 self::assertContains('no_cost_per_unit', $keys);
@@ -645,6 +645,85 @@ class WebInventoryTest extends TestCase
         $this->actingAs($member)
             ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
             ->post('/inventory/'.$item->getKey().'/duplicate')
+            ->assertForbidden();
+    }
+
+    public function test_spend_export_streams_a_csv_of_the_same_rows_the_page_shows(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        InventoryItem::create([
+            'name' => 'Velika Bjelica',
+            'sku' => 'VB-1',
+            'category' => 'FINISHED',
+            'unit' => 'bottles',
+            'sales_unit' => 'bottles',
+            'current_stock' => '100',
+            'is_active' => true,
+            'is_for_sale' => true,
+        ]);
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory-spend/export')
+            ->assertOk();
+
+        self::assertStringContainsString('text/csv', (string) $response->headers->get('Content-Type'));
+        self::assertStringContainsString('VB-1', $response->streamedContent());
+    }
+
+    public function test_spend_export_requires_the_financials_capability(): void
+    {
+        $tenant = $this->createTenant();
+        // CELLAR can see inventory but not money.
+        $member = $this->createMember($tenant, [TenantRole::Cellar]);
+
+        $this->actingAs($member)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory-spend/export')
+            ->assertForbidden();
+    }
+
+    public function test_movements_export_streams_the_items_full_ledger(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/inventory/'.$item->getKey().'/stock', [
+                'type' => 'MANUAL_OUT',
+                'quantity' => '-4',
+                'note' => 'Broken case',
+            ])
+            ->assertRedirect();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory/'.$item->getKey().'/movements/export')
+            ->assertOk();
+
+        self::assertStringContainsString('text/csv', (string) $response->headers->get('Content-Type'));
+        self::assertStringContainsString('Broken case', $response->streamedContent());
+    }
+
+    public function test_movements_export_requires_inventory_view(): void
+    {
+        $tenant = $this->createTenant();
+        $sales = $this->createMember($tenant, [TenantRole::Sales]);
+
+        $this->actingAsTenant($tenant);
+        $item = $this->makeItem('Cork', 'CORK-1');
+        $this->forgetTenant();
+
+        $this->actingAs($sales)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory/'.$item->getKey().'/movements/export')
             ->assertForbidden();
     }
 }

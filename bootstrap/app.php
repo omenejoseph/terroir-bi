@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnforceModuleAccess;
 use App\Http\Middleware\EnforceTenantAccess;
 use App\Http\Middleware\EnsurePlatformAdmin;
+use App\Http\Middleware\EnsureUserNotSuspended;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RecordNavVisit;
 use App\Http\Middleware\ResolveTenant;
@@ -51,6 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // CSRF) by virtue of living in routes/web.php.
         $middleware->group('tenant.web', [
             'auth',
+            EnsureUserNotSuspended::class,
             ResolveTenant::class,
             EnforceModuleAccess::class,
             EnforceTenantAccess::class,
@@ -76,6 +78,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->group('platform.admin', [
             'web',
             'auth',
+            EnsureUserNotSuspended::class,
             EnsurePlatformAdmin::class,
             SetLocale::class,
         ]);

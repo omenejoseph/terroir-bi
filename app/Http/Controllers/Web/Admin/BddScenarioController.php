@@ -16,6 +16,7 @@ use App\Services\Bdd\BddRunLog;
 use App\Services\Bdd\CurrentOperator;
 use App\Services\Bdd\LiveScenarioRunner;
 use App\Support\PerPage;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -71,14 +72,14 @@ class BddScenarioController extends Controller
 
     public function store(StoreBddScenarioRequest $request, SaveBddScenarioAction $action): RedirectResponse
     {
-        $scenario = $action->execute($request->validated(), CurrentOperator::id());
+        $scenario = $action->execute($this->scenarioData($request), CurrentOperator::id());
 
         return redirect('/admin/bdd-scenarios/'.$scenario->getKey())->with('success', __('Scenario created.'));
     }
 
     public function update(UpdateBddScenarioRequest $request, BddScenario $bddScenario, SaveBddScenarioAction $action): RedirectResponse
     {
-        $action->execute($request->validated(), CurrentOperator::id(), $bddScenario);
+        $action->execute($this->scenarioData($request), CurrentOperator::id(), $bddScenario);
 
         return redirect('/admin/bdd-scenarios/'.$bddScenario->getKey())->with('success', __('Scenario updated.'));
     }
@@ -220,5 +221,24 @@ class BddScenarioController extends Controller
             'run_log' => ! $inFlight && $run !== null ? ($run->logs ?? []) : [],
             'transcript' => $transcript,
         ];
+    }
+
+    /**
+     * @return array{title: string, gherkin: string, is_active?: bool}
+     */
+    private function scenarioData(FormRequest $request): array
+    {
+        $data = $request->validated();
+
+        $result = [
+            'title' => (string) $data['title'],
+            'gherkin' => (string) $data['gherkin'],
+        ];
+
+        if (isset($data['is_active'])) {
+            $result['is_active'] = (bool) $data['is_active'];
+        }
+
+        return $result;
     }
 }

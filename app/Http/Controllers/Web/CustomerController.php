@@ -30,6 +30,7 @@ use App\Queries\OrderStatusCountsQuery;
 use App\Services\Customers\CustomerMergeService;
 use App\Services\Customers\CustomerPresenter;
 use App\Services\Customers\PricingTierOptions;
+use App\Services\Export\CsvExporter;
 use App\Services\Orders\CustomerConsignmentService;
 use App\Services\Orders\OrderFormOptions;
 use App\Services\Orders\OrderPresenter;
@@ -44,6 +45,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Inertia counterpart of Api\CustomerController.
@@ -199,6 +201,44 @@ class CustomerController extends Controller
         ]);
     }
 
+    /**
+     * Customers export (Figma 230:2395's "Export all" and the selection bar's
+     * "Export") — a CSV of the same rows ListCustomersQuery lists.
+     *
+     * `ids` (comma-separated, sent by the selection bar's "Export") narrows to
+     * exactly those rows instead of the filter bar's own state — the two
+     * buttons share this one endpoint rather than each inventing its own.
+     */
+    public function export(Request $request, ListCustomersQuery $query, CsvExporter $csv): StreamedResponse
+    {
+        $ids = $request->query('ids');
+        $ids = is_string($ids) && $ids !== '' ? array_values(array_filter(explode(',', $ids))) : null;
+
+        $customers = ($ids !== null
+            ? $query->build([])->whereIn('id', $ids)
+            : $query->build(CustomerFilters::fromRequest($request)))
+            ->orderBy('company_name')
+            ->get();
+
+        $currency = $this->currency();
+
+        return $csv->download(
+            'customers-'.now()->toDateString().'.csv',
+            ['Company', 'Contact', 'Email', 'Type', 'Tier', 'Rebate %', 'Orders', 'Revenue', 'Status'],
+            $customers->map(fn (Customer $customer): array => [
+                $customer->company_name,
+                $customer->contact_name,
+                $customer->email,
+                $customer->customer_type?->value,
+                $customer->pricingTier?->name,
+                $customer->effectiveRebatePercent(),
+                $customer->getAttribute('order_count') ?? 0,
+                Money::fromMinor((int) ($customer->getAttribute('revenue_minor') ?? 0), $currency)->toMajor(),
+                $customer->is_active ? 'Active' : 'Inactive',
+            ]),
+        );
+    }
+
     public function store(StoreCustomerRequest $request, CreateCustomerAction $action): RedirectResponse
     {
         $customer = $action->execute($request->validated());
@@ -294,24 +334,43 @@ class CustomerController extends Controller
      */
     private function pricing(Customer $customer): array
     {
-        $rows = CustomerPrice::query()
+        $overrides = CustomerPrice::query()
             ->where('customer_id', $customer->getKey())
             ->with('inventoryItem')
             ->get()
-            ->filter(fn (CustomerPrice $override): bool => $override->inventoryItem instanceof InventoryItem)
-            ->sortBy(fn (CustomerPrice $override): string => $override->inventoryItem->name)
-            ->map(fn (CustomerPrice $override): array => [
+            ->sortBy(function (CustomerPrice $override): string {
+                $item = $override->inventoryItem;
+
+                return $item instanceof InventoryItem ? $item->name : '';
+            });
+
+        // A plain loop rather than filter()->map(): the instanceof guard needs
+        // to live in the same scope as the property access it protects for
+        // PHPStan to narrow $item, which a Collection pipeline loses across
+        // separate closures. In practice inventoryItem is never actually null
+        // (customer_prices.inventory_item_id cascades on delete, so an
+        // override row can't outlive its item) — this guard is for the type
+        // system, not a real runtime case.
+        $rows = [];
+
+        foreach ($overrides as $override) {
+            $item = $override->inventoryItem;
+
+            if (! $item instanceof InventoryItem) {
+                continue;
+            }
+
+            $rows[] = [
                 'inventory_item_id' => $override->inventory_item_id,
-                'name' => $override->inventoryItem->name,
-                'sku' => $override->inventoryItem->sku,
-                'vintage' => $override->inventoryItem->vintage,
-                'unit_size' => $override->inventoryItem->unit_size,
-                'list_price' => $override->inventoryItem->default_price?->jsonSerialize(),
+                'name' => $item->name,
+                'sku' => $item->sku,
+                'vintage' => $item->vintage,
+                'unit_size' => $item->unit_size,
+                'list_price' => $item->default_price?->jsonSerialize(),
                 'price' => $override->price->jsonSerialize(),
                 'source' => 'customer',
-            ])
-            ->values()
-            ->all();
+            ];
+        }
 
         return [
             'rows' => $rows,
@@ -400,7 +459,7 @@ class CustomerController extends Controller
 
     private function currency(): string
     {
-        return app(TenantContext::class)->current()?->settings()->first()?->default_currency
+        return app(TenantContext::class)->current()?->settings()->first()->default_currency
             ?? CurrencyRegistry::default()->code;
     }
 

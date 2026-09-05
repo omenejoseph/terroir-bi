@@ -660,4 +660,77 @@ class WebOrdersTest extends TestCase
         $this->assertSame(1, $duplicate->statusHistories()->count());
         $this->forgetTenant();
     }
+
+    public function test_export_streams_a_csv_honouring_filters_and_shipped_visibility(): void
+    {
+        $tenant = $this->createTenant();
+        $member = $this->createMember($tenant, [TenantRole::Orders]);
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer();
+        $visible = $this->makeOrder($customer, $member, OrderStatus::Received);
+        $this->makeOrder($customer, $member, OrderStatus::Shipped);
+        $this->forgetTenant();
+
+        $response = $this->actingAs($member)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/orders/export')
+            ->assertOk();
+
+        self::assertStringContainsString('text/csv', (string) $response->headers->get('Content-Type'));
+        $csv = $response->streamedContent();
+        self::assertStringContainsString($visible->order_number, $csv);
+        // ORDERS lacks can_see_shipped_orders — the export must not leak it
+        // any more than the table itself does.
+        self::assertStringNotContainsString('SHIPPED', $csv);
+    }
+
+    public function test_export_requires_orders_view(): void
+    {
+        $tenant = $this->createTenant();
+        $cellar = $this->createMember($tenant, [TenantRole::Cellar]);
+
+        $this->actingAs($cellar)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/orders/export')
+            ->assertForbidden();
+    }
+
+    public function test_bulk_status_change_moves_every_selected_order_and_records_history(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer();
+        $first = $this->makeOrder($customer, $admin, OrderStatus::Received);
+        $second = $this->makeOrder($customer, $admin, OrderStatus::Received);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->patch('/orders-bulk/status', [
+                'order_ids' => [$first->getKey(), $second->getKey()],
+                'status' => 'IN_PROCESS',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->actingAsTenant($tenant);
+        self::assertSame(OrderStatus::InProcess, $first->refresh()->status);
+        self::assertSame(OrderStatus::InProcess, $second->refresh()->status);
+        self::assertSame(2, $first->statusHistories()->count());
+        self::assertSame(2, $second->statusHistories()->count());
+        $this->forgetTenant();
+    }
+
+    public function test_bulk_status_change_requires_orders_manage(): void
+    {
+        $tenant = $this->createTenant();
+        $sales = $this->createMember($tenant, [TenantRole::Sales]);
+
+        $this->actingAs($sales)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->patch('/orders-bulk/status', ['order_ids' => ['x'], 'status' => 'IN_PROCESS'])
+            ->assertForbidden();
+    }
 }

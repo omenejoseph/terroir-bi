@@ -9,6 +9,8 @@ use App\Models\Supplier;
 use App\Models\SupplierOrder;
 use App\Models\SupplierPriceChange;
 use App\Models\SupplierPriceItem;
+use App\Services\Audit\AuditLogger;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,6 +21,8 @@ use Illuminate\Support\Facades\DB;
  */
 class SupplierMergeService
 {
+    public function __construct(private readonly AuditLogger $audit) {}
+
     /**
      * @param  list<string>  $loserIds
      * @return array<string, mixed>
@@ -75,6 +79,19 @@ class SupplierMergeService
             );
 
             if ($apply) {
+                // A merge deletes one row and reassigns relations across
+                // several tables — Supplier's own Auditable listener logs the
+                // deletion, but this is the entry that ties it to where
+                // everything went, which the generic floor can't tell.
+                $this->audit->record(Auth::user(), 'supplier.merged', $loser, [
+                    'into_supplier_id' => $winner->getKey(),
+                    'into_company_name' => $winner->company_name,
+                    'orders_moved' => $orders,
+                    'costs_moved' => $costs,
+                    'price_reassigned' => $price['reassign'],
+                    'price_dropped' => $price['drop'],
+                ]);
+
                 $loser->delete();
             }
 

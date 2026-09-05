@@ -17,11 +17,11 @@ class UserShortcutsQuery
     /** @return list<string> */
     public function pinned(User $user): array
     {
-        return UserShortcut::query()
+        return array_values(array_map('strval', UserShortcut::query()
             ->where('user_id', $user->getKey())
             ->orderBy('position')
             ->pluck('nav_key')
-            ->all();
+            ->all()));
     }
 
     /**
@@ -31,11 +31,11 @@ class UserShortcutsQuery
      */
     public function recent(User $user, int $limit = 5): array
     {
-        return UserNavVisit::query()
+        return array_values(array_map('strval', UserNavVisit::query()
             ->where('user_id', $user->getKey())
             ->orderByDesc('visited_at')
             ->limit($limit)
             ->pluck('nav_key')
-            ->all();
+            ->all()));
     }
 }

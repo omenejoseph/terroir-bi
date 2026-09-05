@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\SupplierOrderStatus;
+use App\Services\Audit\Auditable;
 use App\Support\Money\Money;
 use App\Support\Money\MoneyCast;
 use App\Tenancy\BelongsToTenant;
@@ -27,6 +28,7 @@ use Illuminate\Support\Carbon;
  */
 class SupplierOrder extends Model
 {
+    use Auditable;
     use BelongsToTenant;
     use HasUlids;
 
@@ -65,5 +67,17 @@ class SupplierOrder extends Model
     public function items(): HasMany
     {
         return $this->hasMany(SupplierOrderItem::class);
+    }
+
+    /**
+     * Status transitions get their own richer `supplier_order.status_changed`
+     * entry (from/to) via UpdateSupplierOrderStatusAction — skip the generic
+     * one here so the trail doesn't carry two entries for the same change.
+     *
+     * @return list<string>
+     */
+    protected static function auditIgnoreOnUpdate(): array
+    {
+        return ['status'];
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\TenantStatus;
+use App\Services\Audit\Auditable;
 use App\Tenancy\Adapters\Stancl\StanclTenantModelTrait;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -30,6 +31,7 @@ use Stancl\Tenancy\Contracts\Tenant as StanclTenantContract;
  */
 class Tenant extends Model implements StanclTenantContract
 {
+    use Auditable;
     use HasUlids;
     use StanclTenantModelTrait;
 

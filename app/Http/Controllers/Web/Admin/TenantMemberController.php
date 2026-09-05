@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Admin;
 
+use App\Actions\Members\RemoveMemberAction;
+use App\Actions\Members\UpdateMemberAction;
 use App\Actions\Tenancy\AddTenantMemberAction;
 use App\Enums\MembershipStatus;
 use App\Enums\TenantRole;
@@ -12,15 +14,18 @@ use App\Http\Requests\Admin\Tenants\AddTenantMemberRequest;
 use App\Http\Requests\Admin\Tenants\UpdateTenantMemberRequest;
 use App\Models\Membership;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
  * Port of App\Filament\Resources\Tenants\RelationManagers\MembersRelationManager.
- * "Add member" provisions a fresh user account; edit only ever touches roles +
- * status (a member's identity isn't editable here either) — no dedicated
- * Filament Action existed for that, so update() is a plain model update, same
- * as Filament's default EditAction fell back to.
+ * "Add member" provisions a fresh user account; edit/remove route through the
+ * same UpdateMemberAction/RemoveMemberAction the tenant's own self-service
+ * Api\MemberController uses — a platform admin gets the same MembershipGuard
+ * "keep at least one active admin" protection a tenant's own admins have,
+ * rather than a raw model update/delete bypassing it.
  */
 class TenantMemberController extends Controller
 {
@@ -31,25 +36,30 @@ class TenantMemberController extends Controller
         return back()->with('success', __('Member added.'));
     }
 
-    public function update(UpdateTenantMemberRequest $request, Tenant $tenant, Membership $member): RedirectResponse
+    public function update(UpdateTenantMemberRequest $request, Tenant $tenant, Membership $member, UpdateMemberAction $action): RedirectResponse
     {
         $this->assertBelongsToTenant($tenant, $member);
 
         $data = $request->validated();
 
-        $member->update([
-            'roles' => collect($data['roles'] ?? [])->map(fn (string $role) => TenantRole::from($role)),
-            'status' => MembershipStatus::from($data['status']),
-        ]);
+        $roles = array_values(array_map(
+            fn (string $role): TenantRole => TenantRole::from($role),
+            $data['roles'] ?? [],
+        ));
+
+        $action->execute($member, $roles, MembershipStatus::from($data['status']));
 
         return back()->with('success', __('Member updated.'));
     }
 
-    public function destroy(Tenant $tenant, Membership $member): RedirectResponse
+    public function destroy(Request $request, Tenant $tenant, Membership $member, RemoveMemberAction $action): RedirectResponse
     {
         $this->assertBelongsToTenant($tenant, $member);
 
-        $member->delete();
+        $admin = $request->user();
+        abort_unless($admin instanceof User, 401);
+
+        $action->execute($admin, $member);
 
         return back()->with('success', __('Member removed.'));
     }

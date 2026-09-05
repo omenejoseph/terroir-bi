@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Web\Admin\AiSettingsController;
 use App\Http\Controllers\Web\Admin\AiSpendController;
+use App\Http\Controllers\Web\Admin\AuditLogController;
 use App\Http\Controllers\Web\Admin\BddAccessController;
 use App\Http\Controllers\Web\Admin\BddScenarioController;
 use App\Http\Controllers\Web\Admin\BroadcastController;
 use App\Http\Controllers\Web\Admin\DashboardController;
+use App\Http\Controllers\Web\Admin\ImpersonationController;
 use App\Http\Controllers\Web\Admin\PlanController;
 use App\Http\Controllers\Web\Admin\PlatformAdminController;
 use App\Http\Controllers\Web\Admin\StripeSettingsController;
@@ -51,6 +53,14 @@ Route::middleware('platform.admin')->prefix('admin')->name('admin.')->group(func
 
     Route::get('users', [UserController::class, 'index'])->name('users.index');
     Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
+    Route::patch('users/{user}/suspension', [UserController::class, 'updateSuspension'])
+        ->name('users.update-suspension');
+    Route::post('users/{user}/send-password-reset', [UserController::class, 'sendPasswordReset'])
+        ->name('users.send-password-reset');
+    Route::post('users/{user}/impersonate', [ImpersonationController::class, 'store'])
+        ->name('users.impersonate');
+
+    Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 
     Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
     Route::post('plans', [PlanController::class, 'store'])->name('plans.store');
@@ -65,6 +75,7 @@ Route::middleware('platform.admin')->prefix('admin')->name('admin.')->group(func
     Route::get('tenants/{tenant}', [TenantController::class, 'show'])->name('tenants.show');
     Route::patch('tenants/{tenant}/status', [TenantController::class, 'updateStatus'])->name('tenants.update-status');
     Route::patch('tenants/{tenant}/plan', [TenantController::class, 'assignPlan'])->name('tenants.assign-plan');
+    Route::patch('tenants/{tenant}/details', [TenantController::class, 'updateDetails'])->name('tenants.update-details');
     Route::post('tenants/{tenant}/onboarding-link', [TenantController::class, 'generateOnboardingLink'])
         ->name('tenants.generate-onboarding-link');
     Route::post('tenants/{tenant}/email-billing-link', [TenantController::class, 'emailBillingLink'])

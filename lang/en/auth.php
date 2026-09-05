@@ -7,4 +7,5 @@ return [
     'password' => 'The provided password is incorrect.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
     'tenant_membership' => 'You are not an active member of the selected tenant.',
+    'suspended' => 'Your account has been suspended.',
 ];

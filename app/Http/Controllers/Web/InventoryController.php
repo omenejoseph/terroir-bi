@@ -30,6 +30,7 @@ use App\Queries\InventoryTaxonomyQuery;
 use App\Queries\ItemMovementsQuery;
 use App\Queries\ListInventoryItemsQuery;
 use App\Queries\VintageCoverageQuery;
+use App\Services\Export\CsvExporter;
 use App\Services\Inventory\InventoryItemPresenter;
 use App\Support\InventoryItemFilters;
 use App\Support\Period;
@@ -38,6 +39,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Inertia counterpart of Api\InventoryItemController.
@@ -122,6 +124,30 @@ class InventoryController extends Controller
             'vintageCoverage' => $vintage->get($item),
             'filters' => ['period' => $period],
         ]);
+    }
+
+    /**
+     * The item's full stock ledger (Figma 449:1577's "Movement history" ·
+     * "Export") — the same ItemMovementsQuery rows the drawer shows, but
+     * unbounded rather than capped at the page's default 100.
+     */
+    public function exportMovements(InventoryItem $item, ItemMovementsQuery $query, CsvExporter $csv): StreamedResponse
+    {
+        $rows = $query->get($item, 100000);
+
+        return $csv->download(
+            ($item->sku !== '' ? $item->sku : $item->getKey()).'-movements-'.now()->toDateString().'.csv',
+            ['Date', 'Type', 'Quantity', 'Balance', 'Reference', 'Note', 'By'],
+            array_map(fn (array $row): array => [
+                $row['created_at'],
+                $row['type'],
+                $row['quantity'],
+                $row['balance'],
+                $row['reference'],
+                $row['note'],
+                $row['created_by']['name'] ?? null,
+            ], $rows),
+        );
     }
 
     /**
@@ -214,6 +240,48 @@ class InventoryController extends Controller
             ],
             'filters' => ['preset' => is_string($preset) && $preset !== '' ? $preset : '90d'],
         ]);
+    }
+
+    /**
+     * Inventory spend export (Figma 386:1673's "Export") — a CSV of the same
+     * per-product rows the Spend table shows, over the same window.
+     */
+    public function exportSpend(Request $request, InventorySpendQuery $query, CsvExporter $csv): StreamedResponse
+    {
+        $preset = $request->query('preset');
+        $from = $request->query('from');
+        $to = $request->query('to');
+
+        [$start, $end] = Period::resolve(
+            is_string($preset) && $preset !== '' ? $preset : '90d',
+            is_string($from) ? $from : null,
+            is_string($to) ? $to : null,
+        );
+
+        $rows = $query->get($start, $end)['per_product'];
+
+        return $csv->download(
+            'inventory-spend-'.now()->toDateString().'.csv',
+            [
+                'Name', 'SKU', 'Vintage', 'Group', 'Subcategory', 'On Hand',
+                'Stock Value', 'Units Exited', 'Velocity/day', 'Days Left',
+                'Cost of Exits', 'Revenue',
+            ],
+            array_map(fn (array $row): array => [
+                $row['name'],
+                $row['sku'],
+                $row['vintage'],
+                $row['group'],
+                $row['subcategory'],
+                $row['on_hand'],
+                $row['stock_value']['formatted'] ?? null,
+                $row['units_exited'],
+                $row['velocity_per_day'],
+                $row['days_left'],
+                $row['cost_of_exits']['formatted'] ?? null,
+                $row['revenue']['formatted'] ?? null,
+            ], $rows),
+        );
     }
 
     /**

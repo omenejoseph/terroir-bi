@@ -27,7 +27,7 @@ class OrderFormOptions
      */
     public function customers(): array
     {
-        return Customer::query()
+        return array_values(Customer::query()
             ->where('is_active', true)
             ->orderBy('company_name')
             ->get(['id', 'company_name', 'customer_type', 'city', 'rebate_percent'])
@@ -38,7 +38,7 @@ class OrderFormOptions
                 'city' => $customer->city,
                 'rebate_percent' => $customer->rebate_percent,
             ])
-            ->all();
+            ->all());
     }
 
     /**
@@ -50,7 +50,7 @@ class OrderFormOptions
      */
     public function products(): array
     {
-        return InventoryItem::query()
+        return array_values(InventoryItem::query()
             ->where('is_active', true)
             ->where('is_for_sale', true)
             ->orderBy('sort_order')
@@ -68,6 +68,6 @@ class OrderFormOptions
                     ? $item->default_price->jsonSerialize()
                     : null,
             ])
-            ->all();
+            ->all());
     }
 }

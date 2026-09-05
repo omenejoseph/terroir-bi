@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\Contracts\HasAbilities;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -27,6 +28,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $email
  * @property bool $is_platform_admin
  * @property string|null $locale
+ * @property Carbon|null $suspended_at
  */
 class User extends Authenticatable
 {
@@ -60,7 +62,14 @@ class User extends Authenticatable
             'password' => 'hashed',
             // Not fillable — set only via an admin action, never mass-assigned.
             'is_platform_admin' => 'boolean',
+            // Not fillable — set only via SetUserSuspendedAction.
+            'suspended_at' => 'datetime',
         ];
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
     }
 
     /** The user's full name (first [middle] last). */

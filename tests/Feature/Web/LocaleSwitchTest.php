@@ -6,6 +6,7 @@ namespace Tests\Feature\Web;
 
 use App\Enums\TenantRole;
 use App\Models\TranslationOverride;
+use App\Models\User;
 use App\Services\Auth\ActiveTenantSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
@@ -33,9 +34,11 @@ class LocaleSwitchTest extends TestCase
             ->assertRedirect('/dashboard')
             ->assertCookie('terroir_locale', 'en');
 
-        $this->assertSame('en', $user->fresh()->locale);
+        $fresh = $user->fresh();
+        $this->assertInstanceOf(User::class, $fresh);
+        $this->assertSame('en', $fresh->locale);
 
-        $this->actingAs($user->fresh())
+        $this->actingAs($fresh)
             ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
             ->get('/dashboard')
             ->assertOk()

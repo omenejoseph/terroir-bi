@@ -42,6 +42,9 @@ const { t } = useTranslations();
 const num = (n: number) => formatNumber(n, locale.value);
 const money = (minor: number, currency: string) => formatMoney(minor, currency);
 
+/** The table's "Export" — the same per-product rows, over the page's own window. */
+const exportHref = computed(() => `/inventory-spend/export?preset=${encodeURIComponent(props.filters.preset)}`);
+
 const MODULE_TABS: TabItem[] = [
     { label: t('Inventory'), href: '/inventory' },
     { label: t('Analytics'), href: '/inventory-analytics' },
@@ -211,12 +214,7 @@ const dateRange = computed(() => {
                         :description="t('Runout forecast and per-product exit, merged into one table.')"
                     >
                         <template #actions>
-                            <!--
-                              @todo Export. Needs a CSV/XLSX endpoint for this
-                              query; the browser cannot serialise the paginated
-                              server-side result on its own.
-                            -->
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" :href="exportHref" download>
                                 <Download class="size-4" :stroke-width="1.5" />
                                 {{ t('Export') }}
                             </Button>

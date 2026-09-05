@@ -653,13 +653,13 @@ class DashboardSummary
 
         return [
             'due_this_week' => $dueThisWeek,
-            'rows' => $open->map(fn (WorkOrder $task): array => [
+            'rows' => array_values($open->map(fn (WorkOrder $task): array => [
                 'id' => $task->getKey(),
                 'title' => $task->title,
                 'category' => $task->category?->value,
                 'due_date' => $task->due_date?->toIso8601String(),
                 'overdue' => $task->due_date !== null && $task->due_date->isPast(),
-            ])->all(),
+            ])->all()),
         ];
     }
 

@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\MembershipStatus;
 use App\Enums\TenantRole;
+use App\Services\Audit\Auditable;
 use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +30,7 @@ use Illuminate\Support\Collection;
  */
 class Membership extends Model
 {
+    use Auditable;
     use HasUlids;
 
     protected $fillable = [

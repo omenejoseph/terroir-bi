@@ -41,6 +41,7 @@ final class ModuleRegistry
             Module::Team->value => ['members.view', 'members.manage', 'invitations.manage'],
             Module::Settings->value => ['settings.manage', 'translations.manage'],
             Module::AiDataEntry->value => ['ai.use', 'ai.manage'],
+            Module::AuditLog->value => ['logs.view'],
         ];
     }
 
@@ -69,6 +70,9 @@ final class ModuleRegistry
             Module::Team->value => ['members', 'invitations'],
             Module::Settings->value => ['settings', 'translations'],
             Module::AiDataEntry->value => ['ai-imports'],
+            // No API route exists yet (Inertia-only for now) — reserved so
+            // every module keeps exactly one owning prefix if/when one lands.
+            Module::AuditLog->value => ['audit-logs'],
         ];
     }
 
@@ -89,6 +93,7 @@ final class ModuleRegistry
             Module::Orders->value => ['orders'],
             Module::Customers->value => ['customers', 'customers-analytics'],
             Module::WorkOrders->value => ['work-orders'],
+            Module::AuditLog->value => ['logs'],
         ];
     }
 

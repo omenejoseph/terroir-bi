@@ -44,32 +44,32 @@ class GlobalSearchQuery
     /** @return list<SearchResultData> */
     private function searchOrders(string $term): array
     {
-        return $this->orders->build(['search' => $term])
+        return array_values($this->orders->build(['search' => $term])
             ->with('customer')
             ->latest()
             ->limit(self::LIMIT)
             ->get()
             ->map(fn (Order $order): SearchResultData => SearchResultData::fromOrder($order))
-            ->all();
+            ->all());
     }
 
     /** @return list<SearchResultData> */
     private function searchCustomers(string $term): array
     {
-        return $this->customers->build(['search' => $term])
+        return array_values($this->customers->build(['search' => $term])
             ->limit(self::LIMIT)
             ->get()
             ->map(fn (Customer $customer): SearchResultData => SearchResultData::fromCustomer($customer))
-            ->all();
+            ->all());
     }
 
     /** @return list<SearchResultData> */
     private function searchInventory(string $term): array
     {
-        return $this->inventory->build(['search' => $term])
+        return array_values($this->inventory->build(['search' => $term])
             ->limit(self::LIMIT)
             ->get()
             ->map(fn (InventoryItem $item): SearchResultData => SearchResultData::fromInventoryItem($item))
-            ->all();
+            ->all());
     }
 }

@@ -21,17 +21,27 @@ class ListTenantMembersQuery
     /** @return list<array{id: string, name: string, email: string}> */
     public function list(): array
     {
-        return Membership::query()
+        $memberships = Membership::query()
             ->where('tenant_id', $this->tenants->id())
             ->with('user')
-            ->get()
-            ->filter(fn (Membership $membership) => $membership->user instanceof User)
-            ->map(fn (Membership $membership): array => [
-                'id' => $membership->user->getKey(),
-                'name' => $membership->user->fullName(),
-                'email' => $membership->user->email,
-            ])
-            ->values()
-            ->all();
+            ->get();
+
+        $rows = [];
+
+        foreach ($memberships as $membership) {
+            $user = $membership->user;
+
+            if (! $user instanceof User) {
+                continue;
+            }
+
+            $rows[] = [
+                'id' => $user->getKey(),
+                'name' => $user->fullName(),
+                'email' => $user->email,
+            ];
+        }
+
+        return $rows;
     }
 }

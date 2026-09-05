@@ -153,6 +153,27 @@ const selectedCustomers = computed(() =>
     props.customers.data.filter((c) => selected.value.includes(c.id)),
 );
 
+/* ---- export ------------------------------------------------------------ */
+
+/** "Export all" (Figma 230:2395) — honours whatever the filter bar is currently applied. */
+const exportAllHref = computed(() => {
+    const params = new URLSearchParams();
+
+    if (props.filters.search) params.set('search', props.filters.search);
+    if (props.filters.is_active !== null) params.set('is_active', String(props.filters.is_active));
+    if (props.filters.pricing_tier_id) params.set('pricing_tier_id', props.filters.pricing_tier_id);
+    if (props.filters.customer_type) params.set('customer_type', props.filters.customer_type);
+
+    const query = params.toString();
+
+    return query === '' ? '/customers/export' : `/customers/export?${query}`;
+});
+
+/** The selection bar's "Export" — the same endpoint, narrowed to just the checked rows. */
+const exportSelectionHref = computed(
+    () => `/customers/export?ids=${selected.value.map(encodeURIComponent).join(',')}`,
+);
+
 /* ---- formatting ------------------------------------------------------ */
 
 const rebate = (customer: Customer): string => {
@@ -233,8 +254,7 @@ function destroy(customer: Customer): void {
         <div class="space-y-5">
             <PageHeader :title="t('Customers')">
                 <template #actions>
-                    <!-- @todo Export all. No customer export endpoint exists. -->
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" :href="exportAllHref" download>
                         <Download class="size-3.5" :stroke-width="1.5" />
                         {{ t('Export all') }}
                     </Button>
@@ -517,8 +537,7 @@ function destroy(customer: Customer): void {
             class="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 border border-border bg-card px-3 py-2 shadow-lg"
         >
             <span class="px-2 text-xs">{{ t(':count selected', { count: selected.length }) }}</span>
-            <!-- @todo Export selection. Same missing endpoint as Export all. -->
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" :href="exportSelectionHref" download>
                 <Download class="size-3.5" :stroke-width="1.5" />
                 {{ t('Export') }}
             </Button>

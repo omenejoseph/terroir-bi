@@ -162,7 +162,7 @@ class CustomerAttentionQuery
 
     private function currency(): string
     {
-        return $this->tenant->current()?->settings()->first()?->default_currency
+        return $this->tenant->current()?->settings()->first()->default_currency
             ?? CurrencyRegistry::default()->code;
     }
 }

@@ -42,6 +42,9 @@ class WebCustomersTest extends TestCase
         return [$tenant, $this->createMember($tenant, [TenantRole::Admin])];
     }
 
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
     private function makeCustomer(string $company, array $attributes = []): Customer
     {
         return Customer::create(array_merge([
@@ -183,7 +186,7 @@ class WebCustomersTest extends TestCase
             ->get('/customers')
             ->assertOk()
             ->assertInertia(function (AssertableInertia $page) {
-                $rows = collect($page->toArray()['props']['customers']['data'])->keyBy('company_name');
+                $rows = collect((array) $page->toArray()['props']['customers']['data'])->keyBy('company_name');
 
                 $this->assertSame('13.00', $rows['Inherits Tier']['effective_rebate_percent']);
                 $this->assertSame('18.00', $rows['Own Rebate']['effective_rebate_percent']);
@@ -290,7 +293,7 @@ class WebCustomersTest extends TestCase
 
         $response->assertOk();
 
-        $rows = collect($response->json('props.pricing.rows'))->keyBy('name');
+        $rows = collect((array) $response->json('props.pricing.rows'))->keyBy('name');
 
         $this->assertCount(1, $rows);
         // A customer price is absolute: no rebate, and named as the customer's.
@@ -536,7 +539,7 @@ class WebCustomersTest extends TestCase
 
         $response->assertOk();
 
-        $placements = collect($response->json('props.consignment.placements'))->keyBy('order_id');
+        $placements = collect((array) $response->json('props.consignment.placements'))->keyBy('order_id');
 
         $this->assertCount(1, $placements);
         $this->assertTrue($placements->has($open->getKey()));
@@ -544,7 +547,7 @@ class WebCustomersTest extends TestCase
 
         // Both placements' work is still in the product rollup — placed 2,
         // sold 1, remaining 1 — only the settled placement's own chip drops.
-        $product = collect($response->json('props.consignment.products'))->first();
+        $product = collect((array) $response->json('props.consignment.products'))->first();
         $this->assertSame(2, $product['placed']);
         $this->assertSame(1, $product['sold']);
         $this->assertSame(1, $product['remaining']);
@@ -607,7 +610,7 @@ class WebCustomersTest extends TestCase
                 $this->inertiaPartial('Customers/Show', 'consignment'),
             );
 
-        $row = collect($response->json('props.consignment.products'))->first();
+        $row = collect((array) $response->json('props.consignment.products'))->first();
         $this->assertSame(10, $row['placed']);
         $this->assertSame(6, $row['sold']);
         $this->assertSame(4, $row['returned']);
@@ -864,6 +867,57 @@ class WebCustomersTest extends TestCase
         $this->actingAs($orders)
             ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
             ->post('/customers/'.$customer->getKey().'/order-token')
+            ->assertForbidden();
+    }
+
+    public function test_export_streams_a_csv_of_customers_matching_the_filters(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $this->makeCustomer('Konzum', ['customer_type' => 'WHOLESALE']);
+        $this->makeCustomer('Konoba Fjaka', ['customer_type' => 'RETAIL']);
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/customers/export?customer_type=WHOLESALE')
+            ->assertOk();
+
+        self::assertStringContainsString('text/csv', (string) $response->headers->get('Content-Type'));
+        $csv = $response->streamedContent();
+        self::assertStringContainsString('Konzum', $csv);
+        self::assertStringNotContainsString('Konoba Fjaka', $csv);
+    }
+
+    /** The selection bar's "Export" — narrows to exactly the checked rows, ignoring the filter bar. */
+    public function test_export_selection_narrows_to_the_given_ids(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $keep = $this->makeCustomer('Konzum');
+        $this->makeCustomer('Konoba Fjaka');
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/customers/export?ids='.$keep->getKey())
+            ->assertOk();
+
+        $csv = $response->streamedContent();
+        self::assertStringContainsString('Konzum', $csv);
+        self::assertStringNotContainsString('Konoba Fjaka', $csv);
+    }
+
+    public function test_export_requires_customers_view(): void
+    {
+        $tenant = $this->createTenant();
+        $cellar = $this->createMember($tenant, [TenantRole::Cellar]);
+
+        $this->actingAs($cellar)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/customers/export')
             ->assertForbidden();
     }
 }

@@ -31,7 +31,7 @@ final class SearchResultData implements Arrayable, JsonSerializable
         return new self(
             id: $order->getKey(),
             title: $order->order_number,
-            subtitle: $order->customer?->company_name ?? '',
+            subtitle: $order->customer->company_name ?? '',
             // No dedicated show route — the list reads ?order= and opens the
             // same drawer this URL lands on directly.
             url: '/orders?order='.$order->getKey(),

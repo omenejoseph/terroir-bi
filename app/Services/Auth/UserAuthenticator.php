@@ -35,6 +35,12 @@ class UserAuthenticator
             ]);
         }
 
+        if ($user->isSuspended()) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.suspended'),
+            ]);
+        }
+
         return $user;
     }
 

@@ -84,7 +84,7 @@ class TranslationService implements TranslationServiceInterface
     }
 
     /**
-     * @param  array<string, string>  $replace
+     * @param  array<string, string|int|float>  $replace
      */
     private function makeReplacements(string $line, array $replace): string
     {

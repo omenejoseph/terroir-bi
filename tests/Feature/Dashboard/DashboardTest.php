@@ -412,7 +412,7 @@ class DashboardTest extends TestCase
 
         // Cash in 5,000 − cash out 4,500 (3,000 + 1,000 + 500) = 500.
         $this->assertSame(500, $flow['net']['minor']);
-        $byLabel = collect($flow['by_category'])->keyBy('label');
+        $byLabel = collect((array) $flow['by_category'])->keyBy('label');
         $this->assertSame(3000, $byLabel['Salary']['amount']['minor']);
         $this->assertSame(1000, $byLabel['Marketing']['amount']['minor']);
         $this->assertSame(0, $byLabel['Operations']['amount']['minor']);
@@ -496,7 +496,7 @@ class DashboardTest extends TestCase
 
         $this->assertCount(6, $trend);
         $this->assertSame(now()->format('M'), $trend[5]['label']);
-        $monthTwoAgo = collect($trend)->firstWhere('label', now()->subMonthsNoOverflow(2)->format('M'));
+        $monthTwoAgo = collect((array) $trend)->firstWhere('label', now()->subMonthsNoOverflow(2)->format('M'));
         $this->assertSame(5000, $monthTwoAgo['value']);
     }
 }

@@ -68,20 +68,20 @@ class CustomerProductsQuery
             ->keyBy(fn (InventoryItem $item): string => (string) $item->getKey())
             ->all();
 
-        $totalUnits = (int) $lines->sum(fn (object $row): int => (int) $row->units);
+        $totalUnits = (int) $lines->sum(fn (OrderItem $row): int => (int) $row->getAttribute('units'));
 
-        $rows = $lines
-            ->sortByDesc(fn (object $row): int => (int) $row->units)
+        $rows = array_values($lines
+            ->sortByDesc(fn (OrderItem $row): int => (int) $row->getAttribute('units'))
             ->values()
-            ->map(function (object $row) use ($items, $totalUnits, $orderCount, $currency): array {
-                $id = (string) $row->item_id;
+            ->map(function (OrderItem $row) use ($items, $totalUnits, $orderCount, $currency): array {
+                $id = (string) $row->getAttribute('item_id');
                 $item = $items[$id] ?? null;
-                $units = (int) $row->units;
-                $ordersWith = (int) $row->orders_with;
+                $units = (int) $row->getAttribute('units');
+                $ordersWith = (int) $row->getAttribute('orders_with');
 
                 return [
                     'inventory_item_id' => $id,
-                    'name' => $item?->name ?? '—',
+                    'name' => $item->name ?? '—',
                     'sku' => $item?->sku,
                     'vintage' => $item?->vintage,
                     'unit_size' => $item?->unit_size,
@@ -89,13 +89,13 @@ class CustomerProductsQuery
                     'subcategory' => $item?->subcategory,
                     'units' => $units,
                     'share' => $totalUnits > 0 ? round($units / $totalUnits, 4) : 0.0,
-                    'revenue' => Money::fromMinor((int) $row->revenue, $currency)->jsonSerialize(),
+                    'revenue' => Money::fromMinor((int) $row->getAttribute('revenue'), $currency)->jsonSerialize(),
                     'orders_with' => $ordersWith,
-                    'last_ordered' => $this->iso($row->last_ordered),
+                    'last_ordered' => $this->iso($row->getAttribute('last_ordered')),
                     'signal' => $this->signal($ordersWith, $orderCount),
                 ];
             })
-            ->all();
+            ->all());
 
         return [
             'rows' => $rows,
@@ -137,7 +137,7 @@ class CustomerProductsQuery
 
     private function currency(): string
     {
-        return $this->tenant->current()?->settings()->first()?->default_currency
+        return $this->tenant->current()?->settings()->first()->default_currency
             ?? CurrencyRegistry::default()->code;
     }
 }

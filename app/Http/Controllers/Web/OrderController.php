@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Actions\Orders\AddOrderCommentAction;
 use App\Actions\Orders\AddOrderItemsAction;
+use App\Actions\Orders\BulkUpdateOrderStatusAction;
 use App\Actions\Orders\CreateOrderAction;
 use App\Actions\Orders\DeleteOrderAction;
 use App\Actions\Orders\DeleteOrderItemAction;
@@ -18,6 +19,7 @@ use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\AddOrderCommentRequest;
 use App\Http\Requests\Orders\AddOrderItemsRequest;
+use App\Http\Requests\Orders\BulkUpdateOrderStatusRequest;
 use App\Http\Requests\Orders\StoreOrderRequest;
 use App\Http\Requests\Orders\UpdateOrderItemRequest;
 use App\Http\Requests\Orders\UpdateOrderNotesRequest;
@@ -29,6 +31,7 @@ use App\Models\User;
 use App\Queries\ListOrdersQuery;
 use App\Queries\OrderPipelineQuery;
 use App\Queries\OrderStatusCountsQuery;
+use App\Services\Export\CsvExporter;
 use App\Services\Orders\OrderFormOptions;
 use App\Services\Orders\OrderPresenter;
 use App\Support\OrderFilters;
@@ -38,6 +41,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Inertia counterpart of Api\OrderController.
@@ -119,6 +123,50 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+     * Orders export (Figma 455:1577's header "Export") — a CSV of the same
+     * rows ListOrdersQuery lists, honouring the same period/filter/visibility
+     * scoping index() applies (including the shipped-visibility rule, which
+     * must not be bypassable here any more than it is on the table itself).
+     */
+    public function export(Request $request, ListOrdersQuery $query, CsvExporter $csv): StreamedResponse
+    {
+        $filters = OrderFilters::fromRequest($request);
+
+        [$from, $to] = Period::resolve(
+            $filters['period'] ?? 'ytd',
+            $filters['from'],
+            $filters['to'],
+        );
+
+        $scoped = [
+            ...$filters,
+            'from' => $from->toDateTimeString(),
+            'to' => $to->toDateTimeString(),
+            'hide_shipped' => ! $this->membership->canSeeShippedOrders(),
+        ];
+
+        $orders = $query->build($scoped)
+            ->with(['customer', 'items'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return $csv->download(
+            'orders-'.now()->toDateString().'.csv',
+            ['Order #', 'Customer', 'Status', 'Date', 'Total', 'Currency', 'Lines', 'Units'],
+            $orders->map(fn (Order $order): array => [
+                $order->order_number,
+                $order->customer?->company_name,
+                $order->status->label(),
+                $order->created_at?->toDateString(),
+                $order->total_amount->toMajor(),
+                $order->total_amount->getCurrencyCode(),
+                $order->items->count(),
+                $order->items->sum('quantity'),
+            ]),
+        );
+    }
+
     public function store(StoreOrderRequest $request, CreateOrderAction $action): RedirectResponse
     {
         $customer = Customer::query()->whereKey((string) $request->validated('customer_id'))->firstOrFail();
@@ -147,6 +195,35 @@ class OrderController extends Controller
         return back()->with('success', __('Order moved to :status.', [
             'status' => OrderStatus::from((string) $request->validated('status'))->label(),
         ]));
+    }
+
+    /**
+     * The list's floating selection bar, "Bulk actions" (Figma 455:1577) — the
+     * same UpdateOrderStatusAction the single-order stepper calls, looped over
+     * the selected orders inside one transaction (BulkUpdateOrderStatusAction),
+     * so every side effect (status history, notification) fires exactly as it
+     * would for each order changed one at a time.
+     */
+    public function bulkUpdateStatus(
+        BulkUpdateOrderStatusRequest $request,
+        BulkUpdateOrderStatusAction $action,
+    ): RedirectResponse {
+        /** @var list<string> $orderIds */
+        $orderIds = array_values((array) $request->validated('order_ids'));
+        $status = OrderStatus::from((string) $request->validated('status'));
+
+        $updated = $action->execute(
+            $orderIds,
+            $status,
+            $request->has('note') ? $request->string('note')->value() : null,
+            $this->userId($request),
+        );
+
+        return back()->with('success', trans_choice(
+            ':count order moved to :status.|:count orders moved to :status.',
+            $updated,
+            ['count' => $updated, 'status' => $status->label()],
+        ));
     }
 
     public function updateNotes(

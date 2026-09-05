@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Enums\WorkOrderCategory;
+use App\Services\Audit\Auditable;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -34,6 +35,7 @@ use Illuminate\Support\Carbon;
  */
 class WorkOrder extends Model
 {
+    use Auditable;
     use BelongsToTenant;
     use HasUlids;
 
@@ -107,5 +109,17 @@ class WorkOrder extends Model
     public function wineLot(): BelongsTo
     {
         return $this->belongsTo(WineLot::class);
+    }
+
+    /**
+     * Status transitions get their own richer `work_order.status_changed`
+     * entry (from/to) via UpdateWorkOrderStatusAction — skip the generic one
+     * here so the trail doesn't carry two entries for the same change.
+     *
+     * @return list<string>
+     */
+    protected static function auditIgnoreOnUpdate(): array
+    {
+        return ['status'];
     }
 }
