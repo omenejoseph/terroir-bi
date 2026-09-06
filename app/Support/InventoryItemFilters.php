@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 final class InventoryItemFilters
 {
     /**
-     * @return array{search: ?string, category: ?string, is_active: ?bool, is_for_sale: ?bool, sellable: bool}
+     * @return array{search: ?string, category: ?string, is_active: ?bool, is_for_sale: ?bool, sellable: bool, missing_cost: bool}
      */
     public static function fromRequest(Request $request): array
     {
@@ -30,6 +30,10 @@ final class InventoryItemFilters
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : null,
             'is_for_sale' => $request->has('is_for_sale') ? $request->boolean('is_for_sale') : null,
             'sellable' => $request->boolean('sellable'),
+            // Inventory Analytics' "Add costs" deep-link — active items with no
+            // cost_per_unit, same criteria InventoryAnalyticsQuery counts as
+            // "not costed" so the two screens can't disagree on the set.
+            'missing_cost' => $request->boolean('missing_cost'),
         ];
     }
 }

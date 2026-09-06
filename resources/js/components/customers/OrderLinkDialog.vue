@@ -5,6 +5,7 @@ import { Check, Copy, Link2, RefreshCw } from 'lucide-vue-next';
 
 import Button from '@/components/ui/Button.vue';
 import Dialog from '@/components/ui/Dialog.vue';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 
 /**
@@ -71,8 +72,13 @@ function generate(): void {
     );
 }
 
-function revoke(): void {
-    if (!confirm(t('Revoke this order link? The customer will no longer be able to use it.'))) return;
+async function revoke(): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Revoke order link'),
+        description: t('Revoke this order link? The customer will no longer be able to use it.'),
+        tone: 'danger',
+    });
+    if (!ok) return;
 
     revoking.value = true;
     router.delete(`/customers/${props.customerId}/order-token`, {

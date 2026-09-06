@@ -14,13 +14,19 @@ use App\Models\WineLot;
 class LotCostService
 {
     /**
+     * `$additionsMinor` lets a caller listing many lots at once (e.g.
+     * CellarCostsQuery) pass in a pre-aggregated sum (one `withSum()` query
+     * for every lot) instead of this method running its own `additions()`
+     * query per lot — omit it for the single-lot call sites below, where
+     * that would just be one query either way.
+     *
      * @return array{total: int, additions: int, grape: int, per_liter: int, per_bottle_750: int}
      */
-    public function breakdown(WineLot $lot): array
+    public function breakdown(WineLot $lot, ?int $additionsMinor = null): array
     {
         $grape = $lot->grape_cost?->getMinorAmount() ?? 0;
 
-        $additions = (int) $lot->additions()->sum('total_cost');
+        $additions = $additionsMinor ?? (int) $lot->additions()->sum('total_cost');
 
         $total = $grape + $additions;
 

@@ -41,6 +41,8 @@ const props = defineProps<{
     pipeline: OrderPipeline | null;
     /** Only present while the Order — View drawer has asked for it. */
     order?: Order | null;
+    /** The item drawer's "Open in Orders" link — names `filters.item_id` for the dismissible chip below. Null unless that filter is active. */
+    itemFilterName: string | null;
 }>();
 
 const page = usePage<SharedProps>();
@@ -73,6 +75,7 @@ function reload(overrides: Record<string, unknown>): void {
             search: props.filters.search ?? undefined,
             status: props.filters.status ?? undefined,
             channel: props.filters.channel ?? undefined,
+            item_id: props.filters.item_id ?? undefined,
             period: props.filters.period ?? undefined,
             from: props.filters.from ?? undefined,
             to: props.filters.to ?? undefined,
@@ -81,8 +84,13 @@ function reload(overrides: Record<string, unknown>): void {
             per_page: props.orders.meta.per_page,
             ...overrides,
         },
-        { preserveState: true, preserveScroll: true, replace: true, only: ['orders', 'filters', 'statusCounts', 'pipeline'] },
+        { preserveState: true, preserveScroll: true, replace: true, only: ['orders', 'filters', 'statusCounts', 'pipeline', 'itemFilterName'] },
     );
+}
+
+/** The item drawer's "Open in Orders" deep-link — dismissible, since nothing else on this page offers a way back out of it. */
+function clearItemFilter(): void {
+    reload({ item_id: undefined });
 }
 
 /** The toolbar's Channel filter — filters by the customer's sales channel (App\Enums\CustomerType); Rep has no backing order-owner column, so it stays a dead stub. */
@@ -216,6 +224,7 @@ const exportHref = computed(() => {
     if (props.filters.search) params.set('search', props.filters.search);
     if (props.filters.status) params.set('status', props.filters.status);
     if (props.filters.channel) params.set('channel', props.filters.channel);
+    if (props.filters.item_id) params.set('item_id', props.filters.item_id);
     if (props.filters.period) params.set('period', props.filters.period);
     if (props.filters.from) params.set('from', props.filters.from);
     if (props.filters.to) params.set('to', props.filters.to);
@@ -373,6 +382,17 @@ function bulkChangeStatus(status: string): void {
                     >
                         {{ t('Rep') }}
                         <span aria-hidden="true" class="text-muted-foreground">▾</span>
+                    </button>
+
+                    <!-- The item drawer's "Open in Orders" deep-link. -->
+                    <button
+                        v-if="filters.item_id"
+                        type="button"
+                        class="inline-flex h-[30px] shrink-0 items-center gap-1.5 border border-primary bg-primary px-2.5 text-xs text-primary-foreground"
+                        @click="clearItemFilter"
+                    >
+                        {{ itemFilterName ?? t('Item') }}
+                        <X class="size-3.5" :stroke-width="1.5" />
                     </button>
 
                     <div class="ml-auto flex items-center gap-2">

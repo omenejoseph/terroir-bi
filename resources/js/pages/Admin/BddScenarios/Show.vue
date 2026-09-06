@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import Disclosure from '@/components/ui/Disclosure.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminBddScenarioDetail } from '@/types/admin';
@@ -67,18 +68,24 @@ onBeforeUnmount(stopPolling);
 
 const formOpen = ref(false);
 
-function run(): void {
-    if (!confirm(t('Queue a background run: an AI agent executes the Gherkin live against a throwaway sandbox (always rolled back). Costs one AI call.'))) {
-        return;
-    }
+async function run(): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Run scenario'),
+        description: t('Queue a background run: an AI agent executes the Gherkin live against a throwaway sandbox (always rolled back). Costs one AI call.'),
+    });
+    if (!ok) return;
 
     router.post(`${ADMIN_BASE}/bdd-scenarios/${scenario.value.id}/run`, {}, { preserveScroll: true, only: ['scenario'] });
 }
 
-function grantAccess(): void {
+async function grantAccess(): Promise<void> {
     const list = scenario.value.denied_operations.join(', ');
 
-    if (!confirm(t('Grant: :operations — the next run picks the grants up automatically.', { operations: list }))) return;
+    const ok = await confirmDialog({
+        title: t('Grant access'),
+        description: t('Grant: :operations — the next run picks the grants up automatically.', { operations: list }),
+    });
+    if (!ok) return;
 
     router.post(`${ADMIN_BASE}/bdd-scenarios/${scenario.value.id}/grant-access`, {}, { preserveScroll: true });
 }

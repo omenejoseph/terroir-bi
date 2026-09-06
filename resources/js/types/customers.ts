@@ -78,6 +78,27 @@ export interface CustomerAnalytics {
     customers: CustomerAnalyticsRow[];
 }
 
+/** App\Queries\ReorderRadarQuery — one flagged customer. */
+export interface ReorderRadarRow {
+    customer_id: string;
+    company_name: string;
+    order_count: number;
+    last_order_date: string;
+    /** Fractional — the median gap is not a whole-day figure either. */
+    days_since_last: number;
+    median_gap_days: number;
+    overdue_ratio: number;
+    status: 'due' | 'overdue' | 'at_risk';
+    avg_order_value: MoneyValue;
+    urgency: number;
+}
+
+/** App\Queries\ReorderRadarQuery::get() — the Dashboard's Reorder pipeline card narrows this; the full page (Customers/ReorderRadar.vue) shows it as-is. */
+export interface ReorderRadar {
+    rows: ReorderRadarRow[];
+    counts: { due: number; overdue: number; at_risk: number };
+}
+
 /** App\Queries\CustomerInsightsQuery. */
 export interface CustomerInsights {
     total_spend: MoneyValue;
@@ -148,6 +169,26 @@ export interface CustomerProducts {
     order_count: number;
 }
 
+/** A real catalog item "Suggest upsell" (231:9336) can offer. */
+export interface CustomerUpsellCandidate {
+    inventory_item_id: string;
+    name: string;
+    sku: string | null;
+    vintage: number | null;
+    default_price: MoneyValue;
+}
+
+/**
+ * App\Queries\CustomerUpsellQuery — a pricier item in the customer's own
+ * cheapest-per-bottle bucket that they haven't bought. `bucket` and
+ * `candidates` are both empty/null when the data can't support a suggestion.
+ */
+export interface CustomerUpsell {
+    bucket: string | null;
+    current_price_per_bottle: MoneyValue | null;
+    candidates: CustomerUpsellCandidate[];
+}
+
 /** The Pricing tab: what this customer pays, and which rule decided it. */
 export interface CustomerPriceRow {
     inventory_item_id: string;
@@ -188,6 +229,25 @@ export interface CustomerConsignmentPlacement {
     remaining: number;
 }
 
+/** One line of a recorded consignment sale/return. */
+export interface CustomerConsignmentHistoryItem {
+    name: string;
+    quantity: number;
+    /** Null unless the viewer may see financials. */
+    total: MoneyValue | null;
+}
+
+/** App\Services\Orders\CustomerConsignmentService::history() — one ConsignmentReport. */
+export interface CustomerConsignmentHistoryEntry {
+    id: string;
+    kind: 'SALE' | 'RETURN';
+    date: string;
+    order_number: string | null;
+    note: string | null;
+    created_by_name: string | null;
+    items: CustomerConsignmentHistoryItem[];
+}
+
 /** App\Services\Orders\CustomerConsignmentService::summary() — the Consignment tab. */
 export interface CustomerConsignment {
     products: CustomerConsignmentProduct[];
@@ -197,6 +257,8 @@ export interface CustomerConsignment {
     total_sold_revenue: MoneyValue | null;
     total_sold_gross_profit: MoneyValue | null;
     total_sold_margin_percent: string | null;
+    /** Every sale/return recorded, newest first — capped server-side. */
+    history: CustomerConsignmentHistoryEntry[];
 }
 
 /** One card in the customer overview's "Needs attention" band. */

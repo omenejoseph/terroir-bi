@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { ArrowRight, Copy, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import { ArrowRight, Copy, Mail, MoreHorizontal, Pencil, Plus, Printer, Trash2, Wallet } from 'lucide-vue-next';
 
+import CommentReactions from '@/components/orders/CommentReactions.vue';
 import OrderLineFields from '@/components/orders/OrderLineFields.vue';
 import QuantityStepper from '@/components/orders/QuantityStepper.vue';
 import StatusStepper from '@/components/orders/StatusStepper.vue';
 import Avatar from '@/components/ui/Avatar.vue';
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
+import DropdownMenu from '@/components/ui/DropdownMenu.vue';
 import MentionInput from '@/components/ui/MentionInput.vue';
 import type { Mentionable } from '@/components/ui/MentionInput.vue';
 import SectionHeader from '@/components/ui/SectionHeader.vue';
@@ -16,12 +18,14 @@ import Select from '@/components/ui/Select.vue';
 import Separator from '@/components/ui/Separator.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import { useAuth } from '@/composables/useAuth';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber } from '@/lib/money';
 import { linesToPayload, UNIT_OPTIONS } from '@/lib/orders';
 import type { MoneyValue } from '@/types/inventory';
-import type { Order, OrderLine, OrderLineDraft, OrderStatusKey, ProductOption } from '@/types/orders';
+import type { Order, OrderComment, OrderLine, OrderLineDraft, OrderStatusKey, ProductOption } from '@/types/orders';
 import type { SharedProps } from '@/types';
+import type { MenuItem } from '@/types/ui';
 
 /**
  * Order — View (Figma `376:1592`; shown in context on `453:4938`).
@@ -40,7 +44,7 @@ const emit = defineEmits<{ close: [] }>();
 
 const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
-const { can } = useAuth();
+const { can, user } = useAuth();
 const { t } = useTranslations();
 
 const money = (m: MoneyValue | null | undefined): string =>
@@ -154,6 +158,18 @@ function postComment(): void {
     });
 }
 
+/** Hitting the same emoji again is how a reaction is taken back — see CommentReactions.vue. */
+function toggleReaction(note: OrderComment, emoji: string): void {
+    const id = order.value?.id;
+    if (id === undefined) return;
+
+    router.post(
+        `/order-comments/${note.id}/reactions`,
+        { emoji },
+        { preserveScroll: true, preserveState: true, onSuccess: () => reloadOrder(id) },
+    );
+}
+
 /** Clear a half-typed comment when the drawer moves to another order. */
 watch(() => order.value?.id, () => comment.reset());
 
@@ -223,10 +239,16 @@ function saveEdit(line: OrderLine): void {
     );
 }
 
-function removeLine(line: OrderLine): void {
+async function removeLine(line: OrderLine): Promise<void> {
     const id = order.value?.id;
     if (id === undefined) return;
-    if (!confirm(t('Remove :item?', { item: line.name || line.custom_description || t('this line') }))) return;
+
+    const ok = await confirmDialog({
+        title: t('Remove line'),
+        description: t('Remove :item?', { item: line.name || line.custom_description || t('this line') }),
+        tone: 'danger',
+    });
+    if (!ok) return;
 
     router.delete(`/order-items/${line.id}`, { preserveScroll: true, onSuccess: () => reloadOrder(id) });
 }
@@ -287,20 +309,71 @@ function destroy(): void {
 
     router.delete(`/orders/${id}`, { onSuccess: () => emit('close') });
 }
+
+/**
+ * The header's overflow menu (Figma 376:1592) — print, resend, mark paid.
+ * "Mark paid" is hidden once the order already shows PAID: the action
+ * records an Inflow for the outstanding balance, so there'd be nothing left
+ * to mark.
+ */
+const overflowActions = computed<MenuItem[]>(() => {
+    const o = order.value;
+    if (!o) return [];
+
+    const items: MenuItem[] = [
+        { key: 'print', label: t('Print'), icon: Printer },
+        { key: 'resend', label: t('Resend confirmation'), icon: Mail },
+    ];
+
+    if (can('orders.manage') && o.payment?.status !== 'PAID') {
+        items.push({ key: 'mark-paid', label: t('Mark paid'), icon: Wallet });
+    }
+
+    return items;
+});
+
+async function onOverflowAction(key: string): Promise<void> {
+    const id = order.value?.id;
+    if (id === undefined) return;
+
+    if (key === 'print') {
+        window.open(`/orders/${id}/pdf`, '_blank');
+
+        return;
+    }
+
+    if (key === 'resend') {
+        const ok = await confirmDialog({
+            title: t('Resend confirmation'),
+            description: t('Resend the order confirmation to this customer?'),
+        });
+        if (!ok) return;
+
+        router.post(`/orders/${id}/resend-confirmation`, {}, { preserveScroll: true, onSuccess: () => reloadOrder(id) });
+
+        return;
+    }
+
+    if (key === 'mark-paid') {
+        const ok = await confirmDialog({
+            title: t('Mark paid'),
+            description: t('Mark this order paid for the full outstanding balance?'),
+        });
+        if (!ok) return;
+
+        router.post(`/orders/${id}/mark-paid`, {}, { preserveScroll: true, onSuccess: () => reloadOrder(id) });
+    }
+}
 </script>
 
 <template>
     <SidePanel :open="open" :title="order?.customer?.company_name ?? t('Order')" :subtitle="subtitle" @close="emit('close')">
         <template #header-actions>
-            <!-- @todo Overflow menu. The design offers per-order actions here
-                 (print, resend, mark paid); none has an endpoint yet. -->
-            <button
-                type="button"
-                class="p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                :aria-label="t('More actions')"
-            >
-                <MoreHorizontal class="size-4" :stroke-width="1.5" />
-            </button>
+            <DropdownMenu :items="overflowActions" :label="t('More actions')" @select="onOverflowAction">
+                <template #trigger>
+                    <MoreHorizontal class="size-4" :stroke-width="1.5" />
+                </template>
+            </DropdownMenu>
         </template>
 
         <template v-if="order" #meta>
@@ -312,6 +385,18 @@ function destroy(): void {
                 <Badge v-if="rebate !== null" variant="outline">{{ t('Rebate :percent%', { percent: rebate }) }}</Badge>
                 <Badge v-if="order!.is_backorder" variant="warning">{{ t('Backorder') }}</Badge>
                 <Badge v-if="order!.is_consignment" variant="outline">{{ t('Consignment') }}</Badge>
+                <Badge
+                    v-if="order!.payment"
+                    :variant="order!.payment.status === 'PAID' ? 'success' : order!.payment.status === 'PARTIAL' ? 'warning' : 'outline'"
+                >
+                    {{
+                        order!.payment.status === 'PAID'
+                            ? t('Paid')
+                            : order!.payment.status === 'PARTIAL'
+                              ? t('Partially paid')
+                              : t('Unpaid')
+                    }}
+                </Badge>
             </div>
             <p class="mt-2 text-xs text-muted-foreground">
                 {{ t('Received') }} {{ dateTime(order!.created_at) }}
@@ -450,16 +535,30 @@ function destroy(): void {
                     <SectionHeader :title="t('Profitability')" />
 
                     <!--
-                      The design splits revenue into gross, rebate and net. The
-                      server records line totals with the rebate already applied
-                      and does not keep the gross figure, so reconstructing it
-                      here would be arithmetic on an assumption rather than data.
-                      @todo Have OrderData carry the pre-rebate revenue so the
-                      three-line breakdown can be shown as designed.
+                      The design splits revenue into gross, rebate and net.
+                      Shown only when every line on this order snapshotted its
+                      pre-rebate price (OrderLineWriter) — an order written
+                      before that existed keeps the simpler Revenue/COGS/Margin
+                      view, since reconstructing gross from the customer's
+                      CURRENT rebate % would be wrong if it has since changed.
                     -->
                     <dl class="grid grid-cols-2 gap-x-8 border border-border bg-muted/40 p-4 text-xs">
+                        <template v-if="order.profitability.gross_revenue && order.profitability.rebate_amount">
+                            <div class="flex justify-between gap-3 py-1">
+                                <dt class="text-muted-foreground">{{ t('Gross revenue') }}</dt>
+                                <dd class="tabular-nums">{{ money(order.profitability.gross_revenue) }}</dd>
+                            </div>
+                            <div aria-hidden="true" />
+                            <div class="flex justify-between gap-3 py-1">
+                                <dt class="text-muted-foreground">{{ t('Rebate') }}</dt>
+                                <dd class="tabular-nums">−{{ money(order.profitability.rebate_amount) }}</dd>
+                            </div>
+                            <div aria-hidden="true" />
+                        </template>
                         <div class="flex justify-between gap-3 py-1">
-                            <dt class="text-muted-foreground">{{ t('Revenue') }}</dt>
+                            <dt class="text-muted-foreground">
+                                {{ order.profitability.gross_revenue ? t('Net revenue') : t('Revenue') }}
+                            </dt>
                             <dd class="tabular-nums">{{ money(order.profitability.revenue) }}</dd>
                         </div>
                         <div class="flex justify-between gap-3 py-1">
@@ -597,8 +696,11 @@ function destroy(): void {
                                 <span class="text-muted-foreground">{{ dateTime(note.created_at) }}</span>
                             </span>
                             <span class="mt-0.5 block text-sm break-words">{{ note.content }}</span>
-                            <!-- @todo Reactions. The design shows emoji counts
-                                 under a comment; there is no reactions table. -->
+                            <CommentReactions
+                                :reactions="note.reactions"
+                                :current-user-id="user?.id ?? null"
+                                @toggle="toggleReaction(note, $event)"
+                            />
                         </span>
                     </li>
                 </ul>

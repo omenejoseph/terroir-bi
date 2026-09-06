@@ -10,6 +10,38 @@ jobs:
     name: Lint, analyse & test
     runs-on: ubuntu-latest
 
+    # Overrides phpunit.xml's own sqlite <env> defaults (which stay in
+    # place for local `php artisan test` — no MySQL required for that) —
+    # ambient environment variables take precedence over phpunit.xml's
+    # <env> declarations, so this is enough on its own, no separate
+    # phpunit config file needed.
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: terroir_bi_test
+      DB_USERNAME: root
+      DB_PASSWORD: ''
+
+    # MySQL, not sqlite: this app runs MySQL in production, and a
+    # driver-specific query (a date/month-format function, a collation
+    # quirk) can pass on sqlite and fail — or silently misbehave — on the
+    # engine that actually matters. See config/database.php's own comment
+    # on utf8mb4_0900_ai_ci for one bug this service run already caught.
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: terroir_bi_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,8 +50,9 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          # intl powers locale-aware money formatting; sqlite backs the test DB.
-          extensions: intl, pdo_sqlite, sqlite3, mbstring, dom, curl, fileinfo
+          # intl powers locale-aware money formatting; pdo_mysql backs the
+          # test DB (pdo_sqlite/sqlite3 kept too — local dev's own default).
+          extensions: intl, pdo_mysql, pdo_sqlite, sqlite3, mbstring, dom, curl, fileinfo
           coverage: none
           tools: composer:v2
 

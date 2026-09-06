@@ -50,15 +50,27 @@ export interface OrderStatusEvent {
     created_at: string | null;
 }
 
+/** Mirrors App\DataTransferObjects\OrderData::reactions() — one emoji's tally on a comment. */
+export interface OrderCommentReaction {
+    emoji: string;
+    count: number;
+    user_ids: string[];
+}
+
 export interface OrderComment {
     id: string;
     content: string;
     author: OrderUser | null;
     created_at: string | null;
+    reactions: OrderCommentReaction[];
 }
 
 export interface OrderProfitability {
     revenue: MoneyValue;
+    /** Pre-rebate revenue — null on an order written before this was tracked. */
+    gross_revenue: MoneyValue | null;
+    /** gross_revenue - revenue — null alongside gross_revenue. */
+    rebate_amount: MoneyValue | null;
     cogs: MoneyValue;
     logistics: MoneyValue | null;
     gross_profit: MoneyValue;
@@ -130,6 +142,8 @@ export interface OrderFilters {
     customer_id: string | null;
     /** The customer's sales channel (App\Enums\CustomerType) — orders have no channel of their own. */
     channel: string | null;
+    /** The item drawer's "Open in Orders" link — an exact match, not a text search. */
+    item_id: string | null;
     period: string | null;
     /** `YYYY-MM-DD`. Set by the Custom tab and beats `period` when present. */
     from: string | null;

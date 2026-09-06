@@ -4,6 +4,8 @@ import { router, usePage } from '@inertiajs/vue3';
 import { History, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
+import CheckHistoryPanel from '@/components/inventory/CheckHistoryPanel.vue';
+import type { CheckHistoryEntry } from '@/components/inventory/CheckHistoryPanel.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
@@ -29,7 +31,7 @@ import type { TabItem } from '@/types/ui';
  */
 const props = defineProps<{
     items: InventoryItem[];
-    history: { id: string; created_at: string | null; net_difference?: string }[];
+    history: CheckHistoryEntry[];
 }>();
 
 const page = usePage<SharedProps>();
@@ -45,6 +47,7 @@ const MODULE_TABS: TabItem[] = [
 
 const search = ref('');
 const saving = ref(false);
+const historyOpen = ref(false);
 
 /** Physical counts, seeded from the system so an untouched sheet is a no-op. */
 const counts = reactive<Record<string, string>>(
@@ -116,12 +119,7 @@ function save(): void {
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Inventory')">
                 <template #actions>
-                    <!--
-                      @todo History panel. Past stocktakes are already loaded in
-                      `history` (InventoryCheck + its adjusted lines); this needs
-                      a drawer listing them with their net difference.
-                    -->
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" @click="historyOpen = true">
                         <History class="size-4" :stroke-width="1.5" />
                         {{ t('History') }}<template v-if="history.length"> ({{ history.length }})</template>
                     </Button>
@@ -233,5 +231,7 @@ function save(): void {
                 {{ t('No active items to count.') }}
             </p>
         </div>
+
+        <CheckHistoryPanel :open="historyOpen" :history="history" @close="historyOpen = false" />
     </AppLayout>
 </template>

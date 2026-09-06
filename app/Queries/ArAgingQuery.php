@@ -31,15 +31,29 @@ class ArAgingQuery
     {
         $currency = $this->currency();
 
-        $paidByOrder = Inflow::query()
+        // Per-order received total (credit notes negative) — the same
+        // formula OrderPipelineQuery::paid() groups the same way.
+        $paid = Inflow::query()
+            ->select('order_id')
             ->whereNotNull('order_id')
             ->where('status', InflowStatus::Received->value)
             ->groupBy('order_id')
-            ->pluck(DB::raw('SUM(CASE WHEN is_credit_note THEN -amount ELSE amount END)'), 'order_id');
+            ->selectRaw('SUM(CASE WHEN is_credit_note THEN -amount ELSE amount END) as paid');
 
+        // Only orders with a genuine outstanding balance (total > paid) are
+        // pulled into PHP — filtered here in SQL rather than loading every
+        // non-consignment order the tenant has ever placed just to find the
+        // handful still owed. leftJoinSub (not joinSub) so an order with no
+        // Inflow at all still matches, with paid_minor coalescing to 0.
         $orders = Order::query()
-            ->where('is_consignment', false)
-            ->get(['id', 'order_number', 'customer_id', 'created_at', 'backorder_date', 'total_amount']);
+            ->where('orders.is_consignment', false)
+            ->leftJoinSub($paid, 'settled', 'settled.order_id', '=', 'orders.id')
+            ->whereRaw('orders.total_amount > COALESCE(settled.paid, 0)')
+            ->get([
+                'orders.id', 'orders.order_number', 'orders.customer_id',
+                'orders.created_at', 'orders.backorder_date', 'orders.total_amount',
+                DB::raw('COALESCE(settled.paid, 0) as paid_minor'),
+            ]);
 
         $now = Carbon::now();
         $buckets = ['current' => 0, 'd30' => 0, 'd60' => 0, 'd90_plus' => 0];
@@ -47,11 +61,9 @@ class ArAgingQuery
         $totalOutstanding = 0;
 
         foreach ($orders as $order) {
-            $paid = (int) ($paidByOrder[$order->getKey()] ?? 0);
-            $balance = $order->total_amount->getMinorAmount() - $paid;
-            if ($balance <= 0) {
-                continue;
-            }
+            // Every row here already has a positive balance (the SQL WHERE
+            // above guarantees it), so no re-check before using it.
+            $balance = $order->total_amount->getMinorAmount() - (int) $order->getAttribute('paid_minor');
 
             $effective = $order->backorder_date ?? $order->created_at ?? $now;
             $age = $effective->diffInDays($now);

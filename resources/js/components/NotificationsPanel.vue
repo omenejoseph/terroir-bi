@@ -4,6 +4,7 @@ import { router, usePage } from '@inertiajs/vue3';
 import { Bell, Trash2 } from 'lucide-vue-next';
 
 import { usePopover } from '@/composables/usePopover';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { csrfHeader } from '@/lib/csrf';
 import { relativeNotificationTime, resolveNotificationRoute } from '@/lib/notifications';
@@ -82,7 +83,12 @@ async function remove(item: NotificationItem): Promise<void> {
 }
 
 async function clearAll(): Promise<void> {
-    if (!confirm(t('Clear all notifications? This cannot be undone.'))) return;
+    const ok = await confirmDialog({
+        title: t('Clear all notifications'),
+        description: t('Clear all notifications? This cannot be undone.'),
+        tone: 'danger',
+    });
+    if (!ok) return;
 
     items.value = [];
     await fetch('/notifications/clear', { method: 'POST', headers: csrfHeader() });

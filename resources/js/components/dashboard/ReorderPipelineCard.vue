@@ -2,6 +2,7 @@
 import { usePage } from '@inertiajs/vue3';
 import { RotateCcw } from 'lucide-vue-next';
 
+import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { ReorderPipeline } from '@/types/dashboard';
@@ -13,14 +14,15 @@ import type { SharedProps } from '@/types';
  * card-sized. `total` is what the whole flagged list is worth if each account
  * reorders at its usual size, not just the three rows shown below it.
  *
- * @todo "View all" (Figma `208:5921`). The design links this to a full
- * reorder-radar screen; the Inertia app has no such page yet — the radar is
- * only reachable through the API today.
+ * "View all" (Figma `208:5921`) goes to Customers/ReorderRadar.vue — the
+ * design has no dedicated frame for that full screen, so it is a plain
+ * table rather than a pixel match, but it is the same query, unnarrowed.
  */
 const props = defineProps<{ pipeline: ReorderPipeline; currency: string }>();
 
 const page = usePage<SharedProps>();
 const { t } = useTranslations();
+const { can } = useAuth();
 
 const money = (minor: number) => formatMoney(minor, props.currency);
 
@@ -45,9 +47,14 @@ function daysAgo(days: number): string {
 
 <template>
     <div class="flex h-full flex-col border border-border bg-card p-4">
-        <div class="flex items-center gap-1.5 text-sm font-semibold">
-            <RotateCcw class="size-4 text-muted-foreground" :stroke-width="1.5" />
-            {{ t('Reorder pipeline') }}
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-1.5 text-sm font-semibold">
+                <RotateCcw class="size-4 text-muted-foreground" :stroke-width="1.5" />
+                {{ t('Reorder pipeline') }}
+            </div>
+            <a v-if="can('customers.view')" href="/customers/reorder-radar" class="shrink-0 text-xs text-muted-foreground hover:text-foreground">
+                {{ t('View all') }}
+            </a>
         </div>
 
         <p class="mt-3 text-2xl font-semibold tabular-nums">{{ money(pipeline.total.minor) }}</p>

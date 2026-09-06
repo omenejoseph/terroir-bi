@@ -24,7 +24,15 @@ import type { InventoryItem } from '@/types/inventory';
  * Naming note: the design's "Type" is our `category` (the InventoryCategory
  * enum) and the design's "Category" is our free-text `group`.
  */
-const props = defineProps<{ open: boolean; item: InventoryItem | null }>();
+const props = withDefaults(
+    defineProps<{
+        open: boolean;
+        item: InventoryItem | null;
+        /** Which page props the post-edit partial reload asks for — see submit(). */
+        reloadOnly?: string[];
+    }>(),
+    { reloadOnly: () => ['items', 'itemMovements'] },
+);
 const emit = defineEmits<{ close: [] }>();
 const { t } = useTranslations();
 
@@ -136,9 +144,11 @@ function submit(): void {
             preserveScroll: true,
             // A partial reload when editing — see CustomerPriceDialog.vue's
             // submit() for why a bare patch without `only` would drop every
-            // other Optional prop the Inventory list may have loaded, namely
-            // the Item — View drawer's itemMovements.
-            only: isEdit.value ? ['items', 'itemMovements'] : undefined,
+            // other Optional prop the current page may have loaded. Which keys
+            // to ask for differs by consumer (the Inventory list's own
+            // itemMovements vs. Product Detail's single `item`), hence the prop
+            // rather than a value hard-coded here.
+            only: isEdit.value ? props.reloadOnly : undefined,
             onSuccess: () => emit('close'),
         });
 }

@@ -14,6 +14,7 @@ use App\Models\Inflow;
 use App\Models\InventoryItem;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Supplier;
 use App\Models\WorkOrder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -420,6 +421,98 @@ class DashboardTest extends TestCase
         $this->assertSame(500, $byLabel['Other']['amount']['minor']);
     }
 
+    /**
+     * key_ratios() and net_cash_flow() each build their own identical Cost
+     * query over the same window and separately sum total/Salary/Marketing —
+     * a safety net for collapsing that into one shared computation: both
+     * must keep reporting the SAME underlying cost figures from ONE fixture,
+     * in ONE request, not just agree with themselves in isolation.
+     */
+    public function test_key_ratios_and_net_cash_flow_agree_on_the_same_cost_totals(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $wholesale = Customer::create(['company_name' => 'Distributor', 'email' => 'd@example.com', 'customer_type' => 'WHOLESALE']);
+        Order::create(['order_number' => 'O-1', 'status' => OrderStatus::Received->value, 'total_amount' => 10000, 'customer_id' => $wholesale->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+
+        Cost::create(['category' => 'Salary', 'description' => 'Payroll', 'total_amount' => 3000, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
+        Cost::create(['category' => 'Marketing', 'description' => 'Ads', 'total_amount' => 2000, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
+        Cost::create(['category' => 'Operations', 'description' => 'Misc', 'total_amount' => 500, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
+        // A cost from a stats-excluded supplier must be excluded from BOTH
+        // cards identically — the shared exclude_from_stats join lives in
+        // both queries today and must survive any refactor that merges them.
+        $excludedSupplier = Supplier::create(['company_name' => 'Ghost Co', 'exclude_from_stats' => true]);
+        Cost::create(['category' => 'Salary', 'description' => 'Off-book', 'total_amount' => 99999, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey(), 'supplier_id' => $excludedSupplier->getKey()]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $data = $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->json('data');
+
+        // employee_cost_pct = 3,000 / 10,000 = 30%; marketing_cost_pct = 2,000 / 10,000 = 20%.
+        // assertEquals, not assertSame: a whole-number float round-trips
+        // through JSON as an int (30.0 -> 30).
+        $this->assertEquals(30.0, $data['key_ratios']['employee_cost_pct']);
+        $this->assertEquals(20.0, $data['key_ratios']['marketing_cost_pct']);
+        // operating_margin_pct = (10,000 − 5,500) / 10,000 = 45%.
+        $this->assertEquals(45.0, $data['key_ratios']['operating_margin_pct']);
+
+        $byLabel = collect((array) $data['net_cash_flow']['by_category'])->keyBy('label');
+        $this->assertSame(3000, $byLabel['Salary']['amount']['minor']);
+        $this->assertSame(2000, $byLabel['Marketing']['amount']['minor']);
+        $this->assertSame(500, $byLabel['Operations']['amount']['minor']);
+        // net = cash in 0 − cash out 5,500 (3,000 + 2,000 + 500; the excluded
+        // supplier's 99,999 must not appear on either card).
+        $this->assertSame(-5500, $data['net_cash_flow']['net']['minor']);
+    }
+
+    /**
+     * channelTotals() backs revenue_by_channel, key_ratios.dtc_revenue_pct,
+     * and revenue_vs_target.channels — three different call sites reading
+     * the same underlying per-channel totals. A safety net for caching/
+     * de-duplicating that computation: all three must report figures
+     * derived from the SAME numbers, from ONE fixture, in ONE request.
+     */
+    public function test_channel_totals_agree_across_revenue_by_channel_key_ratios_and_targets(): void
+    {
+        $tenant = $this->createTenant([], ['channel_revenue_targets' => ['wholesale' => 480_000, 'retail' => 240_000]]);
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $wholesale = Customer::create(['company_name' => 'Distributor', 'email' => 'w@example.com', 'customer_type' => 'WHOLESALE']);
+        $retail = Customer::create(['company_name' => 'Shop', 'email' => 'r@example.com', 'customer_type' => 'RETAIL']);
+        $agency = Customer::create(['company_name' => 'Agent', 'email' => 'a@example.com', 'customer_type' => 'AGENCY']);
+
+        Order::create(['order_number' => 'O-W', 'status' => OrderStatus::Received->value, 'total_amount' => 30000, 'customer_id' => $wholesale->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        Order::create(['order_number' => 'O-R', 'status' => OrderStatus::Received->value, 'total_amount' => 20000, 'customer_id' => $retail->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        Order::create(['order_number' => 'O-A', 'status' => OrderStatus::Received->value, 'total_amount' => 10000, 'customer_id' => $agency->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $data = $this->getJson('/api/v1/dashboard?period=ytd', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->json('data');
+
+        // revenue_by_channel: the raw per-channel totals.
+        $this->assertSame(30000, $data['revenue_by_channel']['wholesale']['current']);
+        $this->assertSame(20000, $data['revenue_by_channel']['retail']['current']);
+        $this->assertSame(10000, $data['revenue_by_channel']['agency']['current']);
+        $this->assertSame(60000, $data['revenue_by_channel']['total']['current']);
+
+        // key_ratios.dtc_revenue_pct: retail (DTC) / total = 20,000 / 60,000.
+        $this->assertSame(round(20000 / 60000 * 100, 1), $data['key_ratios']['dtc_revenue_pct']);
+
+        // revenue_vs_target.channels: the exact same 'current' figures, keyed by channel.
+        $channels = collect((array) $data['revenue_vs_target']['channels'])->keyBy('key');
+        $this->assertSame(30000, $channels['wholesale']['current']['minor']);
+        $this->assertSame(20000, $channels['retail']['current']['minor']);
+        // agency has no stored target, so it must be entirely absent from this
+        // list (revenueVsTarget only lists channels a target was set for) —
+        // NOT a third disagreeing source of the same number.
+        $this->assertFalse($channels->has('agency'));
+    }
+
     public function test_summary_reflects_real_orders_ar_and_tasks(): void
     {
         $tenant = $this->createTenant();
@@ -498,5 +591,121 @@ class DashboardTest extends TestCase
         $this->assertSame(now()->format('M'), $trend[5]['label']);
         $monthTwoAgo = collect((array) $trend)->firstWhere('label', now()->subMonthsNoOverflow(2)->format('M'));
         $this->assertSame(5000, $monthTwoAgo['value']);
+    }
+
+    /** Nothing is stored anywhere by default — see App\Models\TenantSetting. */
+    public function test_revenue_vs_target_is_null_without_a_stored_target(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $customer = Customer::create(['company_name' => 'Co', 'email' => 'c@example.com', 'customer_type' => 'WHOLESALE']);
+        Order::create(['order_number' => 'ORD-1', 'status' => OrderStatus::Received->value, 'total_amount' => 5000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $target = $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->json('data.revenue_vs_target');
+
+        $this->assertNull($target['annual_target']);
+        $this->assertNull($target['progress_pct']);
+        $this->assertSame([], $target['channels']);
+        // ytd_revenue is real either way — it just has nothing to compare against.
+        $this->assertSame(5000, $target['ytd_revenue']['minor']);
+    }
+
+    /** Set via the Settings page — App\Actions\Settings\UpdateSettingsAction. */
+    public function test_revenue_vs_target_computes_progress_and_channel_pace_once_set(): void
+    {
+        $tenant = $this->createTenant([], [
+            'annual_revenue_target' => 100_000,
+            'channel_revenue_targets' => ['wholesale' => 60_000],
+        ]);
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $customer = Customer::create(['company_name' => 'Co', 'email' => 'c@example.com', 'customer_type' => 'WHOLESALE']);
+        Order::create(['order_number' => 'ORD-1', 'status' => OrderStatus::Received->value, 'total_amount' => 20_000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $target = $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->json('data.revenue_vs_target');
+
+        $this->assertSame(100_000, $target['annual_target']['minor']);
+        $this->assertSame(20_000, $target['ytd_revenue']['minor']);
+        // assertEquals, not assertSame: a whole-number float round-trips
+        // through JSON as an int (20.0 -> 20), which is not a bug to chase.
+        $this->assertEquals(round(20_000 / 100_000 * 100, 1), $target['progress_pct']);
+
+        $this->assertCount(1, $target['channels']);
+        $wholesale = $target['channels'][0];
+        $this->assertSame('wholesale', $wholesale['key']);
+        $this->assertSame(60_000, $wholesale['target']['minor']);
+        $this->assertSame(20_000, $wholesale['current']['minor']);
+
+        $fractionElapsed = now()->dayOfYear / (now()->isLeapYear() ? 366 : 365);
+        $this->assertEquals(round(20_000 / (60_000 * $fractionElapsed) * 100, 1), $wholesale['pace_pct']);
+    }
+
+    /** Nothing is stored anywhere by default. */
+    public function test_runway_is_null_without_a_stored_cash_figure(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+
+        Sanctum::actingAs($admin);
+        $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonPath('data.runway', null);
+    }
+
+    /** Burn rate is real: trailing 3 calendar months' (cash out − cash in), independent of the period tab. */
+    public function test_runway_computes_months_from_the_trailing_burn_rate(): void
+    {
+        $tenant = $this->createTenant([], ['cash_on_hand' => 90_000, 'cash_on_hand_as_of' => '2026-01-01']);
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        // 30,000 net burn over the trailing window → burn rate close to
+        // 30,000/2mo elapsed at test time; assert against the same formula
+        // DashboardSummary::runway() uses, not a hand-picked number.
+        Inflow::create(['date' => now(), 'amount' => 10_000, 'status' => InflowStatus::Received->value, 'created_by_id' => $admin->getKey()]);
+        Cost::create(['category' => 'Salary', 'description' => 'Payroll', 'total_amount' => 40_000, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $runway = $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->json('data.runway');
+
+        $this->assertSame(90_000, $runway['cash_on_hand']['minor']);
+        $this->assertSame('2026-01-01', $runway['cash_on_hand_as_of']);
+
+        $from = now()->subMonthsNoOverflow(2)->startOfMonth();
+        $monthsElapsed = max(1.0, $from->diffInDays(now()) / 30.44);
+        $expectedBurn = (int) round(30_000 / $monthsElapsed);
+
+        $this->assertSame($expectedBurn, $runway['monthly_burn']['minor']);
+        $this->assertEquals(round(90_000 / $expectedBurn, 1), $runway['months']);
+    }
+
+    /** A profitable trailing quarter has no burn — "months" is null, not negative or infinite. */
+    public function test_runway_months_is_null_when_the_trailing_quarter_is_profitable(): void
+    {
+        $tenant = $this->createTenant([], ['cash_on_hand' => 90_000]);
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        Inflow::create(['date' => now(), 'amount' => 50_000, 'status' => InflowStatus::Received->value, 'created_by_id' => $admin->getKey()]);
+        Cost::create(['category' => 'Salary', 'description' => 'Payroll', 'total_amount' => 10_000, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+        $runway = $this->getJson('/api/v1/dashboard?range=30D', $this->tenantHeader($tenant))
+            ->assertOk()
+            ->json('data.runway');
+
+        $this->assertNull($runway['monthly_burn']);
+        $this->assertNull($runway['months']);
     }
 }

@@ -10,6 +10,7 @@ use App\Models\Customer;
 use App\Models\InventoryImage;
 use App\Models\InventoryItem;
 use App\Models\Order;
+use App\Models\RecipeItem;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Orders\OrderNumberGenerator;
@@ -241,6 +242,96 @@ class OrderTest extends TestCase
 
         $this->assertSame('100.000', (string) $this->wine->refresh()->current_stock);
         $this->assertDatabaseCount('orders', 0);
+    }
+
+    /**
+     * Ahead of batching DeleteOrderAction's restock loop (which currently
+     * accesses $item->inventoryItem without eager-loading) into one
+     * eager-loaded/whereIn pass, this locks down that each line's OWN item is
+     * restocked by that line's OWN quantity — a batching bug that mismatches
+     * items to quantities would restock item A with item B's quantity (or
+     * vice versa) and this test would catch it.
+     */
+    public function test_deleting_an_order_with_multiple_lines_restocks_each_correct_item(): void
+    {
+        Sanctum::actingAs($this->admin);
+        $this->actingAsTenant($this->tenant);
+        $wine2 = InventoryItem::create([
+            'name' => 'Babic', 'sku' => 'BAB', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'sales_unit' => 'bottles',
+            'current_stock' => '50.000', 'is_for_sale' => true,
+            'default_price' => 500, 'cost_per_unit' => 200,
+        ]);
+        $this->forgetTenant();
+
+        $id = $this->postJson('/api/v1/orders', [
+            'customer_id' => $this->customer->getKey(),
+            'items' => [
+                ['inventory_item_id' => $this->wine->getKey(), 'quantity' => 2, 'unit_type' => 'cases'], // 24 bottles
+                ['inventory_item_id' => $wine2->getKey(), 'quantity' => 7, 'unit_type' => 'bottles'],
+            ],
+        ], $this->headers())->assertCreated()->json('data.id');
+
+        // wine: 100 - 24 = 76; wine2: 50 - 7 = 43.
+        $this->assertSame('76.000', (string) $this->wine->refresh()->current_stock);
+        $this->assertSame('43.000', (string) $wine2->refresh()->current_stock);
+
+        $this->deleteJson("/api/v1/orders/{$id}", [], $this->headers())->assertNoContent();
+
+        // Each item is restored by ITS OWN line's quantity — wine +24 back to
+        // 100, wine2 +7 back to 50. Neither borrows the other's quantity.
+        $this->assertSame('100.000', (string) $this->wine->refresh()->current_stock);
+        $this->assertSame('50.000', (string) $wine2->refresh()->current_stock);
+    }
+
+    /**
+     * Ahead of batching OrderLineWriter/CogsSnapshot's per-line recipe lookup
+     * (currently one fresh query per order line), this locks down that TWO
+     * lines for TWO different products — each with its OWN, non-overlapping
+     * recipe — snapshot the CORRECT per-line cost. A batching refactor that
+     * keys the wrong item to the wrong recipe would swap these two values.
+     */
+    public function test_multi_line_order_computes_recipe_based_cogs_per_line_independently(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        $corkA = InventoryItem::create([
+            'name' => 'Cork A', 'sku' => 'CRKA', 'category' => 'RAW_MATERIAL', 'unit' => 'pcs',
+            'sales_unit' => 'bottles', 'cost_per_unit' => 50,
+        ]);
+        $corkB = InventoryItem::create([
+            'name' => 'Cork B', 'sku' => 'CRKB', 'category' => 'RAW_MATERIAL', 'unit' => 'pcs',
+            'sales_unit' => 'bottles', 'cost_per_unit' => 30,
+        ]);
+        $itemA = InventoryItem::create([
+            'name' => 'Wine A', 'sku' => 'WA', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'sales_unit' => 'bottles', 'current_stock' => '100.000', 'is_for_sale' => true,
+            'default_price' => 1000, 'cost_per_unit' => 999999, // must be ignored — recipe wins
+        ]);
+        $itemB = InventoryItem::create([
+            'name' => 'Wine B', 'sku' => 'WB', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'sales_unit' => 'bottles', 'current_stock' => '100.000', 'is_for_sale' => true,
+            'default_price' => 2000, 'cost_per_unit' => 888888, // must be ignored — recipe wins
+        ]);
+        // Distinct, non-overlapping recipes: A uses 2× Cork A (→ 100/bottle),
+        // B uses 3× Cork B (→ 90/bottle).
+        RecipeItem::create(['output_id' => $itemA->getKey(), 'input_id' => $corkA->getKey(), 'quantity' => '2']);
+        RecipeItem::create(['output_id' => $itemB->getKey(), 'input_id' => $corkB->getKey(), 'quantity' => '3']);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($this->admin);
+
+        $this->postJson('/api/v1/orders', [
+            'customer_id' => $this->customer->getKey(),
+            'items' => [
+                ['inventory_item_id' => $itemA->getKey(), 'quantity' => 4, 'unit_type' => 'bottles'],
+                ['inventory_item_id' => $itemB->getKey(), 'quantity' => 5, 'unit_type' => 'bottles'],
+            ],
+        ], $this->headers())
+            ->assertCreated()
+            ->assertJsonPath('data.items.0.cost_per_unit.minor', 100) // 2 × Cork A's 50
+            ->assertJsonPath('data.items.0.total.minor', 4000)        // 4 × €10.00
+            ->assertJsonPath('data.items.1.cost_per_unit.minor', 90)  // 3 × Cork B's 30 — not A's 100
+            ->assertJsonPath('data.items.1.total.minor', 10000);      // 5 × €20.00
     }
 
     public function test_setting_shipping_cost(): void

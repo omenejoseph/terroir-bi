@@ -8,6 +8,7 @@ import PlatformAdminFormPanel from '@/components/admin/PlatformAdminFormPanel.vu
 import PromotePlatformAdminDialog from '@/components/admin/PromotePlatformAdminDialog.vue';
 import Button from '@/components/ui/Button.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { PlatformAdmin } from '@/types/admin';
@@ -33,10 +34,13 @@ const promoteOpen = ref(false);
 const canRevoke = (admin: PlatformAdmin): boolean =>
     admin.id !== props.currentUserId && props.admins.length > 1;
 
-function revoke(admin: PlatformAdmin): void {
-    if (!confirm(t('Revoke access for :name? They will lose access to the back office.', { name: admin.name }))) {
-        return;
-    }
+async function revoke(admin: PlatformAdmin): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Revoke platform admin'),
+        description: t('Revoke access for :name? They will lose access to the back office.', { name: admin.name }),
+        tone: 'danger',
+    });
+    if (!ok) return;
 
     router.delete(`${ADMIN_BASE}/platform-admins/${admin.id}`, { preserveScroll: true });
 }

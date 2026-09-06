@@ -8,6 +8,7 @@ use App\Services\Audit\Auditable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Per-tenant, non-secret configuration (1:1 with Tenant). Accessed via the
@@ -20,6 +21,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $timezone
  * @property string|null $company_oib
  * @property string|null $storage_prefix
+ * @property int|null $annual_revenue_target
+ * @property array<string, int>|null $channel_revenue_targets
+ * @property int|null $cash_on_hand
+ * @property Carbon|null $cash_on_hand_as_of
  */
 class TenantSetting extends Model
 {
@@ -33,6 +38,10 @@ class TenantSetting extends Model
         'timezone',
         'company_oib',
         'storage_prefix',
+        'annual_revenue_target',
+        'channel_revenue_targets',
+        'cash_on_hand',
+        'cash_on_hand_as_of',
     ];
 
     protected $attributes = [
@@ -40,6 +49,17 @@ class TenantSetting extends Model
         'default_locale' => 'hr',
         'timezone' => 'Europe/Zagreb',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'channel_revenue_targets' => 'array',
+            'cash_on_hand_as_of' => 'date',
+        ];
+    }
 
     /**
      * @return BelongsTo<Tenant, $this>

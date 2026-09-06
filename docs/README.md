@@ -32,6 +32,7 @@ rules.
 | 13 | [`design/`](design/) | 🆕 **Design cache** — tokens + screen inventory extracted from the TERROIR Figma file, plus known deviations and design↔backend gaps |
 | 14 | [`17-frontend-screen-plan.md`](17-frontend-screen-plan.md) | 🆕 **Screen plan** — the 42 real screens phased into a build order, with a definition of done per screen and per phase |
 | 15 | [`design/COMPONENTS.md`](design/COMPONENTS.md) | 🆕 **Component map** — the design's own reusable vocabulary (derived by counting instances across all frames) mapped to Vue components |
+| 16 | [`18-inventory-detail-tabs-plan.md`](18-inventory-detail-tabs-plan.md) | 🆕 **Inventory detail-screen backlog** — the remaining Product Detail tabs, Item — View affordances, and Analytics/Spend/Check gaps left as `@todo` after the screens themselves shipped |
 | 08 | [`openapi/openapi.yaml`](openapi/openapi.yaml) | Machine-readable OpenAPI 3.1 spec — the **target** contract (import into Postman/Swagger/codegen) |
 | 08a | [`openapi/live.yaml`](openapi/live.yaml) | OpenAPI 3.1 spec of the **currently implemented** API (kept in lock-step with the code) |
 

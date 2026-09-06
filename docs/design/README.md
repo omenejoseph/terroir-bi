@@ -196,10 +196,10 @@ or a policy decision can close the rest:
 | Net cash flow + expense split | ✅ Built — `NetCashFlowCard.vue`, reading `DashboardSummary::netCashFlow()`: received `Inflow` minus `Cost` in the window, grouped by the same categories `keyRatios()` already names (Salary/Marketing/Operations), everything else folded into Other |
 | "Upcoming tasks" | ✅ Built — `UpcomingTasksCard.vue`, reading `DashboardSummary::upcomingTasks()`: open `WorkOrder`s, soonest-due first, undated last |
 | Revenue chart (monthly, trailing 6 months) | ✅ Built — `AreaChart.vue` plots `revenue_trend`, a fixed trailing-6-calendar-month bucketing independent of the selected period tab |
-| Runway's payables line ("Delay payable — Supplier, due soon") | Not built — `Cost` has `due_date` + `supplier_id` to support it, but see Runway below: a card can't ship half its content, and the card's headline number is blocked |
-| "Revenue vs. target" (68% of annual target) | **Missing: no annual revenue target is stored** |
-| "Target by channel" + pace commentary | **Missing: no per-channel target is stored** |
-| "Runway — 4,2 months" + the receivables-aging line | **Missing: no cash-on-hand figure exists anywhere, and `Order` has no due-date/payment-terms field** — "overdue" can only mean *unpaid*, not *unpaid past its due date*. The card stays absent rather than shipping a payables feed under a "Runway" heading with no runway number in it |
+| Runway's payables line ("Delay payable — Supplier, due soon") | Still not built — `Order` has no due-date/payment-terms field, so "overdue" can only mean *unpaid*, not *unpaid past its due date*. The headline runway number below no longer waits on this; the sub-feed just isn't shipped |
+| "Revenue vs. target" (68% of annual target) | ✅ Built (2026-09-06) — `RevenueVsTargetCard.vue`, reading `DashboardSummary::revenueVsTarget()`. The stored number now exists: `TenantSetting::$annual_revenue_target`, entered on the new Settings page (`settings.manage`). Still shows "not set" when no target has been entered |
+| "Target by channel" + pace commentary | ✅ Built (2026-09-06) — same card, same query; `TenantSetting::$channel_revenue_targets` (per wholesale/retail/agency/shipshop). Pace is YTD revenue against the target prorated to today's point in the year, only for channels with a target actually set |
+| "Runway — 4,2 months" + the receivables-aging line | ✅ Headline number built (2026-09-06) — `RunwayCard.vue`, reading `DashboardSummary::runway()`: `TenantSetting::$cash_on_hand` divided by the trailing-3-month average burn (real `Cost`/`Inflow` data). Shows "not set" without a stored cash figure, and "—" when the trailing quarter wasn't a burn. The receivables-aging line is the row above this table, still not built |
 
 Inventory (`389:1592`) adds three more:
 
@@ -217,7 +217,6 @@ Orders (`455:1577`, `376:1592`, `335:4233`) adds five:
 | Toolbar filters "Channel / Date range / Rep" | Channel would have to be inferred from the customer's type (a different axis), and there is no order-owner column for Rep. Rendered, with a `@todo` |
 | "Bulk actions" and "Columns" | No multi-select or column-preference layer on orders |
 | Profitability's "Rebate · 18%" and "Net revenue" rows | Line totals are stored with the rebate already applied and the gross figure is not kept, so the three-line split cannot be reconstructed without assuming the arithmetic. Shown as Revenue / COGS / Gross profit / Margin |
-| Comment reactions (emoji counts) | No reactions table |
 
 Customers (`230:2395`, `230:4717`, `231:9336`) adds seven:
 

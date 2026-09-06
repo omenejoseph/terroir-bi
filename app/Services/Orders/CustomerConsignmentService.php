@@ -6,6 +6,8 @@ namespace App\Services\Orders;
 
 use App\Actions\Orders\RecordConsignmentReturnAction;
 use App\Actions\Orders\RecordConsignmentSaleAction;
+use App\Models\ConsignmentReport;
+use App\Models\ConsignmentReportItem;
 use App\Models\Customer;
 use App\Models\InventoryItem;
 use App\Models\Order;
@@ -112,21 +114,28 @@ class CustomerConsignmentService
      * any not yet formally closed — a closed placement with nothing left is
      * settled and has nothing more to say.
      *
-     * @param  list<array{order: Order, remaining: int}>  $lines  Same lines summary() already built, so this doesn't re-query.
+     * `$lines` must come from `openLines($customer, includeEmpty: true)` —
+     * summary()'s only caller does — so every consignment order (not just
+     * ones with something still outstanding) is represented by at least one
+     * line and this can read the order set straight off it instead of
+     * re-querying the same orders a second time.
+     *
+     * @param  list<array{order: Order, remaining: int}>  $lines
      * @return list<array<string, mixed>>
      */
     private function placements(Customer $customer, array $lines): array
     {
         $remainingByOrder = [];
+        /** @var array<string, Order> $ordersById */
+        $ordersById = [];
         foreach ($lines as $line) {
             $orderId = $line['order']->getKey();
             $remainingByOrder[$orderId] = ($remainingByOrder[$orderId] ?? 0) + $line['remaining'];
+            $ordersById[$orderId] ??= $line['order'];
         }
 
-        return array_values($customer->orders()
-            ->where('is_consignment', true)
-            ->orderByDesc('created_at')
-            ->get(['id', 'order_number', 'created_at', 'consignment_closed_at'])
+        return array_values(collect($ordersById)
+            ->sortByDesc(fn (Order $o) => $o->created_at)
             ->map(fn (Order $o): array => [
                 'order_id' => $o->getKey(),
                 'order_number' => $o->order_number,
@@ -135,7 +144,52 @@ class CustomerConsignmentService
                 'remaining' => $remainingByOrder[$o->getKey()] ?? 0,
             ])
             ->filter(fn (array $p): bool => $p['remaining'] > 0 || $p['closed_at'] === null)
+            ->values()
             ->all());
+    }
+
+    /**
+     * Every sale/return recorded against any of this customer's consignment
+     * placements, newest first — the individual `ConsignmentReport` rows
+     * `sale()`/`return()` write, which `summary()`'s per-product rollup
+     * necessarily flattens away. Genuinely absent everywhere else: a report
+     * is not an `Order`, so it never appears in the Order History tab
+     * (`Web\CustomerController::orderHistory()` reads `orders` only) — unlike
+     * the placement itself, which does.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function history(Customer $customer, bool $includeFinancials, int $limit = 20): array
+    {
+        $reports = ConsignmentReport::query()
+            ->whereHas('order', fn ($q) => $q->where('customer_id', $customer->getKey())->where('is_consignment', true))
+            ->with(['order', 'createdBy', 'items.inventoryItem'])
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+
+        return array_values($reports->map(fn (ConsignmentReport $report): array => [
+            'id' => $report->getKey(),
+            'kind' => $report->kind->value,
+            'date' => $report->date->toIso8601String(),
+            'order_number' => $report->order?->order_number,
+            'note' => $report->note,
+            'created_by_name' => $report->createdBy?->fullName(),
+            'items' => array_values($report->items->map(function (ConsignmentReportItem $item) use ($includeFinancials): array {
+                $product = $item->inventoryItem;
+
+                return [
+                    // A custom (non-catalog) order line carries no
+                    // inventory_item_id, so this genuinely can be null —
+                    // unlike an item lookup, there is no delete-time guard
+                    // that rules it out here.
+                    'name' => $product instanceof InventoryItem ? $product->name : '—',
+                    'quantity' => $item->quantity,
+                    'total' => $includeFinancials ? $item->total->jsonSerialize() : null,
+                ];
+            })->all()),
+        ])->all());
     }
 
     /**
@@ -224,10 +278,14 @@ class CustomerConsignmentService
      */
     private function openLines(Customer $customer, bool $includeEmpty): array
     {
+        // Eager-loaded so currency()'s `$order->items` and tally()'s own
+        // loadMissing() below find everything already in memory — without
+        // this, both fire their own extra queries per order.
         $orders = $customer->orders()
             ->where('is_consignment', true)
             ->orderBy('created_at')
             ->orderBy('id')
+            ->with(['items.inventoryItem', 'consignmentReports.items'])
             ->get();
 
         $lines = [];

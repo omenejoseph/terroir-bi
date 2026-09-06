@@ -14,6 +14,7 @@ use App\Models\PricingTier;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Auth\ActiveTenantSession;
+use App\Services\Orders\CustomerConsignmentService;
 use App\Support\Money\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
@@ -191,6 +192,153 @@ class WebCustomersTest extends TestCase
                 $this->assertSame('13.00', $rows['Inherits Tier']['effective_rebate_percent']);
                 $this->assertSame('18.00', $rows['Own Rebate']['effective_rebate_percent']);
             });
+    }
+
+    public function test_revenue_trend_range_picker_changes_the_monthly_window(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Taverna Olea');
+        $this->makeOrder($customer, $admin);
+        $this->forgetTenant();
+
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+
+        $this->actingAs($admin)->withSession($session)
+            ->get('/customers/'.$customer->getKey())
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('orderAnalytics.monthly_revenue', 12)
+                ->where('revenueRangeMonths', 12));
+
+        $this->actingAs($admin)->withSession($session)
+            ->get('/customers/'.$customer->getKey().'?revenue_months=3')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('orderAnalytics.monthly_revenue', 3)
+                ->where('revenueRangeMonths', 3));
+
+        // Not one of the offered presets — falls back rather than passing an
+        // arbitrary count straight to the query.
+        $this->actingAs($admin)->withSession($session)
+            ->get('/customers/'.$customer->getKey().'?revenue_months=999')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('orderAnalytics.monthly_revenue', 12)
+                ->where('revenueRangeMonths', 12));
+    }
+
+    /** Mirrors orderToken: never evaluated until the Suggest upsell dialog asks for it. */
+    public function test_suggest_upsell_is_absent_from_a_full_page_load(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/customers/'.$customer->getKey())
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page->missing('upsell'));
+    }
+
+    /**
+     * The customer's own cheapest-per-bottle bucket (by subcategory, here
+     * "White") is where a real upsell candidate must come from: pricier,
+     * for sale, and not already bought — a pricier item in a different
+     * bucket, a cheaper item in the same bucket, and an already-bought item
+     * must all be excluded.
+     */
+    public function test_suggest_upsell_offers_a_real_pricier_unbought_item_in_the_cheapest_bucket(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+
+        $whiteStaple = $this->makeProduct('Pošip', 1000);
+        $whiteStaple->forceFill(['subcategory' => 'White'])->save();
+        $order = $this->makeOrder($customer, $admin);
+        $order->items()->create([
+            'inventory_item_id' => $whiteStaple->getKey(),
+            'quantity' => 10,
+            'unit_type' => 'bottles',
+            'unit_price' => Money::fromMinor(1000, 'EUR'),
+            'total' => Money::fromMinor(10000, 'EUR'),
+        ]);
+
+        // Real candidate: same bucket, pricier, for sale, unbought.
+        $upgrade = $this->makeProduct('Pošip Barrique', 1800);
+        $upgrade->forceFill(['subcategory' => 'White'])->save();
+
+        // Excluded: cheaper than what they already pay per bottle.
+        $cheaper = $this->makeProduct('Table White', 800);
+        $cheaper->forceFill(['subcategory' => 'White'])->save();
+
+        // Excluded: pricier, but a different bucket entirely.
+        $wrongBucket = $this->makeProduct('Plavac Mali', 5000);
+        $wrongBucket->forceFill(['subcategory' => 'Red'])->save();
+
+        // Excluded: pricier and same bucket, but already bought.
+        $alreadyBought = $this->makeProduct('Grk', 2500);
+        $alreadyBought->forceFill(['subcategory' => 'White'])->save();
+        $order->items()->create([
+            'inventory_item_id' => $alreadyBought->getKey(),
+            'quantity' => 1,
+            'unit_type' => 'bottles',
+            'unit_price' => Money::fromMinor(2500, 'EUR'),
+            'total' => Money::fromMinor(2500, 'EUR'),
+        ]);
+
+        // Excluded: pricier and same bucket, but not for sale.
+        $notForSale = $this->makeProduct('Reserve White', 3000);
+        $notForSale->forceFill(['subcategory' => 'White', 'is_for_sale' => false])->save();
+
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get(
+                '/customers/'.$customer->getKey(),
+                $this->inertiaPartial('Customers/Show', 'upsell'),
+            );
+
+        $response->assertOk();
+        $this->assertSame('White', $response->json('props.upsell.bucket'));
+        // Revenue per bottle across everything bought in the bucket (10 @
+        // 1000 + 1 @ 2500, the same bought-but-excluded Grk), not just the
+        // staple's own price — the same aggregate the Price ladder itself
+        // ranks by.
+        $this->assertSame(1136, $response->json('props.upsell.current_price_per_bottle.minor'));
+
+        $names = collect((array) $response->json('props.upsell.candidates'))->pluck('name');
+        $this->assertSame(['Pošip Barrique'], $names->all());
+        $this->assertSame(1800, $response->json('props.upsell.candidates.0.default_price.minor'));
+    }
+
+    /** No purchase history at all means no bucket to search from — never invent one. */
+    public function test_suggest_upsell_is_empty_without_purchase_history(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $this->makeProduct('Pošip Barrique', 1800)->forceFill(['subcategory' => 'White'])->save();
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get(
+                '/customers/'.$customer->getKey(),
+                $this->inertiaPartial('Customers/Show', 'upsell'),
+            );
+
+        $response->assertOk();
+        $this->assertNull($response->json('props.upsell.bucket'));
+        $this->assertSame([], $response->json('props.upsell.candidates'));
     }
 
     public function test_revenue_is_withheld_from_a_viewer_without_financials(): void
@@ -554,6 +702,112 @@ class WebCustomersTest extends TestCase
         $this->assertSame(3000, $product['sold_revenue']['minor']);
     }
 
+    public function test_consignment_history_lists_every_recorded_sale_and_return(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $product = $this->makeProduct('Kosa Plavac', 3000);
+
+        $order = Order::create([
+            'order_number' => 'VT-'.fake()->unique()->numerify('########'),
+            'status' => OrderStatus::Received,
+            'customer_id' => $customer->getKey(),
+            'created_by_id' => $admin->getKey(),
+            'is_consignment' => true,
+            'total_amount' => Money::fromMinor(9000, 'EUR'),
+        ]);
+        $item = $order->items()->create([
+            'inventory_item_id' => $product->getKey(),
+            'quantity' => 3,
+            'unit_type' => 'bottles',
+            'unit_price' => Money::fromMinor(3000, 'EUR'),
+            'total' => Money::fromMinor(9000, 'EUR'),
+        ]);
+
+        $sale = $order->consignmentReports()->create([
+            'kind' => 'SALE', 'date' => now()->subDay(), 'note' => 'First case sold', 'created_by_id' => $admin->getKey(),
+        ]);
+        $sale->items()->create([
+            'order_item_id' => $item->getKey(), 'inventory_item_id' => $product->getKey(),
+            'quantity' => 2, 'unit_price' => Money::fromMinor(3000, 'EUR'), 'total' => Money::fromMinor(6000, 'EUR'),
+        ]);
+
+        $return = $order->consignmentReports()->create([
+            'kind' => 'RETURN', 'date' => now(), 'created_by_id' => $admin->getKey(),
+        ]);
+        $return->items()->create([
+            'order_item_id' => $item->getKey(), 'inventory_item_id' => $product->getKey(),
+            'quantity' => 1, 'unit_price' => Money::fromMinor(3000, 'EUR'), 'total' => Money::fromMinor(3000, 'EUR'),
+        ]);
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get(
+                '/customers/'.$customer->getKey().'?tab=consignment',
+                $this->inertiaPartial('Customers/Show', 'consignment'),
+            )
+            ->assertOk();
+
+        $history = (array) $response->json('props.consignment.history');
+        $this->assertCount(2, $history);
+
+        // Newest first: the return (today) before the sale (yesterday).
+        $this->assertSame('RETURN', $history[0]['kind']);
+        $this->assertSame($order->order_number, $history[0]['order_number']);
+        $this->assertSame('Kosa Plavac', $history[0]['items'][0]['name']);
+        $this->assertSame(1, $history[0]['items'][0]['quantity']);
+        $this->assertSame(3000, $history[0]['items'][0]['total']['minor']);
+
+        $this->assertSame('SALE', $history[1]['kind']);
+        $this->assertSame('First case sold', $history[1]['note']);
+        $this->assertSame(2, $history[1]['items'][0]['quantity']);
+    }
+
+    /**
+     * No role in this app currently grants customers.view without also
+     * granting financials.view (see App\Authorization\RoleCapabilities), so
+     * the "hidden" branch can't be reached through the HTTP/role layer —
+     * this calls the service directly, the same way
+     * Web\CustomerController::consignment() does for a viewer without it.
+     */
+    public function test_consignment_history_withholds_totals_without_financials_visibility(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Restoran Mediteran');
+        $product = $this->makeProduct('Kosa Plavac', 3000);
+        $order = Order::create([
+            'order_number' => 'VT-'.fake()->unique()->numerify('########'),
+            'status' => OrderStatus::Received,
+            'customer_id' => $customer->getKey(),
+            'created_by_id' => $admin->getKey(),
+            'is_consignment' => true,
+            'total_amount' => Money::fromMinor(3000, 'EUR'),
+        ]);
+        $item = $order->items()->create([
+            'inventory_item_id' => $product->getKey(), 'quantity' => 1, 'unit_type' => 'bottles',
+            'unit_price' => Money::fromMinor(3000, 'EUR'), 'total' => Money::fromMinor(3000, 'EUR'),
+        ]);
+        $order->consignmentReports()->create([
+            'kind' => 'SALE', 'date' => now(), 'created_by_id' => $admin->getKey(),
+        ])->items()->create([
+            'order_item_id' => $item->getKey(), 'inventory_item_id' => $product->getKey(),
+            'quantity' => 1, 'unit_price' => Money::fromMinor(3000, 'EUR'), 'total' => Money::fromMinor(3000, 'EUR'),
+        ]);
+
+        $withFinancials = app(CustomerConsignmentService::class)->history($customer, true);
+        $withoutFinancials = app(CustomerConsignmentService::class)->history($customer, false);
+        $this->forgetTenant();
+
+        self::assertNotNull($withFinancials[0]['items'][0]['total']);
+        self::assertNull($withoutFinancials[0]['items'][0]['total']);
+    }
+
     public function test_placing_goods_creates_a_consignment_order(): void
     {
         [$tenant, $admin] = $this->tenantAndAdmin();
@@ -759,6 +1013,47 @@ class WebCustomersTest extends TestCase
         $this->actingAsTenant($tenant);
         $this->assertNotNull($customer->refresh()->reorder_contacted_at);
         $this->forgetTenant();
+    }
+
+    /**
+     * The Dashboard Reorder pipeline card's "View all" (Figma 208:5921) — the
+     * full, unnarrowed ReorderRadarQuery list, same query the card itself and
+     * Api\CustomerController::reorderRadar use.
+     */
+    public function test_reorder_radar_page_lists_every_flagged_customer(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer('Slipping Bar');
+        foreach ([40, 30, 20] as $daysAgo) {
+            $order = $this->makeOrder($customer, $admin);
+            $order->forceFill(['created_at' => now()->subDays($daysAgo)])->save();
+        }
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/customers/reorder-radar');
+
+        $response->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Customers/ReorderRadar')
+                ->has('radar.rows', 1)
+                ->where('radar.rows.0.customer_id', $customer->getKey())
+                ->where('radar.rows.0.status', 'overdue'));
+    }
+
+    /** Same gate the API's own reorder-radar endpoint uses (customers.view). */
+    public function test_reorder_radar_page_is_closed_without_customers_view(): void
+    {
+        $tenant = $this->createTenant();
+        $viewer = $this->createMember($tenant, [TenantRole::Cellar]);
+
+        $this->actingAs($viewer)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/customers/reorder-radar')
+            ->assertForbidden();
     }
 
     /** The Show page never evaluates orderToken until a partial reload asks for it. */

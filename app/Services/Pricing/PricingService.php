@@ -26,6 +26,24 @@ class PricingService
 {
     public function resolve(Customer $customer, InventoryItem $item): Money
     {
+        return $this->resolveDetailed($customer, $item)['net'];
+    }
+
+    /**
+     * Same resolution as resolve(), but also returns the pre-rebate ("list")
+     * price the rebate was applied to — for the order drawer's Gross/Rebate/
+     * Net breakdown (OrderLineWriter snapshots this per line, since a rebate
+     * reconstructed from the customer's CURRENT rebate % would be wrong for a
+     * historical order whose rebate has since changed).
+     *
+     * `gross` equals `net` whenever no rebate applies: a CustomerPrice
+     * override carries no rebate by definition, and neither does a $0/no-base
+     * item.
+     *
+     * @return array{net: Money, gross: Money}
+     */
+    public function resolveDetailed(Customer $customer, InventoryItem $item): array
+    {
         // 1. Customer-specific absolute price — no rebate.
         $customerPrice = CustomerPrice::query()
             ->where('customer_id', $customer->getKey())
@@ -33,7 +51,7 @@ class PricingService
             ->first();
 
         if ($customerPrice !== null) {
-            return $customerPrice->price;
+            return ['net' => $customerPrice->price, 'gross' => $customerPrice->price];
         }
 
         // 2. Tier price, else 3. default price.
@@ -48,21 +66,23 @@ class PricingService
         $base ??= $item->default_price;
 
         if ($base === null) {
-            return Money::zero($this->currencyFor($item));
+            $zero = Money::zero($this->currencyFor($item));
+
+            return ['net' => $zero, 'gross' => $zero];
         }
 
         // Rebate: customer overrides tier.
         $rebatePercent = (float) $customer->effectiveRebatePercent();
 
         if ($rebatePercent <= 0) {
-            return $base;
+            return ['net' => $base, 'gross' => $base];
         }
 
         // final = round(base * (1 - rebate/100)); rebate has 2 decimals.
         $rebateBasisPoints = (int) round($rebatePercent * 100);
         $finalMinor = (int) round($base->getMinorAmount() * (10000 - $rebateBasisPoints) / 10000);
 
-        return Money::fromMinor($finalMinor, $base->getCurrencyCode());
+        return ['net' => Money::fromMinor($finalMinor, $base->getCurrencyCode()), 'gross' => $base];
     }
 
     /**

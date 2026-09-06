@@ -63,6 +63,16 @@ class InventorySpendTest extends TestCase
         $m->forceFill(['created_at' => Carbon::parse($at)])->save();
     }
 
+    /** Like exit() but with a configurable movement type and reconciliation flag. */
+    private function movement(InventoryItem $item, string $type, int $qty, string $at, bool $isReconciliation = false): void
+    {
+        $m = StockMovement::create([
+            'inventory_item_id' => $item->getKey(), 'type' => $type, 'quantity' => $qty,
+            'is_reconciliation' => $isReconciliation,
+        ]);
+        $m->forceFill(['created_at' => Carbon::parse($at)])->save();
+    }
+
     /** @return array<string, string> */
     private function headers(): array
     {
@@ -125,6 +135,67 @@ class InventorySpendTest extends TestCase
             ->assertJsonPath('data.summary.distinct_skus', 0)
             ->assertJsonPath('data.per_product.0.units_exited', 0)
             ->assertJsonPath('data.per_product.0.days_left', null);
+    }
+
+    public function test_reconciliation_flagged_and_non_exit_movements_are_excluded_from_spend(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        // Genuine, unflagged exit: counts.
+        $this->movement($this->wine, 'MANUAL_OUT', -30, '2026-06-03');
+        // Operator-tagged reconciliation on an otherwise-genuine exit type: excluded
+        // even though the type and sign look exactly like a real exit.
+        $this->movement($this->wine, 'MANUAL_OUT', -25, '2026-06-04', isReconciliation: true);
+        // ADJUSTMENT type: excluded regardless of the reconciliation flag.
+        $this->movement($this->wine, 'ADJUSTMENT', -15, '2026-06-05');
+        // Inbound movement: only negative ("exit") movements count.
+        $this->movement($this->wine, 'MANUAL_IN', 100, '2026-06-06');
+        $this->forgetTenant();
+
+        Sanctum::actingAs($this->admin);
+        $res = $this->getJson('/api/v1/inventory-items/spend?from=2026-06-01&to=2026-06-10', $this->headers())
+            ->assertOk();
+
+        $res->assertJsonPath('data.summary.units_exited', 30)
+            ->assertJsonPath('data.summary.movements', 1)
+            ->assertJsonPath('data.summary.cost_value.minor', 12000); // 30 × €4.00 cost_per_unit
+
+        // The daily series and the per-product breakdown must agree with the
+        // summary's total — a refactor that shares/caches reconciledExits()
+        // must not let one of them diverge from the others.
+        $daily = $res->json('data.daily');
+        self::assertSame(30, array_sum(array_column($daily, 'units')));
+
+        $wineRow = collect((array) $res->json('data.per_product'))->firstWhere('sku', 'FP-REDWINE-001');
+        self::assertSame(30, $wineRow['units_exited']);
+        self::assertSame(30, array_sum($wineRow['daily']));
+    }
+
+    public function test_summary_daily_and_per_product_totals_agree_for_the_same_window(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        $white = InventoryItem::create([
+            'name' => 'White Blend', 'sku' => 'FP-WHITE-001', 'category' => 'FINISHED',
+            'unit' => 'bottles', 'current_stock' => '80', 'cost_per_unit' => 300,
+        ]);
+        $this->movement($this->wine, 'MANUAL_OUT', -12, '2026-06-02');
+        $this->movement($this->wine, 'ORDER_DEDUCT', -8, '2026-06-05');
+        $this->movement($white, 'MANUAL_OUT', -5, '2026-06-01');
+        $this->movement($white, 'MANUAL_OUT', -15, '2026-06-09');
+        $this->forgetTenant();
+
+        Sanctum::actingAs($this->admin);
+        $res = $this->getJson('/api/v1/inventory-items/spend?from=2026-06-01&to=2026-06-10', $this->headers())
+            ->assertOk();
+
+        $summaryUnits = $res->json('data.summary.units_exited');
+        self::assertSame(40, $summaryUnits);
+        self::assertSame(2, $res->json('data.summary.distinct_skus'));
+
+        $dailyTotal = array_sum(array_column($res->json('data.daily'), 'units'));
+        self::assertSame($summaryUnits, $dailyTotal);
+
+        $perProductTotal = array_sum(array_column($res->json('data.per_product'), 'units_exited'));
+        self::assertSame($summaryUnits, $perProductTotal);
     }
 
     public function test_spend_requires_inventory_visibility(): void

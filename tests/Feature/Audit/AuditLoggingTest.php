@@ -79,7 +79,13 @@ class AuditLoggingTest extends TestCase
         $this->assertSame(1, AuditLog::query()->count());
         $log = AuditLog::query()->firstOrFail();
         $this->assertSame('order.status_changed', $log->action);
-        $this->assertSame(['from' => 'RECEIVED', 'to' => 'SHIPPED', 'note' => 'Left the cellar'], $log->metadata);
+        // Individual keys, not a whole-array comparison: a JSON column's key
+        // order isn't guaranteed across DB drivers, and isn't the point here.
+        $metadata = $log->metadata;
+        $this->assertIsArray($metadata);
+        $this->assertSame('RECEIVED', $metadata['from']);
+        $this->assertSame('SHIPPED', $metadata['to']);
+        $this->assertSame('Left the cellar', $metadata['note']);
     }
 
     public function test_a_stock_adjustment_writes_a_richly_named_entry_not_a_bare_diff(): void

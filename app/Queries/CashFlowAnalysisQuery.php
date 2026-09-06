@@ -133,13 +133,12 @@ class CashFlowAnalysisQuery
      */
     private function outstandingReceivables(array $excluded): array
     {
-        $rows = Inflow::query()
+        $query = fn () => Inflow::query()
             ->where('status', InflowStatus::Pending)
             ->where('is_credit_note', false)
-            ->where(fn ($q) => $q->whereNull('customer_id')->orWhereNotIn('customer_id', $excluded))
-            ->get(['amount']);
+            ->where(fn ($q) => $q->whereNull('customer_id')->orWhereNotIn('customer_id', $excluded));
 
-        return ['total' => (int) $rows->sum(fn (Inflow $i) => $i->amount->getMinorAmount()), 'count' => $rows->count()];
+        return ['total' => (int) $query()->sum('amount'), 'count' => $query()->count()];
     }
 
     /**
@@ -147,9 +146,9 @@ class CashFlowAnalysisQuery
      */
     private function outstandingPayables(): array
     {
-        $rows = Cost::query()->where('status', '!=', CostStatus::Paid)->get(['total_amount']);
+        $query = fn () => Cost::query()->where('status', '!=', CostStatus::Paid);
 
-        return ['total' => (int) $rows->sum(fn (Cost $c) => $c->total_amount->getMinorAmount()), 'count' => $rows->count()];
+        return ['total' => (int) $query()->sum('total_amount'), 'count' => $query()->count()];
     }
 
     /**

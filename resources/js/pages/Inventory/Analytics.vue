@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
 import { AlertTriangle, Plus, Upload } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import BarChart from '@/components/ui/BarChart.vue';
+import BulkImportDialog from '@/components/inventory/BulkImportDialog.vue';
 import Button from '@/components/ui/Button.vue';
 import Callout from '@/components/ui/Callout.vue';
 import Card from '@/components/ui/Card.vue';
@@ -16,7 +17,7 @@ import StatCard from '@/components/ui/StatCard.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
-import { formatMoney, formatNumber, formatQuantity } from '@/lib/money';
+import { formatMoney, formatNumber } from '@/lib/money';
 import { categoryLabel, channelLabel, formatMonth } from '@/lib/stock';
 import type { InventoryAnalytics } from '@/types/stock';
 import type { SharedProps } from '@/types';
@@ -30,7 +31,7 @@ import type { TabItem } from '@/types/ui';
  * value as fact. That behaviour is reproduced here — a portfolio that barely
  * moves really does compute to decades of cover, and saying so is the point.
  */
-const props = defineProps<{ analytics: InventoryAnalytics }>();
+const props = defineProps<{ analytics: InventoryAnalytics; filters: { months: number } }>();
 
 const page = usePage<SharedProps>();
 const { can } = useAuth();
@@ -73,11 +74,65 @@ const cover = computed(() => {
 /** Nothing costed means the portfolio total is the only value we can state. */
 const nothingCosted = computed(() => summary.value.costed_count === 0);
 
-const maxStock = computed(() =>
-    Math.max(1, ...props.analytics.stock_levels.map((s) => Number.parseFloat(s.stock) || 0)),
+/** The "In and out" card's range picker (Figma 382:1592). */
+const RANGE_TABS: TabItem[] = [
+    { value: '3', label: t('3 months') },
+    { value: '6', label: t('6 months') },
+    { value: '12', label: t('12 months') },
+];
+
+function selectMonths(months: string): void {
+    router.get(
+        '/inventory-analytics',
+        { months },
+        { preserveState: true, preserveScroll: true, only: ['analytics', 'filters'] },
+    );
+}
+
+/** The "Stock against movement" card's unit switch (Figma 382:1592). */
+type StockUnit = 'bottles' | 'cases' | 'value';
+
+const STOCK_UNIT_TABS: TabItem[] = [
+    { value: 'bottles', label: t('Bottles') },
+    { value: 'cases', label: t('Cases') },
+    { value: 'value', label: t('Value') },
+];
+
+const stockUnit = ref<StockUnit>('bottles');
+
+/**
+ * A level's bar amount in the selected unit — null when the item can't be
+ * expressed in it (cases need a case size, value needs a price), so the row
+ * says so rather than drawing a bar it cannot honestly compute.
+ */
+function levelAmount(level: InventoryAnalytics['stock_levels'][number]): number | null {
+    const bottles = Number.parseFloat(level.stock) || 0;
+
+    if (stockUnit.value === 'bottles') return bottles;
+    if (stockUnit.value === 'cases') return level.bottles_per_case ? bottles / level.bottles_per_case : null;
+
+    return level.value; // already in minor currency units
+}
+
+function levelLabel(level: InventoryAnalytics['stock_levels'][number]): string {
+    const amount = levelAmount(level);
+
+    if (amount === null) {
+        return stockUnit.value === 'cases' ? t('no case size') : t('not priced');
+    }
+
+    if (stockUnit.value === 'value') return money(amount, value.value.currency);
+
+    return t(':count :unit', { count: num(Math.round(amount * 100) / 100), unit: stockUnit.value === 'cases' ? t('cases') : t('held') });
+}
+
+const maxStockAmount = computed(() =>
+    Math.max(1, ...props.analytics.stock_levels.map((s) => levelAmount(s) ?? 0)),
 );
 
 const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum + c.units, 0));
+
+const bulkImportOpen = ref(false);
 </script>
 
 <template>
@@ -85,8 +140,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Inventory')">
                 <template #actions>
-                    <!-- @todo Bulk Import — no CSV/XLSX import pipeline yet. -->
-                    <Button v-if="can('inventory.manage')" variant="outline" size="sm">
+                    <Button v-if="can('inventory.manage')" variant="outline" size="sm" @click="bulkImportOpen = true">
                         <Upload class="size-4" :stroke-width="1.5" />
                         {{ t('Bulk Import') }}
                     </Button>
@@ -142,19 +196,16 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                 <Card>
                     <CardContent class="flex flex-col gap-4 p-6">
                         <SectionHeader
-                            :title="t('In and out · 12 months')"
+                            :title="t('In and out · :count months', { count: filters.months })"
                             :description="t('Units received against units shipped.')"
                         >
                             <template #actions>
-                                <!--
-                                  @todo Range picker. The window is fixed at 12
-                                  months in InventoryAnalyticsQuery::movements12m();
-                                  it needs a period argument before this can do
-                                  anything.
-                                -->
-                                <button type="button" class="text-xs text-muted-foreground hover:text-foreground">
-                                    {{ t('Change range') }}
-                                </button>
+                                <Tabs
+                                    :items="RANGE_TABS"
+                                    :current="String(filters.months)"
+                                    variant="solid"
+                                    @select="selectMonths"
+                                />
                             </template>
                         </SectionHeader>
                         <BarChart
@@ -219,14 +270,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                             :description="t('Bar is what we hold. Per-product exits are not attributed yet, so no movement notch is drawn.')"
                         >
                             <template #actions>
-                                <!--
-                                  @todo Unit switch (bottles / cases / value).
-                                  Needs bottles_per_case and a price basis per
-                                  row before the bars can be re-scaled.
-                                -->
-                                <button type="button" class="text-xs text-muted-foreground hover:text-foreground">
-                                    {{ t('By bottles') }}
-                                </button>
+                                <Tabs :items="STOCK_UNIT_TABS" :current="stockUnit" variant="filter" @select="stockUnit = $event as StockUnit" />
                             </template>
                         </SectionHeader>
 
@@ -235,15 +279,13 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                                 <div class="flex items-baseline justify-between gap-3">
                                     <span class="truncate text-sm font-medium">{{ level.name }}</span>
                                     <span class="shrink-0 text-xs tabular-nums text-muted-foreground">
-                                        {{ formatQuantity(level.stock, locale) }} {{ t('held') }}
+                                        {{ levelLabel(level) }}
                                     </span>
                                 </div>
                                 <div class="h-2 w-full overflow-hidden bg-muted">
                                     <div
                                         class="h-full bg-muted-foreground/50"
-                                        :style="{
-                                            width: `${((Number.parseFloat(level.stock) || 0) / maxStock) * 100}%`,
-                                        }"
+                                        :style="{ width: `${((levelAmount(level) ?? 0) / maxStockAmount) * 100}%` }"
                                     />
                                 </div>
                             </li>
@@ -291,8 +333,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                                 {{ t(':costed of :total active items carry a cost per unit. The rest fall back to list price.', { costed: num(summary.costed_count), total: num(summary.total_active) }) }}
                             </template>
                             <template #action>
-                                <!-- @todo Deep-link to the items missing a cost, rather than the whole list. -->
-                                <Button v-if="can('inventory.manage')" variant="outline" size="sm" href="/inventory">
+                                <Button v-if="can('inventory.manage')" variant="outline" size="sm" href="/inventory?missing_cost=1">
                                     {{ t('Add costs') }}
                                 </Button>
                             </template>
@@ -301,5 +342,7 @@ const channelUnits = computed(() => exits.value.channels.reduce((sum, c) => sum 
                 </Card>
             </div>
         </div>
+
+        <BulkImportDialog :open="bulkImportOpen" @close="bulkImportOpen = false" />
     </AppLayout>
 </template>

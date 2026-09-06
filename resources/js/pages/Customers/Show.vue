@@ -9,6 +9,8 @@ import CustomerAttentionBand from '@/components/customers/CustomerAttentionBand.
 import CustomerFormPanel from '@/components/customers/CustomerFormPanel.vue';
 import CustomerPriceDialog from '@/components/customers/CustomerPriceDialog.vue';
 import OrderLinkDialog from '@/components/customers/OrderLinkDialog.vue';
+import SuggestOrderDialog from '@/components/customers/SuggestOrderDialog.vue';
+import SuggestUpsellDialog from '@/components/customers/SuggestUpsellDialog.vue';
 import OrderRhythm from '@/components/customers/OrderRhythm.vue';
 import PipelineCard from '@/components/orders/PipelineCard.vue';
 import BarChart from '@/components/ui/BarChart.vue';
@@ -22,6 +24,7 @@ import StatCard from '@/components/ui/StatCard.vue';
 import StatusChips from '@/components/ui/StatusChips.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type {
@@ -34,6 +37,7 @@ import type {
     CustomerPricing,
     CustomerProducts,
     CustomerRhythm,
+    CustomerUpsell,
 } from '@/types/customers';
 import type { MoneyValue } from '@/types/inventory';
 import type { Order, OrderPipeline, OrderStatusCounts, OrderStatusKey, ProductOption } from '@/types/orders';
@@ -61,6 +65,8 @@ const props = defineProps<{
     /** Null when the viewer may not see financials. */
     insights: CustomerInsights | null;
     orderAnalytics: CustomerOrderAnalytics | null;
+    /** The revenue trend card's own range picker — independent of productRange. */
+    revenueRangeMonths: number;
     products: CustomerProducts;
     productRange: { preset: string; from: string | null; to: string | null };
     pricing?: CustomerPricing;
@@ -78,6 +84,8 @@ const props = defineProps<{
     consignment?: CustomerConsignment;
     /** Undefined until the Order link dialog opens and asks for it. */
     orderToken?: string | null;
+    /** Undefined until the Suggest upsell dialog opens and asks for it. */
+    upsell?: CustomerUpsell;
 }>();
 
 const page = usePage<SharedProps>();
@@ -88,6 +96,8 @@ const { t } = useTranslations();
 const editOpen = ref(false);
 const confirmingDelete = ref(false);
 const orderLinkOpen = ref(false);
+const suggestOrderOpen = ref(false);
+const suggestUpsellOpen = ref(false);
 
 const money = (m: MoneyValue | null | undefined): string =>
     m ? formatMoney(m.minor, m.currency) : '—';
@@ -451,6 +461,24 @@ function selectProductCustomRange(range: DateRange): void {
 }
 
 /**
+ * The revenue trend card's own range picker (231:9336's "Change range"). Only
+ * reloads that card, same as Products bought's own window above.
+ */
+const REVENUE_RANGE_TABS: TabItem[] = [
+    { value: '3', label: t('3 months') },
+    { value: '6', label: t('6 months') },
+    { value: '12', label: t('12 months') },
+];
+
+function selectRevenueRange(months: string): void {
+    router.get(
+        `/customers/${props.customer.id}`,
+        { tab: props.tab, revenue_months: months },
+        { preserveState: true, preserveScroll: true, replace: true, only: ['orderAnalytics', 'revenueRangeMonths'] },
+    );
+}
+
+/**
  * Products bought, grouped the way the design groups them: by product group,
  * then by subcategory within it (231:9336 shows "Wine" over "White" / "Rosé" /
  * "Red" as two nesting levels, not one flat list under "Wine").
@@ -574,8 +602,13 @@ function openEditPrice(row: CustomerPriceRow): void {
     priceDialogOpen.value = true;
 }
 
-function removePrice(row: CustomerPriceRow): void {
-    if (!confirm(t('Remove the price set for :name? They will pay the tier/list price instead.', { name: row.name }))) return;
+async function removePrice(row: CustomerPriceRow): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Remove price'),
+        description: t('Remove the price set for :name? They will pay the tier/list price instead.', { name: row.name }),
+        tone: 'danger',
+    });
+    if (!ok) return;
 
     router.delete(`/customers/${props.customer.id}/prices/${row.inventory_item_id}`, {
         preserveScroll: true,
@@ -679,19 +712,19 @@ function removePrice(row: CustomerPriceRow): void {
                     <div v-if="orderAnalytics" class="border border-border bg-card xl:col-span-2">
                         <div class="flex items-center justify-between gap-3 border-b border-border px-6 py-4">
                             <SectionHeader
-                                :title="t('Revenue trend · 12 months')"
+                                :title="t('Revenue trend · :count months', { count: revenueRangeMonths })"
                                 :description="
                                     orderAnalytics.last_order_date
                                         ? t('Last order :date', { date: shortDate(orderAnalytics.last_order_date) })
                                         : t('No orders recorded yet')
                                 "
                             />
-                            <!-- @todo Change range. The design draws this control but
-                                 doesn't specify what alternate window it opens; the
-                                 chart's own 12-month window matches the header. -->
-                            <button type="button" class="shrink-0 text-xs text-muted-foreground hover:text-foreground">
-                                {{ t('Change range') }}
-                            </button>
+                            <Tabs
+                                :items="REVENUE_RANGE_TABS"
+                                :current="String(revenueRangeMonths)"
+                                variant="solid"
+                                @select="selectRevenueRange"
+                            />
                         </div>
                         <div class="p-6">
                             <BarChart :points="revenueTrend" :height="220" />
@@ -770,9 +803,11 @@ function removePrice(row: CustomerPriceRow): void {
                                         : t('Revenue per bottle')
                                 "
                             />
-                            <!-- @todo Suggest upsell. No suggestion engine exists yet
-                                 to back this — the ladder itself is real. -->
-                            <button type="button" class="shrink-0 text-xs text-muted-foreground hover:text-foreground">
+                            <button
+                                type="button"
+                                class="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+                                @click="suggestUpsellOpen = true"
+                            >
                                 {{ t('Suggest upsell') }}
                             </button>
                         </div>
@@ -836,8 +871,11 @@ function removePrice(row: CustomerPriceRow): void {
                                     })
                                 "
                             />
-                            <!-- @todo Suggest order. No suggestion engine exists yet. -->
-                            <button type="button" class="shrink-0 text-xs text-muted-foreground hover:text-foreground">
+                            <button
+                                type="button"
+                                class="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+                                @click="suggestOrderOpen = true"
+                            >
                                 {{ t('Suggest order') }}
                             </button>
                         </div>
@@ -1213,5 +1251,8 @@ function removePrice(row: CustomerPriceRow): void {
             :editing="editingPrice"
             @close="priceDialogOpen = false"
         />
+
+        <SuggestOrderDialog :open="suggestOrderOpen" :products="products.rows" :rhythm="rhythm" @close="suggestOrderOpen = false" />
+        <SuggestUpsellDialog :open="suggestUpsellOpen" :upsell="upsell" @close="suggestUpsellOpen = false" />
     </AppLayout>
 </template>

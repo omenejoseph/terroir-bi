@@ -9,6 +9,7 @@ import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminOption, AdminPlan, AdminPlanTenant } from '@/types/admin';
@@ -28,10 +29,12 @@ const { t } = useTranslations();
 
 const formOpen = ref(false);
 
-function createStripePrice(): void {
-    if (!confirm(t("Create a Stripe product + recurring price from this plan's amount and link it to the plan?"))) {
-        return;
-    }
+async function createStripePrice(): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Create Stripe price'),
+        description: t("Create a Stripe product + recurring price from this plan's amount and link it to the plan?"),
+    });
+    if (!ok) return;
 
     router.post(`${ADMIN_BASE}/plans/${props.plan.id}/create-stripe-price`, {}, { preserveScroll: true });
 }

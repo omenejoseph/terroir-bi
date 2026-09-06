@@ -4,6 +4,8 @@ import { createApp, h, type DefineComponent } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
+import ConfirmDialogHost from './components/ConfirmDialogHost.vue';
+
 const appName = import.meta.env.VITE_APP_NAME ?? 'Terroir';
 
 void createInertiaApp({
@@ -20,7 +22,11 @@ void createInertiaApp({
         ),
 
     setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
+        // ConfirmDialogHost is a sibling root, not a child of App: one dialog,
+        // shared by every page/component via useConfirm's module-level state,
+        // rather than each screen mounting (and re-mounting on navigation) its
+        // own copy.
+        createApp({ render: () => [h(App, props), h(ConfirmDialogHost)] })
             .use(plugin)
             .mount(el);
     },

@@ -10,6 +10,7 @@ use App\Models\InventoryItem;
 use App\Models\User;
 use App\Services\Inventory\StockLedger;
 use App\Support\Quantity;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -33,13 +34,33 @@ class ApplyInventoryCheckAction
         $reference = 'INVCHECK-'.now()->toDateString();
 
         return DB::transaction(function () use ($counts, $reference, $performedBy): array {
+            $itemIds = array_values(array_unique(array_column($counts, 'item_id')));
+
+            // One locked SELECT for every counted item, instead of one per
+            // row — a stocktake often covers the whole active catalog. Each
+            // count entry still reads/writes through the SAME item instance
+            // (not a fresh query), so a repeated item_id in one submission
+            // sees the earlier entry's adjustment, exactly as the per-row
+            // lockForUpdate()->firstOrFail() loop this replaces did.
+            $items = InventoryItem::query()
+                ->whereIn('id', $itemIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy(fn (InventoryItem $i): string => (string) $i->getKey());
+
+            foreach ($itemIds as $itemId) {
+                if (! $items->has($itemId)) {
+                    throw (new ModelNotFoundException)->setModel(InventoryItem::class, [$itemId]);
+                }
+            }
+
             $results = [];
             $lines = [];
             $net = '0';
 
             foreach ($counts as $count) {
                 /** @var InventoryItem $item */
-                $item = InventoryItem::query()->whereKey($count['item_id'])->lockForUpdate()->firstOrFail();
+                $item = $items[$count['item_id']];
 
                 $system = (string) $item->current_stock;
                 $difference = Quantity::sub($count['physical_count'], $system);

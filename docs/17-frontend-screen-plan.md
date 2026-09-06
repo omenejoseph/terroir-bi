@@ -261,8 +261,10 @@ The unauthenticated public token order page stayed on `routes/api.php`, as
 planned — it resolves its tenant from the token, not the session.
 
 **Design divergences** (all in the gap register): the pipeline's stage
-vocabulary, the Channel/Date range/Rep filters, bulk actions and columns, the
-profitability rebate split, and comment reactions.
+vocabulary, the Channel/Date range/Rep filters, bulk actions and columns, and
+the profitability rebate split. Comment reactions were later built —
+`order_note_reactions`, `ToggleOrderCommentReactionAction`, a fixed six-emoji
+palette on each comment.
 
 ## Phase 4 — Customers ✅ DONE
 

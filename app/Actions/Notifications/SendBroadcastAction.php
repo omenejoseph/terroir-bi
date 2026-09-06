@@ -11,6 +11,7 @@ use App\Jobs\SendWebPushNotification;
 use App\Models\Membership;
 use App\Models\Notification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Super-admin announcement: writes an in-app feed row for every active member of
@@ -36,22 +37,40 @@ class SendBroadcastAction
         $tenants = [];
 
         DB::transaction(function () use ($memberships, $title, $body, &$userIds, &$tenants): void {
-            foreach ($memberships as $membership) {
-                // tenant_id is not fillable (normally set by the BelongsToTenant
-                // hook from context); set it directly so the cross-tenant write
-                // doesn't fall back to demanding a bound tenant.
-                $notification = new Notification([
-                    'user_id' => $membership->user_id,
-                    'type' => NotificationType::Announcement,
-                    'title' => $title,
-                    'body' => $body,
-                    'data' => [],
-                ]);
-                $notification->tenant_id = $membership->tenant_id;
-                $notification->save();
+            $now = now();
 
+            // Built by hand (id/timestamps/cast included) rather than one
+            // Notification::create()/save() per membership, then written in
+            // chunks — a broadcast to "all tenants" can mean one row per
+            // active membership on the whole platform.
+            $rows = [];
+            foreach ($memberships as $membership) {
                 $userIds[(string) $membership->user_id] = true;
                 $tenants[(string) $membership->tenant_id] = true;
+
+                $rows[] = [
+                    'id' => (string) Str::ulid(),
+                    // tenant_id is not fillable (normally set by the
+                    // BelongsToTenant hook from context); a raw insert has no
+                    // hook to run at all, so it's given directly either way.
+                    'tenant_id' => $membership->tenant_id,
+                    'user_id' => $membership->user_id,
+                    'type' => NotificationType::Announcement->value,
+                    'title' => $title,
+                    'body' => $body,
+                    'data' => json_encode([]),
+                    'is_read' => false,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+
+            // withoutTenant(): this action runs across every targeted
+            // tenant (or the whole platform) with no tenant bound, the same
+            // audited escape hatch PlatformDashboardQuery uses for its own
+            // cross-tenant reads.
+            foreach (array_chunk($rows, 500) as $chunk) {
+                Notification::withoutTenant()->insert($chunk);
             }
         });
 

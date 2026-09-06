@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ListOrdersQuery
 {
     /**
-     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string, channel?: ?string, from?: ?string, to?: ?string}  $filters
+     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string, channel?: ?string, item_id?: ?string, from?: ?string, to?: ?string}  $filters
      * @return LengthAwarePaginator<int, Order>
      */
     public function paginate(array $filters = [], int $perPage = 25): LengthAwarePaginator
@@ -29,7 +29,7 @@ class ListOrdersQuery
     }
 
     /**
-     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string, channel?: ?string, from?: ?string, to?: ?string}  $filters
+     * @param  array{status?: ?string, search?: ?string, hide_shipped?: ?bool, customer_id?: ?string, channel?: ?string, item_id?: ?string, from?: ?string, to?: ?string}  $filters
      * @return Builder<Order>
      */
     public function build(array $filters): Builder
@@ -38,6 +38,12 @@ class ListOrdersQuery
 
         if (! empty($filters['customer_id'])) {
             $query->where('customer_id', $filters['customer_id']);
+        }
+
+        // The item drawer's "Open in Orders" — every order with a line for
+        // this item, an exact match rather than folded into `search`.
+        if (! empty($filters['item_id'])) {
+            $query->whereHas('items', fn (Builder $i) => $i->where('inventory_item_id', $filters['item_id']));
         }
 
         // Orders have no channel of their own — "Channel" filters by the

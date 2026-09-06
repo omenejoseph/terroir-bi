@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button.vue';
 import DropdownMenu from '@/components/ui/DropdownMenu.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Pagination from '@/components/ui/Pagination.vue';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminBddScenarioSummary } from '@/types/admin';
@@ -83,18 +84,22 @@ function edit(scenario: AdminBddScenarioSummary): void {
     formOpen.value = true;
 }
 
-function run(scenario: AdminBddScenarioSummary): void {
-    if (!confirm(t('Queue a background run: an AI agent executes the Gherkin live against a throwaway sandbox (always rolled back). Costs one AI call.'))) {
-        return;
-    }
+async function run(scenario: AdminBddScenarioSummary): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Run scenario'),
+        description: t('Queue a background run: an AI agent executes the Gherkin live against a throwaway sandbox (always rolled back). Costs one AI call.'),
+    });
+    if (!ok) return;
 
     router.post(`${ADMIN_BASE}/bdd-scenarios/${scenario.id}/run`, {}, { preserveScroll: true });
 }
 
-function runAll(): void {
-    if (!confirm(t('Queue a background run for every active scenario: an AI agent executes each Gherkin live against a throwaway sandbox (always rolled back). Costs one AI call per scenario.'))) {
-        return;
-    }
+async function runAll(): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Run all scenarios'),
+        description: t('Queue a background run for every active scenario: an AI agent executes each Gherkin live against a throwaway sandbox (always rolled back). Costs one AI call per scenario.'),
+    });
+    if (!ok) return;
 
     router.post(`${ADMIN_BASE}/bdd-scenarios/run-all`, {}, { preserveScroll: true });
 }
@@ -116,8 +121,13 @@ function onRowAction(key: string, scenario: AdminBddScenarioSummary): void {
     if (key === 'delete') destroy(scenario);
 }
 
-function destroy(scenario: AdminBddScenarioSummary): void {
-    if (!confirm(t('Delete :title?', { title: scenario.title }))) return;
+async function destroy(scenario: AdminBddScenarioSummary): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Delete scenario'),
+        description: t('Delete :title?', { title: scenario.title }),
+        tone: 'danger',
+    });
+    if (!ok) return;
 
     router.delete(`${ADMIN_BASE}/bdd-scenarios/${scenario.id}`, { preserveScroll: true });
 }

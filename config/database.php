@@ -54,7 +54,15 @@ return [
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
-            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            // utf8mb4_unicode_ci (the historical Laravel default) folds some
+            // distinct supplementary-plane characters — several emoji pairs
+            // among them — to equal collation weights, which a unique index
+            // reads as a duplicate row even though the stored bytes differ
+            // (order_note_reactions' own (note, user, emoji) key hit this
+            // exact case in testing). utf8mb4_0900_ai_ci is MySQL 8+'s own
+            // modern default and doesn't have the bug — this app runs MySQL
+            // in production, not MariaDB, so only this connection changes.
+            'collation' => env('DB_COLLATION', 'utf8mb4_0900_ai_ci'),
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,

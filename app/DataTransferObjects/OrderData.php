@@ -9,10 +9,12 @@ use App\Models\InventoryItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderNote;
+use App\Models\OrderNoteReaction;
 use App\Models\OrderStatusHistory;
 use App\Models\User;
 use App\Support\Money\Money;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Collection;
 use JsonSerializable;
 
 /**
@@ -87,8 +89,35 @@ final class OrderData implements Arrayable, JsonSerializable
                     'content' => $n->content,
                     'author' => $this->user($n->author),
                     'created_at' => $n->created_at?->toIso8601String(),
+                    'reactions' => $this->reactions($n),
                 ])->all(),
         ];
+    }
+
+    /**
+     * A comment's reactions, grouped by emoji (Figma 376:1592's emoji
+     * counts). Carries the reacting user ids rather than a pre-computed
+     * "did I react" flag, since the DTO has no notion of who's asking —
+     * the client already has its own id (page.props.auth.user) to compare.
+     *
+     * @return list<array{emoji: string, count: int, user_ids: list<string>}>
+     */
+    private function reactions(OrderNote $note): array
+    {
+        /** @var Collection<int, OrderNoteReaction> $all */
+        $all = $note->reactions;
+
+        $rows = $all
+            ->groupBy('emoji')
+            ->map(fn (Collection $group, string $emoji): array => [
+                'emoji' => $emoji,
+                'count' => $group->count(),
+                'user_ids' => array_values($group->map(fn (OrderNoteReaction $r): string => $r->user_id)->all()),
+            ])
+            ->values()
+            ->all();
+
+        return array_values($rows);
     }
 
     /**
@@ -178,6 +207,8 @@ final class OrderData implements Arrayable, JsonSerializable
 
         $currency = $this->order->total_amount->getCurrencyCode();
         $revenue = 0;
+        $grossRevenue = 0;
+        $hasGross = true;
         $cogs = 0;
         $missing = [];
 
@@ -190,6 +221,16 @@ final class OrderData implements Arrayable, JsonSerializable
             }
 
             $revenue += $item->total->getMinorAmount();
+
+            // Null on an order written before unit_price_gross existed — the
+            // gross/rebate breakdown is withheld for the whole order rather
+            // than showing a false "no rebate" for a line we simply don't
+            // know the gross of.
+            if ($item->unit_price_gross === null) {
+                $hasGross = false;
+            } else {
+                $grossRevenue += $item->unit_price_gross->getMinorAmount() * $item->quantity;
+            }
 
             if ($item->cost_per_unit === null) {
                 $missing[] = $this->itemName($item);
@@ -209,6 +250,8 @@ final class OrderData implements Arrayable, JsonSerializable
 
         return [
             'revenue' => Money::fromMinor($revenue, $currency)->jsonSerialize(),
+            'gross_revenue' => $hasGross ? Money::fromMinor($grossRevenue, $currency)->jsonSerialize() : null,
+            'rebate_amount' => $hasGross ? Money::fromMinor($grossRevenue - $revenue, $currency)->jsonSerialize() : null,
             'cogs' => Money::fromMinor($cogs, $currency)->jsonSerialize(),
             'logistics' => $logistics > 0 ? Money::fromMinor($logistics, $currency)->jsonSerialize() : null,
             'gross_profit' => Money::fromMinor($profit, $currency)->jsonSerialize(),

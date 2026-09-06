@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button.vue';
 import DropdownMenu from '@/components/ui/DropdownMenu.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Pagination from '@/components/ui/Pagination.vue';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminOption, AdminPlan } from '@/types/admin';
@@ -81,10 +82,13 @@ function onRowAction(key: string, plan: AdminPlan): void {
     if (key === 'delete') destroy(plan);
 }
 
-function destroy(plan: AdminPlan): void {
-    if (!confirm(t('Delete :name? Tenants on this plan keep their subscription but lose their plan assignment.', { name: plan.name }))) {
-        return;
-    }
+async function destroy(plan: AdminPlan): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Delete plan'),
+        description: t('Delete :name? Tenants on this plan keep their subscription but lose their plan assignment.', { name: plan.name }),
+        tone: 'danger',
+    });
+    if (!ok) return;
 
     router.delete(`${ADMIN_BASE}/plans/${plan.id}`, { preserveScroll: true });
 }

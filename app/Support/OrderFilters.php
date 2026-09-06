@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 final class OrderFilters
 {
     /**
-     * @return array{status: ?string, search: ?string, customer_id: ?string, channel: ?string, period: ?string, from: ?string, to: ?string}
+     * @return array{status: ?string, search: ?string, customer_id: ?string, channel: ?string, item_id: ?string, period: ?string, from: ?string, to: ?string}
      */
     public static function fromRequest(Request $request): array
     {
@@ -28,6 +28,10 @@ final class OrderFilters
             // The customer's sales channel (App\Enums\CustomerType) — orders
             // have no channel of their own, so this filters by the customer's.
             'channel' => self::str($request->query('channel')),
+            // The item drawer's "Open in Orders" — an exact match, not folded
+            // into `search` (which only matches order_number/customer name):
+            // a SKU/name text search could false-match an unrelated order.
+            'item_id' => self::str($request->query('item_id')),
             'period' => self::str($request->query('period')),
             // An explicit range beats the preset — the design's "Custom" tab.
             // Period::resolve applies that precedence; both are carried so the

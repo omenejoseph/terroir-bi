@@ -6,6 +6,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import Pagination from '@/components/ui/Pagination.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
+import { formatActionLabel, formatMetadata } from '@/lib/auditLog';
 import type { AdminAuditLog } from '@/types/admin';
 import type { Paginated } from '@/types';
 
@@ -52,13 +53,14 @@ function subject(row: AdminAuditLog): string {
 
             <div class="overflow-hidden border border-border bg-card">
                 <div class="overflow-x-auto">
-                    <table class="w-full min-w-[48rem] text-xs">
+                    <table class="w-full min-w-[64rem] text-xs">
                         <thead class="border-b border-border bg-muted/40 text-left text-xs text-muted-foreground">
                             <tr>
                                 <th scope="col" class="px-4 py-2.5 font-medium">{{ t('When') }}</th>
                                 <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Actor') }}</th>
                                 <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Action') }}</th>
                                 <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Subject') }}</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Details') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -67,16 +69,17 @@ function subject(row: AdminAuditLog): string {
                                 :key="row.id"
                                 class="border-b border-border transition-colors last:border-b-0 hover:bg-muted/40"
                             >
-                                <td class="px-4 py-3 text-muted-foreground">
+                                <td class="px-4 py-3 whitespace-nowrap text-muted-foreground">
                                     {{ row.created_at ? new Date(row.created_at).toLocaleString() : '—' }}
                                 </td>
                                 <td class="px-4 py-3 text-foreground">{{ row.actor_name ?? '—' }}</td>
-                                <td class="px-4 py-3 text-foreground">{{ row.action }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-foreground">{{ formatActionLabel(row.action) }}</td>
                                 <td class="px-4 py-3 text-muted-foreground">{{ subject(row) }}</td>
+                                <td class="px-4 py-3 text-muted-foreground">{{ formatMetadata(row.metadata) }}</td>
                             </tr>
 
                             <tr v-if="logs.data.length === 0">
-                                <td colspan="4" class="px-4 py-12 text-center text-muted-foreground">
+                                <td colspan="5" class="px-4 py-12 text-center text-muted-foreground">
                                     {{ t('No audit log entries yet.') }}
                                 </td>
                             </tr>

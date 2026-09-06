@@ -8,6 +8,7 @@ import Badge from '@/components/ui/Badge.vue';
 import DropdownMenu from '@/components/ui/DropdownMenu.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Pagination from '@/components/ui/Pagination.vue';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminUserSummary } from '@/types/admin';
@@ -80,30 +81,42 @@ function rowActions(row: AdminUserSummary): MenuItem[] {
 }
 
 function onRowAction(key: string, row: AdminUserSummary): void {
-    if (key === 'reset-password') return sendPasswordReset(row);
-    if (key === 'impersonate') return impersonate(row);
-    if (key === 'suspension') return toggleSuspension(row);
+    if (key === 'reset-password') void sendPasswordReset(row);
+    if (key === 'impersonate') void impersonate(row);
+    if (key === 'suspension') void toggleSuspension(row);
 }
 
-function sendPasswordReset(row: AdminUserSummary): void {
-    if (!confirm(t('Email :name a password reset link?', { name: row.name }))) return;
+async function sendPasswordReset(row: AdminUserSummary): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Send password reset'),
+        description: t('Email :name a password reset link?', { name: row.name }),
+    });
+    if (!ok) return;
 
     router.post(`${ADMIN_BASE}/users/${row.id}/send-password-reset`, {}, { preserveScroll: true });
 }
 
-function impersonate(row: AdminUserSummary): void {
-    if (!confirm(t('Log in as :name?', { name: row.name }))) return;
+async function impersonate(row: AdminUserSummary): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Log in as user'),
+        description: t('Log in as :name?', { name: row.name }),
+    });
+    if (!ok) return;
 
     router.post(`${ADMIN_BASE}/users/${row.id}/impersonate`);
 }
 
-function toggleSuspension(row: AdminUserSummary): void {
+async function toggleSuspension(row: AdminUserSummary): Promise<void> {
     const suspending = !row.is_suspended;
-    const message = suspending
-        ? t('Suspend :name? They will be signed out immediately and cannot sign back in.', { name: row.name })
-        : t('Unsuspend :name?', { name: row.name });
 
-    if (!confirm(message)) return;
+    const ok = await confirmDialog({
+        title: suspending ? t('Suspend user') : t('Unsuspend user'),
+        description: suspending
+            ? t('Suspend :name? They will be signed out immediately and cannot sign back in.', { name: row.name })
+            : t('Unsuspend :name?', { name: row.name }),
+        tone: suspending ? 'danger' : 'default',
+    });
+    if (!ok) return;
 
     router.patch(`${ADMIN_BASE}/users/${row.id}/suspension`, { suspended: suspending }, { preserveScroll: true });
 }

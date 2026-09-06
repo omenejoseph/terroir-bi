@@ -31,7 +31,7 @@ class DeleteOrderAction
             if (! $order->is_backorder) {
                 $tally = $order->is_consignment ? $this->consignment->tally($order) : null;
 
-                foreach ($order->items()->get() as $item) {
+                foreach ($order->items()->with('inventoryItem')->get() as $item) {
                     $product = $item->inventoryItem;
 
                     if ($product === null) {

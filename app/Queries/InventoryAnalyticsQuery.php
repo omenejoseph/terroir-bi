@@ -11,6 +11,7 @@ use App\Models\OrderItem;
 use App\Models\StockMovement;
 use App\Support\Money\CurrencyRegistry;
 use App\Support\Money\Money;
+use App\Support\SqlDate;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
@@ -39,12 +40,15 @@ class InventoryAnalyticsQuery
     /**
      * @return array<string, mixed>
      */
-    public function get(int $stockLimit = 12, float $approachingFactor = 1.5): array
+    public function get(int $stockLimit = 12, float $approachingFactor = 1.5, int $months = 12): array
     {
         return [
             'summary' => $this->summary(),
             'portfolio_exits' => $this->portfolioExits(),
-            'movements_12m' => $this->movements12m(),
+            // Named movements_12m for the client regardless of $months — the
+            // page's own range picker (Figma 382:1592) reads the window from
+            // this same key, so the name is legacy rather than a live claim.
+            'movements_12m' => $this->movements12m($months),
             'top_products' => $this->topProducts(8),
             'by_group' => $this->byGroup(),
             'stock_levels' => $this->stockLevels($stockLimit),
@@ -212,41 +216,46 @@ class InventoryAnalyticsQuery
     }
 
     /**
-     * Monthly In/Out bottle totals for the trailing 12 months.
+     * Monthly In/Out bottle totals for the trailing $months months (the
+     * design's own range picker, Figma 382:1592).
      *
      * @return list<array{month: string, in: int, out: int}>
      */
-    private function movements12m(): array
+    private function movements12m(int $months = 12): array
     {
-        $start = Carbon::now()->startOfMonth()->subMonths(11);
+        $start = Carbon::now()->startOfMonth()->subMonths($months - 1);
 
-        /** @var array<string, array{in: float, out: float}> $buckets */
-        $buckets = [];
+        // Bucketed by calendar month in SQL: SqlDate::month() branches by
+        // driver (sqlite locally/CI's default test run, DATE_FORMAT on
+        // MySQL — CI also runs the whole suite against MySQL, so both
+        // branches are genuinely covered, not a one-off untested driver
+        // check). Sums the in/out totals per month too, instead of pulling
+        // every movement row into PHP just to add them up by hand. Reuses
+        // MOVE_BOTTLES — the same per-row bottle conversion portfolioExits()
+        // already sums for the same table/join.
+        $monthBucket = SqlDate::month('stock_movements.created_at');
+
         $rows = StockMovement::query()
             ->join('inventory_items', 'inventory_items.id', '=', 'stock_movements.inventory_item_id')
             ->where('stock_movements.created_at', '>=', $start)
-            ->selectRaw("stock_movements.*, (CASE WHEN inventory_items.unit IN ('case', 'cases') THEN inventory_items.bottles_per_case ELSE 1 END) as factor")
-            ->get();
-
-        foreach ($rows as $movement) {
-            $month = $movement->created_at?->format('Y-m') ?? '';
-            $bottles = abs((float) $movement->quantity) * (int) $movement->getAttribute('factor');
-            $buckets[$month] ??= ['in' => 0.0, 'out' => 0.0];
-            if ((float) $movement->quantity >= 0) {
-                $buckets[$month]['in'] += $bottles;
-            } else {
-                $buckets[$month]['out'] += $bottles;
-            }
-        }
+            ->select(DB::raw(
+                "{$monthBucket} as bucket_month,
+                 SUM(CASE WHEN stock_movements.quantity >= 0 THEN ".self::MOVE_BOTTLES.' ELSE 0 END) as bottles_in,
+                 SUM(CASE WHEN stock_movements.quantity < 0 THEN '.self::MOVE_BOTTLES.' ELSE 0 END) as bottles_out'
+            ))
+            ->groupBy('bucket_month')
+            ->get()
+            ->keyBy('bucket_month');
 
         $series = [];
         $cursor = $start->copy();
-        for ($i = 0; $i < 12; $i++) {
+        for ($i = 0; $i < $months; $i++) {
             $month = $cursor->format('Y-m');
+            $bucket = $rows->get($month);
             $series[] = [
                 'month' => $month,
-                'in' => (int) round($buckets[$month]['in'] ?? 0.0),
-                'out' => (int) round($buckets[$month]['out'] ?? 0.0),
+                'in' => (int) round((float) ($bucket->bottles_in ?? 0)),
+                'out' => (int) round((float) ($bucket->bottles_out ?? 0)),
             ];
             $cursor->addMonth();
         }
@@ -345,16 +354,27 @@ class InventoryAnalyticsQuery
     /**
      * @return array<int, array{name: string, stock: string}>
      */
+    /**
+     * @return array<int, array{name: string, stock: string, bottles_per_case: int|null, value: int|null}>
+     */
     private function stockLevels(int $limit): array
     {
         return InventoryItem::query()
             ->where('is_active', true)
             ->orderByDesc('current_stock')
             ->limit($limit)
-            ->get(['name', 'current_stock'])
+            ->get(['name', 'current_stock', 'bottles_per_case', 'default_price'])
             ->map(fn (InventoryItem $i): array => [
                 'name' => $i->name,
                 'stock' => (string) $i->current_stock,
+                // The other two of the design's unit switch (Figma 382:1592) —
+                // cases needs a case size, value needs a price; either can be
+                // absent (a raw material, or an uncosted item), so the client
+                // falls back rather than showing a wrong number.
+                'bottles_per_case' => $i->bottles_per_case,
+                'value' => $i->default_price instanceof Money
+                    ? (int) round((float) $i->current_stock * $i->default_price->getMinorAmount())
+                    : null,
             ])
             ->all();
     }

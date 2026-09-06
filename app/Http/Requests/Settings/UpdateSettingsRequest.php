@@ -27,6 +27,15 @@ class UpdateSettingsRequest extends FormRequest
             'default_locale' => ['required', 'string', Rule::in(config('app.supported_locales', []))],
             'timezone' => ['required', 'string', Rule::in(timezone_identifiers_list())],
             'company_oib' => ['nullable', 'string', 'max:32'],
+
+            // Dashboard "Revenue vs. target" / "Runway" inputs — all optional;
+            // leaving them blank is what keeps those cards showing "not set"
+            // rather than a manufactured number.
+            'annual_revenue_target' => ['nullable', 'integer', 'min:0'],
+            'channel_revenue_targets' => ['nullable', 'array'],
+            'channel_revenue_targets.*' => ['integer', 'min:0'],
+            'cash_on_hand' => ['nullable', 'integer', 'min:0'],
+            'cash_on_hand_as_of' => ['nullable', 'date'],
         ];
     }
 }

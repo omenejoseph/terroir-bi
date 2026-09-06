@@ -50,6 +50,12 @@ export interface Org {
     default_currency: string;
     timezone: string;
     company_oib: string | null;
+    /** Dashboard "Revenue vs. target" / "Target by channel" inputs — minor units, null until a settings.manage member sets them. */
+    annual_revenue_target: number | null;
+    channel_revenue_targets: Record<string, number> | null;
+    /** Dashboard "Runway" inputs — minor units, null until set. */
+    cash_on_hand: number | null;
+    cash_on_hand_as_of: string | null;
 }
 
 export interface SharedProps {

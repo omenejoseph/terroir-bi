@@ -9,6 +9,8 @@ import KeyRatiosGrid from '@/components/dashboard/KeyRatiosGrid.vue';
 import LowStockCard from '@/components/dashboard/LowStockCard.vue';
 import NetCashFlowCard from '@/components/dashboard/NetCashFlowCard.vue';
 import ReorderPipelineCard from '@/components/dashboard/ReorderPipelineCard.vue';
+import RevenueVsTargetCard from '@/components/dashboard/RevenueVsTargetCard.vue';
+import RunwayCard from '@/components/dashboard/RunwayCard.vue';
 import UpcomingTasksCard from '@/components/dashboard/UpcomingTasksCard.vue';
 import CreateOrderPanel from '@/components/orders/CreateOrderPanel.vue';
 import AreaChart from '@/components/ui/AreaChart.vue';
@@ -34,9 +36,12 @@ import type { DateRange, TabItem } from '@/types/ui';
  * breakdown cards, a row of four operational cards, then the ratio grid and
  * low stock.
  *
- * Three things the design draws still have nothing to compute them: an annual
- * revenue target, per-channel targets, and a cash-on-hand figure for runway.
- * Those stay `@todo` rather than filled with invented numbers — see
+ * "Revenue vs. target" and "Runway" (208:5577, 208:5808) needed an annual
+ * revenue target, per-channel targets, and a cash-on-hand figure that nothing
+ * stored anywhere — those now come from the Settings page
+ * (App\Models\TenantSetting), and both cards fall back to an honest "not set"
+ * message until a settings.manage member fills them in. Runway's
+ * payables-aging line stays unbuilt (`Order` has no due-date field) — see
  * docs/design/README.md for the full accounting of what's missing vs. what
  * was simply never wired up.
  */
@@ -253,37 +258,13 @@ const alerts = computed(() => {
                     </Card>
                 </div>
 
-                <!--
-                  @todo Revenue vs. target (Figma 208:5577 / 286:781), folding in
-                  "Target by channel". No annual or per-channel target is stored
-                  anywhere — needs a tenant setting or a targets table before
-                  either can show a real number.
-                -->
-                <div class="flex h-full flex-col border border-border bg-card p-4">
-                    <h3 class="text-sm font-semibold">{{ t('Revenue vs. target') }}</h3>
-                    <p class="mt-4 text-xs text-muted-foreground">
-                        {{ t("No annual or per-channel target is set, so progress can't be calculated yet.") }}
-                    </p>
-                </div>
+                <RevenueVsTargetCard :target="summary.revenue_vs_target" :currency="summary.currency" />
             </div>
 
             <!-- Upcoming tasks · Runway · Net cash flow · Reorder pipeline (Figma 208:5577's four-card row) -->
             <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <UpcomingTasksCard :tasks="summary.upcoming_tasks" />
-
-                <!--
-                  @todo Runway (Figma 208:5808): months of cash left, plus a
-                  feed of what's overdue to collect and what's due to pay. No
-                  cash-on-hand figure is stored anywhere, so months-of-runway
-                  cannot be computed — see docs/design/README.md.
-                -->
-                <div class="flex h-full flex-col border border-border bg-card p-4">
-                    <h3 class="text-sm font-semibold">{{ t('Runway') }}</h3>
-                    <p class="mt-4 text-xs text-muted-foreground">
-                        {{ t("No cash balance is on file, so runway can't be calculated yet.") }}
-                    </p>
-                </div>
-
+                <RunwayCard :runway="summary.runway" :currency="summary.currency" />
                 <NetCashFlowCard :flow="summary.net_cash_flow" :currency="summary.currency" />
                 <ReorderPipelineCard :pipeline="summary.reorder_pipeline" :currency="summary.currency" />
             </div>

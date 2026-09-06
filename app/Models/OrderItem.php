@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $quantity
  * @property string $unit_type
  * @property Money $unit_price
+ * @property Money|null $unit_price_gross
  * @property Money $total
  * @property Money|null $cost_per_unit
  * @property string|null $custom_description
@@ -37,6 +38,7 @@ class OrderItem extends Model
         'quantity',
         'unit_type',
         'unit_price',
+        'unit_price_gross',
         'total',
         'cost_per_unit',
         'custom_description',
@@ -47,6 +49,7 @@ class OrderItem extends Model
         return [
             'quantity' => 'integer',
             'unit_price' => MoneyCast::class,
+            'unit_price_gross' => MoneyCast::class,
             'total' => MoneyCast::class,
             'cost_per_unit' => MoneyCast::class,
         ];

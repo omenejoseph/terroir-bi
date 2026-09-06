@@ -11,6 +11,7 @@ import Button from '@/components/ui/Button.vue';
 import DropdownMenu from '@/components/ui/DropdownMenu.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Pagination from '@/components/ui/Pagination.vue';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminOption, AdminTenant } from '@/types/admin';
@@ -79,8 +80,12 @@ function onRowAction(key: string, tenant: AdminTenant): void {
     if (key === 'email-link') emailLink(tenant);
 }
 
-function emailLink(tenant: AdminTenant): void {
-    if (!confirm(t('Email a Stripe subscription link to :name?', { name: tenant.name }))) return;
+async function emailLink(tenant: AdminTenant): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Email subscription link'),
+        description: t('Email a Stripe subscription link to :name?', { name: tenant.name }),
+    });
+    if (!ok) return;
 
     router.post(`${ADMIN_BASE}/tenants/${tenant.id}/email-billing-link`, {}, { preserveScroll: true });
 }

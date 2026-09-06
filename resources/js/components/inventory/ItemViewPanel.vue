@@ -5,6 +5,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import Callout from '@/components/ui/Callout.vue';
+import ItemDetailFields from '@/components/inventory/ItemDetailFields.vue';
 import MetaStrip from '@/components/ui/MetaStrip.vue';
 import QuickStockEntry from '@/components/inventory/QuickStockEntry.vue';
 import SectionHeader from '@/components/ui/SectionHeader.vue';
@@ -14,7 +15,13 @@ import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/cn';
 import { formatMoney, formatQuantity } from '@/lib/money';
 import { categoryLabel, formatMovementDate, movementTypeLabel } from '@/lib/stock';
-import type { InventoryItem, MoneyValue } from '@/types/inventory';
+import type {
+    InventoryItem,
+    ItemAuditTrailEntry,
+    ItemCustomerAttributionRow,
+    ItemStockRank,
+    MoneyValue,
+} from '@/types/inventory';
 import type { StockMovement } from '@/types/stock';
 import type { SharedProps } from '@/types';
 
@@ -28,7 +35,13 @@ import type { SharedProps } from '@/types';
  * Built from the cached layer tree and copy — this frame was not in the export
  * set, so it wants a visual diff once a render exists.
  */
-const props = defineProps<{ item: InventoryItem | null; movements: StockMovement[] }>();
+const props = defineProps<{
+    item: InventoryItem | null;
+    movements: StockMovement[];
+    auditTrail: ItemAuditTrailEntry[];
+    stockRank: ItemStockRank | null;
+    customerAttribution: ItemCustomerAttributionRow[];
+}>();
 const emit = defineEmits<{ close: []; edit: [item: InventoryItem] }>();
 
 const page = usePage<SharedProps>();
@@ -46,9 +59,74 @@ watch(
     (id) => {
         adjusting.value = false;
 
-        if (id) router.reload({ only: ['itemMovements'], data: { item: id } });
+        if (id) {
+            router.reload({
+                only: ['itemMovements', 'itemAuditTrail', 'itemStockRank', 'itemCustomerAttribution'],
+                data: { item: id },
+            });
+        }
     },
 );
+
+/**
+ * Turns one App\Queries\ItemAuditTrailQuery row into the design's timeline
+ * sentence ("Stock adjusted by +12 by Iva Šimić", "Item created by …"). Falls
+ * back to the raw action string for anything not special-cased, so a new
+ * audited action shows up here immediately rather than silently.
+ */
+function describeAuditEntry(entry: ItemAuditTrailEntry): string {
+    const actor = entry.actor_name ?? t('System');
+    const metadata: Record<string, unknown> = entry.metadata ?? {};
+
+    switch (entry.action) {
+        case 'inventory_item.created':
+            return t(':actor created this item', { actor });
+        case 'inventory_item.stock_adjusted': {
+            const signed = String(metadata.signed_quantity ?? '0');
+            const delta = signed.startsWith('-') ? signed : `+${signed}`;
+
+            return t(':actor adjusted stock by :delta', { actor, delta });
+        }
+        case 'inventory_item.updated': {
+            const changed = metadata.changed;
+            const fields = changed && typeof changed === 'object' ? Object.keys(changed) : [];
+
+            return fields.length > 0
+                ? t(':actor updated :fields', { actor, fields: fields.join(', ') })
+                : t(':actor updated this item', { actor });
+        }
+        case 'inventory_item.deleted':
+            return t(':actor deleted this item', { actor });
+        default:
+            return t(':actor · :action', { actor, action: entry.action });
+    }
+}
+
+/** Provenance line's "Updated … by …" — the trail's own newest entry. */
+const lastEdited = computed<ItemAuditTrailEntry | null>(() => props.auditTrail[0] ?? null);
+
+/**
+ * Provenance line's ranking half ("Lowest stock of the six wines"). Only the
+ * two extremes get the design's own phrasing — a middle rank has no natural
+ * English (or Croatian) sentence that isn't an invented ordinal, so it states
+ * the rank plainly instead.
+ */
+const stockRankLine = computed<string | null>(() => {
+    const rank = props.stockRank;
+    const group = props.item?.group;
+
+    if (rank === null || group === undefined || group === null) return null;
+
+    if (rank.rank === 1) {
+        return t('Lowest stock of :total :group items', { total: rank.total, group });
+    }
+
+    if (rank.rank === rank.total) {
+        return t('Highest stock of :total :group items', { total: rank.total, group });
+    }
+
+    return t('Stock rank :rank of :total :group items (1 = lowest)', { rank: rank.rank, total: rank.total, group });
+});
 
 const cases = computed(() => {
     const per = props.item?.bottles_per_case ?? 0;
@@ -69,25 +147,6 @@ const deductions = [
     { label: t('On consignment'), note: t('consignment is not attributed per item') },
 ];
 
-const details = computed(() => {
-    const item = props.item;
-
-    if (!item) return [];
-
-    return [
-        { label: t('Type'), value: categoryLabel(item.category) },
-        { label: t('Category'), value: [item.group, item.subcategory].filter(Boolean).join(' · ') || '—' },
-        { label: t('Unit size / unit'), value: [item.unit_size, item.unit].filter(Boolean).join(' · ') },
-        { label: t('Sales unit'), value: item.sales_unit ?? '—' },
-        { label: t('Vintage'), value: item.vintage ? String(item.vintage) : '—' },
-        {
-            label: t('Min stock'),
-            value: item.min_stock ? qty(item.min_stock) : t('Not set — no low-stock alert'),
-            warn: !item.min_stock,
-        },
-        { label: t('Available for sale'), value: item.is_for_sale ? t('Yes') : t('No') },
-    ];
-});
 </script>
 
 <template>
@@ -107,12 +166,14 @@ const details = computed(() => {
                 </div>
             </div>
 
-            <!--
-              @todo Provenance line. The design reads "Lowest stock of the six
-              wines · Updated 8 Aug 2026 by Iva Šimić" — a ranking within its
-              group plus the last editor. Needs an audit trail; the ledger
-              records movements but not field edits.
-            -->
+            <!-- Provenance line (Figma 378:1592): where this item's stock ranks among its group, and who last edited it. -->
+            <p v-if="stockRankLine || lastEdited" class="text-xs text-muted-foreground">
+                <template v-if="stockRankLine">{{ stockRankLine }}</template>
+                <template v-if="stockRankLine && lastEdited"> · </template>
+                <template v-if="lastEdited">
+                    {{ t('Updated :date by :actor', { date: formatMovementDate(lastEdited.created_at, locale), actor: lastEdited.actor_name ?? t('System') }) }}
+                </template>
+            </p>
 
             <Separator />
 
@@ -213,29 +274,7 @@ const details = computed(() => {
 
             <Separator />
 
-            <!-- Item details -->
-            <section class="flex flex-col gap-3">
-                <SectionHeader :title="t('Item details')">
-                    <template #actions>
-                        <!-- @todo Inline details edit; for now it opens the shared item form. -->
-                        <button type="button" class="text-xs text-muted-foreground hover:text-foreground" @click="emit('edit', item)">
-                            {{ t('Edit') }}
-                        </button>
-                    </template>
-                </SectionHeader>
-                <dl class="divide-y divide-border text-sm">
-                    <div
-                        v-for="detail in details"
-                        :key="detail.label"
-                        class="flex items-baseline justify-between gap-3 py-2.5"
-                    >
-                        <dt class="shrink-0 text-muted-foreground">{{ detail.label }}</dt>
-                        <dd :class="cn('truncate text-right font-medium', detail.warn && 'text-destructive')">
-                            {{ detail.value }}
-                        </dd>
-                    </div>
-                </dl>
-            </section>
+            <ItemDetailFields :item="item" @edit="emit('edit', item)" />
 
             <Separator />
 
@@ -243,17 +282,29 @@ const details = computed(() => {
             <section class="flex flex-col gap-3">
                 <SectionHeader :title="t('Who\'s buying it')">
                     <template #actions>
-                        <!-- @todo Filter Orders by this item once Orders is ported. -->
-                        <span class="text-xs text-muted-foreground">{{ t('Open in Orders') }}</span>
+                        <Link
+                            v-if="item"
+                            :href="`/orders?item_id=${item.id}`"
+                            class="text-xs text-primary underline-offset-2 hover:underline"
+                        >
+                            {{ t('Open in Orders') }}
+                        </Link>
                     </template>
                 </SectionHeader>
-                <!--
-                  @todo Customer attribution. The design lists each buyer with
-                  their share of this item's volume and their last order date.
-                  Needs order lines rolled up by customer for this item — the
-                  data exists on OrderItem, but no query aggregates it per item.
-                -->
-                <p class="text-xs text-muted-foreground">{{ t('Per-customer demand is not attributed yet.') }}</p>
+                <ul v-if="customerAttribution.length" class="flex flex-col divide-y divide-border">
+                    <li
+                        v-for="row in customerAttribution"
+                        :key="row.customer_id"
+                        class="flex items-baseline justify-between gap-3 py-2.5 text-sm"
+                    >
+                        <span class="min-w-0 truncate">{{ row.company_name }}</span>
+                        <span class="flex shrink-0 items-baseline gap-3 text-xs text-muted-foreground">
+                            <span class="tabular-nums">{{ Math.round(row.share * 100) }} %</span>
+                            <span>{{ formatMovementDate(row.last_ordered, locale) }}</span>
+                        </span>
+                    </li>
+                </ul>
+                <p v-else class="text-xs text-muted-foreground">{{ t('No orders for this item yet.') }}</p>
             </section>
 
             <Separator />
@@ -301,13 +352,20 @@ const details = computed(() => {
             <!-- Timeline -->
             <section class="flex flex-col gap-3">
                 <SectionHeader :title="t('Timeline')" />
-                <!--
-                  @todo Audit trail. The design shows "Stock adjusted to 420 by
-                  Iva Šimić" and "Item created by Iva Šimić" with timestamps.
-                  Movements cover adjustments, but creation and field edits are
-                  not recorded anywhere.
-                -->
-                <p class="text-xs text-muted-foreground">{{ t('Item history is not recorded yet.') }}</p>
+
+                <ul v-if="auditTrail.length" class="flex flex-col divide-y divide-border">
+                    <li
+                        v-for="entry in auditTrail"
+                        :key="entry.id"
+                        class="flex items-baseline justify-between gap-3 py-2.5 text-sm"
+                    >
+                        <span class="min-w-0 truncate">{{ describeAuditEntry(entry) }}</span>
+                        <span class="shrink-0 text-xs text-muted-foreground">
+                            {{ formatMovementDate(entry.created_at, locale) }}
+                        </span>
+                    </li>
+                </ul>
+                <p v-else class="text-xs text-muted-foreground">{{ t('No history recorded yet.') }}</p>
             </section>
         </div>
 

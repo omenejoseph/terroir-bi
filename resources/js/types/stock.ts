@@ -108,7 +108,7 @@ export interface InventoryAnalytics {
     movements_12m: { month: string; in: number; out: number }[];
     top_products: { name: string; value: number }[];
     by_group: { group: string | null; count: number }[];
-    stock_levels: { name: string; stock: string }[];
+    stock_levels: { name: string; stock: string; bottles_per_case: number | null; value: number | null }[];
     value: { total: number; currency: string; categories: { category: string; value: number }[] };
     low_stock: {
         below: { name: string; stock: string; min: string }[];
@@ -151,4 +151,23 @@ export interface InventorySpend {
     previous: SpendSummary;
     daily: { date: string; units: number }[];
     per_product: SpendProduct[];
+}
+
+/** Mirrors App\Queries\OrderStockReconciliationQuery::get() — "Check order → stock link". */
+export interface OrderStockMismatchRow {
+    order_number: string;
+    /** Null when the order itself has been deleted entirely, not just a line. */
+    order_id: string | null;
+    /** App\Enums\OrderStatus, e.g. 'SHIPPED'. Null alongside order_id. */
+    order_status: string | null;
+    customer_name: string | null;
+    item_id: string;
+    item_name: string;
+    sku: string | null;
+    /** Bottle-equivalent totals — see the query's own docblock for what each direction of delta means. */
+    recorded_bottles: number;
+    current_bottles: number;
+    /** current_bottles - recorded_bottles. Negative: ledger recorded more than the order now backs (edited/removed/deleted). Positive: the order backs more than the ledger ever recorded (never deducted). */
+    delta: number;
+    last_movement_at: string | null;
 }

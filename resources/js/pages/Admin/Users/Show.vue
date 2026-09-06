@@ -7,6 +7,7 @@ import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminUserDetail } from '@/types/admin';
@@ -20,13 +21,17 @@ const props = defineProps<{ user: AdminUserDetail }>();
 
 const { t } = useTranslations();
 
-function toggleSuspension(): void {
+async function toggleSuspension(): Promise<void> {
     const suspending = !props.user.is_suspended;
-    const message = suspending
-        ? t('Suspend :name? They will be signed out immediately and cannot sign back in.', { name: props.user.name })
-        : t('Unsuspend :name?', { name: props.user.name });
 
-    if (!confirm(message)) return;
+    const ok = await confirmDialog({
+        title: suspending ? t('Suspend user') : t('Unsuspend user'),
+        description: suspending
+            ? t('Suspend :name? They will be signed out immediately and cannot sign back in.', { name: props.user.name })
+            : t('Unsuspend :name?', { name: props.user.name }),
+        tone: suspending ? 'danger' : 'default',
+    });
+    if (!ok) return;
 
     router.patch(
         `${ADMIN_BASE}/users/${props.user.id}/suspension`,
@@ -35,14 +40,22 @@ function toggleSuspension(): void {
     );
 }
 
-function sendPasswordReset(): void {
-    if (!confirm(t('Email :name a password reset link?', { name: props.user.name }))) return;
+async function sendPasswordReset(): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Send password reset'),
+        description: t('Email :name a password reset link?', { name: props.user.name }),
+    });
+    if (!ok) return;
 
     router.post(`${ADMIN_BASE}/users/${props.user.id}/send-password-reset`, {}, { preserveScroll: true });
 }
 
-function impersonate(): void {
-    if (!confirm(t('Log in as :name?', { name: props.user.name }))) return;
+async function impersonate(): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Log in as user'),
+        description: t('Log in as :name?', { name: props.user.name }),
+    });
+    if (!ok) return;
 
     router.post(`${ADMIN_BASE}/users/${props.user.id}/impersonate`);
 }

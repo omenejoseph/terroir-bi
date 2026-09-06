@@ -100,6 +100,58 @@ class SupplierTest extends TestCase
             ->assertJsonPath('data.total_costs.minor', 20000);
     }
 
+    public function test_supplier_stats_sums_and_counts_costs_across_categories_and_dates(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        $supplier = Supplier::create(['company_name' => 'Staklo']);
+        Cost::create(['date' => '2026-01-05', 'total_amount' => 15075, 'category' => 'Packaging', 'supplier_id' => $supplier->getKey(), 'created_by_id' => $this->admin->getKey()]);
+        Cost::create(['date' => '2026-03-20', 'total_amount' => 4250, 'category' => 'Freight', 'supplier_id' => $supplier->getKey(), 'created_by_id' => $this->admin->getKey()]);
+        Cost::create(['date' => '2026-06-30', 'total_amount' => 999, 'category' => 'Utilities', 'supplier_id' => $supplier->getKey(), 'created_by_id' => $this->admin->getKey()]);
+        $this->forgetTenant();
+
+        $this->getJson("/api/v1/suppliers/{$supplier->getKey()}/stats", $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.cost_entries', 3)
+            ->assertJsonPath('data.total_costs.minor', 15075 + 4250 + 999);
+    }
+
+    public function test_supplier_stats_report_zero_when_supplier_has_no_costs(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        $supplier = Supplier::create(['company_name' => 'NoCosts']);
+        $this->forgetTenant();
+
+        $this->getJson("/api/v1/suppliers/{$supplier->getKey()}/stats", $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.price_items', 0)
+            ->assertJsonPath('data.cost_entries', 0)
+            ->assertJsonPath('data.total_costs.minor', 0);
+    }
+
+    public function test_supplier_stats_exclude_costs_belonging_to_another_supplier(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        $target = Supplier::create(['company_name' => 'Target']);
+        $other = Supplier::create(['company_name' => 'Other']);
+
+        Cost::create(['date' => '2026-06-01', 'total_amount' => 5000, 'category' => 'Packaging', 'supplier_id' => $target->getKey(), 'created_by_id' => $this->admin->getKey()]);
+        Cost::create(['date' => '2026-06-02', 'total_amount' => 99999, 'category' => 'Freight', 'supplier_id' => $other->getKey(), 'created_by_id' => $this->admin->getKey()]);
+        Cost::create(['date' => '2026-06-03', 'total_amount' => 12345, 'category' => 'Freight', 'supplier_id' => $other->getKey(), 'created_by_id' => $this->admin->getKey()]);
+        $this->forgetTenant();
+
+        // The target supplier only sees its own cost, never the other supplier's.
+        $this->getJson("/api/v1/suppliers/{$target->getKey()}/stats", $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.cost_entries', 1)
+            ->assertJsonPath('data.total_costs.minor', 5000);
+
+        // And vice versa: the other supplier doesn't pick up the target's cost.
+        $this->getJson("/api/v1/suppliers/{$other->getKey()}/stats", $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.cost_entries', 2)
+            ->assertJsonPath('data.total_costs.minor', 99999 + 12345);
+    }
+
     public function test_price_changes_are_tracked_and_listed(): void
     {
         $this->actingAsTenant($this->tenant);

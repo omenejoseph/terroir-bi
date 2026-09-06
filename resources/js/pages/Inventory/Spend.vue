@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { Download, Plus, Upload } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import BarChart from '@/components/ui/BarChart.vue';
+import BulkImportDialog from '@/components/inventory/BulkImportDialog.vue';
 import Button from '@/components/ui/Button.vue';
 import Callout from '@/components/ui/Callout.vue';
+import OrderStockReconciliationPanel from '@/components/inventory/OrderStockReconciliationPanel.vue';
 import StackedBar from '@/components/ui/StackedBar.vue';
 import Card from '@/components/ui/Card.vue';
 import CardContent from '@/components/ui/CardContent.vue';
@@ -15,10 +17,11 @@ import SectionHeader from '@/components/ui/SectionHeader.vue';
 import Separator from '@/components/ui/Separator.vue';
 import StatCard from '@/components/ui/StatCard.vue';
 import Tabs from '@/components/ui/Tabs.vue';
+import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber } from '@/lib/money';
 import { coverPhrase, spendSignal } from '@/lib/stock';
-import type { InventoryAnalytics, InventorySpend } from '@/types/stock';
+import type { InventoryAnalytics, InventorySpend, OrderStockMismatchRow } from '@/types/stock';
 import type { SharedProps } from '@/types';
 import type { TabItem } from '@/types/ui';
 
@@ -34,13 +37,18 @@ const props = defineProps<{
     spend: InventorySpend;
     portfolio: { value: InventoryAnalytics['value']; summary: InventoryAnalytics['summary'] };
     filters: { preset: string };
+    /** Only present once the "Check order → stock link" panel has opened. */
+    reconciliation?: OrderStockMismatchRow[];
 }>();
 
 const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
+const { can } = useAuth();
 const { t } = useTranslations();
 const num = (n: number) => formatNumber(n, locale.value);
 const money = (minor: number, currency: string) => formatMoney(minor, currency);
+const bulkImportOpen = ref(false);
+const reconciliationOpen = ref(false);
 
 /** The table's "Export" — the same per-product rows, over the page's own window. */
 const exportHref = computed(() => `/inventory-spend/export?preset=${encodeURIComponent(props.filters.preset)}`);
@@ -118,12 +126,11 @@ const dateRange = computed(() => {
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Inventory')">
                 <template #actions>
-                    <!-- @todo Bulk Import — no import pipeline yet. -->
-                    <Button variant="outline" size="sm">
+                    <Button v-if="can('inventory.manage')" variant="outline" size="sm" @click="bulkImportOpen = true">
                         <Upload class="size-4" :stroke-width="1.5" />
                         {{ t('Bulk Import') }}
                     </Button>
-                    <Button size="sm" href="/inventory">
+                    <Button v-if="can('inventory.manage')" size="sm" href="/inventory">
                         <Plus class="size-4" :stroke-width="1.5" />
                         {{ t('New Item') }}
                     </Button>
@@ -288,16 +295,16 @@ const dateRange = computed(() => {
                     >
                         {{ t('They may still appear in shipped orders — an exit that never reached the ledger looks identical to no trade at all. Check the order → stock link before reading this as idle stock.') }}
                         <template #action>
-                            <!--
-                              @todo "Check order → stock link" — needs a
-                              reconciliation view comparing shipped order lines
-                              against recorded stock movements.
-                            -->
-                            <Button variant="outline" size="sm">{{ t('Check order → stock link') }}</Button>
+                            <Button variant="outline" size="sm" @click="reconciliationOpen = true">
+                                {{ t('Check order → stock link') }}
+                            </Button>
                         </template>
                     </Callout>
                 </CardContent>
             </Card>
         </div>
+
+        <BulkImportDialog :open="bulkImportOpen" @close="bulkImportOpen = false" />
+        <OrderStockReconciliationPanel :open="reconciliationOpen" :rows="reconciliation" @close="reconciliationOpen = false" />
     </AppLayout>
 </template>

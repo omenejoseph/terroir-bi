@@ -35,7 +35,7 @@ class ReorderRadarQuery
         $customers = Customer::query()
             ->where('is_active', true)
             ->where('exclude_from_stats', false)
-            ->get()
+            ->get(['id', 'company_name', 'reorder_contacted_at'])
             ->keyBy('id');
 
         /** @var Collection<int, Order> $orders */

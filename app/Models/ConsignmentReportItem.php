@@ -60,4 +60,12 @@ class ConsignmentReportItem extends Model
     {
         return $this->belongsTo(OrderItem::class, 'order_item_id');
     }
+
+    /**
+     * @return BelongsTo<InventoryItem, $this>
+     */
+    public function inventoryItem(): BelongsTo
+    {
+        return $this->belongsTo(InventoryItem::class);
+    }
 }

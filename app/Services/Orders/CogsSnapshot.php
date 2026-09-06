@@ -18,6 +18,20 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class CogsSnapshot
 {
+    /**
+     * Recipe roll-up per item id, for the life of this instance — an order
+     * with the same item on more than one line (e.g. two case sizes of the
+     * same wine) reuses the first line's lookup instead of re-querying. One
+     * CogsSnapshot instance is shared across every `write()` call in a
+     * single CreateOrderAction/AddOrderItemsAction run (constructor
+     * injection resolves it once), and a fresh container resolution starts
+     * a fresh instance for the next request, so this never leaks across
+     * requests.
+     *
+     * @var array<string, Money|null>
+     */
+    private array $perBottleCache = [];
+
     public function forLine(InventoryItem $item, string $unitType): ?Money
     {
         $perBottle = $this->perBottle($item);
@@ -38,18 +52,22 @@ class CogsSnapshot
     /** Per-bottle COGS: recipe roll-up if present, else the item's own cost_per_unit. */
     public function perBottle(InventoryItem $item): ?Money
     {
-        /** @var Collection<int, RecipeItem> $recipe */
-        $recipe = $item->recipe()->with('input')->get();
-
-        if ($recipe->isNotEmpty()) {
-            $rollup = $this->recipeRollup($recipe);
-
-            if ($rollup !== null) {
-                return $rollup;
-            }
+        $key = (string) $item->getKey();
+        if (array_key_exists($key, $this->perBottleCache)) {
+            return $this->perBottleCache[$key];
         }
 
-        return $item->cost_per_unit;
+        /** @var Collection<int, RecipeItem> $recipe */
+        $recipe = $item->recipe()->with('input')->get();
+        $result = null;
+
+        if ($recipe->isNotEmpty()) {
+            $result = $this->recipeRollup($recipe);
+        }
+
+        $result ??= $item->cost_per_unit;
+
+        return $this->perBottleCache[$key] = $result;
     }
 
     /**

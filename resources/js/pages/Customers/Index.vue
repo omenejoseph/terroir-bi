@@ -25,6 +25,7 @@ import Pagination from '@/components/ui/Pagination.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { usePopover } from '@/composables/usePopover';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { CUSTOMER_TYPES, customerTypeLabel } from '@/lib/customers';
 import { formatMoney, formatNumber } from '@/lib/money';
@@ -237,13 +238,16 @@ function onRowAction(key: string, customer: Customer): void {
  * between them: a customer with orders is deactivated, never deleted, since
  * their orders are the revenue record (DeleteCustomerAction).
  */
-function destroy(customer: Customer): void {
-    const message = t(
-        'Delete :name? Customers with orders are deactivated instead, so their history survives.',
-        { name: customer.company_name },
-    );
-
-    if (!confirm(message)) return;
+async function destroy(customer: Customer): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Delete customer'),
+        description: t(
+            'Delete :name? Customers with orders are deactivated instead, so their history survives.',
+            { name: customer.company_name },
+        ),
+        tone: 'danger',
+    });
+    if (!ok) return;
 
     router.delete(`/customers/${customer.id}`, { preserveScroll: true });
 }

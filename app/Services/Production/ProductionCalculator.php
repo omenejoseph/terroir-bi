@@ -27,7 +27,18 @@ class ProductionCalculator
         /** @var array<string, array{name: string, unit: string, quantity: float, cost: int}> $materials */
         $materials = [];
 
-        foreach ($plan->rows()->with('baseItem')->orderBy('sort_order')->get() as $row) {
+        $planRows = $plan->rows()->with('baseItem')->orderBy('sort_order')->get();
+
+        // Every row's recipe, batched into one query keyed by output_id —
+        // one query total instead of one per row.
+        $itemIds = $planRows->map(fn ($row) => $row->baseItem?->getKey())->filter()->unique()->values()->all();
+        $recipesByOutput = RecipeItem::query()
+            ->whereIn('output_id', $itemIds)
+            ->with('input')
+            ->get()
+            ->groupBy('output_id');
+
+        foreach ($planRows as $row) {
             $item = $row->baseItem;
             if (! $item instanceof InventoryItem) {
                 continue;
@@ -40,7 +51,7 @@ class ProductionCalculator
             $cost = (int) round($costPerBottle * $bottles);
 
             // Expand the recipe into raw-material requirements.
-            foreach (RecipeItem::query()->where('output_id', $item->getKey())->with('input')->get() as $line) {
+            foreach ($recipesByOutput->get($item->getKey()) ?? [] as $line) {
                 $required = (float) $line->quantity * $bottles;
                 $key = $line->input_id ?? ('custom:'.$line->custom_name);
                 $name = $line->input instanceof InventoryItem ? $line->input->name : (string) $line->custom_name;

@@ -100,4 +100,59 @@ class CashFlowAnalysisTest extends TestCase
 
         $this->getJson('/api/v1/cash-flow/analysis', $this->headers())->assertForbidden();
     }
+
+    public function test_outstanding_receivables_only_counts_pending_non_credit_note_inflows(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        $customer = Customer::create(['company_name' => 'Konzum', 'email' => 'konzum2@example.com']);
+
+        // Counts: a genuine pending receivable.
+        Inflow::create(['date' => '2026-06-05', 'amount' => 8000, 'status' => 'PENDING', 'customer_id' => $customer->getKey(), 'created_by_id' => $this->admin->getKey()]);
+        // Excluded: already received (money already in, not outstanding).
+        Inflow::create(['date' => '2026-06-05', 'amount' => 9000, 'status' => 'RECEIVED', 'customer_id' => $customer->getKey(), 'created_by_id' => $this->admin->getKey()]);
+        // Excluded: a pending credit note (reduces what's owed, isn't itself owed).
+        Inflow::create(['date' => '2026-06-05', 'amount' => 3000, 'status' => 'PENDING', 'is_credit_note' => true, 'customer_id' => $customer->getKey(), 'created_by_id' => $this->admin->getKey()]);
+        $this->forgetTenant();
+
+        $this->getJson('/api/v1/cash-flow/analysis?from=2026-06-01&to=2026-06-30', $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.outstanding_receivables.total.minor', 8000)
+            ->assertJsonPath('data.outstanding_receivables.count', 1);
+    }
+
+    public function test_outstanding_payables_counts_every_non_paid_status(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        // Both PENDING and APPROVED are "not yet paid" and must count.
+        Cost::create(['date' => '2026-06-05', 'total_amount' => 3000, 'status' => 'PENDING', 'category' => 'Operations', 'created_by_id' => $this->admin->getKey()]);
+        Cost::create(['date' => '2026-06-06', 'total_amount' => 2000, 'status' => 'APPROVED', 'category' => 'Operations', 'created_by_id' => $this->admin->getKey()]);
+        // Excluded: already paid.
+        Cost::create(['date' => '2026-06-07', 'total_amount' => 1000, 'status' => 'PAID', 'category' => 'Operations', 'created_by_id' => $this->admin->getKey()]);
+        $this->forgetTenant();
+
+        $this->getJson('/api/v1/cash-flow/analysis?from=2026-06-01&to=2026-06-30', $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.outstanding_payables.total.minor', 5000) // 3000 + 2000
+            ->assertJsonPath('data.outstanding_payables.count', 2);
+    }
+
+    public function test_outstanding_receivables_excludes_customers_flagged_out_of_stats(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        $excludedCustomer = Customer::create(['company_name' => 'Staff Account', 'email' => 'staff@example.com', 'exclude_from_stats' => true]);
+        $normalCustomer = Customer::create(['company_name' => 'Konzum', 'email' => 'konzum3@example.com']);
+
+        // No customer at all — still counts (whereNull branch).
+        Inflow::create(['date' => '2026-06-05', 'amount' => 1000, 'status' => 'PENDING', 'created_by_id' => $this->admin->getKey()]);
+        // A normal customer — counts (not in the excluded-id list).
+        Inflow::create(['date' => '2026-06-05', 'amount' => 2000, 'status' => 'PENDING', 'customer_id' => $normalCustomer->getKey(), 'created_by_id' => $this->admin->getKey()]);
+        // The excluded customer's receivable must not count.
+        Inflow::create(['date' => '2026-06-05', 'amount' => 5000, 'status' => 'PENDING', 'customer_id' => $excludedCustomer->getKey(), 'created_by_id' => $this->admin->getKey()]);
+        $this->forgetTenant();
+
+        $this->getJson('/api/v1/cash-flow/analysis?from=2026-06-01&to=2026-06-30', $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.outstanding_receivables.total.minor', 3000) // 1000 + 2000, not 5000
+            ->assertJsonPath('data.outstanding_receivables.count', 2);
+    }
 }

@@ -26,7 +26,7 @@ class CustomerOrderAnalyticsQuery
     /**
      * @return array<string, mixed>
      */
-    public function get(Customer $customer): array
+    public function get(Customer $customer, int $months = 12): array
     {
         $currency = $this->currency();
         $now = Carbon::now();
@@ -77,9 +77,10 @@ class CustomerOrderAnalyticsQuery
             ];
         }
 
-        // Trailing 12-month revenue history for the trend chart.
+        // Trailing $months-month revenue history for the trend chart (the
+        // page's own range picker, Figma 231:9336).
         $monthlyRevenue = [];
-        for ($i = 11; $i >= 0; $i--) {
+        for ($i = $months - 1; $i >= 0; $i--) {
             $monthStart = $now->copy()->startOfMonth()->subMonths($i);
             $rev = $this->revenueBetween($base(), $monthStart, $monthStart->copy()->endOfMonth());
             $monthlyRevenue[] = [

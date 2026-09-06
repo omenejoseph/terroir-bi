@@ -11,6 +11,8 @@ use App\Actions\Orders\CreateOrderAction;
 use App\Actions\Orders\DeleteOrderAction;
 use App\Actions\Orders\DeleteOrderItemAction;
 use App\Actions\Orders\DuplicateOrderAction;
+use App\Actions\Orders\MarkOrderPaidAction;
+use App\Actions\Orders\ToggleOrderCommentReactionAction;
 use App\Actions\Orders\UpdateOrderItemAction;
 use App\Actions\Orders\UpdateOrderNotesAction;
 use App\Actions\Orders\UpdateOrderStatusAction;
@@ -21,17 +23,22 @@ use App\Http\Requests\Orders\AddOrderCommentRequest;
 use App\Http\Requests\Orders\AddOrderItemsRequest;
 use App\Http\Requests\Orders\BulkUpdateOrderStatusRequest;
 use App\Http\Requests\Orders\StoreOrderRequest;
+use App\Http\Requests\Orders\ToggleOrderCommentReactionRequest;
 use App\Http\Requests\Orders\UpdateOrderItemRequest;
 use App\Http\Requests\Orders\UpdateOrderNotesRequest;
 use App\Http\Requests\Orders\UpdateOrderStatusRequest;
 use App\Models\Customer;
+use App\Models\InventoryItem;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderNote;
 use App\Models\User;
+use App\Notifications\OrderConfirmationNotification;
 use App\Queries\ListOrdersQuery;
 use App\Queries\OrderPipelineQuery;
 use App\Queries\OrderStatusCountsQuery;
 use App\Services\Export\CsvExporter;
+use App\Services\Export\OrderPdfExporter;
 use App\Services\Orders\OrderFormOptions;
 use App\Services\Orders\OrderPresenter;
 use App\Support\OrderFilters;
@@ -39,8 +46,10 @@ use App\Support\Period;
 use App\Support\PerPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -94,6 +103,12 @@ class OrderController extends Controller
         return Inertia::render('Orders/Index', [
             'orders' => $presenter->page($query->paginate($scoped, PerPage::fromRequest($request))),
             'filters' => $filters,
+            // The item drawer's "Open in Orders" link lands here with only the
+            // item's id in the query string — this names the filter chip
+            // without the frontend needing its own item lookup.
+            'itemFilterName' => $filters['item_id'] === null
+                ? null
+                : InventoryItem::query()->whereKey($filters['item_id'])->value('name'),
             // Chip counts describe the whole filtered set, so they stay stable
             // while you switch between statuses.
             'statusCounts' => $counts->get($scoped),
@@ -251,6 +266,21 @@ class OrderController extends Controller
     }
 
     /**
+     * Add or remove the caller's own reaction to a comment — hitting the
+     * same emoji twice takes it back. The same ToggleOrderCommentReactionAction
+     * the JSON API's own reaction endpoint uses.
+     */
+    public function toggleCommentReaction(
+        ToggleOrderCommentReactionRequest $request,
+        OrderNote $orderNote,
+        ToggleOrderCommentReactionAction $action,
+    ): RedirectResponse {
+        $action->execute($orderNote, (string) $request->validated('emoji'), $this->userId($request));
+
+        return back();
+    }
+
+    /**
      * Add lines to an existing order. Guarded by the same 1-hour edit window
      * as the API (App\Services\Orders\OrderEditGuard, called from inside the
      * Action), so this needs no extra check here.
@@ -299,6 +329,45 @@ class OrderController extends Controller
         $action->execute($order);
 
         return redirect('/orders')->with('success', __('Order deleted.'));
+    }
+
+    /**
+     * The drawer's overflow menu "Mark paid" — records a RECEIVED Inflow for
+     * the outstanding balance (see MarkOrderPaidAction); payment state itself
+     * is derived, not stored on the order.
+     */
+    public function markPaid(Request $request, Order $order, MarkOrderPaidAction $action): RedirectResponse
+    {
+        $action->execute($order, $this->userId($request));
+
+        return back()->with('success', __('Order marked paid.'));
+    }
+
+    /**
+     * The drawer's overflow menu "Resend" — re-sends the same order
+     * confirmation a customer would have received when the order was placed.
+     */
+    public function resendConfirmation(Order $order): RedirectResponse
+    {
+        $order->loadMissing(['customer', 'items.inventoryItem']);
+        $email = $order->customer?->email;
+
+        if (! is_string($email) || $email === '') {
+            return back()->with('error', __('This customer has no email address on file.'));
+        }
+
+        Notification::route('mail', $email)->notify(new OrderConfirmationNotification($order));
+
+        return back()->with('success', __('Order confirmation sent.'));
+    }
+
+    /**
+     * The drawer's overflow menu "Print" — a packing-slip/invoice PDF built
+     * from the same Order the drawer itself reads.
+     */
+    public function downloadPdf(Order $order, OrderPdfExporter $exporter): HttpResponse
+    {
+        return $exporter->download($order);
     }
 
     private function userId(Request $request): string

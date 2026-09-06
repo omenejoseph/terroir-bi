@@ -56,12 +56,21 @@ class OrderLineWriter
 
         if ($item !== null) {
             // Price and cost are stored per bottle; a case line is scaled up by
-            // bottles_per_case.
-            $unitPriceMinor = $override ?? $this->resolvedUnitPrice($customer, $item, $unitType);
+            // bottles_per_case. An explicit override is the final say, same as
+            // a CustomerPrice — no rebate to snapshot against it.
+            if ($override !== null) {
+                $unitPriceMinor = $override;
+                $unitPriceGrossMinor = $override;
+            } else {
+                $resolved = $this->resolvedPrice($customer, $item, $unitType);
+                $unitPriceMinor = $resolved['net'];
+                $unitPriceGrossMinor = $resolved['gross'];
+            }
             $cost = $this->cogs->forLine($item, $unitType);
             $costMinor = $cost?->getMinorAmount();
         } else {
             $unitPriceMinor = $override ?? 0;
+            $unitPriceGrossMinor = $unitPriceMinor;
             $costMinor = null;
         }
 
@@ -70,6 +79,7 @@ class OrderLineWriter
             'quantity' => $quantity,
             'unit_type' => $unitType,
             'unit_price' => Money::fromMinor($unitPriceMinor, $currency),
+            'unit_price_gross' => Money::fromMinor($unitPriceGrossMinor, $currency),
             'total' => Money::fromMinor($unitPriceMinor * $quantity, $currency),
             'cost_per_unit' => $costMinor !== null ? Money::fromMinor($costMinor, $currency) : null,
             'custom_description' => $line['custom_description'] ?? null,
@@ -82,11 +92,19 @@ class OrderLineWriter
         return $orderItem;
     }
 
-    /** Per-bottle resolved price, scaled to a case line by bottles_per_case. */
-    private function resolvedUnitPrice(Customer $customer, InventoryItem $item, string $unitType): int
+    /**
+     * Resolved net + gross price, scaled to a case line by bottles_per_case.
+     *
+     * @return array{net: int, gross: int}
+     */
+    private function resolvedPrice(Customer $customer, InventoryItem $item, string $unitType): array
     {
-        $base = $this->pricing->resolve($customer, $item)->getMinorAmount();
+        $detailed = $this->pricing->resolveDetailed($customer, $item);
+        $scale = $unitType === SalesUnit::Cases->value ? max(1, (int) $item->bottles_per_case) : 1;
 
-        return $unitType === SalesUnit::Cases->value ? $base * max(1, (int) $item->bottles_per_case) : $base;
+        return [
+            'net' => $detailed['net']->getMinorAmount() * $scale,
+            'gross' => $detailed['gross']->getMinorAmount() * $scale,
+        ];
     }
 }

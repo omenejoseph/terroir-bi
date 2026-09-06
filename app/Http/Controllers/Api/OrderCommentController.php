@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Actions\Orders\AddOrderCommentAction;
+use App\Actions\Orders\ToggleOrderCommentReactionAction;
 use App\Authorization\MembershipContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\AddOrderCommentRequest;
+use App\Http\Requests\Orders\ToggleOrderCommentReactionRequest;
 use App\Http\Requests\Orders\UpdateOrderCommentRequest;
 use App\Models\Order;
 use App\Models\OrderNote;
+use App\Models\OrderNoteReaction;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -46,6 +50,20 @@ class OrderCommentController extends Controller
         return response()->json(status: 204);
     }
 
+    /**
+     * Add or remove the caller's own reaction — hitting the same emoji twice
+     * takes it back. Anyone who may comment may react; there is no separate
+     * author/admin check like update()/destroy() have, since a toggle only
+     * ever touches the caller's own row (ToggleOrderCommentReactionAction
+     * scopes the lookup to $userId).
+     */
+    public function toggleReaction(ToggleOrderCommentReactionRequest $request, OrderNote $orderNote, ToggleOrderCommentReactionAction $action): JsonResponse
+    {
+        $action->execute($orderNote, (string) $request->validated('emoji'), $this->userId($request));
+
+        return response()->json(['data' => $this->reactions($orderNote->load('reactions'))]);
+    }
+
     private function ensureCanModify(OrderNote $note, Request $request): void
     {
         $isAuthor = $note->author_id === $this->userId($request);
@@ -65,7 +83,32 @@ class OrderCommentController extends Controller
             'content' => $note->content,
             'author_id' => $note->author_id,
             'created_at' => $note->created_at?->toIso8601String(),
+            'reactions' => $this->reactions($note),
         ];
+    }
+
+    /**
+     * A comment's reactions grouped by emoji — mirrors OrderData::reactions(),
+     * the shape the order-detail read carries this same information in.
+     *
+     * @return list<array{emoji: string, count: int, user_ids: list<string>}>
+     */
+    private function reactions(OrderNote $note): array
+    {
+        /** @var Collection<int, OrderNoteReaction> $grouped */
+        $grouped = $note->reactions;
+
+        $rows = $grouped
+            ->groupBy('emoji')
+            ->map(fn (Collection $group, string $emoji): array => [
+                'emoji' => $emoji,
+                'count' => $group->count(),
+                'user_ids' => array_values($group->map(fn (OrderNoteReaction $r): string => $r->user_id)->all()),
+            ])
+            ->values()
+            ->all();
+
+        return array_values($rows);
     }
 
     private function userId(Request $request): string

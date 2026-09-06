@@ -13,6 +13,7 @@ import Card from '@/components/ui/Card.vue';
 import DropdownMenu from '@/components/ui/DropdownMenu.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Select from '@/components/ui/Select.vue';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminOption, AdminTenant, AdminTenantMember } from '@/types/admin';
@@ -53,8 +54,12 @@ function updatePlan(): void {
 const detailsFormOpen = ref(false);
 const onboardingOpen = ref(false);
 
-function emailLink(): void {
-    if (!confirm(t('Email a Stripe subscription link to :name?', { name: props.tenant.name }))) return;
+async function emailLink(): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Email subscription link'),
+        description: t('Email a Stripe subscription link to :name?', { name: props.tenant.name }),
+    });
+    if (!ok) return;
 
     router.post(`${ADMIN_BASE}/tenants/${props.tenant.id}/email-billing-link`, {}, { preserveScroll: true });
 }
@@ -87,8 +92,13 @@ function onMemberAction(key: string, member: AdminTenantMember): void {
     if (key === 'delete') removeMember(member);
 }
 
-function removeMember(member: AdminTenantMember): void {
-    if (!confirm(t('Remove :name from this tenant?', { name: member.name }))) return;
+async function removeMember(member: AdminTenantMember): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Remove member'),
+        description: t('Remove :name from this tenant?', { name: member.name }),
+        tone: 'danger',
+    });
+    if (!ok) return;
 
     router.delete(`${ADMIN_BASE}/tenants/${props.tenant.id}/members/${member.id}`, { preserveScroll: true });
 }

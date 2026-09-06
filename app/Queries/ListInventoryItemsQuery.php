@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ListInventoryItemsQuery
 {
     /**
-     * @param  array{search?: ?string, category?: ?string, is_for_sale?: ?bool, is_active?: ?bool, sellable?: ?bool}  $filters
+     * @param  array{search?: ?string, category?: ?string, is_for_sale?: ?bool, is_active?: ?bool, sellable?: ?bool, missing_cost?: ?bool}  $filters
      * @return LengthAwarePaginator<int, InventoryItem>
      */
     public function paginate(array $filters = [], int $perPage = 25): LengthAwarePaginator
@@ -28,7 +28,7 @@ class ListInventoryItemsQuery
     }
 
     /**
-     * @param  array{search?: ?string, category?: ?string, is_for_sale?: ?bool, is_active?: ?bool, sellable?: ?bool}  $filters
+     * @param  array{search?: ?string, category?: ?string, is_for_sale?: ?bool, is_active?: ?bool, sellable?: ?bool, missing_cost?: ?bool}  $filters
      * @return Builder<InventoryItem>
      */
     public function build(array $filters): Builder
@@ -61,6 +61,12 @@ class ListInventoryItemsQuery
                 ->where('is_for_sale', true)
                 ->where('is_active', true)
                 ->whereNotNull('default_price');
+        }
+
+        // Inventory Analytics' "Add costs" deep-link — same "not costed"
+        // criteria as InventoryAnalyticsQuery::get()'s costed_count.
+        if (! empty($filters['missing_cost'])) {
+            $query->where('is_active', true)->whereNull('cost_per_unit');
         }
 
         return $query;

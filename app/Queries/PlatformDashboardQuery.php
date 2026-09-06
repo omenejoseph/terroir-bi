@@ -17,7 +17,13 @@ use Illuminate\Support\Carbon;
 /**
  * Cross-tenant aggregates for the back-office dashboard. Platform-level reads,
  * so tenant-scoped tables are accessed through the audited ->withoutTenant()
- * escape hatch. Date bucketing happens in PHP to stay DB-driver agnostic.
+ * escape hatch. Month-level bucketing happens in PHP to stay DB-driver
+ * agnostic — this app runs on sqlite in dev/test and MySQL in production, and
+ * CI only exercises sqlite, so a driver-specific month-format function
+ * (strftime vs. DATE_FORMAT) would ship an untested branch. Day-level
+ * bucketing (orderActivity() below) is the one exception: `date(...)` is one
+ * of the few date functions both drivers support with the same name and
+ * behaviour, so it's grouped in SQL.
  */
 class PlatformDashboardQuery
 {
@@ -146,16 +152,22 @@ class PlatformDashboardQuery
     {
         $start = $now->copy()->startOfDay()->subDays($days - 1);
 
-        $createdAt = Order::withoutTenant()
+        // Grouped by calendar day in SQL rather than pulling every order's
+        // raw timestamp across the whole platform into PHP to bucket by
+        // hand — date() is portable across sqlite and Postgres (see the
+        // class docblock), so this one is safe without a per-driver branch.
+        $counts = Order::withoutTenant()
             ->where('created_at', '>=', $start)
-            ->pluck('created_at');
+            ->selectRaw('date(created_at) as day, COUNT(*) as day_count')
+            ->groupBy('day')
+            ->pluck('day_count', 'day');
 
         $perDay = array_fill(0, $days, 0);
 
-        foreach ($createdAt as $timestamp) {
-            $index = (int) $start->diffInDays(Carbon::parse((string) $timestamp)->startOfDay());
+        foreach ($counts as $day => $count) {
+            $index = (int) $start->diffInDays(Carbon::parse((string) $day));
             if ($index >= 0 && $index < $days) {
-                $perDay[$index]++;
+                $perDay[$index] = (int) $count;
             }
         }
 

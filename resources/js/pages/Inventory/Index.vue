@@ -5,6 +5,7 @@ import { ChevronDown, PencilLine, Upload, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import BulkEditTable from '@/components/inventory/BulkEditTable.vue';
+import BulkImportDialog from '@/components/inventory/BulkImportDialog.vue';
 import ItemFormPanel from '@/components/inventory/ItemFormPanel.vue';
 import ItemViewPanel from '@/components/inventory/ItemViewPanel.vue';
 import AttentionBand from '@/components/ui/AttentionBand.vue';
@@ -18,7 +19,13 @@ import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/cn';
 import { formatMoney, formatQuantity } from '@/lib/money';
-import type { InventoryFilters, InventoryItem } from '@/types/inventory';
+import type {
+    InventoryFilters,
+    InventoryItem,
+    ItemAuditTrailEntry,
+    ItemCustomerAttributionRow,
+    ItemStockRank,
+} from '@/types/inventory';
 import type { Paginated, SharedProps } from '@/types';
 import type { StockMovement } from '@/types/stock';
 import type { AttentionItem, TabItem } from '@/types/ui';
@@ -42,6 +49,12 @@ const props = defineProps<{
     cover: Record<string, number | null>;
     /** Only present while the Item — View drawer has asked for them. */
     itemMovements?: StockMovement[];
+    /** Only present while the Item — View drawer has asked for it. */
+    itemAuditTrail?: ItemAuditTrailEntry[];
+    /** Only present while the Item — View drawer has asked for it. Null when there's nothing to rank the item against. */
+    itemStockRank?: ItemStockRank | null;
+    /** Only present while the Item — View drawer has asked for it. */
+    itemCustomerAttribution?: ItemCustomerAttributionRow[];
 }>();
 
 const page = usePage<SharedProps>();
@@ -54,6 +67,7 @@ const search = ref(props.filters.search ?? '');
    The same drawer edits an existing one — see ItemFormPanel. */
 const itemFormOpen = ref(false);
 const editingItem = ref<InventoryItem | null>(null);
+const bulkImportOpen = ref(false);
 
 function openNewItem(): void {
     editingItem.value = null;
@@ -97,6 +111,7 @@ function reload(overrides: Record<string, unknown>): void {
         {
             search: props.filters.search ?? undefined,
             category: props.filters.category ?? undefined,
+            missing_cost: props.filters.missing_cost ? 1 : undefined,
             // Carried forward so changing a filter does not silently reset the
             // page size back to the server default.
             per_page: props.items.meta.per_page,
@@ -104,6 +119,11 @@ function reload(overrides: Record<string, unknown>): void {
         },
         { preserveState: true, replace: true, only: ['items', 'filters'] },
     );
+}
+
+/** Inventory Analytics' "Add costs" deep-link — dismissible, since nothing else on this page offers a way back out of it. */
+function clearMissingCostFilter(): void {
+    reload({ missing_cost: undefined });
 }
 
 function setPerPage(perPage: number): void {
@@ -248,7 +268,7 @@ function flags(item: InventoryItem): string[] {
                         </Button>
                     </template>
                     <template v-else>
-                        <Button v-if="can('inventory.manage')" variant="outline" size="sm">
+                        <Button v-if="can('inventory.manage')" variant="outline" size="sm" @click="bulkImportOpen = true">
                             <Upload class="size-4" :stroke-width="1.5" />
                             {{ t('Bulk Import') }}
                         </Button>
@@ -282,6 +302,16 @@ function flags(item: InventoryItem): string[] {
                     variant="filter"
                     @select="selectCategory"
                 />
+
+                <button
+                    v-if="filters.missing_cost"
+                    type="button"
+                    class="inline-flex h-8 items-center gap-1.5 border border-primary bg-primary px-2.5 text-xs text-primary-foreground"
+                    @click="clearMissingCostFilter"
+                >
+                    {{ t('Missing cost') }}
+                    <X class="size-3.5" :stroke-width="1.5" />
+                </button>
 
                 <!-- The count lives in the table's own header, not here. -->
                 <Button
@@ -440,6 +470,15 @@ function flags(item: InventoryItem): string[] {
         </div>
 
         <ItemFormPanel :open="itemFormOpen" :item="editingItem" @close="itemFormOpen = false" />
-        <ItemViewPanel :item="viewing" :movements="itemMovements ?? []" @close="viewingId = null" @edit="openEdit" />
+        <BulkImportDialog :open="bulkImportOpen" @close="bulkImportOpen = false" />
+        <ItemViewPanel
+            :item="viewing"
+            :movements="itemMovements ?? []"
+            :audit-trail="itemAuditTrail ?? []"
+            :stock-rank="itemStockRank ?? null"
+            :customer-attribution="itemCustomerAttribution ?? []"
+            @close="viewingId = null"
+            @edit="openEdit"
+        />
     </AppLayout>
 </template>

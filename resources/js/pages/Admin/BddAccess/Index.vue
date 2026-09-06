@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import Disclosure from '@/components/ui/Disclosure.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminBddOperationSpec } from '@/types/admin';
@@ -25,10 +26,13 @@ function grant(spec: AdminBddOperationSpec): void {
     router.post(`${ADMIN_BASE}/bdd-access/grant`, { key: spec.key }, { preserveScroll: true });
 }
 
-function revoke(spec: AdminBddOperationSpec): void {
-    if (!confirm(t('Revoke :key? Scenarios using it will park as "needs access" on their next run.', { key: spec.key }))) {
-        return;
-    }
+async function revoke(spec: AdminBddOperationSpec): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Revoke access'),
+        description: t('Revoke :key? Scenarios using it will park as "needs access" on their next run.', { key: spec.key }),
+        tone: 'danger',
+    });
+    if (!ok) return;
 
     router.post(`${ADMIN_BASE}/bdd-access/revoke`, { key: spec.key }, { preserveScroll: true });
 }

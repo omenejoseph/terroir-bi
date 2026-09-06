@@ -107,6 +107,7 @@ class OrderPresenter
             'items.inventoryItem.firstImage',
             'statusHistories.changedBy',
             'orderNotes.author',
+            'orderNotes.reactions',
         ]);
     }
 

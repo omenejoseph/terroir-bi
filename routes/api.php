@@ -299,6 +299,9 @@ Route::prefix('v1')->group(function () {
             Route::post('orders/{order}/comments', [OrderCommentController::class, 'store']);
             Route::patch('order-comments/{orderNote}', [OrderCommentController::class, 'update']);
             Route::delete('order-comments/{orderNote}', [OrderCommentController::class, 'destroy']);
+            // Reactions: same participation gate as commenting — a toggle
+            // only ever touches the caller's own reaction.
+            Route::post('order-comments/{orderNote}/reactions', [OrderCommentController::class, 'toggleReaction']);
         });
         Route::middleware('can:orders.manage')->group(function () {
             Route::post('orders', [OrderController::class, 'store']);

@@ -137,6 +137,79 @@ class PlatformDashboardQueryTest extends TestCase
         $this->assertSame(2, array_sum($activity['per_day']));
     }
 
+    public function test_order_activity_buckets_by_day_boundary_and_excludes_orders_outside_window(): void
+    {
+        $days = 30;
+        $now = Carbon::parse('2026-06-15 12:00:00');
+        $start = $now->copy()->startOfDay()->subDays($days - 1); // 2026-05-17 00:00:00
+
+        $tenantA = $this->createTenant();
+        $tenantB = $this->createTenant();
+
+        $this->actingAsTenant($tenantA);
+        $customerA = Customer::create(['company_name' => 'A Co', 'email' => 'a-boundary@example.com']);
+        $adminA = $this->createMember($tenantA);
+
+        // One day before the window starts — must not be counted at all.
+        $old = Order::create([
+            'order_number' => 'ORD-OLD', 'customer_id' => $customerA->getKey(),
+            'created_by_id' => $adminA->getKey(), 'total_amount' => 1000,
+        ]);
+        $old->forceFill(['created_at' => $start->copy()->subSecond()])->save();
+
+        // Day boundary: 23:59:59 one day vs 00:01:00 the next must land in
+        // different buckets, never merged into one.
+        $lateNight = Order::create([
+            'order_number' => 'ORD-LATE', 'customer_id' => $customerA->getKey(),
+            'created_by_id' => $adminA->getKey(), 'total_amount' => 1000,
+        ]);
+        $lateNight->forceFill(['created_at' => Carbon::parse('2026-06-01 23:59:59')])->save();
+
+        $earlyMorning = Order::create([
+            'order_number' => 'ORD-EARLY', 'customer_id' => $customerA->getKey(),
+            'created_by_id' => $adminA->getKey(), 'total_amount' => 1000,
+        ]);
+        $earlyMorning->forceFill(['created_at' => Carbon::parse('2026-06-02 00:01:00')])->save();
+        $this->forgetTenant();
+
+        // A different tenant's order, created and queried without tenant A's
+        // context bound, proves the aggregate is genuinely platform-wide.
+        $this->actingAsTenant($tenantB);
+        $customerB = Customer::create(['company_name' => 'B Co', 'email' => 'b-boundary@example.com']);
+        $adminB = $this->createMember($tenantB);
+        $today = Order::create([
+            'order_number' => 'ORD-TODAY', 'customer_id' => $customerB->getKey(),
+            'created_by_id' => $adminB->getKey(), 'total_amount' => 1000,
+        ]);
+        $today->forceFill(['created_at' => $now->copy()])->save();
+        $this->forgetTenant();
+
+        // Sanity: 4 orders exist platform-wide, but only 3 fall inside the window.
+        $this->assertSame(4, Order::withoutTenant()->count());
+
+        $activity = $this->query->orderActivity($now, $days);
+
+        $this->assertCount(30, $activity['per_day']);
+        $this->assertSame(3, $activity['total']);
+        $this->assertSame(3, array_sum($activity['per_day']));
+
+        $lateIndex = (int) $start->diffInDays(Carbon::parse('2026-06-01')->startOfDay());
+        $earlyIndex = (int) $start->diffInDays(Carbon::parse('2026-06-02')->startOfDay());
+        $todayIndex = $days - 1;
+
+        $this->assertNotSame($lateIndex, $earlyIndex, 'the two boundary orders must land in distinct day buckets');
+        $this->assertSame(1, $activity['per_day'][$lateIndex]);
+        $this->assertSame(1, $activity['per_day'][$earlyIndex]);
+        $this->assertSame(1, $activity['per_day'][$todayIndex]);
+
+        // Every other bucket (including the one holding the excluded old order) is empty.
+        foreach ($activity['per_day'] as $index => $count) {
+            if (! in_array($index, [$lateIndex, $earlyIndex, $todayIndex], true)) {
+                $this->assertSame(0, $count, "bucket {$index} should be empty");
+            }
+        }
+    }
+
     public function test_active_user_count_is_distinct_across_tenants(): void
     {
         $tenantA = $this->createTenant();

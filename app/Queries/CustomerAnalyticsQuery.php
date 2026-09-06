@@ -33,7 +33,7 @@ class CustomerAnalyticsQuery
 
         $customers = Customer::query()
             ->where('exclude_from_stats', false)
-            ->get()
+            ->get(['id', 'company_name', 'contact_name'])
             ->keyBy('id');
 
         /** @var Collection<int, Order> $orders */

@@ -9,6 +9,7 @@ use App\Enums\MembershipStatus;
 use App\Enums\NotificationType;
 use App\Enums\TenantRole;
 use App\Jobs\SendWebPushNotification;
+use App\Models\Membership;
 use App\Models\Notification;
 use App\Models\Tenant;
 use App\Models\User;
@@ -63,6 +64,42 @@ class SendBroadcastActionTest extends TestCase
 
         // One push per distinct user, not per feed row.
         Queue::assertPushed(SendWebPushNotification::class, 2);
+    }
+
+    public function test_broadcast_to_all_tenants_creates_exactly_one_notification_per_active_membership(): void
+    {
+        Queue::fake();
+
+        $alice = $this->createMember($this->tenantA, [TenantRole::Admin]);
+        $bob = $this->createMember($this->tenantB, [TenantRole::Team]);
+        // A third, unrelated tenant with its own active member, to prove the
+        // "all tenants" branch really spans every tenant, not just A/B.
+        $tenantC = $this->createTenant();
+        $carol = $this->createMember($tenantC, [TenantRole::Team]);
+        // Suspended memberships must be excluded even in "all tenants" (null) mode.
+        $suspended = $this->createMember($this->tenantA, [TenantRole::Team], status: MembershipStatus::Suspended);
+
+        $activeMembershipCount = Membership::query()->where('status', MembershipStatus::Active->value)->count();
+        $this->assertSame(3, $activeMembershipCount);
+
+        $result = app(SendBroadcastAction::class)->execute('Platform notice', null, null);
+
+        // Exactly one Notification row per active membership — none skipped, none duplicated.
+        $this->assertSame($activeMembershipCount, $result['notifications']);
+        $this->assertSame(3, $result['recipients']);
+        $this->assertSame(3, $result['tenants']);
+        $this->assertSame(
+            $activeMembershipCount,
+            Notification::withoutTenant()->where('type', NotificationType::Announcement->value)->count(),
+        );
+
+        $this->assertSame(1, $this->rowsFor($this->tenantA, $alice->getKey()));
+        $this->assertSame(1, $this->rowsFor($this->tenantB, $bob->getKey()));
+        $this->assertSame(1, $this->rowsFor($tenantC, $carol->getKey()));
+        // The suspended membership's tenant/user gets nothing.
+        $this->assertSame(0, $this->rowsFor($this->tenantA, $suspended->getKey()));
+
+        Queue::assertPushed(SendWebPushNotification::class, 3);
     }
 
     public function test_broadcast_to_specific_tenant_only_targets_its_members(): void

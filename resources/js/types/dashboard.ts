@@ -129,6 +129,43 @@ export interface NetCashFlow {
     by_category: CashCategorySplit[];
 }
 
+/** One channel's line in "Target by channel" — only present when that channel has a target set. */
+export interface RevenueTargetChannel {
+    key: string;
+    label: string;
+    target: MoneyValue;
+    current: MoneyValue;
+    /** Current YTD revenue as a % of the target prorated to today's point in the year; null if the target is 0. */
+    pace_pct: number | null;
+}
+
+/**
+ * "Revenue vs. target" (Figma 208:5577 / 286:781). `annual_target` and any
+ * `channels` entry are absent until a settings.manage member sets a real
+ * figure on the Settings page — see App\Services\Dashboard\DashboardSummary::revenueVsTarget().
+ */
+export interface RevenueVsTarget {
+    annual_target: MoneyValue | null;
+    ytd_revenue: MoneyValue;
+    /** ytd_revenue as a % of annual_target; null if no target is set. */
+    progress_pct: number | null;
+    channels: RevenueTargetChannel[];
+}
+
+/**
+ * "Runway" (Figma 208:5808). Null entirely until a settings.manage member
+ * sets a cash-on-hand figure on the Settings page — see
+ * App\Services\Dashboard\DashboardSummary::runway().
+ */
+export interface Runway {
+    cash_on_hand: MoneyValue;
+    cash_on_hand_as_of: string | null;
+    /** Trailing-3-month average burn; null when the trailing quarter wasn't a burn (net positive). */
+    monthly_burn: MoneyValue | null;
+    /** cash_on_hand / monthly_burn; null when monthly_burn is null. */
+    months: number | null;
+}
+
 export interface DashboardSummary {
     range: string;
     currency: string;
@@ -147,6 +184,8 @@ export interface DashboardSummary {
     reorder_pipeline: ReorderPipeline;
     upcoming_tasks: UpcomingTasks;
     net_cash_flow: NetCashFlow;
+    revenue_vs_target: RevenueVsTarget;
+    runway: Runway | null;
 }
 
 export interface DashboardFilters {

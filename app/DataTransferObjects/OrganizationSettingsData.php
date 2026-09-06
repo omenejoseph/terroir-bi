@@ -24,6 +24,15 @@ final class OrganizationSettingsData implements Arrayable, JsonSerializable
         public readonly string $defaultCurrency,
         public readonly string $timezone,
         public readonly ?string $companyOib,
+        // Dashboard "Revenue vs. target" / "Runway" (Figma 208:5577, 208:5808)
+        // read these; nothing computes a real number without them, so they
+        // stay null until a tenant admin sets them here. Minor units, like
+        // every other stored money figure.
+        public readonly ?int $annualRevenueTarget = null,
+        /** @var array<string, int>|null */
+        public readonly ?array $channelRevenueTargets = null,
+        public readonly ?int $cashOnHand = null,
+        public readonly ?string $cashOnHandAsOf = null,
     ) {}
 
     public static function fromTenant(Tenant $tenant): self
@@ -43,6 +52,10 @@ final class OrganizationSettingsData implements Arrayable, JsonSerializable
             defaultCurrency: self::str($settings, 'default_currency', 'EUR'),
             timezone: self::str($settings, 'timezone', 'Europe/Zagreb'),
             companyOib: $settings->company_oib,
+            annualRevenueTarget: $settings->annual_revenue_target,
+            channelRevenueTargets: $settings->channel_revenue_targets,
+            cashOnHand: $settings->cash_on_hand,
+            cashOnHandAsOf: $settings->cash_on_hand_as_of?->toDateString(),
         );
     }
 
@@ -65,6 +78,10 @@ final class OrganizationSettingsData implements Arrayable, JsonSerializable
             'default_currency' => $this->defaultCurrency,
             'timezone' => $this->timezone,
             'company_oib' => $this->companyOib,
+            'annual_revenue_target' => $this->annualRevenueTarget,
+            'channel_revenue_targets' => $this->channelRevenueTargets,
+            'cash_on_hand' => $this->cashOnHand,
+            'cash_on_hand_as_of' => $this->cashOnHandAsOf,
         ];
     }
 

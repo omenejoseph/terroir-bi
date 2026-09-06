@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button.vue';
 import DropdownMenu from '@/components/ui/DropdownMenu.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Pagination from '@/components/ui/Pagination.vue';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminOption, TranslationCatalogRow, TranslationOverride } from '@/types/admin';
@@ -90,9 +91,15 @@ function editOverride(row: TranslationCatalogRow): void {
     formOpen.value = true;
 }
 
-function resetToBundled(row: TranslationCatalogRow): void {
+async function resetToBundled(row: TranslationCatalogRow): Promise<void> {
     if (row.override_id === null) return;
-    if (!confirm(t('Reset ":key" to the bundled string?', { key: row.key }))) return;
+
+    const ok = await confirmDialog({
+        title: t('Reset to bundled'),
+        description: t('Reset ":key" to the bundled string?', { key: row.key }),
+        tone: 'danger',
+    });
+    if (!ok) return;
 
     router.delete(`${ADMIN_BASE}/translation-overrides/${row.override_id}`, { preserveScroll: true });
 }
@@ -109,7 +116,7 @@ function rowActions(row: TranslationCatalogRow): MenuItem[] {
 function onRowAction(key: string, row: TranslationCatalogRow): void {
     if (key === 'override') return override(row);
     if (key === 'edit') return editOverride(row);
-    if (key === 'reset') return resetToBundled(row);
+    if (key === 'reset') void resetToBundled(row);
 }
 </script>
 

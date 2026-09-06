@@ -7,13 +7,16 @@ namespace Tests\Feature\Web;
 use App\Enums\OrderStatus;
 use App\Enums\TenantRole;
 use App\Models\Customer;
+use App\Models\Inflow;
 use App\Models\InventoryItem;
 use App\Models\Order;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Notifications\OrderConfirmationNotification;
 use App\Services\Auth\ActiveTenantSession;
 use App\Support\Money\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia;
 use Tests\Concerns\InteractsWithTenancy;
 use Tests\TestCase;
@@ -210,6 +213,42 @@ class WebOrdersTest extends TestCase
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->has('orders.data', 1)
                 ->where('orders.data.0.customer.company_name', 'Taverna Olea'));
+    }
+
+    public function test_index_filters_by_item_id(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $malvasia = $this->makeProduct('Malvazija');
+        $plavac = $this->makeProduct('Plavac Mali');
+        $withMalvasia = $this->makeOrder($this->makeCustomer('Taverna Olea'), $admin);
+        $withMalvasia->items()->create([
+            'inventory_item_id' => $malvasia->getKey(),
+            'quantity' => 12,
+            'unit_type' => 'bottles',
+            'unit_price' => Money::fromMinor(2548, 'EUR'),
+            'total' => Money::fromMinor(30576, 'EUR'),
+        ]);
+        $withPlavac = $this->makeOrder($this->makeCustomer('Konoba Kraljevac'), $admin);
+        $withPlavac->items()->create([
+            'inventory_item_id' => $plavac->getKey(),
+            'quantity' => 6,
+            'unit_type' => 'bottles',
+            'unit_price' => Money::fromMinor(3200, 'EUR'),
+            'total' => Money::fromMinor(19200, 'EUR'),
+        ]);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/orders?item_id='.$malvasia->getKey())
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('orders.data', 1)
+                ->where('orders.data.0.customer.company_name', 'Taverna Olea')
+                ->where('filters.item_id', $malvasia->getKey())
+                ->where('itemFilterName', 'Malvazija'));
     }
 
     public function test_period_filter_narrows_the_table_and_the_pipeline(): void
@@ -439,6 +478,86 @@ class WebOrdersTest extends TestCase
         $this->actingAsTenant($tenant);
         $this->assertSame(1, $order->orderNotes()->count());
         $this->forgetTenant();
+    }
+
+    public function test_reacting_to_a_comment_toggles_it_on_then_off(): void
+    {
+        $tenant = $this->createTenant();
+        $member = $this->createMember($tenant, [TenantRole::Orders]);
+
+        $this->actingAsTenant($tenant);
+        $order = $this->makeOrder($this->makeCustomer(), $member);
+        $note = $order->orderNotes()->create(['content' => 'Hello', 'author_id' => $member->getKey()]);
+        $this->forgetTenant();
+
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+
+        $this->actingAs($member)->withSession($session)
+            ->post('/order-comments/'.$note->getKey().'/reactions', ['emoji' => '👍'])
+            ->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $this->assertSame(1, $note->reactions()->count());
+        $this->forgetTenant();
+
+        // Hitting the same emoji again takes it back.
+        $this->actingAs($member)->withSession($session)
+            ->post('/order-comments/'.$note->getKey().'/reactions', ['emoji' => '👍'])
+            ->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $this->assertSame(0, $note->reactions()->count());
+        $this->forgetTenant();
+    }
+
+    public function test_reactions_appear_grouped_on_the_order_detail_read(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $member = $this->createMember($tenant, [TenantRole::Orders]);
+
+        $this->actingAsTenant($tenant);
+        $order = $this->makeOrder($this->makeCustomer(), $admin);
+        $note = $order->orderNotes()->create(['content' => 'Hello', 'author_id' => $admin->getKey()]);
+        $note->reactions()->create(['user_id' => $admin->getKey(), 'emoji' => '👍']);
+        $note->reactions()->create(['user_id' => $member->getKey(), 'emoji' => '👍']);
+        $note->reactions()->create(['user_id' => $admin->getKey(), 'emoji' => '🎉']);
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/orders?order='.$order->getKey(), $this->inertiaPartial('Orders/Index', 'order'))
+            ->assertOk();
+
+        /** @var array<int, array<string, mixed>> $rows */
+        $rows = $response->json('props.order.comments.0.reactions');
+        $reactions = collect($rows)->keyBy('emoji');
+
+        $thumbsUp = $reactions->get('👍');
+        self::assertIsArray($thumbsUp);
+        $this->assertSame(2, $thumbsUp['count']);
+        $this->assertContains($admin->getKey(), $thumbsUp['user_ids']);
+        $this->assertContains($member->getKey(), $thumbsUp['user_ids']);
+
+        $party = $reactions->get('🎉');
+        self::assertIsArray($party);
+        $this->assertSame(1, $party['count']);
+    }
+
+    public function test_reaction_requires_a_recognised_emoji(): void
+    {
+        $tenant = $this->createTenant();
+        $member = $this->createMember($tenant, [TenantRole::Orders]);
+
+        $this->actingAsTenant($tenant);
+        $order = $this->makeOrder($this->makeCustomer(), $member);
+        $note = $order->orderNotes()->create(['content' => 'Hello', 'author_id' => $member->getKey()]);
+        $this->forgetTenant();
+
+        $this->actingAs($member)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post('/order-comments/'.$note->getKey().'/reactions', ['emoji' => '💩'])
+            ->assertSessionHasErrors('emoji');
     }
 
     public function test_deleting_an_order_is_admin_only(): void
@@ -732,5 +851,106 @@ class WebOrdersTest extends TestCase
             ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
             ->patch('/orders-bulk/status', ['order_ids' => ['x'], 'status' => 'IN_PROCESS'])
             ->assertForbidden();
+    }
+
+    /** The overflow menu's "Mark paid" — records an Inflow, payment state is derived from it. */
+    public function test_mark_paid_records_an_inflow_for_the_outstanding_balance(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $order = $this->makeOrder($this->makeCustomer(), $admin);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post("/orders/{$order->getKey()}/mark-paid")
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->actingAsTenant($tenant);
+        $inflow = Inflow::query()->where('order_id', $order->getKey())->firstOrFail();
+        self::assertSame($order->total_amount->getMinorAmount(), $inflow->amount->getMinorAmount());
+        self::assertSame($order->customer_id, $inflow->customer_id);
+        $this->forgetTenant();
+    }
+
+    public function test_marking_an_already_paid_order_paid_again_is_refused(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $order = $this->makeOrder($this->makeCustomer(), $admin);
+        $this->forgetTenant();
+
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+        $this->actingAs($admin)->withSession($session)->post("/orders/{$order->getKey()}/mark-paid")->assertRedirect();
+
+        $this->actingAs($admin)->withSession($session)
+            ->post("/orders/{$order->getKey()}/mark-paid")
+            ->assertSessionHasErrors('order');
+    }
+
+    /** The overflow menu's "Resend" — the same confirmation a customer got when the order was placed. */
+    public function test_resend_confirmation_emails_the_customer(): void
+    {
+        Notification::fake();
+
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $order = $this->makeOrder($this->makeCustomer(), $admin);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->post("/orders/{$order->getKey()}/resend-confirmation")
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        Notification::assertSentOnDemand(OrderConfirmationNotification::class);
+    }
+
+    /** The overflow menu's "Print" — a packing-slip/invoice PDF of the same order. */
+    public function test_download_pdf_streams_a_pdf(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $order = $this->makeOrder($this->makeCustomer(), $admin);
+        $this->forgetTenant();
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get("/orders/{$order->getKey()}/pdf")
+            ->assertOk();
+
+        self::assertStringContainsString('application/pdf', (string) $response->headers->get('Content-Type'));
+    }
+
+    /**
+     * The drawer's Profitability card: a fresh order (written after
+     * unit_price_gross existed) shows the real Gross/Rebate/Net breakdown.
+     */
+    public function test_profitability_reports_gross_and_rebate_for_a_rebated_customer(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $customer = $this->makeCustomer();
+        $customer->update(['rebate_percent' => '10']);
+        $product = $this->makeProduct(); // default_price 2548
+        $this->forgetTenant();
+
+        $order = $this->createOrderViaWeb($tenant, $admin, $customer, $product, 2);
+
+        $response = $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/orders?order='.$order->getKey(), $this->inertiaPartial('Orders/Index', 'order'));
+
+        $response->assertOk();
+        // 2548 * 2 = 5096 gross; 10% rebate -> 4586 net (2293/unit, rounded).
+        self::assertSame(5096, $response->json('props.order.profitability.gross_revenue.minor'));
+        self::assertSame(510, $response->json('props.order.profitability.rebate_amount.minor'));
     }
 }

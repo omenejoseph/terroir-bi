@@ -23,10 +23,12 @@ use App\Queries\CustomerInsightsQuery;
 use App\Queries\CustomerOrderAnalyticsQuery;
 use App\Queries\CustomerProductsQuery;
 use App\Queries\CustomerRhythmQuery;
+use App\Queries\CustomerUpsellQuery;
 use App\Queries\ListCustomersQuery;
 use App\Queries\ListOrdersQuery;
 use App\Queries\OrderPipelineQuery;
 use App\Queries\OrderStatusCountsQuery;
+use App\Queries\ReorderRadarQuery;
 use App\Services\Customers\CustomerMergeService;
 use App\Services\Customers\CustomerPresenter;
 use App\Services\Customers\PricingTierOptions;
@@ -91,6 +93,18 @@ class CustomerController extends Controller
     }
 
     /**
+     * Reorder radar (Figma `208:5921`'s "View all" off the Dashboard's
+     * Reorder pipeline card) — the full, unnarrowed list `ReorderRadarQuery`
+     * computes; the dashboard card only ever showed its top rows. Same query
+     * `Api\CustomerController::reorderRadar` and `DashboardSummary::reorderPipeline()`
+     * both already use, so none of the three can disagree about who's overdue.
+     */
+    public function reorderRadar(ReorderRadarQuery $query): Response
+    {
+        return Inertia::render('Customers/ReorderRadar', ['radar' => $query->get()]);
+    }
+
+    /**
      * One customer (Figma 231:9336). The Overview tab's material always loads;
      * the other three arrive on demand.
      */
@@ -110,6 +124,12 @@ class CustomerController extends Controller
         // year / This month / Custom), independent of anything else on the page.
         [$productsFrom, $productsTo] = $this->productWindow($request);
 
+        // The revenue trend card's own range picker (231:9336's "Change
+        // range") — independent of Products bought's, and of everything else
+        // that doesn't depend on it.
+        $revenueMonths = (int) $request->query('revenue_months', 12);
+        $revenueMonths = in_array($revenueMonths, [3, 6, 12], true) ? $revenueMonths : 12;
+
         return Inertia::render('Customers/Show', [
             'customer' => $presenter->detail($customer),
             'tab' => $this->tab($request),
@@ -120,7 +140,8 @@ class CustomerController extends Controller
             // Money-denominated, so withheld rather than zeroed for a viewer
             // without financial visibility.
             'insights' => $financials ? $insights->get($customer) : null,
-            'orderAnalytics' => $financials ? $orderAnalytics->get($customer) : null,
+            'orderAnalytics' => $financials ? $orderAnalytics->get($customer, $revenueMonths) : null,
+            'revenueRangeMonths' => $revenueMonths,
             'products' => $products->get($customer, $productsFrom, $productsTo),
             'productRange' => [
                 'preset' => $this->productPreset($request),
@@ -198,6 +219,13 @@ class CustomerController extends Controller
             'orderToken' => Inertia::optional(
                 fn (): ?string => $this->membership->can('customers.tokens') ? $customer->order_token : null,
             ),
+
+            // "Suggest upsell" (231:9336, next to Price ladder) — a real,
+            // pricier catalog item in the customer's cheapest-per-bottle
+            // bucket that they haven't bought. Only fetched once that dialog
+            // opens, the same "not needed until asked for" lazy loading as
+            // orderToken above.
+            'upsell' => Inertia::optional(fn (): array => app(CustomerUpsellQuery::class)->get($customer)),
         ]);
     }
 
@@ -390,7 +418,9 @@ class CustomerController extends Controller
      */
     private function consignment(Customer $customer, bool $financials): array
     {
-        $summary = app(CustomerConsignmentService::class)->summary($customer);
+        $service = app(CustomerConsignmentService::class);
+        $summary = $service->summary($customer);
+        $summary['history'] = $service->history($customer, $financials);
 
         if ($financials) {
             return $summary;

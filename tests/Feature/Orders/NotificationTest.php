@@ -130,6 +130,38 @@ class NotificationTest extends TestCase
             ->assertOk()->assertJsonPath('data.content', 'edited');
     }
 
+    public function test_reacting_to_a_comment_toggles_it_on_then_off(): void
+    {
+        $id = $this->createOrder();
+        Sanctum::actingAs($this->admin);
+        $commentId = $this->postJson("/api/v1/orders/{$id}/comments", ['content' => 'mine'], $this->headers())
+            ->assertCreated()->json('data.id');
+
+        Sanctum::actingAs($this->teammate);
+        $this->postJson("/api/v1/order-comments/{$commentId}/reactions", ['emoji' => '🎉'], $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.0.emoji', '🎉')
+            ->assertJsonPath('data.0.count', 1)
+            ->assertJsonPath('data.0.user_ids.0', $this->teammate->getKey());
+
+        // The same emoji again takes it back.
+        $this->postJson("/api/v1/order-comments/{$commentId}/reactions", ['emoji' => '🎉'], $this->headers())
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_reaction_rejects_an_emoji_outside_the_fixed_palette(): void
+    {
+        $id = $this->createOrder();
+        Sanctum::actingAs($this->admin);
+        $commentId = $this->postJson("/api/v1/orders/{$id}/comments", ['content' => 'mine'], $this->headers())
+            ->assertCreated()->json('data.id');
+
+        $this->postJson("/api/v1/order-comments/{$commentId}/reactions", ['emoji' => '💩'], $this->headers())
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['emoji']);
+    }
+
     public function test_stale_order_command_flags_and_notifies(): void
     {
         $id = $this->createOrder();

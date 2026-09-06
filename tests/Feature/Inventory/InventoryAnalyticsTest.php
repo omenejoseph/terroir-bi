@@ -129,6 +129,63 @@ class InventoryAnalyticsTest extends TestCase
             ->assertJsonFragment(['group' => 'Wine', 'count' => 2]);
     }
 
+    public function test_movements_12m_separates_in_from_out_by_sign_and_buckets_by_calendar_month(): void
+    {
+        // Anchor "now" so the fixed 12-month window (this-month back 11) runs
+        // 2025-07 .. 2026-06, giving clean month boundaries to test against.
+        Carbon::setTestNow('2026-06-06 12:00:00');
+
+        $this->actingAsTenant($this->tenant);
+
+        $caseItem = InventoryItem::create([
+            'name' => 'Cased Wine', 'sku' => 'CASE-1', 'category' => 'FINISHED', 'unit' => 'case',
+            'bottles_per_case' => 6, 'current_stock' => '100',
+        ]);
+        $bottleItem = InventoryItem::create([
+            'name' => 'Bottled Wine', 'sku' => 'BTL-1', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'current_stock' => '100',
+        ]);
+
+        // One second before the window opens: must not appear in ANY bucket.
+        $this->exit($bottleItem, 'MANUAL_OUT', -999, '2025-06-30 23:59:59');
+        // Exactly at the window's opening instant: first bucket, 2025-07.
+        $this->exit($bottleItem, 'ORDER_DEDUCT', -5, '2025-07-01 00:00:00');
+        // Sign (not type) decides in vs out: a positive quantity on a case-unit
+        // item, converted via bottles_per_case. Lands in 2026-01.
+        $this->exit($caseItem, 'MANUAL_IN', 2, '2026-01-01 00:00:00');
+        // One second earlier — the previous calendar month's bucket, 2025-12,
+        // not 2026-01. Also case-converted (3 cases × 6 = 18 bottles).
+        $this->exit($caseItem, 'MANUAL_OUT', -3, '2025-12-31 23:59:59');
+        // Current month: a positive ADJUSTMENT (sign, not type, still decides
+        // "in") and a negative ADJUSTMENT ("out" despite being a correction,
+        // not an order/manual exit — movements_12m has no type filter).
+        $this->exit($bottleItem, 'ADJUSTMENT', 7, '2026-06-06 09:00:00');
+        $this->exit($caseItem, 'ADJUSTMENT', -1, '2026-06-06 10:00:00');
+
+        $this->forgetTenant();
+
+        Sanctum::actingAs($this->admin);
+        $res = $this->getJson('/api/v1/inventory-items/analytics', $this->headers())->assertOk();
+
+        $series = (array) $res->json('data.movements_12m');
+        self::assertCount(12, $series);
+        self::assertSame('2025-07', $series[0]['month']);
+        self::assertSame('2026-06', $series[11]['month']);
+
+        $byMonth = collect($series)->keyBy('month');
+        self::assertSame(['month' => '2025-07', 'in' => 0, 'out' => 5], $byMonth['2025-07']);
+        self::assertSame(['month' => '2025-12', 'in' => 0, 'out' => 18], $byMonth['2025-12']); // 3 cases × 6
+        self::assertSame(['month' => '2026-01', 'in' => 12, 'out' => 0], $byMonth['2026-01']); // 2 cases × 6
+        self::assertSame(['month' => '2026-06', 'in' => 7, 'out' => 6], $byMonth['2026-06']); // 6 = 1 case × 6
+
+        // The pre-window movement (-999) must be excluded entirely, not just
+        // misfiled into the wrong bucket.
+        $totalOut = collect($series)->sum('out');
+        self::assertSame(5 + 18 + 6, $totalOut);
+        $totalIn = collect($series)->sum('in');
+        self::assertSame(12 + 7, $totalIn);
+    }
+
     public function test_analytics_requires_inventory_visibility(): void
     {
         $member = $this->createMember($this->tenant, [TenantRole::WineClub]);

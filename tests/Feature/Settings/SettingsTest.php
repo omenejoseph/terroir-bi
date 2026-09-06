@@ -104,6 +104,57 @@ class SettingsTest extends TestCase
             ->assertJsonValidationErrors(['default_locale', 'timezone']);
     }
 
+    /** Backs the Dashboard's "Revenue vs. target" / "Runway" cards — see App\Services\Dashboard\DashboardSummary. */
+    public function test_admin_can_set_revenue_targets_and_cash_on_hand(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+
+        Sanctum::actingAs($admin);
+
+        $this->patchJson('/api/v1/settings', [
+            'name' => 'Vinarija Test',
+            'default_locale' => 'hr',
+            'timezone' => 'Europe/Zagreb',
+            'annual_revenue_target' => 1_000_000,
+            'channel_revenue_targets' => ['wholesale' => 600_000, 'retail' => 400_000, 'bogus' => 999],
+            'cash_on_hand' => 250_000,
+            'cash_on_hand_as_of' => '2026-01-15',
+        ], $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonPath('data.annual_revenue_target', 1_000_000)
+            ->assertJsonPath('data.channel_revenue_targets.wholesale', 600_000)
+            ->assertJsonPath('data.channel_revenue_targets.retail', 400_000)
+            ->assertJsonMissingPath('data.channel_revenue_targets.bogus')
+            ->assertJsonPath('data.cash_on_hand', 250_000)
+            ->assertJsonPath('data.cash_on_hand_as_of', '2026-01-15');
+
+        $this->assertDatabaseHas('tenant_settings', [
+            'tenant_id' => $tenant->getKey(),
+            'annual_revenue_target' => 1_000_000,
+            'cash_on_hand' => 250_000,
+        ]);
+    }
+
+    /** Leaving them blank is what keeps the Dashboard cards showing "not set" instead of a manufactured number. */
+    public function test_revenue_targets_and_cash_on_hand_stay_null_when_left_blank(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+
+        Sanctum::actingAs($admin);
+
+        $this->patchJson('/api/v1/settings', [
+            'name' => 'Vinarija Test',
+            'default_locale' => 'hr',
+            'timezone' => 'Europe/Zagreb',
+        ], $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonPath('data.annual_revenue_target', null)
+            ->assertJsonPath('data.channel_revenue_targets', null)
+            ->assertJsonPath('data.cash_on_hand', null);
+    }
+
     public function test_non_admin_cannot_update_settings(): void
     {
         $tenant = $this->createTenant();

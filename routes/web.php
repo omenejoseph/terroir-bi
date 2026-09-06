@@ -6,19 +6,24 @@ use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Auth\PasswordResetController;
 use App\Http\Controllers\Web\Auth\StopImpersonationController;
 use App\Http\Controllers\Web\Auth\TenantSwitchController;
+use App\Http\Controllers\Web\BottleAnalysisController;
 use App\Http\Controllers\Web\CustomerConsignmentController;
 use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\CustomerPriceController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InventoryController;
+use App\Http\Controllers\Web\InventoryMediaController;
 use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\LogController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\OrderController;
 use App\Http\Controllers\Web\PublicOrderController;
 use App\Http\Controllers\Web\SearchController;
+use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\ShortcutController;
 use App\Http\Controllers\Web\TeamMembersController;
+use App\Http\Controllers\Web\TierPriceController;
+use App\Http\Controllers\Web\UploadController;
 use App\Http\Controllers\Web\WelcomeController;
 use App\Http\Controllers\Web\WorkOrderController;
 use Illuminate\Support\Facades\Route;
@@ -102,10 +107,21 @@ Route::middleware('tenant.web')->group(function () {
     Route::patch('shortcuts', [ShortcutController::class, 'update'])->name('shortcuts.update');
     Route::delete('shortcuts/recent', [ShortcutController::class, 'clearRecent'])->name('shortcuts.clear-recent');
 
+    // General presigned upload URL (any member; the attach step is gated) —
+    // mirrors routes/api.php's own uploads/presign.
+    Route::post('uploads/presign', [UploadController::class, 'presign'])->name('uploads.presign');
+
     // A tenant's own audit trail — scoped to this tenant only, unlike the
     // platform-admin /admin/audit-logs view. See Web\LogController.
     Route::middleware('can:logs.view')->group(function () {
         Route::get('logs', [LogController::class, 'index'])->name('logs.index');
+    });
+
+    // Organisation settings (nav's "System · Settings") — the Inertia
+    // counterpart of Api\SettingsController's own settings.manage gate.
+    Route::middleware('can:settings.manage')->group(function () {
+        Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
+        Route::patch('settings', [SettingsController::class, 'update'])->name('settings.update');
     });
 
     Route::middleware('can:inventory.view')->group(function () {
@@ -130,8 +146,40 @@ Route::middleware('tenant.web')->group(function () {
             ->name('inventory.stock.adjust');
         Route::patch('inventory-bulk', [InventoryController::class, 'bulkUpdate'])->name('inventory.bulk-update');
         Route::post('inventory-check', [InventoryController::class, 'applyCheck'])->name('inventory.check.apply');
+
+        // Bulk Import — shared by the Inventory list, Analytics and Spend
+        // pages' own "Bulk Import" button.
+        Route::post('inventory/bulk-import', [InventoryController::class, 'bulkImport'])
+            ->name('inventory.bulk-import');
+        Route::get('inventory/bulk-import/template', [InventoryController::class, 'bulkImportTemplate'])
+            ->name('inventory.bulk-import.template');
         Route::post('inventory/{item}/duplicate', [InventoryController::class, 'duplicate'])
             ->name('inventory.duplicate');
+        Route::put('inventory/{item}/recipe', [InventoryController::class, 'updateRecipe'])
+            ->name('inventory.recipe.update');
+        Route::post('inventory/{item}/produce', [InventoryController::class, 'produce'])
+            ->name('inventory.produce');
+
+        // Images and Docs tabs — attach/delete only; InventoryController::show()
+        // sends the current lists alongside everything else on the page.
+        Route::post('inventory/{item}/images', [InventoryMediaController::class, 'attachImage'])
+            ->name('inventory.images.attach');
+        Route::delete('inventory/{item}/images/{image}', [InventoryMediaController::class, 'deleteImage'])
+            ->name('inventory.images.destroy');
+        Route::post('inventory/{item}/tech-sheets', [InventoryMediaController::class, 'attachTechSheet'])
+            ->name('inventory.tech-sheets.attach');
+        Route::delete('inventory/{item}/tech-sheets/{techSheet}', [InventoryMediaController::class, 'deleteTechSheet'])
+            ->name('inventory.tech-sheets.destroy');
+        Route::post('inventory/{item}/documents', [InventoryMediaController::class, 'attachDocument'])
+            ->name('inventory.documents.attach');
+        Route::delete('inventory/{item}/documents/{document}', [InventoryMediaController::class, 'deleteDocument'])
+            ->name('inventory.documents.destroy');
+
+        // Analysis tab.
+        Route::post('inventory/{item}/bottle-analyses', [BottleAnalysisController::class, 'store'])
+            ->name('inventory.bottle-analyses.store');
+        Route::delete('inventory/{item}/bottle-analyses/{analysis}', [BottleAnalysisController::class, 'destroy'])
+            ->name('inventory.bottle-analyses.destroy');
     });
 
     Route::delete('inventory/{item}', [InventoryController::class, 'destroy'])
@@ -147,9 +195,15 @@ Route::middleware('tenant.web')->group(function () {
     Route::middleware('can:orders.view')->group(function () {
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
+        // The overflow menu's "Print" — read-only, like export().
+        Route::get('orders/{order}/pdf', [OrderController::class, 'downloadPdf'])->name('orders.pdf');
         // Participation, not management: any order viewer may comment.
         Route::post('orders/{order}/comments', [OrderController::class, 'storeComment'])
             ->name('orders.comments.store');
+        // Reactions: same participation gate — a toggle only ever touches
+        // the caller's own reaction.
+        Route::post('order-comments/{orderNote}/reactions', [OrderController::class, 'toggleCommentReaction'])
+            ->name('orders.comments.reactions.toggle');
     });
 
     Route::middleware('can:orders.manage')->group(function () {
@@ -168,6 +222,11 @@ Route::middleware('tenant.web')->group(function () {
             ->name('order-items.destroy');
         Route::post('orders/{order}/duplicate', [OrderController::class, 'duplicate'])
             ->name('orders.duplicate');
+        // The overflow menu's "Mark paid" and "Resend".
+        Route::post('orders/{order}/mark-paid', [OrderController::class, 'markPaid'])
+            ->name('orders.mark-paid');
+        Route::post('orders/{order}/resend-confirmation', [OrderController::class, 'resendConfirmation'])
+            ->name('orders.confirmation.resend');
     });
 
     Route::delete('orders/{order}', [OrderController::class, 'destroy'])
@@ -186,6 +245,10 @@ Route::middleware('tenant.web')->group(function () {
         Route::get('customers-analytics', [CustomerController::class, 'analytics'])
             ->middleware('can:financials.view')
             ->name('customers.analytics');
+        // Static segment before the {customer} wildcard so it isn't treated
+        // as an id — mirrors routes/api.php's own reorder-radar placement.
+        // The Dashboard's Reorder pipeline card "View all" (Figma 208:5921).
+        Route::get('customers/reorder-radar', [CustomerController::class, 'reorderRadar'])->name('customers.reorder-radar');
         Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
     });
 
@@ -215,13 +278,22 @@ Route::middleware('tenant.web')->group(function () {
             ->name('customers.order-token.revoke');
     });
 
-    // A customer's own negotiated prices (Pricing tab · "Add price"). Gates
-    // mirror routes/api.php's pricing.manage on the same endpoint shape.
+    // A customer's own negotiated prices (Customer — Show · Pricing tab and
+    // Product Detail · Pricing tab both write through these, one row at a
+    // time by (customer, item)). Gates mirror routes/api.php's pricing.manage
+    // on the same endpoint shape.
     Route::middleware('can:pricing.manage')->group(function () {
         Route::patch('customers/{customer}/prices/{item}', [CustomerPriceController::class, 'update'])
             ->name('customers.prices.update');
         Route::delete('customers/{customer}/prices/{item}', [CustomerPriceController::class, 'destroy'])
             ->name('customers.prices.destroy');
+
+        // A pricing tier's absolute price for one item (Product Detail ·
+        // Pricing tab's other table).
+        Route::patch('inventory/{item}/tier-prices/{tier}', [TierPriceController::class, 'update'])
+            ->name('inventory.tier-prices.update');
+        Route::delete('inventory/{item}/tier-prices/{tier}', [TierPriceController::class, 'destroy'])
+            ->name('inventory.tier-prices.destroy');
     });
 
     // Customer-level consignment (Consignment tab): place new goods, and

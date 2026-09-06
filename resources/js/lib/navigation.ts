@@ -164,7 +164,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
         label: 'System',
         icon: Settings,
         items: [
-            { key: 'settings', label: 'Settings', href: null, icon: Settings, capability: 'settings.manage', module: 'settings' },
+            { key: 'settings', label: 'Settings', href: '/settings', icon: Settings, capability: 'settings.manage', module: 'settings' },
             { key: 'whatsapp-bot', label: 'WhatsApp Bot', href: null, icon: MessageCircle, capability: 'settings.manage', module: 'settings' },
             // Its own module (not 'settings') so a plan can include or
             // exclude the audit trail independently — see App\Enums\Module.

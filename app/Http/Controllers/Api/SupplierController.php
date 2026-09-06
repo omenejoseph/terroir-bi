@@ -84,10 +84,10 @@ class SupplierController extends Controller
         $data = ['price_items' => $supplier->priceItems()->count()];
 
         if ($request->user()?->can('finance.view')) {
-            $costs = Cost::query()->where('supplier_id', $supplier->getKey())->get(['total_amount']);
+            $costs = Cost::query()->where('supplier_id', $supplier->getKey());
             $currency = $tenant->current()?->settings()->first()?->default_currency;
             $currency ??= CurrencyRegistry::default()->code;
-            $total = (int) $costs->sum(fn (Cost $c) => $c->total_amount->getMinorAmount());
+            $total = (int) $costs->sum('total_amount');
 
             $data['cost_entries'] = $costs->count();
             $data['total_costs'] = Money::fromMinor($total, $currency)->jsonSerialize();

@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { Loader2, PackageCheck, Plus, Undo2 } from 'lucide-vue-next';
 
+import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import Combobox from '@/components/ui/Combobox.vue';
 import Input from '@/components/ui/Input.vue';
@@ -54,6 +55,7 @@ function reset(): void {
 
 const products = computed(() => props.consignment?.products ?? []);
 const placements = computed(() => props.consignment?.placements ?? []);
+const history = computed(() => props.consignment?.history ?? []);
 const hasRemaining = computed(() => products.value.some((p) => p.remaining > 0));
 /** Present only once financials.view has actually let the server compute them. */
 const showFinancials = computed(() => props.consignment?.total_sold_revenue !== null && props.consignment !== undefined);
@@ -301,9 +303,40 @@ function shortDate(iso: string | null): string {
                     </div>
                 </div>
 
-                <!-- @todo Per-report sale/return history. The sold quantities
-                     already surface in the Order History tab, so a separate
-                     consignment log here would just repeat it. -->
+                <!--
+                  Per-report sale/return history — one ConsignmentReport row,
+                  each of these individual sale/return events is not an Order
+                  of its own, so it never appears in the Order History tab
+                  the way the placement itself does.
+                -->
+                <div v-if="history.length > 0" class="border-t border-border pt-3">
+                    <p class="mb-2 text-2xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        {{ t('History') }}
+                    </p>
+                    <ul class="flex flex-col divide-y divide-border">
+                        <li v-for="entry in history" :key="entry.id" class="flex flex-col gap-1 py-2.5 first:pt-0 last:pb-0">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="flex items-center gap-2 text-xs">
+                                    <Badge :variant="entry.kind === 'SALE' ? 'success' : 'outline'">
+                                        {{ entry.kind === 'SALE' ? t('Sale') : t('Return') }}
+                                    </Badge>
+                                    <span v-if="entry.order_number" class="text-muted-foreground">#{{ entry.order_number }}</span>
+                                </span>
+                                <span class="text-2xs text-muted-foreground">{{ shortDate(entry.date) }}</span>
+                            </div>
+                            <ul class="text-xs text-muted-foreground">
+                                <li v-for="(item, i) in entry.items" :key="i" class="flex items-baseline justify-between gap-3">
+                                    <span class="min-w-0 truncate">{{ item.name }} · {{ item.quantity }} {{ t('btl') }}</span>
+                                    <span v-if="item.total" class="shrink-0 tabular-nums">{{ money(item.total) }}</span>
+                                </li>
+                            </ul>
+                            <p v-if="entry.note" class="text-2xs text-muted-foreground italic">{{ entry.note }}</p>
+                            <p v-if="entry.created_by_name" class="text-2xs text-muted-foreground">
+                                {{ t('by :name', { name: entry.created_by_name }) }}
+                            </p>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>

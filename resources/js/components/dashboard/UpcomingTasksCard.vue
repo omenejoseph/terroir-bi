@@ -16,8 +16,10 @@ import type { UpcomingTasks } from '@/types/dashboard';
  * about the card's shape, not about ticking work off from the dashboard —
  * that stays the Work Orders board's job.
  *
- * @todo "View all" would go to /work-orders; not wired because there is no
- * "due this week" filter there yet for it to land on meaningfully.
+ * "View all" goes to the Work Orders board's own "Due soon" filter
+ * (`due_soon=1`, Figma 267:1781) — the closest real filter to this card's
+ * "this week" framing (due within 7 days, including overdue, vs. this
+ * card's due-by-end-of-calendar-week), not an exact match invented to be one.
  */
 defineProps<{ tasks: UpcomingTasks }>();
 
@@ -39,9 +41,14 @@ function dueLabel(dueDate: string | null, overdue: boolean): string {
 
 <template>
     <div class="flex h-full flex-col border border-border bg-card p-4">
-        <div class="flex items-center gap-1.5 text-sm font-semibold">
-            <TicketCheck class="size-4 text-muted-foreground" :stroke-width="1.5" />
-            {{ t('Upcoming tasks') }}
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-1.5 text-sm font-semibold">
+                <TicketCheck class="size-4 text-muted-foreground" :stroke-width="1.5" />
+                {{ t('Upcoming tasks') }}
+            </div>
+            <a href="/work-orders?due_soon=1" class="shrink-0 text-xs text-muted-foreground hover:text-foreground">
+                {{ t('View all') }}
+            </a>
         </div>
 
         <div class="mt-3 flex items-baseline gap-2">

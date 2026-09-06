@@ -15,11 +15,13 @@ use App\Models\Inflow;
 use App\Models\InventoryItem;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\TenantSetting;
 use App\Models\WorkOrder;
 use App\Queries\InventoryAnalyticsQuery;
 use App\Queries\ReorderRadarQuery;
 use App\Support\Money\CurrencyRegistry;
 use App\Support\Money\Money;
+use App\Support\SqlDate;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -94,13 +96,21 @@ class DashboardSummary
             }
         }
 
+        // Computed once and shared: revenueByChannel() and keyRatios() both
+        // want this window's channel totals, and keyRatios()/netCashFlow()
+        // both want this window's cost breakdown. Sharing the result (rather
+        // than each re-running the same aggregate queries) means the cards
+        // built from them cannot independently drift apart.
+        $channelTotals = $this->channelTotals($since, $until);
+        $costs = $this->costBreakdown($since, $until);
+
         return [
             'range' => $token,
             'currency' => $this->currency(),
             'revenue_summary' => $this->revenueSummary(),
-            'revenue_by_channel' => $this->revenueByChannel($since, $until),
+            'revenue_by_channel' => $this->revenueByChannel($since, $until, $channelTotals),
             'revenue_trend' => $this->revenueTrend(),
-            'key_ratios' => $this->keyRatios($orders, $since, $until),
+            'key_ratios' => $this->keyRatios($orders, $since, $until, $channelTotals, $costs),
             'stats' => [
                 'total_orders' => $orders->count(),
                 'customers' => Customer::query()->where('is_active', true)
@@ -119,7 +129,9 @@ class DashboardSummary
             'recent_orders' => $this->recentOrders(),
             'reorder_pipeline' => $this->reorderPipeline(),
             'upcoming_tasks' => $this->upcomingTasks(),
-            'net_cash_flow' => $this->netCashFlow($since, $until),
+            'net_cash_flow' => $this->netCashFlow($since, $until, $costs),
+            'revenue_vs_target' => $this->revenueVsTarget(),
+            'runway' => $this->runway(),
         ];
     }
 
@@ -160,12 +172,16 @@ class DashboardSummary
      * the preceding equal-length window so the UI can show a trend. Money is
      * integer minor units; `previous` is null when there's no comparable window.
      *
+     * `$current` is this window's channelTotals(), computed once in build()
+     * and shared with keyRatios() rather than each re-querying it — the
+     * "previous" window below is genuinely different data, so it still gets
+     * its own call.
+     *
+     * @param  array{wholesale: int, retail: int, agency: int, shipshop: int, other: int, total: int}  $current
      * @return array<string, array{current: int, previous: int|null}>
      */
-    private function revenueByChannel(?Carbon $since, Carbon $until): array
+    private function revenueByChannel(?Carbon $since, Carbon $until, array $current): array
     {
-        $current = $this->channelTotals($since, $until);
-
         // Previous comparable window: same length immediately before `since`.
         $previous = null;
         if ($since !== null) {
@@ -185,29 +201,35 @@ class DashboardSummary
      * Flat channel totals (minor units) for one window: non-consignment orders,
      * excluding stats-excluded customers, bucketed by the customer's channel.
      *
+     * Grouped in SQL, not PHP: CustomerType::channelKey() is exactly
+     * "lowercase the enum value" for every real channel, so LOWER(...) plus
+     * a join reproduces it precisely — and unlike month/day bucketing,
+     * grouping by a plain column value has no driver-portability concern at
+     * all (LOWER()/CASE are standard SQL everywhere this app runs).
+     *
      * @return array{wholesale: int, retail: int, agency: int, shipshop: int, other: int, total: int}
      */
     private function channelTotals(?Carbon $since, Carbon $until): array
     {
-        /** @var Collection<int, Order> $orders */
-        $orders = Order::query()
-            ->where('is_consignment', false)
-            ->whereNotIn('customer_id', $this->excludedCustomers())
-            ->when($since !== null, fn (Builder $q) => $q->where('created_at', '>=', $since))
-            ->where('created_at', '<=', $until)
-            ->get(['total_amount', 'customer_id']);
-
-        // pluck() bypasses model casts, so values come back as raw strings.
-        $types = Customer::query()
-            ->whereIn('id', $orders->pluck('customer_id')->filter()->unique()->all())
-            ->pluck('customer_type', 'id');
+        $rows = Order::query()
+            ->join('customers', 'customers.id', '=', 'orders.customer_id')
+            ->where('orders.is_consignment', false)
+            ->whereNotIn('orders.customer_id', $this->excludedCustomers())
+            ->when($since !== null, fn (Builder $q) => $q->where('orders.created_at', '>=', $since))
+            ->where('orders.created_at', '<=', $until)
+            ->selectRaw(
+                "CASE WHEN LOWER(customers.customer_type) IN ('wholesale', 'retail', 'agency', 'shipshop')
+                      THEN LOWER(customers.customer_type)
+                      ELSE 'other'
+                 END as channel_key,
+                 SUM(orders.total_amount) as channel_total"
+            )
+            ->groupBy('channel_key')
+            ->pluck('channel_total', 'channel_key');
 
         $channels = ['wholesale' => 0, 'retail' => 0, 'agency' => 0, 'shipshop' => 0, 'other' => 0];
-        foreach ($orders as $order) {
-            $raw = $types->get($order->customer_id);
-            $type = $raw instanceof CustomerType ? $raw : (is_string($raw) ? CustomerType::tryFrom($raw) : null);
-            $key = $type?->channelKey() ?? 'other';
-            $channels[array_key_exists($key, $channels) ? $key : 'other'] += $order->total_amount->getMinorAmount();
+        foreach ($rows as $key => $total) {
+            $channels[array_key_exists($key, $channels) ? $key : 'other'] += (int) $total;
         }
 
         return [
@@ -221,32 +243,55 @@ class DashboardSummary
     }
 
     /**
+     * Costs for one window, excluding stats-excluded suppliers — every
+     * figure keyRatios() and netCashFlow() need from Cost, computed once in
+     * build() and shared between them instead of each independently
+     * re-running the same four aggregate queries over the same window.
+     *
+     * @return array{total: int, salary: int, marketing: int, operations: int, headcount: int}
+     */
+    private function costBreakdown(?Carbon $since, Carbon $until): array
+    {
+        $costBase = fn (): Builder => Cost::query()
+            ->when($since !== null, fn (Builder $q) => $q->where('date', '>=', $since))
+            ->where('date', '<=', $until)
+            ->whereDoesntHave('supplier', fn (Builder $q) => $q->where('exclude_from_stats', true));
+
+        return [
+            'total' => (int) $costBase()->sum('total_amount'),
+            'salary' => (int) $costBase()->whereRaw('LOWER(category) = ?', [CostCategory::Salary->sqlLower()])->sum('total_amount'),
+            'marketing' => (int) $costBase()->whereRaw('LOWER(category) = ?', [CostCategory::Marketing->sqlLower()])->sum('total_amount'),
+            'operations' => (int) $costBase()->whereRaw('LOWER(category) = ?', [CostCategory::Operations->sqlLower()])->sum('total_amount'),
+            'headcount' => (int) $costBase()->whereRaw('LOWER(category) = ?', [CostCategory::Salary->sqlLower()])->distinct()->count('description'),
+        ];
+    }
+
+    /**
      * Headline financial ratios for the selected window, mirroring the prototype's
      * getKeyRatios. Denominator is the channel total. Each ratio is null when the
      * underlying input is missing (e.g. no payroll imported) so the tile renders
      * "—" rather than a misleading green 0%. Money values are integer minor units.
      *
+     * `$channels` and `$costs` are computed once in build() and shared with
+     * revenueByChannel()/netCashFlow() — see costBreakdown()'s own docblock.
+     *
      * @param  Collection<int, Order>  $orders  windowed, non-consignment, non-excluded
+     * @param  array{wholesale: int, retail: int, agency: int, shipshop: int, other: int, total: int}  $channels
+     * @param  array{total: int, salary: int, marketing: int, operations: int, headcount: int}  $costs
      * @return array<string, mixed>
      */
-    private function keyRatios(Collection $orders, ?Carbon $since, Carbon $until): array
+    private function keyRatios(Collection $orders, ?Carbon $since, Carbon $until, array $channels, array $costs): array
     {
         $currency = $this->currency();
-        $channels = $this->channelTotals($since, $until);
         $totalRevenue = $channels['total'];
         $orderCount = $orders->count();
         // DTC = retail (the rebuild has no separate hospitality channel).
         $dtc = $channels['retail'];
 
-        // Costs in the window, excluding stats-excluded suppliers.
-        $costBase = fn (): Builder => Cost::query()
-            ->when($since !== null, fn (Builder $q) => $q->where('date', '>=', $since))
-            ->where('date', '<=', $until)
-            ->whereDoesntHave('supplier', fn (Builder $q) => $q->where('exclude_from_stats', true));
-        $totalCosts = (int) $costBase()->sum('total_amount');
-        $salary = (int) $costBase()->whereRaw('LOWER(category) = ?', [CostCategory::Salary->sqlLower()])->sum('total_amount');
-        $marketing = (int) $costBase()->whereRaw('LOWER(category) = ?', [CostCategory::Marketing->sqlLower()])->sum('total_amount');
-        $headcount = (int) $costBase()->whereRaw('LOWER(category) = ?', [CostCategory::Salary->sqlLower()])->distinct()->count('description');
+        $totalCosts = $costs['total'];
+        $salary = $costs['salary'];
+        $marketing = $costs['marketing'];
+        $headcount = $costs['headcount'];
 
         $cogs = $this->shippedCogs($since, $until);
         $bottlesSold = $this->bottlesSold($since, $until);
@@ -283,29 +328,37 @@ class DashboardSummary
     /** COGS of goods shipped in the window: snapshot cost × qty, plus freight we pay. */
     private function shippedCogs(?Carbon $since, Carbon $until): int
     {
-        /** @var Collection<int, Order> $shipped */
-        $shipped = Order::query()
+        // Both halves summed in SQL rather than hydrating every shipped
+        // order plus all its line items just to multiply and add in PHP.
+        $shippedOrders = fn (): Builder => Order::query()
             ->where('status', OrderStatus::Shipped->value)
             ->where('is_consignment', false)
             ->whereNotIn('customer_id', $this->excludedCustomers())
             ->when($since !== null, fn (Builder $q) => $q->where('created_at', '>=', $since))
-            ->where('created_at', '<=', $until)
-            ->with('items')
-            ->get();
+            ->where('created_at', '<=', $until);
 
-        $cogs = 0;
-        foreach ($shipped as $order) {
-            foreach ($order->items as $item) {
-                if ($item->cost_per_unit !== null) {
-                    $cogs += $item->cost_per_unit->getMinorAmount() * $item->quantity;
-                }
-            }
-            if ($order->shipping_paid_by_us && $order->shipping_cost !== null) {
-                $cogs += $order->shipping_cost->getMinorAmount();
-            }
-        }
+        // Aliased as something other than "total" deliberately: OrderItem
+        // itself has a real `total` column cast through MoneyCast, and
+        // value('total') hydrates a model — Eloquent applies a cast by
+        // attribute name alone, so reusing that name would wrap this raw
+        // SUM in a Money object instead of returning the int it says it does.
+        $lineCogs = (int) (OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.status', OrderStatus::Shipped->value)
+            ->where('orders.is_consignment', false)
+            ->whereNotIn('orders.customer_id', $this->excludedCustomers())
+            ->when($since !== null, fn (Builder $q) => $q->where('orders.created_at', '>=', $since))
+            ->where('orders.created_at', '<=', $until)
+            ->whereNotNull('order_items.cost_per_unit')
+            ->selectRaw('SUM(order_items.cost_per_unit * order_items.quantity) as line_cogs_minor')
+            ->value('line_cogs_minor') ?? 0);
 
-        return $cogs;
+        $shippingCogs = (int) $shippedOrders()
+            ->where('shipping_paid_by_us', true)
+            ->whereNotNull('shipping_cost')
+            ->sum('shipping_cost');
+
+        return $lineCogs + $shippingCogs;
     }
 
     /** Bottles sold in the window (catalog lines only; cases → bottles). */
@@ -567,27 +620,31 @@ class DashboardSummary
         $now = Carbon::now();
         $from = $now->copy()->subMonthsNoOverflow(5)->startOfMonth();
 
-        /** @var Collection<int, Order> $orders */
-        $orders = Order::query()
+        // Summed per calendar month in SQL — SqlDate::month() branches by
+        // driver (sqlite locally/CI's default test run, DATE_FORMAT on
+        // MySQL, both genuinely covered by CI) — instead of pulling every
+        // order in the trailing 6 months into PHP just to add them up.
+        $monthBucket = SqlDate::month('created_at');
+        $rows = Order::query()
             ->where('is_consignment', false)
             ->whereNotIn('customer_id', $this->excludedCustomers())
             ->where('created_at', '>=', $from)
-            ->get(['created_at', 'total_amount']);
+            ->select(DB::raw("{$monthBucket} as bucket_month, SUM(total_amount) as bucket_total"))
+            ->groupBy('bucket_month')
+            ->get()
+            ->keyBy('bucket_month');
 
         $months = [];
         for ($i = 5; $i >= 0; $i--) {
             $month = $now->copy()->subMonthsNoOverflow($i);
-            $months[$month->format('Y-m')] = ['label' => $month->format('M'), 'value' => 0];
+            $key = $month->format('Y-m');
+            $months[] = [
+                'label' => $month->format('M'),
+                'value' => (int) ($rows->get($key)->bucket_total ?? 0),
+            ];
         }
 
-        foreach ($orders as $order) {
-            $key = $order->created_at?->format('Y-m');
-            if ($key !== null && array_key_exists($key, $months)) {
-                $months[$key]['value'] += $order->total_amount->getMinorAmount();
-            }
-        }
-
-        return array_values($months);
+        return $months;
     }
 
     /**
@@ -666,13 +723,15 @@ class DashboardSummary
     /**
      * The Dashboard's "Net cash flow" card (Figma `208:5852`): cash actually
      * received minus cash actually spent in the window, plus what it went to.
-     * Uses the same cost base as `keyRatios()` (spend by its own `date`,
-     * excluding stats-excluded suppliers) so the two cards cannot disagree
-     * about what counts as spend in this window.
+     * `$costs` is the same breakdown keyRatios() uses (see costBreakdown()),
+     * computed once in build() and shared here — the two cards cannot
+     * disagree about what counts as spend in this window, because there is
+     * only one query for it, not two that happen to agree today.
      *
+     * @param  array{total: int, salary: int, marketing: int, operations: int, headcount: int}  $costs
      * @return array{net: array<string, mixed>, by_category: list<array<string, mixed>>}
      */
-    private function netCashFlow(?Carbon $since, Carbon $until): array
+    private function netCashFlow(?Carbon $since, Carbon $until, array $costs): array
     {
         $currency = $this->currency();
         $excluded = $this->excludedCustomers();
@@ -685,12 +744,7 @@ class DashboardSummary
             ->get(['amount', 'is_credit_note'])
             ->sum(fn (Inflow $i) => $i->is_credit_note ? -$i->amount->getMinorAmount() : $i->amount->getMinorAmount());
 
-        $costBase = fn (): Builder => Cost::query()
-            ->when($since !== null, fn (Builder $q) => $q->where('date', '>=', $since))
-            ->where('date', '<=', $until)
-            ->whereDoesntHave('supplier', fn (Builder $q) => $q->where('exclude_from_stats', true));
-
-        $cashOut = (int) $costBase()->sum('total_amount');
+        $cashOut = $costs['total'];
 
         // Salary and Marketing are broken out because keyRatios() already does
         // (they back the ratio grid next to this card); Operations is the
@@ -698,9 +752,9 @@ class DashboardSummary
         // tenant's own free-text category — falls into Other rather than
         // growing an ever-longer legend.
         $named = [
-            'Salary' => (int) $costBase()->whereRaw('LOWER(category) = ?', [CostCategory::Salary->sqlLower()])->sum('total_amount'),
-            'Marketing' => (int) $costBase()->whereRaw('LOWER(category) = ?', [CostCategory::Marketing->sqlLower()])->sum('total_amount'),
-            'Operations' => (int) $costBase()->whereRaw('LOWER(category) = ?', [CostCategory::Operations->sqlLower()])->sum('total_amount'),
+            'Salary' => $costs['salary'],
+            'Marketing' => $costs['marketing'],
+            'Operations' => $costs['operations'],
         ];
         $named['Other'] = max(0, $cashOut - array_sum($named));
 
@@ -715,6 +769,131 @@ class DashboardSummary
                 array_keys($named),
                 array_values($named),
             ),
+        ];
+    }
+
+    /**
+     * "Revenue vs. target" (Figma 208:5577 / 286:781), folding in "Target by
+     * channel". Both read App\Models\TenantSetting — annual_revenue_target
+     * and channel_revenue_targets — set via the Settings page. Absent either,
+     * there is nothing to compare against: `annual_target` is null and
+     * `channels` lists only the channels a target was actually set for,
+     * rather than a full row of zeroes.
+     *
+     * YTD figures reuse revenueBetween()/channelTotals(), the same helpers
+     * revenue_summary.ytd and revenue_by_channel already call, so this card
+     * can never disagree with the ones beside it about what YTD revenue is.
+     *
+     * @return array{
+     *     annual_target: array<string, mixed>|null,
+     *     ytd_revenue: array<string, mixed>,
+     *     progress_pct: float|null,
+     *     channels: list<array{key: string, label: string, target: array<string, mixed>, current: array<string, mixed>, pace_pct: float|null}>,
+     * }
+     */
+    private function revenueVsTarget(): array
+    {
+        $settings = $this->tenant->current()?->settings;
+        $currency = $this->currency();
+        $now = Carbon::now();
+
+        $ytdRevenue = $this->revenueBetween($now->copy()->startOfYear(), $now);
+        $annualTarget = $settings instanceof TenantSetting ? $settings->annual_revenue_target : null;
+
+        // How far into the year "on pace" would have reached by now — the
+        // same elapsed-fraction CustomerOrderAnalyticsQuery's annual
+        // projection uses.
+        $daysInYear = $now->isLeapYear() ? 366 : 365;
+        $fractionElapsed = $now->dayOfYear / $daysInYear;
+
+        $channelTargets = $settings instanceof TenantSetting ? ($settings->channel_revenue_targets ?? []) : [];
+        $currentByChannel = $this->channelTotals($now->copy()->startOfYear(), $now);
+
+        $channels = [];
+        foreach (['wholesale', 'retail', 'agency', 'shipshop'] as $key) {
+            $target = $channelTargets[$key] ?? null;
+            if (! is_int($target) || $target <= 0) {
+                continue;
+            }
+
+            $current = $currentByChannel[$key];
+            $proratedTarget = $target * $fractionElapsed;
+
+            $channels[] = [
+                'key' => $key,
+                'label' => ucfirst($key),
+                'target' => Money::fromMinor($target, $currency)->jsonSerialize(),
+                'current' => Money::fromMinor($current, $currency)->jsonSerialize(),
+                'pace_pct' => $proratedTarget > 0 ? round($current / $proratedTarget * 100, 1) : null,
+            ];
+        }
+
+        return [
+            'annual_target' => is_int($annualTarget) && $annualTarget > 0
+                ? Money::fromMinor($annualTarget, $currency)->jsonSerialize()
+                : null,
+            'ytd_revenue' => Money::fromMinor($ytdRevenue, $currency)->jsonSerialize(),
+            'progress_pct' => is_int($annualTarget) && $annualTarget > 0
+                ? round($ytdRevenue / $annualTarget * 100, 1)
+                : null,
+            'channels' => $channels,
+        ];
+    }
+
+    /**
+     * "Runway" (Figma 208:5808): months of cash left at the current burn
+     * rate. Needs App\Models\TenantSetting::$cash_on_hand (set via the
+     * Settings page) — absent it, there is nothing to divide by, so this
+     * returns null rather than a card with no headline number in it.
+     *
+     * The burn rate itself is real either way: trailing 3 calendar months'
+     * average (cash out − cash in), independent of the dashboard's own
+     * period tab — the same "always trailing, never the selected window"
+     * choice revenueTrend() makes. A profitable trailing quarter has no
+     * burn, so `months` is null rather than a meaningless negative or
+     * infinite figure.
+     *
+     * @return array{
+     *     cash_on_hand: array<string, mixed>,
+     *     cash_on_hand_as_of: string|null,
+     *     monthly_burn: array<string, mixed>|null,
+     *     months: float|null,
+     * }|null
+     */
+    private function runway(): ?array
+    {
+        $settings = $this->tenant->current()?->settings;
+        $cashOnHand = $settings?->cash_on_hand;
+
+        if (! is_int($cashOnHand)) {
+            return null;
+        }
+
+        $currency = $this->currency();
+        $excluded = $this->excludedCustomers();
+        $now = Carbon::now();
+        $from = $now->copy()->subMonthsNoOverflow(2)->startOfMonth();
+        $monthsElapsed = max(1.0, $from->diffInDays($now) / 30.44);
+
+        $cashIn = (int) Inflow::query()
+            ->where('status', InflowStatus::Received->value)
+            ->where('date', '>=', $from)
+            ->where(fn (Builder $q) => $q->whereNull('customer_id')->orWhereNotIn('customer_id', $excluded))
+            ->get(['amount', 'is_credit_note'])
+            ->sum(fn (Inflow $i) => $i->is_credit_note ? -$i->amount->getMinorAmount() : $i->amount->getMinorAmount());
+
+        $cashOut = (int) Cost::query()
+            ->where('date', '>=', $from)
+            ->whereDoesntHave('supplier', fn (Builder $q) => $q->where('exclude_from_stats', true))
+            ->sum('total_amount');
+
+        $monthlyBurn = (int) round(max(0, $cashOut - $cashIn) / $monthsElapsed);
+
+        return [
+            'cash_on_hand' => Money::fromMinor($cashOnHand, $currency)->jsonSerialize(),
+            'cash_on_hand_as_of' => $settings->cash_on_hand_as_of?->toDateString(),
+            'monthly_burn' => $monthlyBurn > 0 ? Money::fromMinor($monthlyBurn, $currency)->jsonSerialize() : null,
+            'months' => $monthlyBurn > 0 ? round($cashOnHand / $monthlyBurn, 1) : null,
         ];
     }
 
