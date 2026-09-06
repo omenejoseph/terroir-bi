@@ -303,7 +303,8 @@ class AdminResourcesTest extends TestCase
             ->delete("/admin/tenants/{$tenant->getKey()}/members/{$membership->getKey()}")
             ->assertRedirect();
 
-        $this->assertDatabaseMissing('memberships', ['id' => $membership->getKey()]);
+        // Soft-deleted, not gone — recoverable via RestoreMemberAction.
+        $this->assertSoftDeleted('memberships', ['id' => $membership->getKey()]);
     }
 
     public function test_admin_pages_render(): void

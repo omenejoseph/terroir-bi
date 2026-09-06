@@ -13,6 +13,8 @@ use App\Http\Requests\Invitations\AcceptInvitationRequest;
 use App\Http\Requests\Invitations\InviteMemberRequest;
 use App\Models\Invitation;
 use App\Models\User;
+use App\Services\Auth\SessionBuilder;
+use App\Services\Auth\TokenIssuer;
 use Illuminate\Http\JsonResponse;
 
 class InvitationController extends Controller
@@ -51,9 +53,13 @@ class InvitationController extends Controller
         return response()->json(status: 204);
     }
 
-    public function accept(AcceptInvitationRequest $request, AcceptInvitationAction $action): JsonResponse
-    {
-        $session = $action->execute(
+    public function accept(
+        AcceptInvitationRequest $request,
+        AcceptInvitationAction $action,
+        TokenIssuer $tokens,
+        SessionBuilder $sessions,
+    ): JsonResponse {
+        $result = $action->execute(
             $request->string('token')->value(),
             [
                 'first_name' => $request->has('first_name') ? $request->string('first_name')->value() : null,
@@ -62,6 +68,9 @@ class InvitationController extends Controller
             ],
             $request->has('password') ? $request->string('password')->value() : null,
         );
+
+        $token = $tokens->issue($result['user'], $result['tenant']);
+        $session = $sessions->build($result['user'], $result['tenant'], $token);
 
         return response()->json(['data' => $session->toArray()]);
     }

@@ -89,10 +89,11 @@ class InvitationTest extends TestCase
         $this->assertDatabaseHas('memberships', ['tenant_id' => $tenant->getKey()]);
     }
 
-    public function test_an_existing_user_can_accept_an_invitation(): void
+    public function test_an_existing_user_can_accept_an_invitation_with_their_own_password(): void
     {
         $tenant = $this->createTenant();
         $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        // UserFactory's default password — see database/factories/UserFactory.php.
         $existing = $this->createUser(['email' => 'existing@example.com']);
 
         Sanctum::actingAs($admin);
@@ -101,10 +102,39 @@ class InvitationTest extends TestCase
             'roles' => ['TEAM'],
         ], $this->tenantHeader($tenant))->json('data.accept_token');
 
-        $this->postJson('/api/v1/auth/invitations/accept', ['token' => $token])
+        $this->postJson('/api/v1/auth/invitations/accept', ['token' => $token, 'password' => 'password'])
             ->assertOk()
             ->assertJsonPath('data.user.id', $existing->getKey())
             ->assertJsonPath('data.roles', ['TEAM']);
+    }
+
+    /**
+     * The token proves someone was invited, not that whoever holds the link
+     * IS the existing account — accepting on their behalf requires their
+     * actual password, same as any login.
+     */
+    public function test_an_existing_user_cannot_accept_without_their_own_password(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->createUser(['email' => 'existing@example.com']);
+
+        Sanctum::actingAs($admin);
+        $token = $this->postJson('/api/v1/invitations', [
+            'email' => 'existing@example.com',
+            'roles' => ['TEAM'],
+        ], $this->tenantHeader($tenant))->json('data.accept_token');
+
+        $this->postJson('/api/v1/auth/invitations/accept', ['token' => $token, 'password' => 'wrong-password'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('password');
+
+        $this->postJson('/api/v1/auth/invitations/accept', ['token' => $token])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('password');
+
+        // Only $admin's own membership — neither rejected attempt went through.
+        $this->assertDatabaseCount('memberships', 1);
     }
 
     public function test_invalid_token_is_rejected(): void

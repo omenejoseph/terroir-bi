@@ -153,7 +153,9 @@ export const NAV_CATEGORIES: NavCategory[] = [
         label: 'Team',
         icon: Users,
         items: [
-            { key: 'employees', label: 'Employees', href: null, icon: Users, capability: 'members.view', module: 'team' },
+            // 'employees' itself moved into System, next to Settings — see
+            // below. What's left here (schedules/my-team/surveys/my-hours)
+            // is unbuilt HR-ish work this task didn't touch.
             { key: 'schedules', label: 'Schedules', href: null, icon: CalendarDays, module: 'team' },
             { key: 'my-team', label: 'My Team', href: null, icon: UserRound, module: 'team' },
             { key: 'surveys', label: 'Surveys', href: null, icon: ClipboardList, module: 'team' },
@@ -165,6 +167,13 @@ export const NAV_CATEGORIES: NavCategory[] = [
         icon: Settings,
         items: [
             { key: 'settings', label: 'Settings', href: '/settings', icon: Settings, capability: 'settings.manage', module: 'settings' },
+            // Was "Employees" under the "Team" category (key kept the same,
+            // so any existing Manage Shortcuts pin still resolves) — moved
+            // here per the Team page's own placement, see Web\TeamController.
+            // Gated on the 'settings' module (not 'team'): the page lives
+            // under Settings, so its visibility follows Settings' own plan
+            // inclusion rather than requiring a separate Team module too.
+            { key: 'employees', label: 'Team', href: '/settings/team', icon: Users, capability: 'members.view', module: 'settings' },
             { key: 'whatsapp-bot', label: 'WhatsApp Bot', href: null, icon: MessageCircle, capability: 'settings.manage', module: 'settings' },
             // Its own module (not 'settings') so a plan can include or
             // exclude the audit trail independently — see App\Enums\Module.

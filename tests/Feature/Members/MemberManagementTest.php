@@ -55,7 +55,8 @@ class MemberManagementTest extends TestCase
         $this->deleteJson("/api/v1/members/{$member->getKey()}", [], $this->tenantHeader($tenant))
             ->assertNoContent();
 
-        $this->assertDatabaseMissing('memberships', [
+        // Soft-deleted, not gone — recoverable via RestoreMemberAction.
+        $this->assertSoftDeleted('memberships', [
             'tenant_id' => $tenant->getKey(),
             'user_id' => $member->getKey(),
         ]);

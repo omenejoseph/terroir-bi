@@ -41,6 +41,8 @@ export interface Auth {
 export interface Flash {
     success: string | null;
     error: string | null;
+    /** The Team page's own "Invite" action — a one-time link, never re-shown after this request. */
+    inviteLink: string | null;
 }
 
 /** Org-wide settings (App\DataTransferObjects\OrganizationSettingsData). */

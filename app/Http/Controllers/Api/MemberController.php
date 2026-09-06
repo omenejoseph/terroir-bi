@@ -46,7 +46,10 @@ class MemberController extends Controller
             ? MembershipStatus::from($request->string('status')->value())
             : null;
 
-        $data = $action->execute($membership, $roles, $status);
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 401);
+
+        $data = $action->execute($membership, $roles, $status, $actor);
 
         return response()->json(['data' => $data->toArray()]);
     }

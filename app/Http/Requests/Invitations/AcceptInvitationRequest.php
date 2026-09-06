@@ -23,7 +23,10 @@ class AcceptInvitationRequest extends FormRequest
             'first_name' => ['sometimes', 'string', 'max:255'],
             'middle_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'last_name' => ['sometimes', 'string', 'max:255'],
-            'password' => ['sometimes', 'string', 'min:8'],
+            // Required either way now: a new account's chosen password, or an
+            // existing account's own password to confirm it's really them —
+            // see AcceptInvitationAction.
+            'password' => ['required', 'string', 'min:8'],
         ];
     }
 }

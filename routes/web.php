@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Web\Auth\AcceptInvitationController;
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Auth\PasswordResetController;
 use App\Http\Controllers\Web\Auth\StopImpersonationController;
@@ -21,6 +22,8 @@ use App\Http\Controllers\Web\PublicOrderController;
 use App\Http\Controllers\Web\SearchController;
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\ShortcutController;
+use App\Http\Controllers\Web\TeamController;
+use App\Http\Controllers\Web\TeamInvitationController;
 use App\Http\Controllers\Web\TeamMembersController;
 use App\Http\Controllers\Web\TierPriceController;
 use App\Http\Controllers\Web\UploadController;
@@ -67,6 +70,11 @@ Route::middleware('guest')->group(function () {
     // (UserController::sendPasswordReset) — see PasswordResetController.
     Route::get('reset-password/{token}', [PasswordResetController::class, 'create'])->name('password.reset');
     Route::post('reset-password', [PasswordResetController::class, 'store'])->name('password.update');
+
+    // The Team page's "Invite" link (Web\TeamInvitationController generates
+    // it, no email sent) — see AcceptInvitationController.
+    Route::get('invitations/{token}', [AcceptInvitationController::class, 'show'])->name('invitations.show');
+    Route::post('invitations/accept', [AcceptInvitationController::class, 'store'])->name('invitations.accept');
 });
 
 // Authenticated, but no active tenant required: a user whose current tenant
@@ -122,6 +130,25 @@ Route::middleware('tenant.web')->group(function () {
     Route::middleware('can:settings.manage')->group(function () {
         Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::patch('settings', [SettingsController::class, 'update'])->name('settings.update');
+    });
+
+    // Team (nav's "System · Team") — self-service member management,
+    // grouped under Settings rather than a "Team" nav category of its own.
+    // Gates mirror routes/api.php's own members/invitations gates exactly.
+    Route::middleware('can:members.view')->group(function () {
+        Route::get('settings/team', [TeamController::class, 'index'])->name('team.index');
+    });
+    Route::middleware('can:members.manage')->group(function () {
+        Route::patch('settings/team/{membership}', [TeamController::class, 'update'])->name('team.update');
+        Route::patch('settings/team/{membership}/password', [TeamController::class, 'setPassword'])->name('team.set-password');
+        Route::delete('settings/team/{membership}', [TeamController::class, 'destroy'])->name('team.destroy');
+        Route::post('settings/team/{membership}/restore', [TeamController::class, 'restore'])
+            ->withTrashed()
+            ->name('team.restore');
+    });
+    Route::middleware('can:invitations.manage')->group(function () {
+        Route::post('settings/team/invitations', [TeamInvitationController::class, 'store'])->name('team.invitations.store');
+        Route::delete('settings/team/invitations/{invitation}', [TeamInvitationController::class, 'destroy'])->name('team.invitations.destroy');
     });
 
     Route::middleware('can:inventory.view')->group(function () {
