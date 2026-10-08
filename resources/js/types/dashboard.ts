@@ -25,18 +25,22 @@ export interface OrderStatusCount {
     value: number;
 }
 
+/** Every figure is null when the member's role may not see it (the server does not send it at all). */
 export interface DashboardStats {
-    total_orders: number;
-    customers: number;
+    total_orders: number | null;
+    customers: number | null;
     /** Minor units. */
-    revenue: number;
-    low_stock: number;
+    revenue: number | null;
+    low_stock: number | null;
     /** Minor units. */
-    outstanding_ar: number;
-    tasks_overdue: number;
+    outstanding_ar: number | null;
+    tasks_overdue: number | null;
     /** Current state, not scoped to the selected period — see stats.low_stock. */
-    ready_to_ship: number;
+    ready_to_ship: number | null;
 }
+
+/** The dashboard blocks a member may see; mirrors App\Services\Dashboard\DashboardSummary::build(). */
+export type DashboardSection = 'revenue' | 'finance' | 'orders' | 'stock' | 'reorder' | 'tasks';
 
 export interface RecentOrderItem {
     name: string | null;
@@ -169,22 +173,25 @@ export interface Runway {
 export interface DashboardSummary {
     range: string;
     currency: string;
-    revenue_summary: Record<string, RevenuePoint>;
-    revenue_by_channel: Record<string, RevenuePoint>;
+    /** Which blocks the member's role may see. A block they may not see is null below. */
+    visible: DashboardSection[];
+    revenue_summary: Record<string, RevenuePoint> | null;
+    revenue_by_channel: Record<string, RevenuePoint> | null;
     /** Trailing 6 calendar months, independent of the selected period. */
-    revenue_trend: SeriesPoint[];
-    key_ratios: DashboardKeyRatios;
+    revenue_trend: SeriesPoint[] | null;
+    key_ratios: DashboardKeyRatios | null;
     stats: DashboardStats;
-    orders: SeriesPoint[];
-    revenue: SeriesPoint[];
-    order_status: OrderStatusCount[];
-    top_products: TopProduct[];
-    stock_watch: StockWatchItem[];
-    recent_orders: RecentOrder[];
-    reorder_pipeline: ReorderPipeline;
-    upcoming_tasks: UpcomingTasks;
-    net_cash_flow: NetCashFlow;
-    revenue_vs_target: RevenueVsTarget;
+    orders: SeriesPoint[] | null;
+    revenue: SeriesPoint[] | null;
+    order_status: OrderStatusCount[] | null;
+    top_products: TopProduct[] | null;
+    stock_watch: StockWatchItem[] | null;
+    recent_orders: RecentOrder[] | null;
+    reorder_pipeline: ReorderPipeline | null;
+    upcoming_tasks: UpcomingTasks | null;
+    net_cash_flow: NetCashFlow | null;
+    revenue_vs_target: RevenueVsTarget | null;
+    /** Also null when cash on hand is not set; see the card. */
     runway: Runway | null;
 }
 

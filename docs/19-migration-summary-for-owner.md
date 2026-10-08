@@ -111,6 +111,7 @@ A few things worth knowing, all copied from how the old app behaved:
 - **Creating and editing products** is for the Team role only. Inventory staff can see products and record stock movements, but not create or edit them.
 - **Work orders** are for Team, Cellar and Orders. Anyone who also holds the Manager role never sees them, even if they hold Orders as well. That is why Bojan has none. Administrators always see everything.
 - **Customers:** the customer list and customer pages are for administrators. Team and Orders staff can create customers and use the reorder reminders.
+- **The dashboard** shows each person only the parts they could see elsewhere. Money and sales figures need the "see money figures" permission. Costs, cash flow, salaries and runway are administrator-only. Order counts need orders, low stock needs inventory, reorder reminders follow the customer rules, and tasks follow work orders. Someone with none of these (for example the Hospitality role) sees a short welcome note instead. The restricted figures are not sent to their screen at all, not just hidden.
 
 Four judgement calls, where the old app was not entirely consistent:
 

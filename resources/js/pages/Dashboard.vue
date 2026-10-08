@@ -26,7 +26,7 @@ import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber } from '@/lib/money';
-import type { DashboardFilters, DashboardSummary } from '@/types/dashboard';
+import type { DashboardFilters, DashboardSection, DashboardSummary } from '@/types/dashboard';
 import type { SharedProps } from '@/types';
 import type { DateRange, TabItem } from '@/types/ui';
 
@@ -102,7 +102,7 @@ function delta(current: number, previous: number | null): number | null {
     return ((current - previous) / previous) * 100;
 }
 
-const revenue = computed(() => props.summary.revenue_summary.ytd ?? { current: 0, previous: null });
+const revenue = computed(() => props.summary.revenue_summary?.ytd ?? { current: 0, previous: null });
 const revenueDelta = computed(() => delta(revenue.value.current, revenue.value.previous));
 
 /** Channel rows, largest first; the design lists them descending by value. */
@@ -132,15 +132,31 @@ const alerts = computed(() => {
     const out: { icon: typeof AlertTriangle; text: string }[] = [];
     const s = props.summary.stats;
 
-    if (s.ready_to_ship > 0) {
+    // A figure the role may not see arrives as null: no alert, rather than a misleading zero.
+    if (s.ready_to_ship !== null && s.ready_to_ship > 0) {
         out.push({ icon: PackageCheck, text: t('Orders ready to ship: :count', { count: count(s.ready_to_ship) }) });
     }
-    if (s.tasks_overdue > 0) {
+    if (s.tasks_overdue !== null && s.tasks_overdue > 0) {
         out.push({ icon: AlertTriangle, text: t('Tasks overdue: :count', { count: count(s.tasks_overdue) }) });
     }
 
     return out;
 });
+
+/*
+  What this member may see. The server leaves out (does not just hide) every block their role has no
+  access to, so each card below renders only when its data actually arrived. Cards that share a row
+  are laid out from what is present, so a role with a single card still gets a tidy page.
+*/
+const sees = (section: DashboardSection): boolean => props.summary.visible.includes(section);
+const hasRevenue = computed(() => sees('revenue'));
+const cashCards = computed(() => [sees('tasks'), sees('finance'), sees('finance'), sees('reorder')].filter(Boolean).length);
+const hasRatiosOrStock = computed(() => sees('finance') || sees('stock'));
+/** Nothing at all for this role: show a short orientation instead of a blank page. */
+const nothingToShow = computed(() => props.summary.visible.length === 0);
+/** The period strip only means something for the blocks that follow the selected window. */
+const showPeriod = computed(() => sees('revenue') || sees('finance') || sees('orders'));
+const userName = computed(() => page.props.auth.user?.name ?? '');
 </script>
 
 <template>
@@ -162,7 +178,7 @@ const alerts = computed(() => {
             </div>
 
             <!-- The Dashboard's period strip spans the content column (208:5577). -->
-            <div class="flex flex-wrap items-center gap-2">
+            <div v-if="showPeriod" class="flex flex-wrap items-center gap-2">
                 <Tabs
                     :items="PERIOD_TABS"
                     :current="filters.from === null ? (filters.period ?? summary.range) : ''"
@@ -202,7 +218,7 @@ const alerts = computed(() => {
               throwing the two grids out of alignment and widening the gap
               beside "Revenue vs. target" past the gap under it.
             -->
-            <div class="grid gap-4 lg:grid-cols-4">
+            <div v-if="hasRevenue" class="grid gap-4 lg:grid-cols-4">
                 <div class="flex flex-col gap-6 lg:col-span-3">
                     <!-- Revenue -->
                     <Card>
@@ -228,7 +244,7 @@ const alerts = computed(() => {
                                     {{ Math.abs(revenueDelta).toFixed(1) }}%
                                 </Badge>
                             </div>
-                            <AreaChart :points="summary.revenue_trend" />
+                            <AreaChart :points="summary.revenue_trend ?? []" />
                         </CardContent>
                     </Card>
 
@@ -258,22 +274,34 @@ const alerts = computed(() => {
                     </Card>
                 </div>
 
-                <RevenueVsTargetCard :target="summary.revenue_vs_target" :currency="summary.currency" />
+                <RevenueVsTargetCard v-if="summary.revenue_vs_target" :target="summary.revenue_vs_target" :currency="summary.currency" />
             </div>
 
             <!-- Upcoming tasks · Runway · Net cash flow · Reorder pipeline (Figma 208:5577's four-card row) -->
-            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <UpcomingTasksCard :tasks="summary.upcoming_tasks" />
-                <RunwayCard :runway="summary.runway" :currency="summary.currency" />
-                <NetCashFlowCard :flow="summary.net_cash_flow" :currency="summary.currency" />
-                <ReorderPipelineCard :pipeline="summary.reorder_pipeline" :currency="summary.currency" />
+            <div
+                v-if="cashCards > 0"
+                class="grid gap-4 md:grid-cols-2"
+                :class="cashCards >= 4 ? 'xl:grid-cols-4' : cashCards === 3 ? 'xl:grid-cols-3' : ''"
+            >
+                <UpcomingTasksCard v-if="summary.upcoming_tasks" :tasks="summary.upcoming_tasks" />
+                <!-- Runway stays a card even when cash on hand is not set: the card says so itself. -->
+                <RunwayCard v-if="sees('finance')" :runway="summary.runway" :currency="summary.currency" />
+                <NetCashFlowCard v-if="summary.net_cash_flow" :flow="summary.net_cash_flow" :currency="summary.currency" />
+                <ReorderPipelineCard v-if="summary.reorder_pipeline" :pipeline="summary.reorder_pipeline" :currency="summary.currency" />
             </div>
 
             <!-- Key ratios · Low stock (Figma 208:6303 / 286:1024) -->
-            <div class="grid gap-4 md:grid-cols-2">
-                <KeyRatiosGrid :ratios="summary.key_ratios" :currency="summary.currency" />
-                <LowStockCard :items="summary.stock_watch" />
+            <div v-if="hasRatiosOrStock" class="grid gap-4 md:grid-cols-2">
+                <KeyRatiosGrid v-if="summary.key_ratios" :ratios="summary.key_ratios" :currency="summary.currency" />
+                <LowStockCard v-if="summary.stock_watch" :items="summary.stock_watch" :class="summary.key_ratios ? '' : 'md:col-span-2'" />
             </div>
+
+            <!-- A role with nothing on the dashboard just gets a greeting. -->
+            <Card v-if="nothingToShow">
+                <CardHeader>
+                    <CardTitle>{{ t('Welcome, :name', { name: userName }) }}</CardTitle>
+                </CardHeader>
+            </Card>
         </div>
 
         <!-- Same drawers Orders/Customers open from their own "New" button. -->

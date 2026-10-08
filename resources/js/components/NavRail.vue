@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
-import { Settings2, ShieldCheck } from 'lucide-vue-next';
+import { Settings2, ShieldCheck, UserRound } from 'lucide-vue-next';
 
 import AppLogo from '@/components/AppLogo.vue';
 import ManageShortcutsDialog from '@/components/ManageShortcutsDialog.vue';
@@ -211,6 +211,14 @@ function isCurrent(group: NavCategory, url: string): boolean {
                 :aria-label="t('Admin')"
             >
                 <ShieldCheck class="size-[18px]" :stroke-width="1.5" />
+            </Link>
+            <Link
+                href="/profile"
+                class="grid size-10 place-items-center transition-colors hover:bg-sidebar-active hover:text-foreground"
+                :class="$page.url.startsWith('/profile') ? 'bg-sidebar-active text-foreground' : 'text-muted-foreground'"
+                :aria-label="t('My profile')"
+            >
+                <UserRound class="size-[18px]" :stroke-width="1.5" />
             </Link>
             <Link
                 href="/logout"

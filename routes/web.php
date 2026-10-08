@@ -19,6 +19,7 @@ use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\LogController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\OrderController;
+use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\PublicOrderController;
 use App\Http\Controllers\Web\SearchController;
 use App\Http\Controllers\Web\SettingsController;
@@ -110,6 +111,12 @@ Route::middleware('tenant.web')->group(function () {
     // any tenant member may look up a teammate to tag, not just members.view
     // holders (that capability is for member *management*, not this).
     Route::get('team-members', [TeamMembersController::class, 'index'])->name('team-members.index');
+
+    // "My profile": every member manages only their own name and password, so there is no
+    // can:* gate. Writes are refused while impersonating (see the requests' authorize()).
+    Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
     // Manage Shortcuts (Figma 143:4179). No can:* gate: pinning is a personal
     // preference over nav items the member can already see, not a capability

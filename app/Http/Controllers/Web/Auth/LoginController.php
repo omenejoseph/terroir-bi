@@ -11,6 +11,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use App\Services\Auth\ActiveTenantSession;
 use App\Services\Auth\ImpersonationSession;
+use App\Services\Auth\UserAuthenticator;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,7 +32,7 @@ class LoginController extends Controller
         return Inertia::render('Auth/Login');
     }
 
-    public function store(LoginRequest $request, StartWebSessionAction $action): RedirectResponse
+    public function store(LoginRequest $request, StartWebSessionAction $action, UserAuthenticator $authenticator): RedirectResponse
     {
         $user = $action->execute(
             $request->string('email')->value(),
@@ -40,11 +41,11 @@ class LoginController extends Controller
             $request->has('tenant_id') ? $request->string('tenant_id')->value() : null,
         );
 
-        // Platform admins land in the back office, not the tenant dashboard —
-        // some hold no tenant membership at all, and /dashboard's tenant.web
-        // middleware would 400/403 them. redirect()->intended() still wins
-        // when the visit was bounced here from a deep link (e.g. /admin/plans).
-        return redirect()->intended($user->is_platform_admin ? '/admin' : '/dashboard');
+        // The app comes first, platform admins included; only one with no organisation to open goes
+        // to the back office (the tenant middleware would refuse them at /dashboard). See
+        // UserAuthenticator::homePath(). redirect()->intended() still wins when the visit was
+        // bounced here from a deep link (e.g. /admin/plans).
+        return redirect()->intended($authenticator->homePath($user));
     }
 
     public function destroy(

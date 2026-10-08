@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Dashboard;
 
+use App\Authorization\MembershipContext;
 use App\Enums\CostCategory;
 use App\Enums\CustomerType;
 use App\Enums\InflowStatus;
@@ -52,6 +53,7 @@ class DashboardSummary
         private readonly InventoryAnalyticsQuery $analytics,
         private readonly ReorderRadarQuery $reorderRadar,
         private readonly TenantContext $tenant,
+        private readonly MembershipContext $membership,
     ) {}
 
     /** @return list<string> */
@@ -72,13 +74,27 @@ class DashboardSummary
     {
         [$since, $until, $token] = $this->resolveWindow($period, $range, $from, $to);
 
+        // What this member may see. Each block of the dashboard is tied to the permission that guards
+        // the same data elsewhere in the app, so the dashboard can never show more than the module
+        // behind it would: a section the member may not see is not computed and not sent (null),
+        // rather than sent and hidden by the screen. See RoleCapabilities.
+        $money = $this->membership->can('financials.view');     // order revenue and prices
+        $finance = $this->membership->can('finance.view');      // costs, cash, receivables, salaries
+        $orderAccess = $this->membership->can('orders.view');
+        $stockAccess = $this->membership->can('inventory.view');
+        $radarAccess = $this->membership->can('customers.create'); // the reorder radar's roles
+        $taskAccess = $this->membership->can('work_orders.use');
+        $customerAccess = $this->membership->can('customers.view');
+
         /** @var Collection<int, Order> $orders */
-        $orders = Order::query()
-            ->where('is_consignment', false)
-            ->whereNotIn('customer_id', $this->excludedCustomers())
-            ->when($since !== null, fn ($q) => $q->where('created_at', '>=', $since))
-            ->where('created_at', '<=', $until)
-            ->get(['id', 'order_number', 'created_at', 'total_amount', 'status', 'customer_id']);
+        $orders = ($money || $orderAccess || $finance)
+            ? Order::query()
+                ->where('is_consignment', false)
+                ->whereNotIn('customer_id', $this->excludedCustomers())
+                ->when($since !== null, fn ($q) => $q->where('created_at', '>=', $since))
+                ->where('created_at', '<=', $until)
+                ->get(['id', 'order_number', 'created_at', 'total_amount', 'status', 'customer_id'])
+            : new Collection;
 
         // Bucket the window into at most 30 points for the trend charts.
         $spanStart = $since ?? $until->copy()->subDays(self::RANGE_DAYS['ALL']);
@@ -101,37 +117,52 @@ class DashboardSummary
         // both want this window's cost breakdown. Sharing the result (rather
         // than each re-running the same aggregate queries) means the cards
         // built from them cannot independently drift apart.
-        $channelTotals = $this->channelTotals($since, $until);
-        $costs = $this->costBreakdown($since, $until);
+        $channelTotals = ($money || $finance)
+            ? $this->channelTotals($since, $until)
+            : ['wholesale' => 0, 'retail' => 0, 'agency' => 0, 'shipshop' => 0, 'other' => 0, 'total' => 0];
+        $costs = $finance
+            ? $this->costBreakdown($since, $until)
+            : ['total' => 0, 'salary' => 0, 'marketing' => 0, 'operations' => 0, 'headcount' => 0];
+
+        $visible = [];
+        foreach (['revenue' => $money, 'finance' => $finance, 'orders' => $orderAccess, 'stock' => $stockAccess, 'reorder' => $radarAccess, 'tasks' => $taskAccess] as $section => $allowed) {
+            if ($allowed) {
+                $visible[] = $section;
+            }
+        }
 
         return [
             'range' => $token,
             'currency' => $this->currency(),
-            'revenue_summary' => $this->revenueSummary(),
-            'revenue_by_channel' => $this->revenueByChannel($since, $until, $channelTotals),
-            'revenue_trend' => $this->revenueTrend(),
-            'key_ratios' => $this->keyRatios($orders, $since, $until, $channelTotals, $costs),
+            // Which blocks this member may see, so the screen can tell "hidden for your role" from "empty".
+            'visible' => $visible,
+            'revenue_summary' => $money ? $this->revenueSummary() : null,
+            'revenue_by_channel' => $money ? $this->revenueByChannel($since, $until, $channelTotals) : null,
+            'revenue_trend' => $money ? $this->revenueTrend() : null,
+            // Cost and salary ratios, so admin-only like the costs themselves.
+            'key_ratios' => $finance ? $this->keyRatios($orders, $since, $until, $channelTotals, $costs) : null,
             'stats' => [
-                'total_orders' => $orders->count(),
-                'customers' => Customer::query()->where('is_active', true)
-                    ->where('exclude_from_stats', false)->count(),
-                'revenue' => (int) $orders->sum(fn (Order $o) => $o->total_amount->getMinorAmount()),
-                'low_stock' => $this->analytics->lowStockCount(),
-                'outstanding_ar' => $this->outstandingAr(),
-                'tasks_overdue' => $this->overdueTasks(),
-                'ready_to_ship' => $this->readyToShipCount(),
+                'total_orders' => $orderAccess ? $orders->count() : null,
+                'customers' => $customerAccess ? Customer::query()->where('is_active', true)
+                    ->where('exclude_from_stats', false)->count() : null,
+                'revenue' => $money ? (int) $orders->sum(fn (Order $o) => $o->total_amount->getMinorAmount()) : null,
+                'low_stock' => $stockAccess ? $this->analytics->lowStockCount() : null,
+                'outstanding_ar' => $finance ? $this->outstandingAr() : null,
+                'tasks_overdue' => $taskAccess ? $this->overdueTasks() : null,
+                'ready_to_ship' => $orderAccess ? $this->readyToShipCount() : null,
             ],
-            'orders' => $this->series(array_values($orderCounts), $step, $until),
-            'revenue' => $this->series(array_values($revenueBuckets), $step, $until),
-            'order_status' => $this->orderStatus($orders),
-            'top_products' => $this->topProducts($since, $until),
-            'stock_watch' => $this->analytics->stockWatch(6),
-            'recent_orders' => $this->recentOrders(),
-            'reorder_pipeline' => $this->reorderPipeline(),
-            'upcoming_tasks' => $this->upcomingTasks(),
-            'net_cash_flow' => $this->netCashFlow($since, $until, $costs),
-            'revenue_vs_target' => $this->revenueVsTarget(),
-            'runway' => $this->runway(),
+            'orders' => $orderAccess ? $this->series(array_values($orderCounts), $step, $until) : null,
+            'revenue' => $money ? $this->series(array_values($revenueBuckets), $step, $until) : null,
+            'order_status' => $orderAccess ? $this->orderStatus($orders) : null,
+            'top_products' => $money ? $this->topProducts($since, $until) : null,
+            'stock_watch' => $stockAccess ? $this->analytics->stockWatch(6) : null,
+            // Lists order totals, so it needs both: seeing orders and seeing money.
+            'recent_orders' => ($orderAccess && $money) ? $this->recentOrders() : null,
+            'reorder_pipeline' => $radarAccess ? $this->reorderPipeline() : null,
+            'upcoming_tasks' => $taskAccess ? $this->upcomingTasks() : null,
+            'net_cash_flow' => $finance ? $this->netCashFlow($since, $until, $costs) : null,
+            'revenue_vs_target' => $money ? $this->revenueVsTarget() : null,
+            'runway' => $finance ? $this->runway() : null,
         ];
     }
 

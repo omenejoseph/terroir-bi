@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import { ChevronDown, ChevronsUpDown, ShieldCheck, Settings2 } from 'lucide-vue-next';
+import { ChevronDown, ChevronsUpDown, ShieldCheck, Settings2, UserRound } from 'lucide-vue-next';
 
 import AppLogo from '@/components/AppLogo.vue';
 import ManageShortcutsDialog from '@/components/ManageShortcutsDialog.vue';
@@ -171,6 +171,14 @@ function toggle(label: string): void {
             >
                 <ShieldCheck class="size-[15px] shrink-0" :stroke-width="1.5" />
                 <span>{{ t('Admin') }}</span>
+            </Link>
+            <Link
+                href="/profile"
+                class="flex items-center gap-2.5 rounded-nav p-2 text-sm transition-colors hover:bg-sidebar-active"
+                :class="$page.url.startsWith('/profile') ? 'bg-sidebar-active text-foreground' : 'text-muted-foreground hover:text-foreground'"
+            >
+                <UserRound class="size-[15px] shrink-0" :stroke-width="1.5" />
+                <span>{{ t('My profile') }}</span>
             </Link>
             <Link
                 href="/logout"

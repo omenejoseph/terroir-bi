@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\Auth\UserAuthenticator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,10 +22,12 @@ use Inertia\Response;
  */
 class WelcomeController extends Controller
 {
-    public function __invoke(Request $request): Response|RedirectResponse
+    public function __invoke(Request $request, UserAuthenticator $authenticator): Response|RedirectResponse
     {
-        if ($request->user() !== null) {
-            return redirect()->route('dashboard');
+        $user = $request->user();
+
+        if ($user instanceof User) {
+            return redirect($authenticator->homePath($user));
         }
 
         return Inertia::render('Welcome');

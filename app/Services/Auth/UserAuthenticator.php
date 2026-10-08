@@ -73,4 +73,21 @@ class UserAuthenticator
 
         return $first !== null ? Tenant::query()->find($first->tenant_id) : null;
     }
+
+    /**
+     * Where someone lands after signing in (or visiting `/` while signed in).
+     *
+     * The app comes first: anyone who belongs to an organisation goes to its dashboard, platform
+     * admins included. Only a platform admin with no usable organisation goes to the back office,
+     * because the app's tenant middleware would refuse them. They reach /admin from the app's
+     * footer link whenever they want it.
+     */
+    public function homePath(User $user): string
+    {
+        if ($this->resolveActiveTenant($user, null) !== null) {
+            return '/dashboard';
+        }
+
+        return $user->is_platform_admin ? '/admin' : '/dashboard';
+    }
 }

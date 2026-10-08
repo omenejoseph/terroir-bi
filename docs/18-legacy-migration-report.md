@@ -146,6 +146,8 @@ Role **names** map one-to-one (same 11 roles) and each person's roles and the or
 
 Admin-only, as in the old app: costs, money received, cash flow, cellar costs, suppliers, purchase-order changes, price editing, customer list/detail/editing/deleting/links, bulk inventory operations and analytics, order deletion, settings, team, logs.
 
+The dashboard follows the same rules block by block (`DashboardSummary`): revenue figures need `financials.view`; key ratios, cash flow, runway and receivables need `finance.view`; order counts `orders.view`; low stock `inventory.view`; the reorder pipeline `customers.create`; tasks `work_orders.use`. A restricted block is neither computed nor sent (null), and `visible` lists the blocks a member holds. Pinned by `DashboardRoleVisibilityTest`.
+
 Two multi-role rules are enforced: roles add up, and **anyone holding MANAGER never gets work orders** even alongside another role that would grant them (the old sidebar's `excludeRoles`), unless they are also ADMIN.
 
 New capabilities introduced to express the old app's finer distinctions: `customers.create`, `inventory.stock`, `inventory.bulk`, `inventory.analytics`, `supplier_orders.view`, `work_orders.use`; routes were regrouped under them (static-segment routes kept ahead of their `{id}` wildcards).
