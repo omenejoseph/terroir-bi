@@ -44,6 +44,11 @@ class S3ObjectStore implements ObjectStore
         return $this->disk()->temporaryUrl($key, now()->addSeconds($ttlSeconds));
     }
 
+    public function put(string $key, string $contents, string $contentType): void
+    {
+        $this->disk()->put($key, $contents, ['ContentType' => $contentType, 'visibility' => 'private']);
+    }
+
     public function exists(string $key): bool
     {
         return $this->disk()->exists($key);

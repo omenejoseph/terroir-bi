@@ -126,7 +126,7 @@ const dateRange = computed(() => {
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Inventory')">
                 <template #actions>
-                    <Button v-if="can('inventory.manage')" variant="outline" size="sm" @click="bulkImportOpen = true">
+                    <Button v-if="can('inventory.bulk')" variant="outline" size="sm" @click="bulkImportOpen = true">
                         <Upload class="size-4" :stroke-width="1.5" />
                         {{ t('Bulk Import') }}
                     </Button>

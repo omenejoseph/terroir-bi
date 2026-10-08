@@ -25,6 +25,8 @@ const locale = computed(() => usePage<SharedProps>().props.locale);
 
 const overdue = computed(() => isOverdue(props.task.due_date, props.task.status));
 const done = computed(() => props.task.status === 'DONE');
+// Finished either way: a cancelled task is dimmed and struck through like a done one, but it is not "complete".
+const closed = computed(() => done.value || props.task.status === 'CANCELLED');
 
 /** "12 Aug – 14 Aug", or a single date when only one end is known. */
 const dateRange = computed(() => {
@@ -63,7 +65,7 @@ const priorityTone = computed(() => PRIORITY_TONES[props.task.priority]);
                 type="button"
                 class="mt-0.5 shrink-0"
                 :aria-pressed="done"
-                :aria-label="done ? `Reopen ${task.title}` : `Complete ${task.title}`"
+                :aria-label="closed ? `Reopen ${task.title}` : `Complete ${task.title}`"
                 @click.stop="emit('toggle')"
             >
                 <CircleCheck v-if="done" class="size-4 text-board-done" :stroke-width="2" />
@@ -72,7 +74,7 @@ const priorityTone = computed(() => PRIORITY_TONES[props.task.priority]);
 
             <h4
                 class="min-w-0 flex-1 text-sm leading-5"
-                :class="done && 'text-muted-foreground line-through'"
+                :class="closed && 'text-muted-foreground line-through'"
             >
                 {{ task.title }}
             </h4>

@@ -587,7 +587,7 @@ class DashboardSummary
     private function overdueTasks(): int
     {
         return WorkOrder::query()
-            ->where('status', '!=', TaskStatus::Done)
+            ->whereNotIn('status', TaskStatus::closed())
             ->whereNotNull('due_date')
             ->where('due_date', '<', Carbon::now())
             ->count();
@@ -695,14 +695,14 @@ class DashboardSummary
         $endOfWeek = $now->copy()->endOfWeek();
 
         $dueThisWeek = WorkOrder::query()
-            ->where('status', '!=', TaskStatus::Done)
+            ->whereNotIn('status', TaskStatus::closed())
             ->whereNotNull('due_date')
             ->where('due_date', '<=', $endOfWeek)
             ->count();
 
         /** @var Collection<int, WorkOrder> $open */
         $open = WorkOrder::query()
-            ->where('status', '!=', TaskStatus::Done)
+            ->whereNotIn('status', TaskStatus::closed())
             ->orderByRaw('due_date is null') // undated last
             ->orderBy('due_date')
             ->limit(3)

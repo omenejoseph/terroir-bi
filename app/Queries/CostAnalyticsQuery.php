@@ -33,7 +33,7 @@ class CostAnalyticsQuery
         $currency = $this->currency();
 
         $costs = Cost::query()->whereBetween('date', [$from, $to])
-            ->get(['id', 'date', 'total_amount', 'vat_amount', 'category', 'status', 'supplier_id', 'paid_at', 'due_date']);
+            ->get(['id', 'date', 'total_amount', 'vat_amount', 'category', 'is_invoice', 'status', 'supplier_id', 'paid_at', 'due_date']);
 
         // Preceding equal-length window — drives the per-category period-over-period change.
         $prevFrom = $from->copy()->subSeconds((int) $from->diffInSeconds($to));
@@ -87,7 +87,7 @@ class CostAnalyticsQuery
      */
     private function invoiceCard(Collection $costs, CostStatus|string|null $filter, string $currency): array
     {
-        $invoices = $costs->where('category', ListCostsQuery::INVOICE_CATEGORY);
+        $invoices = $costs->filter(fn (Cost $c) => $c->isInvoice());
         $rows = match (true) {
             $filter instanceof CostStatus => $invoices->where('status', $filter),
             $filter === 'unpaid' => $invoices->where('status', '!=', CostStatus::Paid),
@@ -111,7 +111,7 @@ class CostAnalyticsQuery
      */
     private function avgInvoice(Collection $costs, string $currency): array
     {
-        $invoices = $costs->where('category', ListCostsQuery::INVOICE_CATEGORY);
+        $invoices = $costs->filter(fn (Cost $c) => $c->isInvoice());
         $count = $invoices->count();
         $sum = (int) $invoices->sum(fn (Cost $c) => $c->total_amount->getMinorAmount());
         $max = (int) ($invoices->max(fn (Cost $c) => $c->total_amount->getMinorAmount()) ?? 0);
@@ -130,7 +130,7 @@ class CostAnalyticsQuery
      */
     private function avgDaysToPay(Collection $costs): array
     {
-        $paid = $costs->where('category', ListCostsQuery::INVOICE_CATEGORY)
+        $paid = $costs->filter(fn (Cost $c) => $c->isInvoice())
             ->where('status', CostStatus::Paid)
             ->filter(fn (Cost $c) => $c->paid_at !== null);
         $count = $paid->count();

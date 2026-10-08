@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web\Auth;
 use App\Actions\Auth\StopImpersonationAction;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Auth\ImpersonationSession;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -22,10 +23,13 @@ use Illuminate\Http\Request;
  */
 class StopImpersonationController extends Controller
 {
-    public function store(Request $request, StopImpersonationAction $action): RedirectResponse
+    public function store(Request $request, StopImpersonationAction $action, ImpersonationSession $impersonation): RedirectResponse
     {
         $target = $request->user();
         abort_unless($target instanceof User, 401);
+
+        // Read before stopping — it is cleared along with the impersonation.
+        $tenantScoped = $impersonation->tenantId() !== null;
 
         $admin = $action->execute($target);
 
@@ -33,6 +37,7 @@ class StopImpersonationController extends Controller
             abort(404);
         }
 
-        return redirect('/admin');
+        // A tenant admin returns to the Team page they started from; a platform admin to the back office.
+        return redirect($tenantScoped ? '/settings/team' : '/admin');
     }
 }

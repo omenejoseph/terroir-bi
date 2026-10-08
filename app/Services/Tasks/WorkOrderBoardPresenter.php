@@ -101,6 +101,7 @@ class WorkOrderBoardPresenter
             TaskStatus::Todo => 'To Do',
             TaskStatus::InProgress => 'In Progress',
             TaskStatus::Done => 'Done',
+            TaskStatus::Cancelled => 'Cancelled',
         };
     }
 }

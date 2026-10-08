@@ -35,6 +35,10 @@ final class InflowData implements Arrayable, JsonSerializable
             'changes_count' => $inflow->getAttribute('changes_count') !== null ? (int) $inflow->getAttribute('changes_count') : null,
             'date' => $inflow->date->toIso8601String(),
             'amount' => $inflow->amount->jsonSerialize(),
+            'vat_amount' => $inflow->vat_amount?->jsonSerialize(),
+            // The amount is gross (VAT included), as in the old app; net is amount minus VAT, only once VAT is known.
+            'net_amount' => $inflow->vat_amount !== null ? $inflow->amount->minus($inflow->vat_amount)->jsonSerialize() : null,
+            'is_invoice' => $inflow->isInvoice(),
             'status' => $inflow->status->value,
             'is_credit_note' => $inflow->is_credit_note,
             'category' => $inflow->category,

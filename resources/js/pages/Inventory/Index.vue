@@ -268,7 +268,7 @@ function flags(item: InventoryItem): string[] {
                         </Button>
                     </template>
                     <template v-else>
-                        <Button v-if="can('inventory.manage')" variant="outline" size="sm" @click="bulkImportOpen = true">
+                        <Button v-if="can('inventory.bulk')" variant="outline" size="sm" @click="bulkImportOpen = true">
                             <Upload class="size-4" :stroke-width="1.5" />
                             {{ t('Bulk Import') }}
                         </Button>
@@ -315,7 +315,7 @@ function flags(item: InventoryItem): string[] {
 
                 <!-- The count lives in the table's own header, not here. -->
                 <Button
-                    v-if="can('inventory.manage') && !bulkEditing"
+                    v-if="can('inventory.bulk') && !bulkEditing"
                     variant="outline"
                     size="sm"
                     class="ml-auto"

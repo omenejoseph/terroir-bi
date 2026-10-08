@@ -21,6 +21,9 @@ interface ObjectStore
     /** A short-lived presigned GET for reading a private object. */
     public function temporaryUrl(string $key, int $ttlSeconds): string;
 
+    /** Server-side write (used by the legacy media copy; browsers upload via presignPut). */
+    public function put(string $key, string $contents, string $contentType): void;
+
     public function exists(string $key): bool;
 
     /** Object size in bytes, or null when it doesn't exist. */

@@ -17,19 +17,21 @@ use Illuminate\Http\Request;
 final class CustomerFilters
 {
     /**
-     * @return array{search: ?string, is_active: ?bool, pricing_tier_id: ?string, customer_type: ?string}
+     * @return array{search: ?string, is_active: ?bool, pricing_tier_id: ?string, customer_type: ?string, customer_category_id: ?string}
      */
     public static function fromRequest(Request $request): array
     {
         $search = $request->query('search');
         $tier = $request->query('pricing_tier_id');
         $type = $request->query('customer_type');
+        $category = $request->query('customer_category_id');
 
         return [
             'search' => is_string($search) && $search !== '' ? $search : null,
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : null,
             'pricing_tier_id' => is_string($tier) && $tier !== '' ? $tier : null,
             'customer_type' => is_string($type) && $type !== '' ? $type : null,
+            'customer_category_id' => is_string($category) && $category !== '' ? $category : null,
         ];
     }
 }

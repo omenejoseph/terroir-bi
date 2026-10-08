@@ -36,6 +36,15 @@ class FakeObjectStore implements ObjectStore
         return "https://bucket.example/{$key}?X-Amz-Signature=read";
     }
 
+    /** @var array<string, string> object key => content type, for objects written via put() */
+    public array $contentTypes = [];
+
+    public function put(string $key, string $contents, string $contentType): void
+    {
+        $this->objects[$key] = strlen($contents);
+        $this->contentTypes[$key] = $contentType;
+    }
+
     public function exists(string $key): bool
     {
         return isset($this->objects[$key]);

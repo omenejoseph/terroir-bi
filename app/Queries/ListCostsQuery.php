@@ -73,9 +73,9 @@ class ListCostsQuery
     private function applyGroup(Builder $query, ?string $group): void
     {
         match ($group) {
-            'invoices' => $query->where('category', self::INVOICE_CATEGORY),
+            'invoices' => $query->where(fn (Builder $q) => $q->where('category', self::INVOICE_CATEGORY)->orWhere('is_invoice', true)),
             'payments' => $query->where('category', self::PAYMENT_CATEGORY),
-            'others' => $query->whereNotIn('category', [self::INVOICE_CATEGORY, self::PAYMENT_CATEGORY]),
+            'others' => $query->whereNotIn('category', [self::INVOICE_CATEGORY, self::PAYMENT_CATEGORY])->where('is_invoice', false),
             default => null,
         };
     }

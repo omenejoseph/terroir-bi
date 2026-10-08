@@ -29,6 +29,8 @@ class StoreInflowRequest extends FormRequest
             'order_id' => ['sometimes', 'nullable', 'string', Rule::exists('orders', 'id')->where('tenant_id', $tenantId)],
             'date' => ['sometimes', 'date'],
             'amount' => ['required', 'integer', 'min:1'],
+            'vat_amount' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'is_invoice' => ['sometimes', 'boolean'],
             'status' => ['sometimes', Rule::enum(InflowStatus::class)],
             'is_credit_note' => ['sometimes', 'boolean'],
             'category' => ['sometimes', 'nullable', 'string', 'max:255'],

@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Auth;
 
 use App\Actions\Auth\StartWebSessionAction;
+use App\Actions\Auth\StopImpersonationAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use App\Services\Auth\ActiveTenantSession;
+use App\Services\Auth\ImpersonationSession;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,7 +51,16 @@ class LoginController extends Controller
         Request $request,
         AuthFactory $auth,
         ActiveTenantSession $activeTenant,
+        ImpersonationSession $impersonation,
+        StopImpersonationAction $stopImpersonation,
     ): RedirectResponse {
+        // Signing out mid-impersonation ends it: record the stop (restoring the admin's own
+        // session first) so the audit trail never shows a start with no end.
+        $user = $request->user();
+        if ($impersonation->get() !== null && $user instanceof User) {
+            $stopImpersonation->execute($user);
+        }
+
         $activeTenant->forget();
         $auth->guard('web')->logout();
 

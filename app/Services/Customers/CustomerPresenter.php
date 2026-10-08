@@ -33,7 +33,7 @@ class CustomerPresenter
 
         // effectiveRebatePercent() reads the tier; loading it here keeps the
         // page at one query rather than one per row.
-        EloquentCollection::make($customers)->loadMissing('pricingTier');
+        EloquentCollection::make($customers)->loadMissing(['pricingTier', 'category']);
 
         return [
             'data' => array_map(fn (Customer $customer): array => $this->row($customer), $customers),
@@ -63,7 +63,7 @@ class CustomerPresenter
      */
     public function detail(Customer $customer): array
     {
-        $customer->loadMissing('pricingTier');
+        $customer->loadMissing(['pricingTier', 'category']);
 
         return $this->row($customer);
     }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\Auth\PasswordResetController;
 use App\Http\Controllers\Web\Auth\StopImpersonationController;
 use App\Http\Controllers\Web\Auth\TenantSwitchController;
 use App\Http\Controllers\Web\BottleAnalysisController;
+use App\Http\Controllers\Web\CustomerCategoryController;
 use App\Http\Controllers\Web\CustomerConsignmentController;
 use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\CustomerPriceController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\Web\SearchController;
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\ShortcutController;
 use App\Http\Controllers\Web\TeamController;
+use App\Http\Controllers\Web\TeamImpersonationController;
 use App\Http\Controllers\Web\TeamInvitationController;
 use App\Http\Controllers\Web\TeamMembersController;
 use App\Http\Controllers\Web\TierPriceController;
@@ -138,6 +140,11 @@ Route::middleware('tenant.web')->group(function () {
     Route::middleware('can:members.view')->group(function () {
         Route::get('settings/team', [TeamController::class, 'index'])->name('team.index');
     });
+    // Admin-only (no role besides ADMIN's wildcard holds it). Stopping is the plain-auth
+    // impersonation/stop route above, since the session user is the target by then.
+    Route::post('settings/team/{membership}/impersonate', [TeamImpersonationController::class, 'store'])
+        ->middleware('can:members.impersonate')
+        ->name('team.impersonate');
     Route::middleware('can:members.manage')->group(function () {
         Route::patch('settings/team/{membership}', [TeamController::class, 'update'])->name('team.update');
         Route::patch('settings/team/{membership}/password', [TeamController::class, 'setPassword'])->name('team.set-password');
@@ -153,14 +160,7 @@ Route::middleware('tenant.web')->group(function () {
 
     Route::middleware('can:inventory.view')->group(function () {
         Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
-        Route::get('inventory-analytics', [InventoryController::class, 'analytics'])->name('inventory.analytics');
         Route::get('inventory-check', [InventoryController::class, 'check'])->name('inventory.check');
-        Route::get('inventory-spend', [InventoryController::class, 'spend'])
-            ->middleware('can:financials.view')
-            ->name('inventory.spend');
-        Route::get('inventory-spend/export', [InventoryController::class, 'exportSpend'])
-            ->middleware('can:financials.view')
-            ->name('inventory.spend.export');
         Route::get('inventory/{item}', [InventoryController::class, 'show'])->name('inventory.show');
         Route::get('inventory/{item}/movements/export', [InventoryController::class, 'exportMovements'])
             ->name('inventory.movements.export');
@@ -169,19 +169,9 @@ Route::middleware('tenant.web')->group(function () {
     Route::middleware('can:inventory.manage')->group(function () {
         Route::post('inventory', [InventoryController::class, 'store'])->name('inventory.store');
         Route::patch('inventory/{item}', [InventoryController::class, 'update'])->name('inventory.update');
-        Route::post('inventory/{item}/stock', [InventoryController::class, 'adjustStock'])
-            ->name('inventory.stock.adjust');
-        Route::patch('inventory-bulk', [InventoryController::class, 'bulkUpdate'])->name('inventory.bulk-update');
-        Route::post('inventory-check', [InventoryController::class, 'applyCheck'])->name('inventory.check.apply');
 
         // Bulk Import — shared by the Inventory list, Analytics and Spend
         // pages' own "Bulk Import" button.
-        Route::post('inventory/bulk-import', [InventoryController::class, 'bulkImport'])
-            ->name('inventory.bulk-import');
-        Route::get('inventory/bulk-import/template', [InventoryController::class, 'bulkImportTemplate'])
-            ->name('inventory.bulk-import.template');
-        Route::post('inventory/{item}/duplicate', [InventoryController::class, 'duplicate'])
-            ->name('inventory.duplicate');
         Route::put('inventory/{item}/recipe', [InventoryController::class, 'updateRecipe'])
             ->name('inventory.recipe.update');
         Route::post('inventory/{item}/produce', [InventoryController::class, 'produce'])
@@ -207,6 +197,35 @@ Route::middleware('tenant.web')->group(function () {
             ->name('inventory.bottle-analyses.store');
         Route::delete('inventory/{item}/bottle-analyses/{analysis}', [BottleAnalysisController::class, 'destroy'])
             ->name('inventory.bottle-analyses.destroy');
+    });
+
+    // Stock movements: TEAM and INVENTORY in the old app (addStockMovement).
+    Route::middleware('can:inventory.stock')->group(function () {
+        Route::post('inventory/{item}/stock', [InventoryController::class, 'adjustStock'])
+            ->name('inventory.stock.adjust');
+    });
+
+    // Admin-only in the old app: bulk import/update, applying a stock check, duplicating a product.
+    Route::middleware('can:inventory.bulk')->group(function () {
+        Route::patch('inventory-bulk', [InventoryController::class, 'bulkUpdate'])->name('inventory.bulk-update');
+        Route::post('inventory-check', [InventoryController::class, 'applyCheck'])->name('inventory.check.apply');
+        Route::post('inventory/bulk-import', [InventoryController::class, 'bulkImport'])
+            ->name('inventory.bulk-import');
+        Route::get('inventory/bulk-import/template', [InventoryController::class, 'bulkImportTemplate'])
+            ->name('inventory.bulk-import.template');
+        Route::post('inventory/{item}/duplicate', [InventoryController::class, 'duplicate'])
+            ->name('inventory.duplicate');
+    });
+
+    // Inventory analytics and spend were admin-only in the old app.
+    Route::middleware('can:inventory.analytics')->group(function () {
+        Route::get('inventory-analytics', [InventoryController::class, 'analytics'])->name('inventory.analytics');
+        Route::get('inventory-spend', [InventoryController::class, 'spend'])
+            ->middleware('can:financials.view')
+            ->name('inventory.spend');
+        Route::get('inventory-spend/export', [InventoryController::class, 'exportSpend'])
+            ->middleware('can:financials.view')
+            ->name('inventory.spend.export');
     });
 
     Route::delete('inventory/{item}', [InventoryController::class, 'destroy'])
@@ -266,6 +285,14 @@ Route::middleware('tenant.web')->group(function () {
       money), writes need customers.manage, and deletion is admin-only via
       customers.delete.
     */
+    // TEAM and ORDERS create customers, see the reorder radar and mark customers contacted in the old app; editing is admin-only.
+    Route::middleware('can:customers.create')->group(function () {
+        Route::get('customers/reorder-radar', [CustomerController::class, 'reorderRadar'])->name('customers.reorder-radar');
+        Route::post('customers', [CustomerController::class, 'store'])->name('customers.store');
+        Route::post('customers/{customer}/contacted', [CustomerController::class, 'markContacted'])
+            ->name('customers.contacted');
+    });
+
     Route::middleware('can:customers.view')->group(function () {
         Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
         Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');
@@ -275,15 +302,17 @@ Route::middleware('tenant.web')->group(function () {
         // Static segment before the {customer} wildcard so it isn't treated
         // as an id — mirrors routes/api.php's own reorder-radar placement.
         // The Dashboard's Reorder pipeline card "View all" (Figma 208:5921).
-        Route::get('customers/reorder-radar', [CustomerController::class, 'reorderRadar'])->name('customers.reorder-radar');
+        // Before customers/{customer}, which would otherwise swallow "categories" as an id.
+        Route::get('customers/categories', [CustomerCategoryController::class, 'index'])->name('customers.categories.index');
         Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
     });
 
     Route::middleware('can:customers.manage')->group(function () {
-        Route::post('customers', [CustomerController::class, 'store'])->name('customers.store');
+        Route::post('customers/categories', [CustomerCategoryController::class, 'store'])->name('customers.categories.store');
+        Route::post('customers/categories/reorder', [CustomerCategoryController::class, 'reorder'])->name('customers.categories.reorder');
+        Route::patch('customers/categories/{category}', [CustomerCategoryController::class, 'update'])->name('customers.categories.update');
+        Route::delete('customers/categories/{category}', [CustomerCategoryController::class, 'destroy'])->name('customers.categories.destroy');
         Route::patch('customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
-        Route::post('customers/{customer}/contacted', [CustomerController::class, 'markContacted'])
-            ->name('customers.contacted');
     });
 
     // Merging destroys records, so it carries the same admin-only gate as
@@ -338,21 +367,21 @@ Route::middleware('tenant.web')->group(function () {
     });
 
     /*
-      Work orders. Deliberately ungated, matching routes/api.php: team task
-      planning is open to any member of the tenant. Static segments precede the
-      {workOrder} wildcard.
+      Work orders: TEAM, CELLAR and ORDERS in the old app, and never anyone who also holds
+      MANAGER (its menu excluded them) — RoleCapabilities::revokedBy(). Static segments
+      precede the {workOrder} wildcard.
     */
-    Route::get('work-orders', [WorkOrderController::class, 'index'])->name('work-orders.index');
-    Route::post('work-orders', [WorkOrderController::class, 'store'])->name('work-orders.store');
-    Route::post('work-orders/reorder', [WorkOrderController::class, 'reorder'])->name('work-orders.reorder');
-    Route::patch('work-orders/{workOrder}/status', [WorkOrderController::class, 'updateStatus'])
-        ->name('work-orders.status.update');
-    Route::patch('work-orders/{workOrder}', [WorkOrderController::class, 'update'])->name('work-orders.update');
-    Route::delete('work-orders/{workOrder}', [WorkOrderController::class, 'destroy'])
-        ->name('work-orders.destroy');
-
-    // Boards — same ungated stance as work orders themselves.
-    Route::post('work-order-boards', [WorkOrderController::class, 'storeBoard'])->name('work-order-boards.store');
-    Route::patch('work-order-boards/favorite', [WorkOrderController::class, 'setFavoriteBoard'])
-        ->name('work-order-boards.favorite');
+    Route::middleware('can:work_orders.use')->group(function () {
+        Route::get('work-orders', [WorkOrderController::class, 'index'])->name('work-orders.index');
+        Route::post('work-orders', [WorkOrderController::class, 'store'])->name('work-orders.store');
+        Route::post('work-orders/reorder', [WorkOrderController::class, 'reorder'])->name('work-orders.reorder');
+        Route::patch('work-orders/{workOrder}/status', [WorkOrderController::class, 'updateStatus'])
+            ->name('work-orders.status.update');
+        Route::patch('work-orders/{workOrder}', [WorkOrderController::class, 'update'])->name('work-orders.update');
+        Route::delete('work-orders/{workOrder}', [WorkOrderController::class, 'destroy'])
+            ->name('work-orders.destroy');
+        Route::post('work-order-boards', [WorkOrderController::class, 'storeBoard'])->name('work-order-boards.store');
+        Route::patch('work-order-boards/favorite', [WorkOrderController::class, 'setFavoriteBoard'])
+            ->name('work-order-boards.favorite');
+    });
 });

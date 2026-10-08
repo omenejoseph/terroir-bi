@@ -1,7 +1,7 @@
 /** Mirrors App\DataTransferObjects\WorkOrderData and the board's page props. */
 
 /** Mirrors App\Enums\TaskStatus — the board's three columns. */
-export type TaskStatusKey = 'TODO' | 'IN_PROGRESS' | 'DONE';
+export type TaskStatusKey = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED';
 
 /** Mirrors App\Enums\TaskPriority. */
 export type TaskPriorityKey = 'LOW' | 'MEDIUM' | 'HIGH';

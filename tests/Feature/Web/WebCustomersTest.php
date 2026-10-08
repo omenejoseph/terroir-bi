@@ -986,12 +986,33 @@ class WebCustomersTest extends TestCase
         $this->forgetTenant();
     }
 
-    public function test_writes_are_closed_to_a_viewer_without_customers_manage(): void
+    public function test_orders_staff_may_create_customers_but_never_edit_or_list_them(): void
     {
+        // The old app let TEAM and ORDERS create a customer; editing, deleting and the list were admin-only.
         $tenant = $this->createTenant();
         $orders = $this->createMember($tenant, [TenantRole::Orders]);
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
 
-        $this->actingAs($orders)
+        $this->actingAs($orders)->withSession($session)
+            ->post('/customers', ['company_name' => 'X', 'email' => 'x@example.test'])
+            ->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $customer = Customer::query()->firstOrFail();
+        $this->forgetTenant();
+
+        $this->actingAs($orders)->withSession($session)
+            ->patch('/customers/'.$customer->getKey(), ['company_name' => 'Renamed'])
+            ->assertForbidden();
+        $this->actingAs($orders)->withSession($session)->get('/customers')->assertForbidden();
+    }
+
+    public function test_cellar_staff_cannot_create_customers(): void
+    {
+        $tenant = $this->createTenant();
+        $cellar = $this->createMember($tenant, [TenantRole::Cellar]);
+
+        $this->actingAs($cellar)
             ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
             ->post('/customers', ['company_name' => 'X', 'email' => 'x@example.test'])
             ->assertForbidden();

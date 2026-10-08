@@ -53,6 +53,7 @@ export const STATUS_LABELS: Record<string, string> = {
     TODO: 'To Do',
     IN_PROGRESS: 'In Progress',
     DONE: 'Done',
+    CANCELLED: 'Cancelled',
 };
 
 export function categoryLabel(value: string | null): string {
@@ -69,7 +70,7 @@ export function categoryTone(value: string | null): string {
 
 /** True when work is still open and its due date has passed. */
 export function isOverdue(dueDate: string | null, status: string): boolean {
-    if (dueDate === null || status === 'DONE') return false;
+    if (dueDate === null || status === 'DONE' || status === 'CANCELLED') return false;
 
     return new Date(dueDate).getTime() < Date.now();
 }

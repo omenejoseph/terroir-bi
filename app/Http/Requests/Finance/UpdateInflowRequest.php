@@ -28,6 +28,8 @@ class UpdateInflowRequest extends FormRequest
             'order_id' => ['sometimes', 'nullable', 'string', Rule::exists('orders', 'id')->where('tenant_id', $tenantId)],
             'date' => ['sometimes', 'date'],
             'amount' => ['sometimes', 'integer', 'min:1'],
+            'vat_amount' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'is_invoice' => ['sometimes', 'boolean'],
             'is_credit_note' => ['sometimes', 'boolean'],
             'category' => ['sometimes', 'nullable', 'string', 'max:255'],
             'reference' => ['sometimes', 'nullable', 'string', 'max:255'],

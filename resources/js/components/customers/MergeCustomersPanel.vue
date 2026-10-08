@@ -70,7 +70,7 @@ function submit(): void {
                     <span class="min-w-0 flex-1">
                         <span class="block truncate text-sm font-medium">{{ customer.company_name }}</span>
                         <span class="block truncate text-xs text-muted-foreground">
-                            {{ customerSubtitle(customer.customer_type, customer.city) ?? customer.email }}
+                            {{ customerSubtitle(customer.customer_type, customer.city, customer.category?.name ?? null) ?? customer.email }}
                         </span>
                         <span class="mt-1 block text-xs text-muted-foreground tabular-nums">
                             {{ t(':count orders', { count: customer.order_count ?? 0 }) }}

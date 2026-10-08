@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { Copy, Plus, UserCog, KeyRound, RotateCcw, X } from 'lucide-vue-next';
+import { Copy, KeyRound, LogIn, Plus, RotateCcw, Trash2, UserCog } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import DropdownMenu from '@/components/ui/DropdownMenu.vue';
 import EditMemberDialog from '@/components/team/EditMemberDialog.vue';
 import InviteMemberDialog from '@/components/team/InviteMemberDialog.vue';
 import SetPasswordDialog from '@/components/team/SetPasswordDialog.vue';
@@ -14,6 +15,7 @@ import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import type { RoleOption, TeamInvitation, TeamMember } from '@/types/team';
 import type { SharedProps } from '@/types';
+import type { MenuItem } from '@/types/ui';
 
 /**
  * Team (nav's "System · Team", capability `members.view`/`members.manage`)
@@ -43,6 +45,31 @@ function isSelf(member: TeamMember): boolean {
     return member.user_id === props.currentUserId;
 }
 
+/**
+ * The row's `⋯` menu. Which actions appear mirrors what the server will allow:
+ * you can't set your own password or remove yourself here, and Impersonate only
+ * shows where the server's rule (`can_impersonate`) says it would work.
+ */
+function rowActions(member: TeamMember): MenuItem[] {
+    const items: MenuItem[] = [{ key: 'roles', label: t('Manage roles'), icon: UserCog }];
+
+    if (member.can_impersonate) items.push({ key: 'impersonate', label: t('Impersonate'), icon: LogIn });
+
+    if (!isSelf(member)) {
+        items.push({ key: 'password', label: t('Set password'), icon: KeyRound });
+        items.push({ key: 'remove', label: t('Remove'), icon: Trash2, destructive: true });
+    }
+
+    return items;
+}
+
+function onRowAction(key: string, member: TeamMember): void {
+    if (key === 'roles') editingMember.value = member;
+    else if (key === 'impersonate') impersonateMember(member);
+    else if (key === 'password') settingPasswordFor.value = member;
+    else if (key === 'remove') removeMember(member);
+}
+
 async function removeMember(member: TeamMember): Promise<void> {
     const ok = await confirmDialog({
         title: t('Remove :name', { name: member.name }),
@@ -52,6 +79,20 @@ async function removeMember(member: TeamMember): Promise<void> {
     if (!ok) return;
 
     router.delete(`/settings/team/${member.id}`, { preserveScroll: true });
+}
+
+async function impersonateMember(member: TeamMember): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Impersonate :name', { name: member.name }),
+        description: t(
+            'You will see the app exactly as :name does. This is recorded in the audit log, and you can stop at any time from the banner.',
+            { name: member.name },
+        ),
+        confirmLabel: t('Impersonate'),
+    });
+    if (!ok) return;
+
+    router.post(`/settings/team/${member.id}/impersonate`);
 }
 
 function restoreMember(member: TeamMember): void {
@@ -111,9 +152,10 @@ async function copyInviteLink(): Promise<void> {
             </div>
 
             <!-- Members -->
-            <div class="overflow-hidden border border-border bg-card">
-                <div class="overflow-x-auto">
-                    <table class="w-full min-w-[56rem] text-xs">
+            <div class="border border-border bg-card">
+                <!-- The row menu is absolutely positioned: on wide screens nothing may clip it; on narrow ones the table scrolls sideways, so reserve the height a menu needs. -->
+                <div class="min-h-60 overflow-x-auto xl:min-h-0 xl:overflow-visible">
+                    <table class="w-full min-w-[40rem] text-xs">
                         <thead class="border-b border-border bg-muted/40 text-left text-xs text-muted-foreground">
                             <tr>
                                 <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Name') }}</th>
@@ -143,33 +185,12 @@ async function copyInviteLink(): Promise<void> {
                                     </Badge>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        <button
-                                            type="button"
-                                            class="p-1 text-muted-foreground hover:text-foreground"
-                                            :title="t('Manage roles')"
-                                            @click="editingMember = member"
-                                        >
-                                            <UserCog class="size-3.5" :stroke-width="1.5" />
-                                        </button>
-                                        <button
-                                            v-if="!isSelf(member)"
-                                            type="button"
-                                            class="p-1 text-muted-foreground hover:text-foreground"
-                                            :title="t('Set password')"
-                                            @click="settingPasswordFor = member"
-                                        >
-                                            <KeyRound class="size-3.5" :stroke-width="1.5" />
-                                        </button>
-                                        <button
-                                            v-if="!isSelf(member)"
-                                            type="button"
-                                            class="p-1 text-muted-foreground hover:text-destructive"
-                                            :title="t('Remove')"
-                                            @click="removeMember(member)"
-                                        >
-                                            <X class="size-3.5" :stroke-width="1.5" />
-                                        </button>
+                                    <div class="flex justify-end">
+                                        <DropdownMenu
+                                            :items="rowActions(member)"
+                                            :label="t('Actions for :name', { name: member.name })"
+                                            @select="onRowAction($event, member)"
+                                        />
                                     </div>
                                 </td>
                             </tr>

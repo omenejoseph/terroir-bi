@@ -8,6 +8,7 @@ use App\Authorization\MembershipContext;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Auth\ActiveTenantSession;
+use App\Services\Auth\ImpersonationSession;
 use App\Tenancy\Contracts\TenantContext;
 use App\Tenancy\Contracts\TenantResolver;
 use Closure;
@@ -36,6 +37,7 @@ class ResolveTenant
         private readonly TenantContext $context,
         private readonly TenantResolver $resolver,
         private readonly MembershipContext $membership,
+        private readonly ImpersonationSession $impersonation,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
@@ -50,6 +52,14 @@ class ResolveTenant
 
         if ($tenant === null) {
             abort(Response::HTTP_BAD_REQUEST, 'No active tenant for this request.');
+        }
+
+        // A tenant admin impersonating a team member is confined to that tenant: the
+        // target's other organisations stay out of reach however the session's active
+        // tenant gets changed.
+        $confinedTo = $this->impersonation->tenantId();
+        if ($confinedTo !== null && $confinedTo !== $tenant->getKey()) {
+            abort(Response::HTTP_FORBIDDEN, 'This impersonation is limited to one organisation.');
         }
 
         $membership = $user->membershipFor($tenant);

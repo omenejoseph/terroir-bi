@@ -38,7 +38,7 @@ class InflowAnalyticsQuery
         $excluded = Customer::statsExcludedIds();
         $inflows = Inflow::query()->whereBetween('date', [$from, $to])
             ->where(fn ($q) => $q->whereNull('customer_id')->orWhereNotIn('customer_id', $excluded))
-            ->get(['date', 'amount', 'category', 'status', 'customer_id', 'is_credit_note', 'received_at']);
+            ->get(['date', 'amount', 'vat_amount', 'category', 'is_invoice', 'status', 'customer_id', 'is_credit_note', 'received_at']);
 
         $costsTotal = (int) Cost::query()->whereBetween('date', [$from, $to])
             ->get(['total_amount'])->sum(fn (Cost $c) => $c->total_amount->getMinorAmount());
@@ -55,6 +55,10 @@ class InflowAnalyticsQuery
         return [
             'period' => ['from' => $from->toIso8601String(), 'to' => $to->toIso8601String()],
             'invoiced' => $this->card($inflows, null, $currency),
+            // VAT contained in the money received (amounts are gross). Credit notes are left out and an
+            // entry with no VAT recorded adds nothing, as in the old app.
+            'vat' => Money::fromMinor((int) $inflows->reject(fn (Inflow $i) => $i->is_credit_note)
+                ->sum(fn (Inflow $i) => $i->vat_amount?->getMinorAmount() ?? 0), $currency)->jsonSerialize(),
             'collected' => $this->card($inflows, InflowStatus::Received, $currency),
             'pending' => $this->card($inflows, InflowStatus::Pending, $currency),
             'net_cash_flow' => [
@@ -82,7 +86,7 @@ class InflowAnalyticsQuery
      */
     private function card(Collection $inflows, ?InflowStatus $status, string $currency): array
     {
-        $rows = $inflows->where('category', self::INVOICE_CATEGORY);
+        $rows = $inflows->filter(fn (Inflow $i) => $i->isInvoice());
         if ($status !== null) {
             $rows = $rows->where('status', $status);
         }
@@ -126,7 +130,7 @@ class InflowAnalyticsQuery
      */
     private function avgDaysToCollect(Collection $inflows): array
     {
-        $collected = $inflows->where('category', self::INVOICE_CATEGORY)
+        $collected = $inflows->filter(fn (Inflow $i) => $i->isInvoice())
             ->where('status', InflowStatus::Received)
             ->filter(fn (Inflow $i) => $i->received_at !== null);
         $count = $collected->count();

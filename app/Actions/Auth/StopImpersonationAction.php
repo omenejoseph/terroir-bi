@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Auth;
 
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\Auth\ActiveTenantSession;
@@ -41,6 +42,7 @@ class StopImpersonationAction
         }
 
         $admin = User::query()->find($impersonatorId);
+        $confinedTo = $this->impersonation->tenantId();
 
         if ($admin === null) {
             $this->impersonation->forget();
@@ -60,7 +62,14 @@ class StopImpersonationAction
         // ops-only admin with no memberships resolves to null, same as before.
         $this->activeTenant->set($this->authenticator->resolveActiveTenant($admin, null));
 
-        $this->audit->record($admin, 'user.impersonation.stopped', $target);
+        // A tenant admin goes straight back to the tenant they were administering, not
+        // to whichever tenant a fresh login would pick.
+        $tenant = $confinedTo !== null ? Tenant::query()->find($confinedTo) : null;
+        if ($tenant !== null && $admin->isMemberOf($tenant)) {
+            $this->activeTenant->set($tenant);
+        }
+
+        $this->audit->record($admin, 'user.impersonation.stopped', $target, $confinedTo !== null ? ['scope' => 'tenant'] : []);
 
         return $admin;
     }

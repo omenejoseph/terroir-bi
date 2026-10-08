@@ -105,12 +105,16 @@ Route::prefix('v1')->group(function () {
             Route::delete('invitations/{invitation}', [InvitationController::class, 'destroy']);
         });
 
+        // Inventory analytics and spend were admin-only in the old app.
+        Route::middleware('can:inventory.analytics')->group(function () {
+            Route::get('inventory-items/analytics', [InventoryItemController::class, 'analytics']);
+            Route::get('inventory-items/spend', [InventorySpendController::class, 'index']);
+        });
+
         // Inventory & recipes.
         Route::middleware('can:inventory.view')->group(function () {
             // Static segments must precede the {item} wildcard so they aren't treated as ids.
             Route::get('inventory-items/taxonomy', [InventoryItemController::class, 'taxonomy']);
-            Route::get('inventory-items/analytics', [InventoryItemController::class, 'analytics']);
-            Route::get('inventory-items/spend', [InventorySpendController::class, 'index']);
             Route::get('inventory-items', [InventoryItemController::class, 'index']);
             Route::get('inventory-items/{item}', [InventoryItemController::class, 'show']);
             Route::get('inventory-items/{item}/movements', [StockController::class, 'movements']);
@@ -125,12 +129,8 @@ Route::prefix('v1')->group(function () {
         });
         Route::middleware('can:inventory.manage')->group(function () {
             // Static segment before the {item} wildcard so it isn't treated as an id.
-            Route::post('inventory-items/check', [StockController::class, 'check']);
-            Route::post('inventory-items/bulk-update', [InventoryItemController::class, 'bulkUpdate']);
             Route::post('inventory-items', [InventoryItemController::class, 'store']);
             Route::patch('inventory-items/{item}', [InventoryItemController::class, 'update']);
-            Route::post('inventory-items/{item}/duplicate', [InventoryItemController::class, 'duplicate']);
-            Route::post('inventory-items/{item}/stock', [StockController::class, 'adjust']);
             Route::post('inventory-items/{item}/produce', [StockController::class, 'produce']);
             Route::put('inventory-items/{item}/recipe', [StockController::class, 'setRecipe']);
             Route::post('inventory-items/{item}/images', [InventoryMediaController::class, 'attachImage']);
@@ -141,16 +141,34 @@ Route::prefix('v1')->group(function () {
             Route::delete('inventory-items/{item}/documents/{document}', [InventoryMediaController::class, 'deleteDocument']);
             Route::post('inventory-items/{item}/bottle-analyses', [BottleAnalysisController::class, 'store']);
             Route::delete('inventory-items/{item}/bottle-analyses/{analysis}', [BottleAnalysisController::class, 'destroy']);
+        });
+        // Stock movements: TEAM and INVENTORY in the old app.
+        Route::middleware('can:inventory.stock')->group(function () {
+            Route::post('inventory-items/{item}/stock', [StockController::class, 'adjust']);
             Route::patch('stock-movements/{stockMovement}/reconciliation', [StockController::class, 'setReconciliation']);
         });
+        // Admin-only in the old app: applying a stock check, bulk update, duplicating a product.
+        Route::middleware('can:inventory.bulk')->group(function () {
+            Route::post('inventory-items/check', [StockController::class, 'check']);
+            Route::post('inventory-items/bulk-update', [InventoryItemController::class, 'bulkUpdate']);
+            Route::post('inventory-items/{item}/duplicate', [InventoryItemController::class, 'duplicate']);
+        });
+
         Route::delete('inventory-items/{item}', [InventoryItemController::class, 'destroy'])
             ->middleware('can:inventory.delete');
+
+        // TEAM and ORDERS create customers, look up a VAT number, use the reorder radar and mark customers contacted in the old app; editing is admin-only.
+        Route::middleware('can:customers.create')->group(function () {
+            Route::get('customers/lookup-vat', [CustomerController::class, 'lookupVat']);
+            Route::get('customers/reorder-radar', [CustomerController::class, 'reorderRadar']);
+            Route::post('customers', [CustomerController::class, 'store']);
+            Route::post('customers/quick', [CustomerController::class, 'quickStore']);
+            Route::post('customers/{customer}/contacted', [CustomerController::class, 'markContacted']);
+        });
 
         // Customers.
         Route::middleware('can:customers.view')->group(function () {
             // Static segments before the {customer} wildcard so they aren't treated as ids.
-            Route::get('customers/lookup-vat', [CustomerController::class, 'lookupVat']);
-            Route::get('customers/reorder-radar', [CustomerController::class, 'reorderRadar']);
             Route::get('customers/analytics', [CustomerController::class, 'analytics'])->middleware('can:financials.view');
             Route::get('customers', [CustomerController::class, 'index']);
             Route::get('customers/{customer}', [CustomerController::class, 'show']);
@@ -160,12 +178,10 @@ Route::prefix('v1')->group(function () {
             Route::get('customers/{customer}/custom-prices', [PriceController::class, 'customerPrices']);
             Route::get('customers/{customer}/product-overrides', [CustomerProductOverrideController::class, 'index']);
         });
+
         Route::middleware('can:customers.manage')->group(function () {
-            Route::post('customers', [CustomerController::class, 'store']);
-            Route::post('customers/quick', [CustomerController::class, 'quickStore']);
             Route::post('customers/merge/preview', [CustomerController::class, 'mergePreview']);
             Route::patch('customers/{customer}', [CustomerController::class, 'update']);
-            Route::post('customers/{customer}/contacted', [CustomerController::class, 'markContacted']);
             Route::put('customers/{customer}/product-overrides/{item}', [CustomerProductOverrideController::class, 'upsert']);
             Route::delete('customers/{customer}/product-overrides/{item}', [CustomerProductOverrideController::class, 'destroy']);
         });
@@ -180,9 +196,12 @@ Route::prefix('v1')->group(function () {
         });
 
         // Suppliers + price lists.
-        Route::middleware('can:suppliers.view')->group(function () {
+        // TEAM may view purchase orders in the old app; creating or changing them is admin-only, like suppliers.
+        Route::middleware('can:supplier_orders.view')->group(function () {
             Route::get('supplier-orders', [SupplierOrderController::class, 'index']);
             Route::get('supplier-orders/{supplierOrder}', [SupplierOrderController::class, 'show']);
+        });
+        Route::middleware('can:suppliers.view')->group(function () {
             Route::get('suppliers', [SupplierController::class, 'index']);
             Route::get('suppliers/{supplier}', [SupplierController::class, 'show']);
             Route::get('suppliers/{supplier}/stats', [SupplierController::class, 'stats']);
@@ -277,15 +296,18 @@ Route::prefix('v1')->group(function () {
         Route::post('push-subscriptions', [PushSubscriptionController::class, 'store']);
         Route::delete('push-subscriptions', [PushSubscriptionController::class, 'destroy']);
 
-        // Team task planning (any member). Static segments precede the {workOrder} wildcard.
-        Route::get('work-orders/stats', [WorkOrderController::class, 'stats']);
-        Route::post('work-orders/reorder', [WorkOrderController::class, 'reorder']);
-        Route::get('work-orders', [WorkOrderController::class, 'index']);
-        Route::post('work-orders', [WorkOrderController::class, 'store']);
-        Route::get('work-orders/{workOrder}', [WorkOrderController::class, 'show']);
-        Route::patch('work-orders/{workOrder}/status', [WorkOrderController::class, 'updateStatus']);
-        Route::patch('work-orders/{workOrder}', [WorkOrderController::class, 'update']);
-        Route::delete('work-orders/{workOrder}', [WorkOrderController::class, 'destroy']);
+        // Team task planning: TEAM, CELLAR and ORDERS in the old app, never anyone who also holds
+        // MANAGER (RoleCapabilities::revokedBy). Static segments precede the {workOrder} wildcard.
+        Route::middleware('can:work_orders.use')->group(function () {
+            Route::get('work-orders/stats', [WorkOrderController::class, 'stats']);
+            Route::post('work-orders/reorder', [WorkOrderController::class, 'reorder']);
+            Route::get('work-orders', [WorkOrderController::class, 'index']);
+            Route::post('work-orders', [WorkOrderController::class, 'store']);
+            Route::get('work-orders/{workOrder}', [WorkOrderController::class, 'show']);
+            Route::patch('work-orders/{workOrder}/status', [WorkOrderController::class, 'updateStatus']);
+            Route::patch('work-orders/{workOrder}', [WorkOrderController::class, 'update']);
+            Route::delete('work-orders/{workOrder}', [WorkOrderController::class, 'destroy']);
+        });
 
         // Orders.
         Route::middleware('can:orders.view')->group(function () {
@@ -343,9 +365,12 @@ Route::prefix('v1')->group(function () {
 
         // Cellar — vessels (incl. cellar map) and wine lots. Module gated by the
         // `vessels` / `wine-lots` path prefixes (App\Authorization\ModuleRegistry).
+        // Cellar costs were admin-only in the old app (they are money figures).
+        Route::middleware('can:finance.view')->group(function () {
+            Route::get('cellar/costs', [CellarController::class, 'costs']);
+        });
         Route::middleware('can:cellar.view')->group(function () {
             Route::get('cellar/fermentation-monitor', [FermentationMonitorController::class, 'index']);
-            Route::get('cellar/costs', [CellarController::class, 'costs']);
             Route::get('cellar/analytics', [CellarController::class, 'analytics']);
             Route::get('tasting-reports', [TastingReportController::class, 'index']);
             Route::get('vessels', [VesselController::class, 'index']);

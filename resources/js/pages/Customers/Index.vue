@@ -29,7 +29,7 @@ import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { CUSTOMER_TYPES, customerTypeLabel } from '@/lib/customers';
 import { formatMoney, formatNumber } from '@/lib/money';
-import type { Customer, CustomerFilters, PricingTierSummary } from '@/types/customers';
+import type { Customer, CustomerCategorySummary, CustomerFilters, PricingTierSummary } from '@/types/customers';
 import type { Paginated, SharedProps } from '@/types';
 import type { MenuItem, TabItem } from '@/types/ui';
 
@@ -49,6 +49,8 @@ const props = defineProps<{
     filters: CustomerFilters;
     /** Only present once the Tier filter has asked for them. */
     tiers?: PricingTierSummary[];
+    /** Only present once the Category filter has asked for them. */
+    categories?: CustomerCategorySummary[];
 }>();
 
 const page = usePage<SharedProps>();
@@ -70,7 +72,7 @@ const mergeOpen = ref(false);
 */
 const filterRow = ref<HTMLElement | null>(null);
 const { open: filterOpen, close: closeFilter, show: showFilter } = usePopover(filterRow);
-const openFilter = ref<'status' | 'tier' | 'type' | null>(null);
+const openFilter = ref<'status' | 'tier' | 'type' | 'category' | null>(null);
 
 watch(filterOpen, (isOpen) => {
     if (!isOpen) openFilter.value = null;
@@ -91,6 +93,7 @@ function reload(overrides: Record<string, unknown>): void {
             is_active: props.filters.is_active ?? undefined,
             pricing_tier_id: props.filters.pricing_tier_id ?? undefined,
             customer_type: props.filters.customer_type ?? undefined,
+            customer_category_id: props.filters.customer_category_id ?? undefined,
             // Carried forward so changing a filter does not silently reset the
             // page size back to the server default.
             per_page: props.customers.meta.per_page,
@@ -103,10 +106,11 @@ function reload(overrides: Record<string, unknown>): void {
 const MODULE_TABS = computed<TabItem[]>(() => [
     { label: t('Customers'), href: '/customers' },
     { label: t('Analytics'), href: '/customers-analytics' },
+    { label: t('Categories'), href: '/customers/categories' },
 ]);
 
 /** Tiers are only fetched when the Tier filter is first opened. */
-function toggleFilter(which: 'status' | 'tier' | 'type'): void {
+function toggleFilter(which: 'status' | 'tier' | 'type' | 'category'): void {
     if (openFilter.value === which) {
         closeFilter();
 
@@ -119,6 +123,10 @@ function toggleFilter(which: 'status' | 'tier' | 'type'): void {
     if (which === 'tier' && props.tiers === undefined) {
         router.reload({ only: ['tiers'] });
     }
+
+    if (which === 'category' && props.categories === undefined) {
+        router.reload({ only: ['categories'] });
+    }
 }
 
 function setFilter(key: string, value: unknown): void {
@@ -128,7 +136,7 @@ function setFilter(key: string, value: unknown): void {
 
 const activeFilterCount = computed(
     () =>
-        [props.filters.is_active, props.filters.pricing_tier_id, props.filters.customer_type].filter(
+        [props.filters.is_active, props.filters.pricing_tier_id, props.filters.customer_type, props.filters.customer_category_id].filter(
             (v) => v !== null,
         ).length,
 );
@@ -164,6 +172,7 @@ const exportAllHref = computed(() => {
     if (props.filters.is_active !== null) params.set('is_active', String(props.filters.is_active));
     if (props.filters.pricing_tier_id) params.set('pricing_tier_id', props.filters.pricing_tier_id);
     if (props.filters.customer_type) params.set('customer_type', props.filters.customer_type);
+    if (props.filters.customer_category_id) params.set('customer_category_id', props.filters.customer_category_id);
 
     const query = params.toString();
 
@@ -262,7 +271,7 @@ async function destroy(customer: Customer): Promise<void> {
                         <Download class="size-3.5" :stroke-width="1.5" />
                         {{ t('Export all') }}
                     </Button>
-                    <Button v-if="can('customers.manage')" size="sm" @click="create">
+                    <Button v-if="can('customers.create')" size="sm" @click="create">
                         <Plus class="size-3.5" :stroke-width="1.5" />
                         {{ t('New Customer') }}
                     </Button>
@@ -407,11 +416,54 @@ async function destroy(customer: Customer): Promise<void> {
                     </div>
                 </div>
 
+                <div class="relative">
+                    <button
+                        type="button"
+                        class="inline-flex h-8 items-center gap-1.5 border px-2.5 text-xs transition-colors"
+                        :class="
+                            filters.customer_category_id === null
+                                ? 'border-dashed border-border text-foreground hover:border-foreground/40'
+                                : 'border-primary bg-primary text-primary-foreground'
+                        "
+                        @click="toggleFilter('category')"
+                    >
+                        <Filter class="size-3.5" :stroke-width="1.5" />
+                        {{ t('Category') }}
+                        <template v-if="filters.customer_category_id">
+                            · {{ (categories ?? []).find((c) => c.id === filters.customer_category_id)?.name ?? '' }}
+                        </template>
+                    </button>
+                    <div
+                        v-if="filterOpen && openFilter === 'category'"
+                        class="absolute top-9 left-0 z-20 max-h-64 min-w-48 overflow-y-auto border border-border bg-card p-1 shadow-lg"
+                    >
+                        <button
+                            type="button"
+                            class="block w-full px-2 py-1.5 text-left text-xs hover:bg-muted"
+                            @click="setFilter('customer_category_id', null)"
+                        >
+                            {{ t('Any category') }}
+                        </button>
+                        <button
+                            v-for="category in categories ?? []"
+                            :key="category.id"
+                            type="button"
+                            class="block w-full px-2 py-1.5 text-left text-xs hover:bg-muted"
+                            @click="setFilter('customer_category_id', category.id)"
+                        >
+                            {{ category.name }}
+                        </button>
+                        <p v-if="(categories ?? []).length === 0" class="px-2 py-1.5 text-xs text-muted-foreground">
+                            {{ t('No categories yet.') }}
+                        </p>
+                    </div>
+                </div>
+
                 <button
                     v-if="activeFilterCount > 0"
                     type="button"
                     class="inline-flex h-8 items-center gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
-                    @click="reload({ is_active: undefined, pricing_tier_id: undefined, customer_type: undefined })"
+                    @click="reload({ is_active: undefined, pricing_tier_id: undefined, customer_type: undefined, customer_category_id: undefined })"
                 >
                     <X class="size-3.5" :stroke-width="1.5" />
                     {{ t('Clear') }}
@@ -420,7 +472,7 @@ async function destroy(customer: Customer): Promise<void> {
 
             <div class="overflow-hidden border border-border bg-card">
                 <div class="overflow-x-auto">
-                    <table class="w-full min-w-[60rem] text-xs">
+                    <table class="w-full min-w-[66rem] text-xs">
                         <thead class="border-b border-border bg-muted/40 text-left text-xs text-muted-foreground">
                             <tr>
                                 <th scope="col" class="w-10 px-4 py-2.5">
@@ -433,6 +485,7 @@ async function destroy(customer: Customer): Promise<void> {
                                 </th>
                                 <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Company') }} <span aria-hidden="true">↑</span></th>
                                 <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Contact') }}</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Category') }}</th>
                                 <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Type') }}</th>
                                 <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Tier') }}</th>
                                 <th scope="col" class="px-4 py-2.5 text-right font-medium">
@@ -472,6 +525,10 @@ async function destroy(customer: Customer): Promise<void> {
                                     </Link>
                                 </td>
                                 <td class="px-4 py-3 text-muted-foreground">{{ row.contact_name ?? '—' }}</td>
+                                <td class="px-4 py-3">
+                                    <Badge v-if="row.category" variant="outline">{{ row.category.name }}</Badge>
+                                    <span v-else class="text-muted-foreground">—</span>
+                                </td>
                                 <td class="px-4 py-3 text-muted-foreground">
                                     {{ customerTypeLabel(row.customer_type) }}
                                 </td>
@@ -508,7 +565,7 @@ async function destroy(customer: Customer): Promise<void> {
                             </tr>
 
                             <tr v-if="customers.data.length === 0">
-                                <td colspan="10" class="px-4 py-12 text-center text-muted-foreground">
+                                <td colspan="11" class="px-4 py-12 text-center text-muted-foreground">
                                     {{ t('No customers match these filters.') }}
                                 </td>
                             </tr>
@@ -565,7 +622,7 @@ async function destroy(customer: Customer): Promise<void> {
         </div>
 
         <CustomerFormPanel
-            v-if="can('customers.manage')"
+            v-if="can('customers.create') || can('customers.manage')"
             :open="formOpen"
             :customer="editing"
             @close="formOpen = false"

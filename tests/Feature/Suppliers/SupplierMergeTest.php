@@ -89,23 +89,22 @@ class SupplierMergeTest extends TestCase
         ], $this->headers())->assertStatus(422);
     }
 
-    public function test_merge_requires_delete_capability(): void
+    public function test_only_an_admin_can_preview_or_apply_a_merge(): void
     {
-        $member = $this->createMember($this->tenant, [TenantRole::Manager]); // manage, not delete
-
+        // Suppliers were admin-only in the old app: no other role manages or merges them.
         $this->actingAsTenant($this->tenant);
         $a = Supplier::create(['company_name' => 'A']);
         $b = Supplier::create(['company_name' => 'B']);
         $this->forgetTenant();
+        $payload = ['winner_id' => $a->getKey(), 'loser_ids' => [$b->getKey()]];
 
-        Sanctum::actingAs($member);
-        // Preview is allowed (manage); applying the merge is not (delete-only).
-        $this->postJson('/api/v1/suppliers/merge/preview', [
-            'winner_id' => $a->getKey(), 'loser_ids' => [$b->getKey()],
-        ], $this->headers())->assertOk();
+        foreach ([TenantRole::Team, TenantRole::Manager, TenantRole::Orders, TenantRole::Inventory] as $role) {
+            Sanctum::actingAs($this->createMember($this->tenant, [$role]));
+            $this->postJson('/api/v1/suppliers/merge/preview', $payload, $this->headers())->assertForbidden();
+            $this->postJson('/api/v1/suppliers/merge', $payload, $this->headers())->assertForbidden();
+        }
 
-        $this->postJson('/api/v1/suppliers/merge', [
-            'winner_id' => $a->getKey(), 'loser_ids' => [$b->getKey()],
-        ], $this->headers())->assertForbidden();
+        Sanctum::actingAs($this->createMember($this->tenant, [TenantRole::Admin]));
+        $this->postJson('/api/v1/suppliers/merge/preview', $payload, $this->headers())->assertOk();
     }
 }

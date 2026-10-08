@@ -29,6 +29,7 @@ use App\Queries\ListOrdersQuery;
 use App\Queries\OrderPipelineQuery;
 use App\Queries\OrderStatusCountsQuery;
 use App\Queries\ReorderRadarQuery;
+use App\Services\Customers\CustomerCategoryOptions;
 use App\Services\Customers\CustomerMergeService;
 use App\Services\Customers\CustomerPresenter;
 use App\Services\Customers\PricingTierOptions;
@@ -70,6 +71,7 @@ class CustomerController extends Controller
         ListCustomersQuery $query,
         CustomerPresenter $presenter,
         PricingTierOptions $tiers,
+        CustomerCategoryOptions $categories,
     ): Response {
         $filters = CustomerFilters::fromRequest($request);
         $perPage = PerPage::fromRequest($request);
@@ -80,6 +82,8 @@ class CustomerController extends Controller
             // Feeds the Tier filter; a small table, but only the filter row
             // needs it, so it is not paid for on every visit.
             'tiers' => Inertia::optional(fn (): array => $tiers->list()),
+            // Feeds the Category filter and the customer form's select, loaded on demand like tiers.
+            'categories' => Inertia::optional(fn (): array => $categories->list()),
         ]);
     }
 
@@ -117,6 +121,7 @@ class CustomerController extends Controller
         CustomerRhythmQuery $rhythm,
         CustomerProductsQuery $products,
         CustomerAttentionQuery $attention,
+        CustomerCategoryOptions $categories,
     ): Response {
         $financials = $this->membership->canSeeFinancials();
 
@@ -132,6 +137,8 @@ class CustomerController extends Controller
 
         return Inertia::render('Customers/Show', [
             'customer' => $presenter->detail($customer),
+            // For the edit form's Category select, loaded on demand like the tiers on the list page.
+            'categories' => Inertia::optional(fn (): array => $categories->list()),
             'tab' => $this->tab($request),
             'rhythm' => $rhythm->get($customer),
             // The band is usually empty; each card either fires with its

@@ -154,7 +154,7 @@ const alerts = computed(() => {
                         <Plus class="size-3.5" :stroke-width="1.5" />
                         {{ t('New order') }}
                     </Button>
-                    <Button v-if="can('customers.manage')" size="sm" @click="createCustomerOpen = true">
+                    <Button v-if="can('customers.create')" size="sm" @click="createCustomerOpen = true">
                         <Plus class="size-3.5" :stroke-width="1.5" />
                         {{ t('New customer') }}
                     </Button>
@@ -279,7 +279,7 @@ const alerts = computed(() => {
         <!-- Same drawers Orders/Customers open from their own "New" button. -->
         <CreateOrderPanel v-if="can('orders.manage')" :open="createOrderOpen" @close="createOrderOpen = false" />
         <CustomerFormPanel
-            v-if="can('customers.manage')"
+            v-if="can('customers.create')"
             :open="createCustomerOpen"
             :customer="null"
             @close="createCustomerOpen = false"

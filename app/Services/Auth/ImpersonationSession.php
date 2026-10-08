@@ -16,6 +16,9 @@ class ImpersonationSession
 {
     public const KEY = 'impersonator_id';
 
+    /** Set only for a tenant admin impersonating a team member; confines the session to that tenant. */
+    public const TENANT_KEY = 'impersonation_tenant_id';
+
     public function __construct(private readonly Session $session) {}
 
     public function get(): ?string
@@ -30,8 +33,21 @@ class ImpersonationSession
         $this->session->put(self::KEY, $impersonatorId);
     }
 
+    /** The tenant this impersonation is confined to, or null (platform-admin impersonation is unconfined). */
+    public function tenantId(): ?string
+    {
+        $id = $this->session->get(self::TENANT_KEY);
+
+        return is_string($id) && $id !== '' ? $id : null;
+    }
+
+    public function confineToTenant(string $tenantId): void
+    {
+        $this->session->put(self::TENANT_KEY, $tenantId);
+    }
+
     public function forget(): void
     {
-        $this->session->forget(self::KEY);
+        $this->session->forget([self::KEY, self::TENANT_KEY]);
     }
 }

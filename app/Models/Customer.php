@@ -26,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property bool $hide_prices
  * @property string|null $order_token
  * @property string|null $pricing_tier_id
+ * @property string|null $customer_category_id
  * @property CustomerType|null $customer_type
  * @property string|null $oib
  * @property bool $is_agency
@@ -58,6 +59,7 @@ class Customer extends Model
         'is_agency',
         'allow_single_bottle',
         'pricing_tier_id',
+        'customer_category_id',
         'reorder_contacted_at',
     ];
 
@@ -91,6 +93,14 @@ class Customer extends Model
     public function pricingTier(): BelongsTo
     {
         return $this->belongsTo(PricingTier::class);
+    }
+
+    /**
+     * @return BelongsTo<CustomerCategory, $this>
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(CustomerCategory::class, 'customer_category_id');
     }
 
     /**

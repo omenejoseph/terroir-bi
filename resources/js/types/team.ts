@@ -13,6 +13,8 @@ export interface TeamMember {
     roles: string[];
     /** App\Enums\MembershipStatus: "active" | "suspended". */
     status: string;
+    /** Set by Web\TeamController: whether the viewer may impersonate this member right now. */
+    can_impersonate?: boolean;
 }
 
 export interface TeamInvitation {

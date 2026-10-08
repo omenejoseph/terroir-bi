@@ -60,8 +60,9 @@ class WorkOrderController extends Controller
             'todo' => $scoped()->where('status', TaskStatus::Todo)->count(),
             'in_progress' => $scoped()->where('status', TaskStatus::InProgress)->count(),
             'done' => $scoped()->where('status', TaskStatus::Done)->count(),
+            'cancelled' => $scoped()->where('status', TaskStatus::Cancelled)->count(),
             'overdue' => $scoped()
-                ->where('status', '!=', TaskStatus::Done)
+                ->whereNotIn('status', TaskStatus::closed())
                 ->whereNotNull('due_date')
                 ->where('due_date', '<', now())
                 ->count(),

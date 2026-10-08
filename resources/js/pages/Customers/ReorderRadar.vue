@@ -100,7 +100,7 @@ function markContacted(customerId: string): void {
                                 <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Last order') }}</th>
                                 <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Usual gap') }}</th>
                                 <th scope="col" class="px-4 py-2.5 font-medium">{{ t('Avg. order value') }}</th>
-                                <th v-if="can('customers.manage')" scope="col" class="px-4 py-2.5 font-medium" />
+                                <th v-if="can('customers.create')" scope="col" class="px-4 py-2.5 font-medium" />
                             </tr>
                         </thead>
                         <tbody>
@@ -124,7 +124,7 @@ function markContacted(customerId: string): void {
                                 <td class="px-4 py-3 tabular-nums text-foreground">
                                     {{ formatMoney(row.avg_order_value.minor, row.avg_order_value.currency) }}
                                 </td>
-                                <td v-if="can('customers.manage')" class="px-4 py-3 text-right">
+                                <td v-if="can('customers.create')" class="px-4 py-3 text-right">
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -137,7 +137,7 @@ function markContacted(customerId: string): void {
                             </tr>
 
                             <tr v-if="rows.length === 0">
-                                <td :colspan="can('customers.manage') ? 6 : 5" class="px-4 py-12 text-center text-muted-foreground">
+                                <td :colspan="can('customers.create') ? 6 : 5" class="px-4 py-12 text-center text-muted-foreground">
                                     {{ filter ? t('No accounts match that search.') : t('No accounts are due to reorder.') }}
                                 </td>
                             </tr>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Actions\Auth\StartTenantImpersonationAction;
 use App\Actions\Members\RemoveMemberAction;
 use App\Actions\Members\RestoreMemberAction;
 use App\Actions\Members\SetMemberPasswordAction;
@@ -43,15 +44,21 @@ class TeamController extends Controller
 {
     public function __construct(private readonly TenantContext $tenant) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request, StartTenantImpersonationAction $impersonation): Response
     {
         $tenantId = $this->tenant->id();
+        $actor = $request->user();
+        $currentTenant = $this->tenant->current();
+        $mayImpersonate = $actor instanceof User && $currentTenant !== null && $actor->can('members.impersonate');
 
         $members = Membership::query()
             ->where('tenant_id', $tenantId)
             ->with('user')
             ->get()
-            ->map(fn (Membership $m): array => MembershipData::fromModel($m)->toArray())
+            ->map(fn (Membership $m): array => MembershipData::fromModel($m)->toArray() + [
+                // Same rule the action enforces, so the button only shows where it would work.
+                'can_impersonate' => $mayImpersonate && $impersonation->denialReason($actor, $m, $currentTenant) === null,
+            ])
             ->values();
 
         $removedMembers = Membership::onlyTrashed()

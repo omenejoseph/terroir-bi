@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ListCustomersQuery
 {
     /**
-     * @param  array{search?: ?string, is_active?: ?bool, pricing_tier_id?: ?string, customer_type?: ?string}  $filters
+     * @param  array{search?: ?string, is_active?: ?bool, pricing_tier_id?: ?string, customer_type?: ?string, customer_category_id?: ?string}  $filters
      * @return LengthAwarePaginator<int, Customer>
      */
     public function paginate(array $filters = [], int $perPage = 25): LengthAwarePaginator
@@ -24,7 +24,7 @@ class ListCustomersQuery
     }
 
     /**
-     * @param  array{search?: ?string, is_active?: ?bool, pricing_tier_id?: ?string, customer_type?: ?string}  $filters
+     * @param  array{search?: ?string, is_active?: ?bool, pricing_tier_id?: ?string, customer_type?: ?string, customer_category_id?: ?string}  $filters
      * @return Builder<Customer>
      */
     public function build(array $filters): Builder
@@ -33,7 +33,7 @@ class ListCustomersQuery
         // only, matching the analytics queries). Revenue is exposed minor-only;
         // the controller gates it behind financials visibility.
         $query = Customer::query()
-            ->with('pricingTier')
+            ->with(['pricingTier', 'category'])
             ->withCount(['orders as order_count' => fn (Builder $q) => $q->where('is_consignment', false)])
             ->withSum(
                 ['orders as revenue_minor' => fn (Builder $q) => $q->where('is_consignment', false)],
@@ -55,6 +55,10 @@ class ListCustomersQuery
 
         if (! empty($filters['pricing_tier_id'])) {
             $query->where('pricing_tier_id', $filters['pricing_tier_id']);
+        }
+
+        if (! empty($filters['customer_category_id'])) {
+            $query->where('customer_category_id', $filters['customer_category_id']);
         }
 
         // The design's Type filter (Figma 230:2395) narrows by sales channel.

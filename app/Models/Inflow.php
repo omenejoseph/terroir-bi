@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\CostCategory;
 use App\Enums\InflowStatus;
 use App\Enums\PaymentMethod;
 use App\Support\Money\Money;
@@ -25,8 +26,10 @@ use Illuminate\Support\Facades\Auth;
  * @property string|null $order_id
  * @property Carbon $date
  * @property Money $amount
+ * @property Money|null $vat_amount
  * @property InflowStatus $status
  * @property bool $is_credit_note
+ * @property bool $is_invoice
  * @property string|null $category
  * @property string|null $reference
  * @property PaymentMethod|null $payment_method
@@ -46,6 +49,7 @@ class Inflow extends Model
         'order_id',
         'date',
         'amount',
+        'vat_amount',
         'status',
         'is_credit_note',
         'category',
@@ -55,6 +59,7 @@ class Inflow extends Model
         'due_date',
         'received_at',
         'created_by_id',
+        'is_invoice',
         'is_ai_generated',
         'ai_metadata',
     ];
@@ -62,18 +67,27 @@ class Inflow extends Model
     protected $attributes = [
         'status' => 'PENDING',
         'is_credit_note' => false,
+        'is_invoice' => false,
     ];
+
+    /** An invoice either carries the reserved "Invoice" category or is flagged as one (old app: e-invoice link or type INVOICE). */
+    public function isInvoice(): bool
+    {
+        return $this->is_invoice || $this->category === CostCategory::Invoice->value;
+    }
 
     protected function casts(): array
     {
         return [
             'date' => 'datetime',
             'amount' => MoneyCast::class,
+            'vat_amount' => MoneyCast::class,
             'status' => InflowStatus::class,
             'payment_method' => PaymentMethod::class,
             'is_credit_note' => 'boolean',
             'due_date' => 'datetime',
             'received_at' => 'datetime',
+            'is_invoice' => 'boolean',
             'is_ai_generated' => 'boolean',
             'ai_metadata' => 'array',
         ];

@@ -9,6 +9,17 @@ export interface PricingTierSummary {
     rebate_percent: string;
 }
 
+export interface CustomerCategorySummary {
+    id: string;
+    name: string;
+}
+
+/** A row of the Categories management page (Web\CustomerCategoryController::index). */
+export interface CustomerCategoryRow extends CustomerCategorySummary {
+    is_active: boolean;
+    customers_count: number;
+}
+
 export interface Customer {
     id: string;
     company_name: string;
@@ -36,6 +47,8 @@ export interface Customer {
     reorder_contacted_at: string | null;
     has_order_token: boolean;
     pricing_tier: PricingTierSummary | null;
+    /** The organisation's own label for this customer, e.g. "Restaurant". */
+    category: CustomerCategorySummary | null;
     /** Loaded by ListCustomersQuery; null on a bare record. */
     order_count: number | null;
     /** Minor units, and null unless the viewer may see financials. */
@@ -47,6 +60,7 @@ export interface CustomerFilters {
     is_active: boolean | null;
     pricing_tier_id: string | null;
     customer_type: string | null;
+    customer_category_id: string | null;
 }
 
 /** App\Queries\CustomerAnalyticsQuery — the Analytics tab. */

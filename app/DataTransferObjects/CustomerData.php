@@ -51,6 +51,7 @@ final class CustomerData implements Arrayable, JsonSerializable
     {
         $c = $this->model;
         $tier = $c?->pricingTier;
+        $category = $c?->category;
 
         return [
             'id' => $this->id,
@@ -75,6 +76,7 @@ final class CustomerData implements Arrayable, JsonSerializable
             'exclude_from_stats' => $c?->exclude_from_stats,
             'reorder_contacted_at' => $c?->reorder_contacted_at?->toIso8601String(),
             'has_order_token' => $this->hasOrderToken,
+            'category' => $category !== null ? ['id' => $category->getKey(), 'name' => $category->name] : null,
             'pricing_tier' => $tier !== null
                 ? ['id' => $tier->getKey(), 'name' => $tier->name, 'rebate_percent' => (string) $tier->rebate_percent]
                 : null,

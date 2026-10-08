@@ -22,6 +22,16 @@ final class RoleCapabilities
     public const WILDCARD = '*';
 
     /**
+     * Each role's capabilities, mirroring what that role could do in the original app
+     * (every `requireRole(...)` / `hasAnyRole(...)` in its pages and server actions, and its
+     * sidebar). ADMIN is the only role that could do the rest, which is why a capability
+     * listed for no role below (members.*, settings.manage, finance.*, suppliers.*, …) is
+     * admin-only. Pinned by tests/Feature/Members/RoleParityTest.
+     *
+     * Where the old app was looser than its own menu (e.g. any signed-in user could read the
+     * customer list through a server action, while the menu showed Customers to admins only)
+     * the menu and page guards win, since that is what a person actually experienced.
+     *
      * @return array<TenantRole, list<string>>
      */
     public static function map(): array
@@ -29,67 +39,67 @@ final class RoleCapabilities
         return [
             TenantRole::Admin->value => [self::WILDCARD],
             TenantRole::Team->value => [
-                'customers.view',
-                'customers.manage',
-                'pricing.view',
-                'pricing.manage',
+                'customers.create',
                 'inventory.view',
                 'inventory.manage',
+                'inventory.stock',
                 'orders.view',
                 'orders.manage',
-                'finance.view',
-                'finance.manage',
-                'suppliers.view',
-                'suppliers.manage',
+                'pricing.view',
+                'production.view',
+                'production.manage',
+                'supplier_orders.view',
+                'work_orders.use',
                 'financials.view',
-                'ai.use',
-                'ai.manage',
-                // customers.delete, customers.tokens, inventory.delete, orders.delete,
-                // orders.backorder, finance.delete and suppliers.delete are ADMIN-only.
             ],
             TenantRole::Cellar->value => [
                 'cellar.view',
                 'cellar.manage',
                 'vineyards.view',
                 'vineyards.manage',
-                'production.view',
-                'inventory.view',
+                'work_orders.use',
             ],
             TenantRole::Orders->value => [
+                'customers.create',
                 'orders.view',
                 'orders.manage',
-                'finance.view',
-                'finance.manage',
+                'pricing.view',
+                'work_orders.use',
                 'financials.view',
             ],
+            // The old MANAGER role was about people (schedules, "My Team"), which this app
+            // does not have yet; the only business power it carried was seeing figures.
             TenantRole::Manager->value => [
-                'finance.view',
-                'finance.manage',
-                'suppliers.view',
-                'suppliers.manage',
                 'financials.view',
-                'cellar.view',
-                'cellar.manage',
-                'vineyards.view',
-                'vineyards.manage',
-                'production.view',
-                'production.manage',
-                'ai.use',
-                'ai.manage',
             ],
+            // Sales worked in the pipeline (not built here yet) and could see figures.
             TenantRole::Sales->value => [
-                'finance.view',
                 'financials.view',
             ],
-            // Roles below accumulate capabilities as their modules land.
+            // Roles below belong to modules that are not built here yet.
             TenantRole::Hospitality->value => [],
             TenantRole::Kitchen->value => [],
             TenantRole::Employee->value => [],
             TenantRole::WineClub->value => [],
             TenantRole::Inventory->value => [
                 'inventory.view',
-                'inventory.manage',
+                'inventory.stock',
+                'pricing.view',
             ],
+        ];
+    }
+
+    /**
+     * Capabilities that holding a given role takes AWAY, even when another of the member's
+     * roles grants them. The old app's sidebar hid Work Orders from anyone with MANAGER, so
+     * a MANAGER who was also on ORDERS still did not see it. ADMIN is never restricted.
+     *
+     * @return array<string, list<TenantRole>>
+     */
+    public static function revokedBy(): array
+    {
+        return [
+            'work_orders.use' => [TenantRole::Manager],
         ];
     }
 

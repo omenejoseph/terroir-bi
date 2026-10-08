@@ -229,7 +229,7 @@ class InventoryItemTest extends TestCase
     public function test_duplicate_clones_item_with_new_sku_zero_stock_and_recipe(): void
     {
         $tenant = $this->createTenant();
-        $admin = $this->createMember($tenant, [TenantRole::Team]);
+        $admin = $this->createMember($tenant, [TenantRole::Admin]); // admin-only in the old app
         $this->actingAsTenant($tenant);
         $input = InventoryItem::create(['name' => 'Juice', 'sku' => 'JU-1', 'category' => 'RAW_MATERIAL', 'unit' => 'liter', 'current_stock' => '50']);
         $output = InventoryItem::create(['name' => 'Cuvée', 'sku' => 'CV-1', 'category' => 'FINISHED', 'unit' => 'bottles', 'sales_unit' => 'bottles', 'bottles_per_case' => 6, 'current_stock' => '120', 'default_price' => 2500]);
@@ -256,7 +256,7 @@ class InventoryItemTest extends TestCase
     public function test_bulk_update_applies_edits_to_many_items(): void
     {
         $tenant = $this->createTenant();
-        $admin = $this->createMember($tenant, [TenantRole::Team]);
+        $admin = $this->createMember($tenant, [TenantRole::Admin]); // admin-only in the old app
         $this->actingAsTenant($tenant);
         $a = InventoryItem::create(['name' => 'A', 'sku' => 'A', 'category' => 'FINISHED', 'unit' => 'bottles', 'is_active' => true, 'default_price' => 1000]);
         $b = InventoryItem::create(['name' => 'B', 'sku' => 'B', 'category' => 'FINISHED', 'unit' => 'bottles', 'is_active' => true, 'is_for_sale' => false]);

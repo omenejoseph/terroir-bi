@@ -17,6 +17,7 @@ use App\Services\Auth\ActiveTenantSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Concerns\InteractsWithTenancy;
 use Tests\TestCase;
 
@@ -67,7 +68,7 @@ class WebWorkOrdersTest extends TestCase
         return [ActiveTenantSession::KEY => $tenant->getKey()];
     }
 
-    public function test_the_board_groups_tasks_into_the_three_statuses(): void
+    public function test_the_board_groups_tasks_into_the_status_columns(): void
     {
         [$tenant, $admin] = $this->tenantAndMember();
 
@@ -82,7 +83,8 @@ class WebWorkOrdersTest extends TestCase
             ->assertOk()
             ->assertInertia(function (AssertableInertia $page) {
                 $page->component('WorkOrders/Index')
-                    ->has('board.columns', 3)
+                    // To do, In progress, Done and (since the old app's cancelled tasks came across) Cancelled.
+                    ->has('board.columns', 4)
                     ->where('board.total', 3);
 
                 $columns = collect((array) $page->toArray()['props']['board']['columns'])->keyBy('key');
@@ -90,6 +92,7 @@ class WebWorkOrdersTest extends TestCase
                 $this->assertSame(1, $columns['TODO']['count']);
                 $this->assertSame(1, $columns['IN_PROGRESS']['count']);
                 $this->assertSame(1, $columns['DONE']['count']);
+                $this->assertSame(0, $columns['CANCELLED']['count']);
                 $this->assertSame('Rack Malvazija', $columns['TODO']['tasks'][0]['title']);
             });
     }
@@ -232,12 +235,12 @@ class WebWorkOrdersTest extends TestCase
     }
 
     /**
-     * Boards are as ungated as the work orders themselves — any member of the
-     * tenant may create one and favourite one.
+     * Boards follow the work orders themselves: TEAM, CELLAR and ORDERS may create
+     * one and favourite one.
      */
-    public function test_the_board_routes_are_open_to_any_member(): void
+    public function test_the_board_routes_are_open_to_the_work_order_roles(): void
     {
-        [$tenant, $employee] = $this->tenantAndMember(TenantRole::Employee);
+        [$tenant, $employee] = $this->tenantAndMember(TenantRole::Team);
 
         $this->actingAs($employee)->withSession($this->tenantSession($tenant))
             ->post('/work-order-boards', ['name' => 'Bottling Line'])
@@ -421,12 +424,11 @@ class WebWorkOrdersTest extends TestCase
     }
 
     /**
-     * Task planning is open to every member on the API, so the web routes must
-     * be too — a role with no module capabilities at all still gets the board.
+     * Work orders belong to TEAM, CELLAR and ORDERS, as in the old app's menu.
      */
-    public function test_the_board_is_open_to_any_member(): void
+    public function test_the_board_is_open_to_the_work_order_roles(): void
     {
-        [$tenant, $employee] = $this->tenantAndMember(TenantRole::Employee);
+        [$tenant, $employee] = $this->tenantAndMember(TenantRole::Cellar);
 
         $this->actingAs($employee)->withSession($this->tenantSession($tenant))
             ->get('/work-orders')
@@ -440,5 +442,38 @@ class WebWorkOrdersTest extends TestCase
     public function test_a_guest_is_still_sent_to_login(): void
     {
         $this->get('/work-orders')->assertRedirect('/login');
+    }
+
+    /** @return array<string, array{list<TenantRole>, bool}> */
+    public static function whoSeesTheBoard(): array
+    {
+        return [
+            'team' => [[TenantRole::Team], true],
+            'cellar' => [[TenantRole::Cellar], true],
+            'orders' => [[TenantRole::Orders], true],
+            'an employee' => [[TenantRole::Employee], false],
+            'hospitality' => [[TenantRole::Hospitality], false],
+            'a manager' => [[TenantRole::Manager], false],
+            // The old menu hid Work Orders from anyone holding MANAGER, even alongside ORDERS.
+            'a manager who is also on orders' => [[TenantRole::Manager, TenantRole::Orders], false],
+            // …unless they are also an admin, who always saw everything.
+            'a manager who is also an admin' => [[TenantRole::Manager, TenantRole::Admin], true],
+        ];
+    }
+
+    /**
+     * @param  list<TenantRole>  $roles
+     *
+     * @dataProvider whoSeesTheBoard
+     */
+    #[DataProvider('whoSeesTheBoard')]
+    public function test_only_the_old_apps_roles_reach_work_orders(array $roles, bool $allowed): void
+    {
+        $tenant = $this->createTenant();
+        $member = $this->createMember($tenant, $roles);
+
+        $response = $this->actingAs($member)->withSession($this->tenantSession($tenant))->get('/work-orders');
+
+        $allowed ? $response->assertOk() : $response->assertForbidden();
     }
 }

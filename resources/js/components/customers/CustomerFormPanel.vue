@@ -15,7 +15,7 @@ import SidePanel from '@/components/ui/SidePanel.vue';
 import SwitchRow from '@/components/ui/SwitchRow.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { CUSTOMER_TYPES } from '@/lib/customers';
-import type { Customer, PricingTierSummary } from '@/types/customers';
+import type { Customer, CustomerCategorySummary, PricingTierSummary } from '@/types/customers';
 import type { SharedProps } from '@/types';
 
 /**
@@ -37,6 +37,10 @@ const tiers = computed<PricingTierSummary[]>(
     () => (page.props.tiers as PricingTierSummary[] | undefined) ?? [],
 );
 
+const categories = computed<CustomerCategorySummary[]>(
+    () => (page.props.categories as CustomerCategorySummary[] | undefined) ?? [],
+);
+
 const isEdit = computed(() => props.customer !== null);
 
 const form = useForm({
@@ -46,6 +50,7 @@ const form = useForm({
     email: '',
     phone: '',
     customer_type: '',
+    customer_category_id: '',
     address: '',
     city: '',
     zip: '',
@@ -79,6 +84,7 @@ watch(
             email: c?.email ?? '',
             phone: c?.phone ?? '',
             customer_type: c?.customer_type ?? '',
+            customer_category_id: c?.category?.id ?? '',
             address: c?.address ?? '',
             city: c?.city ?? '',
             zip: c?.zip ?? '',
@@ -94,9 +100,9 @@ watch(
         form.reset();
         form.clearErrors();
 
-        // The tier picker needs the tier list; the customers page loads it
-        // lazily, so ask for it the first time a form actually opens.
-        if (tiers.value.length === 0) router.reload({ only: ['tiers'] });
+        // The tier and category pickers need their lists; the pages load them
+        // lazily, so ask for them the first time a form actually opens.
+        if (tiers.value.length === 0 || categories.value.length === 0) router.reload({ only: ['tiers', 'categories'] });
     },
     { immediate: true },
 );
@@ -143,6 +149,16 @@ async function lookUp(): Promise<void> {
     }
 }
 
+/** The customer's own category stays selectable even if it has since been retired. */
+const CATEGORY_OPTIONS = computed(() => {
+    const options = categories.value.map((category) => ({ value: category.id, label: category.name }));
+    const current = props.customer?.category;
+
+    if (current && !options.some((o) => o.value === current.id)) options.push({ value: current.id, label: current.name });
+
+    return options;
+});
+
 const TIER_OPTIONS = computed(() =>
     tiers.value.map((tier) => ({
         value: tier.id,
@@ -179,7 +195,7 @@ function submit(): void {
     form
         .transform((data) => {
             const out: Record<string, unknown> = { ...data };
-            for (const key of ['contact_name', 'phone', 'customer_type', 'address', 'city', 'zip', 'state', 'country', 'oib', 'pricing_tier_id']) {
+            for (const key of ['contact_name', 'phone', 'customer_type', 'address', 'city', 'zip', 'state', 'country', 'oib', 'pricing_tier_id', 'customer_category_id']) {
                 if (out[key] === '') out[key] = null;
             }
             out.rebate_percent = data.rebate_percent === '' ? 0 : Number(data.rebate_percent);
@@ -245,6 +261,22 @@ function submit(): void {
                             <Input :id="id" v-model="form.phone" :invalid="invalid" />
                         </template>
                     </FormField>
+                    <FormField :label="t('Category')" :error="form.errors.customer_category_id">
+                        <template #default="{ id }">
+                            <Combobox
+                                :id="id"
+                                :model-value="form.customer_category_id === '' ? null : form.customer_category_id"
+                                :placeholder="t('No category')"
+                                :empty-text="t('No category matches.')"
+                                clearable
+                                :options="CATEGORY_OPTIONS"
+                                @update:model-value="form.customer_category_id = $event ?? ''"
+                            />
+                        </template>
+                    </FormField>
+                </FieldRow>
+
+                <FieldRow>
                     <FormField :label="t('Customer type')" :error="form.errors.customer_type">
                         <template #default="{ id }">
                             <Select

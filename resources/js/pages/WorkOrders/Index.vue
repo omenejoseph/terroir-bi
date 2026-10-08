@@ -165,7 +165,7 @@ function orderedIdsAfterDrop(task: WorkOrder, payload: { status: TaskStatusKey; 
 function toggleDone(task: WorkOrder): void {
     router.patch(
         `/work-orders/${task.id}/status`,
-        { status: task.status === 'DONE' ? 'TODO' : 'DONE' },
+        { status: task.status === 'DONE' || task.status === 'CANCELLED' ? 'TODO' : 'DONE' },
         { preserveScroll: true },
     );
 }

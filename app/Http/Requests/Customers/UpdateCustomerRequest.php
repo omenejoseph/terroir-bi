@@ -51,6 +51,10 @@ class UpdateCustomerRequest extends FormRequest
                 'sometimes', 'nullable',
                 Rule::exists('pricing_tiers', 'id')->where('tenant_id', $tenantId),
             ],
+            'customer_category_id' => [
+                'sometimes', 'nullable',
+                Rule::exists('customer_categories', 'id')->where('tenant_id', $tenantId),
+            ],
         ];
     }
 }

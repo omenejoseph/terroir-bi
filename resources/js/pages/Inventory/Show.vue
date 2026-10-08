@@ -253,8 +253,8 @@ async function destroy(): Promise<void> {
                     />
                 </div>
 
-                <div v-if="can('inventory.manage')" class="flex shrink-0 items-center gap-2">
-                    <Button variant="outline" size="sm" @click="duplicate">{{ t('Duplicate') }}</Button>
+                <div v-if="can('inventory.bulk') || can('inventory.delete')" class="flex shrink-0 items-center gap-2">
+                    <Button v-if="can('inventory.bulk')" variant="outline" size="sm" @click="duplicate">{{ t('Duplicate') }}</Button>
                     <Button v-if="can('inventory.delete')" variant="outline" size="sm" @click="destroy">
                         <Trash2 class="size-4 text-destructive" :stroke-width="1.5" />
                         <span class="text-destructive">{{ t('Delete') }}</span>
@@ -477,7 +477,7 @@ async function destroy(): Promise<void> {
                 </div>
     
                 <!-- Quick stock entry -->
-                <Card v-if="can('inventory.manage')">
+                <Card v-if="can('inventory.stock')">
                     <CardContent class="flex flex-col gap-4 p-6">
                         <SectionHeader :title="t('Quick stock entry')" />
                         <QuickStockEntry :item-id="item.id" :unit="current.unit" />

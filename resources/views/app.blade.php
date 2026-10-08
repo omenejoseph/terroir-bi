@@ -16,6 +16,11 @@
          specifies. Preloading the latin subset avoids a flash of fallback text. --}}
     <link rel="preload" href="/fonts/figtree/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
 
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" href="/favicon.ico" sizes="48x48 32x32 16x16">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
     @routes
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
     @inertiaHead

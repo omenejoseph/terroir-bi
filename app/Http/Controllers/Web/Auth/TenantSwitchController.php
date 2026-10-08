@@ -8,6 +8,7 @@ use App\Actions\Auth\SwitchWebSessionTenantAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\SwitchTenantRequest;
 use App\Models\User;
+use App\Services\Auth\ImpersonationSession;
 use Illuminate\Http\RedirectResponse;
 
 /**
@@ -17,10 +18,13 @@ use Illuminate\Http\RedirectResponse;
  */
 class TenantSwitchController extends Controller
 {
-    public function store(SwitchTenantRequest $request, SwitchWebSessionTenantAction $action): RedirectResponse
+    public function store(SwitchTenantRequest $request, SwitchWebSessionTenantAction $action, ImpersonationSession $impersonation): RedirectResponse
     {
         $user = $request->user();
         abort_unless($user instanceof User, 401);
+
+        // An organisation admin impersonating a team member stays in that organisation.
+        abort_if($impersonation->tenantId() !== null, 403);
 
         $tenant = $action->execute($user, $request->string('tenant_id')->value());
 

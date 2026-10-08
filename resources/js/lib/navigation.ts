@@ -66,6 +66,8 @@ export interface NavItem {
     capability?: string;
     /** Matches an `App\Enums\Module` key; unset when no module owns the item yet. */
     module?: string;
+    /** Kept in the catalogue (so keys stay stable) but not shown anywhere until the module is built. */
+    hidden?: boolean;
 }
 
 export interface NavCategory {
@@ -94,10 +96,9 @@ export const NAV_CATEGORIES: NavCategory[] = [
         items: [
             { key: 'orders', label: 'Orders', href: '/orders', icon: ShoppingCart, capability: 'orders.view', module: 'orders' },
             { key: 'customers', label: 'Customers', href: '/customers', icon: Users, capability: 'customers.view', module: 'customers' },
-            // Task planning is open to any member (routes/api.php and routes/web.php
-            // both leave it ungated), so this entry carries no capability — hiding it
-            // from someone the route admits would be the sidebar lying.
-            { key: 'work-orders', label: 'Work Orders', href: '/work-orders', icon: ClipboardList, module: 'work_orders' },
+            // Task planning follows the old app's menu: TEAM, CELLAR and ORDERS, never
+            // anyone who also holds MANAGER (see RoleCapabilities::revokedBy).
+            { key: 'work-orders', label: 'Work Orders', href: '/work-orders', icon: ClipboardList, capability: 'work_orders.use', module: 'work_orders' },
             // These three don't have a real App\Enums\Module case yet — the
             // module keys below are forward-looking, not ones any plan can
             // include today. That's deliberate: the item stays hidden (no
@@ -136,8 +137,8 @@ export const NAV_CATEGORIES: NavCategory[] = [
         icon: Boxes,
         items: [
             { key: 'inventory', label: 'Inventory', href: '/inventory', icon: Package, capability: 'inventory.view', module: 'inventory' },
-            { key: 'purchase-orders', label: 'Purchase Orders', href: null, icon: FileStack, capability: 'suppliers.view', module: 'suppliers' },
-            { key: 'suppliers', label: 'Suppliers', href: null, icon: Truck, capability: 'suppliers.view', module: 'suppliers' },
+            { key: 'purchase-orders', label: 'Purchase Orders', href: null, icon: FileStack, capability: 'supplier_orders.view', module: 'suppliers', hidden: true },
+            { key: 'suppliers', label: 'Suppliers', href: null, icon: Truck, capability: 'suppliers.view', module: 'suppliers', hidden: true },
         ],
     },
     {
@@ -146,7 +147,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
         items: [
             { key: 'costs', label: 'Costs', href: null, icon: Receipt, capability: 'finance.view', module: 'costs' },
             { key: 'inflow', label: 'Inflow', href: null, icon: CreditCard, capability: 'finance.view', module: 'inflows' },
-            { key: 'cash-flow', label: 'Cash Flow', href: null, icon: ChartLine, capability: 'financials.view', module: 'cash_flow' },
+            { key: 'cash-flow', label: 'Cash Flow', href: null, icon: ChartLine, capability: 'finance.view', module: 'cash_flow' },
         ],
     },
     {
@@ -174,7 +175,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
             // under Settings, so its visibility follows Settings' own plan
             // inclusion rather than requiring a separate Team module too.
             { key: 'employees', label: 'Team', href: '/settings/team', icon: Users, capability: 'members.view', module: 'settings' },
-            { key: 'whatsapp-bot', label: 'WhatsApp Bot', href: null, icon: MessageCircle, capability: 'settings.manage', module: 'settings' },
+            { key: 'whatsapp-bot', label: 'WhatsApp Bot', href: null, icon: MessageCircle, capability: 'settings.manage', module: 'settings', hidden: true },
             // Its own module (not 'settings') so a plan can include or
             // exclude the audit trail independently — see App\Enums\Module.
             { key: 'logs', label: 'Logs', href: '/logs', icon: ScrollText, capability: 'logs.view', module: 'audit_log' },
@@ -201,6 +202,7 @@ export function navigationFor(
         ...category,
         items: category.items.filter(
             (item) =>
+                !item.hidden &&
                 (item.capability === undefined || can(item.capability)) &&
                 (item.module === undefined || hasModule(item.module)),
         ),
@@ -224,6 +226,7 @@ export function shortcutsFor(
         .filter(
             (item): item is NavItem =>
                 item !== undefined &&
+                !item.hidden &&
                 (item.capability === undefined || can(item.capability)) &&
                 (item.module === undefined || hasModule(item.module)),
         );
@@ -233,6 +236,7 @@ export function shortcutsFor(
 export function pinnableItemsFor(can: (capability: string) => boolean, hasModule: (module: string) => boolean): NavItem[] {
     return NAV_CATEGORIES.flatMap((category) => category.items).filter(
         (item) =>
+            !item.hidden &&
             (item.capability === undefined || can(item.capability)) &&
             (item.module === undefined || hasModule(item.module)),
     );

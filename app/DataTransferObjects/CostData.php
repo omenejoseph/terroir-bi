@@ -35,6 +35,9 @@ final class CostData implements Arrayable, JsonSerializable
             'date' => $c->date->toIso8601String(),
             'total_amount' => $c->total_amount->jsonSerialize(),
             'vat_amount' => $c->vat_amount?->jsonSerialize(),
+            // The total is gross (VAT included), as in the old app; net is total minus VAT, only once VAT is known.
+            'net_amount' => $c->vat_amount !== null ? $c->total_amount->minus($c->vat_amount)->jsonSerialize() : null,
+            'is_invoice' => $c->isInvoice(),
             'category' => $c->category,
             'description' => $c->description,
             'reference' => $c->reference,

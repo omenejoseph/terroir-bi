@@ -31,6 +31,7 @@ const { t } = useTranslations();
 const MODULE_TABS = computed<TabItem[]>(() => [
     { label: t('Customers'), href: '/customers' },
     { label: t('Analytics'), href: '/customers-analytics' },
+    { label: t('Categories'), href: '/customers/categories' },
 ]);
 
 const filter = ref('');

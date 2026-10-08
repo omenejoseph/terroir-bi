@@ -33,6 +33,9 @@ export const PRICE_SOURCE_LABELS: Record<string, string> = {
 };
 
 /** "Restaurant · Zadar" — the identity line used under a customer's name. */
-export function customerSubtitle(type: string | null, city: string | null): string | null {
-    return [type === null ? null : customerTypeLabel(type), city].filter(Boolean).join(' · ') || null;
+export function customerSubtitle(type: string | null, city: string | null, category: string | null = null): string | null {
+    // The organisation's own wording ("Restaurant") wins over the fixed sales channel ("Wholesale").
+    const label = category ?? (type === null ? null : customerTypeLabel(type));
+
+    return [label, city].filter(Boolean).join(' · ') || null;
 }

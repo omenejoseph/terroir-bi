@@ -106,7 +106,7 @@ const PRIORITY_OPTIONS = Object.entries(PRIORITY_LABELS).map(([value, label]) =>
  * fourth ("This Week") is a date window. See WorkOrderBoard for why it is not
  * a column, and therefore not a step here either.
  */
-const STATUS_TABS: TabItem[] = (['TODO', 'IN_PROGRESS', 'DONE'] as TaskStatusKey[]).map((value) => ({
+const STATUS_TABS: TabItem[] = (['TODO', 'IN_PROGRESS', 'DONE', 'CANCELLED'] as TaskStatusKey[]).map((value) => ({
     value,
     label: STATUS_LABELS[value] ?? value,
 }));
