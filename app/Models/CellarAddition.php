@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property string $id
  * @property string $wine_lot_id
+ * @property string|null $vessel_id
  * @property string|null $enological_product_id
  * @property string $created_by_id
  * @property string $name
@@ -32,7 +33,7 @@ class CellarAddition extends Model
     use HasUlids;
 
     protected $fillable = [
-        'wine_lot_id', 'enological_product_id', 'created_by_id', 'name',
+        'wine_lot_id', 'vessel_id', 'enological_product_id', 'created_by_id', 'name',
         'category', 'quantity', 'unit', 'cost_per_unit', 'total_cost', 'note',
     ];
 
@@ -51,6 +52,14 @@ class CellarAddition extends Model
     public function wineLot(): BelongsTo
     {
         return $this->belongsTo(WineLot::class);
+    }
+
+    /**
+     * @return BelongsTo<Vessel, $this>
+     */
+    public function vessel(): BelongsTo
+    {
+        return $this->belongsTo(Vessel::class);
     }
 
     /**

@@ -17,7 +17,7 @@ final class NotMigrated
         'EnologicalProduct', 'FermentationTemplate', 'Vessel', 'WineLot', 'WineLotGrape', 'VesselLot', 'CellarAnalysis',
         'CellarAddition', 'CellarProcess', 'CellarTransfer', 'TastingReport', 'CellarTastingNote', 'Board', 'WorkOrder',
         'ProductionPlan', 'ProductionPlanRow', 'VineyardParcel', 'PhenologyLog', 'CropEstimate', 'VineyardApplication',
-        'GrapeContract', 'IntakeBooking', 'CustomerCategory',
+        'GrapeContract', 'IntakeBooking', 'CustomerCategory', 'ProtocolAdditive', 'CellarActivity', 'CellarActivityRound',
     ];
 
     /** First matching prefix wins. */
@@ -44,10 +44,8 @@ final class NotMigrated
         'InflowItem' => 'inflow line items — no counterpart in the rebuild',
         'InflowAttachment' => 'attachments — no counterpart in the rebuild',
         'CostAttachment' => 'attachments — no counterpart in the rebuild',
-        'CellarActivity' => 'planned cellar activities — no counterpart in the rebuild',
         'Harvest' => 'harvest planning inputs — no counterpart in the rebuild',
         'ProductionFinalPlan' => 'final production plan — no counterpart in the rebuild',
-        'Protocol' => 'protocol additives — no counterpart in the rebuild',
         'Notification' => 'in-app notifications — transient, not migrated',
         'PushSubscription' => 'push endpoints are bound to the old origin — users re-subscribe',
         'TranslationOverride' => 'translation overrides are platform-wide in the rebuild (Filament /admin)',

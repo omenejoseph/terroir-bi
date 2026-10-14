@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Auth\TenantSessionController;
 use App\Http\Controllers\Api\Billing\StripeWebhookController;
 use App\Http\Controllers\Api\BottleAnalysisController;
 use App\Http\Controllers\Api\CashFlowController;
+use App\Http\Controllers\Api\CellarActivityController;
 use App\Http\Controllers\Api\CellarController;
 use App\Http\Controllers\Api\ConsignmentController;
 use App\Http\Controllers\Api\CostController;
@@ -380,6 +381,8 @@ Route::prefix('v1')->group(function () {
             Route::get('wine-lots/{wineLot}', [WineLotController::class, 'show']);
             Route::get('enological-products', [EnologicalProductController::class, 'index']);
             Route::get('fermentation-templates', [FermentationTemplateController::class, 'index']);
+            Route::get('cellar/activities/today', [CellarActivityController::class, 'today']);
+            Route::get('cellar/activities/plan', [CellarActivityController::class, 'plan']);
         });
         Route::middleware('can:cellar.manage')->group(function () {
             Route::post('vessels', [VesselController::class, 'store']);
@@ -423,6 +426,17 @@ Route::prefix('v1')->group(function () {
             Route::patch('fermentation-templates/{fermentationTemplate}', [FermentationTemplateController::class, 'update']);
             Route::post('wine-lots/{wineLot}/protocol', [WineLotController::class, 'assignProtocol']);
             Route::post('wine-lots/{wineLot}/protocol/generate', [WineLotController::class, 'generateProtocol']);
+            Route::post('wine-lots/{wineLot}/protocol/plan-additions', [CellarActivityController::class, 'planProtocolAdditions']);
+
+            // Planned cellar work (Cellar › Plan / Today).
+            Route::post('cellar/activities', [CellarActivityController::class, 'store']);
+            Route::post('cellar/activities/{activity}/complete', [CellarActivityController::class, 'complete']);
+            Route::post('cellar/activities/{activity}/skip', [CellarActivityController::class, 'skip']);
+            Route::post('cellar/activities/{activity}/reschedule', [CellarActivityController::class, 'reschedule']);
+            Route::delete('cellar/activities/{activity}', [CellarActivityController::class, 'destroy']);
+            Route::post('cellar/activity-rounds/{round}/reschedule', [CellarActivityController::class, 'rescheduleRound']);
+            Route::delete('cellar/activity-rounds/{round}', [CellarActivityController::class, 'destroyRound']);
+            Route::post('cellar/so2-rounds', [CellarActivityController::class, 'storeSo2Round']);
         });
         Route::middleware('can:cellar.delete')->group(function () {
             Route::delete('vessels/{vessel}', [VesselController::class, 'destroy']);

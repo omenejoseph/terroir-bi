@@ -288,8 +288,8 @@ class WineLotController extends Controller
     private function present(WineLot $lot): array
     {
         $lot->loadMissing([
-            'grapes', 'vesselLots.vessel', 'analyses.vessel', 'additions',
-            'processes', 'tastingNotes', 'transfersOut', 'transfersIn', 'bottlings',
+            'grapes', 'vesselLots.vessel', 'analyses.vessel', 'additions.vessel',
+            'processes', 'tastingNotes', 'transfersOut', 'transfersIn', 'bottlings', 'plannedAdditions.vessel',
         ]);
 
         return WineLotData::fromModel($lot, withDetail: true, costBreakdown: $this->costs->breakdown($lot))->toArray();

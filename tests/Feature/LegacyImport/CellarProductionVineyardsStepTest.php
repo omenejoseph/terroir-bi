@@ -230,6 +230,79 @@ class CellarProductionVineyardsStepTest extends TestCase
         $this->assertSame('PROCESSED', DB::table('intake_bookings')->value('status'));
     }
 
+    public function test_planned_activities_rounds_protocol_doses_and_addition_vessels(): void
+    {
+        $this->vessel('v1', 'F11');
+        $this->vessel('v2', 'F12');
+        $this->lot('l1', 'LOT-1');
+        $this->legacyInsert('VesselLot', ['id' => 'vl1', 'volume' => '5000', 'addedAt' => '2026-02-27', 'vesselId' => 'v1', 'wineLotId' => 'l1']);
+        $this->legacyInsert('EnologicalProduct', ['id' => 'p1', 'name' => 'K2S2O5', 'category' => 'SULFITE', 'unit' => 'g', 'currentStock' => '500', 'isActive' => 't', 'createdAt' => '2026-01-01', 'updatedAt' => '2026-01-01']);
+        $this->legacyInsert('FermentationTemplate', ['id' => 'ft1', 'name' => 'Red', 'mlf' => 't', 'isActive' => 't', 'createdAt' => '2026-01-01', 'updatedAt' => '2026-01-01']);
+        $this->legacyInsert('ProtocolAdditive', ['id' => 'pa1', 'templateId' => 'ft1', 'enologicalProductId' => 'p1', 'name' => 'SO2', 'dose' => '5', 'basis' => 'per_hL', 'stage' => 'crush', 'sortOrder' => 0, 'createdAt' => '2026-01-01']);
+        $this->legacyInsert('ProtocolAdditive', ['id' => 'pa2', 'templateId' => 'ft1', 'name' => 'Odd', 'dose' => '1', 'basis' => 'per_bottle', 'sortOrder' => 1, 'createdAt' => '2026-01-01']);
+        $add = ['category' => 'SO2', 'quantity' => '10', 'unit' => 'g', 'createdAt' => '2026-03-01', 'wineLotId' => 'l1', 'createdById' => 'u1'];
+        $this->legacyInsert('CellarAddition', $add + ['id' => 'a1', 'name' => 'SO2', 'note' => '+10 mg/L → F11']);
+        $this->legacyInsert('CellarAddition', $add + ['id' => 'a2', 'name' => 'SO2', 'note' => 'Vessel F12 · planned']);
+        $this->legacyInsert('CellarAddition', $add + ['id' => 'a3', 'name' => 'SO2', 'note' => 'no vessel here']);
+
+        $this->legacyInsert('Board', ['id' => 'b1', 'name' => 'Team Board', 'ownerId' => 'u1', 'sortOrder' => 1, 'createdAt' => '2026-01-01', 'updatedAt' => '2026-01-01', 'isDefault' => 't']);
+        $this->legacyInsert('WorkOrder', ['id' => 'w1', 'title' => '🍇 SO₂ 01.03.', 'category' => 'CELLAR', 'priority' => 'MEDIUM', 'status' => 'TODO', 'createdById' => 'u1', 'createdAt' => '2026-03-01', 'updatedAt' => '2026-03-01', 'sortOrder' => 0, 'listOrder' => 0, 'boardId' => 'b1']);
+        $this->legacyInsert('CellarActivityRound', ['id' => 'r1', 'name' => 'SO₂ 01.03.', 'createdAt' => '2026-03-01', 'createdById' => 'u1', 'workOrderId' => 'w1']);
+        $act = ['plannedFor' => '2026-03-01 00:00:00', 'sortOrder' => 0, 'wineLotId' => 'l1', 'vesselId' => 'v1', 'plannedById' => 'u1', 'deviated' => 'f', 'createdAt' => '2026-03-01', 'updatedAt' => '2026-03-02'];
+        $this->legacyInsert('CellarActivity', array_merge($act, ['id' => 'c1', 'type' => 'ADDITION', 'status' => 'DONE', 'roundId' => 'r1', 'executedById' => 'u1', 'appliedAt' => '2026-03-02 08:00:00', 'deviated' => 't',
+            'payload' => json_encode(['productId' => 'p1', 'productName' => 'K2S2O5', 'unit' => 'g', 'quantity' => 7.5, 'costPerUnit' => 0.02, 'targetNote' => '+10 mg/L', 'applied' => ['quantity' => 6]])]));
+        $this->legacyInsert('CellarActivity', $act + ['id' => 'c2', 'type' => 'ANALYSIS', 'status' => 'SKIPPED', 'skipReason' => 'Nije potrebno', 'payload' => json_encode(['metrics' => ['freeSO2', 'pH']])]);
+        $this->legacyInsert('CellarActivity', $act + ['id' => 'c3', 'type' => 'TOPPING', 'status' => 'SKIPPED', 'skipReason' => 'Bačva puna', 'payload' => json_encode(['liters' => 4])]);
+        $this->legacyInsert('CellarActivity', array_merge($act, ['id' => 'c4', 'type' => 'VINEYARD', 'status' => 'PLANNED', 'wineLotId' => null, 'vesselId' => null, 'payload' => json_encode(['kind' => 'Spraying', 'parcelName' => 'Gornji'])]));
+        $this->legacyInsert('CellarActivity', array_merge($act, ['id' => 'c5', 'type' => 'PROCESS', 'status' => 'PLANNED', 'wineLotId' => 'gone', 'payload' => json_encode(['kind' => 'Pump-over'])]));
+
+        $ctx = $this->import();
+
+        // Default board survives the import.
+        $this->assertTrue((bool) DB::table('work_order_boards')->where('name', 'Team Board')->value('is_default'));
+
+        // Protocol doses: unknown basis skipped.
+        $dose = DB::table('protocol_additives')->sole();
+        $this->assertSame(['SO2', 'per_hL', 'crush'], [$dose->name, $dose->basis, $dose->stage]);
+        $this->assertNotNull($dose->enological_product_id);
+        $this->assertSame(1, $ctx->report->counts()['protocol_additives']['skipped']);
+
+        // Vessel recovered from the addition note.
+        $byNote = DB::table('cellar_additions')->join('vessels', 'vessels.id', '=', 'cellar_additions.vessel_id')->pluck('vessels.name', 'cellar_additions.note')->all();
+        $this->assertSame(['+10 mg/L → F11' => 'F11', 'Vessel F12 · planned' => 'F12'], $byNote);
+        $this->assertNull(DB::table('cellar_additions')->where('note', 'no vessel here')->value('vessel_id'));
+
+        // Rounds and activities.
+        $round = DB::table('cellar_activity_rounds')->sole();
+        $this->assertSame(DB::table('work_orders')->value('id'), $round->work_order_id);
+        $this->assertSame(4, DB::table('cellar_activities')->count());
+        $this->assertSame(1, $ctx->report->counts()['cellar_activities']['skipped']);
+
+        $c1 = DB::table('cellar_activities')->where('type', 'ADDITION')->sole();
+        $payload = json_decode($c1->payload, true);
+        $this->assertSame(DB::table('enological_products')->value('id'), $payload['enological_product_id']);
+        $this->assertSame('K2S2O5', $payload['product_name']);
+        $this->assertSame(2, $payload['cost_per_unit']);
+        $this->assertSame(['quantity' => 6], $payload['applied']);
+        $this->assertSame($round->id, $c1->round_id);
+        $this->assertSame('2026-03-01', substr((string) $c1->planned_for, 0, 10));
+        $this->assertTrue((bool) $c1->deviated);
+        $this->assertNotNull($c1->applied_at);
+
+        $c2 = DB::table('cellar_activities')->where('type', 'ANALYSIS')->sole();
+        $this->assertSame(['free_so2', 'ph'], json_decode($c2->payload, true)['metrics']);
+        $this->assertSame('not_needed', $c2->skip_reason);
+        $this->assertNotNull($c2->skipped_at);
+
+        $c3 = DB::table('cellar_activities')->where('type', 'TOPPING')->sole();
+        $this->assertSame('other', $c3->skip_reason);
+        $this->assertSame('Bačva puna', $c3->note);
+
+        $c4 = DB::table('cellar_activities')->where('type', 'VINEYARD')->sole();
+        $this->assertNull($c4->wine_lot_id);
+        $this->assertSame('Gornji', json_decode($c4->payload, true)['parcel_name']);
+    }
+
     public function test_not_migrated_scan_lists_populated_unmapped_tables(): void
     {
         $this->legacyInsert('Reservation', ['id' => 'r1', 'guestName' => 'X']);

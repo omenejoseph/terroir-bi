@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DataTransferObjects;
 
 use App\Models\Bottling;
+use App\Models\CellarActivity;
 use App\Models\CellarAddition;
 use App\Models\CellarAnalysis;
 use App\Models\CellarProcess;
@@ -95,6 +96,8 @@ final class WineLotData implements Arrayable, JsonSerializable
                 'id' => $a->getKey(),
                 'name' => $a->name,
                 'category' => $a->category,
+                'vessel_id' => $a->vessel_id,
+                'vessel' => $a->vessel !== null ? ['id' => $a->vessel->getKey(), 'name' => $a->vessel->name] : null,
                 'quantity' => (string) $a->quantity,
                 'unit' => $a->unit,
                 'total_cost' => $a->total_cost?->jsonSerialize(),
@@ -136,6 +139,18 @@ final class WineLotData implements Arrayable, JsonSerializable
                 'note' => $t->note,
                 'date' => $t->created_at?->toIso8601String(),
             ])->all();
+
+        $payload['planned_additions'] = $lot->relationLoaded('plannedAdditions')
+            ? $lot->plannedAdditions->map(fn (CellarActivity $a): array => [
+                'id' => $a->getKey(),
+                'planned_for' => $a->planned_for->toDateString(),
+                'product_name' => $a->payload['product_name'] ?? null,
+                'quantity' => isset($a->payload['quantity']) ? (string) $a->payload['quantity'] : null,
+                'unit' => $a->payload['unit'] ?? null,
+                'vessel' => $a->vessel !== null ? ['id' => $a->vessel->getKey(), 'name' => $a->vessel->name] : null,
+                'round_id' => $a->round_id,
+            ])->all()
+            : [];
 
         $payload['bottlings'] = $lot->bottlings
             ->map(fn (Bottling $b): array => [

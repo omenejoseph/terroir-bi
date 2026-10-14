@@ -20,23 +20,40 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property string $created_by_id
  * @property int $sort_order
+ * @property bool $is_default
  */
 class WorkOrderBoard extends Model
 {
     use BelongsToTenant;
     use HasUlids;
 
-    protected $fillable = ['name', 'created_by_id', 'sort_order'];
+    protected $fillable = ['name', 'created_by_id', 'sort_order', 'is_default'];
 
     protected $attributes = [
         'sort_order' => 0,
+        'is_default' => false,
     ];
 
     protected function casts(): array
     {
         return [
             'sort_order' => 'integer',
+            'is_default' => 'boolean',
         ];
+    }
+
+    /**
+     * Where system-created cards (cellar activity rounds, protocol tasks) land:
+     * the board flagged default, else the first board, else none (a board-less
+     * card still shows in list views).
+     */
+    public static function defaultBoard(): ?self
+    {
+        return self::query()
+            ->orderByDesc('is_default')
+            ->orderBy('sort_order')
+            ->orderBy('created_at')
+            ->first();
     }
 
     /**

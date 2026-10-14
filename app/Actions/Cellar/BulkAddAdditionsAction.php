@@ -17,7 +17,7 @@ class BulkAddAdditionsAction
     public function __construct(private readonly AddCellarAdditionAction $add) {}
 
     /**
-     * @param  array<string, mixed>  $data  {name, unit, category?, enological_product_id?, cost_per_unit?, lots: [{wine_lot_id, quantity}]}
+     * @param  array<string, mixed>  $data  {name, unit, category?, enological_product_id?, cost_per_unit?, lots: [{wine_lot_id, quantity, vessel_id?}]}
      * @return int number of additions recorded
      */
     public function execute(array $data, string $createdById): int
@@ -34,6 +34,7 @@ class BulkAddAdditionsAction
                     'category' => $data['category'] ?? null,
                     'unit' => $data['unit'],
                     'quantity' => $line['quantity'],
+                    'vessel_id' => $line['vessel_id'] ?? null,
                     'cost_per_unit' => $data['cost_per_unit'] ?? null,
                     'enological_product_id' => $data['enological_product_id'] ?? null,
                     'note' => $data['note'] ?? null,

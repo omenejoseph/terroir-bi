@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\CellarActivityStatus;
+use App\Enums\CellarActivityType;
 use App\Enums\WineLotStatus;
 use App\Enums\WineType;
 use App\Support\Money\Money;
@@ -157,6 +159,20 @@ class WineLot extends Model
     public function bottlings(): HasMany
     {
         return $this->hasMany(Bottling::class);
+    }
+
+    /**
+     * Additions planned for this lot and not yet done ("waiting for the cellar team").
+     *
+     * @return HasMany<CellarActivity, $this>
+     */
+    public function plannedAdditions(): HasMany
+    {
+        return $this->hasMany(CellarActivity::class)
+            ->where('type', CellarActivityType::Addition->value)
+            ->where('status', CellarActivityStatus::Planned->value)
+            ->orderBy('planned_for')
+            ->orderBy('sort_order');
     }
 
     /**

@@ -167,4 +167,53 @@ class CellarLifecycleTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.current_stock', '300.000');
     }
+
+    public function test_addition_records_its_vessel_and_is_refused_when_stock_is_short(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $vessel = Vessel::create(['name' => 'F11', 'type' => 'TANK', 'capacity_liters' => '1000.000']);
+        $lot = $this->lotInVessel('LOT-2026-050', '500.000', $vessel);
+        $product = EnologicalProduct::create(['name' => 'Bentonite', 'category' => 'FINING', 'unit' => 'g', 'current_stock' => '40.000']);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+
+        $this->postJson("/api/v1/wine-lots/{$lot->getKey()}/additions", [
+            'name' => 'Bentonite', 'quantity' => 30, 'unit' => 'g', 'enological_product_id' => $product->getKey(), 'vessel_id' => $vessel->getKey(),
+        ], $this->tenantHeader($tenant))
+            ->assertCreated()
+            ->assertJsonPath('data.additions.0.vessel.name', 'F11');
+
+        $this->postJson("/api/v1/wine-lots/{$lot->getKey()}/additions", [
+            'name' => 'Bentonite', 'quantity' => 30, 'unit' => 'g', 'enological_product_id' => $product->getKey(),
+        ], $this->tenantHeader($tenant))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['quantity']);
+
+        $this->assertSame('10.000', (string) $product->refresh()->current_stock);
+        $this->assertSame(1, $lot->additions()->count());
+    }
+
+    public function test_bulk_additions_are_all_or_nothing_when_stock_runs_out(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        $this->actingAsTenant($tenant);
+        $lotA = $this->lotInVessel('LOT-2026-051', '500.000');
+        $lotB = $this->lotInVessel('LOT-2026-052', '500.000');
+        $product = EnologicalProduct::create(['name' => 'K2S2O5', 'category' => 'SO2', 'unit' => 'g', 'current_stock' => '50.000']);
+        $this->forgetTenant();
+
+        Sanctum::actingAs($admin);
+
+        $this->postJson('/api/v1/wine-lots/additions/bulk', [
+            'name' => 'K2S2O5', 'unit' => 'g', 'enological_product_id' => $product->getKey(),
+            'lots' => [['wine_lot_id' => $lotA->getKey(), 'quantity' => 30], ['wine_lot_id' => $lotB->getKey(), 'quantity' => 30]],
+        ], $this->tenantHeader($tenant))->assertUnprocessable();
+
+        $this->assertSame('50.000', (string) $product->refresh()->current_stock);
+        $this->assertSame(0, $lotA->additions()->count());
+    }
 }

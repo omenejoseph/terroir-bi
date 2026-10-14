@@ -38,6 +38,10 @@ class BulkAdditionsRequest extends FormRequest
                 Rule::exists('wine_lots', 'id')->where('tenant_id', $tenantId),
             ],
             'lots.*.quantity' => ['required', 'numeric', 'gt:0'],
+            'lots.*.vessel_id' => [
+                'sometimes', 'nullable', 'string',
+                Rule::exists('vessels', 'id')->where('tenant_id', $tenantId),
+            ],
         ];
     }
 }

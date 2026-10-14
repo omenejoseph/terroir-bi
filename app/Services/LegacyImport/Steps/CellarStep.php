@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\LegacyImport\Steps;
 
 use App\Enums\CellarTransferType;
+use App\Enums\DoseBasis;
 use App\Enums\VesselStatus;
 use App\Enums\VesselType;
 use App\Enums\WineLotStatus;
@@ -23,6 +24,9 @@ use Illuminate\Support\Facades\DB;
  */
 class CellarStep extends AbstractStep
 {
+    /** @var array<string, string>|null lower-cased vessel name → legacy vessel id */
+    private ?array $vesselsByName = null;
+
     public function name(): string
     {
         return 'cellar';
@@ -37,6 +41,7 @@ class CellarStep extends AbstractStep
     {
         $this->products($ctx);
         $this->templates($ctx);
+        $this->protocolAdditives($ctx);
         $this->vessels($ctx);
         $this->lots($ctx);
         $this->lotGrapes($ctx);
@@ -270,6 +275,69 @@ class CellarStep extends AbstractStep
         }
     }
 
+    private function protocolAdditives(ImportContext $ctx): void
+    {
+        foreach ($this->rows($ctx, 'ProtocolAdditive') as $r) {
+            $ctx->report->read('protocol_additives');
+            $template = $ctx->ids->get('FermentationTemplate', (string) $r->templateId);
+            $basis = DoseBasis::tryFrom((string) $r->basis);
+            if ($template === null || $basis === null) {
+                $ctx->report->skipped('protocol_additives', "protocol additive {$r->id}: template not migrated or unknown basis '{$r->basis}'");
+
+                continue;
+            }
+            $this->put($ctx, 'ProtocolAdditive', (string) $r->id, 'protocol_additives', [
+                'fermentation_template_id' => $template,
+                'enological_product_id' => $r->enologicalProductId === null ? null : $ctx->ids->get('EnologicalProduct', (string) $r->enologicalProductId),
+                'name' => $this->fit($ctx, 'cellar', "protocol additive {$r->id} name", trim((string) $r->name)),
+                'dose' => Normalize::dec($r->dose, 4),
+                'basis' => $basis->value,
+                'stage' => Normalize::str($r->stage),
+                'notes' => Normalize::str($r->notes),
+                'sort_order' => (int) $r->sortOrder,
+                'created_at' => Normalize::date($r->createdAt),
+                'updated_at' => Normalize::date($r->createdAt),
+            ]);
+            $ctx->report->written('protocol_additives');
+        }
+    }
+
+    /**
+     * The prototype had no vessel column on additions; the vessel was written
+     * into the note ("… → F11" from the lot form, "Vessel F11 · …" from planned
+     * work). Recover it when the name matches exactly one migrated vessel.
+     */
+    private function vesselFromNote(ImportContext $ctx, ?string $note): ?string
+    {
+        if ($note === null) {
+            return null;
+        }
+
+        if ($this->vesselsByName === null) {
+            $this->vesselsByName = [];
+            $counts = [];
+            foreach ($this->rows($ctx, 'Vessel') as $v) {
+                $key = mb_strtolower(trim((string) $v->name));
+                $counts[$key] = ($counts[$key] ?? 0) + 1;
+                $this->vesselsByName[$key] = (string) $v->id;
+            }
+            // Ambiguous names (two vessels share one) are not guessed.
+            foreach ($counts as $key => $n) {
+                if ($n > 1) {
+                    unset($this->vesselsByName[$key]);
+                }
+            }
+        }
+
+        if (preg_match('/(?:→\s*|^Vessel\s+)([^\s·,;()]+)/u', $note, $m) !== 1) {
+            return null;
+        }
+
+        $legacy = $this->vesselsByName[mb_strtolower($m[1])] ?? null;
+
+        return $legacy === null ? null : $ctx->ids->get('Vessel', $legacy);
+    }
+
     private function additions(ImportContext $ctx): void
     {
         foreach ($this->rows($ctx, 'CellarAddition') as $r) {
@@ -282,6 +350,7 @@ class CellarStep extends AbstractStep
             }
             $this->put($ctx, 'CellarAddition', (string) $r->id, 'cellar_additions', [
                 'wine_lot_id' => $lot,
+                'vessel_id' => $this->vesselFromNote($ctx, Normalize::str($r->note)),
                 'enological_product_id' => $r->enologicalProductId === null ? null : $ctx->ids->get('EnologicalProduct', (string) $r->enologicalProductId),
                 'created_by_id' => $ctx->userId((string) $r->createdById, 'cellar'),
                 'name' => $this->fit($ctx, 'cellar', "addition {$r->id} name", trim((string) $r->name)),

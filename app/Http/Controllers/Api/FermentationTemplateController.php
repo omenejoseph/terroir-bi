@@ -20,6 +20,7 @@ class FermentationTemplateController extends Controller
     public function index(Request $request): JsonResponse
     {
         $templates = FermentationTemplate::query()
+            ->with('additives')
             ->when($request->boolean('active_only'), fn ($q) => $q->where('is_active', true))
             ->orderBy('name')
             ->get();
@@ -33,14 +34,14 @@ class FermentationTemplateController extends Controller
     {
         $template = $action->execute($request->validated());
 
-        return response()->json(['data' => FermentationTemplateData::fromModel($template)->toArray()], 201);
+        return response()->json(['data' => FermentationTemplateData::fromModel($template->load('additives'))->toArray()], 201);
     }
 
     public function update(UpdateFermentationTemplateRequest $request, FermentationTemplate $fermentationTemplate, UpdateFermentationTemplateAction $action): JsonResponse
     {
         $template = $action->execute($fermentationTemplate, $request->validated());
 
-        return response()->json(['data' => FermentationTemplateData::fromModel($template)->toArray()]);
+        return response()->json(['data' => FermentationTemplateData::fromModel($template->load('additives'))->toArray()]);
     }
 
     public function destroy(FermentationTemplate $fermentationTemplate, DeleteFermentationTemplateAction $action): JsonResponse

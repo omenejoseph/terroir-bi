@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace App\Services\LegacyImport\Steps;
 
+use App\Enums\CellarActivitySkipReason;
+use App\Enums\CellarActivityStatus;
+use App\Enums\CellarActivityType;
 use App\Enums\PlanUnit;
 use App\Enums\ProductionPlanStatus;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Enums\WorkOrderCategory;
 use App\Services\LegacyImport\ImportContext;
+use App\Services\LegacyImport\Support\LegacyActivityPayload;
 use App\Services\LegacyImport\Support\Normalize;
 
-/** Boards, work orders and production plans (+ rows). */
+/** Boards, work orders, planned cellar activities (+ rounds) and production plans (+ rows). */
 class ProductionStep extends AbstractStep
 {
     public function name(): string
@@ -29,6 +33,8 @@ class ProductionStep extends AbstractStep
     {
         $this->boards($ctx);
         $this->workOrders($ctx);
+        $this->activityRounds($ctx);
+        $this->activities($ctx);
         $this->plans($ctx);
     }
 
@@ -41,6 +47,7 @@ class ProductionStep extends AbstractStep
                 'name' => trim((string) $r->name),
                 'created_by_id' => $ctx->userId($r->ownerId === null ? null : (string) $r->ownerId, 'production'),
                 'sort_order' => (int) $r->sortOrder,
+                'is_default' => Normalize::bool($r->isDefault),
                 'created_at' => Normalize::date($r->createdAt),
                 'updated_at' => Normalize::date($r->updatedAt),
             ]);
@@ -81,6 +88,83 @@ class ProductionStep extends AbstractStep
                 'updated_at' => Normalize::date($r->updatedAt),
             ]);
             $ctx->report->written('work_orders');
+        }
+    }
+
+    /** Planned cellar activity rounds; their board card is a work order, hence this step. */
+    private function activityRounds(ImportContext $ctx): void
+    {
+        foreach ($this->rows($ctx, 'CellarActivityRound') as $r) {
+            $ctx->report->read('cellar_activity_rounds');
+            $this->put($ctx, 'CellarActivityRound', (string) $r->id, 'cellar_activity_rounds', [
+                'name' => $this->fit($ctx, 'production', "activity round {$r->id} name", trim((string) $r->name)),
+                'work_order_id' => $r->workOrderId === null ? null : $ctx->ids->get('WorkOrder', (string) $r->workOrderId),
+                'created_by_id' => $ctx->userId((string) $r->createdById, 'production'),
+                'created_at' => Normalize::date($r->createdAt),
+                'updated_at' => Normalize::date($r->createdAt),
+            ]);
+            $ctx->report->written('cellar_activity_rounds');
+        }
+    }
+
+    private function activities(ImportContext $ctx): void
+    {
+        foreach ($this->rows($ctx, 'CellarActivity') as $r) {
+            $ctx->report->read('cellar_activities');
+
+            $type = CellarActivityType::tryFrom((string) $r->type);
+            $status = CellarActivityStatus::tryFrom((string) $r->status);
+            if ($type === null || $status === null) {
+                $ctx->report->skipped('cellar_activities', "activity {$r->id}: unknown type/status '{$r->type}/{$r->status}'");
+
+                continue;
+            }
+
+            $lot = $r->wineLotId === null ? null : $ctx->ids->get('WineLot', (string) $r->wineLotId);
+            if ($type !== CellarActivityType::Vineyard && $lot === null) {
+                $ctx->report->skipped('cellar_activities', "activity {$r->id}: lot not migrated");
+
+                continue;
+            }
+
+            $decoded = json_decode((string) $r->payload, true);
+            if (! is_array($decoded)) {
+                $ctx->report->skipped('cellar_activities', "activity {$r->id}: payload is not valid JSON");
+
+                continue;
+            }
+
+            $note = Normalize::str($r->note);
+            $skipReason = null;
+            if ($status === CellarActivityStatus::Skipped) {
+                $legacyReason = Normalize::str($r->skipReason);
+                $skipReason = $legacyReason === 'Nije potrebno' ? CellarActivitySkipReason::NotNeeded : CellarActivitySkipReason::Other;
+                if ($legacyReason !== null && ! in_array($legacyReason, ['Nije potrebno', 'Drugo'], true)) {
+                    $note = implode(' · ', array_filter([$note, $legacyReason]));
+                }
+            }
+
+            $this->put($ctx, 'CellarActivity', (string) $r->id, 'cellar_activities', [
+                'type' => $type->value,
+                'status' => $status->value,
+                'payload' => json_encode(LegacyActivityPayload::map($type, $decoded, $ctx), JSON_THROW_ON_ERROR),
+                'planned_for' => Normalize::date($r->plannedFor)?->toDateString() ?? Normalize::date($r->createdAt)?->toDateString(),
+                'sort_order' => (int) $r->sortOrder,
+                'wine_lot_id' => $type === CellarActivityType::Vineyard ? null : $lot,
+                'vessel_id' => $type === CellarActivityType::Vineyard || $r->vesselId === null ? null : $ctx->ids->get('Vessel', (string) $r->vesselId),
+                'round_id' => $r->roundId === null ? null : $ctx->ids->get('CellarActivityRound', (string) $r->roundId),
+                'assigned_to_id' => $r->assignedToId === null ? null : $ctx->ids->get('User', (string) $r->assignedToId),
+                'note' => $note,
+                'skip_reason' => $skipReason?->value,
+                'deviated' => Normalize::bool($r->deviated),
+                'applied_at' => $status === CellarActivityStatus::Done ? (Normalize::date($r->appliedAt) ?? Normalize::date($r->updatedAt)) : null,
+                'skipped_at' => $status === CellarActivityStatus::Skipped ? Normalize::date($r->updatedAt) : null,
+                'planned_by_id' => $ctx->userId((string) $r->plannedById, 'production'),
+                'executed_by_id' => $r->executedById === null ? null : $ctx->ids->get('User', (string) $r->executedById),
+                'created_at' => Normalize::date($r->createdAt),
+                'updated_at' => Normalize::date($r->updatedAt),
+            ]);
+            $ctx->report->written('cellar_activities');
         }
     }
 

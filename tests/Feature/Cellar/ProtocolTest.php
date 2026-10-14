@@ -97,4 +97,34 @@ class ProtocolTest extends TestCase
 
         $this->assertDatabaseCount('vessels', 3);
     }
+
+    public function test_protocol_additive_doses_are_saved_with_the_template(): void
+    {
+        $tenant = $this->createTenant();
+        $admin = $this->createMember($tenant, [TenantRole::Admin]);
+        Sanctum::actingAs($admin);
+
+        $id = $this->postJson('/api/v1/fermentation-templates', [
+            'name' => 'Classic Red',
+            'additives' => [
+                ['name' => 'Yeast', 'dose' => 20, 'basis' => 'per_hL', 'stage' => 'Inoculation'],
+                ['name' => 'Tannin', 'dose' => 0.5, 'basis' => 'per_100kg'],
+            ],
+        ], $this->tenantHeader($tenant))
+            ->assertCreated()
+            ->assertJsonPath('data.additives.0.name', 'Yeast')
+            ->assertJsonPath('data.additives.1.basis', 'per_100kg')
+            ->json('data.id');
+
+        $this->patchJson("/api/v1/fermentation-templates/{$id}", [
+            'additives' => [['name' => 'Nutrient', 'dose' => 0.3, 'basis' => 'per_L']],
+        ], $this->tenantHeader($tenant))
+            ->assertOk()
+            ->assertJsonCount(1, 'data.additives')
+            ->assertJsonPath('data.additives.0.dose', '0.3000');
+
+        $this->postJson('/api/v1/fermentation-templates', [
+            'name' => 'Bad', 'additives' => [['name' => 'X', 'dose' => 1, 'basis' => 'per_bottle']],
+        ], $this->tenantHeader($tenant))->assertUnprocessable()->assertJsonValidationErrors(['additives.0.basis']);
+    }
 }

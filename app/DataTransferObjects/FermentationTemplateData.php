@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DataTransferObjects;
 
 use App\Models\FermentationTemplate;
+use App\Models\ProtocolAdditive;
 use Illuminate\Contracts\Support\Arrayable;
 use JsonSerializable;
 
@@ -42,6 +43,17 @@ final class FermentationTemplateData implements Arrayable, JsonSerializable
             'estimated_duration' => $t->estimated_duration,
             'stages' => $t->stages ?? [],
             'is_active' => $t->is_active,
+            'additives' => $t->relationLoaded('additives')
+                ? $t->additives->map(fn (ProtocolAdditive $a): array => [
+                    'id' => $a->getKey(),
+                    'name' => $a->name,
+                    'enological_product_id' => $a->enological_product_id,
+                    'dose' => (string) $a->dose,
+                    'basis' => $a->basis->value,
+                    'stage' => $a->stage,
+                    'notes' => $a->notes,
+                ])->all()
+                : [],
         ];
     }
 

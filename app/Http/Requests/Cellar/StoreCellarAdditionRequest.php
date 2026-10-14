@@ -30,6 +30,10 @@ class StoreCellarAdditionRequest extends FormRequest
             'cost_per_unit' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'total_cost' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'note' => ['sometimes', 'nullable', 'string'],
+            'vessel_id' => [
+                'sometimes', 'nullable', 'string',
+                Rule::exists('vessels', 'id')->where('tenant_id', $tenantId),
+            ],
             'enological_product_id' => [
                 'sometimes', 'nullable', 'string',
                 Rule::exists('enological_products', 'id')->where('tenant_id', $tenantId),

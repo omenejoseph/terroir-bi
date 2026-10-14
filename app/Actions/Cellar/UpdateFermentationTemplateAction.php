@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Actions\Cellar;
 
 use App\Models\FermentationTemplate;
+use App\Services\Cellar\SyncProtocolAdditives;
 
 /** Update a fermentation protocol template. */
 class UpdateFermentationTemplateAction
 {
+    public function __construct(private readonly SyncProtocolAdditives $additives) {}
+
     /**
      * @param  array<string, mixed>  $data
      */
@@ -20,6 +23,10 @@ class UpdateFermentationTemplateAction
             'estimated_duration', 'stages', 'is_active',
         ])));
         $template->save();
+
+        if (array_key_exists('additives', $data)) {
+            $this->additives->sync($template, (array) $data['additives']);
+        }
 
         return $template;
     }
