@@ -79,4 +79,14 @@ class HarvestEntry extends Model
     {
         return $this->belongsTo(GrapeContract::class, 'contract_id');
     }
+
+    /**
+     * The grower (cooperant supplier) the grapes came from, if bought in.
+     *
+     * @return BelongsTo<Supplier, $this>
+     */
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
+    }
 }

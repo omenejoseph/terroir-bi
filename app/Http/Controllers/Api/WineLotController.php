@@ -65,6 +65,8 @@ use App\Models\VesselLot;
 use App\Models\WineLot;
 use App\Queries\ListWineLotsQuery;
 use App\Queries\LotAnalysisTrendQuery;
+use App\Queries\LotTimelineQuery;
+use App\Queries\TraceabilityQuery;
 use App\Services\Cellar\BlendProjector;
 use App\Services\Cellar\LotCostService;
 use Illuminate\Http\JsonResponse;
@@ -220,6 +222,16 @@ class WineLotController extends Controller
         $created = $action->execute($request->validated(), $this->userId($request));
 
         return response()->json(['data' => ['created' => $created]], 201);
+    }
+
+    public function timeline(WineLot $wineLot, LotTimelineQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->get($wineLot)]);
+    }
+
+    public function trace(WineLot $wineLot, TraceabilityQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->get($wineLot)]);
     }
 
     public function projectBlend(ProjectBlendRequest $request, BlendProjector $projector): JsonResponse

@@ -7,7 +7,10 @@ namespace App\Actions\Cellar;
 use App\Enums\WorkOrderCategory;
 use App\Models\WineLot;
 use App\Models\WorkOrder;
+use App\Models\WorkOrderBoard;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -21,6 +24,8 @@ use Illuminate\Validation\ValidationException;
  */
 class GenerateWorkOrdersFromProtocolAction
 {
+    public function __construct(private readonly AuditLogger $audit) {}
+
     /**
      * @return array{created: int, skipped: int, day: int, active_stages: list<string>}
      */
@@ -40,8 +45,9 @@ class GenerateWorkOrdersFromProtocolAction
         $created = 0;
         $skipped = 0;
         $activeStages = [];
+        $boardId = WorkOrderBoard::defaultBoard()?->getKey();
 
-        return DB::transaction(function () use ($lot, $template, $day, $today, $createdById, &$created, &$skipped, &$activeStages): array {
+        return DB::transaction(function () use ($lot, $template, $day, $today, $createdById, $boardId, &$created, &$skipped, &$activeStages): array {
             foreach ($template->stages ?? [] as $stage) {
                 $dayStart = (int) ($stage['dayStart'] ?? $stage['day_start'] ?? 0);
                 $dayEnd = (int) ($stage['dayEnd'] ?? $stage['day_end'] ?? 0);
@@ -76,17 +82,22 @@ class GenerateWorkOrdersFromProtocolAction
                         'wine_lot_id' => $lot->getKey(),
                         'due_date' => $today,
                         'created_by_id' => $createdById,
+                        // On the default board so the team sees it (the prototype's were board-less).
+                        'board_id' => $boardId,
                     ]);
                     $created++;
                 }
             }
 
-            return [
+            $result = [
                 'created' => $created,
                 'skipped' => $skipped,
                 'day' => $day,
                 'active_stages' => array_values(array_unique($activeStages)),
             ];
+            $this->audit->record(Auth::user(), 'wine_lot.protocol_tasks_generated', $lot, $result);
+
+            return $result;
         });
     }
 }

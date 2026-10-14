@@ -380,6 +380,9 @@ Route::prefix('v1')->group(function () {
             Route::get('vessels/{vessel}', [VesselController::class, 'show']);
             Route::get('wine-lots', [WineLotController::class, 'index']);
             Route::get('wine-lots/{wineLot}/analyses/trend', [WineLotController::class, 'analysisTrend']);
+            Route::get('wine-lots/{wineLot}/timeline', [WineLotController::class, 'timeline']);
+            Route::get('wine-lots/{wineLot}/trace', [WineLotController::class, 'trace']);
+            Route::get('cellar/book', [CellarController::class, 'book']);
             Route::post('wine-lots/blend/project', [WineLotController::class, 'projectBlend']);
             Route::get('wine-lots/{wineLot}', [WineLotController::class, 'show']);
             Route::get('enological-products', [EnologicalProductController::class, 'index']);

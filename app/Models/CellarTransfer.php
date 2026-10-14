@@ -56,4 +56,20 @@ class CellarTransfer extends Model
     {
         return $this->belongsTo(WineLot::class, 'to_lot_id');
     }
+
+    /**
+     * @return BelongsTo<Vessel, $this>
+     */
+    public function fromVessel(): BelongsTo
+    {
+        return $this->belongsTo(Vessel::class, 'from_vessel_id');
+    }
+
+    /**
+     * @return BelongsTo<Vessel, $this>
+     */
+    public function toVessel(): BelongsTo
+    {
+        return $this->belongsTo(Vessel::class, 'to_vessel_id');
+    }
 }

@@ -8,7 +8,9 @@ use App\Enums\CellarActivityType;
 use App\Models\FermentationTemplate;
 use App\Models\ProtocolAdditive;
 use App\Models\WineLot;
+use App\Services\Audit\AuditLogger;
 use App\Services\Cellar\ProtocolDose;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -20,7 +22,10 @@ use Illuminate\Validation\ValidationException;
  */
 class PlanProtocolAdditionsAction
 {
-    public function __construct(private readonly CreateCellarActivitiesAction $create) {}
+    public function __construct(
+        private readonly CreateCellarActivitiesAction $create,
+        private readonly AuditLogger $audit,
+    ) {}
 
     /**
      * @return array{round_id: string|null, work_order_id: string|null, count: int, skipped_no_grape_weight: list<string>}
@@ -94,6 +99,12 @@ class PlanProtocolAdditionsAction
             'round_name' => trim("Protocol {$template->name} — {$lot->name} ".($lot->vintage ?? '')),
             'activities' => $activities,
         ], $userId);
+
+        $this->audit->record(Auth::user(), 'wine_lot.protocol_additions_planned', $lot, [
+            'round_id' => $result['round_id'],
+            'count' => $result['count'],
+            'skipped_no_grape_weight' => array_values(array_unique($skipped)),
+        ]);
 
         return [...$result, 'skipped_no_grape_weight' => array_values(array_unique($skipped))];
     }

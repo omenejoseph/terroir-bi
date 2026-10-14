@@ -46,4 +46,12 @@ class CellarProcess extends Model
     {
         return $this->belongsTo(WineLot::class);
     }
+
+    /**
+     * @return BelongsTo<Vessel, $this>
+     */
+    public function vessel(): BelongsTo
+    {
+        return $this->belongsTo(Vessel::class);
+    }
 }
