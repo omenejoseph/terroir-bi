@@ -28,7 +28,9 @@ use App\Actions\Cellar\DeleteWineLotAction;
 use App\Actions\Cellar\ExecuteBlendAction;
 use App\Actions\Cellar\GenerateWorkOrdersFromProtocolAction;
 use App\Actions\Cellar\UnassignLotFromVesselAction;
+use App\Actions\Cellar\UpdateCellarAdditionAction;
 use App\Actions\Cellar\UpdateCellarAnalysisAction;
+use App\Actions\Cellar\UpdateTastingNoteAction;
 use App\Actions\Cellar\UpdateWineLotAction;
 use App\DataTransferObjects\WineLotData;
 use App\Http\Controllers\Controller;
@@ -48,6 +50,8 @@ use App\Http\Requests\Cellar\StoreCellarProcessRequest;
 use App\Http\Requests\Cellar\StoreTastingNoteRequest;
 use App\Http\Requests\Cellar\StoreTransferRequest;
 use App\Http\Requests\Cellar\StoreWineLotRequest;
+use App\Http\Requests\Cellar\UpdateCellarAdditionRequest;
+use App\Http\Requests\Cellar\UpdateTastingNoteRequest;
 use App\Http\Requests\Cellar\UpdateWineLotRequest;
 use App\Models\Bottling;
 use App\Models\CellarAddition;
@@ -270,6 +274,22 @@ class WineLotController extends Controller
         $action->execute($wineLot, $request->validated(), $this->userId($request));
 
         return response()->json(['data' => $this->present($wineLot->refresh())], 201);
+    }
+
+    public function updateAddition(UpdateCellarAdditionRequest $request, WineLot $wineLot, CellarAddition $addition, UpdateCellarAdditionAction $action): JsonResponse
+    {
+        abort_unless($addition->wine_lot_id === $wineLot->getKey(), 404);
+        $action->execute($addition, $request->validated());
+
+        return response()->json(['data' => $this->present($wineLot->refresh())]);
+    }
+
+    public function updateTasting(UpdateTastingNoteRequest $request, WineLot $wineLot, CellarTastingNote $tastingNote, UpdateTastingNoteAction $action): JsonResponse
+    {
+        abort_unless($tastingNote->wine_lot_id === $wineLot->getKey(), 404);
+        $action->execute($tastingNote, $request->validated());
+
+        return response()->json(['data' => $this->present($wineLot->refresh())]);
     }
 
     public function deleteAddition(WineLot $wineLot, CellarAddition $addition, DeleteCellarAdditionAction $action): JsonResponse

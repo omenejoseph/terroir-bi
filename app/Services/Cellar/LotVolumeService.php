@@ -163,9 +163,19 @@ class LotVolumeService
      */
     public function drain(WineLot $lot, string $volume): WineLot
     {
+        return $this->drainTracked($lot, $volume)['lot'];
+    }
+
+    /**
+     * As drain(), also returning how much was taken from each vessel.
+     *
+     * @return array{lot: WineLot, takes: list<array{vessel_id: string, volume: string}>}
+     */
+    public function drainTracked(WineLot $lot, string $volume): array
+    {
         $volume = Quantity::normalize($volume);
 
-        return DB::transaction(function () use ($lot, $volume): WineLot {
+        return DB::transaction(function () use ($lot, $volume): array {
             /** @var WineLot $lot */
             $lot = WineLot::query()->whereKey($lot->getKey())->lockForUpdate()->firstOrFail();
 
@@ -177,6 +187,7 @@ class LotVolumeService
 
             $remaining = $volume;
             $affected = [];
+            $takes = [];
             foreach ($lot->vesselLots()->lockForUpdate()->get() as $vesselLot) {
                 if (Quantity::compare($remaining, '0.000') <= 0) {
                     break;
@@ -187,6 +198,7 @@ class LotVolumeService
                 $this->applyToVesselLot($vesselLot, Quantity::negate($take));
                 $remaining = Quantity::sub($remaining, $take);
                 $affected[] = $vesselLot->vessel_id;
+                $takes[] = ['vessel_id' => (string) $vesselLot->vessel_id, 'volume' => $take];
             }
 
             $lot->current_volume = Quantity::sub((string) $lot->current_volume, $volume);
@@ -194,7 +206,7 @@ class LotVolumeService
 
             $this->sync->syncMany($affected);
 
-            return $lot;
+            return ['lot' => $lot, 'takes' => $takes];
         });
     }
 

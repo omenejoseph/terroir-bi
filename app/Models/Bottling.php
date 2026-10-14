@@ -8,6 +8,7 @@ use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -61,5 +62,13 @@ class Bottling extends Model
     public function inventoryItem(): BelongsTo
     {
         return $this->belongsTo(InventoryItem::class);
+    }
+
+    /**
+     * @return HasMany<BottlingVessel, $this>
+     */
+    public function vessels(): HasMany
+    {
+        return $this->hasMany(BottlingVessel::class);
     }
 }

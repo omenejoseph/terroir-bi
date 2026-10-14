@@ -375,6 +375,7 @@ Route::prefix('v1')->group(function () {
             Route::get('cellar/fermentation-monitor', [FermentationMonitorController::class, 'index']);
             Route::get('cellar/analytics', [CellarController::class, 'analytics']);
             Route::get('tasting-reports', [TastingReportController::class, 'index']);
+            Route::get('tasting-reports/{tastingReport}', [TastingReportController::class, 'show']);
             Route::get('vessels', [VesselController::class, 'index']);
             Route::get('vessels/{vessel}', [VesselController::class, 'show']);
             Route::get('wine-lots', [WineLotController::class, 'index']);
@@ -411,14 +412,18 @@ Route::prefix('v1')->group(function () {
             Route::post('wine-lots/blend', [WineLotController::class, 'blend']);
             Route::post('wine-lots/blend/by-ratio', [WineLotController::class, 'blendByRatio']);
             Route::post('tasting-reports', [TastingReportController::class, 'store']);
+            Route::patch('tasting-reports/{tastingReport}', [TastingReportController::class, 'update']);
+            Route::delete('tasting-reports/{tastingReport}', [TastingReportController::class, 'destroy']);
             Route::post('wine-lots/{wineLot}/analyses', [WineLotController::class, 'addAnalysis']);
             Route::patch('wine-lots/{wineLot}/analyses/{analysis}', [WineLotController::class, 'updateAnalysis']);
             Route::delete('wine-lots/{wineLot}/analyses/{analysis}', [WineLotController::class, 'deleteAnalysis']);
             Route::post('wine-lots/{wineLot}/additions', [WineLotController::class, 'addAddition']);
+            Route::patch('wine-lots/{wineLot}/additions/{addition}', [WineLotController::class, 'updateAddition']);
             Route::delete('wine-lots/{wineLot}/additions/{addition}', [WineLotController::class, 'deleteAddition']);
             Route::post('wine-lots/{wineLot}/processes', [WineLotController::class, 'addProcess']);
             Route::delete('wine-lots/{wineLot}/processes/{process}', [WineLotController::class, 'deleteProcess']);
             Route::post('wine-lots/{wineLot}/tasting-notes', [WineLotController::class, 'addTasting']);
+            Route::patch('wine-lots/{wineLot}/tasting-notes/{tastingNote}', [WineLotController::class, 'updateTasting']);
             Route::delete('wine-lots/{wineLot}/tasting-notes/{tastingNote}', [WineLotController::class, 'deleteTasting']);
             Route::post('wine-lots/{wineLot}/transfers', [WineLotController::class, 'addTransfer']);
             Route::delete('wine-lots/{wineLot}/transfers/{transfer}', [WineLotController::class, 'deleteTransfer']);

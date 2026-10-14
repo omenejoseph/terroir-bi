@@ -48,21 +48,21 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | A. Cellar home | 8 | 8 | 0 | 0 | 0 |
 | B. Cellar map | 22 | 22 | 0 | 0 | 0 |
 | C. Vessels | 11 | 11 | 0 | 0 | 0 |
-| D. Wine lots | 30 | 26 | 3 | 1 | 0 |
+| D. Wine lots | 30 | 27 | 2 | 1 | 0 |
 | E. SO₂ | 14 | 14 | 0 | 0 | 0 |
-| F. Additions & enological stock | 18 | 12 | 6 | 0 | 0 |
+| F. Additions & enological stock | 18 | 13 | 5 | 0 | 0 |
 | G. Lab analyses | 9 | 7 | 0 | 2 | 0 |
 | H. Transfers & racking | 4 | 4 | 0 | 0 | 0 |
 | I. Blending | 9 | 8 | 0 | 1 | 0 |
 | J. Planned work & Today | 20 | 20 | 0 | 0 | 0 |
-| K. Tastings | 9 | 3 | 6 | 0 | 0 |
-| L. Bottling | 4 | 3 | 1 | 0 | 0 |
+| K. Tastings | 9 | 9 | 0 | 0 | 0 |
+| L. Bottling | 4 | 4 | 0 | 0 | 0 |
 | M. Fermentation protocols & monitoring | 7 | 6 | 1 | 0 | 0 |
 | N. Analytics & costs | 10 | 5 | 5 | 0 | 0 |
 | O. Compliance & records | 4 | 2 | 2 | 0 | 0 |
 | P. Work-order integration | 3 | 2 | 1 | 0 | 0 |
-| Q. Audit logging | 11 | 3 | 8 | 0 | 0 |
-| **Total** | **193** | **156** | **33** | **4** | **0** |
+| Q. Audit logging | 11 | 4 | 7 | 0 | 0 |
+| **Total** | **193** | **166** | **23** | **4** | **0** |
 
 ---
 
@@ -146,7 +146,7 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | D18 | Lot journey timeline (created, fills, additions, analyses, tastings, transfers, bottlings, processes) | `C/lot-timeline.tsx` | — | ⬜ | ⬜ | `LotTimelineQuery` |
 | D19 | Additions tab: form + planned additions box + table (cost admin) + total + delete | `C/addition-form.tsx` | see F | ✅ | ⬜ | |
 | D20 | Analysis tab: trend chart + form + editable list | `C/charts/parameter-trends.tsx` | see G | ✅ | ⬜ | |
-| D21 | Tasting tab: form + editable list | `C/tasting-note-form.tsx` | see K | 🟡 | ⬜ | |
+| D21 | Tasting tab: form + editable list | `C/tasting-note-form.tsx` | `UpdateTastingNoteAction`, `PATCH wine-lots/{lot}/tasting-notes/{note}` | ✅ | ⬜ | |
 | D22 | Transfers tab: form + in/out list | `C/transfer-form.tsx` | see H | ✅ | ⬜ | |
 | D23 | Processes tab: quick-pick chips + custom kind, date, volume, vessel, note; list; delete | `C/process-form.tsx`, `CA:1303` | `AddCellarProcessAction`, `DeleteCellarProcessAction` | ✅ | ⬜ | |
 | D24 | Edit a process | — (prototype has none) | — | — | ⬜ | Added for symmetry (`UpdateCellarProcess`) |
@@ -188,7 +188,7 @@ Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePla
 | F4 | Vessel for an addition | note text `→ VESSEL` | `cellar_additions.vessel_id` | ✅ | ⬜ | New `cellar_additions.vessel_id`; legacy import back-fills from note |
 | F5 | Stock check blocks save | `CA:1197` | `AddCellarAdditionAction` (one rule) | ✅ | ⬜ | One rule for every addition path |
 | F6 | Delete addition restores stock | `CA:1265` | `DeleteCellarAdditionAction` | ✅ | ⬜ | |
-| F7 | Edit addition | — | — | ⬜ | ⬜ | Added (re-applies the stock delta) |
+| F7 | Edit addition | — | `UpdateCellarAdditionAction`, `PATCH wine-lots/{lot}/additions/{addition}` (stock moved under the stock rule) | ✅ | ⬜ | Added (re-applies the stock delta) |
 | F8 | Bulk additions page: product, dose + unit (g/L, g/hL, mg/L, mg/hL, mL/L, mL/hL, kg/hL), unit conversion, note | `P/bulk-additions`, `C/bulk-additions.tsx` | `BulkAddAdditionsAction` | ✅ | ⬜ | |
 | F9 | Lot table: filters (status, grape, search), select all, per-lot amount/cost/vessel; summary; success screen | `C/bulk-additions.tsx` | — | ✅ | ⬜ | Stock shortfall blocks |
 | F10 | Products list: category chips, stats (total, low stock, value) | `components/harvest/enological-products.tsx` | `EnologicalProductController::index` | ✅ | ⬜ | |
@@ -271,12 +271,12 @@ Backend shipped in Phase 1a: `app/Actions/Cellar/Activities/*`, `CellarTodayQuer
 |---|---|---|---|---|---|---|
 | K1 | Lot/vessel tasting note: date, score 0–100, vessel, appearance, nose, palate, overall, note | `C/tasting-note-form.tsx` | `AddTastingNoteAction` | ✅ | ⬜ | |
 | K2 | Delete note | | `DeleteTastingNoteAction` | ✅ | ⬜ | |
-| K3 | Edit note | `updateCellarTastingNote` | — | ⬜ | ⬜ | |
-| K4 | Reports list: title, date, wine count, first 4 wines, author, empty state | `P/tastings`, `actions/tastings.actions.ts` | `TastingReportController::index` | 🟡 | ⬜ | Add wines + author to the payload |
-| K5 | New report: title, date, note, search-to-add wines (any non-archived lot), per-wine note + score | `C/tasting-report-form.tsx` | `TastingReportController::store` | 🟡 | ⬜ | Move to an Action + DTO |
-| K6 | Report detail: date, author, count, average score, per-wine cards linking to lot | `P/tastings/[id]` | — | ⬜ | ⬜ | |
-| K7 | Edit report (syncs lot notes: add/update/remove) | `P/tastings/[id]/edit` | — | ⬜ | ⬜ | |
-| K8 | Delete report (removes its lot notes) | `tastings.actions.ts` | — | ⬜ | ⬜ | |
+| K3 | Edit note | `updateCellarTastingNote` | `UpdateTastingNoteAction`, `PATCH wine-lots/{lot}/tasting-notes/{note}` | ✅ | ⬜ | |
+| K4 | Reports list: title, date, wine count, first 4 wines, author, empty state | `P/tastings`, `actions/tastings.actions.ts` | `TastingReportController::index` + `TastingReportData` (author, wine count, average, preview) | ✅ | ⬜ | Add wines + author to the payload |
+| K5 | New report: title, date, note, search-to-add wines (any non-archived lot), per-wine note + score | `C/tasting-report-form.tsx` | `SaveTastingReportAction`, `POST tasting-reports` (wines → lot notes) | ✅ | ⬜ | Move to an Action + DTO |
+| K6 | Report detail: date, author, count, average score, per-wine cards linking to lot | `P/tastings/[id]` | `GET tasting-reports/{report}` (wines, scores, lot links) | ✅ | ⬜ | |
+| K7 | Edit report (syncs lot notes: add/update/remove) | `P/tastings/[id]/edit` | `SaveTastingReportAction`, `PATCH tasting-reports/{report}` (sync notes by lot) | ✅ | ⬜ | |
+| K8 | Delete report (removes its lot notes) | `tastings.actions.ts` | `DeleteTastingReportAction`, `DELETE tasting-reports/{report}` | ✅ | ⬜ | |
 | K9 | Each wine in a report becomes a lot note | `tastings.actions.ts` | `TastingReportController::store` | ✅ | — | |
 
 ## L. Bottling
@@ -285,8 +285,8 @@ Backend shipped in Phase 1a: `app/Actions/Cellar/Activities/*`, `CellarTodayQuer
 |---|---|---|---|---|---|---|
 | L1 | Bottle a lot: count, size 375/750/1500/3000, date, note; volume check | `C/bottling-form.tsx` (unused), `CA:2100` | `CreateBottlingAction` | ✅ | ⬜ | Prototype had **no screen**; added on the lot |
 | L2 | Link existing inventory item → PRODUCTION_IN movement | `CA:2100` | `CreateBottlingAction` (`StockLedger`) | ✅ | ⬜ | |
-| L3 | Create a new inventory item (name, SKU, size, price, bottles or cases, per case) | `CA:2100` | — | ⬜ | ⬜ | |
-| L4 | Delete bottling reverses stock + lot status | `CA:2453` | `DeleteBottlingAction` | ✅ | ⬜ | Restores the vessels the wine came from |
+| L3 | Create a new inventory item (name, SKU, size, price, bottles or cases, per case) | `CA:2100` | `CreateBottlingAction` `new_item` (via `CreateInventoryItemAction`) | ✅ | ⬜ | |
+| L4 | Delete bottling reverses stock + lot status | `CA:2453` | `DeleteBottlingAction` (stock out; wine back into `bottling_vessels`) | ✅ | ⬜ | Restores the vessels the wine came from |
 
 ## M. Fermentation protocols & monitoring
 
@@ -359,7 +359,7 @@ rules apply:
 | Q1 | `Auditable` on Vessel, WineLot, WineLotGrape, VesselLot, CellarAnalysis, CellarAddition, CellarProcess, CellarTastingNote, TastingReport, CellarTransfer, Bottling, EnologicalProduct, FermentationTemplate, CellarActivity, CellarActivityRound | — | `Services/Audit/Auditable` | 🟡 | — | Create snapshot = identifying fields; derived volume/stock/status fields ignored on update |
 | Q2 | Named entries for lot volume: `wine_lot.volume_adjusted` (vessel, ±L, reason), `wine_lot.assigned_to_vessel` / `unassigned_from_vessel`, `vessel.layout_updated` (count), `vessel.room_renamed` | — | `wine_lot.volume_adjusted`, `.assigned_to_vessel(s)`, `.unassigned_from_vessel`, `vessel.duplicated`, `wine_lot.deleted` | ✅ | — | |
 | Q3 | Named entries for blends and transfers: `wine_lot.blended` (sources, L, destination, new lot), `wine_lot.blended_in`, `cellar_transfer.created/reversed` (from/to lot+vessel, L, type) | — | `wine_lot.blended`, `wine_lot.blended_in`, `cellar_transfer.created`, `cellar_transfer.reversed` | ✅ | — | |
-| Q4 | Named entries for bottling: `bottling.created/reversed` (bottles, size, L, inventory item, stock movement ref) | — | bottling Actions | ⬜ | — | |
+| Q4 | Named entries for bottling: `bottling.created/reversed` (bottles, size, L, inventory item, stock movement ref) | — | `bottling.created`, `bottling.reversed` | ✅ | — | |
 | Q5 | Named entries for stock: `enological_product.stock_adjusted` (delta, before→after, reason, source: addition / bulk / SO₂ / manual / import) | — | addition + stock Actions | ⬜ | — | Every stock change is traceable to its cause |
 | Q6 | Named entries for bulk operations: `cellar.bulk_additions_applied`, `cellar.bulk_analyses_recorded`, `cellar.so2_round_planned` (lot/vessel ids, dose, product) | — | `cellar.so2_applied`, `cellar.so2_round_planned`, `cellar.bulk_analyses_recorded` (bulk additions page still to do) | 🟡 | — | One summary entry plus per-row trait entries |
 | Q7 | Named entries for planned work: `cellar_activity.completed` (deviated, planned vs actual), `skipped` (reason), `rescheduled` (from→to, reason), `cellar_activity_round.deleted` | — | Activities actions (`cellar_activity.*`, `cellar_activity_round.*`) | ✅ | — | |
