@@ -382,6 +382,8 @@ Route::prefix('v1')->group(function () {
             Route::get('wine-lots/{wineLot}/analyses/trend', [WineLotController::class, 'analysisTrend']);
             Route::get('wine-lots/{wineLot}/timeline', [WineLotController::class, 'timeline']);
             Route::get('wine-lots/{wineLot}/trace', [WineLotController::class, 'trace']);
+            Route::get('wine-lots/{wineLot}/history', [WineLotController::class, 'history']);
+            Route::get('vessels/{vessel}/history', [VesselController::class, 'history']);
             Route::get('cellar/book', [CellarController::class, 'book']);
             Route::post('wine-lots/blend/project', [WineLotController::class, 'projectBlend']);
             Route::get('wine-lots/{wineLot}', [WineLotController::class, 'show']);

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Actions\Cellar;
 
 use App\Models\WineLot;
+use App\Services\Audit\AuditLogger;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -14,7 +16,10 @@ use Illuminate\Support\Facades\DB;
  */
 class BulkAddAdditionsAction
 {
-    public function __construct(private readonly AddCellarAdditionAction $add) {}
+    public function __construct(
+        private readonly AddCellarAdditionAction $add,
+        private readonly AuditLogger $audit,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data  {name, unit, category?, enological_product_id?, cost_per_unit?, lots: [{wine_lot_id, quantity, vessel_id?, note?}]}
@@ -41,6 +46,18 @@ class BulkAddAdditionsAction
                 ], $createdById);
                 $count++;
             }
+
+            // One summary entry for the batch, alongside each addition's own entry.
+            $this->audit->record(Auth::user(), 'cellar.bulk_additions_applied', null, [
+                'name' => $data['name'],
+                'enological_product_id' => $data['enological_product_id'] ?? null,
+                'unit' => $data['unit'],
+                'lines' => array_map(fn (array $l): array => [
+                    'wine_lot_id' => $l['wine_lot_id'],
+                    'vessel_id' => $l['vessel_id'] ?? null,
+                    'quantity' => (string) $l['quantity'],
+                ], $lots),
+            ]);
 
             return $count;
         });

@@ -8,10 +8,8 @@ use App\Enums\CellarTransferType;
 use App\Models\CellarTransfer;
 use App\Models\Vessel;
 use App\Models\WineLot;
-use App\Services\Audit\AuditLogger;
 use App\Services\Cellar\LotVolumeService;
 use App\Support\Quantity;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -22,10 +20,7 @@ use Illuminate\Validation\ValidationException;
  */
 class CreateTransferAction
 {
-    public function __construct(
-        private readonly LotVolumeService $volumes,
-        private readonly AuditLogger $audit,
-    ) {}
+    public function __construct(private readonly LotVolumeService $volumes) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -67,15 +62,6 @@ class CreateTransferAction
                 'type' => $type,
                 'volume_liters' => $volume,
                 'note' => $data['note'] ?? null,
-            ]);
-
-            $this->audit->record(Auth::user(), 'cellar_transfer.created', $transfer, [
-                'type' => $type->value,
-                'from_lot_id' => $fromLot->getKey(),
-                'to_lot_id' => $toLot->getKey(),
-                'from_vessel_id' => $data['from_vessel_id'] ?? null,
-                'to_vessel_id' => $data['to_vessel_id'] ?? null,
-                'volume_liters' => $volume,
             ]);
 
             return $transfer;

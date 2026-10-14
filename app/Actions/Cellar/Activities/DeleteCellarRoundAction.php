@@ -51,7 +51,7 @@ class DeleteCellarRoundAction
                     $this->status->execute($card, TaskStatus::Done);
                 }
             } else {
-                $round->delete();
+                $round->deleteQuietly(); // already audited as cellar_activity_round.deleted above
                 $card?->delete();
             }
 

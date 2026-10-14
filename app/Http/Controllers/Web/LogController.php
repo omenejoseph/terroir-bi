@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Queries\CellarHistoryQuery;
 use App\Support\PerPage;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Http\Request;
@@ -24,8 +25,17 @@ class LogController extends Controller
 {
     public function index(Request $request, TenantContext $tenants): Response
     {
+        $area = $request->query('area');
+        $subjectId = $request->query('subject_id');
+
         $logs = AuditLog::query()
             ->where('tenant_id', $tenants->id())
+            // "Cellar" filter: entries about cellar records, plus the cellar's
+            // subject-less batch entries (cellar.bulk_*, cellar.so2_*).
+            ->when($area === 'cellar', fn ($q) => $q->where(fn ($w) => $w
+                ->whereIn('subject_type', CellarHistoryQuery::morphTypes())
+                ->orWhere('action', 'like', 'cellar.%')))
+            ->when(is_string($subjectId) && $subjectId !== '', fn ($q) => $q->where('subject_id', $subjectId))
             ->with('actor')
             ->orderByDesc('created_at')
             ->paginate(PerPage::fromRequest($request), ['*'], 'page');
@@ -41,6 +51,7 @@ class LogController extends Controller
                     'metadata' => $log->metadata,
                     'created_at' => $log->created_at?->toIso8601String(),
                 ], $logs->items()),
+                'filters' => ['area' => is_string($area) ? $area : null, 'subject_id' => is_string($subjectId) ? $subjectId : null],
                 'meta' => [
                     'current_page' => $logs->currentPage(),
                     'last_page' => $logs->lastPage(),

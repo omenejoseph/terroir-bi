@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\Audit\Auditable;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -30,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class FermentationTemplate extends Model
 {
+    use Auditable;
     use BelongsToTenant;
     use HasUlids;
 
@@ -62,5 +64,21 @@ class FermentationTemplate extends Model
     public function additives(): HasMany
     {
         return $this->hasMany(ProtocolAdditive::class)->orderBy('sort_order');
+    }
+
+    /**
+     * Identifying fields written with the `created` audit entry.
+     *
+     * @return array<string, mixed>
+     */
+    protected static function auditCreateSnapshot(Model $model): array
+    {
+        $snapshot = [];
+        foreach (['name', 'wine_type'] as $field) {
+            $value = $model->getAttribute($field);
+            $snapshot[$field] = $value instanceof \BackedEnum ? $value->value : ($value instanceof \DateTimeInterface ? $value->format(DATE_ATOM) : ($value === null || is_scalar($value) ? $value : (string) $value));
+        }
+
+        return $snapshot;
     }
 }

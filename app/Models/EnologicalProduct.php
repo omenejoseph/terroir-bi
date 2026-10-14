@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\Audit\Auditable;
 use App\Support\Money\Money;
 use App\Support\Money\MoneyCast;
 use App\Tenancy\BelongsToTenant;
@@ -32,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class EnologicalProduct extends Model
 {
+    use Auditable;
     use BelongsToTenant;
     use HasUlids;
 
@@ -71,5 +73,32 @@ class EnologicalProduct extends Model
     public function cellarAdditions(): HasMany
     {
         return $this->hasMany(CellarAddition::class);
+    }
+
+    /**
+     * Identifying fields written with the `created` audit entry.
+     *
+     * @return array<string, mixed>
+     */
+    protected static function auditCreateSnapshot(Model $model): array
+    {
+        $snapshot = [];
+        foreach (['name', 'category', 'unit'] as $field) {
+            $value = $model->getAttribute($field);
+            $snapshot[$field] = $value instanceof \BackedEnum ? $value->value : ($value instanceof \DateTimeInterface ? $value->format(DATE_ATOM) : ($value === null || is_scalar($value) ? $value : (string) $value));
+        }
+
+        return $snapshot;
+    }
+
+    /**
+     * Derived fields: their changes are covered by named entries (volume
+     * moves, stock ledger) or are map layout noise.
+     *
+     * @return list<string>
+     */
+    protected static function auditIgnoreOnUpdate(): array
+    {
+        return ['current_stock'];
     }
 }

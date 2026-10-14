@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\Audit\Auditable;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +24,7 @@ use Illuminate\Support\Carbon;
  */
 class VesselLot extends Model
 {
+    use Auditable;
     use BelongsToTenant;
     use HasUlids;
 
@@ -55,5 +57,32 @@ class VesselLot extends Model
     public function wineLot(): BelongsTo
     {
         return $this->belongsTo(WineLot::class);
+    }
+
+    /**
+     * Identifying fields written with the `created` audit entry.
+     *
+     * @return array<string, mixed>
+     */
+    protected static function auditCreateSnapshot(Model $model): array
+    {
+        $snapshot = [];
+        foreach (['vessel_id', 'wine_lot_id', 'volume'] as $field) {
+            $value = $model->getAttribute($field);
+            $snapshot[$field] = $value instanceof \BackedEnum ? $value->value : ($value instanceof \DateTimeInterface ? $value->format(DATE_ATOM) : ($value === null || is_scalar($value) ? $value : (string) $value));
+        }
+
+        return $snapshot;
+    }
+
+    /**
+     * Derived fields: their changes are covered by named entries (volume
+     * moves, stock ledger) or are map layout noise.
+     *
+     * @return list<string>
+     */
+    protected static function auditIgnoreOnUpdate(): array
+    {
+        return ['volume'];
     }
 }

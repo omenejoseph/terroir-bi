@@ -63,6 +63,7 @@ use App\Models\User;
 use App\Models\Vessel;
 use App\Models\VesselLot;
 use App\Models\WineLot;
+use App\Queries\CellarHistoryQuery;
 use App\Queries\ListWineLotsQuery;
 use App\Queries\LotAnalysisTrendQuery;
 use App\Queries\LotTimelineQuery;
@@ -227,6 +228,11 @@ class WineLotController extends Controller
     public function timeline(WineLot $wineLot, LotTimelineQuery $query): JsonResponse
     {
         return response()->json(['data' => $query->get($wineLot)]);
+    }
+
+    public function history(WineLot $wineLot, CellarHistoryQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->forLot($wineLot)]);
     }
 
     public function trace(WineLot $wineLot, TraceabilityQuery $query): JsonResponse

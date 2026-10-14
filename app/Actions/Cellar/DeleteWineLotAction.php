@@ -52,7 +52,7 @@ class DeleteWineLotAction
 
             $this->audit->record(Auth::user(), 'wine_lot.deleted', $lot, $snapshot);
 
-            $lot->delete();
+            $lot->deleteQuietly(); // the richer wine_lot.deleted entry above replaces the model's own
             $this->sync->syncMany($vesselIds);
         });
     }

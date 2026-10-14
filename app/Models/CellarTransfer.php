@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\CellarTransferType;
+use App\Services\Audit\Auditable;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class CellarTransfer extends Model
 {
+    use Auditable;
     use BelongsToTenant;
     use HasUlids;
 
@@ -71,5 +73,21 @@ class CellarTransfer extends Model
     public function toVessel(): BelongsTo
     {
         return $this->belongsTo(Vessel::class, 'to_vessel_id');
+    }
+
+    /**
+     * Identifying fields written with the `created` audit entry.
+     *
+     * @return array<string, mixed>
+     */
+    protected static function auditCreateSnapshot(Model $model): array
+    {
+        $snapshot = [];
+        foreach (['type', 'from_lot_id', 'to_lot_id', 'from_vessel_id', 'to_vessel_id', 'volume_liters'] as $field) {
+            $value = $model->getAttribute($field);
+            $snapshot[$field] = $value instanceof \BackedEnum ? $value->value : ($value instanceof \DateTimeInterface ? $value->format(DATE_ATOM) : ($value === null || is_scalar($value) ? $value : (string) $value));
+        }
+
+        return $snapshot;
     }
 }

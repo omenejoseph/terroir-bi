@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\Audit\Auditable;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +25,7 @@ use Illuminate\Support\Carbon;
  */
 class CellarProcess extends Model
 {
+    use Auditable;
     use BelongsToTenant;
     use HasUlids;
 
@@ -53,5 +55,21 @@ class CellarProcess extends Model
     public function vessel(): BelongsTo
     {
         return $this->belongsTo(Vessel::class);
+    }
+
+    /**
+     * Identifying fields written with the `created` audit entry.
+     *
+     * @return array<string, mixed>
+     */
+    protected static function auditCreateSnapshot(Model $model): array
+    {
+        $snapshot = [];
+        foreach (['wine_lot_id', 'vessel_id', 'kind', 'volume'] as $field) {
+            $value = $model->getAttribute($field);
+            $snapshot[$field] = $value instanceof \BackedEnum ? $value->value : ($value instanceof \DateTimeInterface ? $value->format(DATE_ATOM) : ($value === null || is_scalar($value) ? $value : (string) $value));
+        }
+
+        return $snapshot;
     }
 }

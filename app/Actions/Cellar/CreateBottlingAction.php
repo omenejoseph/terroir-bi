@@ -12,7 +12,6 @@ use App\Enums\WineLotStatus;
 use App\Models\Bottling;
 use App\Models\InventoryItem;
 use App\Models\WineLot;
-use App\Services\Audit\AuditLogger;
 use App\Services\Cellar\LotCostService;
 use App\Services\Cellar\LotVolumeService;
 use App\Services\Cellar\VesselVolumeSync;
@@ -20,7 +19,6 @@ use App\Services\Inventory\StockLedger;
 use App\Support\Money\CurrencyRegistry;
 use App\Support\Money\Money;
 use App\Support\Quantity;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -39,7 +37,6 @@ class CreateBottlingAction
         private readonly VesselVolumeSync $sync,
         private readonly LotVolumeService $volumes,
         private readonly CreateInventoryItemAction $createItem,
-        private readonly AuditLogger $audit,
     ) {}
 
     /**
@@ -101,15 +98,6 @@ class CreateBottlingAction
                 $lot->save();
                 $this->sync->syncMany($vesselIds);
             }
-
-            $this->audit->record(Auth::user(), 'bottling.created', $bottling, [
-                'wine_lot_id' => $lot->getKey(),
-                'bottle_count' => $bottleCount,
-                'bottle_volume_ml' => $bottleMl,
-                'volume_used' => $volumeUsed,
-                'inventory_item_id' => $item?->getKey(),
-                'vessels' => $takes,
-            ]);
 
             return $bottling;
         });

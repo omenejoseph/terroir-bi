@@ -20,6 +20,7 @@ use App\Http\Requests\Cellar\StoreVesselRequest;
 use App\Http\Requests\Cellar\UpdateVesselLayoutRequest;
 use App\Http\Requests\Cellar\UpdateVesselRequest;
 use App\Models\Vessel;
+use App\Queries\CellarHistoryQuery;
 use App\Queries\ListVesselsQuery;
 use App\Queries\VesselDetailQuery;
 use Illuminate\Http\JsonResponse;
@@ -47,6 +48,11 @@ class VesselController extends Controller
             ...VesselData::fromModel($vessel, withLots: true)->toArray(),
             ...$detail->get($vessel),
         ]]);
+    }
+
+    public function history(Vessel $vessel, CellarHistoryQuery $query): JsonResponse
+    {
+        return response()->json(['data' => $query->forVessel($vessel)]);
     }
 
     public function duplicate(DuplicateVesselsRequest $request, DuplicateVesselsAction $action): JsonResponse

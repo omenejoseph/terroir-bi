@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\Audit\Auditable;
 use App\Support\Money\Money;
 use App\Support\Money\MoneyCast;
 use App\Tenancy\BelongsToTenant;
@@ -29,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class CellarAddition extends Model
 {
+    use Auditable;
     use BelongsToTenant;
     use HasUlids;
 
@@ -68,5 +70,21 @@ class CellarAddition extends Model
     public function enologicalProduct(): BelongsTo
     {
         return $this->belongsTo(EnologicalProduct::class);
+    }
+
+    /**
+     * Identifying fields written with the `created` audit entry.
+     *
+     * @return array<string, mixed>
+     */
+    protected static function auditCreateSnapshot(Model $model): array
+    {
+        $snapshot = [];
+        foreach (['wine_lot_id', 'vessel_id', 'name', 'quantity', 'unit', 'enological_product_id'] as $field) {
+            $value = $model->getAttribute($field);
+            $snapshot[$field] = $value instanceof \BackedEnum ? $value->value : ($value instanceof \DateTimeInterface ? $value->format(DATE_ATOM) : ($value === null || is_scalar($value) ? $value : (string) $value));
+        }
+
+        return $snapshot;
     }
 }
