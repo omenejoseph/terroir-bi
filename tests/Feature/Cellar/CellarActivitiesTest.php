@@ -590,35 +590,6 @@ class CellarActivitiesTest extends TestCase
             ->assertJsonPath('data.skipped_no_grape_weight', ['Tannin']);
     }
 
-    public function test_so2_round_plans_one_addition_per_vessel(): void
-    {
-        [$lot, $v1, $v2, $product] = $this->inTenant(function () {
-            $v1 = $this->vessel('F11');
-            $v2 = $this->vessel('F12');
-            $product = EnologicalProduct::create(['name' => 'K2S2O5', 'category' => 'SO2', 'unit' => 'g', 'current_stock' => '1000.000']);
-
-            return [$this->lotIn('LOT-2026-001', '1000.000', $v1, $v2), $v1, $v2, $product];
-        });
-
-        $this->api('POST', 'cellar/so2-rounds', [
-            'planned_for' => '2026-10-14',
-            'enological_product_id' => $product->getKey(),
-            'product_name' => 'K2S2O5',
-            'unit' => 'g',
-            'items' => [
-                ['wine_lot_id' => $lot->getKey(), 'vessel_id' => $v1->getKey(), 'quantity' => 7.456, 'target_note' => '+10 mg/L (18 → 28)'],
-                ['wine_lot_id' => $lot->getKey(), 'vessel_id' => $v2->getKey(), 'quantity' => 5],
-            ],
-        ])->assertCreated()->assertJsonPath('data.count', 2);
-
-        $this->inTenant(function () use ($v1): void {
-            $this->assertSame('SO₂ round', CellarActivityRound::query()->sole()->name);
-            $a = CellarActivity::query()->where('vessel_id', $v1->getKey())->sole();
-            $this->assertEquals(7.46, $a->payload['quantity']);
-            $this->assertSame('SO2', $a->payload['category']);
-        });
-    }
-
     public function test_lot_detail_lists_planned_additions(): void
     {
         $lot = $this->inTenant(function () {

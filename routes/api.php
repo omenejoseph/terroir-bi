@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\BottleAnalysisController;
 use App\Http\Controllers\Api\CashFlowController;
 use App\Http\Controllers\Api\CellarActivityController;
 use App\Http\Controllers\Api\CellarController;
+use App\Http\Controllers\Api\CellarSo2Controller;
 use App\Http\Controllers\Api\ConsignmentController;
 use App\Http\Controllers\Api\CostController;
 use App\Http\Controllers\Api\CustomerConsignmentController;
@@ -383,6 +384,9 @@ Route::prefix('v1')->group(function () {
             Route::get('fermentation-templates', [FermentationTemplateController::class, 'index']);
             Route::get('cellar/activities/today', [CellarActivityController::class, 'today']);
             Route::get('cellar/activities/plan', [CellarActivityController::class, 'plan']);
+            Route::get('cellar/so2', [CellarSo2Controller::class, 'board']);
+            Route::post('cellar/so2/preview', [CellarSo2Controller::class, 'preview']);
+            Route::post('cellar/calculators', [CellarSo2Controller::class, 'calculate']);
         });
         Route::middleware('can:cellar.manage')->group(function () {
             Route::post('vessels', [VesselController::class, 'store']);
@@ -436,7 +440,10 @@ Route::prefix('v1')->group(function () {
             Route::delete('cellar/activities/{activity}', [CellarActivityController::class, 'destroy']);
             Route::post('cellar/activity-rounds/{round}/reschedule', [CellarActivityController::class, 'rescheduleRound']);
             Route::delete('cellar/activity-rounds/{round}', [CellarActivityController::class, 'destroyRound']);
-            Route::post('cellar/so2-rounds', [CellarActivityController::class, 'storeSo2Round']);
+
+            // SO₂ (doses computed server-side by So2DosePlanner).
+            Route::post('cellar/so2/apply', [CellarSo2Controller::class, 'apply']);
+            Route::post('cellar/so2-rounds', [CellarSo2Controller::class, 'planRound']);
         });
         Route::middleware('can:cellar.delete')->group(function () {
             Route::delete('vessels/{vessel}', [VesselController::class, 'destroy']);

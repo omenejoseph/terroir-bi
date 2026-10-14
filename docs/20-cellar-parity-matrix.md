@@ -49,7 +49,7 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | B. Cellar map | 22 | 18 | 4 | 0 | 0 |
 | C. Vessels | 11 | 9 | 2 | 0 | 0 |
 | D. Wine lots | 30 | 21 | 8 | 1 | 0 |
-| E. SO₂ | 14 | 4 | 10 | 0 | 0 |
+| E. SO₂ | 14 | 13 | 1 | 0 | 0 |
 | F. Additions & enological stock | 18 | 12 | 6 | 0 | 0 |
 | G. Lab analyses | 9 | 7 | 0 | 2 | 0 |
 | H. Transfers & racking | 4 | 4 | 0 | 0 | 0 |
@@ -59,10 +59,10 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | L. Bottling | 4 | 3 | 1 | 0 | 0 |
 | M. Fermentation protocols & monitoring | 7 | 6 | 1 | 0 | 0 |
 | N. Analytics & costs | 10 | 5 | 5 | 0 | 0 |
-| O. Compliance & records | 4 | 0 | 4 | 0 | 0 |
+| O. Compliance & records | 4 | 2 | 2 | 0 | 0 |
 | P. Work-order integration | 3 | 2 | 1 | 0 | 0 |
 | Q. Audit logging | 11 | 1 | 10 | 0 | 0 |
-| **Total** | **193** | **125** | **65** | **3** | **0** |
+| **Total** | **193** | **136** | **54** | **3** | **0** |
 
 ---
 
@@ -159,22 +159,24 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 
 ## E. SO₂ — `/cellar/so2`
 
+Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePlanner` (preview, apply and plan-for-team share it), so what the screen shows is what gets applied.
+
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| E1 | Load lots (FERMENTING/AGING/READY) + latest free SO₂ per lot+vessel | `P/so2/page.tsx` (raw `DISTINCT ON`) | — | ⬜ | ⬜ | `CellarSo2BoardQuery` |
-| E2 | SO₂ product list (name match on sulfit/so2/metabisulfit/sumpor; fallback all) | `P/so2/page.tsx` | `EnologicalProduct` | 🟡 | ⬜ | Match on category SO2/SULFITE first |
+| E1 | Load lots (FERMENTING/AGING/READY) + latest free SO₂ per lot+vessel | `P/so2/page.tsx` (raw `DISTINCT ON`) | `CellarSo2BoardQuery`, `GET cellar/so2` (latest per lot+vessel via `LatestAnalyses`) | ✅ | ⬜ | `CellarSo2BoardQuery` |
+| E2 | SO₂ product list (name match on sulfit/so2/metabisulfit/sumpor; fallback all) | `P/so2/page.tsx` | `CellarSo2BoardQuery::products` (category SO2/SULFITE or name; fallback all) | ✅ | ⬜ | Match on category SO2/SULFITE first |
 | E3 | Quick free/total SO₂ entry per lot and per vessel; "N entered"; save | `C/so2-management.tsx` | `BulkAddAnalysesAction` | ✅ | ⬜ | Vessel id saved on each row |
-| E4 | Plan mode: status chips Critical <15 / Low 15–24 / OK 25–45 / High >45 / No data | `C/so2-management.tsx` | — | ⬜ | ⬜ | |
+| E4 | Plan mode: status chips Critical <15 / Low 15–24 / OK 25–45 / High >45 / No data | `C/so2-management.tsx` | `So2Calculator::status`, board `summary` | ✅ | ⬜ | |
 | E5 | Product picker with stock | `C/so2-management.tsx` | `EnologicalProductData` | ✅ | ⬜ | |
-| E6 | "Set all" mg/L to add; per-row override; expanding a lot copies value to vessels | `C/so2-management.tsx` | — | ⬜ | ⬜ | Label honestly as "mg/L to add" (target mode in Phase 3) |
-| E7 | Reference targets by wine type (red 28, white 35, rosé 32, orange 25, sparkling 30; +3 oak) | `C/so2-management.tsx` | — | ⬜ | ⬜ | Shared constant in the calculator service |
-| E8 | Filters: status, material, search, "only needing SO₂" | `C/so2-management.tsx` | — | ⬜ | ⬜ | |
-| E9 | Row: current free + days since reading, add, projected, dose | `C/so2-management.tsx` | — | ⬜ | ⬜ | |
-| E10 | Dose calculation: uplift coefficient or K₂S₂O₅ fallback (×1.5), kg conversion | `lib/enological-calculators.ts` | `So2Calculator` (uplift only, unused) | 🟡 | ⬜ | Port the fallback and expose it |
-| E11 | Summary: total dose, cost, low-stock warning; Select all needing SO₂ | `C/so2-management.tsx` | — | ⬜ | ⬜ | Stock shortfall **blocks** apply |
-| E12 | Copy list / WhatsApp share / Print sheet | `C/so2-management.tsx` | — | ⬜ | ⬜ | Text translated via `hr.json` |
-| E13 | Apply now (bulk additions per vessel) | `CA:1348 bulkAddAdditions` | `BulkAddAdditionsAction` (per-line `vessel_id`, stock-checked) | ✅ | ⬜ | Per-vessel `vessel_id`; stock-checked |
-| E14 | Plan for cellar team (SO₂ round) + success screen | `CAA createSo2Round` | `CreateSo2RoundAction`, `POST cellar/so2-rounds` | ✅ | ⬜ | Depends on J |
+| E6 | "Set all" mg/L to add; per-row override; expanding a lot copies value to vessels | `C/so2-management.tsx` | `So2DosePlanner` (`mode: add|target`), `POST cellar/so2/preview` | ✅ | ⬜ | Label honestly as "mg/L to add" (target mode in Phase 3) |
+| E7 | Reference targets by wine type (red 28, white 35, rosé 32, orange 25, sparkling 30; +3 oak) | `C/so2-management.tsx` | `So2Calculator::referenceTarget` (+3 oak) | ✅ | ⬜ | Shared constant in the calculator service |
+| E8 | Filters: status, material, search, "only needing SO₂" | `C/so2-management.tsx` | board fields (status, material/oak, search on client) | ✅ | ⬜ | |
+| E9 | Row: current free + days since reading, add, projected, dose | `C/so2-management.tsx` | board `days_since`, preview lines | ✅ | ⬜ | |
+| E10 | Dose calculation: uplift coefficient or K₂S₂O₅ fallback (×1.5), kg conversion | `lib/enological-calculators.ts` | `So2Calculator::doseForProduct` (uplift, K₂S₂O₅ g/kg; other units need uplift) | ✅ | ⬜ | Port the fallback and expose it |
+| E11 | Summary: total dose, cost, low-stock warning; Select all needing SO₂ | `C/so2-management.tsx` | preview `totals` (`quantity`, `cost`, `short_by`) | ✅ | ⬜ | Stock shortfall **blocks** apply |
+| E12 | Copy list / WhatsApp share / Print sheet | `C/so2-management.tsx` | preview lines carry the text (`note`); copy/share rendered in the UI | ✅ | ⬜ | Text translated via `hr.json` |
+| E13 | Apply now (bulk additions per vessel) | `CA:1348 bulkAddAdditions` | `ApplySo2Action`, `POST cellar/so2/apply` | ✅ | ⬜ | Per-vessel `vessel_id`; stock-checked |
+| E14 | Plan for cellar team (SO₂ round) + success screen | `CAA createSo2Round` | `CreateSo2RoundAction` (server doses), `POST cellar/so2-rounds` | ✅ | ⬜ | Depends on J |
 
 ## F. Additions & enological stock
 
@@ -318,9 +320,9 @@ Backend shipped in Phase 1a: `app/Actions/Cellar/Activities/*`, `CellarTodayQuer
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
 | O1 | Cellar book event log (intake, press, vessel, addition, transfer, bottling) + CSV | `harvest/harvest-compliance.tsx` | — | ⬜ | ⬜ | Include **all** lots (blends, manual), processes, analyses and losses; CSV escaped |
-| O2 | EU total-SO₂ compliance (red 150/200, white/rosé/orange 200/250 by sugar, sparkling 185) | `checkSO2Compliance` | — | ⬜ | ⬜ | Uses `wine_type` enum (no ROSE/ROSÉ mismatch) |
+| O2 | EU total-SO₂ compliance (red 150/200, white/rosé/orange 200/250 by sugar, sparkling 185) | `checkSO2Compliance` | `WineCompliance::checkSo2`, board `compliance`, `POST cellar/calculators` | ✅ | ⬜ | Uses `wine_type` enum (no ROSE/ROSÉ mismatch) |
 | O3 | Traceability vineyard → harvest → lot → vessel → bottle | same | — | ⬜ | ⬜ | |
-| O4 | Enological calculators (SO₂ + molecular, acid, general addition, chaptalisation) | `harvest/enological-calculators.tsx` (unrendered) | `So2Calculator` (partial) | ⬜ | ⬜ | Rendered as a Calculators drawer |
+| O4 | Enological calculators (SO₂ + molecular, acid, general addition, chaptalisation) | `harvest/enological-calculators.tsx` (unrendered) | `So2Calculator`, `EnologicalCalculator`, `POST cellar/calculators` | ✅ | ⬜ | Rendered as a Calculators drawer |
 
 ## P. Work-order integration
 
@@ -359,7 +361,7 @@ rules apply:
 | Q3 | Named entries for blends and transfers: `wine_lot.blended` (sources, L, destination, new lot), `wine_lot.blended_in`, `cellar_transfer.created/reversed` (from/to lot+vessel, L, type) | — | `BlendService`, transfer Actions | ⬜ | — | |
 | Q4 | Named entries for bottling: `bottling.created/reversed` (bottles, size, L, inventory item, stock movement ref) | — | bottling Actions | ⬜ | — | |
 | Q5 | Named entries for stock: `enological_product.stock_adjusted` (delta, before→after, reason, source: addition / bulk / SO₂ / manual / import) | — | addition + stock Actions | ⬜ | — | Every stock change is traceable to its cause |
-| Q6 | Named entries for bulk operations: `cellar.bulk_additions_applied`, `cellar.bulk_analyses_recorded`, `cellar.so2_round_planned` (lot/vessel ids, dose, product) | — | bulk Actions | ⬜ | — | One summary entry plus per-row trait entries |
+| Q6 | Named entries for bulk operations: `cellar.bulk_additions_applied`, `cellar.bulk_analyses_recorded`, `cellar.so2_round_planned` (lot/vessel ids, dose, product) | — | `cellar.so2_applied`, `cellar.so2_round_planned`, `cellar.bulk_analyses_recorded` (bulk additions page still to do) | 🟡 | — | One summary entry plus per-row trait entries |
 | Q7 | Named entries for planned work: `cellar_activity.completed` (deviated, planned vs actual), `skipped` (reason), `rescheduled` (from→to, reason), `cellar_activity_round.deleted` | — | Activities actions (`cellar_activity.*`, `cellar_activity_round.*`) | ✅ | — | |
 | Q8 | Named entries for protocols: `wine_lot.protocol_assigned`, `wine_lot.protocol_tasks_generated` (count, day), `wine_lot.protocol_additions_planned` | — | protocol Actions | ⬜ | — | |
 | Q9 | Cellar entries readable in the tenant Logs page (subject filter "Cellar", subject links to lot/vessel) | — | `Web\LogController`, `pages/Logs` | 🟡 | ⬜ | |
@@ -383,6 +385,7 @@ rules apply:
 8. **One cost-per-litre definition** (`LotCostService`) is used on the lot,
    costs, bottling and analytics screens.
 9. **Projected blend pH** is computed through [H⁺].
+- **SO₂ doses for liquid products need an uplift coefficient.** The K₂S₂O₅ fallback only applies to g/kg products; the prototype put grams into ml products.
 10. **Transfers are capped by the source vessel's volume**, not the lot's.
 11. **Deleting a lot or a bottling reverses its stock movements.**
 12. **The cellar book covers every lot**, not only harvest-linked ones, and its
