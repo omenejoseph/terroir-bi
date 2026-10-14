@@ -61,7 +61,8 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | N. Analytics & costs | 10 | 5 | 5 | 0 | 0 |
 | O. Compliance & records | 4 | 0 | 4 | 0 | 0 |
 | P. Work-order integration | 3 | 1 | 2 | 0 | 0 |
-| **Total** | **182** | **97** | **82** | **3** | **0** |
+| Q. Audit logging | 11 | 0 | 11 | 0 | 0 |
+| **Total** | **193** | **97** | **93** | **3** | **0** |
 
 ---
 
@@ -327,6 +328,42 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | P2 | Protocol-generated tasks visible on board | `HA:2196` (board-less) | `GenerateWorkOrdersFromProtocolAction` | 🟡 | ⬜ | Assign to default board/list |
 | P3 | Cellar round cards on board | `CAA:52` | — | ⬜ | ⬜ | Depends on J |
 
+## Q. Audit logging
+
+The old app wrote no audit trail for cellar work. The new app already has the
+plumbing: `App\Services\Audit\Auditable` (a model trait that logs every
+create/update/delete), `AuditLogger::record()` for richer hand-named entries,
+and the tenant **Logs** page (`Web\LogController`). No cellar model uses any
+of it yet.
+
+Audit coverage is part of the parity gate for every cellar write path. Two
+rules apply:
+
+- **Trait as the floor.** Every cellar model gets `Auditable`. Each model's
+  `auditCreateSnapshot()` returns its identifying fields: lot number, vessel
+  name, volume, product, quantity.
+- **Named entries for multi-row operations.** Operations that touch several
+  rows also write one named `AuditLogger` entry that carries the whole story
+  in its metadata. Examples: a blend, a bottling, a bulk addition, an SO₂
+  round, completing a planned activity. The generic per-row update entry for
+  the derived fields (`current_volume`, `current_stock`, `status`) is
+  suppressed with `auditIgnoreOnUpdate()`, so the trail doesn't carry the
+  same change twice.
+
+| # | Feature / action | Old | New backend | BE | UI | Fix |
+|---|---|---|---|---|---|---|
+| Q1 | `Auditable` on Vessel, WineLot, WineLotGrape, VesselLot, CellarAnalysis, CellarAddition, CellarProcess, CellarTastingNote, TastingReport, CellarTransfer, Bottling, EnologicalProduct, FermentationTemplate, CellarActivity, CellarActivityRound | — | `Services/Audit/Auditable` | ⬜ | — | Create snapshot = identifying fields; derived volume/stock/status fields ignored on update |
+| Q2 | Named entries for lot volume: `wine_lot.volume_adjusted` (vessel, ±L, reason), `wine_lot.assigned_to_vessel` / `unassigned_from_vessel`, `vessel.layout_updated` (count), `vessel.room_renamed` | — | `AuditLogger::record` in the Actions | ⬜ | — | |
+| Q3 | Named entries for blends and transfers: `wine_lot.blended` (sources, L, destination, new lot), `wine_lot.blended_in`, `cellar_transfer.created/reversed` (from/to lot+vessel, L, type) | — | `BlendService`, transfer Actions | ⬜ | — | |
+| Q4 | Named entries for bottling: `bottling.created/reversed` (bottles, size, L, inventory item, stock movement ref) | — | bottling Actions | ⬜ | — | |
+| Q5 | Named entries for stock: `enological_product.stock_adjusted` (delta, before→after, reason, source: addition / bulk / SO₂ / manual / import) | — | addition + stock Actions | ⬜ | — | Every stock change is traceable to its cause |
+| Q6 | Named entries for bulk operations: `cellar.bulk_additions_applied`, `cellar.bulk_analyses_recorded`, `cellar.so2_round_planned` (lot/vessel ids, dose, product) | — | bulk Actions | ⬜ | — | One summary entry plus per-row trait entries |
+| Q7 | Named entries for planned work: `cellar_activity.completed` (deviated, planned vs actual), `skipped` (reason), `rescheduled` (from→to, reason), `cellar_activity_round.deleted` | — | activity Actions | ⬜ | — | |
+| Q8 | Named entries for protocols: `wine_lot.protocol_assigned`, `wine_lot.protocol_tasks_generated` (count, day), `wine_lot.protocol_additions_planned` | — | protocol Actions | ⬜ | — | |
+| Q9 | Cellar entries readable in the tenant Logs page (subject filter "Cellar", subject links to lot/vessel) | — | `Web\LogController`, `pages/Logs` | 🟡 | ⬜ | |
+| Q10 | "History" panel on lot and vessel detail (audit entries for that subject) | — | `AuditLog` by subject | ⬜ | ⬜ | Who changed what, beside the lot timeline |
+| Q11 | Tests: every cellar write Action asserts its audit entry (action, actor, subject, key metadata) | — | `tests/Feature/Cellar` | ⬜ | — | |
+
 ---
 
 ## Correctness fixes applied in the port (summary)
@@ -348,7 +385,8 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 11. **Deleting a lot or a bottling reverses its stock movements.**
 12. **The cellar book covers every lot**, not only harvest-linked ones, and its
     CSV export is escaped.
-13. **Strings are translated.** Hard-coded Croatian strings move to `hr.json`.
+13. **Every cellar write is audited.** The prototype kept no audit trail (see Q).
+14. **Strings are translated.** Hard-coded Croatian strings move to `hr.json`.
 
 ## Sign-off
 
