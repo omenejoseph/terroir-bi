@@ -20,6 +20,7 @@ class AdjustEnologicalStockRequest extends FormRequest
     {
         return [
             'delta' => ['required', 'numeric', 'not_in:0'],
+            'note' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
 }

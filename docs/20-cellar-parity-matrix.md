@@ -50,7 +50,7 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | C. Vessels | 11 | 11 | 0 | 0 | 0 |
 | D. Wine lots | 30 | 27 | 2 | 1 | 0 |
 | E. SO₂ | 14 | 14 | 0 | 0 | 0 |
-| F. Additions & enological stock | 18 | 13 | 5 | 0 | 0 |
+| F. Additions & enological stock | 18 | 18 | 0 | 0 | 0 |
 | G. Lab analyses | 9 | 7 | 0 | 2 | 0 |
 | H. Transfers & racking | 4 | 4 | 0 | 0 | 0 |
 | I. Blending | 9 | 8 | 0 | 1 | 0 |
@@ -61,8 +61,8 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | N. Analytics & costs | 10 | 5 | 5 | 0 | 0 |
 | O. Compliance & records | 4 | 2 | 2 | 0 | 0 |
 | P. Work-order integration | 3 | 2 | 1 | 0 | 0 |
-| Q. Audit logging | 11 | 4 | 7 | 0 | 0 |
-| **Total** | **193** | **166** | **23** | **4** | **0** |
+| Q. Audit logging | 11 | 5 | 6 | 0 | 0 |
+| **Total** | **193** | **172** | **17** | **4** | **0** |
 
 ---
 
@@ -193,13 +193,13 @@ Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePla
 | F9 | Lot table: filters (status, grape, search), select all, per-lot amount/cost/vessel; summary; success screen | `C/bulk-additions.tsx` | — | ✅ | ⬜ | Stock shortfall blocks |
 | F10 | Products list: category chips, stats (total, low stock, value) | `components/harvest/enological-products.tsx` | `EnologicalProductController::index` | ✅ | ⬜ | |
 | F11 | Create/edit product incl. packaging, cost per package → per unit, min stock, manufacturer, supplier/price-list, SO₂ uplift + helper | `enological-products.tsx:108` | `Create/UpdateEnologicalProductAction` | ✅ | ⬜ | |
-| F12 | Add/remove stock | `HA:1602` | `AdjustEnologicalStockAction` | ✅ | ⬜ | Note saved |
-| F13 | Stock movement history | — | — | ⬜ | ⬜ | Added (prototype lost this) |
+| F12 | Add/remove stock | `HA:1602` | `AdjustEnologicalStockAction` → `EnologicalStockLedger` (note saved) | ✅ | ⬜ | Note saved |
+| F13 | Stock movement history | — | `enological_stock_movements` via `EnologicalStockLedger`, `GET enological-products/{p}/movements` | ✅ | ⬜ | Added (prototype lost this) |
 | F14 | Delete product (deactivate if used) | `HA` | `DeleteEnologicalProductAction` | ✅ | ⬜ | |
-| F15 | Bulk import (paste TSV/CSV) | `enological-products.tsx` | — | ⬜ | ⬜ | |
-| F16 | Bulk edit | `enological-products.tsx` | — | ⬜ | ⬜ | |
-| F17 | Protocol needs / deficits | `getProtocolNeeds` | — | ⬜ | ⬜ | |
-| F18 | Generate draft purchase orders by supplier | `generateDraftPurchaseOrders` | supplier-order Actions | ⬜ | ⬜ | Reuse existing supplier order creation |
+| F15 | Bulk import (paste TSV/CSV) | `enological-products.tsx` | `ImportEnologicalProductsAction`, `POST enological-products/import` (TSV/CSV, EN/HR headers, dry run) | ✅ | ⬜ | |
+| F16 | Bulk edit | `enological-products.tsx` | `BulkUpdateEnologicalProductsAction`, `PATCH enological-products/bulk` | ✅ | ⬜ | |
+| F17 | Protocol needs / deficits | `getProtocolNeeds` | `ProtocolNeedsQuery`, `GET enological-products/needs` (structured doses × basis) | ✅ | ⬜ | |
+| F18 | Generate draft purchase orders by supplier | `generateDraftPurchaseOrders` | `DraftEnologicalPurchaseOrdersAction` → `CreateSupplierOrderAction`, `POST enological-products/draft-orders` | ✅ | ⬜ | Reuse existing supplier order creation |
 
 ## G. Lab analyses
 
@@ -360,7 +360,7 @@ rules apply:
 | Q2 | Named entries for lot volume: `wine_lot.volume_adjusted` (vessel, ±L, reason), `wine_lot.assigned_to_vessel` / `unassigned_from_vessel`, `vessel.layout_updated` (count), `vessel.room_renamed` | — | `wine_lot.volume_adjusted`, `.assigned_to_vessel(s)`, `.unassigned_from_vessel`, `vessel.duplicated`, `wine_lot.deleted` | ✅ | — | |
 | Q3 | Named entries for blends and transfers: `wine_lot.blended` (sources, L, destination, new lot), `wine_lot.blended_in`, `cellar_transfer.created/reversed` (from/to lot+vessel, L, type) | — | `wine_lot.blended`, `wine_lot.blended_in`, `cellar_transfer.created`, `cellar_transfer.reversed` | ✅ | — | |
 | Q4 | Named entries for bottling: `bottling.created/reversed` (bottles, size, L, inventory item, stock movement ref) | — | `bottling.created`, `bottling.reversed` | ✅ | — | |
-| Q5 | Named entries for stock: `enological_product.stock_adjusted` (delta, before→after, reason, source: addition / bulk / SO₂ / manual / import) | — | addition + stock Actions | ⬜ | — | Every stock change is traceable to its cause |
+| Q5 | Named entries for stock: `enological_product.stock_adjusted` (delta, before→after, reason, source: addition / bulk / SO₂ / manual / import) | — | `enological_product.stock_adjusted` (delta, before→after, source) on every stock change | ✅ | — | Every stock change is traceable to its cause |
 | Q6 | Named entries for bulk operations: `cellar.bulk_additions_applied`, `cellar.bulk_analyses_recorded`, `cellar.so2_round_planned` (lot/vessel ids, dose, product) | — | `cellar.so2_applied`, `cellar.so2_round_planned`, `cellar.bulk_analyses_recorded` (bulk additions page still to do) | 🟡 | — | One summary entry plus per-row trait entries |
 | Q7 | Named entries for planned work: `cellar_activity.completed` (deviated, planned vs actual), `skipped` (reason), `rescheduled` (from→to, reason), `cellar_activity_round.deleted` | — | Activities actions (`cellar_activity.*`, `cellar_activity_round.*`) | ✅ | — | |
 | Q8 | Named entries for protocols: `wine_lot.protocol_assigned`, `wine_lot.protocol_tasks_generated` (count, day), `wine_lot.protocol_additions_planned` | — | protocol Actions | ⬜ | — | |

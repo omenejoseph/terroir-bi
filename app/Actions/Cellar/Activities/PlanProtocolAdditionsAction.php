@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Actions\Cellar\Activities;
 
 use App\Enums\CellarActivityType;
-use App\Enums\DoseBasis;
 use App\Models\FermentationTemplate;
 use App\Models\ProtocolAdditive;
 use App\Models\WineLot;
+use App\Services\Cellar\ProtocolDose;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -62,7 +62,7 @@ class PlanProtocolAdditionsAction
             }
 
             foreach ($scopes as $scope) {
-                $qty = round((float) $additive->dose * $this->factor($additive->basis, $scope['liters'], $grapeKg * $scope['liters'] / $totalLiters), 2);
+                $qty = (float) ProtocolDose::quantity($additive->basis, (float) $additive->dose, $scope['liters'], $grapeKg * $scope['liters'] / $totalLiters);
                 if ($qty <= 0) {
                     continue;
                 }
@@ -96,15 +96,5 @@ class PlanProtocolAdditionsAction
         ], $userId);
 
         return [...$result, 'skipped_no_grape_weight' => array_values(array_unique($skipped))];
-    }
-
-    private function factor(DoseBasis $basis, float $liters, float $kgShare): float
-    {
-        return match ($basis) {
-            DoseBasis::PerLiter => $liters,
-            DoseBasis::PerHectoliter => $liters / 100,
-            DoseBasis::PerKg => $kgShare,
-            DoseBasis::Per100Kg => $kgShare / 100,
-        };
     }
 }

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Actions\Cellar;
 
+use App\Enums\EnologicalStockSource;
 use App\Models\CellarAddition;
-use App\Models\EnologicalProduct;
 use App\Models\WineLot;
+use App\Services\Cellar\EnologicalStockLedger;
 use App\Support\Quantity;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Record an enological addition on a lot, optionally into one of its vessels.
@@ -21,6 +21,8 @@ use Illuminate\Validation\ValidationException;
  */
 class AddCellarAdditionAction
 {
+    public function __construct(private readonly EnologicalStockLedger $ledger) {}
+
     /**
      * @param  array<string, mixed>  $data
      */
@@ -29,19 +31,6 @@ class AddCellarAdditionAction
         return DB::transaction(function () use ($lot, $data, $createdById): CellarAddition {
             $quantity = Quantity::normalize((string) $data['quantity']);
 
-            // Lock and check stock before writing anything.
-            $product = null;
-            if (! empty($data['enological_product_id'])) {
-                $product = EnologicalProduct::query()
-                    ->whereKey((string) $data['enological_product_id'])
-                    ->lockForUpdate()
-                    ->first();
-                if ($product !== null && Quantity::isNegative(Quantity::sub((string) $product->current_stock, $quantity))) {
-                    throw ValidationException::withMessages([
-                        'quantity' => "Not enough {$product->name} in stock — {$product->current_stock} {$product->unit} available, {$quantity} needed.",
-                    ]);
-                }
-            }
             $costPerUnit = isset($data['cost_per_unit']) ? (int) $data['cost_per_unit'] : null;
             $totalCost = isset($data['total_cost'])
                 ? (int) $data['total_cost']
@@ -61,9 +50,9 @@ class AddCellarAdditionAction
                 'note' => $data['note'] ?? null,
             ]);
 
-            if ($product !== null) {
-                $product->current_stock = Quantity::sub((string) $product->current_stock, $quantity);
-                $product->save();
+            // Draws the product's stock — refused (and rolled back) if it would go negative.
+            if (! empty($data['enological_product_id'])) {
+                $this->ledger->move((string) $data['enological_product_id'], Quantity::negate($quantity), EnologicalStockSource::Addition, $addition, $lot->lot_number);
             }
 
             return $addition;

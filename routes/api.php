@@ -383,6 +383,8 @@ Route::prefix('v1')->group(function () {
             Route::post('wine-lots/blend/project', [WineLotController::class, 'projectBlend']);
             Route::get('wine-lots/{wineLot}', [WineLotController::class, 'show']);
             Route::get('enological-products', [EnologicalProductController::class, 'index']);
+            Route::get('enological-products/needs', [EnologicalProductController::class, 'needs']);
+            Route::get('enological-products/{enologicalProduct}/movements', [EnologicalProductController::class, 'movements']);
             Route::get('fermentation-templates', [FermentationTemplateController::class, 'index']);
             Route::get('cellar/activities/today', [CellarActivityController::class, 'today']);
             Route::get('cellar/activities/plan', [CellarActivityController::class, 'plan']);
@@ -432,6 +434,9 @@ Route::prefix('v1')->group(function () {
 
             // Enological products.
             Route::post('enological-products', [EnologicalProductController::class, 'store']);
+            Route::post('enological-products/import', [EnologicalProductController::class, 'import']);
+            Route::patch('enological-products/bulk', [EnologicalProductController::class, 'bulkUpdate']);
+            Route::post('enological-products/draft-orders', [EnologicalProductController::class, 'draftOrders']);
             Route::patch('enological-products/{enologicalProduct}', [EnologicalProductController::class, 'update']);
             Route::post('enological-products/{enologicalProduct}/adjust-stock', [EnologicalProductController::class, 'adjustStock']);
 

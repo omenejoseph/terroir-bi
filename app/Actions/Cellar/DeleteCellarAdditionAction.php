@@ -4,29 +4,23 @@ declare(strict_types=1);
 
 namespace App\Actions\Cellar;
 
+use App\Enums\EnologicalStockSource;
 use App\Models\CellarAddition;
 use App\Models\EnologicalProduct;
-use App\Support\Quantity;
+use App\Services\Cellar\EnologicalStockLedger;
 use Illuminate\Support\Facades\DB;
 
-/** Delete an addition, restoring any enological stock it consumed. */
+/** Delete an addition, giving back any enological stock it consumed. */
 class DeleteCellarAdditionAction
 {
+    public function __construct(private readonly EnologicalStockLedger $ledger) {}
+
     public function execute(CellarAddition $addition): void
     {
         DB::transaction(function () use ($addition): void {
-            if ($addition->enological_product_id !== null) {
-                $product = EnologicalProduct::query()
-                    ->whereKey($addition->enological_product_id)
-                    ->lockForUpdate()
-                    ->first();
-                if ($product !== null) {
-                    $product->current_stock = Quantity::add(
-                        (string) $product->current_stock,
-                        (string) $addition->quantity,
-                    );
-                    $product->save();
-                }
+            if ($addition->enological_product_id !== null
+                && EnologicalProduct::query()->whereKey($addition->enological_product_id)->exists()) {
+                $this->ledger->move($addition->enological_product_id, (string) $addition->quantity, EnologicalStockSource::AdditionReversed, $addition, 'Addition deleted');
             }
 
             $addition->delete();

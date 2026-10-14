@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Actions\Cellar;
 
+use App\Enums\EnologicalStockSource;
 use App\Models\CellarAddition;
 use App\Models\EnologicalProduct;
+use App\Services\Cellar\EnologicalStockLedger;
 use App\Support\Quantity;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Correct a recorded addition. Stock follows the change: what the old line
@@ -18,6 +19,8 @@ use Illuminate\Validation\ValidationException;
  */
 class UpdateCellarAdditionAction
 {
+    public function __construct(private readonly EnologicalStockLedger $ledger) {}
+
     /**
      * @param  array<string, mixed>  $data
      */
@@ -41,24 +44,12 @@ class UpdateCellarAdditionAction
             $unit = $addition->cost_per_unit?->getMinorAmount();
             $addition->setAttribute('total_cost', $unit !== null ? (int) round($unit * (float) $addition->quantity) : null);
 
-            if ($oldProductId !== null) {
-                $old = EnologicalProduct::query()->whereKey($oldProductId)->lockForUpdate()->first();
-                if ($old !== null) {
-                    $old->current_stock = Quantity::add((string) $old->current_stock, $oldQuantity);
-                    $old->save();
-                }
+            if ($oldProductId !== null && EnologicalProduct::query()->whereKey($oldProductId)->exists()) {
+                $this->ledger->move($oldProductId, $oldQuantity, EnologicalStockSource::AdditionCorrected, $addition, 'Addition corrected — previous amount returned');
             }
 
             if ($addition->enological_product_id !== null) {
-                $new = EnologicalProduct::query()->whereKey($addition->enological_product_id)->lockForUpdate()->firstOrFail();
-                $after = Quantity::sub((string) $new->current_stock, (string) $addition->quantity);
-                if (Quantity::isNegative($after)) {
-                    throw ValidationException::withMessages([
-                        'quantity' => "Not enough {$new->name} in stock — {$new->current_stock} {$new->unit} available, {$addition->quantity} needed.",
-                    ]);
-                }
-                $new->current_stock = $after;
-                $new->save();
+                $this->ledger->move($addition->enological_product_id, Quantity::negate((string) $addition->quantity), EnologicalStockSource::AdditionCorrected, $addition, 'Addition corrected');
             }
 
             $addition->save();

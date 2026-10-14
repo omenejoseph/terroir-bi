@@ -4,31 +4,17 @@ declare(strict_types=1);
 
 namespace App\Actions\Cellar;
 
+use App\Enums\EnologicalStockSource;
 use App\Models\EnologicalProduct;
-use App\Support\Quantity;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
+use App\Services\Cellar\EnologicalStockLedger;
 
-/** Apply a signed stock adjustment to an enological product. */
+/** Apply a signed manual stock adjustment (with an optional note) to an enological product. */
 class AdjustEnologicalStockAction
 {
-    public function execute(EnologicalProduct $product, string $delta): EnologicalProduct
+    public function __construct(private readonly EnologicalStockLedger $ledger) {}
+
+    public function execute(EnologicalProduct $product, string $delta, ?string $note = null): EnologicalProduct
     {
-        return DB::transaction(function () use ($product, $delta): EnologicalProduct {
-            /** @var EnologicalProduct $product */
-            $product = EnologicalProduct::query()->whereKey($product->getKey())->lockForUpdate()->firstOrFail();
-
-            $next = Quantity::add((string) $product->current_stock, Quantity::normalize($delta));
-            if (Quantity::compare($next, '0.000') < 0) {
-                throw ValidationException::withMessages([
-                    'delta' => 'Adjustment would drive stock negative.',
-                ]);
-            }
-
-            $product->current_stock = $next;
-            $product->save();
-
-            return $product;
-        });
+        return $this->ledger->move($product, $delta, EnologicalStockSource::Manual, null, $note, 'delta');
     }
 }
