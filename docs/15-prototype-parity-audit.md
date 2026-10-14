@@ -25,7 +25,7 @@ secondary capability/info · **LOW** = minor.
 |--|--|
 | Orders — line-item display | ✅ **Done** (unit size in list + detail; case→bottle expansion in detail) |
 | Inventory | ✅ **Done** (case-count display; post-hoc correction toggle; "By" column with `created_by`) |
-| Cellar | ⬜ catalogued |
+| Cellar | ⬜ catalogued — **superseded by [`20-cellar-parity-matrix.md`](20-cellar-parity-matrix.md)** |
 | Vineyards / Production / Work Orders | ⬜ catalogued |
 | Dashboard / Costs / Inflows / Cash-flow / Suppliers | ⬜ catalogued |
 
@@ -44,6 +44,8 @@ secondary capability/info · **LOW** = minor.
 | MED | Movement history shows **who** made it | "By" column | was missing — no `created_by` column | ✅ **Done** — migration adds `created_by_id`; `StockLedger::record()` (the single sink) stamps `auth()->id()`; DTO/type expose `created_by`; "By" column added |
 
 ## Cellar
+> Superseded by the row-level tracker [`20-cellar-parity-matrix.md`](20-cellar-parity-matrix.md). Kept for history.
+
 | Sev | Divergence | Notes |
 |--|--|--|
 | HIGH | Enological calculators (SO₂ K₂S₂O₅, acid, chaptalization, press yield, EU SO₂ compliance) | port `enological-calculators.ts`; rebuild only inline uplift `dose()` |
