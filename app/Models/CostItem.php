@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $id
  * @property string $cost_id
  * @property string|null $inventory_item_id
+ * @property string|null $wine_lot_id
  * @property string $description
  * @property string $quantity
  * @property Money $unit_price
@@ -27,7 +28,7 @@ class CostItem extends Model
     use HasUlids;
 
     protected $fillable = [
-        'cost_id', 'inventory_item_id', 'description', 'quantity', 'unit_price', 'total', 'category',
+        'cost_id', 'inventory_item_id', 'wine_lot_id', 'description', 'quantity', 'unit_price', 'total', 'category',
     ];
 
     protected function casts(): array

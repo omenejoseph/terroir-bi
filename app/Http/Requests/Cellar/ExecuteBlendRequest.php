@@ -24,7 +24,7 @@ class ExecuteBlendRequest extends FormRequest
         $tenantId = app(TenantContext::class)->id();
 
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'vintage' => ['sometimes', 'nullable', 'string', 'max:255'],
             'wine_type' => ['sometimes', 'nullable', Rule::enum(WineType::class)],
             'destination_vessel_id' => [

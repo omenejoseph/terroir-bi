@@ -28,4 +28,20 @@ class LotNumberGenerator
 
         return $prefix.str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
     }
+
+    /** BLEND-YYMMDD, then BLEND-YYMMDD-1, -2… for further blends that day. */
+    public function nextBlend(?\DateTimeInterface $on = null): string
+    {
+        $stamp = 'BLEND-'.($on ?? now())->format('ymd');
+        $taken = WineLot::query()->where('lot_number', 'like', $stamp.'%')->pluck('lot_number')->flip();
+
+        if (! isset($taken[$stamp])) {
+            return $stamp;
+        }
+        for ($i = 1; isset($taken["{$stamp}-{$i}"]); $i++) {
+            // next free suffix
+        }
+
+        return "{$stamp}-{$i}";
+    }
 }

@@ -21,7 +21,7 @@ class CostsStep extends AbstractStep
 
     public function dependsOn(): array
     {
-        return ['users', 'inventory', 'suppliers'];
+        return ['users', 'inventory', 'suppliers', 'cellar'];
     }
 
     public function run(ImportContext $ctx): void
@@ -97,6 +97,7 @@ class CostsStep extends AbstractStep
             $this->put($ctx, 'CostItem', (string) $r->id, 'cost_items', [
                 'cost_id' => $cost,
                 'inventory_item_id' => $item,
+                'wine_lot_id' => $r->wineLotId === null ? null : $ctx->ids->get('WineLot', (string) $r->wineLotId),
                 'description' => trim((string) $r->description),
                 'quantity' => Normalize::dec($r->quantity, 3),
                 'unit_price' => Normalize::minor($r->unitPrice),

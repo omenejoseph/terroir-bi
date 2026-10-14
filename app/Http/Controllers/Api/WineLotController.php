@@ -40,6 +40,7 @@ use App\Http\Requests\Cellar\BulkAdditionsRequest;
 use App\Http\Requests\Cellar\BulkAnalysesRequest;
 use App\Http\Requests\Cellar\BulkAssignLotToVesselsRequest;
 use App\Http\Requests\Cellar\ExecuteBlendRequest;
+use App\Http\Requests\Cellar\ProjectBlendRequest;
 use App\Http\Requests\Cellar\StoreBottlingRequest;
 use App\Http\Requests\Cellar\StoreCellarAdditionRequest;
 use App\Http\Requests\Cellar\StoreCellarAnalysisRequest;
@@ -60,6 +61,7 @@ use App\Models\VesselLot;
 use App\Models\WineLot;
 use App\Queries\ListWineLotsQuery;
 use App\Queries\LotAnalysisTrendQuery;
+use App\Services\Cellar\BlendProjector;
 use App\Services\Cellar\LotCostService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -214,6 +216,44 @@ class WineLotController extends Controller
         $created = $action->execute($request->validated(), $this->userId($request));
 
         return response()->json(['data' => ['created' => $created]], 201);
+    }
+
+    public function projectBlend(ProjectBlendRequest $request, BlendProjector $projector): JsonResponse
+    {
+        /** @var list<array{wine_lot_id: string, ratio: float|int|string}> $components */
+        $components = array_values((array) $request->validated('components'));
+
+        return response()->json(['data' => $projector->project($components, $this->blendVolume($request))]);
+    }
+
+    public function blendByRatio(ProjectBlendRequest $request, BlendProjector $projector, ExecuteBlendAction $action): JsonResponse
+    {
+        /** @var list<array{wine_lot_id: string, ratio: float|int|string}> $components */
+        $components = array_values((array) $request->validated('components'));
+        $volume = $this->blendVolume($request);
+
+        $lot = $action->execute([
+            'name' => $request->validated('name'),
+            'vintage' => $request->validated('vintage'),
+            'wine_type' => $request->validated('wine_type'),
+            'destination_vessel_id' => $request->validated('destination_vessel_id'),
+            'sources' => $projector->sources($components, $volume),
+        ], $this->userId($request));
+
+        return response()->json(['data' => $this->present($lot)], 201);
+    }
+
+    /** The blend size: explicit, or the destination vessel's free room. */
+    private function blendVolume(ProjectBlendRequest $request): float
+    {
+        $volume = $request->validated('target_volume');
+        if ($volume !== null) {
+            return (float) $volume;
+        }
+
+        $vessel = Vessel::query()->whereKey((string) $request->validated('destination_vessel_id'))->firstOrFail();
+
+        return max(0.0, (float) $vessel->capacity_liters - (float) $vessel->current_volume);
     }
 
     public function blend(ExecuteBlendRequest $request, ExecuteBlendAction $action): JsonResponse

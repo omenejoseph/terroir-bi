@@ -379,6 +379,7 @@ Route::prefix('v1')->group(function () {
             Route::get('vessels/{vessel}', [VesselController::class, 'show']);
             Route::get('wine-lots', [WineLotController::class, 'index']);
             Route::get('wine-lots/{wineLot}/analyses/trend', [WineLotController::class, 'analysisTrend']);
+            Route::post('wine-lots/blend/project', [WineLotController::class, 'projectBlend']);
             Route::get('wine-lots/{wineLot}', [WineLotController::class, 'show']);
             Route::get('enological-products', [EnologicalProductController::class, 'index']);
             Route::get('fermentation-templates', [FermentationTemplateController::class, 'index']);
@@ -408,6 +409,7 @@ Route::prefix('v1')->group(function () {
             Route::post('wine-lots/analyses/bulk', [WineLotController::class, 'bulkAnalyses']);
             Route::post('wine-lots/additions/bulk', [WineLotController::class, 'bulkAdditions']);
             Route::post('wine-lots/blend', [WineLotController::class, 'blend']);
+            Route::post('wine-lots/blend/by-ratio', [WineLotController::class, 'blendByRatio']);
             Route::post('tasting-reports', [TastingReportController::class, 'store']);
             Route::post('wine-lots/{wineLot}/analyses', [WineLotController::class, 'addAnalysis']);
             Route::patch('wine-lots/{wineLot}/analyses/{analysis}', [WineLotController::class, 'updateAnalysis']);

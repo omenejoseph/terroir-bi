@@ -23,7 +23,7 @@ use JsonSerializable;
 final class WineLotData implements Arrayable, JsonSerializable
 {
     /**
-     * @param  array{total: int, additions: int, grape: int, per_liter: int, per_bottle_750: int}|null  $costBreakdown
+     * @param  array{total: int, additions: int, grape: int, linked: int, carried: int, per_liter: int, per_bottle_750: int}|null  $costBreakdown
      */
     public function __construct(
         public readonly WineLot $lot,
@@ -32,7 +32,7 @@ final class WineLotData implements Arrayable, JsonSerializable
     ) {}
 
     /**
-     * @param  array{total: int, additions: int, grape: int, per_liter: int, per_bottle_750: int}|null  $costBreakdown
+     * @param  array{total: int, additions: int, grape: int, linked: int, carried: int, per_liter: int, per_bottle_750: int}|null  $costBreakdown
      */
     public static function fromModel(WineLot $lot, bool $withDetail = false, ?array $costBreakdown = null): self
     {

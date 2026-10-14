@@ -48,12 +48,12 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | A. Cellar home | 8 | 8 | 0 | 0 | 0 |
 | B. Cellar map | 22 | 22 | 0 | 0 | 0 |
 | C. Vessels | 11 | 11 | 0 | 0 | 0 |
-| D. Wine lots | 30 | 25 | 4 | 1 | 0 |
+| D. Wine lots | 30 | 26 | 3 | 1 | 0 |
 | E. SO₂ | 14 | 14 | 0 | 0 | 0 |
 | F. Additions & enological stock | 18 | 12 | 6 | 0 | 0 |
 | G. Lab analyses | 9 | 7 | 0 | 2 | 0 |
 | H. Transfers & racking | 4 | 4 | 0 | 0 | 0 |
-| I. Blending | 9 | 4 | 5 | 0 | 0 |
+| I. Blending | 9 | 8 | 0 | 1 | 0 |
 | J. Planned work & Today | 20 | 20 | 0 | 0 | 0 |
 | K. Tastings | 9 | 3 | 6 | 0 | 0 |
 | L. Bottling | 4 | 3 | 1 | 0 | 0 |
@@ -61,8 +61,8 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | N. Analytics & costs | 10 | 5 | 5 | 0 | 0 |
 | O. Compliance & records | 4 | 2 | 2 | 0 | 0 |
 | P. Work-order integration | 3 | 2 | 1 | 0 | 0 |
-| Q. Audit logging | 11 | 2 | 9 | 0 | 0 |
-| **Total** | **193** | **150** | **40** | **3** | **0** |
+| Q. Audit logging | 11 | 3 | 8 | 0 | 0 |
+| **Total** | **193** | **156** | **33** | **4** | **0** |
 
 ---
 
@@ -140,7 +140,7 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | D12 | Adjust volume ± (vessel picker if several; cap removal per vessel; proportional when no vessel) | `C/adjust-volume-form.tsx`, `CA:588` | `AdjustLotVolumeAction` (reason → Loss/Gain process, proportional, per-vessel cap) | ✅ | ⬜ | Reason **saved** as `CellarProcess` Loss/Gain; proportional split |
 | D13 | Assign to vessel (searchable, shows current content) | `C/assign-vessel-form.tsx` | `AssignLotToVesselAction` | ✅ | ⬜ | |
 | D14 | Blend in another vessel's wine into this lot (keeps identity, recomputes grape %) | `C/blend-in-form.tsx`, `CA:735` | `BlendIntoLotAction`, `POST wine-lots/{lot}/blend-in` (`carried_cost`) | ✅ | ⬜ | Capacity checked; cost carried volume-weighted |
-| D15 | Cost breakdown (admin): €/kg, kg, yield %, grape, additions, linked costs, total, per L, per 750 ml | `P/lots/[id]` | `LotCostService::breakdown` | 🟡 | ⬜ | Include linked `CostItem` costs; one cost/L definition |
+| D15 | Cost breakdown (admin): €/kg, kg, yield %, grape, additions, linked costs, total, per L, per 750 ml | `P/lots/[id]` | `LotCostService::breakdown` (grape + additions + linked `cost_items.wine_lot_id` + `carried_cost`; per L over initial volume) | ✅ | ⬜ | Include linked `CostItem` costs; one cost/L definition |
 | D16 | Grape breakdown table (admin, more than one grape) | `P/lots/[id]` | `WineLotData.grapes` | ✅ | ⬜ | |
 | D17 | Latest analysis card (latest SO₂ with date/vessel + latest other params) | `P/lots/[id]` | `WineLotData.analyses` | ✅ | ⬜ | All 14 params, not 5 |
 | D18 | Lot journey timeline (created, fills, additions, analyses, tastings, transfers, bottlings, processes) | `C/lot-timeline.tsx` | — | ⬜ | ⬜ | `LotTimelineQuery` |
@@ -222,7 +222,7 @@ Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePla
 | H1 | Transfer form: type Rack/Blend/Split, volume, "this vessel" shortcut, from/to vessel (free space), note | `C/transfer-form.tsx`, `CA:1616` | `CreateTransferAction` | ✅ | ⬜ | Volume capped by the **source vessel**; Blend/Split offer a destination-lot picker |
 | H2 | Same-lot transfer needs two different vessels; capacity check | `CA:1616` | `CreateTransferAction` | ✅ | — | |
 | H3 | Transfers list in/out (direction, other lot link, type, date, user, note, ±L) | `P/lots/[id]` | `WineLotData.transfers` | ✅ | ⬜ | |
-| H4 | Delete transfer reverses volumes | `CA:2374` | `DeleteTransferAction` | ✅ | ⬜ | Also reverses grape % on BLEND |
+| H4 | Delete transfer reverses volumes | `CA:2374` | `DeleteTransferAction` (from the destination vessel; undoes grape mix and carried cost) | ✅ | ⬜ | Also reverses grape % on BLEND |
 
 ## I. Blending — `/cellar/blend`
 
@@ -230,13 +230,13 @@ Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePla
 |---|---|---|---|---|---|---|
 | I1 | Blend by vessels: source vessels grouped by room, filter | `C/vessel-blend.tsx` | `ListVesselsQuery` | ✅ | ⬜ | |
 | I2 | Source row: lot L, capacity, latest SO₂/pH/alc; All/Half; over-volume warning | `C/vessel-blend.tsx` | `VesselData` | ✅ | ⬜ | |
-| I3 | Destination vessel (free space or in-place); blend name | `C/vessel-blend.tsx` | `ExecuteBlendRequest` | 🟡 | ⬜ | Support in-place destination |
-| I4 | Execute → new BLEND lot (BLEND-YYMMDD-n, AGING, type, default name, latest vintage, grape %) | `CA:1752 executeBlend` | `BlendService`, `ExecuteBlendAction` | 🟡 | ⬜ | BLEND-YYMMDD numbering; **carry volume-weighted cost** |
+| I3 | Destination vessel (free space or in-place); blend name | `C/vessel-blend.tsx` | `BlendService` (in-place destination; drawn from each chosen vessel) | ✅ | ⬜ | Support in-place destination |
+| I4 | Execute → new BLEND lot (BLEND-YYMMDD-n, AGING, type, default name, latest vintage, grape %) | `CA:1752 executeBlend` | `BlendService` (BLEND-YYMMDD[-n], default name/vintage/type, `carried_cost`) — status stays BLENDED (rebuild choice) | ✅ | ⬜ | BLEND-YYMMDD numbering; **carry volume-weighted cost** |
 | I5 | Projected blend by lot ratios: add lots, ratio %, distribute evenly, must total 100 | `C/blend-projection.tsx` | — (client side) | ✅ | ⬜ | |
 | I6 | Target volume or vessel capacity; breakdown bar | `C/blend-projection.tsx` | — | ✅ | ⬜ | |
-| I7 | Projected analysis + grading (optimal/watch/concern) + projected type | `C/blend-projection.tsx` | — | ⬜ | ⬜ | pH computed through [H⁺], not averaged |
-| I8 | Print blend sheet | `C/blend-projection.tsx` | — | ⬜ | ⬜ | |
-| I9 | Execute projection (pull from lots' vessels oldest-first) | `C/blend-projection.tsx` | `BlendService` | ⬜ | ⬜ | Map ratios → vessel sources server-side |
+| I7 | Projected analysis + grading (optimal/watch/concern) + projected type | `C/blend-projection.tsx` | `BlendProjector`, `POST wine-lots/blend/project` (pH via [H⁺], grades, composition, cost/L) | ✅ | ⬜ | pH computed through [H⁺], not averaged |
+| I8 | Print blend sheet | `C/blend-projection.tsx` | Client-side print of the projection | — | ⬜ | |
+| I9 | Execute projection (pull from lots' vessels oldest-first) | `C/blend-projection.tsx` | `BlendProjector::sources`, `POST wine-lots/blend/by-ratio` (oldest vessel first) | ✅ | ⬜ | Map ratios → vessel sources server-side |
 
 ## J. Planned work & Today — `/cellar/plan`, `/cellar/today`
 
@@ -358,7 +358,7 @@ rules apply:
 |---|---|---|---|---|---|---|
 | Q1 | `Auditable` on Vessel, WineLot, WineLotGrape, VesselLot, CellarAnalysis, CellarAddition, CellarProcess, CellarTastingNote, TastingReport, CellarTransfer, Bottling, EnologicalProduct, FermentationTemplate, CellarActivity, CellarActivityRound | — | `Services/Audit/Auditable` | 🟡 | — | Create snapshot = identifying fields; derived volume/stock/status fields ignored on update |
 | Q2 | Named entries for lot volume: `wine_lot.volume_adjusted` (vessel, ±L, reason), `wine_lot.assigned_to_vessel` / `unassigned_from_vessel`, `vessel.layout_updated` (count), `vessel.room_renamed` | — | `wine_lot.volume_adjusted`, `.assigned_to_vessel(s)`, `.unassigned_from_vessel`, `vessel.duplicated`, `wine_lot.deleted` | ✅ | — | |
-| Q3 | Named entries for blends and transfers: `wine_lot.blended` (sources, L, destination, new lot), `wine_lot.blended_in`, `cellar_transfer.created/reversed` (from/to lot+vessel, L, type) | — | `BlendService`, transfer Actions | ⬜ | — | |
+| Q3 | Named entries for blends and transfers: `wine_lot.blended` (sources, L, destination, new lot), `wine_lot.blended_in`, `cellar_transfer.created/reversed` (from/to lot+vessel, L, type) | — | `wine_lot.blended`, `wine_lot.blended_in`, `cellar_transfer.created`, `cellar_transfer.reversed` | ✅ | — | |
 | Q4 | Named entries for bottling: `bottling.created/reversed` (bottles, size, L, inventory item, stock movement ref) | — | bottling Actions | ⬜ | — | |
 | Q5 | Named entries for stock: `enological_product.stock_adjusted` (delta, before→after, reason, source: addition / bulk / SO₂ / manual / import) | — | addition + stock Actions | ⬜ | — | Every stock change is traceable to its cause |
 | Q6 | Named entries for bulk operations: `cellar.bulk_additions_applied`, `cellar.bulk_analyses_recorded`, `cellar.so2_round_planned` (lot/vessel ids, dose, product) | — | `cellar.so2_applied`, `cellar.so2_round_planned`, `cellar.bulk_analyses_recorded` (bulk additions page still to do) | 🟡 | — | One summary entry plus per-row trait entries |

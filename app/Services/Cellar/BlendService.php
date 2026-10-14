@@ -10,27 +10,36 @@ use App\Models\CellarTransfer;
 use App\Models\Vessel;
 use App\Models\VesselLot;
 use App\Models\WineLot;
+use App\Services\Audit\AuditLogger;
 use App\Support\Quantity;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 // VesselVolumeSync is invoked indirectly via LotVolumeService (drain/assign).
 
 /**
- * Multi-source blend: drain volume from several source vessel-lots and mint a new
- * wine lot in a destination vessel. The new lot's grape composition is the
- * volume-weighted union of the sources', and a BLEND transfer is recorded from
- * each source lot. Runs in one transaction with the touched rows locked.
+ * Multi-source blend: draw volume from several source vessel-lots — each from
+ * its own vessel — and mint a new wine lot in a destination vessel (which may
+ * be one of the sources: an in-place blend). The new lot:
+ *  - is numbered BLEND-YYMMDD[-n] (the prototype's scheme);
+ *  - takes the volume-weighted union of the sources' grape composition;
+ *  - carries the sources' cost (cost/L × litres taken) — the prototype lost it;
+ *  - defaults its name to "Blend {vintage} — A + B", its vintage to the latest
+ *    source vintage and its wine type to the sources' shared type.
+ * A BLEND transfer is recorded from each source. One transaction, rows locked.
  */
 class BlendService
 {
     public function __construct(
         private readonly LotNumberGenerator $numbers,
         private readonly LotVolumeService $volumes,
+        private readonly LotCostService $costs,
+        private readonly AuditLogger $audit,
     ) {}
 
     /**
-     * @param  array<string, mixed>  $data  {name, vintage?, wine_type?, destination_vessel_id, sources: [{vessel_lot_id, volume}]}
+     * @param  array<string, mixed>  $data  {name?, vintage?, wine_type?, destination_vessel_id, sources: [{vessel_lot_id, volume}]}
      */
     public function execute(array $data, string $createdById): WineLot
     {
@@ -73,14 +82,28 @@ class BlendService
             }
 
             $variety = implode(', ', array_keys($varietyVolumes));
+            $distinctLots = collect($sourceLots)->map(fn (array $s): WineLot => $s['lot'])->unique(fn (WineLot $l): string => (string) $l->getKey());
+            $vintages = $distinctLots->pluck('vintage')->filter()->sort()->values();
+            $vintage = (string) ($data['vintage'] ?? $vintages->last() ?? date('Y'));
+            $types = $distinctLots->map(fn (WineLot $l) => $l->wine_type?->value)->filter()->unique();
+            $carried = 0;
+            foreach ($sourceLots as $s) {
+                $carried += (int) round($this->costs->breakdown($s['lot'])['per_liter'] * (float) $s['volume']);
+            }
+
+            $name = isset($data['name']) && trim((string) $data['name']) !== ''
+                ? (string) $data['name']
+                : mb_substr("Blend {$vintage} — ".$distinctLots->pluck('name')->implode(' + '), 0, 160);
+
             $newLot = WineLot::create([
-                'lot_number' => $this->numbers->next(),
-                'name' => $data['name'],
+                'lot_number' => $this->numbers->nextBlend(),
+                'name' => $name,
                 'grape_variety' => $variety !== '' ? $variety : 'Blend',
-                'vintage' => (string) ($data['vintage'] ?? date('Y')),
-                'wine_type' => $data['wine_type'] ?? null,
+                'vintage' => $vintage,
+                'wine_type' => $data['wine_type'] ?? ($types->count() === 1 ? $types->first() : null),
                 'initial_volume' => $total,
                 'current_volume' => $total,
+                'carried_cost' => $carried,
                 'status' => WineLotStatus::Blended->value,
             ]);
 
@@ -92,9 +115,9 @@ class BlendService
                 $newLot->grapes()->create(['grape_variety' => $grape, 'percentage' => $pct, 'weight_kg' => null]);
             }
 
-            // Drain each source and record a BLEND transfer into the new lot.
+            // Draw each source from its own vessel and record a BLEND transfer.
             foreach ($sourceLots as $s) {
-                $this->volumes->drain($s['lot'], $s['volume']);
+                $this->volumes->adjust($s['lot'], Quantity::negate($s['volume']), (string) $s['vesselLot']->vessel_id);
                 CellarTransfer::create([
                     'from_lot_id' => $s['lot']->getKey(),
                     'to_lot_id' => $newLot->getKey(),
@@ -108,6 +131,17 @@ class BlendService
 
             // Place the blended volume into the destination vessel.
             $this->volumes->assignToVessel($newLot, $destVessel, $total);
+
+            $this->audit->record(Auth::user(), 'wine_lot.blended', $newLot, [
+                'sources' => array_map(fn (array $s): array => [
+                    'wine_lot_id' => (string) $s['lot']->getKey(),
+                    'vessel_id' => (string) $s['vesselLot']->vessel_id,
+                    'volume' => $s['volume'],
+                ], $sourceLots),
+                'destination_vessel_id' => $destVessel->getKey(),
+                'total' => $total,
+                'carried_cost' => $carried,
+            ]);
 
             return $newLot;
         });

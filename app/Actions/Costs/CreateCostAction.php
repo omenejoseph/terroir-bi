@@ -27,6 +27,7 @@ class CreateCostAction
                 $unitPrice = (int) $item['unit_price'];
                 $cost->items()->create([
                     'inventory_item_id' => $item['inventory_item_id'] ?? null,
+                    'wine_lot_id' => $item['wine_lot_id'] ?? null,
                     'description' => (string) $item['description'],
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,

@@ -133,6 +133,16 @@ class WineLot extends Model
     }
 
     /**
+     * Cost lines charged to this lot.
+     *
+     * @return HasMany<CostItem, $this>
+     */
+    public function costItems(): HasMany
+    {
+        return $this->hasMany(CostItem::class);
+    }
+
+    /**
      * @return HasOne<Bottling, $this>
      */
     public function latestBottling(): HasOne

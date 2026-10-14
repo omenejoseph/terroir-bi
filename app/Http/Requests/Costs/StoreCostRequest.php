@@ -43,6 +43,7 @@ class StoreCostRequest extends FormRequest
             'items.*.quantity' => ['sometimes', 'numeric', 'min:0'],
             'items.*.category' => ['sometimes', 'nullable', 'string', 'max:255'],
             'items.*.inventory_item_id' => ['sometimes', 'nullable', 'string', Rule::exists('inventory_items', 'id')->where('tenant_id', $tenantId)],
+            'items.*.wine_lot_id' => ['sometimes', 'nullable', 'string', Rule::exists('wine_lots', 'id')->where('tenant_id', $tenantId)],
         ];
     }
 }

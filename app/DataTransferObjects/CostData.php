@@ -56,6 +56,7 @@ final class CostData implements Arrayable, JsonSerializable
             $data['items'] = $c->items->map(fn (CostItem $i) => [
                 'id' => $i->getKey(),
                 'inventory_item_id' => $i->inventory_item_id,
+                'wine_lot_id' => $i->wine_lot_id,
                 'description' => $i->description,
                 'quantity' => $i->quantity,
                 'unit_price' => $i->unit_price->jsonSerialize(),

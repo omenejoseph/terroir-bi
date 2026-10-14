@@ -74,7 +74,7 @@ class LatestAnalyses
         }
 
         return CellarAnalysis::query()
-            ->select(['id', 'wine_lot_id', 'vessel_id', 'date', 'created_at', 'free_so2', 'total_so2', 'ph', 'residual_sugar'])
+            ->select(['id', 'wine_lot_id', 'vessel_id', 'date', 'created_at', ...CellarAnalysis::PARAMETERS])
             ->whereIn('wine_lot_id', $lotIds)
             ->whereNotNull($column)
             ->orderByDesc('date')

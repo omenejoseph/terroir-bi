@@ -110,7 +110,8 @@ class GrapeComposition
     /**
      * After `$addedLiters` of `$from` were blended into `$into` (which held
      * `$intoLitersBefore`), rewrite `$into`'s grape percentages by volume.
-     * Prices and weights of existing rows are kept.
+     * Prices and weights of existing rows are kept. A negative `$addedLiters`
+     * undoes a blend-in (varieties left with no share are dropped).
      */
     public function mix(WineLot $into, float $intoLitersBefore, WineLot $from, float $addedLiters): void
     {
@@ -127,7 +128,14 @@ class GrapeComposition
             $mixed[$variety] = ($mixed[$variety] ?? 0.0) + $share * $addedLiters / $total;
         }
 
+        $mixed = array_filter($mixed, fn (float $s): bool => $s > 0.00005);
         $existing = $into->grapes()->get()->keyBy(fn (WineLotGrape $g): string => mb_strtolower(trim($g->grape_variety)));
+        $keep = array_flip(array_map(fn (string $v): string => mb_strtolower(trim($v)), array_keys($mixed)));
+        foreach ($existing as $key => $row) {
+            if (! isset($keep[$key])) {
+                $row->delete();
+            }
+        }
         foreach ($mixed as $variety => $share) {
             $percentage = number_format($share * 100, 2, '.', '');
             $row = $existing[mb_strtolower(trim($variety))] ?? null;
