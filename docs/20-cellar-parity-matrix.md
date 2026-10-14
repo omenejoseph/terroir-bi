@@ -49,7 +49,7 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | B. Cellar map | 22 | 18 | 4 | 0 | 0 |
 | C. Vessels | 11 | 9 | 2 | 0 | 0 |
 | D. Wine lots | 30 | 21 | 8 | 1 | 0 |
-| E. SO₂ | 14 | 13 | 1 | 0 | 0 |
+| E. SO₂ | 14 | 14 | 0 | 0 | 0 |
 | F. Additions & enological stock | 18 | 12 | 6 | 0 | 0 |
 | G. Lab analyses | 9 | 7 | 0 | 2 | 0 |
 | H. Transfers & racking | 4 | 4 | 0 | 0 | 0 |
@@ -62,7 +62,7 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | O. Compliance & records | 4 | 2 | 2 | 0 | 0 |
 | P. Work-order integration | 3 | 2 | 1 | 0 | 0 |
 | Q. Audit logging | 11 | 1 | 10 | 0 | 0 |
-| **Total** | **193** | **136** | **54** | **3** | **0** |
+| **Total** | **193** | **137** | **53** | **3** | **0** |
 
 ---
 
@@ -168,7 +168,7 @@ Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePla
 | E3 | Quick free/total SO₂ entry per lot and per vessel; "N entered"; save | `C/so2-management.tsx` | `BulkAddAnalysesAction` | ✅ | ⬜ | Vessel id saved on each row |
 | E4 | Plan mode: status chips Critical <15 / Low 15–24 / OK 25–45 / High >45 / No data | `C/so2-management.tsx` | `So2Calculator::status`, board `summary` | ✅ | ⬜ | |
 | E5 | Product picker with stock | `C/so2-management.tsx` | `EnologicalProductData` | ✅ | ⬜ | |
-| E6 | "Set all" mg/L to add; per-row override; expanding a lot copies value to vessels | `C/so2-management.tsx` | `So2DosePlanner` (`mode: add|target`), `POST cellar/so2/preview` | ✅ | ⬜ | Label honestly as "mg/L to add" (target mode in Phase 3) |
+| E6 | "Set all" mg/L to add; per-row override; expanding a lot copies value to vessels | `C/so2-management.tsx` | `So2DosePlanner` (`mode` add or target), `POST cellar/so2/preview` | ✅ | ⬜ | Label honestly as "mg/L to add" (target mode in Phase 3) |
 | E7 | Reference targets by wine type (red 28, white 35, rosé 32, orange 25, sparkling 30; +3 oak) | `C/so2-management.tsx` | `So2Calculator::referenceTarget` (+3 oak) | ✅ | ⬜ | Shared constant in the calculator service |
 | E8 | Filters: status, material, search, "only needing SO₂" | `C/so2-management.tsx` | board fields (status, material/oak, search on client) | ✅ | ⬜ | |
 | E9 | Row: current free + days since reading, add, projected, dose | `C/so2-management.tsx` | board `days_since`, preview lines | ✅ | ⬜ | |
