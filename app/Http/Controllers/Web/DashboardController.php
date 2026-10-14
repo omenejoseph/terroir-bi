@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web;
 
 use App\Authorization\MembershipContext;
+use App\Enums\TenantRole;
 use App\Http\Controllers\Controller;
 use App\Services\Customers\PricingTierOptions;
 use App\Services\Dashboard\DashboardSummary;
 use App\Services\Orders\OrderFormOptions;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -28,7 +31,14 @@ class DashboardController extends Controller
         DashboardSummary $summary,
         OrderFormOptions $orderOptions,
         PricingTierOptions $tierOptions,
-    ): Response {
+    ): Response|RedirectResponse {
+        // Cellar-only members land on the cellar (as in the prototype). The
+        // route exists once the Inertia cellar screens ship; until then this
+        // is a no-op.
+        if ($this->membership->roles() === [TenantRole::Cellar] && Route::has('cellar')) {
+            return redirect()->route('cellar');
+        }
+
         $period = $request->query('period');
         $range = $request->query('range');
         $from = $request->query('from');

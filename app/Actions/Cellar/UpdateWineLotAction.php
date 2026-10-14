@@ -6,6 +6,7 @@ namespace App\Actions\Cellar;
 
 use App\Enums\WineLotStatus;
 use App\Models\WineLot;
+use App\Services\Cellar\GrapeComposition;
 use App\Services\Cellar\VesselVolumeSync;
 use Illuminate\Support\Facades\DB;
 
@@ -16,7 +17,10 @@ use Illuminate\Support\Facades\DB;
  */
 class UpdateWineLotAction
 {
-    public function __construct(private readonly VesselVolumeSync $sync) {}
+    public function __construct(
+        private readonly VesselVolumeSync $sync,
+        private readonly GrapeComposition $grapes,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -33,6 +37,12 @@ class UpdateWineLotAction
                 && WineLotStatus::from((string) $data['status']) === WineLotStatus::Bottled;
 
             $lot->save();
+
+            if (array_key_exists('grapes', $data)) {
+                /** @var list<array<string, mixed>> $grapes */
+                $grapes = (array) $data['grapes'];
+                $this->grapes->apply($lot, $grapes);
+            }
 
             if ($becameBottled) {
                 $vesselIds = $lot->vesselLots()->pluck('vessel_id')->all();

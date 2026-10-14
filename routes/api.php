@@ -391,6 +391,7 @@ Route::prefix('v1')->group(function () {
         Route::middleware('can:cellar.manage')->group(function () {
             Route::post('vessels', [VesselController::class, 'store']);
             Route::post('vessels/bulk', [VesselController::class, 'bulkCreate']);
+            Route::post('vessels/duplicate', [VesselController::class, 'duplicate']);
             Route::post('vessels/rename-room', [VesselController::class, 'renameRoom']);
             Route::patch('vessels/layout', [VesselController::class, 'layout']);
             Route::patch('vessels/{vessel}', [VesselController::class, 'update']);
@@ -400,6 +401,8 @@ Route::prefix('v1')->group(function () {
             Route::post('wine-lots/{wineLot}/vessels', [WineLotController::class, 'assignVessel']);
             Route::delete('wine-lots/{wineLot}/vessels/{vesselLot}', [WineLotController::class, 'unassignVessel']);
             Route::post('wine-lots/{wineLot}/adjust-volume', [WineLotController::class, 'adjustVolume']);
+            Route::post('wine-lots/{wineLot}/vessels/bulk', [WineLotController::class, 'bulkAssignVessels']);
+            Route::post('wine-lots/{wineLot}/blend-in', [WineLotController::class, 'blendIn']);
 
             // Lot lifecycle (analyses, additions, processes, tastings, transfers, bottling).
             Route::post('wine-lots/analyses/bulk', [WineLotController::class, 'bulkAnalyses']);
@@ -447,6 +450,7 @@ Route::prefix('v1')->group(function () {
         });
         Route::middleware('can:cellar.delete')->group(function () {
             Route::delete('vessels/{vessel}', [VesselController::class, 'destroy']);
+            Route::delete('wine-lots/{wineLot}', [WineLotController::class, 'destroy']);
             Route::delete('enological-products/{enologicalProduct}', [EnologicalProductController::class, 'destroy']);
             Route::delete('fermentation-templates/{fermentationTemplate}', [FermentationTemplateController::class, 'destroy']);
         });

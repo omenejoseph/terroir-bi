@@ -31,6 +31,11 @@ class UpdateWineLotRequest extends FormRequest
             'grape_price_per_kg' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'harvest_weight_kg' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'notes' => ['sometimes', 'nullable', 'string'],
+            'grapes' => ['sometimes', 'array'],
+            'grapes.*.grape_variety' => ['required_with:grapes', 'string', 'max:255'],
+            'grapes.*.percentage' => ['sometimes', 'nullable', 'numeric', 'between:0,100'],
+            'grapes.*.price_per_kg' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'grapes.*.weight_kg' => ['sometimes', 'nullable', 'numeric', 'min:0'],
         ];
     }
 }

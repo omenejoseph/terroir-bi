@@ -7,18 +7,21 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Cellar\BulkCreateVesselsAction;
 use App\Actions\Cellar\CreateVesselAction;
 use App\Actions\Cellar\DeleteVesselAction;
+use App\Actions\Cellar\DuplicateVesselsAction;
 use App\Actions\Cellar\RenameCellarRoomAction;
 use App\Actions\Cellar\UpdateVesselAction;
 use App\Actions\Cellar\UpdateVesselLayoutAction;
 use App\DataTransferObjects\VesselData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cellar\BulkCreateVesselsRequest;
+use App\Http\Requests\Cellar\DuplicateVesselsRequest;
 use App\Http\Requests\Cellar\RenameRoomRequest;
 use App\Http\Requests\Cellar\StoreVesselRequest;
 use App\Http\Requests\Cellar\UpdateVesselLayoutRequest;
 use App\Http\Requests\Cellar\UpdateVesselRequest;
 use App\Models\Vessel;
 use App\Queries\ListVesselsQuery;
+use App\Queries\VesselDetailQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -36,11 +39,25 @@ class VesselController extends Controller
         ]);
     }
 
-    public function show(Vessel $vessel): JsonResponse
+    public function show(Vessel $vessel, VesselDetailQuery $detail): JsonResponse
     {
         $vessel->loadMissing('vesselLots.wineLot');
 
-        return response()->json(['data' => VesselData::fromModel($vessel, withLots: true)->toArray()]);
+        return response()->json(['data' => [
+            ...VesselData::fromModel($vessel, withLots: true)->toArray(),
+            ...$detail->get($vessel),
+        ]]);
+    }
+
+    public function duplicate(DuplicateVesselsRequest $request, DuplicateVesselsAction $action): JsonResponse
+    {
+        /** @var list<string> $ids */
+        $ids = array_values((array) $request->validated('vessel_ids'));
+        $created = $action->execute($ids, (int) $request->validated('count'));
+
+        return response()->json([
+            'data' => $created->map(fn (Vessel $v) => VesselData::fromModel($v)->toArray())->all(),
+        ], 201);
     }
 
     public function store(StoreVesselRequest $request, CreateVesselAction $action): JsonResponse

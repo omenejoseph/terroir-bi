@@ -11,8 +11,10 @@ use App\Actions\Cellar\AddTastingNoteAction;
 use App\Actions\Cellar\AdjustLotVolumeAction;
 use App\Actions\Cellar\AssignFermentationTemplateAction;
 use App\Actions\Cellar\AssignLotToVesselAction;
+use App\Actions\Cellar\BlendIntoLotAction;
 use App\Actions\Cellar\BulkAddAdditionsAction;
 use App\Actions\Cellar\BulkAddAnalysesAction;
+use App\Actions\Cellar\BulkAssignLotToVesselsAction;
 use App\Actions\Cellar\CreateBottlingAction;
 use App\Actions\Cellar\CreateTransferAction;
 use App\Actions\Cellar\CreateWineLotAction;
@@ -22,6 +24,7 @@ use App\Actions\Cellar\DeleteCellarAnalysisAction;
 use App\Actions\Cellar\DeleteCellarProcessAction;
 use App\Actions\Cellar\DeleteTastingNoteAction;
 use App\Actions\Cellar\DeleteTransferAction;
+use App\Actions\Cellar\DeleteWineLotAction;
 use App\Actions\Cellar\ExecuteBlendAction;
 use App\Actions\Cellar\GenerateWorkOrdersFromProtocolAction;
 use App\Actions\Cellar\UnassignLotFromVesselAction;
@@ -32,8 +35,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Cellar\AdjustLotVolumeRequest;
 use App\Http\Requests\Cellar\AssignProtocolRequest;
 use App\Http\Requests\Cellar\AssignVesselRequest;
+use App\Http\Requests\Cellar\BlendIntoLotRequest;
 use App\Http\Requests\Cellar\BulkAdditionsRequest;
 use App\Http\Requests\Cellar\BulkAnalysesRequest;
+use App\Http\Requests\Cellar\BulkAssignLotToVesselsRequest;
 use App\Http\Requests\Cellar\ExecuteBlendRequest;
 use App\Http\Requests\Cellar\StoreBottlingRequest;
 use App\Http\Requests\Cellar\StoreCellarAdditionRequest;
@@ -70,6 +75,7 @@ class WineLotController extends Controller
             'status' => $request->query('status'),
             'search' => $request->query('search'),
             'exclude_bottled' => $request->boolean('exclude_bottled'),
+            'with_counts' => $request->boolean('with_counts'),
         ], $perPage);
 
         return response()->json([
@@ -124,13 +130,44 @@ class WineLotController extends Controller
     public function adjustVolume(AdjustLotVolumeRequest $request, WineLot $wineLot, AdjustLotVolumeAction $action): JsonResponse
     {
         $vesselId = $request->validated('vessel_id');
+        $reason = $request->validated('reason');
         $lot = $action->execute(
             $wineLot,
             (string) $request->validated('delta'),
             $vesselId !== null ? (string) $vesselId : null,
+            $reason !== null ? (string) $reason : null,
+            $this->userId($request),
         );
 
         return response()->json(['data' => $this->present($lot)]);
+    }
+
+    public function bulkAssignVessels(BulkAssignLotToVesselsRequest $request, WineLot $wineLot, BulkAssignLotToVesselsAction $action): JsonResponse
+    {
+        /** @var array{vessel_ids: list<string>, mode: string, source: string, volume?: float|int|string|null, dry_run?: bool} $data */
+        $data = $request->validated();
+        $plan = $action->execute($wineLot, $data);
+
+        return response()->json([
+            'data' => empty($data['dry_run']) ? $this->present($wineLot->refresh()) : null,
+            'plan' => $plan,
+        ]);
+    }
+
+    public function blendIn(BlendIntoLotRequest $request, WineLot $wineLot, BlendIntoLotAction $action): JsonResponse
+    {
+        /** @var array{from_vessel_id: string, volume: float|int|string, to_vessel_id: string, note?: string|null} $data */
+        $data = $request->validated();
+        $lot = $action->execute($wineLot, $data, $this->userId($request));
+
+        return response()->json(['data' => $this->present($lot)]);
+    }
+
+    public function destroy(WineLot $wineLot, DeleteWineLotAction $action): JsonResponse
+    {
+        $action->execute($wineLot);
+
+        return response()->json(status: 204);
     }
 
     // --- Analyses -----------------------------------------------------------

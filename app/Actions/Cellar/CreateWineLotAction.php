@@ -7,6 +7,7 @@ namespace App\Actions\Cellar;
 use App\Enums\WineLotStatus;
 use App\Models\Vessel;
 use App\Models\WineLot;
+use App\Services\Cellar\GrapeComposition;
 use App\Services\Cellar\LotNumberGenerator;
 use App\Services\Cellar\LotVolumeService;
 use App\Support\Quantity;
@@ -23,6 +24,7 @@ class CreateWineLotAction
     public function __construct(
         private readonly LotNumberGenerator $numbers,
         private readonly LotVolumeService $volumes,
+        private readonly GrapeComposition $grapes,
     ) {}
 
     /**
@@ -57,13 +59,9 @@ class CreateWineLotAction
 
             /** @var list<array<string, mixed>> $grapes */
             $grapes = $data['grapes'] ?? [];
-            foreach ($grapes as $grape) {
-                $lot->grapes()->create([
-                    'grape_variety' => $grape['grape_variety'],
-                    'percentage' => $grape['percentage'] ?? null,
-                    'price_per_kg' => isset($grape['price_per_kg']) ? (int) $grape['price_per_kg'] : null,
-                    'weight_kg' => $grape['weight_kg'] ?? null,
-                ]);
+            if ($grapes !== []) {
+                // Per-grape €/kg × kg, as the prototype's lot form (overrides the single-price cost above).
+                $this->grapes->apply($lot, $grapes);
             }
 
             if (! empty($data['vessel_id'])) {

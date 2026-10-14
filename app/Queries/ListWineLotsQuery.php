@@ -13,19 +13,25 @@ use Illuminate\Database\Eloquent\Builder;
 class ListWineLotsQuery
 {
     /**
-     * @param  array{status?: ?string, search?: ?string, exclude_bottled?: ?bool}  $filters
+     * `with_counts` adds the bottled-archive figures: counts of additions,
+     * analyses and bottlings, and the latest bottling with its item.
+     *
+     * @param  array{status?: ?string, search?: ?string, exclude_bottled?: ?bool, with_counts?: ?bool}  $filters
      * @return LengthAwarePaginator<int, WineLot>
      */
     public function paginate(array $filters = [], int $perPage = 25): LengthAwarePaginator
     {
         return $this->build($filters)
             ->with(['grapes', 'latestAnalysis', 'latestAddition'])
+            ->when(! empty($filters['with_counts']), fn (Builder $q) => $q
+                ->withCount(['additions', 'analyses', 'bottlings'])
+                ->with('latestBottling.inventoryItem'))
             ->orderByDesc('created_at')
             ->paginate($perPage);
     }
 
     /**
-     * @param  array{status?: ?string, search?: ?string, exclude_bottled?: ?bool}  $filters
+     * @param  array{status?: ?string, search?: ?string, exclude_bottled?: ?bool, with_counts?: ?bool}  $filters
      * @return Builder<WineLot>
      */
     public function build(array $filters): Builder

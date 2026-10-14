@@ -24,6 +24,7 @@ class AdjustLotVolumeRequest extends FormRequest
 
         return [
             'delta' => ['required', 'numeric', 'not_in:0'],
+            'reason' => ['sometimes', 'nullable', 'string', 'max:255'],
             'vessel_id' => [
                 'sometimes', 'nullable', 'string',
                 Rule::exists('vessels', 'id')->where('tenant_id', $tenantId),

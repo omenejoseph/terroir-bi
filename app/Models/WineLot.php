@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property string $current_volume
  * @property WineLotStatus $status
  * @property Money|null $grape_cost
+ * @property int $carried_cost cost carried in by blends (minor units)
  * @property Money|null $grape_price_per_kg
  * @property string|null $harvest_weight_kg
  * @property string|null $fermentation_template_id
@@ -54,6 +55,7 @@ class WineLot extends Model
         'current_volume',
         'status',
         'grape_cost',
+        'carried_cost',
         'grape_price_per_kg',
         'harvest_weight_kg',
         'fermentation_template_id',
@@ -72,6 +74,7 @@ class WineLot extends Model
             'initial_volume' => 'decimal:3',
             'current_volume' => 'decimal:3',
             'grape_cost' => MoneyCast::class,
+            'carried_cost' => 'integer',
             'grape_price_per_kg' => MoneyCast::class,
             'harvest_weight_kg' => 'decimal:3',
         ];
@@ -127,6 +130,14 @@ class WineLot extends Model
     public function latestAddition(): HasOne
     {
         return $this->hasOne(CellarAddition::class)->latestOfMany('created_at');
+    }
+
+    /**
+     * @return HasOne<Bottling, $this>
+     */
+    public function latestBottling(): HasOne
+    {
+        return $this->hasOne(Bottling::class)->latestOfMany('date');
     }
 
     /**

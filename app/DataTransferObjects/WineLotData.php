@@ -64,7 +64,24 @@ final class WineLotData implements Arrayable, JsonSerializable
             'notes' => $lot->notes,
             'latest_analysis' => $this->latestAnalysis(),
             'latest_addition' => $this->latestAddition(),
+            'carried_cost' => $lot->carried_cost,
         ];
+
+        // Bottled archive (ListWineLotsQuery with_counts).
+        if ($lot->relationLoaded('latestBottling')) {
+            $b = $lot->latestBottling;
+            $payload['counts'] = [
+                'additions' => (int) $lot->getAttribute('additions_count'),
+                'analyses' => (int) $lot->getAttribute('analyses_count'),
+                'bottlings' => (int) $lot->getAttribute('bottlings_count'),
+            ];
+            $payload['latest_bottling'] = $b !== null ? [
+                'date' => $b->date->toIso8601String(),
+                'bottle_count' => $b->bottle_count,
+                'bottle_volume_ml' => $b->bottle_volume_ml,
+                'inventory_item' => $b->inventoryItem !== null ? ['id' => $b->inventoryItem->getKey(), 'name' => $b->inventoryItem->name] : null,
+            ] : null;
+        }
 
         if (! $this->withDetail) {
             return $payload;
