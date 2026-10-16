@@ -34,7 +34,6 @@ use App\DataTransferObjects\CellarActivityData;
 use App\DataTransferObjects\FermentationTemplateData;
 use App\DataTransferObjects\WineLotData;
 use App\Enums\CellarActivityStatus;
-use App\Enums\InventoryCategory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cellar\AdjustLotVolumeRequest;
 use App\Http\Requests\Cellar\AssignProtocolRequest;
@@ -59,7 +58,6 @@ use App\Models\CellarProcess;
 use App\Models\CellarTastingNote;
 use App\Models\CellarTransfer;
 use App\Models\FermentationTemplate;
-use App\Models\InventoryItem;
 use App\Models\User;
 use App\Models\Vessel;
 use App\Models\VesselLot;
@@ -138,7 +136,7 @@ class WineLotController extends Controller
             'products' => fn (): array => $options->products(),
             'templates' => fn (): array => array_values(FermentationTemplate::query()->with('additives')->orderBy('name')->get()
                 ->map(fn (FermentationTemplate $t): array => FermentationTemplateData::fromModel($t)->toArray())->all()),
-            'inventoryItems' => Inertia::optional(fn (): array => $this->finishedItems()),
+            'inventoryItems' => Inertia::optional(fn (): array => $options->finishedItems()),
             'history' => Inertia::optional(fn (): array => $history->forLot($wineLot)),
             'trace' => Inertia::optional(fn (): array => $trace->get($wineLot)),
         ]);
@@ -417,21 +415,6 @@ class WineLotController extends Controller
             fn (array $s): array => [...$s, 'liters' => number_format($s['liters'], 3, '.', '')],
             $sources,
         ));
-    }
-
-    /**
-     * Finished-goods items a bottling can feed.
-     *
-     * @return list<array{value: string, label: string, description: string|null}>
-     */
-    private function finishedItems(): array
-    {
-        return array_values(InventoryItem::query()
-            ->where('category', InventoryCategory::Finished->value)
-            ->orderBy('name')
-            ->get(['id', 'name', 'sku'])
-            ->map(fn (InventoryItem $i): array => ['value' => (string) $i->getKey(), 'label' => $i->name, 'description' => $i->sku])
-            ->all());
     }
 
     private function userId(Request $request): string

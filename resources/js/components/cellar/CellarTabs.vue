@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
+import { PenLine } from 'lucide-vue-next';
+
+import Button from '@/components/ui/Button.vue';
+import Kbd from '@/components/ui/Kbd.vue';
 import Tabs from '@/components/ui/Tabs.vue';
+import { useRecordDrawer } from '@/composables/useRecordDrawer';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import type { TabItem } from '@/types/ui';
@@ -16,6 +21,7 @@ const props = defineProps<{ current: string }>();
 
 const { t } = useTranslations();
 const { can } = useAuth();
+const { openRecord } = useRecordDrawer();
 
 const BUILT = new Set(['overview', 'today', 'plan', 'so2', 'lots', 'blend', 'tastings', 'products', 'protocols', 'analytics', 'costs', 'book']);
 
@@ -42,7 +48,10 @@ const currentLabel = computed(() => items.value.find((i) => (i as TabItem & { ke
 </script>
 
 <template>
-    <div class="-mx-1 overflow-x-auto px-1 print:hidden">
-        <Tabs :items="items" :current="currentLabel" />
+    <div class="flex items-center gap-2 print:hidden">
+        <div class="-mx-1 min-w-0 flex-1 overflow-x-auto px-1"><Tabs :items="items" :current="currentLabel" /></div>
+        <Button v-if="can('cellar.manage')" size="sm" variant="outline" class="shrink-0" :title="t('Record cellar work (R)')" @click="openRecord()">
+            <PenLine class="size-3.5" /> {{ t('Record') }} <Kbd keys="R" class="hidden sm:inline-flex" />
+        </Button>
     </div>
 </template>

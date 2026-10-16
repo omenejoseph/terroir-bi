@@ -6,9 +6,11 @@ namespace App\Queries;
 
 use App\Authorization\MembershipContext;
 use App\DataTransferObjects\VesselData;
+use App\Enums\InventoryCategory;
 use App\Enums\MembershipStatus;
 use App\Enums\WineLotStatus;
 use App\Models\EnologicalProduct;
+use App\Models\InventoryItem;
 use App\Models\Membership;
 use App\Models\User;
 use App\Models\Vessel;
@@ -96,6 +98,21 @@ class CellarPickerOptions
                 'cost_per_unit' => $p->cost_per_unit?->minorFloat(),
                 'so2_uplift_per_unit' => $p->so2_uplift_per_unit !== null ? (string) $p->so2_uplift_per_unit : null,
             ])
+            ->all());
+    }
+
+    /**
+     * Finished-wine inventory items a bottling run can go into.
+     *
+     * @return list<array{value: string, label: string, description: string|null}>
+     */
+    public function finishedItems(): array
+    {
+        return array_values(InventoryItem::query()
+            ->where('category', InventoryCategory::Finished->value)
+            ->orderBy('name')
+            ->get(['id', 'name', 'sku'])
+            ->map(fn (InventoryItem $i): array => ['value' => (string) $i->getKey(), 'label' => $i->name, 'description' => $i->sku])
             ->all());
     }
 

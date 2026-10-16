@@ -11,8 +11,9 @@ import type { SearchResult, SearchResults } from '@/types/search';
 const { t } = useTranslations();
 
 /**
- * The header's global search (Figma 389:1679): searches orders, customers and
- * inventory (by name or SKU) and navigates to the match on selection.
+ * The header's global search (Figma 389:1679): searches orders, customers,
+ * inventory (by name or SKU) and the cellar (wine lots and vessels), and
+ * navigates to the match on selection.
  *
  * Each category is gated server-side by capability and tenant module (see
  * Web\SearchController) and simply omitted rather than erroring, so a member
@@ -24,7 +25,7 @@ const { t } = useTranslations();
  * type-to-filter control — this one differs by fetching its own options from
  * the server instead of filtering a fixed list.
  */
-const EMPTY: SearchResults = { orders: [], customers: [], inventory: [] };
+const EMPTY: SearchResults = { orders: [], customers: [], inventory: [], cellar: [] };
 
 const anchor = ref<HTMLElement | null>(null);
 const input = ref<HTMLInputElement | null>(null);
@@ -38,7 +39,7 @@ const activeIndex = ref(0);
 const listId = useId();
 
 /** Same three categories, in render order, joined for O(1) keyboard-nav lookups. */
-const flat = computed<SearchResult[]>(() => [...results.value.orders, ...results.value.customers, ...results.value.inventory]);
+const flat = computed<SearchResult[]>(() => [...results.value.orders, ...results.value.customers, ...results.value.inventory, ...results.value.cellar]);
 
 /** Grouped for the dropdown, with each item's index into `flat` attached. */
 const groups = computed(() => {
@@ -49,6 +50,7 @@ const groups = computed(() => {
             { label: t('Orders'), items: results.value.orders },
             { label: t('Customers'), items: results.value.customers },
             { label: t('Inventory'), items: results.value.inventory },
+            { label: t('Cellar'), items: results.value.cellar },
         ] satisfies { label: string; items: SearchResult[] }[]
     )
         .filter((group) => group.items.length > 0)

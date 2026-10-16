@@ -214,6 +214,22 @@ class WebCellarLotsAndVesselsTest extends TestCase
         });
     }
 
+    public function test_record_drawer_options_list_lots_with_vessels_products_and_destinations(): void
+    {
+        $this->inTenant(fn () => EnologicalProduct::create(['name' => 'Bentonite', 'category' => 'FINING', 'unit' => 'g', 'current_stock' => '100.000']));
+
+        $this->web('GET', '/cellar/record/options', headers: ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('data.lots.0.name', 'Plavac')
+            ->assertJsonPath('data.lots.0.vessels.0.name', 'T1')
+            ->assertJsonPath('data.products.0.name', 'Bentonite')
+            ->assertJsonCount(2, 'data.vessels')
+            ->assertJsonStructure(['data' => ['inventory_items']]);
+
+        $sales = $this->createMember($this->tenant, [TenantRole::Sales]);
+        $this->web('GET', '/cellar/record/options', as: $sales, headers: ['Accept' => 'application/json'])->assertForbidden();
+    }
+
     public function test_every_lot_write_from_the_lot_page(): void
     {
         $id = $this->lot->getKey();

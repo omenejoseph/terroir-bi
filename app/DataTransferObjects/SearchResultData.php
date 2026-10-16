@@ -7,6 +7,8 @@ namespace App\DataTransferObjects;
 use App\Models\Customer;
 use App\Models\InventoryItem;
 use App\Models\Order;
+use App\Models\Vessel;
+use App\Models\WineLot;
 use Illuminate\Contracts\Support\Arrayable;
 use JsonSerializable;
 
@@ -45,6 +47,26 @@ final class SearchResultData implements Arrayable, JsonSerializable
             title: $customer->company_name,
             subtitle: $customer->contact_name ?? $customer->email ?? '',
             url: '/customers/'.$customer->getKey(),
+        );
+    }
+
+    public static function fromWineLot(WineLot $lot): self
+    {
+        return new self(
+            id: $lot->getKey(),
+            title: $lot->name,
+            subtitle: implode(' · ', array_filter([$lot->lot_number, $lot->grape_variety, $lot->vintage])),
+            url: '/cellar/lots/'.$lot->getKey(),
+        );
+    }
+
+    public static function fromVessel(Vessel $vessel): self
+    {
+        return new self(
+            id: $vessel->getKey(),
+            title: $vessel->name,
+            subtitle: implode(' · ', array_filter([$vessel->room, rtrim(rtrim((string) $vessel->capacity_liters, '0'), '.').' L'])),
+            url: '/cellar/vessels/'.$vessel->getKey(),
         );
     }
 

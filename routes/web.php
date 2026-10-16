@@ -15,6 +15,7 @@ use App\Http\Controllers\Web\Cellar\CellarController;
 use App\Http\Controllers\Web\Cellar\CellarSo2Controller;
 use App\Http\Controllers\Web\Cellar\EnologicalProductController;
 use App\Http\Controllers\Web\Cellar\ProtocolController;
+use App\Http\Controllers\Web\Cellar\RecordOptionsController;
 use App\Http\Controllers\Web\Cellar\TastingReportController;
 use App\Http\Controllers\Web\Cellar\VesselController;
 use App\Http\Controllers\Web\Cellar\WineLotController;
@@ -431,6 +432,7 @@ Route::middleware('tenant.web')->group(function () {
     });
 
     Route::middleware('can:cellar.manage')->group(function () {
+        Route::get('cellar/record/options', RecordOptionsController::class)->name('cellar.record.options');
         Route::post('cellar/activities', [CellarActivityController::class, 'store'])->name('cellar.activities.store');
         Route::post('cellar/activities/{activity}/complete', [CellarActivityController::class, 'complete'])->name('cellar.activities.complete');
         Route::post('cellar/activities/{activity}/skip', [CellarActivityController::class, 'skip'])->name('cellar.activities.skip');

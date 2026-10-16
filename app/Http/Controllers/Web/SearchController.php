@@ -45,6 +45,7 @@ class SearchController extends Controller
             $this->allowed('orders', 'orders.view', $modules) ? 'orders' : null,
             $this->allowed('customers', 'customers.view', $modules) ? 'customers' : null,
             $this->allowed('inventory', 'inventory.view', $modules) ? 'inventory' : null,
+            $this->allowed('cellar', 'cellar.view', $modules) ? 'cellar' : null,
         ]));
 
         return response()->json($query->search($term, $categories)->toArray());

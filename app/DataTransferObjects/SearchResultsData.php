@@ -21,11 +21,13 @@ final class SearchResultsData implements Arrayable, JsonSerializable
      * @param  list<SearchResultData>  $orders
      * @param  list<SearchResultData>  $customers
      * @param  list<SearchResultData>  $inventory
+     * @param  list<SearchResultData>  $cellar  wine lots and vessels
      */
     public function __construct(
         public readonly array $orders = [],
         public readonly array $customers = [],
         public readonly array $inventory = [],
+        public readonly array $cellar = [],
     ) {}
 
     /**
@@ -33,6 +35,7 @@ final class SearchResultsData implements Arrayable, JsonSerializable
      *     orders: list<array{id: string, title: string, subtitle: string, url: string}>,
      *     customers: list<array{id: string, title: string, subtitle: string, url: string}>,
      *     inventory: list<array{id: string, title: string, subtitle: string, url: string}>,
+     *     cellar: list<array{id: string, title: string, subtitle: string, url: string}>,
      * }
      */
     public function toArray(): array
@@ -41,6 +44,7 @@ final class SearchResultsData implements Arrayable, JsonSerializable
             'orders' => array_map(fn (SearchResultData $result): array => $result->toArray(), $this->orders),
             'customers' => array_map(fn (SearchResultData $result): array => $result->toArray(), $this->customers),
             'inventory' => array_map(fn (SearchResultData $result): array => $result->toArray(), $this->inventory),
+            'cellar' => array_map(fn (SearchResultData $result): array => $result->toArray(), $this->cellar),
         ];
     }
 

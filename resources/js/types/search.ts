@@ -14,4 +14,6 @@ export interface SearchResults {
     orders: SearchResult[];
     customers: SearchResult[];
     inventory: SearchResult[];
+    /** Wine lots and vessels. */
+    cellar: SearchResult[];
 }

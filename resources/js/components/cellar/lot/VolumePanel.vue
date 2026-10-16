@@ -19,7 +19,7 @@ import type { ComboboxOption } from '@/types/ui';
  * - assign: put unallocated wine into a vessel (capped at the vessel's room);
  * - blend-in: pull wine from another lot's vessel into one of this lot's.
  */
-const props = defineProps<{ open: boolean; mode: 'adjust' | 'assign' | 'blend-in'; lot: LotRef; vessels: Vessel[]; vesselId?: string | null }>();
+const props = defineProps<{ open: boolean; mode: 'adjust' | 'assign' | 'blend-in'; lot: LotRef; vessels: (Pick<Vessel, 'id' | 'name' | 'room' | 'capacity_liters' | 'current_volume'> & { lots?: Vessel['lots'] })[]; vesselId?: string | null }>();
 const emit = defineEmits<{ close: []; saved: [] }>();
 
 const { t } = useTranslations();

@@ -13,6 +13,8 @@ use App\Models\Order;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\Vessel;
+use App\Models\WineLot;
 use App\Services\Auth\ActiveTenantSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\InteractsWithTenancy;
@@ -33,6 +35,8 @@ class GlobalSearchTest extends TestCase
             'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false,
         ]);
         InventoryItem::create(['name' => 'Rivaljski Plavac', 'sku' => 'RIVA-PLV', 'category' => 'FINISHED', 'unit' => 'bottles']);
+        WineLot::create(['lot_number' => 'LOT-RIVA', 'name' => 'Riva Plavac', 'grape_variety' => 'Plavac', 'vintage' => '2026', 'initial_volume' => '100.000', 'current_volume' => '100.000']);
+        Vessel::create(['name' => 'RIVA-T1', 'type' => 'TANK', 'capacity_liters' => '1000.000', 'room' => 'Hall']);
 
         $this->forgetTenant();
     }
@@ -57,7 +61,12 @@ class GlobalSearchTest extends TestCase
             ->assertOk()
             ->assertJsonPath('orders.0.title', 'RIVA-1')
             ->assertJsonPath('customers.0.title', 'Konoba Rivalja')
-            ->assertJsonPath('inventory.0.title', 'Rivaljski Plavac');
+            ->assertJsonPath('inventory.0.title', 'Rivaljski Plavac')
+            // Cellar: lots (by number, name or grape) first, then vessels by name.
+            ->assertJsonPath('cellar.0.title', 'Riva Plavac')
+            ->assertJsonPath('cellar.0.url', fn (string $url): bool => str_starts_with($url, '/cellar/lots/'))
+            ->assertJsonPath('cellar.1.title', 'RIVA-T1')
+            ->assertJsonPath('cellar.1.subtitle', 'Hall · 1000 L');
     }
 
     public function test_category_without_capability_is_omitted_not_forbidden(): void
@@ -70,7 +79,7 @@ class GlobalSearchTest extends TestCase
 
         $this->getJson('/search?q=riva')
             ->assertOk()
-            ->assertExactJson(['orders' => [], 'customers' => [], 'inventory' => []]);
+            ->assertExactJson(['orders' => [], 'customers' => [], 'inventory' => [], 'cellar' => []]);
     }
 
     public function test_category_missing_from_plan_is_omitted(): void
@@ -85,7 +94,8 @@ class GlobalSearchTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'orders')
             ->assertJsonCount(1, 'customers')
-            ->assertJsonPath('inventory', []);
+            ->assertJsonPath('inventory', [])
+            ->assertJsonPath('cellar', []);
     }
 
     public function test_short_query_returns_everything_empty(): void
@@ -94,7 +104,7 @@ class GlobalSearchTest extends TestCase
 
         $this->getJson('/search?q=r')
             ->assertOk()
-            ->assertExactJson(['orders' => [], 'customers' => [], 'inventory' => []]);
+            ->assertExactJson(['orders' => [], 'customers' => [], 'inventory' => [], 'cellar' => []]);
     }
 
     public function test_results_are_scoped_to_the_current_tenant(): void

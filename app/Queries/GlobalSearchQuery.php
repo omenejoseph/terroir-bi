@@ -9,6 +9,8 @@ use App\DataTransferObjects\SearchResultsData;
 use App\Models\Customer;
 use App\Models\InventoryItem;
 use App\Models\Order;
+use App\Models\Vessel;
+use App\Models\WineLot;
 
 /**
  * The header's global search (Figma 389:1679): a handful of top matches per
@@ -24,10 +26,11 @@ class GlobalSearchQuery
         private readonly ListOrdersQuery $orders,
         private readonly ListCustomersQuery $customers,
         private readonly ListInventoryItemsQuery $inventory,
+        private readonly ListWineLotsQuery $lots,
     ) {}
 
     /**
-     * @param  list<string>  $categories  Which of orders/customers/inventory to
+     * @param  list<string>  $categories  Which of orders/customers/inventory/cellar to
      *                                    search — the controller passes only
      *                                    what the member's capabilities and the
      *                                    tenant's plan modules both allow.
@@ -38,6 +41,7 @@ class GlobalSearchQuery
             orders: in_array('orders', $categories, true) ? $this->searchOrders($term) : [],
             customers: in_array('customers', $categories, true) ? $this->searchCustomers($term) : [],
             inventory: in_array('inventory', $categories, true) ? $this->searchInventory($term) : [],
+            cellar: in_array('cellar', $categories, true) ? $this->searchCellar($term) : [],
         );
     }
 
@@ -61,6 +65,29 @@ class GlobalSearchQuery
             ->get()
             ->map(fn (Customer $customer): SearchResultData => SearchResultData::fromCustomer($customer))
             ->all());
+    }
+
+    /**
+     * Wine lots (the lots list's own search: number, name, grape), then vessels by name.
+     *
+     * @return list<SearchResultData>
+     */
+    private function searchCellar(string $term): array
+    {
+        $lots = $this->lots->build(['search' => $term])
+            ->orderByDesc('vintage')
+            ->limit(self::LIMIT)
+            ->get()
+            ->map(fn (WineLot $lot): SearchResultData => SearchResultData::fromWineLot($lot));
+        $vessels = Vessel::query()
+            ->where('is_active', true)
+            ->where('name', 'like', '%'.$term.'%')
+            ->orderBy('name')
+            ->limit(self::LIMIT)
+            ->get()
+            ->map(fn (Vessel $vessel): SearchResultData => SearchResultData::fromVessel($vessel));
+
+        return [...$lots->values()->all(), ...$vessels->values()->all()];
     }
 
     /** @return list<SearchResultData> */

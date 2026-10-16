@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 
 import Button from '@/components/ui/Button.vue';
 import FormField from '@/components/ui/FormField.vue';
@@ -9,7 +9,7 @@ import Select from '@/components/ui/Select.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import Textarea from '@/components/ui/Textarea.vue';
 import { useTranslations } from '@/composables/useTranslations';
-import { ANALYSIS_FIELDS, parseDecimal } from '@/lib/cellar';
+import { ANALYSIS_FIELDS, WINE_TYPE_LABELS, molecularSo2, parseDecimal, so2ReferenceTarget } from '@/lib/cellar';
 import type { AnalysisParam, AnalysisRow, LotRef } from '@/types/cellar';
 
 /**
@@ -58,6 +58,15 @@ watch(() => values.value.brix, (v) => {
 });
 
 const vesselOptions = computed(() => [{ value: '', label: t('Whole lot') }, ...props.lot.vessels.map((v) => ({ value: v.vessel_id, label: v.vessel_name ?? '—' }))]);
+/** A free-SO₂ reading below the wine's reference target says so, and links to planning the correction. */
+const so2Hint = computed(() => {
+    const free = parseDecimal(values.value.free_so2);
+    if (free === null || props.record || props.lot.wine_type === undefined) return null;
+    const target = so2ReferenceTarget(props.lot.wine_type);
+    if (free >= target) return null;
+
+    return { free, target, molecular: molecularSo2(free, parseDecimal(values.value.ph)) };
+});
 const err = (key: string): string | undefined => (form.errors as Record<string, string | undefined>)[key];
 
 function submit(): void {
@@ -85,6 +94,13 @@ function submit(): void {
                     <Input :id="id" :invalid="invalid" v-model="values[f.key]" inputmode="decimal" />
                 </FormField>
                 <FormField v-slot="{ id, invalid }" :label="t('Baumé')"><Input :id="id" :invalid="invalid" v-model="baume" inputmode="decimal" @input="fromBaume" /></FormField>
+            </div>
+            <div v-if="so2Hint" class="flex flex-col gap-1 bg-tag-orange px-3 py-2 text-xs text-tag-orange-foreground" role="status">
+                <p>
+                    {{ t('Free SO₂ :free is below the :type target of :target mg/L.', { free: so2Hint.free, type: t(WINE_TYPE_LABELS[lot.wine_type as keyof typeof WINE_TYPE_LABELS] ?? 'wine').toLowerCase(), target: so2Hint.target }) }}
+                    <template v-if="so2Hint.molecular !== null">{{ t('Molecular :m.', { m: so2Hint.molecular }) }}</template>
+                </p>
+                <Link :href="`/cellar/so2?lots=${lot.id}`" class="font-medium underline underline-offset-2">{{ t('Plan SO₂ for this wine →') }}</Link>
             </div>
             <FormField v-slot="{ id, invalid }" :label="t('Note')" :error="form.errors.note"><Textarea :id="id" :invalid="invalid" v-model="form.note" :rows="2" /></FormField>
         </div>
