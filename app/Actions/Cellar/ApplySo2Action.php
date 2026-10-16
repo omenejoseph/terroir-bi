@@ -45,7 +45,7 @@ class ApplySo2Action
                 'name' => $product->name,
                 'category' => $product->category,
                 'unit' => $product->unit,
-                'cost_per_unit' => $product->cost_per_unit?->getMinorAmount(),
+                'cost_per_unit' => $product->cost_per_unit?->minorFloat(),
                 'enological_product_id' => $product->getKey(),
                 'lots' => array_map(fn (array $line): array => [
                     'wine_lot_id' => $line['wine_lot_id'],

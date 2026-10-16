@@ -103,7 +103,7 @@ async function removeRecord(url: string, title: string): Promise<void> {
     <AppLayout :title="v.name">
         <div class="flex flex-col gap-5">
             <Link href="/cellar" class="inline-flex w-fit items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft class="size-3.5" /> {{ t('Cellar') }}</Link>
-            <PageHeader :title="v.name" :description="[t(VESSEL_TYPE_LABELS[v.type] ?? v.type), v.material, v.room, v.location].filter(Boolean).join(' · ')">
+            <PageHeader :title="v.name" :description="[...new Set([t(VESSEL_TYPE_LABELS[v.type] ?? v.type), v.material, v.room, v.location].filter(Boolean))].join(' · ')">
                 <template #actions>
                     <span v-if="v.is_faulty" class="inline-flex items-center gap-1 bg-tag-red px-2 py-0.5 text-[11px] text-tag-red-foreground"><AlertTriangle class="size-3" /> {{ t('Faulty') }}</span>
                     <Button v-if="canManage" size="sm" variant="outline" @click="panel = 'edit'"><Pencil class="size-3.5" /> {{ t('Edit') }}</Button>
@@ -129,8 +129,9 @@ async function removeRecord(url: string, title: string): Promise<void> {
                 <Card class="flex flex-col gap-2 p-4 text-sm">
                     <SectionHeader :title="t('Contents')" />
                     <div v-for="c in contents" :key="c.vessel_lot_id" class="flex items-center justify-between border-b border-border py-2 last:border-0">
-                        <Link :href="`/cellar/lots/${c.wine_lot_id}?vessel=${v.id}`" class="inline-flex items-center gap-1 font-medium hover:underline">
-                            {{ c.lot?.name }} <span class="text-xs font-normal text-muted-foreground">{{ c.lot?.vintage }}</span> <ExternalLink class="size-3" />
+                        <Link :href="`/cellar/lots/${c.wine_lot_id}?vessel=${v.id}`" class="flex flex-col hover:underline">
+                            <span class="inline-flex items-center gap-1 font-medium">{{ c.lot?.name }} <ExternalLink class="size-3" /></span>
+                            <span class="text-xs text-muted-foreground">{{ [c.lot?.lot_number, c.lot?.grape_variety].filter(Boolean).join(' · ') }}</span>
                         </Link>
                         <span class="tabular-nums">{{ qty(c.volume) }} L</span>
                     </div>

@@ -26,7 +26,7 @@ class BulkAdditionsRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'unit' => ['required', 'string', 'max:50'],
             'category' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'cost_per_unit' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'cost_per_unit' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'note' => ['sometimes', 'nullable', 'string'],
             'enological_product_id' => [
                 'sometimes', 'nullable', 'string',

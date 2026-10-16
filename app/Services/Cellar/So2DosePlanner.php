@@ -84,7 +84,7 @@ class So2DosePlanner
 
             $quantity = Quantity::normalize((string) $dose['quantity']);
             $total = Quantity::add($total, $quantity);
-            $lineCost = $product->cost_per_unit !== null ? (int) round($product->cost_per_unit->getMinorAmount() * $dose['quantity']) : null;
+            $lineCost = $product->cost_per_unit?->totalFor($dose['quantity']);
             if ($lineCost !== null && $cost !== null) {
                 $cost += $lineCost;
             }

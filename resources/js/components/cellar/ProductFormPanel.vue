@@ -13,6 +13,7 @@ import Textarea from '@/components/ui/Textarea.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import { parseDecimal, qty } from '@/lib/cellar';
+import { unitPriceToMinor } from '@/lib/money';
 import type { EnologicalProduct } from '@/types/cellar';
 import type { ComboboxOption } from '@/types/ui';
 
@@ -103,7 +104,7 @@ function submit(): void {
         so2_uplift_per_unit: parseDecimal(d.so2_uplift_per_unit),
         is_active: d.is_active,
         notes: d.notes || null,
-        ...(finance.value ? { cost_per_unit: parseDecimal(d.cost) === null ? null : Math.round((parseDecimal(d.cost) ?? 0) * 100) } : {}),
+        ...(finance.value ? { cost_per_unit: parseDecimal(d.cost) === null ? null : unitPriceToMinor(parseDecimal(d.cost) ?? 0) } : {}),
         ...(props.product ? {} : { current_stock: parseDecimal(d.current_stock) ?? 0 }),
     }));
     if (props.product) form.patch(`/cellar/products/${props.product.id}`, { preserveScroll: true, onSuccess: () => emit('close') });

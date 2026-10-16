@@ -27,7 +27,7 @@ class UpdateEnologicalProductRequest extends FormRequest
             'category' => ['sometimes', 'string', 'max:255'],
             'unit' => ['sometimes', 'string', 'max:50'],
             'min_stock' => ['sometimes', 'nullable', 'numeric', 'min:0'],
-            'cost_per_unit' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'cost_per_unit' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'manufacturer' => ['sometimes', 'nullable', 'string', 'max:255'],
             'packaging_size' => ['sometimes', 'nullable', 'string', 'max:255'],
             'so2_uplift_per_unit' => ['sometimes', 'nullable', 'numeric', 'min:0'],

@@ -60,7 +60,7 @@ class CreateSo2RoundAction
                         'category' => 'SO2',
                         'unit' => $product->unit,
                         'quantity' => (float) $line['quantity'],
-                        'cost_per_unit' => $product->cost_per_unit?->getMinorAmount(),
+                        'cost_per_unit' => $product->cost_per_unit?->minorFloat(),
                         'target_note' => $line['note'],
                     ],
                 ];

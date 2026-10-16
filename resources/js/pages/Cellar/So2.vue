@@ -24,7 +24,7 @@ import { useTranslations } from '@/composables/useTranslations';
 import { LOT_STATUS_LABELS, SO2_STATUS_BG, SO2_STATUS_LABELS, SO2_STATUS_TONES, dayLabel, parseDecimal, qty, so2Status } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import { csrfHeader } from '@/lib/csrf';
-import { formatMoney } from '@/lib/money';
+import { formatMoney, formatUnitPrice } from '@/lib/money';
 import { copyText, so2ShareText } from '@/lib/so2Share';
 import type { MemberOption, So2Board, So2DosePlan, So2Lot, So2Status, So2Vessel } from '@/types/cellar';
 import type { SharedProps } from '@/types';
@@ -418,7 +418,7 @@ const summaryChips = computed(() =>
                         <Select :id="id" :invalid="invalid" v-model="productId" :options="productOptions" :placeholder="t('Select…')" />
                         <p v-if="product" class="text-[11px] text-muted-foreground">
                             {{ t('Stock') }}: {{ qty(product.current_stock) }} {{ product.unit }}
-                            <template v-if="product.cost_per_unit"> | {{ money(product.cost_per_unit.minor) }}/{{ product.unit }}</template>
+                            <template v-if="product.cost_per_unit"> | {{ formatUnitPrice(product.cost_per_unit.minor, currency) }}/{{ product.unit }}</template>
                         </p>
                     </FormField>
                     <FormField :label="doseMode === 'add' ? t('Set all to (+mg/L)') : t('Set all targets to (mg/L)')" :hint="t('Applies to the lots shown; edit per lot below.')">

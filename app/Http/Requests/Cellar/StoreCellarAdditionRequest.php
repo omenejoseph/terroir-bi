@@ -27,7 +27,7 @@ class StoreCellarAdditionRequest extends FormRequest
             'category' => ['sometimes', 'nullable', 'string', 'max:255'],
             'quantity' => ['required', 'numeric', 'gt:0'],
             'unit' => ['required', 'string', 'max:50'],
-            'cost_per_unit' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'cost_per_unit' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'total_cost' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'note' => ['sometimes', 'nullable', 'string'],
             'vessel_id' => [

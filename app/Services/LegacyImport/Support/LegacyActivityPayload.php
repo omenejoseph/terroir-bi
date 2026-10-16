@@ -36,7 +36,7 @@ final class LegacyActivityPayload
                 'category' => $p['category'] ?? null,
                 'unit' => (string) ($p['unit'] ?? 'g'),
                 'quantity' => $p['quantity'] ?? null,
-                'cost_per_unit' => Normalize::minorOrNull($p['costPerUnit'] ?? null),
+                'cost_per_unit' => is_numeric($c = Normalize::unitPriceOrNull($p['costPerUnit'] ?? null)) ? (float) $c : null,
                 'dose_per_hl' => $p['dosePerHl'] ?? null,
                 'target_note' => $p['targetNote'] ?? null,
             ],

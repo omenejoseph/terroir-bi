@@ -392,6 +392,11 @@ rules apply:
     CSV export is escaped.
 13. **Every cellar write is audited.** The prototype kept no audit trail (see Q).
 14. **Strings are translated.** Hard-coded Croatian strings move to `hr.json`.
+15. **Unit prices keep fractions of a cent.** Enological products are priced
+    per gram or millilitre (K₂S₂O₅ ≈ 0.006 €/g); product and addition unit
+    prices keep four decimals of a cent (`UnitPrice`), totals are whole cents.
+16. **Additions from stock are costed** at the product's price unless one is
+    given, so the lot's cost of goods includes them.
 
 ## Sign-off
 
@@ -400,5 +405,65 @@ rules apply:
 | Matrix reviewed | product | ⬜ |
 | Backend gaps closed (all BE ✅) | eng | ✅ 189 rows; 4 not applicable |
 | Screens shipped (all UI ✅) | eng | ✅ 173 rows; 20 need no screen |
-| Side-by-side walkthrough on imported tenant data | product + eng | ⬜ |
+| Side-by-side walkthrough on imported tenant data | product + eng | ✅ eng — 16 screens; 9 findings fixed, 6 differences kept (below) |
 | Phase 3 experience proposals approved | product | ⬜ |
+
+## Side-by-side walkthrough (slice 2.9)
+
+**Setup.** The old app (order-mgmt, `next build && next start`) ran on its demo
+database in Postgres 16, with a planned SO₂ round, an addition and an overdue
+process added for Today and Plan. That database was imported with
+`php artisan legacy:import` into a fresh terroir-bi tenant, and both apps were
+screenshotted screen by screen with Playwright on the same data. The paired
+screenshots are on the shareable matrix page.
+
+| Screen | Result |
+|---|---|
+| Cellar home | Match — 6 vessels, 3 active lots, 8650 L; same last analysis and addition per lot |
+| Today | Match — same 5 items, round 0/3, overdue item |
+| Plan | Fixed — assignee list (below) |
+| SO₂ | Match — same status counts, lots, free SO₂, days since |
+| Lot (active) | Fixed — latest analysis; grape table cost and total |
+| Lot (bottled) | Fixed — bottling run now imported |
+| Vessel | Fixed — header and contents text |
+| Blend | Match |
+| Bulk additions | Match (Ready lots also listed) |
+| Bulk analyses | Different by decision — grid + paste, AI photos deferred |
+| Tasting reports, report | Match |
+| Enological products | Fixed — inventory value 3,851.00 € in both |
+| Protocols | Match |
+| Analytics | Different — Needs SO₂ (below) |
+| Costs | Match — COGS 3.26 € in both |
+
+**Found and fixed** (each with a test):
+
+1. Legacy transfers with free-text types (`Pretok`, `Sljubljivanje`,
+   `Topping-up`) were skipped on import. They are now typed from their lots —
+   same lot = RACK, another lot = BLEND, a split label = SPLIT — and reported.
+2. Legacy bottling runs were not imported (and not listed as not-migrated).
+   They now import with their inventory item; with no record of which vessels
+   they drew from, reversing one returns the wine to the lot only.
+3. Enological unit prices below a cent were rounded to whole cents
+   (correctness fix 15).
+4. Additions from stock carried no cost (correctness fix 16).
+5. Lot detail lists came back in database order, so "Latest analysis" showed an
+   older reading on imported data. Every lot list is newest first.
+6. Assignee pickers (Plan, SO₂ rounds) offered suspended members — including
+   the import placeholder — and people without cellar access. They now list
+   active members whose roles grant `cellar.manage`.
+7. The lot's grape table gained the cost column and total row.
+8. The vessel header repeated room and location; contents repeated the vintage.
+9. "Blended from 1 source lots" reworded.
+
+**Differences kept on purpose:**
+
+- **Needs SO₂** reads 2, the old app 3. The old KPI counts only additions in
+  category `SULFITE`; the demo's SO₂ additions are `ENOLOGICAL`, so a lot
+  sulphited 7 days earlier was flagged. The new KPI recognises SO₂ products.
+- **SO₂ products** also include products named with a subscript "SO₂", which
+  the old filter missed.
+- **Bulk analysis** is a typed grid with paste; AI photo reading is deferred.
+- **Bulk additions** also lists Ready lots.
+- **Mark faulty** is a switch on the vessel's Details tab.
+- **Per-litre costs below a cent** show as 0,00 € (old: 0,0002 €); lot totals match.
+

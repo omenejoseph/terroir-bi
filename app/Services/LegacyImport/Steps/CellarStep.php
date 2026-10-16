@@ -34,7 +34,7 @@ class CellarStep extends AbstractStep
 
     public function dependsOn(): array
     {
-        return ['users', 'suppliers'];
+        return ['users', 'inventory', 'suppliers'];
     }
 
     public function run(ImportContext $ctx): void
@@ -50,6 +50,7 @@ class CellarStep extends AbstractStep
         $this->additions($ctx);
         $this->processes($ctx);
         $this->transfers($ctx);
+        $this->bottlings($ctx);
         $this->tastings($ctx);
         $this->checkVolumes($ctx);
     }
@@ -64,7 +65,7 @@ class CellarStep extends AbstractStep
                 'unit' => trim((string) $r->unit),
                 'current_stock' => Normalize::dec($r->currentStock, 3) ?? '0.000',
                 'min_stock' => Normalize::dec($r->minStock, 3),
-                'cost_per_unit' => Normalize::minorOrNull($r->costPerUnit),
+                'cost_per_unit' => Normalize::unitPriceOrNull($r->costPerUnit),
                 'manufacturer' => Normalize::str($r->manufacturer),
                 'packaging_size' => Normalize::str($r->packagingSize),
                 'so2_uplift_per_unit' => Normalize::dec($r->so2UpliftPerUnit, 4),
@@ -357,7 +358,7 @@ class CellarStep extends AbstractStep
                 'category' => Normalize::str($r->category),
                 'quantity' => Normalize::dec($r->quantity, 3),
                 'unit' => trim((string) $r->unit),
-                'cost_per_unit' => Normalize::minorOrNull($r->costPerUnit),
+                'cost_per_unit' => Normalize::unitPriceOrNull($r->costPerUnit),
                 'total_cost' => Normalize::minorOrNull($r->totalCost),
                 'note' => Normalize::str($r->note),
                 'created_at' => Normalize::date($r->createdAt),
@@ -398,12 +399,12 @@ class CellarStep extends AbstractStep
             $ctx->report->read('cellar_transfers');
             $from = $ctx->ids->get('WineLot', (string) $r->fromLotId);
             $to = $ctx->ids->get('WineLot', (string) $r->toLotId);
-            $type = CellarTransferType::tryFrom((string) $r->type);
-            if ($from === null || $to === null || $type === null) {
-                $ctx->report->skipped('cellar_transfers', "transfer {$r->id}: ".($type === null ? "unknown type '{$r->type}'" : 'lot not migrated'));
+            if ($from === null || $to === null) {
+                $ctx->report->skipped('cellar_transfers', "transfer {$r->id}: lot not migrated");
 
                 continue;
             }
+            $type = $this->transferType($ctx, (string) $r->id, (string) $r->type, $from === $to);
             $this->put($ctx, 'CellarTransfer', (string) $r->id, 'cellar_transfers', [
                 'from_lot_id' => $from,
                 'to_lot_id' => $to,
@@ -417,6 +418,56 @@ class CellarStep extends AbstractStep
                 'updated_at' => Normalize::date($r->createdAt),
             ]);
             $ctx->report->written('cellar_transfers');
+        }
+    }
+
+    /**
+     * The prototype stored the transfer type as free text, and its seed and voice assistant wrote
+     * labels such as "Pretok" (racking), "Sljubljivanje" (blending) or "Topping-up". What a
+     * transfer *is* follows from its lots — within one lot it's a rack, into another lot a blend —
+     * so an unrecognised label takes its type from the lot pair; only a split is read from the label.
+     */
+    private function transferType(ImportContext $ctx, string $id, string $raw, bool $sameLot): CellarTransferType
+    {
+        $type = CellarTransferType::tryFrom(strtoupper(trim($raw)));
+        if ($type !== null) {
+            return $type;
+        }
+        $type = in_array(mb_strtolower(trim($raw)), ['split', 'razdvajanje', 'podjela'], true)
+            ? CellarTransferType::Split
+            : ($sameLot ? CellarTransferType::Rack : CellarTransferType::Blend);
+        $ctx->report->warn('cellar', "transfer {$id}: type '{$raw}' imported as {$type->value}");
+
+        return $type;
+    }
+
+    /**
+     * Bottling runs. The prototype did not record which vessels a run drew from, so no
+     * bottling_vessels rows are written; reversing an imported run returns the wine to the lot only.
+     */
+    private function bottlings(ImportContext $ctx): void
+    {
+        foreach ($this->rows($ctx, 'Bottling') as $r) {
+            $ctx->report->read('bottlings');
+            $lot = $ctx->ids->get('WineLot', (string) $r->wineLotId);
+            if ($lot === null) {
+                $ctx->report->skipped('bottlings', "bottling {$r->id}: lot not migrated");
+
+                continue;
+            }
+            $this->put($ctx, 'Bottling', (string) $r->id, 'bottlings', [
+                'wine_lot_id' => $lot,
+                'inventory_item_id' => $r->inventoryItemId === null ? null : $ctx->ids->get('InventoryItem', (string) $r->inventoryItemId),
+                'created_by_id' => $ctx->userId((string) $r->createdById, 'cellar'),
+                'bottle_count' => (int) $r->bottleCount,
+                'bottle_volume_ml' => (int) ($r->bottleVolumeMl ?? 750),
+                'volume_used' => Normalize::dec($r->volumeUsed, 3),
+                'date' => Normalize::date($r->date),
+                'note' => Normalize::str($r->note),
+                'created_at' => Normalize::date($r->createdAt),
+                'updated_at' => Normalize::date($r->createdAt),
+            ]);
+            $ctx->report->written('bottlings');
         }
     }
 

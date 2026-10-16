@@ -969,7 +969,6 @@
     "Blend in": "Blend in",
     "Blend into lot": "Blend into lot",
     "Blended from": "Blended from",
-    "Blended from :n source lots": "Blended from :n source lots",
     "Bottle": "Bottle",
     "Bottle size (ml)": "Bottle size (ml)",
     "Bottled wines (:n)": "Bottled wines (:n)",
@@ -1460,5 +1459,7 @@
     "Gain": "Gain",
     "Transfer (RACK)": "Transfer (RACK)",
     "Transfer (BLEND)": "Transfer (BLEND)",
-    "Transfer (SPLIT)": "Transfer (SPLIT)"
+    "Transfer (SPLIT)": "Transfer (SPLIT)",
+    "Blend sources · :n": "Blend sources · :n",
+    "Price / kg": "Price / kg"
 }

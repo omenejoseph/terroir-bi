@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Services\Audit\Auditable;
-use App\Support\Money\Money;
-use App\Support\Money\MoneyCast;
+use App\Support\Money\UnitPrice;
+use App\Support\Money\UnitPriceCast;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +23,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $unit
  * @property string $current_stock
  * @property string|null $min_stock
- * @property Money|null $cost_per_unit
+ * @property UnitPrice|null $cost_per_unit
  * @property string|null $manufacturer
  * @property string|null $packaging_size
  * @property string|null $so2_uplift_per_unit
@@ -53,7 +53,7 @@ class EnologicalProduct extends Model
         return [
             'current_stock' => 'decimal:3',
             'min_stock' => 'decimal:3',
-            'cost_per_unit' => MoneyCast::class,
+            'cost_per_unit' => UnitPriceCast::class,
             'so2_uplift_per_unit' => 'decimal:4',
             'is_active' => 'boolean',
         ];

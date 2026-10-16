@@ -15,6 +15,7 @@ use App\Models\VesselLot;
 use App\Models\WineLot;
 use App\Models\WineLotGrape;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Collection;
 use JsonSerializable;
 
 /**
@@ -105,10 +106,10 @@ final class WineLotData implements Arrayable, JsonSerializable
                 'volume' => (string) $vl->volume,
             ])->all();
 
-        $payload['analyses'] = $lot->analyses
+        $payload['analyses'] = self::newestFirst($lot->analyses, 'date')
             ->map(fn (CellarAnalysis $a): array => $this->analysis($a))->all();
 
-        $payload['additions'] = $lot->additions
+        $payload['additions'] = self::newestFirst($lot->additions, 'created_at')
             ->map(fn (CellarAddition $a): array => [
                 'id' => $a->getKey(),
                 'name' => $a->name,
@@ -123,7 +124,7 @@ final class WineLotData implements Arrayable, JsonSerializable
                 'date' => $a->created_at?->toIso8601String(),
             ])->all();
 
-        $payload['processes'] = $lot->processes
+        $payload['processes'] = self::newestFirst($lot->processes, 'date')
             ->map(fn (CellarProcess $p): array => [
                 'id' => $p->getKey(),
                 'kind' => $p->kind,
@@ -134,7 +135,7 @@ final class WineLotData implements Arrayable, JsonSerializable
                 'date' => $p->date->toIso8601String(),
             ])->all();
 
-        $payload['tasting_notes'] = $lot->tastingNotes
+        $payload['tasting_notes'] = self::newestFirst($lot->tastingNotes, 'date')
             ->map(fn (CellarTastingNote $n): array => [
                 'id' => $n->getKey(),
                 'vessel_id' => $n->vessel_id,
@@ -176,7 +177,7 @@ final class WineLotData implements Arrayable, JsonSerializable
             ])->all()
             : [];
 
-        $payload['bottlings'] = $lot->bottlings
+        $payload['bottlings'] = self::newestFirst($lot->bottlings, 'date')
             ->map(fn (Bottling $b): array => [
                 'id' => $b->getKey(),
                 'bottle_count' => $b->bottle_count,
@@ -258,5 +259,19 @@ final class WineLotData implements Arrayable, JsonSerializable
     public function jsonSerialize(): array
     {
         return $this->toArray();
+    }
+
+    /**
+     * Relations load in no particular order; every list here is newest first (by its own date,
+     * then by when it was recorded), so "latest" is always element 0 for the API and the screens.
+     *
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Collection<int, TModel>  $rows
+     * @return Collection<int, TModel>
+     */
+    private static function newestFirst(Collection $rows, string $column): Collection
+    {
+        return $rows->sortBy([[$column, 'desc'], ['created_at', 'desc']])->values();
     }
 }

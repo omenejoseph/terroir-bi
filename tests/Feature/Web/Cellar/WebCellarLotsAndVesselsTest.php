@@ -175,6 +175,21 @@ class WebCellarLotsAndVesselsTest extends TestCase
         $this->web('GET', "/cellar/lots/{$this->lot->getKey()}", headers: $this->inertiaPartial('Cellar/Lots/Show', ['history', 'trace']))->assertOk()->assertJsonPath('props.trace.name', 'Plavac')->assertJsonStructure(['props' => ['history']]);
     }
 
+    public function test_lot_lists_are_newest_first_whatever_order_they_were_recorded_in(): void
+    {
+        // Imported history arrives in any order; "Latest analysis" is element 0 and must be the newest reading.
+        $this->inTenant(function (): void {
+            foreach (['2026-09-17' => 42, '2026-08-17' => 29, '2026-09-11' => 22] as $date => $free) {
+                CellarAnalysis::create(['wine_lot_id' => $this->lot->getKey(), 'date' => $date, 'free_so2' => $free, 'created_by_id' => $this->cellar->getKey()]);
+            }
+        });
+
+        $this->web('GET', "/cellar/lots/{$this->lot->getKey()}")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('lot.analyses.0.free_so2', '42.00')
+            ->where('lot.analyses.1.free_so2', '22.00')
+            ->where('lot.analyses.2.free_so2', '29.00'));
+    }
+
     public function test_every_lot_write_from_the_lot_page(): void
     {
         $id = $this->lot->getKey();

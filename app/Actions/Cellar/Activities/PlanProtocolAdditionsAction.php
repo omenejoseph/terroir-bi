@@ -84,7 +84,7 @@ class PlanProtocolAdditionsAction
                         'category' => 'Protocol',
                         'unit' => $product !== null ? $product->unit : 'g',
                         'quantity' => $qty,
-                        'cost_per_unit' => $product?->cost_per_unit?->getMinorAmount(),
+                        'cost_per_unit' => $product?->cost_per_unit?->minorFloat(),
                         'target_note' => implode(' · ', array_filter(["Protocol {$template->name}", $additive->stage])),
                     ],
                 ];

@@ -969,7 +969,6 @@
     "Blend in": "Dodaj kupažom",
     "Blend into lot": "Kupažiraj u lot",
     "Blended from": "Kupažirano iz",
-    "Blended from :n source lots": "Kupažirano iz izvornih lotova: :n",
     "Bottle": "Punjenje",
     "Bottle size (ml)": "Veličina boce (ml)",
     "Bottled wines (:n)": "Punjena vina (:n)",
@@ -1460,5 +1459,7 @@
     "Gain": "Dobitak",
     "Transfer (RACK)": "Pretok (unutar lota)",
     "Transfer (BLEND)": "Pretok (kupaža)",
-    "Transfer (SPLIT)": "Pretok (odvajanje)"
+    "Transfer (SPLIT)": "Pretok (odvajanje)",
+    "Blend sources · :n": "Izvori kupaže · :n",
+    "Price / kg": "Cijena / kg"
 }

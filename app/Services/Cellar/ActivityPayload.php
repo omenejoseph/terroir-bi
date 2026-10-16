@@ -70,7 +70,7 @@ class ActivityPayload
                 'quantity' => ['required', 'numeric', 'gt:0'],
                 'enological_product_id' => ['sometimes', 'nullable', 'string', Rule::exists('enological_products', 'id')->where('tenant_id', $tenantId)],
                 'category' => ['sometimes', 'nullable', 'string', 'max:255'],
-                'cost_per_unit' => ['sometimes', 'nullable', 'integer', 'min:0'],
+                'cost_per_unit' => ['sometimes', 'nullable', 'numeric', 'min:0'],
                 'dose_per_hl' => ['sometimes', 'nullable', 'numeric', 'gt:0'],
                 'target_note' => ['sometimes', 'nullable', 'string', 'max:255'],
             ],

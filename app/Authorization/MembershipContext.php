@@ -67,10 +67,18 @@ class MembershipContext implements Authorizer
 
     public function can(string $capability): bool
     {
-        $roles = $this->roles();
+        return self::rolesCan($this->roles(), $capability);
+    }
 
+    /**
+     * Whether a set of roles grants a capability — the same rule as can(), for any member.
+     *
+     * @param  array<int, TenantRole>  $roles
+     */
+    public static function rolesCan(array $roles, string $capability): bool
+    {
         // ADMIN's wildcard is never revoked; everyone else loses a capability a held role revokes.
-        if (! $this->hasRole(TenantRole::Admin)) {
+        if (! in_array(TenantRole::Admin, $roles, true)) {
             foreach (RoleCapabilities::revokedBy()[$capability] ?? [] as $revoking) {
                 if (in_array($revoking, $roles, true)) {
                     return false;

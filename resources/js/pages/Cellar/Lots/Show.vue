@@ -144,6 +144,10 @@ const fill = computed(() => {
     return { now: Number(props.lot.current_volume), of: init, pct: init > 0 ? (Number(props.lot.current_volume) / init) * 100 : 0, label: t('of :n L initial', { n: qty(init) }) };
 });
 
+const grapeTotals = computed(() => ({
+    kg: props.lot.grapes.reduce((n, g) => n + Number(g.weight_kg ?? 0), 0),
+    cost: props.lot.grapes.reduce((n, g) => n + (g.price_per_kg && g.weight_kg ? Math.round(g.price_per_kg.minor * Number(g.weight_kg)) : 0), 0),
+}));
 const latest = computed(() => inFocus(props.lot.analyses)[0] ?? null);
 const SO2_KEYS: AnalysisParam[] = ['free_so2', 'total_so2'];
 const latestParams = computed(() => ANALYSIS_FIELDS.filter((f) => !SO2_KEYS.includes(f.key) && latest.value?.[f.key] !== null && latest.value?.[f.key] !== undefined));
@@ -195,7 +199,7 @@ const TIMELINE_ICONS: Record<string, unknown> = { vessel: Cylinder, addition: Dr
             </div>
 
             <div v-if="blendSources.length" class="border border-tag-violet-foreground/30 bg-tag-violet px-3 py-2 text-xs text-tag-violet-foreground">
-                <p class="font-medium">{{ t('Blended from :n source lots', { n: blendSources.length }) }}</p>
+                <p class="font-medium">{{ t('Blend sources · :n', { n: blendSources.length }) }}</p>
                 <p class="mt-1 flex flex-wrap gap-x-3">
                     <Link v-for="s in blendSources" :key="s.lot_id" :href="`/cellar/lots/${s.lot_id}`" class="underline-offset-2 hover:underline">
                         {{ s.name }} · {{ qty(s.liters) }} L ({{ Math.round((Number(s.liters) / blendSources.reduce((a, b) => a + Number(b.liters), 0)) * 100) }}%)
@@ -270,7 +274,8 @@ const TIMELINE_ICONS: Record<string, unknown> = { vessel: Cylinder, addition: Dr
                                 <th class="py-1 text-left font-medium">{{ t('Variety') }}</th>
                                 <th class="py-1 text-right font-medium">%</th>
                                 <th class="py-1 text-right font-medium">kg</th>
-                                <th v-if="finance" class="py-1 text-right font-medium">€/kg</th>
+                                <th v-if="finance" class="py-1 text-right font-medium">{{ t('Price / kg') }}</th>
+                                <th v-if="finance" class="py-1 text-right font-medium">{{ t('Cost') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -279,6 +284,14 @@ const TIMELINE_ICONS: Record<string, unknown> = { vessel: Cylinder, addition: Dr
                                 <td class="py-1 text-right tabular-nums">{{ qty(g.percentage) }}</td>
                                 <td class="py-1 text-right tabular-nums">{{ qty(g.weight_kg) }}</td>
                                 <td v-if="finance" class="py-1 text-right tabular-nums">{{ g.price_per_kg ? money(g.price_per_kg.minor) : '—' }}</td>
+                                <td v-if="finance" class="py-1 text-right tabular-nums">{{ g.price_per_kg && g.weight_kg ? money(Math.round(g.price_per_kg.minor * Number(g.weight_kg))) : '—' }}</td>
+                            </tr>
+                            <tr class="border-t border-border font-medium">
+                                <td class="py-1">{{ t('Total') }}</td>
+                                <td />
+                                <td class="py-1 text-right tabular-nums">{{ qty(grapeTotals.kg) }}</td>
+                                <td v-if="finance" />
+                                <td v-if="finance" class="py-1 text-right tabular-nums">{{ money(grapeTotals.cost) }}</td>
                             </tr>
                         </tbody>
                     </table>

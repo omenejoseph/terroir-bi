@@ -17,7 +17,7 @@ import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import { LOT_STATUS_LABELS, parseDecimal, qty } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
-import { formatMoney } from '@/lib/money';
+import { formatMoney, formatUnitPrice, unitPriceToMinor } from '@/lib/money';
 import type { LotOption, ProductOption } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { ComboboxOption } from '@/types/ui';
@@ -115,7 +115,7 @@ function amount(l: LotOption): number | null {
 
 const lines = computed(() => props.lots.filter((l) => selected.value.includes(l.id)).map((l) => ({ lot: l, quantity: amount(l) })));
 const total = computed(() => lines.value.reduce((n, x) => n + (x.quantity ?? 0), 0));
-const unitCost = computed(() => (product.value ? product.value.cost_per_unit : finance.value && parseDecimal(cost.value) !== null ? Math.round((parseDecimal(cost.value) ?? 0) * 100) : null));
+const unitCost = computed(() => (product.value ? product.value.cost_per_unit : finance.value && parseDecimal(cost.value) !== null ? unitPriceToMinor(parseDecimal(cost.value) ?? 0) : null));
 const totalCost = computed(() => (unitCost.value === null ? null : Math.round(unitCost.value * total.value)));
 const short = computed(() => (product.value ? total.value - Number(product.value.current_stock) : 0));
 
@@ -203,7 +203,7 @@ const STATUS = computed(() => [{ value: '', label: t('All statuses') }, ...['FER
                     </template>
                     <p v-else class="text-xs text-muted-foreground sm:col-span-3">
                         {{ product.category }} · {{ t('Stock') }}: {{ qty(product.current_stock) }} {{ product.unit }}
-                        <template v-if="finance && product.cost_per_unit !== null"> · {{ formatMoney(product.cost_per_unit, currency) }}/{{ product.unit }}</template>
+                        <template v-if="finance && product.cost_per_unit !== null"> · {{ formatUnitPrice(product.cost_per_unit, currency) }}/{{ product.unit }}</template>
                     </p>
                     <FormField v-slot="{ id }" :label="t('Note')" class="sm:col-span-3"><Input :id="id" v-model="note" /></FormField>
                 </Card>

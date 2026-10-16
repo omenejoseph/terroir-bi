@@ -58,7 +58,8 @@ class DraftEnologicalPurchaseOrdersAction
                     'description' => $i['product']->name,
                     'quantity' => $i['quantity'],
                     'unit' => $i['product']->unit,
-                    'unit_price' => $i['product']->cost_per_unit?->getMinorAmount() ?? 0,
+                    // Supplier order lines take whole cents; the draft is reviewed before it's sent.
+                    'unit_price' => $i['product']->cost_per_unit?->roundedMinor() ?? 0,
                 ], $items), $userId);
 
                 $created[] = ['id' => (string) $order->getKey(), 'order_number' => $order->order_number, 'supplier' => $supplier->company_name, 'lines' => count($items)];

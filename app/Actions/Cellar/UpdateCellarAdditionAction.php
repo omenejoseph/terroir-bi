@@ -8,6 +8,7 @@ use App\Enums\EnologicalStockSource;
 use App\Models\CellarAddition;
 use App\Models\EnologicalProduct;
 use App\Services\Cellar\EnologicalStockLedger;
+use App\Support\Money\UnitPrice;
 use App\Support\Quantity;
 use Illuminate\Support\Facades\DB;
 
@@ -37,12 +38,11 @@ class UpdateCellarAdditionAction
                 'name', 'category', 'quantity', 'unit', 'note', 'vessel_id', 'enological_product_id',
             ])));
             if (array_key_exists('cost_per_unit', $data)) {
-                $addition->setAttribute('cost_per_unit', $data['cost_per_unit'] !== null ? (int) $data['cost_per_unit'] : null);
+                $addition->setAttribute('cost_per_unit', $data['cost_per_unit'] !== null ? UnitPrice::normalize($data['cost_per_unit']) : null);
             }
             $addition->quantity = Quantity::normalize((string) $addition->quantity);
 
-            $unit = $addition->cost_per_unit?->getMinorAmount();
-            $addition->setAttribute('total_cost', $unit !== null ? (int) round($unit * (float) $addition->quantity) : null);
+            $addition->setAttribute('total_cost', $addition->cost_per_unit?->totalFor((string) $addition->quantity));
 
             if ($oldProductId !== null && EnologicalProduct::query()->whereKey($oldProductId)->exists()) {
                 $this->ledger->move($oldProductId, $oldQuantity, EnologicalStockSource::AdditionCorrected, $addition, 'Addition corrected — previous amount returned');

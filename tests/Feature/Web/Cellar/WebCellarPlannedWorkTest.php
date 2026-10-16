@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Web\Cellar;
 
+use App\Enums\MembershipStatus;
 use App\Enums\TenantRole;
 use App\Models\AuditLog;
 use App\Models\CellarActivity;
@@ -170,6 +171,10 @@ class WebCellarPlannedWorkTest extends TestCase
     public function test_plan_page_offers_pickers_and_a_round_plans_a_board_card(): void
     {
         [$lot, $a, $b] = $this->seedLot();
+        // Only people who can carry out cellar work are offered: not a suspended member (the
+        // legacy-import placeholder is one), not a member whose roles don't reach the cellar.
+        $this->createMember($this->tenant, [TenantRole::Cellar], status: MembershipStatus::Suspended);
+        $this->createMember($this->tenant, [TenantRole::Sales]);
 
         $this->web('GET', '/cellar/plan')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Cellar/Plan')
@@ -177,6 +182,7 @@ class WebCellarPlannedWorkTest extends TestCase
             ->where('lots.0.vessels.0.name', 'T1')
             ->has('vessels', 2)
             ->has('members', 1)
+            ->where('members.0.value', (string) $this->cellar->getKey())
             ->has('plan.open', 0));
 
         $this->web('POST', '/cellar/activities', [

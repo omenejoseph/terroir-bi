@@ -7,6 +7,7 @@ namespace App\Actions\Cellar;
 use App\Enums\EnologicalStockSource;
 use App\Models\EnologicalProduct;
 use App\Services\Cellar\EnologicalStockLedger;
+use App\Support\Money\UnitPrice;
 use App\Support\Quantity;
 use Illuminate\Support\Facades\DB;
 
@@ -116,7 +117,7 @@ class ImportEnologicalProductsAction
 
                         continue;
                     }
-                    $value = $field === 'cost_per_unit' ? (int) round((float) $number * 100) : $number;
+                    $value = $field === 'cost_per_unit' ? (float) UnitPrice::normalize((float) $number * 100) : $number;
                 }
                 $row[$field] = $value;
             }

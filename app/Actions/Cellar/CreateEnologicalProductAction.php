@@ -7,6 +7,7 @@ namespace App\Actions\Cellar;
 use App\Enums\EnologicalStockSource;
 use App\Models\EnologicalProduct;
 use App\Services\Cellar\EnologicalStockLedger;
+use App\Support\Money\UnitPrice;
 use Illuminate\Support\Facades\DB;
 
 /** Create an enological product (additive). */
@@ -26,7 +27,7 @@ class CreateEnologicalProductAction
                 'unit' => $data['unit'],
                 'current_stock' => 0,
                 'min_stock' => $data['min_stock'] ?? null,
-                'cost_per_unit' => isset($data['cost_per_unit']) ? (int) $data['cost_per_unit'] : null,
+                'cost_per_unit' => isset($data['cost_per_unit']) ? UnitPrice::normalize($data['cost_per_unit']) : null,
                 'manufacturer' => $data['manufacturer'] ?? null,
                 'packaging_size' => $data['packaging_size'] ?? null,
                 'so2_uplift_per_unit' => $data['so2_uplift_per_unit'] ?? null,

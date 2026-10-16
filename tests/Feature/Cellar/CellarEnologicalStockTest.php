@@ -92,6 +92,28 @@ class CellarEnologicalStockTest extends TestCase
         $this->inTenant(fn () => $this->assertSame(6, AuditLog::query()->where('action', 'enological_product.stock_adjusted')->count()));
     }
 
+    public function test_unit_prices_keep_fractions_of_a_cent_and_additions_from_stock_are_costed(): void
+    {
+        // Potassium metabisulphite at 0.006 €/g: whole-cent storage made it 0.01 €/g (+67 %).
+        $productId = $this->api('POST', 'enological-products', ['name' => 'K-metabisulfit', 'category' => 'SO2', 'unit' => 'g', 'current_stock' => 1000, 'cost_per_unit' => 0.6])
+            ->assertCreated()
+            ->assertJsonPath('data.cost_per_unit.minor', 0.6)
+            ->assertJsonPath('data.cost_per_unit.formatted', '0.006')
+            ->json('data.id');
+
+        $lot = $this->inTenant(fn () => WineLot::create(['lot_number' => 'LOT-2026-001', 'name' => 'Pošip', 'grape_variety' => 'Pošip', 'vintage' => '2026', 'initial_volume' => '1000.000', 'current_volume' => '1000.000']));
+
+        // No price sent: the addition is costed at the product's price — 150 g × 0.6 c = 90 c (whole cents gave 150 c).
+        $this->api('POST', "wine-lots/{$lot->getKey()}/additions", ['name' => 'K-metabisulfit', 'quantity' => 150, 'unit' => 'g', 'enological_product_id' => $productId])->assertCreated();
+        $addition = $this->inTenant(fn () => $lot->additions()->sole());
+        $this->assertSame('0.6000', $addition->cost_per_unit?->minor);
+        $this->assertSame(90, $addition->total_cost?->getMinorAmount());
+
+        // Correcting the amount re-totals at the same sub-cent price.
+        $this->api('PATCH', "wine-lots/{$lot->getKey()}/additions/{$addition->getKey()}", ['quantity' => 25])->assertOk();
+        $this->inTenant(fn () => $this->assertSame(15, $addition->fresh()?->total_cost?->getMinorAmount()));
+    }
+
     public function test_import_parses_tsv_upserts_by_name_and_books_stock_changes(): void
     {
         $this->inTenant(fn () => EnologicalProduct::create(['name' => 'Bentonite', 'category' => 'FINING', 'unit' => 'g', 'current_stock' => '100.000']));
@@ -100,7 +122,7 @@ class CellarEnologicalStockTest extends TestCase
 
         $dry = $this->api('POST', 'enological-products/import', ['text' => $text, 'dry_run' => true])->assertOk()->json('data');
         $this->assertCount(2, $dry['rows']);
-        $this->assertSame(2, $dry['rows'][0]['cost_per_unit']);
+        $this->assertEquals(2, $dry['rows'][0]['cost_per_unit']);
         $this->inTenant(fn () => $this->assertSame(1, EnologicalProduct::query()->count(), 'dry run saves nothing'));
 
         $this->api('POST', 'enological-products/import', ['text' => $text])->assertOk()

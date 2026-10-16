@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Queries;
 
+use App\Authorization\MembershipContext;
 use App\DataTransferObjects\VesselData;
+use App\Enums\MembershipStatus;
 use App\Enums\WineLotStatus;
 use App\Models\EnologicalProduct;
 use App\Models\Membership;
@@ -91,7 +93,7 @@ class CellarPickerOptions
                 'category' => $p->category,
                 'unit' => $p->unit,
                 'current_stock' => (string) $p->current_stock,
-                'cost_per_unit' => $p->cost_per_unit?->getMinorAmount(),
+                'cost_per_unit' => $p->cost_per_unit?->minorFloat(),
                 'so2_uplift_per_unit' => $p->so2_uplift_per_unit !== null ? (string) $p->so2_uplift_per_unit : null,
             ])
             ->all());
@@ -102,9 +104,14 @@ class CellarPickerOptions
      */
     public function members(): array
     {
+        // People who can carry out cellar work: active members whose roles grant cellar.manage
+        // (the prototype listed ADMIN and CELLAR users). Suspended members — including the
+        // legacy-import placeholder — are not offered.
         return array_values(Membership::query()
             ->with('user')
+            ->where('status', MembershipStatus::Active)
             ->get()
+            ->filter(fn (Membership $m): bool => MembershipContext::rolesCan(array_values($m->roles->all()), 'cellar.manage'))
             ->map(fn (Membership $m): ?array => $m->user instanceof User
                 ? ['value' => (string) $m->user->getKey(), 'label' => $m->user->fullName()]
                 : null)

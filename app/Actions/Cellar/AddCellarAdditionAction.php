@@ -6,8 +6,10 @@ namespace App\Actions\Cellar;
 
 use App\Enums\EnologicalStockSource;
 use App\Models\CellarAddition;
+use App\Models\EnologicalProduct;
 use App\Models\WineLot;
 use App\Services\Cellar\EnologicalStockLedger;
+use App\Support\Money\UnitPrice;
 use App\Support\Quantity;
 use Illuminate\Support\Facades\DB;
 
@@ -31,10 +33,16 @@ class AddCellarAdditionAction
         return DB::transaction(function () use ($lot, $data, $createdById): CellarAddition {
             $quantity = Quantity::normalize((string) $data['quantity']);
 
-            $costPerUnit = isset($data['cost_per_unit']) ? (int) $data['cost_per_unit'] : null;
+            // Unit prices may be fractions of a cent (UnitPrice); the total is rounded to whole cents.
+            // An addition drawn from stock is costed at the product's price unless one is given —
+            // as the prototype's form did — so the lot's cost of goods includes it.
+            $costPerUnit = isset($data['cost_per_unit']) ? UnitPrice::normalize($data['cost_per_unit']) : null;
+            if ($costPerUnit === null && ! empty($data['enological_product_id'])) {
+                $costPerUnit = EnologicalProduct::query()->whereKey((string) $data['enological_product_id'])->first()?->cost_per_unit?->minor;
+            }
             $totalCost = isset($data['total_cost'])
                 ? (int) $data['total_cost']
-                : ($costPerUnit !== null ? (int) round($costPerUnit * (float) $quantity) : null);
+                : ($costPerUnit !== null ? (int) round((float) $costPerUnit * (float) $quantity) : null);
 
             /** @var CellarAddition $addition */
             $addition = $lot->additions()->create([

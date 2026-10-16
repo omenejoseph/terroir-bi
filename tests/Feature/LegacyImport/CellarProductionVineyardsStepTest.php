@@ -112,8 +112,11 @@ class CellarProductionVineyardsStepTest extends TestCase
         $this->legacyInsert('CellarAddition', ['id' => 'ad1', 'name' => 'Berry Mix', 'quantity' => '11.25', 'unit' => 'mL', 'costPerUnit' => '0.0125', 'totalCost' => '0.14', 'createdAt' => '2026-03-01', 'wineLotId' => 'l1', 'createdById' => 'u1', 'enologicalProductId' => 'p1']);
         $this->legacyInsert('CellarProcess', ['id' => 'pr1', 'date' => '2026-03-02', 'kind' => 'Filtration', 'volume' => '500', 'createdAt' => '2026-03-02', 'wineLotId' => 'l1', 'createdById' => 'u1']);
         $this->legacyInsert('CellarTransfer', ['id' => 't1', 'type' => 'BLEND', 'volumeLiters' => '1000.5', 'createdAt' => '2026-03-03', 'fromLotId' => 'l1', 'toLotId' => 'l2', 'fromVesselId' => 'v1', 'createdById' => 'u1']);
-        $this->legacyInsert('CellarTransfer', ['id' => 't2', 'type' => 'POUR', 'volumeLiters' => '1', 'createdAt' => '2026-03-03', 'fromLotId' => 'l1', 'toLotId' => 'l2', 'createdById' => 'u1']);
+        $this->legacyInsert('CellarTransfer', ['id' => 't2', 'type' => 'Pretok', 'volumeLiters' => '1', 'createdAt' => '2026-03-03', 'fromLotId' => 'l1', 'toLotId' => 'l2', 'createdById' => 'u1']);
         $this->legacyInsert('CellarTransfer', ['id' => 't3', 'type' => 'RACK', 'volumeLiters' => '1', 'createdAt' => '2026-03-03', 'fromLotId' => 'l1', 'toLotId' => 'gone', 'createdById' => 'u1']);
+        $this->legacyInsert('CellarTransfer', ['id' => 't4', 'type' => 'POUR', 'volumeLiters' => '2', 'createdAt' => '2026-03-03', 'fromLotId' => 'l2', 'toLotId' => 'l2', 'createdById' => 'u1']);
+        $this->legacyInsert('Bottling', ['id' => 'b1', 'bottleCount' => '1200', 'bottleVolumeMl' => '750', 'volumeUsed' => '900.5', 'date' => '2026-05-01', 'createdAt' => '2026-05-01', 'wineLotId' => 'l1', 'createdById' => 'u1']);
+        $this->legacyInsert('Bottling', ['id' => 'b2', 'bottleCount' => '1', 'volumeUsed' => '1', 'date' => '2026-05-01', 'createdAt' => '2026-05-01', 'wineLotId' => 'gone', 'createdById' => 'u1']);
         $this->legacyInsert('TastingReport', ['id' => 'tr1', 'title' => 'Spring', 'date' => '2026-04-01', 'createdById' => 'u1', 'createdAt' => '2026-04-01']);
         $this->legacyInsert('CellarTastingNote', ['id' => 'tn1', 'date' => '2026-04-01', 'overall' => str_repeat('y', 300), 'score' => '91', 'createdAt' => '2026-04-01', 'wineLotId' => 'l1', 'createdById' => 'u1', 'tastingReportId' => 'tr1']);
 
@@ -133,15 +136,27 @@ class CellarProductionVineyardsStepTest extends TestCase
         $this->assertNotNull($a->vessel_id);
         $this->assertSame(DB::table('users')->where('email', 'legacy-import@bibich.invalid')->value('id'), $a->created_by_id);
 
-        $this->assertSame(['mL', 1], [DB::table('cellar_additions')->value('unit'), (int) DB::table('cellar_additions')->value('cost_per_unit')]);
+        // 0.0125 €/mL is 1.25 cents — kept, not rounded to a whole cent.
+        $this->assertSame(['mL', 1.25], [DB::table('cellar_additions')->value('unit'), (float) DB::table('cellar_additions')->value('cost_per_unit')]);
         $this->assertSame(14, (int) DB::table('cellar_additions')->value('total_cost'));
         $this->assertNotNull(DB::table('cellar_additions')->value('enological_product_id'));
         $this->assertSame('Filtration', DB::table('cellar_processes')->value('kind'));
 
-        $this->assertSame(1, DB::table('cellar_transfers')->count());
-        $this->assertSame(2, $ctx->report->counts()['cellar_transfers']['skipped']);
-        $this->assertNotNull(DB::table('cellar_transfers')->value('from_vessel_id'));
-        $this->assertNull(DB::table('cellar_transfers')->value('to_vessel_id'));
+        // Free-text legacy types: known labels map, unknown ones fall back to the lot pair.
+        $this->assertSame(3, DB::table('cellar_transfers')->count());
+        $this->assertSame(1, $ctx->report->counts()['cellar_transfers']['skipped']);
+        $this->assertSame(['BLEND' => 2, 'RACK' => 1], DB::table('cellar_transfers')->orderBy('type')->pluck('type')->countBy()->all());
+        $this->assertSame('BLEND', DB::table('cellar_transfers')->where('volume_liters', 1)->value('type'));  // "Pretok" l1 → l2
+        $this->assertSame('RACK', DB::table('cellar_transfers')->where('volume_liters', 2)->value('type'));   // "POUR" l2 → l2
+        $blend = DB::table('cellar_transfers')->where('volume_liters', 1000.5)->sole();
+        $this->assertNotNull($blend->from_vessel_id);
+        $this->assertNull($blend->to_vessel_id);
+        $this->assertTrue($this->warned($ctx, "type 'Pretok' imported as BLEND"));
+
+        $b = DB::table('bottlings')->sole();
+        $this->assertSame([1200, 750], [(int) $b->bottle_count, (int) $b->bottle_volume_ml]);
+        $this->assertEqualsWithDelta(900.5, (float) $b->volume_used, 0.001);
+        $this->assertSame(1, $ctx->report->counts()['bottlings']['skipped']);
 
         $this->assertSame(1, DB::table('tasting_reports')->count());
         $this->assertSame(255, mb_strlen((string) DB::table('cellar_tasting_notes')->value('overall')));
@@ -282,7 +297,7 @@ class CellarProductionVineyardsStepTest extends TestCase
         $payload = json_decode($c1->payload, true);
         $this->assertSame(DB::table('enological_products')->value('id'), $payload['enological_product_id']);
         $this->assertSame('K2S2O5', $payload['product_name']);
-        $this->assertSame(2, $payload['cost_per_unit']);
+        $this->assertEquals(2, $payload['cost_per_unit']);
         $this->assertSame(['quantity' => 6], $payload['applied']);
         $this->assertSame($round->id, $c1->round_id);
         $this->assertSame('2026-03-01', substr((string) $c1->planned_for, 0, 10));

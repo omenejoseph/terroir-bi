@@ -18,6 +18,7 @@ final class NotMigrated
         'CellarAddition', 'CellarProcess', 'CellarTransfer', 'TastingReport', 'CellarTastingNote', 'Board', 'WorkOrder',
         'ProductionPlan', 'ProductionPlanRow', 'VineyardParcel', 'PhenologyLog', 'CropEstimate', 'VineyardApplication',
         'GrapeContract', 'IntakeBooking', 'CustomerCategory', 'ProtocolAdditive', 'CellarActivity', 'CellarActivityRound',
+        'Bottling',
     ];
 
     /** First matching prefix wins. */

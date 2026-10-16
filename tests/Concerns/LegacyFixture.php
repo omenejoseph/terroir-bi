@@ -41,6 +41,7 @@ trait LegacyFixture
         'CellarAddition' => ['id', 'name', 'category', 'quantity', 'unit', 'costPerUnit', 'totalCost', 'note', 'createdAt', 'wineLotId', 'createdById', 'enologicalProductId'],
         'CellarProcess' => ['id', 'date', 'kind', 'note', 'volume', 'vesselId', 'wineLotId', 'createdAt', 'createdById'],
         'CellarTransfer' => ['id', 'type', 'volumeLiters', 'note', 'createdAt', 'fromLotId', 'toLotId', 'fromVesselId', 'toVesselId', 'createdById'],
+        'Bottling' => ['id', 'bottleCount', 'bottleVolumeMl', 'volumeUsed', 'date', 'note', 'createdAt', 'wineLotId', 'inventoryItemId', 'createdById'],
         'CellarTastingNote' => ['id', 'date', 'appearance', 'nose', 'palate', 'overall', 'score', 'note', 'createdAt', 'wineLotId', 'createdById', 'vesselId', 'tastingReportId'],
         'TastingReport' => ['id', 'title', 'date', 'note', 'createdById', 'createdAt'],
         'ProtocolAdditive' => ['id', 'templateId', 'enologicalProductId', 'name', 'dose', 'basis', 'stage', 'notes', 'sortOrder', 'createdAt'],

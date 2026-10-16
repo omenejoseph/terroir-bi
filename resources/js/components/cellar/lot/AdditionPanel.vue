@@ -14,6 +14,7 @@ import Textarea from '@/components/ui/Textarea.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import { parseDecimal, qty } from '@/lib/cellar';
+import { unitPriceToMinor } from '@/lib/money';
 import type { ProductOption, WineLotDetail } from '@/types/cellar';
 import type { ComboboxOption } from '@/types/ui';
 
@@ -103,7 +104,7 @@ function submit(): void {
         unit: d.unit,
         vessel_id: d.vessel_id || null,
         note: d.note || null,
-        ...(finance.value && !d.enological_product_id && parseDecimal(d.cost) !== null ? { cost_per_unit: Math.round((parseDecimal(d.cost) ?? 0) * 100) } : {}),
+        ...(finance.value && !d.enological_product_id && parseDecimal(d.cost) !== null ? { cost_per_unit: unitPriceToMinor(parseDecimal(d.cost) ?? 0) } : {}),
     }));
     const url = `/cellar/lots/${props.lot.id}/additions`;
     if (props.record) form.patch(`${url}/${props.record.id}`, { preserveScroll: true, onSuccess: () => emit('close') });

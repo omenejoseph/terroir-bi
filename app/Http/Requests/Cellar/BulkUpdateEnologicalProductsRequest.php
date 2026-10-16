@@ -30,7 +30,7 @@ class BulkUpdateEnologicalProductsRequest extends FormRequest
             'fields.category' => ['sometimes', 'string', 'max:255'],
             'fields.supplier_id' => ['sometimes', 'nullable', 'string', Rule::exists('suppliers', 'id')->where('tenant_id', $tenantId)],
             'fields.min_stock' => ['sometimes', 'nullable', 'numeric', 'min:0'],
-            'fields.cost_per_unit' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'fields.cost_per_unit' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'fields.is_active' => ['sometimes', 'boolean'],
             'fields.manufacturer' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];

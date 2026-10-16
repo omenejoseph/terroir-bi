@@ -84,7 +84,7 @@ class ProtocolNeedsQuery
             'product_name' => $product !== null ? $product->name : $additive->name,
             'unit' => $product !== null ? $product->unit : 'g',
             'current_stock' => $product !== null ? (string) $product->current_stock : '0.000',
-            'cost_per_unit' => $product?->cost_per_unit?->getMinorAmount(),
+            'cost_per_unit' => $product?->cost_per_unit?->minorFloat(),
             'supplier' => $product?->supplier !== null ? ['id' => $product->supplier->getKey(), 'name' => $product->supplier->company_name] : null,
             'total_needed' => 0.0,
             'deficit' => 0.0,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\LegacyImport\Support;
 
+use App\Support\Money\UnitPrice;
 use Carbon\CarbonImmutable;
 
 /** Coercions for the Prisma/TablePlus dump quirks ('' vs NULL, 't'/'f', float noise). */
@@ -47,6 +48,12 @@ final class Normalize
     public static function minorOrNull(mixed $v): ?int
     {
         return $v === null || $v === '' ? null : self::minor($v);
+    }
+
+    /** Major-unit unit price → minor units kept to a fraction of a cent (see App\Support\Money\UnitPrice). */
+    public static function unitPriceOrNull(mixed $v): ?string
+    {
+        return $v === null || $v === '' ? null : UnitPrice::normalize(((float) $v) * 100);
     }
 
     /** Prisma's bcryptjs `$2b$` → PHP-recognised `$2y$` (same algorithm, so Laravel won't rehash). */

@@ -63,6 +63,25 @@ export function formatMoney(minor: number, currency: string): string {
     });
 }
 
+/**
+ * A per-unit price that may be a fraction of a minor unit (App\Support\Money\UnitPrice):
+ * 0.6 cents per gram shows as "0,006 €", whole cents as usual ("1,10 €").
+ */
+export function formatUnitPrice(minor: number, currency: string): string {
+    const fractionDigits = ZERO_DECIMAL.has(currency.toUpperCase()) ? 0 : 2;
+
+    return formatCurrencyParts(minor / 10 ** fractionDigits, {
+        currency,
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits + 4,
+    });
+}
+
+/** Major units typed by a person → minor units kept to four decimals (a unit price, not a total). */
+export function unitPriceToMinor(major: number): number {
+    return Math.round(major * 1_000_000) / 10_000;
+}
+
 export function formatNumber(value: number, locale: string): string {
     return new Intl.NumberFormat(locale).format(value);
 }

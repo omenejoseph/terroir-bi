@@ -7,6 +7,8 @@ namespace App\Models;
 use App\Services\Audit\Auditable;
 use App\Support\Money\Money;
 use App\Support\Money\MoneyCast;
+use App\Support\Money\UnitPrice;
+use App\Support\Money\UnitPriceCast;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -24,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $category
  * @property string $quantity
  * @property string $unit
- * @property Money|null $cost_per_unit
+ * @property UnitPrice|null $cost_per_unit
  * @property Money|null $total_cost
  * @property string|null $note
  */
@@ -43,7 +45,7 @@ class CellarAddition extends Model
     {
         return [
             'quantity' => 'decimal:3',
-            'cost_per_unit' => MoneyCast::class,
+            'cost_per_unit' => UnitPriceCast::class,
             'total_cost' => MoneyCast::class,
         ];
     }

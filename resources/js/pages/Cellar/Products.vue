@@ -24,7 +24,7 @@ import { useTranslations } from '@/composables/useTranslations';
 import { parseDecimal, qty } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import { csrfHeader } from '@/lib/csrf';
-import { formatMoney } from '@/lib/money';
+import { formatMoney, formatUnitPrice } from '@/lib/money';
 import type { EnologicalProduct, ProtocolNeed } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { ComboboxOption, MenuItem, TabItem } from '@/types/ui';
@@ -224,7 +224,7 @@ function draftOrders(): void {
                                 <td class="px-2 py-1.5">{{ p.category }}</td>
                                 <td :class="cn('px-2 py-1.5 text-right tabular-nums', low(p) && 'font-semibold text-destructive')">{{ qty(p.current_stock) }} {{ p.unit }}</td>
                                 <td class="px-2 py-1.5 text-right tabular-nums text-muted-foreground">{{ p.min_stock ? qty(p.min_stock) : '—' }}</td>
-                                <td v-if="finance" class="px-2 py-1.5 text-right tabular-nums">{{ p.cost_per_unit ? `${money(p.cost_per_unit.minor)}/${p.unit}` : '—' }}</td>
+                                <td v-if="finance" class="px-2 py-1.5 text-right tabular-nums">{{ p.cost_per_unit ? `${formatUnitPrice(p.cost_per_unit.minor, currency)}/${p.unit}` : '—' }}</td>
                                 <td class="hidden px-2 py-1.5 md:table-cell">{{ supplierName(p.supplier_id) }}</td>
                                 <td class="px-2"><DropdownMenu v-if="canManage" :items="menu" @select="onMenu(p, $event)" /></td>
                             </tr>
