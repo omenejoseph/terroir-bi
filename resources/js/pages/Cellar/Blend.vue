@@ -18,7 +18,7 @@ import Tabs from '@/components/ui/Tabs.vue';
 import { confirmDialog } from '@/composables/useConfirm';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
-import { ANALYSIS_FIELDS, WINE_TYPE_LABELS, parseDecimal, qty } from '@/lib/cellar';
+import { ANALYSIS_FIELDS, WINE_TYPE_LABELS, lotLabel, parseDecimal, qty } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import { csrfHeader } from '@/lib/csrf';
 import { formatMoney } from '@/lib/money';
@@ -81,7 +81,7 @@ const projectionError = ref<string | null>(null);
 const lotPicker = computed<ComboboxOption[]>(() =>
     props.lots
         .filter((l) => ratios[l.id] === undefined)
-        .map((l) => ({ value: l.id, label: [l.name, l.vintage].filter(Boolean).join(' '), description: `${qty(l.current_volume)} L · ${l.vessels.map((v) => v.name).join(', ')}`, keywords: [l.lot_number, l.grape_variety ?? ''] })),
+        .map((l) => ({ value: l.id, label: lotLabel(l.name, l.vintage), description: `${qty(l.current_volume)} L · ${l.vessels.map((v) => v.name).join(', ')}`, keywords: [l.lot_number, l.grape_variety ?? ''] })),
 );
 const addLot = ref<string | null>(null);
 watch(addLot, (id) => {

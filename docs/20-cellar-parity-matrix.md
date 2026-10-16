@@ -410,7 +410,8 @@ rules apply:
 | Backend gaps closed (all BE ✅) | eng | ✅ 189 rows; 4 not applicable |
 | Screens shipped (all UI ✅) | eng | ✅ 173 rows; 20 need no screen |
 | Side-by-side walkthrough on imported tenant data | product + eng | ✅ eng — 16 screens; 9 findings fixed, 6 differences kept (below) |
-| Phase 3 experience proposals approved | product | ⬜ mocks ready for review: lot workspace, map actions, one Record flow, SO₂ by target, Today on a phone, blend workbench, alerts, undo |
+| Phase 3 experience proposals approved | product | ✅ all eight approved as mocked |
+| Phase 3 built (all eight proposals) | eng | ✅ `ae2e902`…`53f0aab` — see below; product walk-through pending |
 
 ## Side-by-side walkthrough (slice 2.9)
 
@@ -470,4 +471,21 @@ screenshots are on the shareable matrix page.
 - **Bulk additions** also lists Ready lots.
 - **Mark faulty** is a switch on the vessel's Details tab.
 - **Per-litre costs below a cent** show as 0,00 € (old: 0,0002 €); lot totals match.
+
+## Phase 3 — experience improvements (built)
+
+Each proposal was built as its own slice on top of the parity screens,
+with feature tests for every new endpoint, en/hr strings, and a Playwright
+pass at 1440 px and 390 px on the imported demo tenant.
+
+| # | Proposal | Commit | What shipped | Kept out / differs from the mock |
+|---|---|---|---|---|
+| 3.1 | Lot workspace | `ae2e902` | One page instead of nine tabs: vitals (volume, free/total and molecular SO₂ against target, pH · alc · VA, cost/L for finance, next planned task), an action bar, the journey feed with type filters and per-row Edit / Delete / Reverse, SO₂ sparkline, vessels, protocol; details, traceability and history in a "Lot details" panel; vessel switcher | — |
+| 3.2 | Map as the control surface | `4029882` | Select in view mode (shift/⌘-click, lasso, a Select toggle for touch) → bar: Record SO₂, Plan addition / readings, Blend these, Move wine, Assign wine; colour by SO₂ / wine / fill with a legend; badges show free SO₂ and days since. `?vessels=` / `?lots=` preselect on SO₂, Plan and Blend (tenant ids only) | — |
+| 3.3 | One Record flow | `da64bae` | Record drawer from anywhere (button or `R`): pick a vessel or lot, then Reading / Addition / Move / Process / Tasting / Volume; "save & record another" keeps the place. Low-SO₂ hint on readings links to SO₂. Global search finds lots and vessels | The drawer doesn't remember the last product and dose |
+| 3.4 | SO₂ by target level | `f6f33ef` | Target mode by default, rows prefilled from wine type and oak, below-target lots preselected; molecular now → after, total after against the EU limit, a stock bar, and a confirmation sheet listing every dose. The board row shows the lot's worst vessel | "Add a fixed amount" stays as the second mode |
+| 3.5 | Today on a phone | `9a09892` | Progress bar, walk order per room, readings open on the card with "Save · next", swipe left to skip / postpone, ticks saved at once and queued offline in the browser (409 = already settled, 422 shown on the card) | — |
+| 3.6 | Blend workbench | `cffb15e` | One bench: ratio sliders that rebalance, live projection against spec ranges with out-of-range messages, cost/L for finance, saved trials (new `blend_trials` table) to load or delete, a confirmation before executing; litres-by-vessel kept as the second mode | — |
+| 3.7 | Alerts where you work | `ef313f5` | "Needs attention" on the cellar home and each lot: fermentation-monitor alerts, low / unread SO₂, high VA and overdue tasks, most urgent first, each with one action (plan a reading — or "Reading planned · date" if it already is — plan SO₂, plan a warm/cool task, open Today); "Hide until tomorrow" per viewer | Informational alerts (MLF / fermentation complete) stay on Analytics |
+| 3.8 | Undo and confirmations | `53f0aab` | Deleting an addition, reading, process, tasting note or transfer happens at once with a 10 s Undo toast; undo re-runs the create Action (stock drawn again, wine moved again) with the original date and author, single-use, same person, 10 minutes, audited as `cellar.undo`. Reversing a bottling keeps its confirmation. Deleting a lot lists what goes (`GET cellar/lots/{lot}/delete-impact`) and asks for the lot number | Skipping or moving a task on Today has no Undo (it's queued offline; move it back from Plan) |
 

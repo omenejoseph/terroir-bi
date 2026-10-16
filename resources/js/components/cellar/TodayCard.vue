@@ -5,7 +5,7 @@ import { Check } from 'lucide-vue-next';
 import Input from '@/components/ui/Input.vue';
 import { type QueuedAction, useActivityQueue } from '@/composables/useActivityQueue';
 import { useTranslations } from '@/composables/useTranslations';
-import { ACTIVITY_ICONS, METRIC_LABELS, activityTitle, addDays, describeActivity, parseDecimal, qty } from '@/lib/cellar';
+import { ACTIVITY_ICONS, METRIC_LABELS, activityTitle, addDays, describeActivity, lotLabel, parseDecimal, qty } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import type { AnalysisParam, CellarActivity } from '@/types/cellar';
 
@@ -142,7 +142,7 @@ function skip(reason: 'not_needed' | 'other'): void {
                         v-if="a.vessel && a.wine_lot"
                         class="bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground"
                     >
-                        {{ [a.wine_lot.name, a.wine_lot.vintage].filter(Boolean).join(' ') }}
+                        {{ lotLabel(a.wine_lot.name, a.wine_lot.vintage) }}
                     </span>
                     <span v-if="a.overdue" class="bg-tag-orange px-1.5 py-0.5 text-[11px] font-medium text-tag-orange-foreground">
                         {{ t('overdue') }}

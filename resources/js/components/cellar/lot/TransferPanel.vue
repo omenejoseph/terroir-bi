@@ -11,7 +11,7 @@ import SidePanel from '@/components/ui/SidePanel.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import Textarea from '@/components/ui/Textarea.vue';
 import { useTranslations } from '@/composables/useTranslations';
-import { parseDecimal, qty } from '@/lib/cellar';
+import { lotLabel, parseDecimal, qty } from '@/lib/cellar';
 import type { LotOption, LotRef, Vessel } from '@/types/cellar';
 import type { ComboboxOption } from '@/types/ui';
 
@@ -41,7 +41,7 @@ const toVesselOptions = computed<ComboboxOption[]>(() =>
         .map((v) => ({ value: v.id, label: v.name, description: t(':free L free', { free: qty(Number(v.capacity_liters) - Number(v.current_volume)) }), keywords: [v.room ?? ''] })),
 );
 const lotOptions = computed<ComboboxOption[]>(() =>
-    props.lots.filter((l) => l.id !== props.lot.id).map((l) => ({ value: l.id, label: [l.name, l.vintage].filter(Boolean).join(' '), description: `${qty(l.current_volume)} L`, keywords: [l.lot_number] })),
+    props.lots.filter((l) => l.id !== props.lot.id).map((l) => ({ value: l.id, label: lotLabel(l.name, l.vintage), description: `${qty(l.current_volume)} L`, keywords: [l.lot_number] })),
 );
 const available = computed(() => props.lot.vessels.find((v) => v.vessel_id === form.from_vessel_id)?.volume ?? props.lot.current_volume);
 const err = (key: string): string | undefined => (form.errors as Record<string, string | undefined>)[key];

@@ -8,7 +8,7 @@ import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
 import Select from '@/components/ui/Select.vue';
 import { useTranslations } from '@/composables/useTranslations';
-import { ACTIVITY_LABELS, ACTIVITY_TYPES, METRIC_LABELS, PLANNER_METRICS, dayLabel, initials, parseDecimal, qty } from '@/lib/cellar';
+import { ACTIVITY_LABELS, ACTIVITY_TYPES, METRIC_LABELS, PLANNER_METRICS, dayLabel, initials, lotLabel, parseDecimal, qty } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import type { ActivityPayload, AnalysisParam, CellarActivityType, LotOption, MemberOption, ParcelOption, ProductOption, Vessel } from '@/types/cellar';
 import type { ComboboxOption } from '@/types/ui';
@@ -79,7 +79,7 @@ const filledVessels = computed(() => props.vessels.filter((v) => (v.lots ?? []).
 const lotOptions = computed<ComboboxOption[]>(() =>
     props.lots.map((l) => ({
         value: l.id,
-        label: [l.name, l.vintage].filter(Boolean).join(' '),
+        label: lotLabel(l.name, l.vintage),
         description: `${qty(l.current_volume)} L`,
         keywords: [l.lot_number, l.grape_variety ?? ''],
     })),

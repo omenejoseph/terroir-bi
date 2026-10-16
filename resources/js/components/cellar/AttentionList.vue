@@ -61,13 +61,14 @@ function act(item: CellarAttentionItem): void {
         <ul>
             <li v-for="item in visible" :key="item.key" class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-tag-orange-foreground/10 px-4 py-2.5 text-sm last:border-0">
                 <span :class="cn('size-2.5 shrink-0', SQUARE[item.severity])" :title="t(item.severity)" />
-                <Link v-if="showLot" :href="`/cellar/lots/${item.lot_id}`" class="w-44 shrink-0 truncate font-semibold hover:underline">{{ item.lot_name }}</Link>
-                <span class="min-w-0 flex-1">
+                <Link v-if="showLot" :href="`/cellar/lots/${item.lot_id}`" class="min-w-0 flex-1 truncate font-semibold hover:underline sm:w-44 sm:flex-none">{{ item.lot_name }}</Link>
+                <!-- On a phone the message takes its own line under the lot; on wider screens it sits beside it. -->
+                <span :class="cn('min-w-0', showLot ? 'basis-full pl-5.5 sm:basis-0 sm:flex-1 sm:pl-0' : 'flex-1')">
                     {{ item.message }}
                     <span v-if="item.suggestion" class="text-muted-foreground">{{ item.suggestion }}</span>
                 </span>
-                <Button v-if="item.action.href" size="sm" variant="outline" :href="item.action.href">{{ item.action.label }}</Button>
-                <Button v-else-if="item.action.post && canManage" size="sm" :disabled="busy === item.key" @click="act(item)">{{ item.action.label }}</Button>
+                <Button v-if="item.action.href" size="sm" variant="outline" :href="item.action.href" class="ml-5.5 sm:ml-0">{{ item.action.label }}</Button>
+                <Button v-else-if="item.action.post && canManage" size="sm" class="ml-5.5 sm:ml-0" :disabled="busy === item.key" @click="act(item)">{{ item.action.label }}</Button>
             </li>
         </ul>
     </section>
