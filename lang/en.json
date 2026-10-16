@@ -1650,5 +1650,6 @@
     "Moved to :date": "Moved to :date",
     "Task skipped.": "Task skipped.",
     "It has been done since.": "It has been done since.",
-    "Undo saved — it goes through when there’s signal.": "Undo saved — it goes through when there’s signal."
+    "Undo saved — it goes through when there’s signal.": "Undo saved — it goes through when there’s signal.",
+    "undo waiting to sync": "undo waiting to sync"
 }

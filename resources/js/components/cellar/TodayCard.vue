@@ -27,6 +27,8 @@ const props = defineProps<{
     today: string;
     meId: string | null;
     canManage: boolean;
+    /** The room group it's listed under (kept with an undo, to show it back there). */
+    room: string;
 }>();
 
 const emit = defineEmits<{ next: [id: string] }>();
@@ -49,6 +51,8 @@ const isAnalysis = computed(() => a.value.type === 'ANALYSIS');
 const canAdjust = computed(() => ['ADDITION', 'TRANSFER', 'TOPPING'].includes(a.value.type));
 const unit = computed(() => (a.value.type === 'ADDITION' ? (a.value.payload.unit ?? 'g') : 'L'));
 const metrics = computed<AnalysisParam[]>(() => a.value.payload.metrics ?? ['free_so2']);
+/** Shown again because its undo is still on the way to the server. */
+const restoring = computed(() => queue.undoPending(props.activity.id));
 const assignedElsewhere = computed(() => a.value.assigned_to !== null && a.value.assigned_to.id !== props.meId);
 
 const amountValue = computed(() => parseDecimal(amount.value));
@@ -113,9 +117,10 @@ function onUp(): void {
 /** Skips and moves can be taken back from the Undo toast. */
 function offerUndo(message: string): void {
     const id = a.value.id;
+    const snapshot = { room: props.room, activity: { ...a.value } };
     const name = a.value.vessel?.name ?? activityTitle(a.value);
     toast.offer(`${name}: ${message}`, () => {
-        if (!queue.undo(id)) toast.offer(t('Could not undo — it stays as it is. Try again from Plan.'), null);
+        if (!queue.undo(id, snapshot)) toast.offer(t('Could not undo — it stays as it is. Try again from Plan.'), null);
         else if (!queue.online.value) toast.offer(t('Undo saved — it goes through when there’s signal.'), null);
     });
 }
@@ -160,6 +165,9 @@ function skip(reason: 'not_needed' | 'other'): void {
                     </span>
                     <span v-if="a.overdue" class="bg-tag-orange px-1.5 py-0.5 text-[11px] font-medium text-tag-orange-foreground">
                         {{ t('overdue') }}
+                    </span>
+                    <span v-if="restoring" class="bg-tag-orange px-1.5 py-0.5 text-[11px] font-medium text-tag-orange-foreground">
+                        {{ t('undo waiting to sync') }}
                     </span>
                     <span v-if="assignedElsewhere" class="bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
                         {{ a.assigned_to?.name.split(' ')[0] }}

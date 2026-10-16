@@ -2,6 +2,7 @@ import { computed, reactive, ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 
 import { csrfHeader } from '@/lib/csrf';
+import type { CellarActivity } from '@/types/cellar';
 import { useUndoToast } from '@/composables/useUndoToast';
 
 /**
@@ -21,13 +22,17 @@ import { useUndoToast } from '@/composables/useUndoToast';
  * tick is on its way is queued as soon as the answer arrives. If the server
  * finally says no (too late, or the task was done meanwhile), the toast says
  * why with the server's own message.
+ *
+ * A queued undo carries a copy of the task as it was (and its room), so Today
+ * can show it back in the open list straight away — the server only lists it
+ * again once the undo reaches it.
  */
 export type QueuedAction = 'complete' | 'skip' | 'reschedule';
 
 interface QueuedItem {
     activityId: string;
     action: QueuedAction | 'undo';
-    /** The tick's fields; for an undo, `{ token }`. */
+    /** The tick's fields; for an undo, `{ token, task }`. */
     data: Record<string, unknown>;
     at: string;
 }
@@ -49,7 +54,16 @@ const errors = reactive<Record<string, string>>({});
 /** Activity id → the server's undo token for its skip / move. */
 const undoTokens: Record<string, string> = {};
 /** Undo pressed while the tick was on its way: queue the undo once it lands. */
-const undoWhenSettled = new Set<string>();
+const undoWhenSettled = new Map<string, RestoredTask>();
+
+/** Undone on the server, but Today's data hasn't been reloaded since. */
+const justRestored = ref<RestoredTask[]>([]);
+
+/** A task as it was before its skip / move, to show while its undo is on the way. */
+export interface RestoredTask {
+    room: string;
+    activity: CellarActivity;
+}
 const online = ref(typeof navigator === 'undefined' ? true : navigator.onLine);
 let flushing = false;
 /** The queued item being sent right now (it's still in the queue). */
@@ -121,18 +135,27 @@ function settle(item: QueuedItem, outcome: Exclude<Outcome, 'retry'>): void {
 
         return;
     }
-    if (item.action === 'undo') return;
+    if (item.action === 'undo') {
+        // Through: keep showing it until Today's data is reloaded and lists it again.
+        if (item.data.task) justRestored.value = [...justRestored.value, item.data.task as RestoredTask];
+
+        return;
+    }
     if (outcome.undo) undoTokens[item.activityId] = outcome.undo;
-    if (undoWhenSettled.delete(item.activityId)) queueUndo(item.activityId);
+    const restored = undoWhenSettled.get(item.activityId);
+    if (restored) {
+        undoWhenSettled.delete(item.activityId);
+        queueUndo(item.activityId, restored);
+    }
 }
 
 /** Put back a tick the server already has: through the queue, like any tick. */
-function queueUndo(activityId: string): boolean {
+function queueUndo(activityId: string, task: RestoredTask): boolean {
     const token = undoTokens[activityId];
     if (!token) return false;
     delete undoTokens[activityId];
     delete local[activityId];
-    enqueue({ activityId, action: 'undo', data: { token }, at: new Date().toISOString() });
+    enqueue({ activityId, action: 'undo', data: { token, task }, at: new Date().toISOString() });
     void flush();
 
     return true;
@@ -183,6 +206,16 @@ export function useActivityQueue() {
         online,
         pending: computed(() => queue.value.length),
         isQueued: (activityId: string) => queue.value.some((q) => q.activityId === activityId),
+        undoPending: (activityId: string) => queue.value.some((q) => q.activityId === activityId && q.action === 'undo'),
+        /** Tasks whose undo is waiting to reach the server — shown as open again meanwhile. */
+        restoring: computed<RestoredTask[]>(() => [
+            ...queue.value.filter((q) => q.action === 'undo' && q.data.task).map((q) => q.data.task as RestoredTask),
+            ...justRestored.value,
+        ]),
+        /** Today's data was reloaded: it lists restored tasks itself now. */
+        forgetRestored(): void {
+            justRestored.value = [];
+        },
         /** Tick it now; send it now or later. */
         async submit(activityId: string, action: QueuedAction, data: Record<string, unknown> = {}): Promise<void> {
             delete errors[activityId];
@@ -215,7 +248,7 @@ export function useActivityQueue() {
          * undo (the server never gave it a token); otherwise the undo is done
          * or on its way.
          */
-        undo(activityId: string): boolean {
+        undo(activityId: string, task: RestoredTask): boolean {
             const waiting = queue.value.find((q) => q.activityId === activityId && q.action !== 'undo');
             if (waiting && waiting !== inFlight) {
                 // Never left this phone: drop it from the queue.
@@ -225,10 +258,10 @@ export function useActivityQueue() {
 
                 return true;
             }
-            if (undoTokens[activityId]) return queueUndo(activityId);
+            if (undoTokens[activityId]) return queueUndo(activityId, task);
             if (local[activityId]) {
                 // On its way: queue the undo when the server answers.
-                undoWhenSettled.add(activityId);
+                undoWhenSettled.set(activityId, task);
                 delete local[activityId];
 
                 return true;
