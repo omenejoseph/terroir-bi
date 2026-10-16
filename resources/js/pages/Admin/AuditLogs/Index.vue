@@ -28,14 +28,14 @@ const props = defineProps<{
 const { t } = useTranslations();
 
 function goToPage(page: number): void {
-    router.get(`${ADMIN_BASE}/audit-logs`, { page }, { preserveState: true, preserveScroll: true, replace: true });
+    router.get(`${ADMIN_BASE}/audit-logs`, { page }, { preserveState: true, preserveScroll: true, replace: true, only: ['logs'] });
 }
 
 function setPerPage(perPage: number): void {
     router.get(
         `${ADMIN_BASE}/audit-logs`,
         { per_page: perPage, page: 1 },
-        { preserveState: true, preserveScroll: true, replace: true },
+        { preserveState: true, preserveScroll: true, replace: true, only: ['logs'] },
     );
 }
 

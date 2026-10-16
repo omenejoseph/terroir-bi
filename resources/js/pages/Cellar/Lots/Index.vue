@@ -43,7 +43,7 @@ const panel = ref(false);
 /** Filtering, searching and paging are all server-side visits; a new filter starts again at page 1. */
 function apply(patch: Partial<typeof props.filters> & { page?: number; per_page?: number } = {}): void {
     const next = { ...props.filters, search: search.value || null, per_page: props.lots.meta.per_page, ...patch };
-    router.get('/cellar/lots', Object.fromEntries(Object.entries(next).filter(([, v]) => v)), { preserveState: true, preserveScroll: true, replace: true });
+    router.get('/cellar/lots', Object.fromEntries(Object.entries(next).filter(([, v]) => v)), { preserveState: true, preserveScroll: true, replace: true, only: ['lots', 'totals', 'filters'] });
 }
 
 let timer: ReturnType<typeof setTimeout> | null = null;

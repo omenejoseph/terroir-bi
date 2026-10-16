@@ -88,7 +88,7 @@ function selectMonths(months: string): void {
     router.get(
         '/inventory-analytics',
         { months },
-        { preserveState: true, preserveScroll: true, only: ['analytics', 'filters'] },
+        { preserveState: true, preserveScroll: true, replace: true, only: ['analytics', 'filters'] },
     );
 }
 

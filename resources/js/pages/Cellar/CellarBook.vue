@@ -32,7 +32,7 @@ const to = ref(props.filters.to);
 const csv = computed(() => `/cellar/book.csv?from=${props.filters.from}&to=${props.filters.to}`);
 
 function apply(extra: Record<string, unknown> = {}): void {
-    router.get('/cellar/book', { from: from.value, to: to.value, per_page: props.rows.meta.per_page, ...extra }, { preserveState: true, preserveScroll: true, replace: true });
+    router.get('/cellar/book', { from: from.value, to: to.value, per_page: props.rows.meta.per_page, ...extra }, { preserveState: true, preserveScroll: true, replace: true, only: ['rows', 'filters'] });
 }
 </script>
 

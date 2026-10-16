@@ -32,15 +32,15 @@ const area = computed(() => props.logs.filters?.area ?? null);
 const query = (extra: Record<string, unknown>) => ({ ...(area.value ? { area: area.value } : {}), ...extra });
 
 function goToPage(page: number): void {
-    router.get('/logs', query({ page }), { preserveState: true, preserveScroll: true, replace: true });
+    router.get('/logs', query({ page }), { preserveState: true, preserveScroll: true, replace: true, only: ['logs'] });
 }
 
 function setPerPage(perPage: number): void {
-    router.get('/logs', query({ per_page: perPage, page: 1 }), { preserveState: true, preserveScroll: true, replace: true });
+    router.get('/logs', query({ per_page: perPage, page: 1 }), { preserveState: true, preserveScroll: true, replace: true, only: ['logs'] });
 }
 
 function setArea(value: string): void {
-    router.get('/logs', value === 'all' ? {} : { area: value }, { preserveState: true, preserveScroll: true, replace: true });
+    router.get('/logs', value === 'all' ? {} : { area: value }, { preserveState: true, preserveScroll: true, replace: true, only: ['logs'] });
 }
 
 /** Cellar subjects link to their page; a lot's child records (analyses, additions…) have no page of their own. */

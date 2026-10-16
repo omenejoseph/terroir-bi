@@ -39,7 +39,8 @@ const PERIOD_TABS = computed<TabItem[]>(() => [
 ]);
 
 function selectPeriod(period: string): void {
-    router.get(`/inventory/${props.itemId}`, { period }, { preserveState: true, preserveScroll: true });
+    // Only the period-dependent figures are refetched; the movements and the rest of the page stay as they are.
+    router.get(`/inventory/${props.itemId}`, { period }, { preserveState: true, preserveScroll: true, replace: true, only: ['analytics', 'filters', 'vintageCoverage'] });
 }
 
 /** Bars fade down the list, as the design draws them: first channel full strength. */

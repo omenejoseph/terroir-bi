@@ -56,7 +56,7 @@ const scopeTabs = computed<TabItem[]>(() => [
 ]);
 
 function setScope(value: string): void {
-    router.get('/cellar/today', value === 'mine' ? { mine: 1 } : {}, { preserveScroll: true, preserveState: true });
+    router.get('/cellar/today', value === 'mine' ? { mine: 1 } : {}, { preserveScroll: true, preserveState: true, replace: true, only: ['today', 'mine'] });
 }
 
 /** Round progress is only worth a bar when the round has more than one task. */

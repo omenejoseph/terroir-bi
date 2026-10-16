@@ -76,7 +76,8 @@ function reload(overrides: Record<string, unknown>): void {
             to: props.filters.to ?? undefined,
             ...overrides,
         },
-        { preserveState: true, preserveScroll: true },
+        // A partial visit: only what the period changes, kept in place (no history entry, no scroll jump).
+        { preserveState: true, preserveScroll: true, replace: true, only: ['summary', 'filters'] },
     );
 }
 
