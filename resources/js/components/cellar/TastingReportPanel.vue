@@ -11,6 +11,7 @@ import Input from '@/components/ui/Input.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import Textarea from '@/components/ui/Textarea.vue';
 import { useTranslations } from '@/composables/useTranslations';
+import { lotLabel } from '@/lib/cellar';
 import type { TastingReport } from '@/types/cellar';
 import type { ComboboxOption } from '@/types/ui';
 
@@ -47,7 +48,7 @@ watch(
             note: r?.note ?? '',
             wines: (r?.wines ?? []).filter((w) => w.wine_lot).map((w) => ({
                 wine_lot_id: w.wine_lot!.id,
-                label: [w.wine_lot!.name, w.wine_lot!.vintage].filter(Boolean).join(' '),
+                label: lotLabel(w.wine_lot!.name, w.wine_lot!.vintage),
                 score: w.score !== null ? String(w.score) : '',
                 nose: w.nose ?? '',
                 palate: w.palate ?? '',

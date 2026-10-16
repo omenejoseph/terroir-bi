@@ -262,3 +262,10 @@ export const ANALYSIS_FIELDS: { key: AnalysisParam; label: string }[] = [
     { key: 'temperature', label: 'Temperature (°C)' },
     { key: 'density', label: 'Density' },
 ];
+
+/** "Name vintage" — without repeating a vintage the name already carries ("Velika Bjelica 2022"). */
+export function lotLabel(name: string, vintage: string | number | null | undefined): string {
+    const v = vintage === null || vintage === undefined ? '' : String(vintage);
+
+    return v === '' || name.includes(v) ? name : `${name} ${v}`;
+}

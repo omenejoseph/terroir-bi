@@ -5,6 +5,7 @@ import { Plus } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import AssignWinePanel from '@/components/cellar/AssignWinePanel.vue';
+import AttentionList from '@/components/cellar/AttentionList.vue';
 import BulkVesselsPanel from '@/components/cellar/BulkVesselsPanel.vue';
 import CellarMap from '@/components/cellar/CellarMap.vue';
 import CellarTabs from '@/components/cellar/CellarTabs.vue';
@@ -23,7 +24,7 @@ import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import { LOT_STATUS_LABELS, LOT_STATUS_TONES, lotRefFromOption, qty } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
-import type { LotOption, MapVessel, Vessel, WineLotSummary } from '@/types/cellar';
+import type { CellarAttentionItem, LotOption, MapVessel, Vessel, WineLotSummary } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 
 /** The shell persists between visits, so navigating does not remount the nav. */
@@ -40,6 +41,7 @@ const props = defineProps<{
     lots: WineLotSummary[];
     bottled: WineLotSummary[];
     lotOptions: LotOption[];
+    attention: CellarAttentionItem[];
 }>();
 
 const page = usePage<SharedProps>();
@@ -122,6 +124,8 @@ function additionLine(l: WineLotSummary): string {
                 </template>
             </PageHeader>
             <CellarTabs current="overview" />
+
+            <AttentionList :items="attention" />
 
             <div class="grid grid-cols-3 gap-3">
                 <StatCard :label="t('Vessels')" :value="String(stats.vessels)" />

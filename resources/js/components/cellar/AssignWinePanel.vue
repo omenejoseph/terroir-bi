@@ -9,7 +9,7 @@ import Input from '@/components/ui/Input.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useTranslations } from '@/composables/useTranslations';
-import { parseDecimal, qty } from '@/lib/cellar';
+import { lotLabel, parseDecimal, qty } from '@/lib/cellar';
 import { csrfHeader } from '@/lib/csrf';
 import type { LotOption, MapVessel } from '@/types/cellar';
 import type { ComboboxOption } from '@/types/ui';
@@ -45,7 +45,7 @@ const lot = computed(() => props.lots.find((l) => l.id === lotId.value) ?? null)
 const lotOptions = computed<ComboboxOption[]>(() =>
     props.lots.map((l) => ({
         value: l.id,
-        label: [l.name, l.vintage].filter(Boolean).join(' '),
+        label: lotLabel(l.name, l.vintage),
         description: t(':in L in vessels · :free L unallocated', { in: qty(Number(l.current_volume) - Number(l.unallocated)), free: qty(l.unallocated) }),
         keywords: [l.lot_number],
     })),

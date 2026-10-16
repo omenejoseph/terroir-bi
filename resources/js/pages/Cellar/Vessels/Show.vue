@@ -97,8 +97,9 @@ async function destroy(): Promise<void> {
     if (ok) router.delete(`/cellar/vessels/${v.value.id}`);
 }
 
-async function removeRecord(url: string, title: string): Promise<void> {
-    if (await confirmDialog({ title, confirmLabel: t('Delete'), tone: 'danger' })) router.delete(url, { preserveScroll: true });
+/** Readings and tasting notes delete at once — the toast offers Undo. */
+function removeRecord(url: string): void {
+    router.delete(url, { preserveScroll: true });
 }
 </script>
 
@@ -157,7 +158,7 @@ async function removeRecord(url: string, title: string): Promise<void> {
                         </span>
                         <template v-if="canManage">
                             <button type="button" class="text-muted-foreground hover:text-foreground" :aria-label="t('Edit')" @click="((panelLot = a.wine_lot_id), (editAnalysis = a), (panel = 'analysis'))"><Pencil class="size-3.5" /></button>
-                            <button type="button" class="text-muted-foreground hover:text-destructive" :aria-label="t('Delete')" @click="removeRecord(`/cellar/lots/${a.wine_lot_id}/analyses/${a.id}`, t('Delete this analysis?'))"><Trash2 class="size-3.5" /></button>
+                            <button type="button" class="text-muted-foreground hover:text-destructive" :aria-label="t('Delete')" @click="removeRecord(`/cellar/lots/${a.wine_lot_id}/analyses/${a.id}`)"><Trash2 class="size-3.5" /></button>
                         </template>
                     </div>
                     <p v-if="v.analyses.length === 0" class="p-8 text-center text-xs text-muted-foreground">{{ t('No analyses taken in this vessel yet.') }}</p>
@@ -177,7 +178,7 @@ async function removeRecord(url: string, title: string): Promise<void> {
                         </div>
                         <template v-if="canManage">
                             <button type="button" class="text-muted-foreground hover:text-foreground" :aria-label="t('Edit')" @click="((panelLot = n.wine_lot_id), (editTasting = n), (panel = 'tasting'))"><Pencil class="size-3.5" /></button>
-                            <button type="button" class="text-muted-foreground hover:text-destructive" :aria-label="t('Delete')" @click="removeRecord(`/cellar/lots/${n.wine_lot_id}/tasting-notes/${n.id}`, t('Delete this tasting note?'))"><Trash2 class="size-3.5" /></button>
+                            <button type="button" class="text-muted-foreground hover:text-destructive" :aria-label="t('Delete')" @click="removeRecord(`/cellar/lots/${n.wine_lot_id}/tasting-notes/${n.id}`)"><Trash2 class="size-3.5" /></button>
                         </template>
                     </div>
                     <p v-if="v.tasting_notes.length === 0" class="p-8 text-center text-xs text-muted-foreground">{{ t('No tasting notes for this vessel yet.') }}</p>

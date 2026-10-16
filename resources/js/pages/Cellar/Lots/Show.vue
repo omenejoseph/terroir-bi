@@ -20,6 +20,7 @@ import {
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
+import AttentionList from '@/components/cellar/AttentionList.vue';
 import CellarTabs from '@/components/cellar/CellarTabs.vue';
 import HistoryList from '@/components/cellar/HistoryList.vue';
 import LotFormPanel from '@/components/cellar/LotFormPanel.vue';
@@ -43,6 +44,7 @@ import Select from '@/components/ui/Select.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import StatCard from '@/components/ui/StatCard.vue';
 import { confirmDialog } from '@/composables/useConfirm';
+import DeleteLotDialog from '@/components/cellar/lot/DeleteLotDialog.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import {
@@ -62,6 +64,7 @@ import type {
     AnalysisParam,
     AnalysisRow,
     CellarActivity,
+    CellarAttentionItem,
     FermentationTemplate,
     HistoryEntry,
     LotOption,
@@ -87,6 +90,7 @@ defineOptions({ layout: AppLayout });
 const props = defineProps<{
     lot: WineLotDetail;
     nextPlanned: CellarActivity | null;
+    attention: CellarAttentionItem[];
     timeline: TimelineEvent[];
     trend: AnalysisRow[];
     blendSources: { lot_id: string; name: string; lot_number: string; liters: string }[];
@@ -140,20 +144,16 @@ const bottled = computed(() => props.lot.status === 'BOTTLED');
 /** A bottled lot is read-only — only reversing its bottling stays available. */
 const canEdit = computed(() => canManage.value && !bottled.value);
 
-async function remove(url: string, title: string): Promise<void> {
-    if (!(await confirmDialog({ title, confirmLabel: t('Delete'), tone: 'danger' }))) return;
+/**
+ * Deletes that can be undone (the toast offers Undo) go straight through;
+ * pass a title only for one that can't — reversing a bottling moves stock.
+ */
+async function remove(url: string, title?: string): Promise<void> {
+    if (title !== undefined && !(await confirmDialog({ title, confirmLabel: t('Delete'), tone: 'danger' }))) return;
     router.delete(url, { preserveScroll: true });
 }
 
-async function deleteLot(): Promise<void> {
-    const ok = await confirmDialog({
-        title: t('Delete :name?', { name: props.lot.name }),
-        description: t('Its vessels are freed, bottlings are reversed and all its records are removed. This cannot be undone.'),
-        confirmLabel: t('Delete lot'),
-        tone: 'danger',
-    });
-    if (ok) router.delete(`/cellar/lots/${props.lot.id}`);
-}
+const deletingLot = ref(false);
 
 // ── Vitals ──────────────────────────────────────────────────────────────────
 const fill = computed(() => {
@@ -260,27 +260,27 @@ function onRow(e: TimelineEvent, action: string): void {
         case 'addition': {
             const record = props.lot.additions.find((a) => a.id === id) ?? null;
             if (action === 'edit' && record) open('addition', { addition: record });
-            else if (action === 'delete') void remove(`${base}/additions/${id}`, t('Delete this addition? Its stock is put back.'));
+            else if (action === 'delete') void remove(`${base}/additions/${id}`);
             break;
         }
         case 'analysis': {
             const record = props.lot.analyses.find((a) => a.id === id) ?? null;
             if (action === 'edit' && record) open('analysis', { analysis: record });
-            else if (action === 'delete') void remove(`${base}/analyses/${id}`, t('Delete this analysis?'));
+            else if (action === 'delete') void remove(`${base}/analyses/${id}`);
             break;
         }
         case 'tasting': {
             const record = props.lot.tasting_notes.find((n) => n.id === id) ?? null;
             if (action === 'edit' && record) open('tasting', { tasting: record });
-            else if (action === 'delete') void remove(`${base}/tasting-notes/${id}`, t('Delete this tasting note?'));
+            else if (action === 'delete') void remove(`${base}/tasting-notes/${id}`);
             break;
         }
         case 'process':
-            void remove(`${base}/processes/${id}`, t('Delete this process?'));
+            void remove(`${base}/processes/${id}`);
             break;
         case 'transfer':
         case 'transfer_in':
-            void remove(`${base}/transfers/${id}`, t('Reverse this transfer? The wine goes back where it came from.'));
+            void remove(`${base}/transfers/${id}`);
             break;
         case 'bottling':
             void remove(`${base}/bottlings/${id}`, t('Reverse this bottling? The wine goes back into its vessels and the bottles leave stock.'));
@@ -320,10 +320,12 @@ const readingMenu = computed<MenuItem[]>(() => (canEdit.value ? [EDIT, DELETE].m
                     <span v-if="lot.wine_type" class="bg-muted px-2 py-0.5 text-[11px]">{{ t(WINE_TYPE_LABELS[lot.wine_type]) }}</span>
                     <Select v-if="lot.vessels.length > 1 || focusId" v-model="vesselChoice" :options="vesselChoices" :aria-label="t('Show vessel')" class="w-52" />
                     <Button v-if="canManage" size="sm" variant="outline" @click="open('edit')"><Pencil class="size-3.5" /> {{ t('Edit') }}</Button>
-                    <Button v-if="can('cellar.delete')" size="sm" variant="ghost" :aria-label="t('Delete lot')" @click="deleteLot"><Trash2 class="size-3.5" /></Button>
+                    <Button v-if="can('cellar.delete')" size="sm" variant="ghost" :aria-label="t('Delete lot')" @click="deletingLot = true"><Trash2 class="size-3.5" /></Button>
                 </template>
             </PageHeader>
             <CellarTabs current="lots" />
+
+            <AttentionList :items="attention" :show-lot="false" />
 
             <div v-if="blendSources.length" class="border border-tag-violet-foreground/30 bg-tag-violet px-3 py-2 text-xs text-tag-violet-foreground">
                 <p class="font-medium">{{ t('Blend sources · :n', { n: blendSources.length }) }}</p>
@@ -513,7 +515,7 @@ const readingMenu = computed<MenuItem[]>(() => (canEdit.value ? [EDIT, DELETE].m
                         v-if="readingMenu.length"
                         :items="readingMenu"
                         align="right"
-                        @select="(k) => (k === 'edit' ? open('analysis', { analysis: a }) : remove(`/cellar/lots/${lot.id}/analyses/${a.id}`, t('Delete this analysis?')))"
+                        @select="(k) => (k === 'edit' ? open('analysis', { analysis: a }) : remove(`/cellar/lots/${lot.id}/analyses/${a.id}`))"
                     />
                 </div>
                 <p v-if="inFocus(lot.analyses).length === 0" class="py-8 text-center text-xs text-muted-foreground">{{ t('No analyses yet.') }}</p>
@@ -568,4 +570,5 @@ const readingMenu = computed<MenuItem[]>(() => (canEdit.value ? [EDIT, DELETE].m
         <TastingPanel :open="panel === 'tasting'" :lot-id="lot.id" :lot-name="lot.name" :vessels="lot.vessels" :record="editing.tasting" :vessel-id="focusId" @close="panel = null" />
         <BottlingPanel :open="panel === 'bottling'" :lot="lot" @close="panel = null" />
         <VolumePanel :open="panel === 'adjust' || panel === 'assign' || panel === 'blend-in'" :mode="panel === 'assign' ? 'assign' : panel === 'blend-in' ? 'blend-in' : 'adjust'" :lot="lot" :vessels="vessels" :vessel-id="focusId" @close="panel = null" />
+        <DeleteLotDialog :open="deletingLot" :lot-id="lot.id" :lot-name="lot.name" @close="deletingLot = false" />
 </template>

@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\Vessel;
 use App\Models\WineLot;
 use App\Queries\CellarAnalyticsQuery;
+use App\Queries\CellarAttentionQuery;
 use App\Queries\CellarBookQuery;
 use App\Queries\CellarCostsQuery;
 use App\Queries\CellarMapQuery;
@@ -29,12 +30,12 @@ use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Cellar home: headline figures, the cellar map (view and edit), the active
- * lots by vintage and the bottled archive.
+ * Cellar home: what needs attention, headline figures, the cellar map (view
+ * and edit), the active lots by vintage and the bottled archive.
  */
 class CellarController extends Controller
 {
-    public function index(CellarMapQuery $map, ListWineLotsQuery $lots, CellarPickerOptions $options, MembershipContext $membership): Response
+    public function index(CellarMapQuery $map, ListWineLotsQuery $lots, CellarPickerOptions $options, MembershipContext $membership, CellarAttentionQuery $attention): Response
     {
         $active = WineLot::query()
             ->with(['grapes', 'latestAnalysis', 'latestAddition'])
@@ -62,6 +63,8 @@ class CellarController extends Controller
             'lots' => array_values($active->map(fn (WineLot $l): array => WineLotData::fromModel($l)->toArray())->all()),
             'bottled' => array_values($bottled->map(fn (WineLot $l): array => WineLotData::fromModel($l)->toArray())->all()),
             'lotOptions' => fn (): array => $manage ? $options->lots() : [],
+            // What needs someone now, each with the action that deals with it.
+            'attention' => fn (): array => $attention->get(),
         ]);
     }
 

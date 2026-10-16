@@ -130,10 +130,11 @@ class CellarSo2Test extends TestCase
 
         $row = $board['lots'][0];
         $this->assertSame($lot->getKey(), $row['id']);
-        $this->assertEquals(22.0, $row['free_so2']);              // lot-level reading
+        // The lot row shows its worst vessel: F11's own 18 (B1 inherits the lot-level 22).
+        $this->assertEquals(18.0, $row['free_so2']);
         $this->assertSame('low', $row['so2_status']);
-        $this->assertSame(5, $row['days_since']);
-        $this->assertEquals(0.44, $row['molecular']);             // 22 / (1 + 10^1.69)
+        $this->assertSame(1, $row['days_since']);
+        $this->assertEquals(0.36, $row['molecular']);             // 18 / (1 + 10^1.69)
         $this->assertEquals(['limit' => 150, 'compliant' => false, 'margin' => -10.0], $row['compliance']);
 
         $vessels = $this->keyed($row['vessels'], 'name');

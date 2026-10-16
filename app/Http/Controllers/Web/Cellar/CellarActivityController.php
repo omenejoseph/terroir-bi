@@ -27,7 +27,9 @@ use App\Models\WineLot;
 use App\Queries\CellarPickerOptions;
 use App\Queries\CellarPlanQuery;
 use App\Queries\CellarTodayQuery;
+use App\Services\Cellar\UndoStash;
 use App\Support\Cellar\CellarPreselect;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -79,17 +81,31 @@ class CellarActivityController extends Controller
         return back()->with('success', __('Planned :n tasks.', ['n' => $result['count']]));
     }
 
-    public function complete(CompleteCellarActivityRequest $request, CellarActivity $activity, CompleteCellarActivityAction $action): RedirectResponse
+    /*
+     * Complete, skip and reschedule also answer JSON (Accept: application/json): Today
+     * ticks optimistically and queues the request when the phone is offline, replaying
+     * it later. A replay of something already done or skipped answers 409 with its
+     * status, which the queue treats as settled; real validation errors stay 422.
+     */
+
+    public function complete(CompleteCellarActivityRequest $request, CellarActivity $activity, CompleteCellarActivityAction $action): RedirectResponse|JsonResponse
     {
+        if ($settled = $this->settled($request, $activity)) {
+            return $settled;
+        }
         /** @var array{quantity?: float|int|string|null, liters?: float|int|string|null, values?: array<string, mixed>|null, note?: string|null} $overrides */
         $overrides = $request->validated();
         $action->execute($activity, $overrides, $this->userId($request));
 
-        return back();
+        return $this->done($request, $activity);
     }
 
-    public function skip(SkipCellarActivityRequest $request, CellarActivity $activity, SkipCellarActivityAction $action): RedirectResponse
+    public function skip(SkipCellarActivityRequest $request, CellarActivity $activity, SkipCellarActivityAction $action, UndoStash $undo): RedirectResponse|JsonResponse
     {
+        if ($settled = $this->settled($request, $activity)) {
+            return $settled;
+        }
+        $token = $activity->isPlanned() ? $undo->stashActivity($activity, $this->userId($request)) : null;
         $action->execute(
             $activity,
             CellarActivitySkipReason::from((string) $request->validated('reason')),
@@ -97,14 +113,40 @@ class CellarActivityController extends Controller
             $this->userId($request),
         );
 
-        return back();
+        return $this->done($request, $activity, __('Task skipped.'), $token);
     }
 
-    public function reschedule(RescheduleCellarActivityRequest $request, CellarActivity $activity, RescheduleCellarActivityAction $action): RedirectResponse
+    public function reschedule(RescheduleCellarActivityRequest $request, CellarActivity $activity, RescheduleCellarActivityAction $action, UndoStash $undo): RedirectResponse|JsonResponse
     {
+        if ($settled = $this->settled($request, $activity)) {
+            return $settled;
+        }
+        $token = $activity->isPlanned() ? $undo->stashActivity($activity, $this->userId($request)) : null;
         $action->execute($activity, (string) $request->validated('planned_for'), $request->validated('reason'));
 
-        return back()->with('success', __('Task moved.'));
+        return $this->done($request, $activity, __('Task moved.'), $token);
+    }
+
+    /** A JSON caller replaying work that's no longer planned gets 409 with where it ended up. */
+    private function settled(Request $request, CellarActivity $activity): ?JsonResponse
+    {
+        return $request->expectsJson() && ! $activity->isPlanned()
+            ? response()->json(['data' => ['id' => (string) $activity->getKey(), 'status' => $activity->status->value]], 409)
+            : null;
+    }
+
+    /** `undo` (skip / move only) is the UndoStash token that puts the task back. */
+    private function done(Request $request, CellarActivity $activity, ?string $flash = null, ?string $undo = null): RedirectResponse|JsonResponse
+    {
+        if ($request->expectsJson()) {
+            $activity->refresh();
+
+            return response()->json(['data' => ['id' => (string) $activity->getKey(), 'status' => $activity->status->value, 'planned_for' => $activity->planned_for->toDateString(), 'undo' => $undo]]);
+        }
+
+        $back = $flash === null ? back() : back()->with('success', $flash);
+
+        return $undo === null ? $back : $back->with('undo', $undo);
     }
 
     public function destroy(CellarActivity $activity, DeleteCellarActivityAction $action): RedirectResponse

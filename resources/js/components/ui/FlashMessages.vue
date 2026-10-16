@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
 import type { SharedProps } from '@/types';
@@ -9,15 +10,17 @@ import type { SharedProps } from '@/types';
  * have it surface without touching the page component.
  */
 const page = usePage<SharedProps>();
+// A delete that can be undone shows its message on the UndoToast instead.
+const success = computed(() => (page.props.flash.undo ? null : page.props.flash.success));
 </script>
 
 <template>
-    <div v-if="page.props.flash.success || page.props.flash.error" class="space-y-2" aria-live="polite">
+    <div v-if="success || page.props.flash.error" class="space-y-2" aria-live="polite">
         <p
-            v-if="page.props.flash.success"
+            v-if="success"
             class="rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm text-foreground"
         >
-            {{ page.props.flash.success }}
+            {{ success }}
         </p>
         <p
             v-if="page.props.flash.error"

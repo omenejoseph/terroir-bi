@@ -586,3 +586,20 @@ export interface CellarPreselect {
     lots: string[];
     type: string | null;
 }
+
+/** App\Queries\CellarAttentionQuery — something that needs someone, with the action that deals with it. */
+export interface AttentionAction {
+    kind: 'plan_reading' | 'plan_so2' | 'process_task' | 'open_lot' | 'open_today' | string;
+    label: string;
+    href: string | null;
+    post: { url: string; data: Record<string, unknown> } | null;
+}
+export interface CellarAttentionItem {
+    key: string;
+    lot_id: string;
+    lot_name: string;
+    severity: 'critical' | 'high' | 'medium';
+    message: string;
+    suggestion: string | null;
+    action: AttentionAction;
+}

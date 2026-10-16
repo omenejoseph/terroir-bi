@@ -13,6 +13,7 @@ use App\Http\Controllers\Web\Cellar\BlendController;
 use App\Http\Controllers\Web\Cellar\CellarActivityController;
 use App\Http\Controllers\Web\Cellar\CellarController;
 use App\Http\Controllers\Web\Cellar\CellarSo2Controller;
+use App\Http\Controllers\Web\Cellar\CellarUndoController;
 use App\Http\Controllers\Web\Cellar\EnologicalProductController;
 use App\Http\Controllers\Web\Cellar\ProtocolController;
 use App\Http\Controllers\Web\Cellar\RecordOptionsController;
@@ -481,6 +482,7 @@ Route::middleware('tenant.web')->group(function () {
         Route::delete('cellar/lots/{wineLot}/tasting-notes/{tastingNote}', [WineLotController::class, 'deleteTasting'])->name('cellar.lots.tastings.destroy');
         Route::post('cellar/lots/{wineLot}/transfers', [WineLotController::class, 'addTransfer'])->name('cellar.lots.transfers.store');
         Route::delete('cellar/lots/{wineLot}/transfers/{transfer}', [WineLotController::class, 'deleteTransfer'])->name('cellar.lots.transfers.destroy');
+        Route::post('cellar/undo/{token}', CellarUndoController::class)->where('token', '[A-Za-z0-9]{40}')->name('cellar.undo');
         Route::post('cellar/lots/{wineLot}/bottlings', [WineLotController::class, 'addBottling'])->name('cellar.lots.bottlings.store');
         Route::delete('cellar/lots/{wineLot}/bottlings/{bottling}', [WineLotController::class, 'deleteBottling'])->name('cellar.lots.bottlings.destroy');
         Route::post('cellar/lots/{wineLot}/protocol', [WineLotController::class, 'assignProtocol'])->name('cellar.lots.protocol');
@@ -488,6 +490,8 @@ Route::middleware('tenant.web')->group(function () {
 
         Route::post('cellar/blend', [BlendController::class, 'execute'])->name('cellar.blend.execute');
         Route::post('cellar/blend/by-ratio', [BlendController::class, 'byRatio'])->name('cellar.blend.by-ratio');
+        Route::post('cellar/blend/trials', [BlendController::class, 'storeTrial'])->name('cellar.blend.trials.store');
+        Route::delete('cellar/blend/trials/{blendTrial}', [BlendController::class, 'destroyTrial'])->name('cellar.blend.trials.destroy');
         Route::post('cellar/bulk-additions', [CellarController::class, 'storeBulkAdditions'])->name('cellar.bulk-additions.store');
         Route::post('cellar/bulk-analyses', [CellarController::class, 'storeBulkAnalyses'])->name('cellar.bulk-analyses.store');
 
@@ -512,6 +516,7 @@ Route::middleware('tenant.web')->group(function () {
 
     Route::middleware('can:cellar.delete')->group(function () {
         Route::delete('cellar/vessels/{vessel}', [VesselController::class, 'destroy'])->name('cellar.vessels.destroy');
+        Route::get('cellar/lots/{wineLot}/delete-impact', [WineLotController::class, 'deleteImpact'])->name('cellar.lots.delete-impact');
         Route::delete('cellar/lots/{wineLot}', [WineLotController::class, 'destroy'])->name('cellar.lots.destroy');
         Route::delete('cellar/products/{enologicalProduct}', [EnologicalProductController::class, 'destroy'])->name('cellar.products.destroy');
         Route::delete('cellar/protocols/{fermentationTemplate}', [ProtocolController::class, 'destroy'])->name('cellar.protocols.destroy');
