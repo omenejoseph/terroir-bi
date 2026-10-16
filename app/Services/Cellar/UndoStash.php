@@ -42,13 +42,21 @@ use Illuminate\Validation\ValidationException;
  * possible — the stock has gone, the vessel has filled — the Action's own
  * validation error says why. A skipped or moved task goes back to how it
  * was (planned, on its old date, its note as it was), and the round's board
- * card reopens if the skip had closed it.
+ * card reopens if the skip had closed it. Today may send its undo much later
+ * (it waits in the phone's queue for signal), so those last a day, and a
+ * retried undo that already went through is answered as done.
  *
  * @phpstan-type Entry array{tenant_id: string, user_id: string, kind: string, lot_id: string, data: array<string, mixed>, at: string|null, by: string|null}
  */
 class UndoStash
 {
     public const TTL_SECONDS = 600;
+
+    /**
+     * A Today undo was decided within the toast's ten seconds, but the phone
+     * may only get signal again hours later — the queued undo still counts.
+     */
+    public const ACTIVITY_TTL_SECONDS = 86400;
 
     public function __construct(
         private readonly TenantContext $tenant,
@@ -133,13 +141,13 @@ class UndoStash
             'note' => $activity->note,
             'card_id' => $card?->getKey(),
             'card_status' => $card?->status->value,
-        ], null, null, $userId);
+        ], null, null, $userId, self::ACTIVITY_TTL_SECONDS);
     }
 
     /**
      * @param  array<string, mixed>  $data
      */
-    private function keep(string $kind, string $lotId, array $data, ?string $at, ?string $by, string $userId): string
+    private function keep(string $kind, string $lotId, array $data, ?string $at, ?string $by, string $userId, int $ttl = self::TTL_SECONDS): string
     {
         $token = Str::random(40);
         Cache::put($this->key($token), [
@@ -150,7 +158,7 @@ class UndoStash
             'data' => $data,
             'at' => $at,
             'by' => $by,
-        ], self::TTL_SECONDS);
+        ], $ttl);
 
         return $token;
     }
@@ -170,7 +178,19 @@ class UndoStash
             return null;
         }
 
-        return Cache::pull($this->key($token)) !== null ? $entry : null; // pull: a second click gets nothing
+        if (Cache::pull($this->key($token)) === null) {
+            return null; // pull: a second click gets nothing
+        }
+        // Remember who used it, so a retried request (its answer was lost) can be told it already worked.
+        Cache::put($this->usedKey($token), $userId, $this->ttl($entry['kind']));
+
+        return $entry;
+    }
+
+    /** Whether this person already used this token (a retry of an undo that went through). */
+    public function wasUsedBy(string $token, string $userId): bool
+    {
+        return Cache::get($this->usedKey($token)) === $userId;
     }
 
     /**
@@ -180,7 +200,8 @@ class UndoStash
      */
     public function giveBack(string $token, array $entry): void
     {
-        Cache::put($this->key($token), $entry, self::TTL_SECONDS);
+        Cache::forget($this->usedKey($token));
+        Cache::put($this->key($token), $entry, $this->ttl($entry['kind']));
     }
 
     /**
@@ -278,6 +299,16 @@ class UndoStash
         $this->rounds->sync($activity->round_id);
 
         return $activity;
+    }
+
+    private function ttl(string $kind): int
+    {
+        return $kind === 'activity' ? self::ACTIVITY_TTL_SECONDS : self::TTL_SECONDS;
+    }
+
+    private function usedKey(string $token): string
+    {
+        return "cellar-undo-used:{$token}";
     }
 
     private function key(string $token): string

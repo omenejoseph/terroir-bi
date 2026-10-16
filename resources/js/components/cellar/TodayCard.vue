@@ -114,8 +114,9 @@ function onUp(): void {
 function offerUndo(message: string): void {
     const id = a.value.id;
     const name = a.value.vessel?.name ?? activityTitle(a.value);
-    toast.offer(`${name}: ${message}`, async () => {
-        if (!(await queue.undo(id))) toast.offer(t('Could not undo — it stays as it is. Try again from Plan.'), null);
+    toast.offer(`${name}: ${message}`, () => {
+        if (!queue.undo(id)) toast.offer(t('Could not undo — it stays as it is. Try again from Plan.'), null);
+        else if (!queue.online.value) toast.offer(t('Undo saved — it goes through when there’s signal.'), null);
     });
 }
 

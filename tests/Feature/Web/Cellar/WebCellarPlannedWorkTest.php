@@ -327,7 +327,9 @@ class WebCellarPlannedWorkTest extends TestCase
             $this->assertNotSame(TaskStatus::Done, $card->fresh()?->status);
             $this->assertTrue(AuditLog::query()->where('action', 'cellar.undo')->exists());
         });
-        $this->tick('/cellar/undo/'.$token)->assertStatus(410);
+        // The offline queue may send it again when an answer was lost: already done, not an error.
+        $this->tick('/cellar/undo/'.$token)->assertOk()->assertJsonPath('data.already', true);
+        $this->inTenant(fn () => $this->assertSame(1, AuditLog::query()->where('action', 'cellar.undo')->count()));
     }
 
     public function test_a_move_on_today_can_be_undone_back_to_its_old_day_and_note(): void
@@ -345,6 +347,17 @@ class WebCellarPlannedWorkTest extends TestCase
             $this->assertSame('2026-10-14', $back->planned_for->toDateString());
             $this->assertNull($back->note);
         });
+    }
+
+    public function test_a_today_undo_still_counts_when_the_phone_sends_it_hours_later(): void
+    {
+        [$lot, $a] = $this->seedLot();
+        $task = $this->plan($lot, $a);
+        $token = $this->tick("/cellar/activities/{$task->getKey()}/skip", ['reason' => 'other'])->json('data.undo');
+
+        $this->travel(5)->hours();
+        $this->tick('/cellar/undo/'.$token)->assertOk();
+        $this->inTenant(fn () => $this->assertSame(CellarActivityStatus::Planned, $task->fresh()?->status));
     }
 
     public function test_a_task_done_since_is_not_undone(): void

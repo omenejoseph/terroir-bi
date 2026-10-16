@@ -2,6 +2,7 @@ import { computed, reactive, ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 
 import { csrfHeader } from '@/lib/csrf';
+import { useUndoToast } from '@/composables/useUndoToast';
 
 /**
  * Cellar › Today's ticks, made for a cellar with patchy signal. A tick shows
@@ -12,42 +13,47 @@ import { csrfHeader } from '@/lib/csrf';
  * a replay of a tick that did arrive — which counts as settled. A real
  * problem (422) puts the card back with the message on it.
  *
- * A skip or a move can be undone (the Undo toast): while the tick is still
- * waiting in the queue it is simply taken out; once the server has it, the
- * undo token it answered with puts the task back. Undo pressed while the
- * tick is on its way runs as soon as the answer arrives.
+ * A skip or a move can be undone (the Undo toast). While the tick is still
+ * waiting in the queue it is simply taken out. Once the server has it, the
+ * undo goes into the same queue, carrying the undo token the server answered
+ * with, and is retried like any tick until the server answers; a retry of an
+ * undo that already went through is answered as done. Undo pressed while the
+ * tick is on its way is queued as soon as the answer arrives. If the server
+ * finally says no (too late, or the task was done meanwhile), the toast says
+ * why with the server's own message.
  */
 export type QueuedAction = 'complete' | 'skip' | 'reschedule';
 
-interface QueuedTick {
+interface QueuedItem {
     activityId: string;
-    action: QueuedAction;
+    action: QueuedAction | 'undo';
+    /** The tick's fields; for an undo, `{ token }`. */
     data: Record<string, unknown>;
     at: string;
 }
 
 const KEY = 'terroir.cellar.todayQueue';
 
-function read(): QueuedTick[] {
+function read(): QueuedItem[] {
     try {
-        return JSON.parse(window.localStorage.getItem(KEY) ?? '[]') as QueuedTick[];
+        return JSON.parse(window.localStorage.getItem(KEY) ?? '[]') as QueuedItem[];
     } catch {
         return [];
     }
 }
 
-const queue = ref<QueuedTick[]>(typeof window === 'undefined' ? [] : read());
+const queue = ref<QueuedItem[]>(typeof window === 'undefined' ? [] : read());
 /** Ticks made on this page view: activity id → what was done (shown before the server confirms). */
 const local = reactive<Record<string, QueuedAction>>({});
 const errors = reactive<Record<string, string>>({});
 /** Activity id → the server's undo token for its skip / move. */
 const undoTokens: Record<string, string> = {};
-/** Undo pressed before the server answered: activity id → resolve when done. */
-const undoWhenSettled: Record<string, (ok: boolean) => void> = {};
+/** Undo pressed while the tick was on its way: queue the undo once it lands. */
+const undoWhenSettled = new Set<string>();
 const online = ref(typeof navigator === 'undefined' ? true : navigator.onLine);
 let flushing = false;
-/** The queued tick being sent right now (it's still first in the queue). */
-let inFlight: string | null = null;
+/** The queued item being sent right now (it's still in the queue). */
+let inFlight: QueuedItem | null = null;
 let started = false;
 let reloadTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -59,15 +65,21 @@ function save(): void {
     }
 }
 
+function enqueue(item: QueuedItem): void {
+    queue.value = [...queue.value, item];
+    save();
+}
+
 type Outcome = { settled: true; undo: string | null } | 'retry' | { error: string };
 
-async function send(tick: QueuedTick): Promise<Outcome> {
+async function send(item: QueuedItem): Promise<Outcome> {
+    const url = item.action === 'undo' ? `/cellar/undo/${String(item.data.token)}` : `/cellar/activities/${item.activityId}/${item.action}`;
     try {
-        const res = await fetch(`/cellar/activities/${tick.activityId}/${tick.action}`, {
+        const res = await fetch(url, {
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...csrfHeader() },
-            body: JSON.stringify(tick.data),
+            body: item.action === 'undo' ? '{}' : JSON.stringify(item.data),
         });
         if (res.ok) {
             const body = (await res.json().catch(() => ({}))) as { data?: { undo?: string | null } };
@@ -75,7 +87,7 @@ async function send(tick: QueuedTick): Promise<Outcome> {
             return { settled: true, undo: body.data?.undo ?? null };
         }
         if (res.status === 409 || res.status === 404) return { settled: true, undo: null };
-        if (res.status === 422) {
+        if (res.status === 422 || res.status === 410) {
             const body = (await res.json().catch(() => ({}))) as { message?: string; errors?: Record<string, string[]> };
 
             return { error: Object.values(body.errors ?? {})[0]?.[0] ?? body.message ?? '' }; // '' → the card shows its own translated fallback
@@ -95,65 +107,56 @@ function refreshSoon(): void {
     }, 800);
 }
 
+/** What the server said once an item is settled for good. */
+function settle(item: QueuedItem, outcome: Exclude<Outcome, 'retry'>): void {
+    if ('error' in outcome) {
+        undoWhenSettled.delete(item.activityId);
+        if (item.action === 'undo') {
+            // The task stays skipped / moved; say why where it was undone.
+            useUndoToast().offer(outcome.error, null);
+        } else {
+            delete local[item.activityId];
+            errors[item.activityId] = outcome.error;
+        }
+
+        return;
+    }
+    if (item.action === 'undo') return;
+    if (outcome.undo) undoTokens[item.activityId] = outcome.undo;
+    if (undoWhenSettled.delete(item.activityId)) queueUndo(item.activityId);
+}
+
+/** Put back a tick the server already has: through the queue, like any tick. */
+function queueUndo(activityId: string): boolean {
+    const token = undoTokens[activityId];
+    if (!token) return false;
+    delete undoTokens[activityId];
+    delete local[activityId];
+    enqueue({ activityId, action: 'undo', data: { token }, at: new Date().toISOString() });
+    void flush();
+
+    return true;
+}
+
 async function flush(): Promise<void> {
     if (flushing || queue.value.length === 0) return;
     flushing = true;
     try {
         while (queue.value.length) {
-            const tick = queue.value[0]!;
-            inFlight = tick.activityId;
-            const outcome = await send(tick);
+            const item = queue.value[0]!;
+            inFlight = item;
+            const outcome = await send(item);
             inFlight = null;
             if (outcome === 'retry') break;
-            queue.value = queue.value.filter((q) => q !== tick);
+            queue.value = queue.value.filter((q) => q !== item);
             save();
-            if ('error' in outcome) {
-                delete local[tick.activityId];
-                errors[tick.activityId] = outcome.error;
-                undoFailed(tick.activityId);
-            } else {
-                settledWith(tick.activityId, outcome.undo);
-            }
+            settle(item, outcome);
         }
         if (queue.value.length === 0) refreshSoon();
     } finally {
+        inFlight = null;
         flushing = false;
     }
-}
-
-function settledWith(activityId: string, token: string | null): void {
-    if (token) undoTokens[activityId] = token;
-    const waiting = undoWhenSettled[activityId];
-    if (waiting) {
-        delete undoWhenSettled[activityId];
-        void undoSent(activityId).then(waiting);
-    }
-}
-
-function undoFailed(activityId: string): void {
-    undoWhenSettled[activityId]?.(false);
-    delete undoWhenSettled[activityId];
-}
-
-/** Put back a tick the server already has. */
-async function undoSent(activityId: string): Promise<boolean> {
-    const token = undoTokens[activityId];
-    if (!token) return false;
-    try {
-        const res = await fetch(`/cellar/undo/${token}`, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: { Accept: 'application/json', ...csrfHeader() },
-        });
-        if (!res.ok) return false;
-    } catch {
-        return false; // offline: the task stays skipped / moved — the toast says so
-    }
-    delete undoTokens[activityId];
-    delete local[activityId];
-    refreshSoon();
-
-    return true;
 }
 
 function start(): void {
@@ -184,53 +187,54 @@ export function useActivityQueue() {
         async submit(activityId: string, action: QueuedAction, data: Record<string, unknown> = {}): Promise<void> {
             delete errors[activityId];
             local[activityId] = action;
-            const tick: QueuedTick = { activityId, action, data, at: new Date().toISOString() };
+            const item: QueuedItem = { activityId, action, data, at: new Date().toISOString() };
             if (queue.value.length > 0) {
                 // Keep order: something is already waiting.
-                queue.value = [...queue.value, tick];
-                save();
+                enqueue(item);
                 void flush();
 
                 return;
             }
-            const outcome = await send(tick);
-            if (outcome !== 'retry' && 'settled' in outcome) {
-                settledWith(activityId, outcome.undo);
-                refreshSoon();
-            } else if (outcome === 'retry') {
-                if (undoWhenSettled[activityId]) {
+            const outcome = await send(item);
+            if (outcome === 'retry') {
+                if (undoWhenSettled.delete(activityId)) {
                     // Undone before it could be sent: it never needs to go.
-                    undoWhenSettled[activityId]!(true);
-                    delete undoWhenSettled[activityId];
                     delete local[activityId];
 
                     return;
                 }
-                queue.value = [...queue.value, tick];
-                save();
-            } else {
-                delete local[activityId];
-                errors[activityId] = outcome.error;
-                undoFailed(activityId);
+                enqueue(item);
+
+                return;
             }
+            settle(item, outcome);
+            if ('settled' in outcome) refreshSoon();
         },
-        /** Undo a skip or move. Resolves false when it couldn't be put back. */
-        undo(activityId: string): Promise<boolean> {
-            if (inFlight !== activityId && queue.value.some((q) => q.activityId === activityId)) {
+        /**
+         * Undo a skip or move. False only when there's nothing this phone can
+         * undo (the server never gave it a token); otherwise the undo is done
+         * or on its way.
+         */
+        undo(activityId: string): boolean {
+            const waiting = queue.value.find((q) => q.activityId === activityId && q.action !== 'undo');
+            if (waiting && waiting !== inFlight) {
                 // Never left this phone: drop it from the queue.
-                queue.value = queue.value.filter((q) => q.activityId !== activityId);
+                queue.value = queue.value.filter((q) => q !== waiting);
                 save();
                 delete local[activityId];
 
-                return Promise.resolve(true);
+                return true;
             }
-            if (undoTokens[activityId]) return undoSent(activityId);
+            if (undoTokens[activityId]) return queueUndo(activityId);
             if (local[activityId]) {
-                // On its way: undo when the server answers.
-                return new Promise((resolve) => (undoWhenSettled[activityId] = resolve));
+                // On its way: queue the undo when the server answers.
+                undoWhenSettled.add(activityId);
+                delete local[activityId];
+
+                return true;
             }
 
-            return Promise.resolve(false);
+            return false;
         },
     };
 }

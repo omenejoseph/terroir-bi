@@ -199,9 +199,10 @@ class WebCellarUndoTest extends TestCase
         $other = $this->createMember($this->tenant, [TenantRole::Cellar]);
         $this->web('POST', '/cellar/undo/'.$token, [], $other)->assertSessionHas('error');
         $this->web('POST', '/cellar/undo/'.$token)->assertSessionHas('success');
-        // Once.
-        $this->web('POST', '/cellar/undo/'.$token)->assertSessionHas('error');
+        // Once: a repeat is told it already worked, and puts nothing back twice.
+        $this->web('POST', '/cellar/undo/'.$token)->assertSessionHas('success');
         $this->inTenant(fn () => $this->assertSame(1, CellarProcess::query()->count()));
+        $this->web('POST', '/cellar/undo/'.$token, [], $other)->assertSessionHas('error');
 
         // Ten minutes.
         $this->inTenant(fn () => CellarProcess::query()->delete());

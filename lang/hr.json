@@ -1649,5 +1649,6 @@
     "Could not undo — it stays as it is. Try again from Plan.": "Poništavanje nije uspjelo — ostaje kako jest. Pokušajte iz Plana.",
     "Moved to :date": "Premješteno na :date",
     "Task skipped.": "Zadatak preskočen.",
-    "It has been done since.": "U međuvremenu je obavljeno."
+    "It has been done since.": "U međuvremenu je obavljeno.",
+    "Undo saved — it goes through when there’s signal.": "Poništavanje spremljeno — provest će se čim bude signala."
 }

@@ -16,7 +16,8 @@ use Illuminate\Validation\ValidationException;
 /**
  * The Undo on the toast after a cellar delete, or after skipping or moving
  * a task on Today: puts it back. Today calls it with fetch and gets JSON
- * (410 when it can no longer be undone, 422 with the reason).
+ * (410 when it can no longer be undone, 422 with the reason; a retry of one
+ * that already worked answers 200 with `already`).
  */
 class CellarUndoController extends Controller
 {
@@ -27,6 +28,10 @@ class CellarUndoController extends Controller
         abort_unless($user instanceof User, 401);
 
         $entry = $undo->take($token, $user->getKey());
+        if ($entry === null && $undo->wasUsedBy($token, $user->getKey())) {
+            // A retry (Today's offline queue) of an undo that already went through.
+            return $json ? response()->json(['data' => ['kind' => null, 'already' => true]]) : back()->with('success', __('Put back.'));
+        }
         if ($entry === null) {
             $message = __('That can no longer be undone.');
 
