@@ -44,6 +44,7 @@ class CellarPickerOptions
                 'wine_type' => $lot->wine_type?->value,
                 'status' => $lot->status->value,
                 'current_volume' => (string) $lot->current_volume,
+                'unallocated' => number_format(max(0.0, (float) $lot->current_volume - (float) $lot->vesselLots->sum(fn (VesselLot $vl): float => (float) $vl->volume)), 3, '.', ''),
                 'vessels' => array_values($lot->vesselLots
                     ->filter(fn (VesselLot $vl): bool => $vl->vessel !== null)
                     ->sortBy(fn (VesselLot $vl): string => (string) $vl->vessel?->name, SORT_NATURAL | SORT_FLAG_CASE)

@@ -45,24 +45,24 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 
 | Area | Rows | BE ✅ | BE 🟡/⬜ | BE n/a | UI ✅ |
 |---|---|---|---|---|---|
-| A. Cellar home | 8 | 8 | 0 | 0 | 0 |
-| B. Cellar map | 22 | 22 | 0 | 0 | 0 |
-| C. Vessels | 11 | 11 | 0 | 0 | 0 |
-| D. Wine lots | 30 | 29 | 0 | 1 | 0 |
+| A. Cellar home | 8 | 8 | 0 | 0 | 8 |
+| B. Cellar map | 22 | 22 | 0 | 0 | 21 |
+| C. Vessels | 11 | 11 | 0 | 0 | 10 |
+| D. Wine lots | 30 | 29 | 0 | 1 | 27 |
 | E. SO₂ | 14 | 14 | 0 | 0 | 14 |
-| F. Additions & enological stock | 18 | 18 | 0 | 0 | 0 |
-| G. Lab analyses | 9 | 7 | 0 | 2 | 0 |
-| H. Transfers & racking | 4 | 4 | 0 | 0 | 0 |
+| F. Additions & enological stock | 18 | 18 | 0 | 0 | 7 |
+| G. Lab analyses | 9 | 7 | 0 | 2 | 6 |
+| H. Transfers & racking | 4 | 4 | 0 | 0 | 3 |
 | I. Blending | 9 | 8 | 0 | 1 | 0 |
 | J. Planned work & Today | 20 | 20 | 0 | 0 | 18 |
-| K. Tastings | 9 | 9 | 0 | 0 | 0 |
-| L. Bottling | 4 | 4 | 0 | 0 | 0 |
+| K. Tastings | 9 | 9 | 0 | 0 | 3 |
+| L. Bottling | 4 | 4 | 0 | 0 | 4 |
 | M. Fermentation protocols & monitoring | 7 | 7 | 0 | 0 | 0 |
 | N. Analytics & costs | 10 | 10 | 0 | 0 | 0 |
 | O. Compliance & records | 4 | 4 | 0 | 0 | 0 |
-| P. Work-order integration | 3 | 3 | 0 | 0 | 1 |
-| Q. Audit logging | 11 | 11 | 0 | 0 | 0 |
-| **Total** | **193** | **189** | **0** | **4** | **33** |
+| P. Work-order integration | 3 | 3 | 0 | 0 | 3 |
+| Q. Audit logging | 11 | 11 | 0 | 0 | 2 |
+| **Total** | **193** | **189** | **0** | **4** | **126** |
 
 ---
 
@@ -70,91 +70,91 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| A1 | Header with "+ Wine Lot" and quick links (Costs admin-only, Today, Plan, Analytics, SO₂, Tastings, Blend, Bulk additions, Bulk analysis, Products, + Vessel) | `P/page.tsx` | — (navigation only) | ✅ | ⬜ | Replaced by a `CellarTabs` sub-nav plus header actions |
-| A2 | Stat cards: active vessels, active lots, total volume (non-bottled) | `P/page.tsx` | `CellarAnalyticsQuery` | ✅ | ⬜ | |
-| A3 | Embedded cellar map (see B) | `C/cellar-map.tsx` | `ListVesselsQuery` | ✅ | ⬜ | |
-| A4 | Active lots grouped by vintage (newest first) with count and litres | `C/wine-lots-by-vintage` in `P/page.tsx` | `ListWineLotsQuery` (`exclude_bottled`) | ✅ | ⬜ | |
-| A5 | Lot row: lot, grape, status pill, last analysis (date, pH, alc, free/total SO₂), last addition (name, qty, unit, date), volume current/initial | `P/page.tsx` | `WineLotData` (`latestAnalysis`, `latestAddition`) | ✅ | ⬜ | |
-| A6 | Mobile card layout of the same rows | `P/page.tsx` | — | ✅ | ⬜ | |
-| A7 | Collapsible "Bottled wines" archive by vintage: last bottling (count → item), counts of additions, analyses and bottlings | `P/page.tsx` | `ListWineLotsQuery` `with_counts` (counts + latest bottling) | ✅ | ⬜ | Add `withCount` to the query |
-| A8 | Role landing: CELLAR users redirected from dashboard to cellar | `app/dashboard/page.tsx:120` | `Web\DashboardController` redirects cellar-only members (active once `/cellar` route ships) | ✅ | ⬜ | |
+| A1 | Header with "+ Wine Lot" and quick links (Costs admin-only, Today, Plan, Analytics, SO₂, Tastings, Blend, Bulk additions, Bulk analysis, Products, + Vessel) | `P/page.tsx` | — (navigation only) | ✅ | ✅ `CellarTabs` + header actions | Replaced by a `CellarTabs` sub-nav plus header actions |
+| A2 | Stat cards: active vessels, active lots, total volume (non-bottled) | `P/page.tsx` | `CellarAnalyticsQuery` | ✅ | ✅ `Cellar/Index` | |
+| A3 | Embedded cellar map (see B) | `C/cellar-map.tsx` | `ListVesselsQuery` | ✅ | ✅ `Cellar/Index` (`CellarMap`) | |
+| A4 | Active lots grouped by vintage (newest first) with count and litres | `C/wine-lots-by-vintage` in `P/page.tsx` | `ListWineLotsQuery` (`exclude_bottled`) | ✅ | ✅ `Cellar/Index` | |
+| A5 | Lot row: lot, grape, status pill, last analysis (date, pH, alc, free/total SO₂), last addition (name, qty, unit, date), volume current/initial | `P/page.tsx` | `WineLotData` (`latestAnalysis`, `latestAddition`) | ✅ | ✅ `Cellar/Index` | |
+| A6 | Mobile card layout of the same rows | `P/page.tsx` | — | ✅ | ✅ `Cellar/Index` (mobile cards) | |
+| A7 | Collapsible "Bottled wines" archive by vintage: last bottling (count → item), counts of additions, analyses and bottlings | `P/page.tsx` | `ListWineLotsQuery` `with_counts` (counts + latest bottling) | ✅ | ✅ `Cellar/Index` (bottled archive) | Add `withCount` to the query |
+| A8 | Role landing: CELLAR users redirected from dashboard to cellar | `app/dashboard/page.tsx:120` | `Web\DashboardController` redirects cellar-only members (active once `/cellar` route ships) | ✅ | ✅ `/cellar` route (landing redirect) | |
 
 ## B. Cellar map
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| B1 | Room tabs | `C/cellar-map.tsx` | `ListVesselsQuery` (room) | ✅ | ⬜ | |
-| B2 | Reorder room tabs by drag (saved per browser) | `C/cellar-map.tsx` | — (localStorage) | ✅ | ⬜ | |
-| B3 | Rename room inline (Esc cancels) | `CA:2511 renameCellarRoom` | `RenameCellarRoomAction`, `POST vessels/rename-room` | ✅ | ⬜ | |
-| B4 | Vessel tiles shaped by type (tank legs/dome, barrel hoops) | `C/cellar-map.tsx` | — | ✅ | ⬜ | |
-| B5 | Fill bar by capacity %, coloured by wine type or grape | `C/cellar-map.tsx`, `lib/cellar-colors` | `VesselData.lots` | ✅ | ⬜ | |
-| B6 | Faulty overlay (red + warning icon) | `C/cellar-map.tsx` | `vessels.is_faulty` | ✅ | ⬜ | |
-| B7 | SO₂ badge (free/total), vessel reading preferred over lot reading | `C/cellar-map.tsx` | `VesselData` latest SO₂ | ✅ | ⬜ | |
-| B8 | Hover tooltip (type, material, capacity, fill, lots and litres, SO₂, projected SO₂ after latest addition) | `C/cellar-map.tsx` | `VesselDetailQuery::so2` (vessel reading, latest addition, projected via uplift) | ✅ | ⬜ | Projection uses `cellar_additions.vessel_id` and the product uplift, **not** regex on the note |
-| B9 | Click: vessel with wine → lot (`?vessel=`); empty vessel → vessel page | `C/cellar-map.tsx` | — | ✅ | ⬜ | |
-| B10 | Edit mode lock/unlock | `C/cellar-map.tsx` | — | ✅ | ⬜ | |
-| B11 | Drag to move; multi-select with shift/⌘; lasso; group move | `C/cellar-map.tsx` | `UpdateVesselLayoutAction` | ✅ | ⬜ | |
-| B12 | Corner resize, including several vessels at once | `C/cellar-map.tsx`, `CA bulkUpdateVesselSize` | `UpdateVesselLayoutAction` | ✅ | ⬜ | |
-| B13 | Mass resize W/H, "Match size" | `C/cellar-map.tsx` | `UpdateVesselLayoutAction` | ✅ | ⬜ | |
-| B14 | Duplicate N (next free number, same padding, offset placement) | `CA:254 duplicateVessels` | `DuplicateVesselsAction`, `POST vessels/duplicate` | ✅ | ⬜ | |
-| B15 | Remove from map (clear position only) | `CA removeVesselFromMap` | `UpdateVesselLayoutAction` (null position, tested) | ✅ | ⬜ | Confirm null positions are accepted |
-| B16 | Undo ⌘/Ctrl+Z (20 steps), select/deselect all, autosave | `C/cellar-map.tsx` | — | ✅ | ⬜ | |
-| B17 | "Unplaced" sidebar of vessels without a position | `C/cellar-map.tsx` | `ListVesselsQuery` | ✅ | ⬜ | |
-| B18 | Quick bulk-add vessels (prefix, start #, count 1–50, type, material, capacity, name preview) | `CA:214 bulkCreateVessels` | `BulkCreateVesselsAction` | ✅ | ⬜ | BARRIQUE valid everywhere |
-| B19 | Assign wine to selected vessels: existing (≤ unallocated) or new wine (grows lot); fill to capacity or split equally; preview | `CA:1085 bulkAssignLotToVessels` | `BulkAssignLotToVesselsAction`, `POST wine-lots/{lot}/vessels/bulk` (fill or split, dry run) | ✅ | ⬜ | |
-| B20 | Unassign one row / Remove all | `CA unassignLotFromVessel` | `UnassignLotFromVesselAction` | ✅ | ⬜ | |
-| B21 | Fullscreen, zoom buttons, mobile pinch-zoom, sidebar toggle | `C/cellar-map.tsx` | — | ✅ | ⬜ | |
-| B22 | Errors surfaced | `alert()` | — | ✅ | ⬜ | Inline flash / `InputError`, never `alert()` |
+| B1 | Room tabs | `C/cellar-map.tsx` | `ListVesselsQuery` (room) | ✅ | ✅ `CellarMap` | |
+| B2 | Reorder room tabs by drag (saved per browser) | `C/cellar-map.tsx` | — (localStorage) | ✅ | ✅ `CellarMap` (drag tabs, saved per browser) | |
+| B3 | Rename room inline (Esc cancels) | `CA:2511 renameCellarRoom` | `RenameCellarRoomAction`, `POST vessels/rename-room` | ✅ | ✅ `CellarMap` | |
+| B4 | Vessel tiles shaped by type (tank legs/dome, barrel hoops) | `C/cellar-map.tsx` | — | ✅ | ✅ `CellarMap` | |
+| B5 | Fill bar by capacity %, coloured by wine type or grape | `C/cellar-map.tsx`, `lib/cellar-colors` | `VesselData.lots` | ✅ | ✅ `CellarMap` | |
+| B6 | Faulty overlay (red + warning icon) | `C/cellar-map.tsx` | `vessels.is_faulty` | ✅ | ✅ `CellarMap` | |
+| B7 | SO₂ badge (free/total), vessel reading preferred over lot reading | `C/cellar-map.tsx` | `VesselData` latest SO₂ | ✅ | ✅ `CellarMap` | |
+| B8 | Hover tooltip (type, material, capacity, fill, lots and litres, SO₂, projected SO₂ after latest addition) | `C/cellar-map.tsx` | `VesselDetailQuery::so2` (vessel reading, latest addition, projected via uplift) | ✅ | ✅ `CellarMap` | Projection uses `cellar_additions.vessel_id` and the product uplift, **not** regex on the note |
+| B9 | Click: vessel with wine → lot (`?vessel=`); empty vessel → vessel page | `C/cellar-map.tsx` | — | ✅ | ✅ `CellarMap` | |
+| B10 | Edit mode lock/unlock | `C/cellar-map.tsx` | — | ✅ | ✅ `CellarMap` | |
+| B11 | Drag to move; multi-select with shift/⌘; lasso; group move | `C/cellar-map.tsx` | `UpdateVesselLayoutAction` | ✅ | ✅ `CellarMap` | |
+| B12 | Corner resize, including several vessels at once | `C/cellar-map.tsx`, `CA bulkUpdateVesselSize` | `UpdateVesselLayoutAction` | ✅ | ✅ `CellarMap` | |
+| B13 | Mass resize W/H, "Match size" | `C/cellar-map.tsx` | `UpdateVesselLayoutAction` | ✅ | ✅ `CellarMap` | |
+| B14 | Duplicate N (next free number, same padding, offset placement) | `CA:254 duplicateVessels` | `DuplicateVesselsAction`, `POST vessels/duplicate` | ✅ | ✅ `CellarMap` | |
+| B15 | Remove from map (clear position only) | `CA removeVesselFromMap` | `UpdateVesselLayoutAction` (null position, tested) | ✅ | ✅ `CellarMap` | Confirm null positions are accepted |
+| B16 | Undo ⌘/Ctrl+Z (20 steps), select/deselect all, autosave | `C/cellar-map.tsx` | — | ✅ | ✅ `CellarMap` | |
+| B17 | "Unplaced" sidebar of vessels without a position | `C/cellar-map.tsx` | `ListVesselsQuery` | ✅ | ✅ `CellarMap` | |
+| B18 | Quick bulk-add vessels (prefix, start #, count 1–50, type, material, capacity, name preview) | `CA:214 bulkCreateVessels` | `BulkCreateVesselsAction` | ✅ | ✅ `BulkVesselsPanel` | BARRIQUE valid everywhere |
+| B19 | Assign wine to selected vessels: existing (≤ unallocated) or new wine (grows lot); fill to capacity or split equally; preview | `CA:1085 bulkAssignLotToVessels` | `BulkAssignLotToVesselsAction`, `POST wine-lots/{lot}/vessels/bulk` (fill or split, dry run) | ✅ | ✅ `AssignWinePanel` (server dry-run preview) | |
+| B20 | Unassign one row / Remove all | `CA unassignLotFromVessel` | `UnassignLotFromVesselAction` | ✅ | ✅ `UnassignWinePanel` | |
+| B21 | Fullscreen, zoom buttons, mobile pinch-zoom, sidebar toggle | `C/cellar-map.tsx` | — | ✅ | 🟡 `CellarMap` zoom buttons + fullscreen; no pinch-zoom of the canvas (the browser pinch zooms the page) | |
+| B22 | Errors surfaced | `alert()` | — | ✅ | ✅ flash + inline field errors | Inline flash / `InputError`, never `alert()` |
 
 ## C. Vessels
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| C1 | Create vessel: name, type (Barrel/Barrique/Tank/Vat/Amphora), material, capacity, room (suggest existing), location, notes | `P/vessels/new`, `C/vessel-form.tsx`, `CA:74` | `CreateVesselAction`, `StoreVesselRequest` | ✅ | ⬜ | BARRIQUE passes validation (prototype rejected it) |
-| C2 | Edit vessel | `CA:99` | `UpdateVesselAction` | ✅ | ⬜ | |
-| C3 | Vessel detail header (type icon, material, location) | `P/vessels/[id]` | `VesselController::show` | ✅ | ⬜ | |
-| C4 | Mark faulty / clear fault with optional note | `C/vessel-fault-toggle.tsx`, `CA:885` | `UpdateVesselAction` (`is_faulty`, `fault_note`) | ✅ | ⬜ | |
-| C5 | Delete (click-twice confirm) | `C/delete-vessel-button.tsx`, `CA:126` | `DeleteVesselAction` (refuses while holding wine) | ✅ | ⬜ | Refuse instead of hiding a vessel that still holds wine |
-| C6 | Overview: capacity bar, latest SO₂ for vessel, contents (lot, litres, link) | `P/vessels/[id]` | `VesselData` | ✅ | ⬜ | |
-| C7 | Assign lot: lot picker with allocated/unallocated, volume ≤ min(free, lot) | `C/assign-lot-form.tsx`, `CA:964` | `AssignLotToVesselAction` | ✅ | ⬜ | Never silently take excess from other vessels |
-| C8 | Analysis tab: new analysis per lot in the vessel; last 10 analyses, editable | `C/editable-vessel-analysis-list.tsx` | `VesselDetailQuery` analyses (last 10 in vessel) | ✅ | ⬜ | Needs a per-vessel analyses read |
-| C9 | Tasting tab: per-vessel notes (last 20), editable | `P/vessels/[id]` | `VesselDetailQuery` tasting notes (last 20 in vessel) | ✅ | ⬜ | Needs note update (K3) |
-| C10 | Details tab: vessel form | `C/vessel-form.tsx` | `UpdateVesselAction` | ✅ | ⬜ | |
+| C1 | Create vessel: name, type (Barrel/Barrique/Tank/Vat/Amphora), material, capacity, room (suggest existing), location, notes | `P/vessels/new`, `C/vessel-form.tsx`, `CA:74` | `CreateVesselAction`, `StoreVesselRequest` | ✅ | ✅ `VesselFormPanel` | BARRIQUE passes validation (prototype rejected it) |
+| C2 | Edit vessel | `CA:99` | `UpdateVesselAction` | ✅ | ✅ `VesselFormPanel` | |
+| C3 | Vessel detail header (type icon, material, location) | `P/vessels/[id]` | `VesselController::show` | ✅ | ✅ `Cellar/Vessels/Show` | |
+| C4 | Mark faulty / clear fault with optional note | `C/vessel-fault-toggle.tsx`, `CA:885` | `UpdateVesselAction` (`is_faulty`, `fault_note`) | ✅ | ✅ `Cellar/Vessels/Show` | |
+| C5 | Delete (click-twice confirm) | `C/delete-vessel-button.tsx`, `CA:126` | `DeleteVesselAction` (refuses while holding wine) | ✅ | ✅ `Cellar/Vessels/Show` | Refuse instead of hiding a vessel that still holds wine |
+| C6 | Overview: capacity bar, latest SO₂ for vessel, contents (lot, litres, link) | `P/vessels/[id]` | `VesselData` | ✅ | ✅ `Cellar/Vessels/Show` | |
+| C7 | Assign lot: lot picker with allocated/unallocated, volume ≤ min(free, lot) | `C/assign-lot-form.tsx`, `CA:964` | `AssignLotToVesselAction` | ✅ | ✅ `AssignWinePanel` from the vessel page | Never silently take excess from other vessels |
+| C8 | Analysis tab: new analysis per lot in the vessel; last 10 analyses, editable | `C/editable-vessel-analysis-list.tsx` | `VesselDetailQuery` analyses (last 10 in vessel) | ✅ | ✅ `Cellar/Vessels/Show` | Needs a per-vessel analyses read |
+| C9 | Tasting tab: per-vessel notes (last 20), editable | `P/vessels/[id]` | `VesselDetailQuery` tasting notes (last 20 in vessel) | ✅ | ✅ `Cellar/Vessels/Show` | Needs note update (K3) |
+| C10 | Details tab: vessel form | `C/vessel-form.tsx` | `UpdateVesselAction` | ✅ | ✅ `Cellar/Vessels/Show` | |
 | C11 | Status sync (AVAILABLE ↔ IN_USE) | `CA:50 syncVesselStatus` | `VesselVolumeSync` | ✅ | — | MAINTENANCE/RETIRED never overridden |
 
 ## D. Wine lots
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| D1 | Lots list (search, status filter) | `P/page.tsx` (no dedicated page) | `ListWineLotsQuery` | ✅ | ⬜ | Dedicated `/cellar/lots` page added (rebuild improvement) |
-| D2 | Create lot: name, grape rows (variety suggestions, €/kg admin-only, kg), wine type, vintage, vineyard, initial volume, stage, starting vessel, notes | `P/lots/new`, `C/wine-lot-form.tsx`, `CA:376` | `CreateWineLotAction`, `StoreWineLotRequest` | ✅ | ⬜ | Starting vessel capacity-checked |
+| D1 | Lots list (search, status filter) | `P/page.tsx` (no dedicated page) | `ListWineLotsQuery` | ✅ | ✅ `Cellar/Lots/Index` | Dedicated `/cellar/lots` page added (rebuild improvement) |
+| D2 | Create lot: name, grape rows (variety suggestions, €/kg admin-only, kg), wine type, vintage, vineyard, initial volume, stage, starting vessel, notes | `P/lots/new`, `C/wine-lot-form.tsx`, `CA:376` | `CreateWineLotAction`, `StoreWineLotRequest` | ✅ | ✅ `LotFormPanel` | Starting vessel capacity-checked |
 | D3 | Lot number LOT-YYYY-NNN; grape cost = Σ price×kg; weighted €/kg | `CA:376` | `LotNumberGenerator`, `CreateWineLotAction` | ✅ | — | |
-| D4 | Edit lot (Details tab) | `CA:490` | `UpdateWineLotAction` + `GrapeComposition` (rows matched by variety) | ✅ | ⬜ | Keep `percentage` and `harvest_entry_id` on grape rows |
-| D5 | Set status BOTTLED frees vessels | `CA:26` | `UpdateWineLotAction` | ✅ | ⬜ | |
-| D6 | Delete lot (click-twice); restores vessels; removes transfers/bottlings; cleans mirror inventory item | `CA:2319` | `DeleteWineLotAction`, `DELETE wine-lots/{lot}` (cellar.delete) | ✅ | ⬜ | Reverse bottling stock movements on delete |
-| D7 | Header: name, status, type, lot no., grape, vintage, vineyard | `P/lots/[id]` | `WineLotData` detail | ✅ | ⬜ | |
-| D8 | `?vessel=` focus banner ("Viewing vessel X — N L · Show all"); filters additions and analyses | `P/lots/[id]` | — | ✅ | ⬜ | Filter additions by `vessel_id` |
-| D9 | Blend provenance (incoming BLEND transfers by source lot, L and %) | `P/lots/[id]` | `WineLotData.transfers` | ✅ | ⬜ | |
-| D10 | Quick-action buttons (+Addition/+Analysis/+Transfer/+Process), hidden once bottled | `C/lot-detail-tabs.tsx` | — | ✅ | ⬜ | |
-| D11 | Volume card (L vs capacity of vessels or initial; focused-vessel L; vessel links) | `P/lots/[id]` | `WineLotData` | ✅ | ⬜ | |
-| D12 | Adjust volume ± (vessel picker if several; cap removal per vessel; proportional when no vessel) | `C/adjust-volume-form.tsx`, `CA:588` | `AdjustLotVolumeAction` (reason → Loss/Gain process, proportional, per-vessel cap) | ✅ | ⬜ | Reason **saved** as `CellarProcess` Loss/Gain; proportional split |
-| D13 | Assign to vessel (searchable, shows current content) | `C/assign-vessel-form.tsx` | `AssignLotToVesselAction` | ✅ | ⬜ | |
-| D14 | Blend in another vessel's wine into this lot (keeps identity, recomputes grape %) | `C/blend-in-form.tsx`, `CA:735` | `BlendIntoLotAction`, `POST wine-lots/{lot}/blend-in` (`carried_cost`) | ✅ | ⬜ | Capacity checked; cost carried volume-weighted |
-| D15 | Cost breakdown (admin): €/kg, kg, yield %, grape, additions, linked costs, total, per L, per 750 ml | `P/lots/[id]` | `LotCostService::breakdown` (grape + additions + linked `cost_items.wine_lot_id` + `carried_cost`; per L over initial volume) | ✅ | ⬜ | Include linked `CostItem` costs; one cost/L definition |
-| D16 | Grape breakdown table (admin, more than one grape) | `P/lots/[id]` | `WineLotData.grapes` | ✅ | ⬜ | |
-| D17 | Latest analysis card (latest SO₂ with date/vessel + latest other params) | `P/lots/[id]` | `WineLotData.analyses` | ✅ | ⬜ | All 14 params, not 5 |
-| D18 | Lot journey timeline (created, fills, additions, analyses, tastings, transfers, bottlings, processes) | `C/lot-timeline.tsx` | `LotTimelineQuery`, `GET wine-lots/{lot}/timeline` | ✅ | ⬜ | `LotTimelineQuery` |
-| D19 | Additions tab: form + planned additions box + table (cost admin) + total + delete | `C/addition-form.tsx` | see F | ✅ | ⬜ | |
-| D20 | Analysis tab: trend chart + form + editable list | `C/charts/parameter-trends.tsx` | see G | ✅ | ⬜ | |
-| D21 | Tasting tab: form + editable list | `C/tasting-note-form.tsx` | `UpdateTastingNoteAction`, `PATCH wine-lots/{lot}/tasting-notes/{note}` | ✅ | ⬜ | |
-| D22 | Transfers tab: form + in/out list | `C/transfer-form.tsx` | see H | ✅ | ⬜ | |
-| D23 | Processes tab: quick-pick chips + custom kind, date, volume, vessel, note; list; delete | `C/process-form.tsx`, `CA:1303` | `AddCellarProcessAction`, `DeleteCellarProcessAction` | ✅ | ⬜ | |
+| D4 | Edit lot (Details tab) | `CA:490` | `UpdateWineLotAction` + `GrapeComposition` (rows matched by variety) | ✅ | ✅ `LotFormPanel` (edit) | Keep `percentage` and `harvest_entry_id` on grape rows |
+| D5 | Set status BOTTLED frees vessels | `CA:26` | `UpdateWineLotAction` | ✅ | ✅ `Cellar/Lots/Show` | |
+| D6 | Delete lot (click-twice); restores vessels; removes transfers/bottlings; cleans mirror inventory item | `CA:2319` | `DeleteWineLotAction`, `DELETE wine-lots/{lot}` (cellar.delete) | ✅ | ✅ `Cellar/Lots/Show` | Reverse bottling stock movements on delete |
+| D7 | Header: name, status, type, lot no., grape, vintage, vineyard | `P/lots/[id]` | `WineLotData` detail | ✅ | ✅ `Cellar/Lots/Show` | |
+| D8 | `?vessel=` focus banner ("Viewing vessel X — N L · Show all"); filters additions and analyses | `P/lots/[id]` | — | ✅ | ✅ `Cellar/Lots/Show` | Filter additions by `vessel_id` |
+| D9 | Blend provenance (incoming BLEND transfers by source lot, L and %) | `P/lots/[id]` | `WineLotData.transfers` | ✅ | ✅ `Cellar/Lots/Show` | |
+| D10 | Quick-action buttons (+Addition/+Analysis/+Transfer/+Process), hidden once bottled | `C/lot-detail-tabs.tsx` | — | ✅ | ✅ `Cellar/Lots/Show` | |
+| D11 | Volume card (L vs capacity of vessels or initial; focused-vessel L; vessel links) | `P/lots/[id]` | `WineLotData` | ✅ | ✅ `Cellar/Lots/Show` | |
+| D12 | Adjust volume ± (vessel picker if several; cap removal per vessel; proportional when no vessel) | `C/adjust-volume-form.tsx`, `CA:588` | `AdjustLotVolumeAction` (reason → Loss/Gain process, proportional, per-vessel cap) | ✅ | ✅ `VolumePanel` (adjust) | Reason **saved** as `CellarProcess` Loss/Gain; proportional split |
+| D13 | Assign to vessel (searchable, shows current content) | `C/assign-vessel-form.tsx` | `AssignLotToVesselAction` | ✅ | ✅ `VolumePanel` (assign) | |
+| D14 | Blend in another vessel's wine into this lot (keeps identity, recomputes grape %) | `C/blend-in-form.tsx`, `CA:735` | `BlendIntoLotAction`, `POST wine-lots/{lot}/blend-in` (`carried_cost`) | ✅ | ✅ `VolumePanel` (blend in) | Capacity checked; cost carried volume-weighted |
+| D15 | Cost breakdown (admin): €/kg, kg, yield %, grape, additions, linked costs, total, per L, per 750 ml | `P/lots/[id]` | `LotCostService::breakdown` (grape + additions + linked `cost_items.wine_lot_id` + `carried_cost`; per L over initial volume) | ✅ | ✅ `Cellar/Lots/Show` | Include linked `CostItem` costs; one cost/L definition |
+| D16 | Grape breakdown table (admin, more than one grape) | `P/lots/[id]` | `WineLotData.grapes` | ✅ | ✅ `Cellar/Lots/Show` | |
+| D17 | Latest analysis card (latest SO₂ with date/vessel + latest other params) | `P/lots/[id]` | `WineLotData.analyses` | ✅ | ✅ `Cellar/Lots/Show` | All 14 params, not 5 |
+| D18 | Lot journey timeline (created, fills, additions, analyses, tastings, transfers, bottlings, processes) | `C/lot-timeline.tsx` | `LotTimelineQuery`, `GET wine-lots/{lot}/timeline` | ✅ | ✅ `Cellar/Lots/Show` | `LotTimelineQuery` |
+| D19 | Additions tab: form + planned additions box + table (cost admin) + total + delete | `C/addition-form.tsx` | see F | ✅ | ✅ `Cellar/Lots/Show` + `AdditionPanel` | |
+| D20 | Analysis tab: trend chart + form + editable list | `C/charts/parameter-trends.tsx` | see G | ✅ | ✅ `Cellar/Lots/Show` + `AnalysisPanel` (trend `AreaChart`) | |
+| D21 | Tasting tab: form + editable list | `C/tasting-note-form.tsx` | `UpdateTastingNoteAction`, `PATCH wine-lots/{lot}/tasting-notes/{note}` | ✅ | ✅ `TastingPanel` | |
+| D22 | Transfers tab: form + in/out list | `C/transfer-form.tsx` | see H | ✅ | ✅ `TransferPanel` | |
+| D23 | Processes tab: quick-pick chips + custom kind, date, volume, vessel, note; list; delete | `C/process-form.tsx`, `CA:1303` | `AddCellarProcessAction`, `DeleteCellarProcessAction` | ✅ | ✅ `ProcessPanel` (suggested kinds + free text) | |
 | D24 | Edit a process | — (prototype has none) | — | — | ⬜ | Added for symmetry (`UpdateCellarProcess`) |
-| D25 | Protocol card (FERMENTING only): assign template | `C/lot-protocol-actions.tsx`, `HA:2156` | `AssignFermentationTemplateAction` | ✅ | ⬜ | |
-| D26 | Generate today's tasks from protocol | `HA:2196` | `GenerateWorkOrdersFromProtocolAction` (default board) | ✅ | ⬜ | Tasks land on the default board (prototype's were invisible) |
-| D27 | Plan protocol additions (per additive per vessel; per_L / per_hL / per_kg / per_100kg; round + board card) | `CAA:515` | `PlanProtocolAdditionsAction`, `POST wine-lots/{lot}/protocol/plan-additions` | ✅ | ⬜ | Depends on J |
-| D28 | Bottling section on lot (see L) | — | see L | ✅ | ⬜ | Prototype had no screen; added |
-| D29 | Bottled lots read-only (actions hidden) | `C/lot-detail-tabs.tsx` | — | ✅ | ⬜ | |
+| D25 | Protocol card (FERMENTING only): assign template | `C/lot-protocol-actions.tsx`, `HA:2156` | `AssignFermentationTemplateAction` | ✅ | ✅ `ProtocolCard` | |
+| D26 | Generate today's tasks from protocol | `HA:2196` | `GenerateWorkOrdersFromProtocolAction` (default board) | ✅ | ✅ `ProtocolCard` | Tasks land on the default board (prototype's were invisible) |
+| D27 | Plan protocol additions (per additive per vessel; per_L / per_hL / per_kg / per_100kg; round + board card) | `CAA:515` | `PlanProtocolAdditionsAction`, `POST wine-lots/{lot}/protocol/plan-additions` | ✅ | ✅ `ProtocolCard` | Depends on J |
+| D28 | Bottling section on lot (see L) | — | see L | ✅ | ✅ `BottlingPanel` | Prototype had no screen; added |
+| D29 | Bottled lots read-only (actions hidden) | `C/lot-detail-tabs.tsx` | — | ✅ | ✅ `Cellar/Lots/Show` | |
 | D30 | Harvest intake / press fraction creates or tops up a lot | `HA:388`, `addPressFraction` | Vineyards module | ✅ | — | Tracked in the vineyards matrix |
 
 ## E. SO₂ — `/cellar/so2`
@@ -182,13 +182,13 @@ Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePla
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| F1 | Single addition: product from inventory (grouped, with stock) or manual entry | `C/addition-form.tsx`, `CA:1197` | `AddCellarAdditionAction` | ✅ | ⬜ | |
-| F2 | Category from product or presets (SO2, Yeast, Nutrient, Bentonite, …) | `C/addition-form.tsx` | free-text category | ✅ | ⬜ | |
-| F3 | Dose per hL × lot hL autofill; units list; cost (admin); note | `C/addition-form.tsx` | `StoreCellarAdditionRequest` | ✅ | ⬜ | Dose uses the **vessel's** volume when a vessel is chosen |
-| F4 | Vessel for an addition | note text `→ VESSEL` | `cellar_additions.vessel_id` | ✅ | ⬜ | New `cellar_additions.vessel_id`; legacy import back-fills from note |
-| F5 | Stock check blocks save | `CA:1197` | `AddCellarAdditionAction` (one rule) | ✅ | ⬜ | One rule for every addition path |
-| F6 | Delete addition restores stock | `CA:1265` | `DeleteCellarAdditionAction` | ✅ | ⬜ | |
-| F7 | Edit addition | — | `UpdateCellarAdditionAction`, `PATCH wine-lots/{lot}/additions/{addition}` (stock moved under the stock rule) | ✅ | ⬜ | Added (re-applies the stock delta) |
+| F1 | Single addition: product from inventory (grouped, with stock) or manual entry | `C/addition-form.tsx`, `CA:1197` | `AddCellarAdditionAction` | ✅ | ✅ `AdditionPanel` | |
+| F2 | Category from product or presets (SO2, Yeast, Nutrient, Bentonite, …) | `C/addition-form.tsx` | free-text category | ✅ | ✅ `AdditionPanel` | |
+| F3 | Dose per hL × lot hL autofill; units list; cost (admin); note | `C/addition-form.tsx` | `StoreCellarAdditionRequest` | ✅ | ✅ `AdditionPanel` | Dose uses the **vessel's** volume when a vessel is chosen |
+| F4 | Vessel for an addition | note text `→ VESSEL` | `cellar_additions.vessel_id` | ✅ | ✅ `AdditionPanel` | New `cellar_additions.vessel_id`; legacy import back-fills from note |
+| F5 | Stock check blocks save | `CA:1197` | `AddCellarAdditionAction` (one rule) | ✅ | ✅ `AdditionPanel` | One rule for every addition path |
+| F6 | Delete addition restores stock | `CA:1265` | `DeleteCellarAdditionAction` | ✅ | ✅ `Cellar/Lots/Show` (delete, stock restored) | |
+| F7 | Edit addition | — | `UpdateCellarAdditionAction`, `PATCH wine-lots/{lot}/additions/{addition}` (stock moved under the stock rule) | ✅ | ✅ `AdditionPanel` | Added (re-applies the stock delta) |
 | F8 | Bulk additions page: product, dose + unit (g/L, g/hL, mg/L, mg/hL, mL/L, mL/hL, kg/hL), unit conversion, note | `P/bulk-additions`, `C/bulk-additions.tsx` | `BulkAddAdditionsAction` | ✅ | ⬜ | |
 | F9 | Lot table: filters (status, grape, search), select all, per-lot amount/cost/vessel; summary; success screen | `C/bulk-additions.tsx` | — | ✅ | ⬜ | Stock shortfall blocks |
 | F10 | Products list: category chips, stats (total, low stock, value) | `components/harvest/enological-products.tsx` | `EnologicalProductController::index` | ✅ | ⬜ | |
@@ -205,12 +205,12 @@ Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePla
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| G1 | Analysis form (collapsed): date, vessel, free/total SO₂, alc, pH, TA, VA, sugar, GF, malic, lactic, TPI, Brix (+Baumé), temp, density, note | `C/analysis-form.tsx`, `CA:1431` | `AddCellarAnalysisAction` (14 params) | ✅ | ⬜ | |
-| G2 | Comma decimal input; validation (non-negative, alc ≤100, pH ≤14) | `lib/validators.ts` | FormRequest | ✅ | ⬜ | |
-| G3 | Brix ↔ Baumé converter | `harvest/brix-baboo-input.tsx` | — | ✅ | ⬜ | |
-| G4 | Edit analysis | `CA:1536` | `UpdateCellarAnalysisAction` | ✅ | ⬜ | The vessel can be changed |
-| G5 | Delete analysis | `C/editable-analysis-list.tsx` | `DeleteCellarAnalysisAction` | ✅ | ⬜ | |
-| G6 | Parameter trends: chart per selected parameter, all vessels (daily avg) or one vessel, min/max, fewer than 2 readings note | `C/charts/parameter-trends.tsx`, `CA:2639` | `LotAnalysisTrendQuery` | ✅ | ⬜ | Hand-written SVG (`AreaChart`) |
+| G1 | Analysis form (collapsed): date, vessel, free/total SO₂, alc, pH, TA, VA, sugar, GF, malic, lactic, TPI, Brix (+Baumé), temp, density, note | `C/analysis-form.tsx`, `CA:1431` | `AddCellarAnalysisAction` (14 params) | ✅ | ✅ `AnalysisPanel` | |
+| G2 | Comma decimal input; validation (non-negative, alc ≤100, pH ≤14) | `lib/validators.ts` | FormRequest | ✅ | ✅ `AnalysisPanel` | |
+| G3 | Brix ↔ Baumé converter | `harvest/brix-baboo-input.tsx` | — | ✅ | ✅ `AnalysisPanel` | |
+| G4 | Edit analysis | `CA:1536` | `UpdateCellarAnalysisAction` | ✅ | ✅ `AnalysisPanel` | The vessel can be changed |
+| G5 | Delete analysis | `C/editable-analysis-list.tsx` | `DeleteCellarAnalysisAction` | ✅ | ✅ `AnalysisPanel` | |
+| G6 | Parameter trends: chart per selected parameter, all vessels (daily avg) or one vessel, min/max, fewer than 2 readings note | `C/charts/parameter-trends.tsx`, `CA:2639` | `LotAnalysisTrendQuery` | ✅ | ✅ `Cellar/Lots/Show` (trend chart per parameter, per vessel or averaged) | Hand-written SVG (`AreaChart`) |
 | G7 | Bulk analysis entry | `P/bulk-analysis` (photo) | `BulkAddAnalysesAction` | ✅ | ⬜ | Typed grid + CSV/paste; saves vessel and lab date |
 | G8 | Photo scan → fields (single and bulk) | `api/parse-analysis`, `api/bulk-analysis` | — | — | — | **Deferred** (out of parity scope) |
 | G9 | Bottle analysis on inventory item | `inventory/bottle-analysis-panel.tsx` | Inventory module | — | — | Tracked in the inventory matrix |
@@ -219,10 +219,10 @@ Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePla
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| H1 | Transfer form: type Rack/Blend/Split, volume, "this vessel" shortcut, from/to vessel (free space), note | `C/transfer-form.tsx`, `CA:1616` | `CreateTransferAction` | ✅ | ⬜ | Volume capped by the **source vessel**; Blend/Split offer a destination-lot picker |
+| H1 | Transfer form: type Rack/Blend/Split, volume, "this vessel" shortcut, from/to vessel (free space), note | `C/transfer-form.tsx`, `CA:1616` | `CreateTransferAction` | ✅ | ✅ `TransferPanel` | Volume capped by the **source vessel**; Blend/Split offer a destination-lot picker |
 | H2 | Same-lot transfer needs two different vessels; capacity check | `CA:1616` | `CreateTransferAction` | ✅ | — | |
-| H3 | Transfers list in/out (direction, other lot link, type, date, user, note, ±L) | `P/lots/[id]` | `WineLotData.transfers` | ✅ | ⬜ | |
-| H4 | Delete transfer reverses volumes | `CA:2374` | `DeleteTransferAction` (from the destination vessel; undoes grape mix and carried cost) | ✅ | ⬜ | Also reverses grape % on BLEND |
+| H3 | Transfers list in/out (direction, other lot link, type, date, user, note, ±L) | `P/lots/[id]` | `WineLotData.transfers` | ✅ | ✅ `Cellar/Lots/Show` (Transfers tab) | |
+| H4 | Delete transfer reverses volumes | `CA:2374` | `DeleteTransferAction` (from the destination vessel; undoes grape mix and carried cost) | ✅ | ✅ `Cellar/Lots/Show` (reverse) | Also reverses grape % on BLEND |
 
 ## I. Blending — `/cellar/blend`
 
@@ -269,9 +269,9 @@ Backend shipped in Phase 1a: `app/Actions/Cellar/Activities/*`, `CellarTodayQuer
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| K1 | Lot/vessel tasting note: date, score 0–100, vessel, appearance, nose, palate, overall, note | `C/tasting-note-form.tsx` | `AddTastingNoteAction` | ✅ | ⬜ | |
-| K2 | Delete note | | `DeleteTastingNoteAction` | ✅ | ⬜ | |
-| K3 | Edit note | `updateCellarTastingNote` | `UpdateTastingNoteAction`, `PATCH wine-lots/{lot}/tasting-notes/{note}` | ✅ | ⬜ | |
+| K1 | Lot/vessel tasting note: date, score 0–100, vessel, appearance, nose, palate, overall, note | `C/tasting-note-form.tsx` | `AddTastingNoteAction` | ✅ | ✅ `TastingPanel` | |
+| K2 | Delete note | | `DeleteTastingNoteAction` | ✅ | ✅ `Cellar/Lots/Show` | |
+| K3 | Edit note | `updateCellarTastingNote` | `UpdateTastingNoteAction`, `PATCH wine-lots/{lot}/tasting-notes/{note}` | ✅ | ✅ `TastingPanel` (edit) | |
 | K4 | Reports list: title, date, wine count, first 4 wines, author, empty state | `P/tastings`, `actions/tastings.actions.ts` | `TastingReportController::index` + `TastingReportData` (author, wine count, average, preview) | ✅ | ⬜ | Add wines + author to the payload |
 | K5 | New report: title, date, note, search-to-add wines (any non-archived lot), per-wine note + score | `C/tasting-report-form.tsx` | `SaveTastingReportAction`, `POST tasting-reports` (wines → lot notes) | ✅ | ⬜ | Move to an Action + DTO |
 | K6 | Report detail: date, author, count, average score, per-wine cards linking to lot | `P/tastings/[id]` | `GET tasting-reports/{report}` (wines, scores, lot links) | ✅ | ⬜ | |
@@ -283,10 +283,10 @@ Backend shipped in Phase 1a: `app/Actions/Cellar/Activities/*`, `CellarTodayQuer
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| L1 | Bottle a lot: count, size 375/750/1500/3000, date, note; volume check | `C/bottling-form.tsx` (unused), `CA:2100` | `CreateBottlingAction` | ✅ | ⬜ | Prototype had **no screen**; added on the lot |
-| L2 | Link existing inventory item → PRODUCTION_IN movement | `CA:2100` | `CreateBottlingAction` (`StockLedger`) | ✅ | ⬜ | |
-| L3 | Create a new inventory item (name, SKU, size, price, bottles or cases, per case) | `CA:2100` | `CreateBottlingAction` `new_item` (via `CreateInventoryItemAction`) | ✅ | ⬜ | |
-| L4 | Delete bottling reverses stock + lot status | `CA:2453` | `DeleteBottlingAction` (stock out; wine back into `bottling_vessels`) | ✅ | ⬜ | Restores the vessels the wine came from |
+| L1 | Bottle a lot: count, size 375/750/1500/3000, date, note; volume check | `C/bottling-form.tsx` (unused), `CA:2100` | `CreateBottlingAction` | ✅ | ✅ `BottlingPanel` | Prototype had **no screen**; added on the lot |
+| L2 | Link existing inventory item → PRODUCTION_IN movement | `CA:2100` | `CreateBottlingAction` (`StockLedger`) | ✅ | ✅ `BottlingPanel` | |
+| L3 | Create a new inventory item (name, SKU, size, price, bottles or cases, per case) | `CA:2100` | `CreateBottlingAction` `new_item` (via `CreateInventoryItemAction`) | ✅ | ✅ `BottlingPanel` | |
+| L4 | Delete bottling reverses stock + lot status | `CA:2453` | `DeleteBottlingAction` (stock out; wine back into `bottling_vessels`) | ✅ | ✅ `Cellar/Lots/Show` (reverse) | Restores the vessels the wine came from |
 
 ## M. Fermentation protocols & monitoring
 
@@ -328,8 +328,8 @@ Backend shipped in Phase 1a: `app/Actions/Cellar/Activities/*`, `CellarTodayQuer
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| P1 | Work order linked to wine lot and vessel | `work-order-form.tsx` | `work_orders.wine_lot_id/vessel_id` | ✅ | 🟡 | Add a wine-lot `Combobox` to `TaskPanel` |
-| P2 | Protocol-generated tasks visible on board | `HA:2196` (board-less) | `GenerateWorkOrdersFromProtocolAction` → `WorkOrderBoard::defaultBoard()` | ✅ | ⬜ | Assign to default board/list |
+| P1 | Work order linked to wine lot and vessel | `work-order-form.tsx` | `work_orders.wine_lot_id/vessel_id` | ✅ | ✅ `TaskPanel` wine-lot `Combobox` | Add a wine-lot `Combobox` to `TaskPanel` |
+| P2 | Protocol-generated tasks visible on board | `HA:2196` (board-less) | `GenerateWorkOrdersFromProtocolAction` → `WorkOrderBoard::defaultBoard()` | ✅ | ✅ `ProtocolCard` → cards on the default board | Assign to default board/list |
 | P3 | Cellar round cards on board | `CAA:52` | `CreateCellarActivitiesAction` → default board | ✅ | ✅ rounds land on the board from `Cellar/Plan` and `Cellar/So2` | Depends on J |
 
 ## Q. Audit logging
@@ -364,8 +364,8 @@ rules apply:
 | Q6 | Named entries for bulk operations: `cellar.bulk_additions_applied`, `cellar.bulk_analyses_recorded`, `cellar.so2_round_planned` (lot/vessel ids, dose, product) | — | `cellar.bulk_additions_applied`, `cellar.bulk_analyses_recorded`, `cellar.so2_applied`, `cellar.so2_round_planned` | ✅ | — | One summary entry plus per-row trait entries |
 | Q7 | Named entries for planned work: `cellar_activity.completed` (deviated, planned vs actual), `skipped` (reason), `rescheduled` (from→to, reason), `cellar_activity_round.deleted` | — | Activities actions (`cellar_activity.*`, `cellar_activity_round.*`) | ✅ | — | |
 | Q8 | Named entries for protocols: `wine_lot.protocol_assigned`, `wine_lot.protocol_tasks_generated` (count, day), `wine_lot.protocol_additions_planned` | — | `wine_lot.protocol_assigned`, `.protocol_tasks_generated`, `.protocol_additions_planned` | ✅ | — | |
-| Q9 | Cellar entries readable in the tenant Logs page (subject filter "Cellar", subject links to lot/vessel) | — | `Web\LogController` `?area=cellar` / `?subject_id=` filters | ✅ | ⬜ | |
-| Q10 | "History" panel on lot and vessel detail (audit entries for that subject) | — | `CellarHistoryQuery`, `GET wine-lots/{lot}/history`, `GET vessels/{vessel}/history` | ✅ | ⬜ | Who changed what, beside the lot timeline |
+| Q9 | Cellar entries readable in the tenant Logs page (subject filter "Cellar", subject links to lot/vessel) | — | `Web\LogController` `?area=cellar` / `?subject_id=` filters | ✅ | ✅ `Logs/Index` All / Cellar filter, links to lot and vessel | |
+| Q10 | "History" panel on lot and vessel detail (audit entries for that subject) | — | `CellarHistoryQuery`, `GET wine-lots/{lot}/history`, `GET vessels/{vessel}/history` | ✅ | ✅ `HistoryList` on lot and vessel pages | Who changed what, beside the lot timeline |
 | Q11 | Tests: every cellar write Action asserts its audit entry (action, actor, subject, key metadata) | — | `CellarAuditCoverageTest` sweep (every write path → expected action, actor set) | ✅ | — | |
 
 ---

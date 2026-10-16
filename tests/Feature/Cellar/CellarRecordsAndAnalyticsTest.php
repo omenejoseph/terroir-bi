@@ -120,9 +120,9 @@ class CellarRecordsAndAnalyticsTest extends TestCase
         $events = array_values(array_filter($all, fn (array $e): bool => ! in_array($e['type'], ['vessel', 'created'], true)));
 
         $this->assertSame(['process', 'analysis', 'addition'], array_column($events, 'type'));
-        $this->assertSame('Loss 5.000 L', $events[0]['title']);
-        $this->assertSame('free SO₂ 30.00 · pH 3.40', $events[1]['detail']);
-        $this->assertSame('SO2 10.000 g → F11', $events[2]['title']);
+        $this->assertSame('Loss 5 L', $events[0]['title']);
+        $this->assertSame('free SO₂ 30 · pH 3.4', $events[1]['detail']);
+        $this->assertSame('SO2 10 g → F11', $events[2]['title']);
     }
 
     public function test_analytics_kpis_timeline_health_and_cost_gating(): void

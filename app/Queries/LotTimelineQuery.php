@@ -40,17 +40,19 @@ class LotTimelineQuery
             ];
         };
 
-        $add('created', $lot->created_at, "Lot created — {$lot->initial_volume} L", $lot->grape_variety, $id);
+        $num = fn (mixed $v): string => self::num($v);
+
+        $add('created', $lot->created_at, 'Lot created — '.$num($lot->initial_volume).' L', $lot->grape_variety, $id);
 
         foreach (VesselLot::query()->with('vessel')->where('wine_lot_id', $id)->get() as $vl) {
             /** @var VesselLot $vl */
-            $add('vessel', $vl->added_at ?? $vl->created_at, "In {$vl->vessel?->name}", "{$vl->volume} L", (string) $vl->getKey());
+            $add('vessel', $vl->added_at ?? $vl->created_at, "In {$vl->vessel?->name}", $num($vl->volume).' L', (string) $vl->getKey());
         }
 
         foreach (CellarAddition::query()->with('vessel')->where('wine_lot_id', $id)->get() as $a) {
             /** @var CellarAddition $a */
             $where = $a->vessel !== null ? " → {$a->vessel->name}" : '';
-            $add('addition', $a->created_at, "{$a->name} {$a->quantity} {$a->unit}{$where}", $a->note, (string) $a->getKey());
+            $add('addition', $a->created_at, $a->name.' '.$num($a->quantity)." {$a->unit}{$where}", $a->note, (string) $a->getKey());
         }
 
         foreach (CellarAnalysis::query()->where('wine_lot_id', $id)->get() as $an) {
@@ -58,7 +60,7 @@ class LotTimelineQuery
             $values = [];
             foreach (['free_so2' => 'free SO₂', 'total_so2' => 'total SO₂', 'ph' => 'pH', 'alcohol' => 'alc', 'brix' => 'Brix', 'volatile_acidity' => 'VA'] as $param => $label) {
                 if ($an->getAttribute($param) !== null) {
-                    $values[] = "{$label} ".$an->getAttribute($param);
+                    $values[] = "{$label} ".$num($an->getAttribute($param));
                 }
             }
             $add('analysis', $an->date, 'Analysis', implode(' · ', $values) ?: $an->note, (string) $an->getKey());
@@ -73,16 +75,16 @@ class LotTimelineQuery
             /** @var CellarTransfer $t */
             $in = $t->to_lot_id === $id && $t->from_lot_id !== $id;
             $title = match (true) {
-                $t->from_lot_id === $t->to_lot_id => "Racked {$t->volume_liters} L",
-                $in => "{$t->volume_liters} L in from {$t->fromLot?->name}",
-                default => "{$t->volume_liters} L out to {$t->toLot?->name}",
+                $t->from_lot_id === $t->to_lot_id => 'Racked '.$num($t->volume_liters).' L',
+                $in => $num($t->volume_liters)." L in from {$t->fromLot?->name}",
+                default => $num($t->volume_liters)." L out to {$t->toLot?->name}",
             };
             $add($in ? 'transfer_in' : 'transfer', $t->created_at, $title, $t->note, (string) $t->getKey());
         }
 
         foreach (CellarProcess::query()->where('wine_lot_id', $id)->get() as $p) {
             /** @var CellarProcess $p */
-            $add('process', $p->date, $p->kind.($p->volume !== null ? " {$p->volume} L" : ''), $p->note, (string) $p->getKey());
+            $add('process', $p->date, $p->kind.($p->volume !== null ? ' '.$num($p->volume).' L' : ''), $p->note, (string) $p->getKey());
         }
 
         foreach (Bottling::query()->with('inventoryItem')->where('wine_lot_id', $id)->get() as $b) {
@@ -105,5 +107,13 @@ class LotTimelineQuery
         usort($events, fn (array $a, array $b): int => strcmp((string) $b['date'], (string) $a['date']));
 
         return $events;
+    }
+
+    /** "2800.000" → "2800", "3.250" → "3.25" — numbers as people write them. */
+    private static function num(mixed $value): string
+    {
+        $s = (string) $value;
+
+        return str_contains($s, '.') ? rtrim(rtrim($s, '0'), '.') : $s;
     }
 }

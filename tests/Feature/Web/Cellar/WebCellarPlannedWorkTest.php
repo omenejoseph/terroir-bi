@@ -111,9 +111,9 @@ class WebCellarPlannedWorkTest extends TestCase
         return $this->inTenant(fn () => CellarActivity::query()->latest('id')->firstOrFail());
     }
 
-    public function test_cellar_home_redirects_to_today_and_the_member_lands_there(): void
+    public function test_a_cellar_member_lands_on_the_cellar_home(): void
     {
-        $this->web('GET', '/cellar')->assertRedirect('/cellar/today');
+        $this->web('GET', '/cellar')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->component('Cellar/Index'));
         $this->web('GET', '/dashboard')->assertRedirect(route('cellar'));
     }
 

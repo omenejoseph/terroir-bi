@@ -48,6 +48,9 @@ const assignees = computed<ComboboxOption[]>(
 const vessels = computed<ComboboxOption[]>(
     () => (page.props.vesselOptions as ComboboxOption[] | undefined) ?? [],
 );
+const wineLots = computed<ComboboxOption[]>(
+    () => (page.props.wineLotOptions as ComboboxOption[] | undefined) ?? [],
+);
 
 const isEdit = computed(() => props.task !== null);
 
@@ -61,6 +64,7 @@ const form = useForm({
     due_date: '',
     assignee_id: '',
     vessel_id: '',
+    wine_lot_id: '',
     board_id: '',
 });
 
@@ -86,13 +90,14 @@ watch(
             due_date: dateInput(t?.due_date ?? null),
             assignee_id: t?.assignee?.id ?? '',
             vessel_id: t?.vessel?.id ?? '',
+            wine_lot_id: t?.wine_lot?.id ?? '',
             board_id: t?.board_id ?? props.defaultBoardId ?? '',
         });
         form.reset();
         form.clearErrors();
 
         if (assignees.value.length === 0) {
-            router.reload({ only: ['assigneeOptions', 'vesselOptions'] });
+            router.reload({ only: ['assigneeOptions', 'vesselOptions', 'wineLotOptions'] });
         }
     },
     { immediate: true },
@@ -158,7 +163,7 @@ function submit(): void {
     const transform = (data: Record<string, unknown>): Record<string, unknown> => {
         const out = { ...data };
 
-        for (const key of ['description', 'category', 'start_date', 'due_date', 'assignee_id', 'vessel_id', 'board_id']) {
+        for (const key of ['description', 'category', 'start_date', 'due_date', 'assignee_id', 'vessel_id', 'wine_lot_id', 'board_id']) {
             if (out[key] === '') out[key] = null;
         }
 
@@ -261,6 +266,20 @@ function submit(): void {
                             clearable
                             :options="vessels"
                             @update:model-value="form.vessel_id = $event ?? ''"
+                        />
+                    </template>
+                </FormField>
+
+                <FormField label="Wine lot" :error="form.errors.wine_lot_id">
+                    <template #default="{ id }">
+                        <Combobox
+                            :id="id"
+                            :model-value="form.wine_lot_id === '' ? null : form.wine_lot_id"
+                            placeholder="No wine lot"
+                            empty-text="No wine lot matches."
+                            clearable
+                            :options="wineLots"
+                            @update:model-value="form.wine_lot_id = $event ?? ''"
                         />
                     </template>
                 </FormField>

@@ -113,6 +113,7 @@ final class WineLotData implements Arrayable, JsonSerializable
                 'id' => $a->getKey(),
                 'name' => $a->name,
                 'category' => $a->category,
+                'enological_product_id' => $a->enological_product_id,
                 'vessel_id' => $a->vessel_id,
                 'vessel' => $a->vessel !== null ? ['id' => $a->vessel->getKey(), 'name' => $a->vessel->name] : null,
                 'quantity' => (string) $a->quantity,
@@ -127,6 +128,7 @@ final class WineLotData implements Arrayable, JsonSerializable
                 'id' => $p->getKey(),
                 'kind' => $p->kind,
                 'vessel_id' => $p->vessel_id,
+                'vessel_name' => $p->relationLoaded('vessel') ? $p->vessel?->name : null,
                 'volume' => $p->volume !== null ? (string) $p->volume : null,
                 'note' => $p->note,
                 'date' => $p->date->toIso8601String(),
@@ -135,6 +137,7 @@ final class WineLotData implements Arrayable, JsonSerializable
         $payload['tasting_notes'] = $lot->tastingNotes
             ->map(fn (CellarTastingNote $n): array => [
                 'id' => $n->getKey(),
+                'vessel_id' => $n->vessel_id,
                 'date' => $n->date->toIso8601String(),
                 'appearance' => $n->appearance,
                 'nose' => $n->nose,
@@ -152,6 +155,10 @@ final class WineLotData implements Arrayable, JsonSerializable
                 'direction' => $t->from_lot_id === $lot->getKey() ? 'out' : 'in',
                 'from_lot_id' => $t->from_lot_id,
                 'to_lot_id' => $t->to_lot_id,
+                'from_lot_name' => $t->relationLoaded('fromLot') ? $t->fromLot?->name : null,
+                'to_lot_name' => $t->relationLoaded('toLot') ? $t->toLot?->name : null,
+                'from_vessel_name' => $t->relationLoaded('fromVessel') ? $t->fromVessel?->name : null,
+                'to_vessel_name' => $t->relationLoaded('toVessel') ? $t->toVessel?->name : null,
                 'volume_liters' => (string) $t->volume_liters,
                 'note' => $t->note,
                 'date' => $t->created_at?->toIso8601String(),
@@ -176,6 +183,7 @@ final class WineLotData implements Arrayable, JsonSerializable
                 'bottle_volume_ml' => $b->bottle_volume_ml,
                 'volume_used' => (string) $b->volume_used,
                 'inventory_item_id' => $b->inventory_item_id,
+                'inventory_item_name' => $b->relationLoaded('inventoryItem') ? $b->inventoryItem?->name : null,
                 'note' => $b->note,
                 'date' => $b->date->toIso8601String(),
             ])->all();
@@ -191,6 +199,7 @@ final class WineLotData implements Arrayable, JsonSerializable
         $row = [
             'id' => $a->getKey(),
             'vessel_id' => $a->vessel_id,
+            'vessel_name' => $a->relationLoaded('vessel') ? $a->vessel?->name : null,
             'date' => $a->date->toIso8601String(),
             'note' => $a->note,
         ];

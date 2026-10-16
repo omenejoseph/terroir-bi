@@ -11,6 +11,7 @@ use App\Actions\Tasks\SetFavoriteWorkOrderBoardAction;
 use App\Actions\Tasks\UpdateWorkOrderAction;
 use App\Actions\Tasks\UpdateWorkOrderStatusAction;
 use App\Enums\TaskStatus;
+use App\Enums\WineLotStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tasks\ReorderTasksRequest;
 use App\Http\Requests\Tasks\SetFavoriteWorkOrderBoardRequest;
@@ -21,6 +22,7 @@ use App\Http\Requests\Tasks\UpdateWorkOrderRequest;
 use App\Models\Membership;
 use App\Models\User;
 use App\Models\Vessel;
+use App\Models\WineLot;
 use App\Models\WorkOrder;
 use App\Queries\FavoriteWorkOrderBoardQuery;
 use App\Services\Tasks\WorkOrderBoardPresenter;
@@ -61,6 +63,7 @@ class WorkOrderController extends Controller
             // The task drawer's two pickers, only paid for when it opens.
             'assigneeOptions' => Inertia::optional(fn (): array => $this->assignees()),
             'vesselOptions' => Inertia::optional(fn (): array => $this->vessels()),
+            'wineLotOptions' => Inertia::optional(fn (): array => $this->wineLots()),
         ]);
     }
 
@@ -197,6 +200,26 @@ class WorkOrderController extends Controller
                 'value' => (string) $vessel->getKey(),
                 'label' => $vessel->name,
                 'description' => $vessel->type->value,
+            ])
+            ->all());
+    }
+
+    /**
+     * Lots still in the cellar, for linking a task to the wine it is about.
+     *
+     * @return list<array{value: string, label: string, description: string}>
+     */
+    private function wineLots(): array
+    {
+        return array_values(WineLot::query()
+            ->whereNotIn('status', [WineLotStatus::Bottled->value, WineLotStatus::Blended->value])
+            ->orderByDesc('vintage')
+            ->orderBy('name')
+            ->get(['id', 'name', 'vintage', 'lot_number'])
+            ->map(fn (WineLot $lot): array => [
+                'value' => (string) $lot->getKey(),
+                'label' => trim($lot->name.' '.$lot->vintage),
+                'description' => $lot->lot_number,
             ])
             ->all());
     }

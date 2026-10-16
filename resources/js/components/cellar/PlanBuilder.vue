@@ -373,11 +373,11 @@ const chip = (on: boolean) =>
             </div>
 
             <div class="grid gap-3 sm:grid-cols-2">
-                <FormField v-if="needsLot" :label="t('Wine lot')">
-                    <Combobox v-model="lotId" :options="lotOptions" :placeholder="t('Select lot…')" clearable />
+                <FormField v-slot="{ id, invalid }" v-if="needsLot" :label="t('Wine lot')">
+                    <Combobox :id="id" :invalid="invalid" v-model="lotId" :options="lotOptions" :placeholder="t('Select lot…')" clearable />
                 </FormField>
-                <FormField :label="t('Date')">
-                    <Input v-model="date" type="date" />
+                <FormField v-slot="{ id, invalid }" :label="t('Date')">
+                    <Input :id="id" :invalid="invalid" v-model="date" type="date" />
                 </FormField>
             </div>
 
@@ -399,23 +399,23 @@ const chip = (on: boolean) =>
 
             <!-- Per type -->
             <template v-if="type === 'ADDITION'">
-                <FormField :label="t('Product')">
-                    <Combobox v-model="productId" :options="productOptions" :placeholder="t('Search product… (bentonite, SO₂, yeast)')" clearable />
+                <FormField v-slot="{ id, invalid }" :label="t('Product')">
+                    <Combobox :id="id" :invalid="invalid" v-model="productId" :options="productOptions" :placeholder="t('Search product… (bentonite, SO₂, yeast)')" clearable />
                 </FormField>
                 <div v-if="productId === null" class="grid grid-cols-[1fr_80px] gap-2">
-                    <FormField :label="t('Or a free name')" :hint="t('Not in stock — no stock is drawn.')">
-                        <Input v-model="freeName" />
+                    <FormField v-slot="{ id, invalid }" :label="t('Or a free name')" :hint="t('Not in stock — no stock is drawn.')">
+                        <Input :id="id" :invalid="invalid" v-model="freeName" />
                     </FormField>
-                    <FormField :label="t('Unit')">
-                        <Input v-model="freeUnit" />
+                    <FormField v-slot="{ id, invalid }" :label="t('Unit')">
+                        <Input :id="id" :invalid="invalid" v-model="freeUnit" />
                     </FormField>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <FormField :label="t('Dose mode')">
-                        <Select v-model="doseMode" :options="DOSE_MODES" />
+                    <FormField v-slot="{ id, invalid }" :label="t('Dose mode')">
+                        <Select :id="id" :invalid="invalid" v-model="doseMode" :options="DOSE_MODES" />
                     </FormField>
-                    <FormField :label="t('Dose (:unit)', { unit: doseUnitLabel })">
-                        <Input v-model="dose" inputmode="decimal" />
+                    <FormField v-slot="{ id, invalid }" :label="t('Dose (:unit)', { unit: doseUnitLabel })">
+                        <Input :id="id" :invalid="invalid" v-model="dose" inputmode="decimal" />
                     </FormField>
                 </div>
             </template>
@@ -430,33 +430,33 @@ const chip = (on: boolean) =>
 
             <template v-if="type === 'TRANSFER' && lot">
                 <div class="grid grid-cols-2 gap-2">
-                    <FormField :label="t('From vessel')">
-                        <Select
+                    <FormField v-slot="{ id, invalid }" :label="t('From vessel')">
+                        <Select :id="id" :invalid="invalid"
                             v-model="fromVessel"
                             :placeholder="t('Select…')"
                             :options="lot.vessels.map((v) => ({ value: v.id, label: `${v.name} · ${qty(v.volume)} L` }))"
                         />
                     </FormField>
-                    <FormField :label="t('To vessel')">
-                        <Select v-model="toVessel" :placeholder="t('Select…')" :options="allVesselOptions" />
+                    <FormField v-slot="{ id, invalid }" :label="t('To vessel')">
+                        <Select :id="id" :invalid="invalid" v-model="toVessel" :placeholder="t('Select…')" :options="allVesselOptions" />
                     </FormField>
                 </div>
-                <FormField :label="t('Liters')">
-                    <Input v-model="liters" inputmode="decimal" />
+                <FormField v-slot="{ id, invalid }" :label="t('Liters')">
+                    <Input :id="id" :invalid="invalid" v-model="liters" inputmode="decimal" />
                 </FormField>
             </template>
 
-            <FormField v-if="type === 'PROCESS'" :label="t('Process kind')">
-                <Input v-model="kind" :placeholder="t('filtration, batonnage, pump-over…')" />
+            <FormField v-slot="{ id, invalid }" v-if="type === 'PROCESS'" :label="t('Process kind')">
+                <Input :id="id" :invalid="invalid" v-model="kind" :placeholder="t('filtration, batonnage, pump-over…')" />
             </FormField>
 
-            <FormField v-if="type === 'TOPPING'" :label="t('Liters per vessel')">
-                <Input v-model="liters" inputmode="decimal" />
+            <FormField v-slot="{ id, invalid }" v-if="type === 'TOPPING'" :label="t('Liters per vessel')">
+                <Input :id="id" :invalid="invalid" v-model="liters" inputmode="decimal" />
             </FormField>
 
             <template v-if="type === 'VINEYARD'">
-                <FormField :label="t('Task')">
-                    <Input v-model="kind" :placeholder="t('pruning, spraying, mowing, canopy…')" />
+                <FormField v-slot="{ id, invalid }" :label="t('Task')">
+                    <Input :id="id" :invalid="invalid" v-model="kind" :placeholder="t('pruning, spraying, mowing, canopy…')" />
                 </FormField>
                 <div class="flex flex-col gap-1.5">
                     <div class="flex items-center gap-3 text-sm font-medium">
@@ -484,11 +484,11 @@ const chip = (on: boolean) =>
             </FormField>
 
             <div class="grid gap-3 sm:grid-cols-2">
-                <FormField :label="t('Note for the team (optional)')">
-                    <Input v-model="note" />
+                <FormField v-slot="{ id, invalid }" :label="t('Note for the team (optional)')">
+                    <Input :id="id" :invalid="invalid" v-model="note" />
                 </FormField>
-                <FormField :label="t('Round name (auto if empty)')">
-                    <Input v-model="roundName" />
+                <FormField v-slot="{ id, invalid }" :label="t('Round name (auto if empty)')">
+                    <Input :id="id" :invalid="invalid" v-model="roundName" />
                 </FormField>
             </div>
 

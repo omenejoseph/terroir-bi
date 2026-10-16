@@ -122,6 +122,7 @@ export interface LotOption {
     wine_type: WineType | null;
     status: WineLotStatus;
     current_volume: string;
+    unallocated: string;
     vessels: { id: string; name: string; room: string | null; volume: string }[];
 }
 
@@ -163,6 +164,23 @@ export interface Vessel {
     rotation: number | null;
     notes: string | null;
     lots?: VesselLotContent[];
+}
+
+/** A vessel's content on the map, with the SO₂ the tile shows (App\Queries\CellarMapQuery). */
+export interface MapLot extends VesselLotContent {
+    so2?: {
+        free: number | null;
+        total: number | null;
+        date: string | null;
+        in_vessel: boolean;
+        projected: number | null;
+        latest_addition: { name: string; quantity: string; unit: string } | null;
+    };
+}
+
+/** App\Queries\CellarMapQuery */
+export interface MapVessel extends Omit<Vessel, 'lots'> {
+    lots?: MapLot[];
 }
 
 /** App\Queries\CellarPickerOptions::products() */
@@ -264,4 +282,152 @@ export interface So2DosePlan {
     product: { id: string; name: string; unit: string; current_stock: string; method: string | null };
     lines: So2DoseLine[];
     totals: { quantity: string; cost: number | null; lines: number; stock_after: string; short_by: string | null };
+}
+
+/** The fields LotFormPanel edits — a subset of WineLotData. */
+export interface LotFormValue {
+    id: string;
+    name: string;
+    vintage: string | null;
+    vineyard: string | null;
+    wine_type: string | null;
+    status: string;
+    harvest_weight_kg: string | null;
+    grape_price_per_kg: { minor: number } | null;
+    notes: string | null;
+    grapes?: { grape_variety: string; percentage: string | null; weight_kg: string | null; price_per_kg: { minor: number } | null }[];
+    grape_variety: string;
+}
+
+
+export interface MoneyValue {
+    minor: number;
+    currency: string;
+    formatted: string;
+}
+
+/** App\DataTransferObjects\WineLotData (list form). Money fields are null without finance.view. */
+export interface WineLotSummary {
+    id: string;
+    lot_number: string;
+    name: string;
+    grape_variety: string;
+    vintage: string | null;
+    vineyard: string | null;
+    wine_type: WineType | null;
+    initial_volume: string;
+    current_volume: string;
+    status: WineLotStatus;
+    fermentation_template_id: string | null;
+    grape_cost: MoneyValue | null;
+    grape_price_per_kg: MoneyValue | null;
+    harvest_weight_kg: string | null;
+    notes: string | null;
+    latest_analysis: { date: string; ph: string | null; alcohol: string | null; free_so2: string | null; total_so2: string | null } | null;
+    latest_addition: { name: string; quantity: string; unit: string; date: string | null } | null;
+    carried_cost: number | null;
+    counts?: { additions: number; analyses: number; bottlings: number };
+    latest_bottling?: { date: string; bottle_count: number; bottle_volume_ml: number; inventory_item: { id: string; name: string } | null } | null;
+}
+
+export type AnalysisRow = { id: string; vessel_id: string | null; vessel_name?: string | null; date: string; note: string | null } & Partial<Record<AnalysisParam, string | null>>;
+
+/** App\DataTransferObjects\WineLotData (detail form). */
+export interface WineLotDetail extends WineLotSummary {
+    cost_breakdown: { total: number; additions: number; grape: number; linked: number; carried: number; per_liter: number; per_bottle_750: number } | null;
+    grapes: { id: string; grape_variety: string; percentage: string | null; price_per_kg: MoneyValue | null; weight_kg: string | null }[];
+    vessels: { vessel_lot_id: string; vessel_id: string; vessel_name: string | null; volume: string }[];
+    analyses: AnalysisRow[];
+    additions: {
+        id: string;
+        name: string;
+        category: string | null;
+        enological_product_id: string | null;
+        vessel_id: string | null;
+        vessel: { id: string; name: string } | null;
+        quantity: string;
+        unit: string;
+        total_cost: MoneyValue | null;
+        note: string | null;
+        date: string | null;
+    }[];
+    processes: { id: string; kind: string; vessel_id: string | null; vessel_name: string | null; volume: string | null; note: string | null; date: string }[];
+    tasting_notes: {
+        id: string;
+        vessel_id: string | null;
+        date: string;
+        appearance: string | null;
+        nose: string | null;
+        palate: string | null;
+        overall: string | null;
+        score: number | null;
+        note: string | null;
+    }[];
+    transfers: {
+        id: string;
+        type: string;
+        direction: 'in' | 'out';
+        from_lot_id: string;
+        to_lot_id: string;
+        from_lot_name: string | null;
+        to_lot_name: string | null;
+        from_vessel_name: string | null;
+        to_vessel_name: string | null;
+        volume_liters: string;
+        note: string | null;
+        date: string | null;
+    }[];
+    planned_additions: { id: string; planned_for: string; product_name: string | null; quantity: string | null; unit: string | null; vessel: { id: string; name: string } | null; round_id: string | null }[];
+    bottlings: { id: string; bottle_count: number; bottle_volume_ml: number; volume_used: string; inventory_item_id: string | null; inventory_item_name: string | null; note: string | null; date: string }[];
+}
+
+/** App\Queries\LotTimelineQuery */
+export interface TimelineEvent {
+    type: string;
+    date: string | null;
+    title: string;
+    detail: string | null;
+    ref_id: string | null;
+}
+
+/** App\Queries\CellarHistoryQuery */
+export interface HistoryEntry {
+    id: string;
+    action: string;
+    actor_name: string | null;
+    subject_type: string;
+    subject_id: string | null;
+    metadata: Record<string, unknown> | null;
+    created_at: string | null;
+}
+
+/** App\Queries\TraceabilityQuery */
+export interface TraceNode {
+    id: string;
+    lot_number: string;
+    name: string;
+    vintage: string | null;
+    harvest: { id: string; date: string | null; grape_variety: string | null; parcel: { id: string; name: string } | null; grower: string | null; kg: string | null }[];
+    blended_from: { volume: string; lot: TraceNode | null }[];
+    vessels: { id: string; name: string }[];
+    bottlings: { id: string; date: string; bottles: number; bottle_volume_ml: number; item: { id: string; name: string; sku: string | null } | null }[];
+}
+
+/** App\DataTransferObjects\FermentationTemplateData */
+export interface FermentationTemplate {
+    id: string;
+    name: string;
+    wine_type: string | null;
+    yeast_strain: string | null;
+    target_temp_min: string | null;
+    target_temp_max: string | null;
+    punchdown_schedule: string | null;
+    maceration: string | null;
+    nutrients: string | null;
+    mlf: string | null;
+    description: string | null;
+    estimated_duration: number | null;
+    stages: { name: string; day_start?: number; day_end?: number; actions?: string[] }[];
+    is_active: boolean;
+    additives: { id: string; name: string; enological_product_id: string | null; dose: string; basis: string; stage: string | null; notes: string | null }[];
 }

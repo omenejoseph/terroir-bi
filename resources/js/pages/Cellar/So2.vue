@@ -409,8 +409,8 @@ const summaryChips = computed(() =>
                 </div>
 
                 <Card class="grid gap-4 p-4 sm:grid-cols-4">
-                    <FormField :label="t('SO₂ product')">
-                        <Select v-model="productId" :options="productOptions" :placeholder="t('Select…')" />
+                    <FormField v-slot="{ id, invalid }" :label="t('SO₂ product')">
+                        <Select :id="id" :invalid="invalid" v-model="productId" :options="productOptions" :placeholder="t('Select…')" />
                         <p v-if="product" class="text-[11px] text-muted-foreground">
                             {{ t('Stock') }}: {{ qty(product.current_stock) }} {{ product.unit }}
                             <template v-if="product.cost_per_unit"> | {{ money(product.cost_per_unit.minor) }}/{{ product.unit }}</template>
@@ -431,8 +431,8 @@ const summaryChips = computed(() =>
                             />
                         </div>
                     </FormField>
-                    <FormField :label="t('Note (optional)')">
-                        <Input v-model="note" :placeholder="t('e.g. Pre-bottling correction')" />
+                    <FormField v-slot="{ id, invalid }" :label="t('Note (optional)')">
+                        <Input :id="id" :invalid="invalid" v-model="note" :placeholder="t('e.g. Pre-bottling correction')" />
                     </FormField>
                     <div class="text-xs text-muted-foreground">
                         <p class="mb-1 text-sm font-medium text-foreground">{{ t('Reference (mg/L)') }}</p>
@@ -606,11 +606,11 @@ const summaryChips = computed(() =>
                     </div>
 
                     <div v-if="planning" class="grid gap-3 border-t border-border pt-4 sm:grid-cols-[160px_1fr_1fr_auto] sm:items-end">
-                        <FormField :label="t('Date')"><Input v-model="planDate" type="date" /></FormField>
-                        <FormField :label="t('Who')">
-                            <Select v-model="planAssignee" :options="[{ value: '', label: t('Anyone') }, ...(members ?? [])]" />
+                        <FormField v-slot="{ id, invalid }" :label="t('Date')"><Input :id="id" :invalid="invalid" v-model="planDate" type="date" /></FormField>
+                        <FormField v-slot="{ id, invalid }" :label="t('Who')">
+                            <Select :id="id" :invalid="invalid" v-model="planAssignee" :options="[{ value: '', label: t('Anyone') }, ...(members ?? [])]" />
                         </FormField>
-                        <FormField :label="t('Round name (auto if empty)')"><Input v-model="planName" /></FormField>
+                        <FormField v-slot="{ id, invalid }" :label="t('Round name (auto if empty)')"><Input :id="id" :invalid="invalid" v-model="planName" /></FormField>
                         <Button :disabled="busy" @click="planRound">{{ t('Plan :n tasks', { n: plan.lines.length }) }}</Button>
                     </div>
                 </Card>

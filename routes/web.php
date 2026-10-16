@@ -9,7 +9,10 @@ use App\Http\Controllers\Web\Auth\StopImpersonationController;
 use App\Http\Controllers\Web\Auth\TenantSwitchController;
 use App\Http\Controllers\Web\BottleAnalysisController;
 use App\Http\Controllers\Web\Cellar\CellarActivityController;
+use App\Http\Controllers\Web\Cellar\CellarController;
 use App\Http\Controllers\Web\Cellar\CellarSo2Controller;
+use App\Http\Controllers\Web\Cellar\VesselController;
+use App\Http\Controllers\Web\Cellar\WineLotController;
 use App\Http\Controllers\Web\CustomerCategoryController;
 use App\Http\Controllers\Web\CustomerConsignmentController;
 use App\Http\Controllers\Web\CustomerController;
@@ -398,7 +401,10 @@ Route::middleware('tenant.web')->group(function () {
     // docs/20-cellar-parity-matrix.md). Every page lives under /cellar so the
     // module owns one web prefix. Same Queries and Actions as routes/api.php.
     Route::middleware('can:cellar.view')->group(function () {
-        Route::get('cellar', fn () => redirect('/cellar/today'))->name('cellar');
+        Route::get('cellar', [CellarController::class, 'index'])->name('cellar');
+        Route::get('cellar/lots', [WineLotController::class, 'index'])->name('cellar.lots.index');
+        Route::get('cellar/lots/{wineLot}', [WineLotController::class, 'show'])->name('cellar.lots.show');
+        Route::get('cellar/vessels/{vessel}', [VesselController::class, 'show'])->name('cellar.vessels.show');
         Route::get('cellar/today', [CellarActivityController::class, 'today'])->name('cellar.today');
         Route::get('cellar/plan', [CellarActivityController::class, 'plan'])->name('cellar.plan');
         Route::get('cellar/so2', [CellarSo2Controller::class, 'index'])->name('cellar.so2');
@@ -418,5 +424,42 @@ Route::middleware('tenant.web')->group(function () {
         Route::post('cellar/so2/apply', [CellarSo2Controller::class, 'apply'])->name('cellar.so2.apply');
         Route::post('cellar/so2/round', [CellarSo2Controller::class, 'planRound'])->name('cellar.so2.round');
         Route::post('cellar/so2/readings', [CellarSo2Controller::class, 'readings'])->name('cellar.so2.readings');
+
+        Route::post('cellar/vessels', [VesselController::class, 'store'])->name('cellar.vessels.store');
+        Route::post('cellar/vessels/bulk', [VesselController::class, 'bulkStore'])->name('cellar.vessels.bulk');
+        Route::post('cellar/vessels/duplicate', [VesselController::class, 'duplicate'])->name('cellar.vessels.duplicate');
+        Route::patch('cellar/vessels/layout', [VesselController::class, 'layout'])->name('cellar.vessels.layout');
+        Route::post('cellar/rooms/rename', [VesselController::class, 'renameRoom'])->name('cellar.rooms.rename');
+        Route::patch('cellar/vessels/{vessel}', [VesselController::class, 'update'])->name('cellar.vessels.update');
+
+        Route::post('cellar/lots', [WineLotController::class, 'store'])->name('cellar.lots.store');
+        Route::patch('cellar/lots/{wineLot}', [WineLotController::class, 'update'])->name('cellar.lots.update');
+        Route::post('cellar/lots/{wineLot}/vessels', [WineLotController::class, 'assignVessel'])->name('cellar.lots.vessels.assign');
+        Route::post('cellar/lots/{wineLot}/vessels/bulk', [WineLotController::class, 'bulkAssignVessels'])->name('cellar.lots.vessels.bulk');
+        Route::delete('cellar/lots/{wineLot}/vessels/{vesselLot}', [WineLotController::class, 'unassignVessel'])->name('cellar.lots.vessels.unassign');
+        Route::post('cellar/lots/{wineLot}/adjust-volume', [WineLotController::class, 'adjustVolume'])->name('cellar.lots.adjust');
+        Route::post('cellar/lots/{wineLot}/blend-in', [WineLotController::class, 'blendIn'])->name('cellar.lots.blend-in');
+        Route::post('cellar/lots/{wineLot}/analyses', [WineLotController::class, 'addAnalysis'])->name('cellar.lots.analyses.store');
+        Route::patch('cellar/lots/{wineLot}/analyses/{analysis}', [WineLotController::class, 'updateAnalysis'])->name('cellar.lots.analyses.update');
+        Route::delete('cellar/lots/{wineLot}/analyses/{analysis}', [WineLotController::class, 'deleteAnalysis'])->name('cellar.lots.analyses.destroy');
+        Route::post('cellar/lots/{wineLot}/additions', [WineLotController::class, 'addAddition'])->name('cellar.lots.additions.store');
+        Route::patch('cellar/lots/{wineLot}/additions/{addition}', [WineLotController::class, 'updateAddition'])->name('cellar.lots.additions.update');
+        Route::delete('cellar/lots/{wineLot}/additions/{addition}', [WineLotController::class, 'deleteAddition'])->name('cellar.lots.additions.destroy');
+        Route::post('cellar/lots/{wineLot}/processes', [WineLotController::class, 'addProcess'])->name('cellar.lots.processes.store');
+        Route::delete('cellar/lots/{wineLot}/processes/{process}', [WineLotController::class, 'deleteProcess'])->name('cellar.lots.processes.destroy');
+        Route::post('cellar/lots/{wineLot}/tasting-notes', [WineLotController::class, 'addTasting'])->name('cellar.lots.tastings.store');
+        Route::patch('cellar/lots/{wineLot}/tasting-notes/{tastingNote}', [WineLotController::class, 'updateTasting'])->name('cellar.lots.tastings.update');
+        Route::delete('cellar/lots/{wineLot}/tasting-notes/{tastingNote}', [WineLotController::class, 'deleteTasting'])->name('cellar.lots.tastings.destroy');
+        Route::post('cellar/lots/{wineLot}/transfers', [WineLotController::class, 'addTransfer'])->name('cellar.lots.transfers.store');
+        Route::delete('cellar/lots/{wineLot}/transfers/{transfer}', [WineLotController::class, 'deleteTransfer'])->name('cellar.lots.transfers.destroy');
+        Route::post('cellar/lots/{wineLot}/bottlings', [WineLotController::class, 'addBottling'])->name('cellar.lots.bottlings.store');
+        Route::delete('cellar/lots/{wineLot}/bottlings/{bottling}', [WineLotController::class, 'deleteBottling'])->name('cellar.lots.bottlings.destroy');
+        Route::post('cellar/lots/{wineLot}/protocol', [WineLotController::class, 'assignProtocol'])->name('cellar.lots.protocol');
+        Route::post('cellar/lots/{wineLot}/protocol/generate', [WineLotController::class, 'generateProtocol'])->name('cellar.lots.protocol.generate');
+    });
+
+    Route::middleware('can:cellar.delete')->group(function () {
+        Route::delete('cellar/vessels/{vessel}', [VesselController::class, 'destroy'])->name('cellar.vessels.destroy');
+        Route::delete('cellar/lots/{wineLot}', [WineLotController::class, 'destroy'])->name('cellar.lots.destroy');
     });
 });

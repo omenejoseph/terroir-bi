@@ -206,3 +206,33 @@ export function initials(name: string): string {
         .map((w) => w[0]!.toUpperCase())
         .join('');
 }
+
+export const VESSEL_TYPE_LABELS: Record<string, string> = {
+    TANK: 'Tank',
+    BARREL: 'Barrel',
+    BARRIQUE: 'Barrique',
+    VAT: 'Vat',
+    AMPHORA: 'Amphora',
+};
+
+export const VESSEL_TYPE_OPTIONS = Object.entries(VESSEL_TYPE_LABELS).map(([value, label]) => ({ value, label }));
+
+export const WINE_TYPE_OPTIONS = Object.entries(WINE_TYPE_LABELS).map(([value, label]) => ({ value, label }));
+
+/** The analysis form's fields, in the prototype's order. */
+export const ANALYSIS_FIELDS: { key: AnalysisParam; label: string }[] = [
+    { key: 'free_so2', label: 'Free SO₂ (mg/L)' },
+    { key: 'total_so2', label: 'Total SO₂ (mg/L)' },
+    { key: 'ph', label: 'pH' },
+    { key: 'alcohol', label: 'Alcohol (%)' },
+    { key: 'total_acidity', label: 'Total acidity (g/L)' },
+    { key: 'volatile_acidity', label: 'Volatile acidity (g/L)' },
+    { key: 'residual_sugar', label: 'Residual sugar (g/L)' },
+    { key: 'glucose_fructose', label: 'Glucose + fructose (g/L)' },
+    { key: 'malic', label: 'Malic acid (g/L)' },
+    { key: 'lactic', label: 'Lactic acid (g/L)' },
+    { key: 'tpi', label: 'TPI' },
+    { key: 'brix', label: 'Brix' },
+    { key: 'temperature', label: 'Temperature (°C)' },
+    { key: 'density', label: 'Density' },
+];

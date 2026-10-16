@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Link, router } from '@inertiajs/vue3';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Pagination from '@/components/ui/Pagination.vue';
+import Tabs from '@/components/ui/Tabs.vue';
+import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import { formatActionLabel, formatMetadata } from '@/lib/auditLog';
 import type { TenantAuditLog } from '@/types/logs';
@@ -15,17 +18,36 @@ import type { Paginated } from '@/types';
  * server-side to this tenant only (see Web\LogController).
  */
 const props = defineProps<{
-    logs: Paginated<TenantAuditLog>;
+    logs: Paginated<TenantAuditLog> & { filters?: { area: string | null; subject_id: string | null } };
 }>();
 
 const { t } = useTranslations();
+const { hasModule } = useAuth();
+
+/** The area filter rides along with paging, so page 2 of "Cellar" stays Cellar. */
+const area = computed(() => props.logs.filters?.area ?? null);
+const query = (extra: Record<string, unknown>) => ({ ...(area.value ? { area: area.value } : {}), ...extra });
 
 function goToPage(page: number): void {
-    router.get('/logs', { page }, { preserveState: true, preserveScroll: true, replace: true });
+    router.get('/logs', query({ page }), { preserveState: true, preserveScroll: true, replace: true });
 }
 
 function setPerPage(perPage: number): void {
-    router.get('/logs', { per_page: perPage, page: 1 }, { preserveState: true, preserveScroll: true, replace: true });
+    router.get('/logs', query({ per_page: perPage, page: 1 }), { preserveState: true, preserveScroll: true, replace: true });
+}
+
+function setArea(value: string): void {
+    router.get('/logs', value === 'all' ? {} : { area: value }, { preserveState: true, preserveScroll: true, replace: true });
+}
+
+/** Cellar subjects link to their page; a lot's child records (analyses, additions…) have no page of their own. */
+function subjectHref(row: TenantAuditLog): string | null {
+    const type = row.subject_type?.split('\\').pop() ?? '';
+    if (row.subject_id === null) return null;
+    if (type === 'WineLot') return `/cellar/lots/${row.subject_id}`;
+    if (type === 'Vessel') return `/cellar/vessels/${row.subject_id}`;
+
+    return null;
 }
 
 function subject(row: TenantAuditLog): string {
@@ -42,6 +64,15 @@ function subject(row: TenantAuditLog): string {
     <AppLayout :title="t('Logs')">
         <div class="space-y-5">
             <PageHeader :title="t('Logs')" />
+            <Tabs
+                v-if="hasModule('cellar')"
+                :items="[
+                    { label: t('All'), value: 'all' },
+                    { label: t('Cellar'), value: 'cellar' },
+                ]"
+                :current="area ?? 'all'"
+                @select="setArea"
+            />
 
             <div class="overflow-hidden border border-border bg-card">
                 <div class="overflow-x-auto">
@@ -66,7 +97,10 @@ function subject(row: TenantAuditLog): string {
                                 </td>
                                 <td class="px-4 py-3 text-foreground">{{ row.actor_name ?? '—' }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-foreground">{{ formatActionLabel(row.action) }}</td>
-                                <td class="px-4 py-3 text-muted-foreground">{{ subject(row) }}</td>
+                                <td class="px-4 py-3 text-muted-foreground">
+                                    <Link v-if="subjectHref(row)" :href="subjectHref(row)!" class="underline-offset-2 hover:underline">{{ subject(row) }}</Link>
+                                    <template v-else>{{ subject(row) }}</template>
+                                </td>
                                 <td class="px-4 py-3 text-muted-foreground">{{ formatMetadata(row.metadata) }}</td>
                             </tr>
 
