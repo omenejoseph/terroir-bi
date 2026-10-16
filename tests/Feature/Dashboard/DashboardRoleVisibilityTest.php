@@ -200,7 +200,7 @@ class DashboardRoleVisibilityTest extends TestCase
             ->where('summary.key_ratios', null)
             ->where('summary.net_cash_flow', null)
             ->where('summary.stats.outstanding_ar', null)
-            ->whereNot('summary.revenue_summary', null)
+            ->whereNot('summary.revenue_by_channel', null)
             ->where('summary.visible', fn ($visible) => array_diff($visible->all(), ['revenue', 'orders', 'stock', 'reorder', 'tasks']) === []));
     }
 

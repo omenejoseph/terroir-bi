@@ -101,20 +101,22 @@ class OrderController extends Controller
         ];
 
         return Inertia::render('Orders/Index', [
-            'orders' => $presenter->page($query->paginate($scoped, PerPage::fromRequest($request))),
+            // Closures: opening an order (a partial visit for `order`) must not rerun the list, counts and
+            // pipeline queries behind it, and a filter change names exactly the ones it needs.
+            'orders' => fn (): array => $presenter->page($query->paginate($scoped, PerPage::fromRequest($request))),
             'filters' => $filters,
             // The item drawer's "Open in Orders" link lands here with only the
             // item's id in the query string — this names the filter chip
             // without the frontend needing its own item lookup.
-            'itemFilterName' => $filters['item_id'] === null
+            'itemFilterName' => fn (): ?string => $filters['item_id'] === null
                 ? null
                 : InventoryItem::query()->whereKey($filters['item_id'])->value('name'),
             // Chip counts describe the whole filtered set, so they stay stable
             // while you switch between statuses.
-            'statusCounts' => $counts->get($scoped),
+            'statusCounts' => fn (): array => $counts->get($scoped),
             // The pipeline card needs financial visibility to be meaningful —
             // it is denominated in money — so it is withheld rather than zeroed.
-            'pipeline' => $this->membership->canSeeFinancials()
+            'pipeline' => fn (): ?array => $this->membership->canSeeFinancials()
                 ? $pipeline->get($from, $to)
                 : null,
             // The Create Order drawer's two pickers. Both are whole-catalog

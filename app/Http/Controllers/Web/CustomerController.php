@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
-use App\Services\Customers\LookupCompanyByVatService;
-use Illuminate\Http\JsonResponse;
 use App\Actions\Customers\CreateCustomerAction;
 use App\Actions\Customers\DeleteCustomerAction;
 use App\Actions\Customers\OrderTokenAction;
@@ -34,6 +32,7 @@ use App\Queries\ReorderRadarQuery;
 use App\Services\Customers\CustomerCategoryOptions;
 use App\Services\Customers\CustomerMergeService;
 use App\Services\Customers\CustomerPresenter;
+use App\Services\Customers\LookupCompanyByVatService;
 use App\Services\Customers\PricingTierOptions;
 use App\Services\Export\CsvExporter;
 use App\Services\Orders\CustomerConsignmentService;
@@ -45,6 +44,7 @@ use App\Support\Money\Money;
 use App\Support\Period;
 use App\Support\PerPage;
 use App\Tenancy\Contracts\TenantContext;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -138,21 +138,23 @@ class CustomerController extends Controller
         $revenueMonths = in_array($revenueMonths, [3, 6, 12], true) ? $revenueMonths : 12;
 
         return Inertia::render('Customers/Show', [
-            'customer' => $presenter->detail($customer),
+            // Closures, so a partial visit (a tab, the product range, the revenue months) evaluates only
+            // the props it names instead of rebuilding the whole overview each time.
+            'customer' => fn (): array => $presenter->detail($customer),
             // For the edit form's Category select, loaded on demand like the tiers on the list page.
             'categories' => Inertia::optional(fn (): array => $categories->list()),
             'tab' => $this->tab($request),
-            'hasConsignment' => Order::query()->where('customer_id', $customer->getKey())->where('is_consignment', true)->exists(),
-            'rhythm' => $rhythm->get($customer),
+            'hasConsignment' => fn (): bool => Order::query()->where('customer_id', $customer->getKey())->where('is_consignment', true)->exists(),
+            'rhythm' => fn (): array => $rhythm->get($customer),
             // The band is usually empty; each card either fires with its
             // numbers or is absent, never a zero.
-            'attention' => $attention->get($customer),
+            'attention' => fn (): array => $attention->get($customer),
             // Money-denominated, so withheld rather than zeroed for a viewer
             // without financial visibility.
-            'insights' => $financials ? $insights->get($customer) : null,
-            'orderAnalytics' => $financials ? $orderAnalytics->get($customer, $revenueMonths) : null,
+            'insights' => fn (): ?array => $financials ? $insights->get($customer) : null,
+            'orderAnalytics' => fn (): ?array => $financials ? $orderAnalytics->get($customer, $revenueMonths) : null,
             'revenueRangeMonths' => $revenueMonths,
-            'products' => $products->get($customer, $productsFrom, $productsTo),
+            'products' => fn (): array => $products->get($customer, $productsFrom, $productsTo),
             'productRange' => [
                 'preset' => $this->productPreset($request),
                 'from' => $productsFrom?->toDateString(),

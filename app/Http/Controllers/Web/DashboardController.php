@@ -50,6 +50,7 @@ class DashboardController extends Controller
                 is_string($range) ? $range : null,
                 is_string($from) ? $from : null,
                 is_string($to) ? $to : null,
+                screen: true,
             ),
             // Echoed back so the period selector can render its current state
             // without duplicating the defaults on the client.

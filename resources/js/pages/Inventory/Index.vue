@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ChevronDown, PencilLine, Upload, X } from 'lucide-vue-next';
+import { ChevronDown, PencilLine, Search, Upload, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import BulkEditTable from '@/components/inventory/BulkEditTable.vue';
@@ -19,6 +19,7 @@ import { useAuth } from '@/composables/useAuth';
 import { csrfHeader } from '@/lib/csrf';
 import { rememberListUrl } from '@/lib/listReturn';
 import { useTranslations } from '@/composables/useTranslations';
+import { useVisitPending } from '@/composables/useVisitPending';
 import { cn } from '@/lib/cn';
 import { formatMoney, formatQuantity } from '@/lib/money';
 import type {
@@ -116,6 +117,15 @@ watch(search, (value) => {
     timer = setTimeout(() => reload({ search: value || undefined }), 300);
 });
 
+/*
+  A category or chip click answers at once: the control shows the new choice immediately and the rows
+  it is about to replace dim (after a beat, so a quick answer never flickers) until the response lands.
+*/
+const pending = useVisitPending();
+const chosen = ref<{ category?: string | null; attention?: string | null }>({});
+const categoryCurrent = computed(() => ('category' in chosen.value ? chosen.value.category ?? '' : (props.filters.category ?? '')));
+const attentionCurrent = computed(() => ('attention' in chosen.value ? chosen.value.attention ?? null : props.filters.attention));
+
 function reload(overrides: Record<string, unknown>): void {
     router.get(
         '/inventory',
@@ -160,6 +170,7 @@ const CATEGORY_TABS: TabItem[] = [
 
 /** The design shows no "All" chip; pressing the active category clears it. */
 function selectCategory(value: string): void {
+    chosen.value = { ...chosen.value, category: props.filters.category === value ? null : value };
     reload({ category: props.filters.category === value ? undefined : value });
 }
 
@@ -429,7 +440,7 @@ function flags(item: InventoryItem): string[] {
 
             <Tabs :items="MODULE_TABS" :current="t('Inventory')" />
 
-            <AttentionBand :items="attention" :active="filters.attention" @select="reload({ attention: $event ?? undefined, page: 1 })" />
+            <AttentionBand :items="attention" :active="attentionCurrent" @select="(key) => { chosen = { ...chosen, attention: key }; reload({ attention: key ?? undefined, page: 1 }); }" />
 
             <!-- Search + category tabs -->
             <div class="flex flex-wrap items-center gap-3">
@@ -448,7 +459,7 @@ function flags(item: InventoryItem): string[] {
 
                 <Tabs
                     :items="CATEGORY_TABS"
-                    :current="filters.category ?? ''"
+                    :current="categoryCurrent"
                     variant="filter"
                     @select="selectCategory"
                 />
@@ -493,7 +504,7 @@ function flags(item: InventoryItem): string[] {
                     <p class="mt-0.5 text-xs text-muted-foreground">{{ listSummary }}</p>
                 </div>
 
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto transition-opacity duration-150" :class="pending ? 'opacity-50 delay-150' : ''" :aria-busy="pending">
                     <table class="w-full min-w-[64rem] text-sm">
                         <thead class="border-b border-border text-left text-3xs text-muted-foreground">
                             <tr>

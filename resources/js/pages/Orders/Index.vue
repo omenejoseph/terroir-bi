@@ -17,6 +17,7 @@ import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { usePopover } from '@/composables/usePopover';
 import { useTranslations } from '@/composables/useTranslations';
+import { useVisitPending } from '@/composables/useVisitPending';
 import { CUSTOMER_TYPES, customerTypeLabel } from '@/lib/customers';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { Paginated, SharedProps } from '@/types';
@@ -71,6 +72,15 @@ watch(search, (value) => {
     timer = setTimeout(() => reload({ search: value || undefined }), 300);
 });
 
+/*
+  A filter, period or status click answers at once: the control shows the new choice immediately
+  and the rows it is about to replace dim until the (partial) response lands.
+*/
+const pending = useVisitPending();
+const chosen = ref<{ period?: string; status?: string | null }>({});
+const periodCurrent = computed(() => chosen.value.period ?? (props.filters.from === null ? (props.filters.period ?? 'ytd') : ''));
+const statusCurrent = computed(() => ('status' in chosen.value ? chosen.value.status ?? null : props.filters.status));
+
 function reload(overrides: Record<string, unknown>): void {
     router.get(
         '/orders',
@@ -87,7 +97,7 @@ function reload(overrides: Record<string, unknown>): void {
             per_page: props.orders.meta.per_page,
             ...overrides,
         },
-        { preserveState: true, preserveScroll: true, replace: true, only: ['orders', 'filters', 'statusCounts', 'pipeline', 'itemFilterName'] },
+        { preserveState: true, preserveScroll: true, replace: true, only: ['orders', 'filters', 'statusCounts', 'pipeline', 'itemFilterName'], onFinish: () => (chosen.value = {}) },
     );
 }
 
@@ -123,6 +133,7 @@ const PERIOD_TABS = computed<TabItem[]>(() => [
 const customRange = computed<DateRange>(() => ({ from: props.filters.from, to: props.filters.to }));
 
 function selectPeriod(value: string): void {
+    chosen.value = { ...chosen.value, period: value };
     reload({ period: value, from: undefined, to: undefined });
 }
 
@@ -138,6 +149,7 @@ function selectRange(range: DateRange): void {
 const FILTERABLE_STAGES = props.statusCounts.statuses.map((s) => s.key);
 
 function selectStatus(key: string | null): void {
+    chosen.value = { ...chosen.value, status: key };
     reload({ status: key ?? undefined });
 }
 
@@ -338,7 +350,7 @@ function bulkChangeStatus(status: string): void {
             <div class="flex flex-wrap items-center gap-2">
                 <Tabs
                     :items="PERIOD_TABS"
-                    :current="filters.from === null ? (filters.period ?? 'ytd') : ''"
+                    :current="periodCurrent"
                     @select="selectPeriod"
                 />
                 <DateRangePicker
@@ -351,12 +363,12 @@ function bulkChangeStatus(status: string): void {
             <PipelineCard
                 v-if="pipeline"
                 :pipeline="pipeline"
-                :current="filters.status"
+                :current="statusCurrent"
                 :filterable="FILTERABLE_STAGES"
                 @select="selectStatus"
             />
 
-            <div class="overflow-hidden border border-border bg-card">
+            <div class="overflow-hidden border border-border bg-card" :aria-busy="pending">
                 <!-- Toolbar -->
                 <div class="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
                     <div class="relative w-full max-w-[280px]">
@@ -516,14 +528,14 @@ function bulkChangeStatus(status: string): void {
                 <div class="border-b border-border px-4 py-3">
                     <StatusChips
                         :chips="statusCounts.statuses"
-                        :current="filters.status"
+                        :current="statusCurrent"
                         :total="statusCounts.total"
                         @select="selectStatus"
                     />
                 </div>
 
                 <!-- The table scrolls inside its own container so the page never does. -->
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto transition-opacity duration-150" :class="pending ? 'opacity-50 delay-150' : ''">
                     <table class="w-full min-w-[60rem] text-xs">
                         <thead class="border-b border-border bg-muted/40 text-left text-3xs text-muted-foreground">
                             <tr>

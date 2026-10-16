@@ -68,9 +68,14 @@ class DashboardSummary
      * (7D/30D/…) kept for backward compatibility. `$from`/`$to` carry a custom
      * date range when `$period === 'custom'`.
      *
+     * `$screen` is the web dashboard: it leaves out the blocks that screen does not draw (the
+     * always-on revenue summary, the six-month trend, the order series and status split, top
+     * products, recent orders — about a dozen queries), so changing the period is quicker. The JSON
+     * API keeps the full payload.
+     *
      * @return array<string, mixed>
      */
-    public function build(?string $period = null, ?string $range = null, ?string $from = null, ?string $to = null): array
+    public function build(?string $period = null, ?string $range = null, ?string $from = null, ?string $to = null, bool $screen = false): array
     {
         [$since, $until, $token] = $this->resolveWindow($period, $range, $from, $to);
 
@@ -136,9 +141,9 @@ class DashboardSummary
             'currency' => $this->currency(),
             // Which blocks this member may see, so the screen can tell "hidden for your role" from "empty".
             'visible' => $visible,
-            'revenue_summary' => $money ? $this->revenueSummary() : null,
+            'revenue_summary' => $money && ! $screen ? $this->revenueSummary() : null,
             'revenue_by_channel' => $money ? $this->revenueByChannel($since, $until, $channelTotals) : null,
-            'revenue_trend' => $money ? $this->revenueTrend() : null,
+            'revenue_trend' => $money && ! $screen ? $this->revenueTrend() : null,
             // Cost and salary ratios, so admin-only like the costs themselves.
             'key_ratios' => $finance ? $this->keyRatios($orders, $since, $until, $channelTotals, $costs) : null,
             'stats' => [
@@ -151,13 +156,13 @@ class DashboardSummary
                 'tasks_overdue' => $taskAccess ? $this->overdueTasks() : null,
                 'ready_to_ship' => $orderAccess ? $this->readyToShipCount() : null,
             ],
-            'orders' => $orderAccess ? $this->series(array_values($orderCounts), $step, $until) : null,
+            'orders' => $orderAccess && ! $screen ? $this->series(array_values($orderCounts), $step, $until) : null,
             'revenue' => $money ? $this->series(array_values($revenueBuckets), $step, $until) : null,
-            'order_status' => $orderAccess ? $this->orderStatus($orders) : null,
-            'top_products' => $money ? $this->topProducts($since, $until) : null,
+            'order_status' => $orderAccess && ! $screen ? $this->orderStatus($orders) : null,
+            'top_products' => $money && ! $screen ? $this->topProducts($since, $until) : null,
             'stock_watch' => $stockAccess ? $this->analytics->stockWatch(6) : null,
             // Lists order totals, so it needs both: seeing orders and seeing money.
-            'recent_orders' => ($orderAccess && $money) ? $this->recentOrders() : null,
+            'recent_orders' => ($orderAccess && $money && ! $screen) ? $this->recentOrders() : null,
             'reorder_pipeline' => $radarAccess ? $this->reorderPipeline() : null,
             'upcoming_tasks' => $taskAccess ? $this->upcomingTasks() : null,
             'net_cash_flow' => $finance ? $this->netCashFlow($since, $until, $costs) : null,

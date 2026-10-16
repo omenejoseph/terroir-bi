@@ -608,4 +608,20 @@ class WebQaFixesTest extends TestCase
         $this->assertSame(2, $barrel->vesselLots()->count());
         $this->assertSame('225.000', (string) $barrel->refresh()->current_volume);
     }
+
+    public function test_the_dashboard_screen_skips_blocks_it_does_not_draw_but_the_api_keeps_them(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAs($admin)->withSession($this->tenantSession($tenant))->get('/dashboard?period=ytd')
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('summary.revenue_summary', null)
+                ->where('summary.recent_orders', null)
+                ->has('summary.stats')
+                ->has('summary.revenue_by_channel'));
+
+        \Laravel\Sanctum\Sanctum::actingAs($admin);
+        $this->getJson('/api/v1/dashboard?period=ytd', $this->tenantHeader($tenant))->assertOk()
+            ->assertJsonStructure(['data' => ['revenue_summary', 'revenue_trend', 'top_products', 'recent_orders']]);
+    }
 }

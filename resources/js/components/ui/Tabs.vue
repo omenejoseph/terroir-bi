@@ -96,7 +96,7 @@ function tabClass(tab: TabItem): string {
         role="tablist"
     >
         <template v-for="tab in items" :key="tab.label">
-            <Link v-if="tab.href" :href="tab.href" role="tab" :aria-selected="isCurrent(tab)" :class="tabClass(tab)">
+            <Link v-if="tab.href" :href="tab.href" prefetch :cache-for="15000" role="tab" :aria-selected="isCurrent(tab)" :class="tabClass(tab)">
                 {{ tab.label }}
             </Link>
             <button

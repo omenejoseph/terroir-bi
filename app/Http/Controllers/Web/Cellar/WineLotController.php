@@ -62,8 +62,6 @@ use App\Models\User;
 use App\Models\Vessel;
 use App\Models\VesselLot;
 use App\Models\WineLot;
-use App\Support\LotScope;
-use App\Support\PerPage;
 use App\Queries\CellarAttentionQuery;
 use App\Queries\CellarHistoryQuery;
 use App\Queries\CellarPickerOptions;
@@ -75,6 +73,8 @@ use App\Queries\TraceabilityQuery;
 use App\Services\Cellar\CellarClock;
 use App\Services\Cellar\LotCostService;
 use App\Services\Cellar\UndoStash;
+use App\Support\LotScope;
+use App\Support\PerPage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -142,13 +142,6 @@ class WineLotController extends Controller
 
     public function show(Request $request, WineLot $wineLot, LotTablesQuery $tables, LotBarrelsQuery $barrels, LotAnalysisTrendQuery $trend, CellarHistoryQuery $history, TraceabilityQuery $trace, CellarPickerOptions $options, CellarClock $clock, CellarAttentionQuery $attention): Response
     {
-        $today = $clock->today();
-        $next = CellarActivity::query()->with(['vessel', 'round'])
-            ->where('wine_lot_id', $wineLot->getKey())
-            ->where('status', CellarActivityStatus::Planned->value)
-            ->orderBy('planned_for')->orderBy('sort_order')
-            ->first();
-
         // What part of the lot is on screen: the whole lot or one barrel (?vessel=), and which tab.
         $vessel = LotScope::resolve($wineLot, $request->query('vessel') !== null ? (string) $request->query('vessel') : null);
         $tab = in_array($request->query('tab'), ['overview', 'barrels', 'analysis', 'additions', 'tasting', 'transfers', 'processes', 'details'], true)
@@ -159,36 +152,52 @@ class WineLotController extends Controller
         $kind = (string) $request->query('kind', '');
 
         // In a barrel's view the barrels table is that barrel (and its "whole lot" row is just it), not all of them.
-        $overview = $barrels->get($wineLot, $vessel);
-
-        // The tab's own table, one page of it. Only the active tab's rows are read.
-        $table = match ($tab) {
-            'overview' => $tables->journey($wineLot, $vessel, self::JOURNEY_KINDS[$kind] ?? null, $perPage, $page),
-            'barrels' => $tables->slice($overview['rows'], $perPage, $page),
-            'analysis' => $tables->analyses($wineLot, $vessel, $perPage, $page),
-            'additions' => $tables->additions($wineLot, $vessel, $perPage, $page),
-            'tasting' => $tables->tastings($wineLot, $vessel, $perPage, $page),
-            'transfers' => $tables->transfers($wineLot, $vessel, $perPage, $page),
-            'processes' => $tables->processes($wineLot, $vessel, $perPage, $page),
-            default => null,
+        // Built once, and only if a prop below actually asks for it.
+        $overview = null;
+        $barrelData = function () use (&$overview, $barrels, $wineLot, $vessel): array {
+            return $overview ??= $barrels->get($wineLot, $vessel);
         };
-        $scopeRow = $vessel === null ? null : (collect($overview['rows'])->firstWhere('vessel_id', $vessel));
 
+        // Every prop is a closure: a tab, barrel or page change is a partial visit that names only the
+        // props it needs (scope, table, counts), so the lot, the trend and the barrels are not rebuilt
+        // for it. A full visit evaluates them all.
         return Inertia::render('Cellar/Lots/Show', [
-            'lot' => $this->present($wineLot),
-            'scope' => ['vessel_id' => $vessel, 'vessel' => $scopeRow, 'tab' => $tab, 'kind' => $kind !== '' && isset(self::JOURNEY_KINDS[$kind]) ? $kind : null],
-            'table' => $table,
+            'lot' => fn (): array => $this->present($wineLot),
+            'scope' => function () use ($vessel, $tab, $kind, $barrelData): array {
+                $scopeRow = $vessel === null ? null : collect($barrelData()['rows'])->firstWhere('vessel_id', $vessel);
+
+                return ['vessel_id' => $vessel, 'vessel' => $scopeRow, 'tab' => $tab, 'kind' => $kind !== '' && isset(self::JOURNEY_KINDS[$kind]) ? $kind : null];
+            },
+            // The tab's own table, one page of it. Only the active tab's rows are read.
+            'table' => fn (): ?array => match ($tab) {
+                'overview' => $tables->journey($wineLot, $vessel, self::JOURNEY_KINDS[$kind] ?? null, $perPage, $page),
+                'barrels' => $tables->slice($barrelData()['rows'], $perPage, $page),
+                'analysis' => $tables->analyses($wineLot, $vessel, $perPage, $page),
+                'additions' => $tables->additions($wineLot, $vessel, $perPage, $page),
+                'tasting' => $tables->tastings($wineLot, $vessel, $perPage, $page),
+                'transfers' => $tables->transfers($wineLot, $vessel, $perPage, $page),
+                'processes' => $tables->processes($wineLot, $vessel, $perPage, $page),
+                default => null,
+            },
             // Bottlings sit under the Transfers tab (a bottling is where wine leaves the lot).
-            'bottlings' => $tab === 'transfers' ? $tables->bottlings($wineLot, 10, 1) : null,
-            'counts' => [...$tables->counts($wineLot, $vessel), 'barrels' => count($overview['rows'])],
+            'bottlings' => fn (): ?array => $tab === 'transfers' ? $tables->bottlings($wineLot, 10, 1) : null,
+            'counts' => fn (): array => [...$tables->counts($wineLot, $vessel), 'barrels' => count($barrelData()['rows'])],
             // The barrels at a glance (the Barrels tab pages through all of them) and the combined figures.
-            'barrels' => ['rows' => array_slice($overview['rows'], 0, 8), 'combined' => $overview['combined']],
+            'barrels' => fn (): array => ['rows' => array_slice($barrelData()['rows'], 0, 8), 'combined' => $barrelData()['combined']],
             // The lot's next planned task (overdue ones first), for the workspace's "Next" tile.
-            'nextPlanned' => $next !== null ? CellarActivityData::fromModel($next, $today)->toArray() : null,
+            'nextPlanned' => function () use ($wineLot, $clock): ?array {
+                $next = CellarActivity::query()->with(['vessel', 'round'])
+                    ->where('wine_lot_id', $wineLot->getKey())
+                    ->where('status', CellarActivityStatus::Planned->value)
+                    ->orderBy('planned_for')->orderBy('sort_order')
+                    ->first();
+
+                return $next !== null ? CellarActivityData::fromModel($next, $clock->today())->toArray() : null;
+            },
             'attention' => fn (): array => $attention->get((string) $wineLot->getKey()),
             // Every reading, oldest first, tagged by barrel: the charts and the stat tiles read it.
-            'trend' => $trend->get($wineLot),
-            'blendSources' => $this->blendSources($wineLot),
+            'trend' => fn (): array => $trend->get($wineLot),
+            'blendSources' => fn (): array => $this->blendSources($wineLot),
             'vessels' => fn (): array => $options->vessels(),
             'lots' => fn (): array => $options->lots(),
             'products' => fn (): array => $options->products(),

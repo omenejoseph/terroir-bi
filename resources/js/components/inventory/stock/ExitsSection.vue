@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 
 import SectionLabel from '@/components/inventory/stock/SectionLabel.vue';
 import SparkBars from '@/components/inventory/SparkBars.vue';
 import { useTranslations } from '@/composables/useTranslations';
+import { useVisitPending } from '@/composables/useVisitPending';
 import { formatMoney, formatNumber } from '@/lib/money';
 import { customerChannelLabel } from '@/lib/stock';
 import type { MoneyValue } from '@/types/inventory';
@@ -38,9 +39,14 @@ const PERIOD_TABS = computed<TabItem[]>(() => [
     { value: '90d', label: t('90d') },
 ]);
 
+/** The strip answers at once; the figures it is about to replace dim until the partial response lands. */
+const pending = useVisitPending();
+const chosen = ref<string | null>(null);
+
 function selectPeriod(period: string): void {
+    chosen.value = period;
     // Only the period-dependent figures are refetched; the movements and the rest of the page stay as they are.
-    router.get(`/inventory/${props.itemId}`, { period }, { preserveState: true, preserveScroll: true, replace: true, only: ['analytics', 'filters', 'vintageCoverage'] });
+    router.get(`/inventory/${props.itemId}`, { period }, { preserveState: true, preserveScroll: true, replace: true, only: ['analytics', 'filters', 'vintageCoverage'], onFinish: () => (chosen.value = null) });
 }
 
 /** Bars fade down the list, as the design draws them: first channel full strength. */
@@ -102,10 +108,10 @@ const velocity = computed(() =>
                         v-for="tab in PERIOD_TABS"
                         :key="tab.value"
                         type="button"
-                        :aria-pressed="period === tab.value"
+                        :aria-pressed="(chosen ?? period) === tab.value"
                         class="border px-2.5 py-1 text-xs transition-colors"
                         :class="
-                            period === tab.value
+                            (chosen ?? period) === tab.value
                                 ? 'border-primary bg-primary text-primary-foreground'
                                 : 'border-border bg-card text-foreground hover:border-foreground/40'
                         "
@@ -117,7 +123,7 @@ const velocity = computed(() =>
             </template>
         </SectionLabel>
 
-        <div class="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div class="grid gap-4 transition-opacity duration-150 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]" :class="pending ? 'opacity-50 delay-150' : ''" :aria-busy="pending">
             <!-- Inventory spend -->
             <div class="flex flex-col gap-4 border border-border bg-card p-6">
                 <div>

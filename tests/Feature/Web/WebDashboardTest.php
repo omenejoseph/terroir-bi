@@ -102,7 +102,9 @@ class WebDashboardTest extends TestCase
                 ->has('summary.reorder_pipeline.total')
                 ->has('summary.upcoming_tasks.due_this_week')
                 ->has('summary.net_cash_flow.net')
-                ->has('summary.revenue_trend', 6)
+                // The screen leaves out what it does not draw; the API keeps the full payload.
+                ->where('summary.revenue_trend', null)
+                ->where('summary.top_products', null)
                 ->where('summary.stats.ready_to_ship', 0));
     }
 

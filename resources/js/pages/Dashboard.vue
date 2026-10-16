@@ -25,6 +25,7 @@ import ProgressBar from '@/components/ui/ProgressBar.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
+import { useVisitPending } from '@/composables/useVisitPending';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { DashboardFilters, DashboardSection, DashboardSummary } from '@/types/dashboard';
 import type { SharedProps } from '@/types';
@@ -67,6 +68,14 @@ const PERIOD_TABS = computed<TabItem[]>(() => [
     { value: 'ytd', label: t('Year to Date') },
 ]);
 
+/*
+  A period change answers at once: the strip shows the new choice immediately and the figures it is
+  about to replace dim until the (partial) response lands.
+*/
+const pending = useVisitPending();
+const dim = computed(() => (pending.value ? 'opacity-50 delay-150' : ''));
+const chosenPeriod = ref<string | null>(null);
+
 function reload(overrides: Record<string, unknown>): void {
     router.get(
         '/dashboard',
@@ -77,11 +86,12 @@ function reload(overrides: Record<string, unknown>): void {
             ...overrides,
         },
         // A partial visit: only what the period changes, kept in place (no history entry, no scroll jump).
-        { preserveState: true, preserveScroll: true, replace: true, only: ['summary', 'filters'] },
+        { preserveState: true, preserveScroll: true, replace: true, only: ['summary', 'filters'], onFinish: () => (chosenPeriod.value = null) },
     );
 }
 
 function selectPeriod(period: string): void {
+    chosenPeriod.value = period;
     reload({ period, from: undefined, to: undefined });
 }
 
@@ -197,7 +207,7 @@ const userName = computed(() => page.props.auth.user?.name ?? '');
             <div v-if="showPeriod" class="flex flex-wrap items-center gap-2">
                 <Tabs
                     :items="PERIOD_TABS"
-                    :current="filters.from === null ? (filters.period ?? summary.range) : ''"
+                    :current="chosenPeriod ?? (filters.from === null ? (filters.period ?? summary.range) : '')"
                     variant="segmented"
                     @select="selectPeriod"
                 />
@@ -205,7 +215,7 @@ const userName = computed(() => page.props.auth.user?.name ?? '');
             </div>
 
             <!-- Alert band -->
-            <div v-if="alerts.length" class="flex flex-wrap gap-2">
+            <div v-if="alerts.length" class="flex flex-wrap gap-2 transition-opacity duration-150" :class="dim" :aria-busy="pending">
                 <span
                     v-for="alert in alerts"
                     :key="alert.text"
@@ -234,7 +244,7 @@ const userName = computed(() => page.props.auth.user?.name ?? '');
               throwing the two grids out of alignment and widening the gap
               beside "Revenue vs. target" past the gap under it.
             -->
-            <div v-if="hasRevenue" class="grid gap-4 lg:grid-cols-4">
+            <div v-if="hasRevenue" class="grid gap-4 transition-opacity duration-150 lg:grid-cols-4" :class="dim">
                 <div class="flex flex-col gap-6 lg:col-span-3">
                     <!-- Revenue -->
                     <Card>
@@ -296,8 +306,8 @@ const userName = computed(() => page.props.auth.user?.name ?? '');
             <!-- Upcoming tasks · Runway · Net cash flow · Reorder pipeline (Figma 208:5577's four-card row) -->
             <div
                 v-if="cashCards > 0"
-                class="grid gap-4 md:grid-cols-2"
-                :class="cashCards >= 4 ? 'xl:grid-cols-4' : cashCards === 3 ? 'xl:grid-cols-3' : ''"
+                class="grid gap-4 transition-opacity duration-150 md:grid-cols-2"
+                :class="[dim, cashCards >= 4 ? 'xl:grid-cols-4' : cashCards === 3 ? 'xl:grid-cols-3' : '']"
             >
                 <UpcomingTasksCard v-if="summary.upcoming_tasks" :tasks="summary.upcoming_tasks" />
                 <!-- Runway stays a card even when cash on hand is not set: the card says so itself. -->
@@ -307,7 +317,7 @@ const userName = computed(() => page.props.auth.user?.name ?? '');
             </div>
 
             <!-- Key ratios · Low stock (Figma 208:6303 / 286:1024) -->
-            <div v-if="hasRatiosOrStock" class="grid gap-4 md:grid-cols-2">
+            <div v-if="hasRatiosOrStock" class="grid gap-4 transition-opacity duration-150 md:grid-cols-2" :class="dim">
                 <KeyRatiosGrid v-if="summary.key_ratios" :ratios="summary.key_ratios" :currency="summary.currency" />
                 <LowStockCard v-if="summary.stock_watch" :items="summary.stock_watch" :class="summary.key_ratios ? '' : 'md:col-span-2'" />
             </div>

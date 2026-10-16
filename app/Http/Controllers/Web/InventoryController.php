@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
-use App\Actions\Inventory\ReorderInventoryAction;
-use App\Http\Requests\Inventory\ReorderInventoryRequest;
 use App\Actions\Inventory\AdjustStockAction;
 use App\Actions\Inventory\ApplyInventoryCheckAction;
 use App\Actions\Inventory\BulkImportInventoryItemsAction;
@@ -14,6 +12,7 @@ use App\Actions\Inventory\CreateInventoryItemAction;
 use App\Actions\Inventory\DeleteInventoryItemAction;
 use App\Actions\Inventory\DuplicateInventoryItemAction;
 use App\Actions\Inventory\ProduceItemAction;
+use App\Actions\Inventory\ReorderInventoryAction;
 use App\Actions\Inventory\SetRecipeAction;
 use App\Actions\Inventory\UpdateInventoryItemAction;
 use App\DataTransferObjects\BottleAnalysisData;
@@ -26,6 +25,7 @@ use App\Http\Requests\Inventory\BulkImportInventoryItemsRequest;
 use App\Http\Requests\Inventory\BulkUpdateInventoryItemsRequest;
 use App\Http\Requests\Inventory\InventoryCheckRequest;
 use App\Http\Requests\Inventory\ProduceItemRequest;
+use App\Http\Requests\Inventory\ReorderInventoryRequest;
 use App\Http\Requests\Inventory\SetRecipeRequest;
 use App\Http\Requests\Inventory\StoreInventoryItemRequest;
 use App\Http\Requests\Inventory\UpdateInventoryItemRequest;
@@ -182,15 +182,17 @@ class InventoryController extends Controller
 
         return Inertia::render('Inventory/Show', [
             'item' => $presenter->item($item),
-            'analytics' => $analytics->get($item, $period),
-            'movements' => $movements->get($item),
+            // Every prop below is a closure: a partial visit (the period strip) evaluates only what it asks
+            // for, instead of rebuilding movements, pricing, images and the rest on every click.
+            'analytics' => fn (): array => $analytics->get($item, $period),
+            'movements' => fn (): array => $movements->get($item),
             // Null unless the wine has sibling vintages to transition between.
-            'vintageCoverage' => $vintage->get($item),
+            'vintageCoverage' => fn (): ?array => $vintage->get($item),
             'filters' => ['period' => $period],
             // The Pricing tab's two tables — cheap regardless of tab, so eager
             // like movements/vintageCoverage above rather than optional; this
             // page has no per-tab partial-reload scaffolding yet.
-            'pricing' => [
+            'pricing' => fn (): array => [
                 'tiers' => $pricing->tierPrices($item),
                 'customers' => $pricing->customerOverrides($item),
             ],
@@ -203,7 +205,7 @@ class InventoryController extends Controller
             // Api\StockController::recipe() returns, so the two transports
             // can't disagree about what an item's recipe is. Also what the
             // Produce tab checks before offering a production run.
-            'recipe' => array_values($item->recipe()->with('input')->get()
+            'recipe' => fn (): array => array_values($item->recipe()->with('input')->get()
                 ->map(fn (RecipeItem $line): array => RecipeLineData::fromModel($line)->toArray())
                 ->all()),
             // The Recipe tab's "add ingredient" picker — a whole-catalog scan,
@@ -211,18 +213,18 @@ class InventoryController extends Controller
             'recipeInputOptions' => Inertia::optional(fn (): array => $recipeInputs->list($item)),
             // The Images and Docs tabs. Each is one item's own small set of
             // attachments, so eager like recipe/pricing above.
-            'images' => array_values($item->images()->orderBy('sort_order')->get()
+            'images' => fn (): array => array_values($item->images()->orderBy('sort_order')->get()
                 ->map(fn (InventoryImage $image): array => $media->image($image))
                 ->all()),
-            'techSheets' => array_values($item->techSheets()->orderBy('name')->get()
+            'techSheets' => fn (): array => array_values($item->techSheets()->orderBy('name')->get()
                 ->map(fn (InventoryTechSheet $sheet): array => $media->techSheet($sheet))
                 ->all()),
-            'documents' => array_values($item->documents()->orderByDesc('id')->get()
+            'documents' => fn (): array => array_values($item->documents()->orderByDesc('id')->get()
                 ->map(fn (InventoryDocument $document): array => $media->document($document))
                 ->all()),
             // The Analysis tab — the same rows and DTO Api\BottleAnalysisController
             // returns, newest first.
-            'bottleAnalyses' => array_values($item->bottleAnalyses()
+            'bottleAnalyses' => fn (): array => array_values($item->bottleAnalyses()
                 ->orderByDesc('analyzed_on')
                 ->orderByDesc('id')
                 ->get()

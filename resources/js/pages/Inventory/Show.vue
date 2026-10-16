@@ -20,6 +20,7 @@ import TierPriceDialog from '@/components/inventory/TierPriceDialog.vue';
 import Badge from '@/components/ui/Badge.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
+import SectionHeader from '@/components/ui/SectionHeader.vue';
 import CardContent from '@/components/ui/CardContent.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
