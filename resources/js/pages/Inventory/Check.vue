@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { History, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -17,6 +17,9 @@ import { categoryLabel } from '@/lib/stock';
 import type { InventoryItem } from '@/types/inventory';
 import type { SharedProps } from '@/types';
 import type { TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Inventory check (Figma `271:12639`) — the physical count sheet.
@@ -115,7 +118,7 @@ function save(): void {
 </script>
 
 <template>
-    <AppLayout :title="t('Inventory check')">
+    <Head :title="t('Inventory check')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Inventory')">
                 <template #actions>
@@ -233,5 +236,4 @@ function save(): void {
         </div>
 
         <CheckHistoryPanel :open="historyOpen" :history="history" @close="historyOpen = false" />
-    </AppLayout>
 </template>

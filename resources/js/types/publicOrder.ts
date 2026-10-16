@@ -8,6 +8,11 @@ export interface PublicCatalogProduct {
     vintage: number | null;
     /** The item's own unit label ("bottles", "cases", …) — display only. */
     unit: string;
+    unit_size: string | null;
+    group: string | null;
+    subcategory: string | null;
+    /** Lead product image (signed URL), when the item has one. */
+    image_url: string | null;
     /** What this item must be ordered in — "bottles" or "cases", strict. */
     sales_unit: 'bottles' | 'cases';
     bottles_per_case: number | null;
@@ -23,6 +28,8 @@ export interface PublicCatalogCustomer {
 }
 
 export interface PublicCatalog {
+    /** The winery's own name, for the page header. */
+    business_name: string | null;
     customer: PublicCatalogCustomer;
     products: PublicCatalogProduct[];
 }

@@ -44,7 +44,7 @@ class ListWorkOrdersQuery
 
         if (! empty($filters['search'])) {
             $term = '%'.$filters['search'].'%';
-            $query->where(fn (Builder $q) => $q->where('title', 'like', $term)->orWhere('description', 'like', $term));
+            $query->where(fn (Builder $q) => $q->whereLike('title', $term)->orWhereLike('description', $term));
         }
 
         if (! empty($filters['due_from'])) {

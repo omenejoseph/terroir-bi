@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ArrowLeft, CreditCard, PencilLine } from 'lucide-vue-next';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -13,6 +13,9 @@ import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminOption, AdminPlan, AdminPlanTenant } from '@/types/admin';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /**
  * Plan — Show. Port of App\Filament\Resources\Plans\Schemas\PlanInfolist +
@@ -41,7 +44,7 @@ async function createStripePrice(): Promise<void> {
 </script>
 
 <template>
-    <AdminLayout :title="plan.name">
+    <Head :title="plan.name" />
         <div class="space-y-5">
             <PageHeader :title="plan.name">
                 <template #actions>
@@ -162,5 +165,4 @@ async function createStripePrice(): Promise<void> {
         </div>
 
         <PlanFormPanel :open="formOpen" :plan="plan" :module-options="moduleOptions" @close="formOpen = false" />
-    </AdminLayout>
 </template>

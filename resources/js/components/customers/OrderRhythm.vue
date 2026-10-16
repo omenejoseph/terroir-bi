@@ -65,26 +65,32 @@ const label = computed(() => {
         </div>
 
         <div class="px-6 py-6">
-            <div class="relative h-16">
-                <!-- The overdue band, drawn only when the silence has outrun
-                     the customer's own cadence. -->
+            <!--
+              Four lanes so nothing sits on anything else: labels (Expected / Today) on top, the
+              timeline with its order ticks, the "days without an order" note, then the month scale.
+            -->
+            <div class="relative h-24">
+                <!-- The overdue band, drawn only when the silence has outrun the customer's own cadence. -->
                 <span
                     v-if="rhythm.overdue"
-                    class="absolute top-7 h-2 bg-destructive/15"
+                    class="absolute top-8 h-2 bg-destructive/15"
                     :style="{ left: `${gapStart * 100}%`, right: '0' }"
                     aria-hidden="true"
                 />
 
+                <!-- Baseline the ticks sit on -->
+                <span class="absolute inset-x-0 top-[2.25rem] h-px bg-border" aria-hidden="true" />
+
                 <!-- Expected-next marker -->
                 <template v-if="rhythm.expected_next_position !== null">
                     <span
-                        class="absolute top-0 h-9 w-px bg-border"
+                        class="absolute top-4 h-6 w-px bg-border"
                         :style="{ left: `${rhythm.expected_next_position * 100}%` }"
                         aria-hidden="true"
                     />
                     <span
                         class="absolute top-0 -translate-x-1/2 text-2xs whitespace-nowrap text-muted-foreground"
-                        :style="{ left: `${rhythm.expected_next_position * 100}%` }"
+                        :style="{ left: `${Math.min(Math.max(rhythm.expected_next_position, 0.08), 0.82) * 100}%` }"
                     >
                         {{
                             t('Expected :date', {
@@ -98,34 +104,33 @@ const label = computed(() => {
                 </template>
 
                 <!-- Today -->
-                <span class="absolute top-4 right-0 h-8 w-0.5 bg-destructive" aria-hidden="true" />
+                <span class="absolute top-4 right-0 h-6 w-0.5 bg-destructive" aria-hidden="true" />
                 <span class="absolute top-0 right-0 text-2xs text-destructive">{{ t('Today') }}</span>
 
                 <!-- One tick per order -->
                 <span
                     v-for="(order, i) in rhythm.orders"
                     :key="`${order.date}-${i}`"
-                    class="absolute top-6 size-2 -translate-x-1/2 bg-foreground"
+                    class="absolute top-8 size-2 -translate-x-1/2 bg-foreground"
                     :style="{ left: `${order.position * 100}%` }"
                     :title="new Date(order.date).toLocaleDateString(locale)"
                 />
+
+                <span
+                    v-if="rhythm.overdue && rhythm.days_since_last !== null"
+                    class="absolute top-[3.25rem] right-0 text-right text-2xs whitespace-nowrap text-destructive"
+                >
+                    {{ t(':days days without an order', { days: rhythm.days_since_last }) }}
+                </span>
 
                 <!-- Month scale -->
                 <span
                     v-for="tick in monthTicks"
                     :key="tick.label + tick.position"
-                    class="absolute bottom-0 text-2xs text-muted-foreground"
+                    class="absolute bottom-0 -translate-x-1/2 text-2xs text-muted-foreground"
                     :style="{ left: `${tick.position * 100}%` }"
                 >
                     {{ tick.label }}
-                </span>
-
-                <span
-                    v-if="rhythm.overdue && rhythm.days_since_last !== null"
-                    class="absolute bottom-5 text-2xs text-destructive"
-                    :style="{ left: `${gapStart * 100}%` }"
-                >
-                    {{ t(':days days without an order', { days: rhythm.days_since_last }) }}
                 </span>
             </div>
 

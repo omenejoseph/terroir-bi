@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { AlertTriangle, Copy, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -18,6 +18,9 @@ import { WINE_TYPE_LABELS, qty } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import type { FermentationAlert, FermentationTemplate, ProductOption, WineType } from '@/types/cellar';
 import type { MenuItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Cellar › Protocols — fermentation protocol templates (assigned to lots on
@@ -58,7 +61,7 @@ const SEVERITY: Record<string, string> = { critical: 'bg-tag-red text-tag-red-fo
 </script>
 
 <template>
-    <AppLayout :title="t('Fermentation protocols')">
+    <Head :title="t('Fermentation protocols')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Fermentation protocols')" :description="t('Assign a protocol on a lot’s page; its stages become tasks and its doses become planned additions.')">
                 <template v-if="can('cellar.manage')" #actions>
@@ -107,5 +110,4 @@ const SEVERITY: Record<string, string> = { critical: 'bg-tag-red text-tag-red-fo
             </div>
         </div>
         <ProtocolFormPanel :open="panel" :template="editing" :duplicate="duplicating" :products="products" @close="panel = false" />
-    </AppLayout>
 </template>

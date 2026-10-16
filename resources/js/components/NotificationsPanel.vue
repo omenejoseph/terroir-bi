@@ -118,7 +118,7 @@ async function clearAll(): Promise<void> {
 
         <div
             v-if="open"
-            class="absolute top-10 right-0 z-30 flex w-80 flex-col border border-border bg-card shadow-lg"
+            class="absolute top-10 right-0 z-30 flex w-80 flex-col border border-border bg-card"
         >
             <div class="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
                 <p class="text-xs font-medium">{{ t('Notifications') }}</p>

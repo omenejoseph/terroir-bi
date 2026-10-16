@@ -78,8 +78,8 @@ class ListOrdersQuery
         if (! empty($filters['search'])) {
             $term = '%'.$filters['search'].'%';
             $query->where(function (Builder $q) use ($term) {
-                $q->where('order_number', 'like', $term)
-                    ->orWhereHas('customer', fn (Builder $c) => $c->where('company_name', 'like', $term));
+                $q->whereLike('order_number', $term)
+                    ->orWhereHas('customer', fn (Builder $c) => $c->whereLike('company_name', $term));
             });
         }
 

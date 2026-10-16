@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { MoreHorizontal, Plus } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+import { ArrowDownAZ, CalendarDays, ListOrdered, Plus } from 'lucide-vue-next';
 
 import TaskCard from '@/components/work-orders/TaskCard.vue';
+import DropdownMenu from '@/components/ui/DropdownMenu.vue';
 import GripHandle from '@/components/ui/GripHandle.vue';
 import { cn } from '@/lib/cn';
 import type { BoardColumn, WorkOrder } from '@/types/work-orders';
@@ -27,6 +28,33 @@ const emit = defineEmits<{
     /** Dropped on this column, before `beforeId` (or at the end when null). */
     drop: [payload: { status: BoardColumn['key']; beforeId: string | null }];
 }>();
+
+/** A view-only ordering for this column; "default" is the saved board order. */
+const sort = ref<'default' | 'due' | 'title'>('default');
+
+const MENU = [
+    { key: 'add', label: 'Add a card', icon: Plus },
+    { key: 'due', label: 'Sort by due date', icon: CalendarDays },
+    { key: 'title', label: 'Sort by title', icon: ArrowDownAZ },
+    { key: 'default', label: 'Board order', icon: ListOrdered },
+];
+
+function onMenu(key: string): void {
+    if (key === 'add') emit('add');
+    else sort.value = key as typeof sort.value;
+}
+
+const tasks = computed(() => {
+    const list = [...props.column.tasks];
+
+    if (sort.value === 'due') {
+        // Undated work goes last: it is the least urgent, not the most.
+        return list.sort((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'));
+    }
+    if (sort.value === 'title') return list.sort((a, b) => a.title.localeCompare(b.title));
+
+    return props.column.tasks;
+});
 
 /** Only the column actually under the pointer highlights. */
 const over = ref(false);
@@ -89,20 +117,11 @@ function reset(): void {
             <GripHandle class="shrink-0" />
             <h3 class="min-w-0 flex-1 truncate text-sm font-semibold">{{ column.label }}</h3>
             <span class="text-xs text-muted-foreground tabular-nums">{{ column.count }}</span>
-            <!-- @todo Column menu. The design offers per-list actions (rename,
-                 archive, sort); lists here are the TaskStatus enum, so there is
-                 nothing yet for those actions to change. -->
-            <button
-                type="button"
-                class="grid size-7 shrink-0 place-items-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                :aria-label="`${column.label} actions`"
-            >
-                <MoreHorizontal class="size-4" :stroke-width="1.5" />
-            </button>
+            <DropdownMenu :items="MENU" :label="`${column.label} actions`" @select="onMenu" />
         </header>
 
         <div class="flex flex-col gap-2">
-            <template v-for="task in column.tasks" :key="task.id">
+            <template v-for="task in tasks" :key="task.id">
                 <!-- The gap the card would drop into. -->
                 <div v-if="beforeId === task.id" class="h-1 bg-foreground/30" aria-hidden="true" />
                 <div

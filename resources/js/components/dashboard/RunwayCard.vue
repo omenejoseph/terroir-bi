@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { Hourglass } from 'lucide-vue-next';
@@ -65,7 +66,7 @@ const months = computed(() => (props.runway?.months !== null && props.runway?.mo
 
         <p v-else class="mt-4 text-xs text-muted-foreground">
             {{ t("No cash balance is on file, so runway can't be calculated yet.") }}
-            <a v-if="can('settings.manage')" href="/settings" class="text-foreground underline">{{ t('Set one in Settings.') }}</a>
+            <Link v-if="can('settings.manage')" href="/settings" class="text-foreground underline">{{ t('Set one in Settings.') }}</Link>
         </p>
     </div>
 </template>

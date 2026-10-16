@@ -143,3 +143,16 @@ export function formatFileSize(bytes: number): string {
 
     return `${value.toFixed(1)} ${units[unit]}`;
 }
+
+/** The product page's customer channels (ItemExitChannelsQuery) in the design's wording. */
+const CUSTOMER_CHANNELS: Record<string, string> = {
+    internal: 'Internal / POS',
+    distributor: 'Distributor / Importer',
+    retailer: 'Retailer / Shop',
+    other: 'Other customers',
+    non_order: 'Production & manual',
+};
+
+export function customerChannelLabel(key: string): string {
+    return CUSTOMER_CHANNELS[key] ?? key;
+}

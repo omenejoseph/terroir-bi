@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { Plus, Search } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -17,6 +17,9 @@ import { LOT_STATUS_LABELS, LOT_STATUS_TONES, WINE_TYPE_OPTIONS, qty } from '@/l
 import { cn } from '@/lib/cn';
 import type { Vessel, WineLotSummary } from '@/types/cellar';
 import type { SharedProps } from '@/types';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /** Every wine lot, bottled and blended included, filterable by status, vintage, type and text. */
 const props = defineProps<{
@@ -52,7 +55,7 @@ const total = computed(() => props.lots.reduce((s, l) => s + Number(l.current_vo
 </script>
 
 <template>
-    <AppLayout :title="t('Wine lots')">
+    <Head :title="t('Wine lots')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Wine lots')" :description="t(':n lots · :l L', { n: lots.length, l: qty(total) })">
                 <template #actions>
@@ -109,5 +112,4 @@ const total = computed(() => props.lots.reduce((s, l) => s + Number(l.current_vo
             </Card>
         </div>
         <LotFormPanel :open="panel" :lot="null" :vessels="vessels" @close="panel = false" />
-    </AppLayout>
 </template>

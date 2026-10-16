@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { AlertTriangle, PackageCheck, Plus, TrendingDown, TrendingUp } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -29,6 +29,9 @@ import { formatMoney, formatNumber } from '@/lib/money';
 import type { DashboardFilters, DashboardSection, DashboardSummary } from '@/types/dashboard';
 import type { SharedProps } from '@/types';
 import type { DateRange, TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Dashboard, following the TERROIR design (Figma 208:5577): title row with the
@@ -102,7 +105,19 @@ function delta(current: number, previous: number | null): number | null {
     return ((current - previous) / previous) * 100;
 }
 
-const revenue = computed(() => props.summary.revenue_summary?.ytd ?? { current: 0, previous: null });
+/*
+  The headline follows the selected window (not always year-to-date): this window's revenue against the
+  preceding equal-length window, which the channel breakdown already carries as its `total`.
+*/
+const revenue = computed(() => ({
+    current: props.summary.stats.revenue ?? 0,
+    previous: props.summary.revenue_by_channel?.total?.previous ?? null,
+}));
+const periodLabel = computed(() => {
+    if (props.filters.from !== null) return t('Custom');
+
+    return PERIOD_TABS.value.find((tab) => tab.value === (props.filters.period ?? props.summary.range))?.label ?? '';
+});
 const revenueDelta = computed(() => delta(revenue.value.current, revenue.value.previous));
 
 /** Channel rows, largest first; the design lists them descending by value. */
@@ -160,7 +175,7 @@ const userName = computed(() => page.props.auth.user?.name ?? '');
 </script>
 
 <template>
-    <AppLayout :title="t('Dashboard')">
+    <Head :title="t('Dashboard')" />
         <div class="space-y-6">
             <!-- Title row + primary actions -->
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -225,7 +240,7 @@ const userName = computed(() => page.props.auth.user?.name ?? '');
                         <CardHeader>
                             <div class="flex items-baseline justify-between gap-3">
                                 <CardTitle>{{ t('Revenue') }}</CardTitle>
-                                <p class="text-xs text-muted-foreground">{{ t('Year to Date') }}</p>
+                                <p class="text-xs text-muted-foreground">{{ periodLabel }}</p>
                             </div>
                         </CardHeader>
                         <CardContent class="space-y-4">
@@ -244,7 +259,7 @@ const userName = computed(() => page.props.auth.user?.name ?? '');
                                     {{ Math.abs(revenueDelta).toFixed(1) }}%
                                 </Badge>
                             </div>
-                            <AreaChart :points="summary.revenue_trend ?? []" />
+                            <AreaChart :points="summary.revenue ?? []" />
                         </CardContent>
                     </Card>
 
@@ -312,5 +327,4 @@ const userName = computed(() => page.props.auth.user?.name ?? '');
             :customer="null"
             @close="createCustomerOpen = false"
         />
-    </AppLayout>
 </template>

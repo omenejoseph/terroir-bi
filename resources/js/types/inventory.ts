@@ -156,4 +156,6 @@ export interface InventoryFilters {
     sellable: boolean;
     /** Inventory Analytics' "Add costs" deep-link — active items with no cost_per_unit. */
     missing_cost: boolean;
+    /** The active "Needs attention" chip, applied on the server. */
+    attention: string | null;
 }

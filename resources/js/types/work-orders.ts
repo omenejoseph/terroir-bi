@@ -76,3 +76,13 @@ export interface WorkOrderFilters {
     /** Rendered but inert — work orders have no recurrence. */
     recurring: boolean;
 }
+
+/** One entry of the board's Recent Activity: a task added or moved in the last hour. */
+export interface RecentActivityEntry {
+    task: WorkOrder;
+    kind: 'added' | 'moved';
+    from: TaskStatusKey | null;
+    to: TaskStatusKey | null;
+    /** ISO time of the event. */
+    at: string;
+}

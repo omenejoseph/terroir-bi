@@ -7,6 +7,7 @@ namespace App\Queries;
 use App\Models\Customer;
 use App\Models\InventoryItem;
 use App\Models\OrderItem;
+use App\Services\Uploads\PresignedUploadService;
 use App\Support\Money\CurrencyRegistry;
 use App\Support\Money\Money;
 use App\Tenancy\Contracts\TenantContext;
@@ -27,7 +28,10 @@ use Illuminate\Support\Facades\DB;
  */
 class CustomerProductsQuery
 {
-    public function __construct(private readonly TenantContext $tenant) {}
+    public function __construct(
+        private readonly TenantContext $tenant,
+        private readonly PresignedUploadService $uploads,
+    ) {}
 
     /**
      * @return array{
@@ -64,6 +68,7 @@ class CustomerProductsQuery
         /** @var array<string, InventoryItem> $items */
         $items = InventoryItem::query()
             ->whereIn('id', $lines->pluck('item_id')->all())
+            ->with('firstImage')
             ->get()
             ->keyBy(fn (InventoryItem $item): string => (string) $item->getKey())
             ->all();
@@ -87,6 +92,7 @@ class CustomerProductsQuery
                     'unit_size' => $item?->unit_size,
                     'group' => $item?->group,
                     'subcategory' => $item?->subcategory,
+                    'image_url' => ($key = $item?->firstImage?->object_key) !== null ? $this->uploads->readUrl($key) : null,
                     'units' => $units,
                     'share' => $totalUnits > 0 ? round($units / $totalUnits, 4) : 0.0,
                     'revenue' => Money::fromMinor((int) $row->getAttribute('revenue'), $currency)->jsonSerialize(),

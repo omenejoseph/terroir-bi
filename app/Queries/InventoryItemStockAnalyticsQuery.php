@@ -29,6 +29,7 @@ class InventoryItemStockAnalyticsQuery
     public function __construct(
         private readonly TenantContext $tenant,
         private readonly CogsSnapshot $cogs,
+        private readonly ItemExitChannelsQuery $customerChannels,
     ) {}
 
     /**
@@ -48,6 +49,10 @@ class InventoryItemStockAnalyticsQuery
 
         [$from, $to, $days] = $this->window($period);
 
+        // One set of genuine exits feeds the headline, the histogram and the channel split, so the
+        // three can never disagree (see ItemExitChannelsQuery).
+        $byCustomer = $this->customerChannels($item, $from, $to, $days, $currency);
+
         return [
             'period' => $period,
             'current' => [
@@ -59,8 +64,9 @@ class InventoryItemStockAnalyticsQuery
                 'selling_per_bottle' => $selling?->jsonSerialize(),
             ],
             'realized' => $this->realized($item, $bpc, $stockBottles, $costPerBottle, $selling, $currency),
-            'exits' => $this->exits($item, $toBottles, $bpc, $from, $to, $days, $stockBottles, $costPerBottle, $currency),
+            'exits' => $this->exits($item, $bpc, $from, $to, $stockBottles, $costPerBottle, $currency, $byCustomer, $days),
             'channels' => $this->channels($item, $toBottles, $from, $to),
+            'channels_by_customer' => $byCustomer,
         ];
     }
 
@@ -133,40 +139,23 @@ class InventoryItemStockAnalyticsQuery
      * Warehouse exits for the period: bottles out (all channels), cost of those
      * exits, sales revenue/margin (orders), velocity and days-of-stock-left.
      *
-     * @param  callable(float): float  $toBottles
+     * @param  array<string, mixed>  $byCustomer
      * @return array<string, mixed>
      */
     private function exits(
         InventoryItem $item,
-        callable $toBottles,
         int $bpc,
         Carbon $from,
         Carbon $to,
-        int $days,
         int $stockBottles,
         ?Money $costPerBottle,
         string $currency,
+        array $byCustomer,
+        int $days,
     ): array {
-        $exitMovements = StockMovement::query()
-            ->where('inventory_item_id', $item->getKey())
-            ->where('quantity', '<', 0)
-            ->whereBetween('created_at', [$from, $to])
-            ->get(['quantity', 'created_at']);
-
-        $bottlesExited = (int) round(
-            $exitMovements->sum(fn (StockMovement $m): float => $toBottles(abs((float) $m->quantity))),
-        );
-        $movementsCount = $exitMovements->count();
-
-        // Daily spark series of bottles exited across the window (for the sparkline).
-        $buckets = min(max(1, $days), 90);
-        $spark = array_fill(0, $buckets, 0.0);
-        foreach ($exitMovements as $m) {
-            $offset = (int) $from->diffInDays($m->created_at);
-            $idx = (int) min($buckets - 1, max(0, floor($offset / max(1, $days) * $buckets)));
-            $spark[$idx] += $toBottles(abs((float) $m->quantity));
-        }
-        $spark = array_map(fn (float $v): int => (int) round($v), $spark);
+        $bottlesExited = (int) $byCustomer['total_bottles'];
+        $movementsCount = (int) $byCustomer['movements_count'];
+        $spark = $byCustomer['spark'];
 
         // Sale lines for the period, optionally restricted by the customer's
         // exclude-from-stats flag (Internal/POS). The main revenue/margin use
@@ -185,7 +174,8 @@ class InventoryItemStockAnalyticsQuery
             ->sum(DB::raw('order_items.cost_per_unit * order_items.quantity'));
 
         // Internal / POS slice (exclude-from-stats customers) — excluded from margin.
-        $internalBottles = $this->toBottlesSum($saleLines(true), $bpc);
+        // Bottles come from the same healed exits as the channel row, so the footnote and the row agree.
+        $internalBottles = (int) (collect($byCustomer['rows'])->firstWhere('key', 'internal')['bottles'] ?? 0);
         $internalRevenue = (int) $saleLines(true)->sum('order_items.total');
         $internalCost = (int) $saleLines(true)->whereNotNull('order_items.cost_per_unit')
             ->sum(DB::raw('order_items.cost_per_unit * order_items.quantity'));
@@ -214,6 +204,17 @@ class InventoryItemStockAnalyticsQuery
                 ]
                 : null,
         ];
+    }
+
+    /**
+     * The product page's "Exit by channel" (by customer channel, with revenue) and the Internal / POS
+     * series that highlights bars in the exits histogram. See ItemExitChannelsQuery.
+     *
+     * @return array<string, mixed>
+     */
+    private function customerChannels(InventoryItem $item, Carbon $from, Carbon $to, int $days, string $currency): array
+    {
+        return $this->customerChannels->get($item, $from, $to, $days, $currency);
     }
 
     /**

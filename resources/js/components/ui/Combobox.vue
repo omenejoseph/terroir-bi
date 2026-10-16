@@ -226,7 +226,7 @@ function onKeydown(event: KeyboardEvent): void {
             :id="listId"
             ref="list"
             role="listbox"
-            class="absolute top-10 right-0 left-0 z-30 max-h-64 overflow-y-auto border border-border bg-card shadow-lg"
+            class="absolute top-10 right-0 left-0 z-30 max-h-64 overflow-y-auto border border-border bg-card"
         >
             <button
                 v-for="(option, i) in filtered"

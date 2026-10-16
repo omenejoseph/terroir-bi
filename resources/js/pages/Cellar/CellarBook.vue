@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { Download } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -12,6 +12,9 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { qty } from '@/lib/cellar';
 import type { CellarBookRow } from '@/types/cellar';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Cellar › Cellar book — every cellar event for every lot in a date range
@@ -32,7 +35,7 @@ function apply(): void {
 </script>
 
 <template>
-    <AppLayout :title="t('Cellar book')">
+    <Head :title="t('Cellar book')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Cellar book')" :description="t('Every cellar event in the period, for every lot.')">
                 <template #actions><Button size="sm" variant="outline" :href="csv" download><Download class="size-3.5" /> CSV</Button></template>
@@ -74,5 +77,4 @@ function apply(): void {
                 </table>
             </Card>
         </div>
-    </AppLayout>
 </template>

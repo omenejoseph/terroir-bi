@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { KeyRound, Power, Search, ShieldCheck, UserCog } from 'lucide-vue-next';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -14,6 +14,9 @@ import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminUserSummary } from '@/types/admin';
 import type { Paginated } from '@/types';
 import type { MenuItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /**
  * Users — port of App\Filament\Resources\Users\**: a read-only directory of
@@ -123,7 +126,7 @@ async function toggleSuspension(row: AdminUserSummary): Promise<void> {
 </script>
 
 <template>
-    <AdminLayout :title="t('Users')">
+    <Head :title="t('Users')" />
         <div class="space-y-5">
             <PageHeader :title="t('Users')" />
 
@@ -211,5 +214,4 @@ async function toggleSuspension(row: AdminUserSummary): Promise<void> {
                 </div>
             </div>
         </div>
-    </AdminLayout>
 </template>

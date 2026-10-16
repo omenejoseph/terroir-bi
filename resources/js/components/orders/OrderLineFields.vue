@@ -9,7 +9,7 @@ import Input from '@/components/ui/Input.vue';
 import Select from '@/components/ui/Select.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney } from '@/lib/money';
-import { UNIT_OPTIONS } from '@/lib/orders';
+import { lineUnitMinor, UNIT_OPTIONS } from '@/lib/orders';
 import type { OrderLineDraft, ProductOption } from '@/types/orders';
 import type { ComboboxOption } from '@/types/ui';
 
@@ -77,6 +77,15 @@ function addCustom(): void {
     ]);
 }
 
+/** The prototype's "Switch unit": a catalog line flips between bottles and cases, and its price follows. */
+function switchUnit(line: OrderLineDraft): void {
+    patch(line.key, { unit_type: line.unit_type === 'cases' ? 'bottles' : 'cases' });
+}
+
+function unitMinor(line: OrderLineDraft): number {
+    return lineUnitMinor(line, props.products);
+}
+
 function remove(key: string): void {
     emit(
         'update:modelValue',
@@ -127,7 +136,7 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
                 <span v-if="line.inventory_item_id" class="min-w-0 flex-1">
                     <span class="block truncate text-sm">{{ line.label }}</span>
                     <span class="block truncate text-xs text-muted-foreground">
-                        {{ line.preview ? formatMoney(line.preview.minor, line.preview.currency) : '—' }}
+                        {{ line.preview ? formatMoney(unitMinor(line), line.preview.currency) : '—' }}
                         / {{ line.unit_type === 'cases' ? t('case') : t('bottle') }}
                         <template v-if="line.meta"> · {{ line.meta }}</template>
                     </span>
@@ -143,12 +152,7 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
                 </span>
 
                 <span class="shrink-0 text-sm font-semibold tabular-nums">
-                    {{
-                        formatMoney(
-                            (line.inventory_item_id ? (line.preview?.minor ?? 0) : (line.unit_price ?? 0)) * line.quantity,
-                            currency,
-                        )
-                    }}
+                    {{ formatMoney(unitMinor(line) * line.quantity, currency) }}
                 </span>
             </div>
 
@@ -156,12 +160,17 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
                 <QuantityStepper :model-value="line.quantity" @update:model-value="patch(line.key, { quantity: $event })" />
 
                 <!-- A catalog line's unit is fixed by the item; only a custom line may choose. -->
-                <span
+                <button
                     v-if="line.inventory_item_id"
-                    class="inline-flex h-7 items-center border border-border px-2.5 text-xs text-muted-foreground"
+                    type="button"
+                    class="inline-flex h-7 items-center border border-border px-2.5 text-xs text-foreground transition-colors hover:border-foreground/40"
+                    :title="t('Switch unit')"
+                    :aria-label="t('Switch unit')"
+                    @click="switchUnit(line)"
                 >
                     {{ line.unit_type === 'cases' ? t('Cases') : t('Bottles') }}
-                </span>
+                    <span class="ml-1.5 text-muted-foreground" aria-hidden="true">⇄</span>
+                </button>
                 <Select
                     v-else
                     :model-value="line.unit_type"
@@ -176,8 +185,9 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
                   supply one — so the request validation requires it and the
                   row asks for it inline.
                 -->
+                <label v-if="!line.inventory_item_id" class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {{ t('Price per unit') }}
                 <input
-                    v-if="!line.inventory_item_id"
                     :value="(line.unit_price ?? 0) / 100"
                     type="number"
                     step="0.01"
@@ -191,6 +201,7 @@ const PRODUCT_OPTIONS = computed<ComboboxOption[]>(() =>
                         })
                     "
                 />
+                </label>
 
                 <button
                     type="button"

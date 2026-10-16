@@ -102,7 +102,7 @@ onBeforeUnmount(() => {
             >
                 <div
                     ref="dialog"
-                    class="flex max-h-[calc(100vh-2rem)] w-full max-w-[28rem] flex-col bg-card shadow-2xl focus:outline-none"
+                    class="flex max-h-[calc(100vh-2rem)] w-full max-w-[28rem] flex-col border border-border bg-card focus:outline-none"
                     tabindex="-1"
                     role="dialog"
                     aria-modal="true"

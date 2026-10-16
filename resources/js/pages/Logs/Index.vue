@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
@@ -11,6 +11,9 @@ import { useTranslations } from '@/composables/useTranslations';
 import { formatActionLabel, formatMetadata } from '@/lib/auditLog';
 import type { TenantAuditLog } from '@/types/logs';
 import type { Paginated } from '@/types';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * A tenant's own audit trail — the per-tenant counterpart of
@@ -61,7 +64,7 @@ function subject(row: TenantAuditLog): string {
 </script>
 
 <template>
-    <AppLayout :title="t('Logs')">
+    <Head :title="t('Logs')" />
         <div class="space-y-5">
             <PageHeader :title="t('Logs')" />
             <Tabs
@@ -118,5 +121,4 @@ function subject(row: TenantAuditLog): string {
                 </div>
             </div>
         </div>
-    </AppLayout>
 </template>

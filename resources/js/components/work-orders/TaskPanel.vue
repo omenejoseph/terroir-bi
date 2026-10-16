@@ -12,9 +12,9 @@ import Input from '@/components/ui/Input.vue';
 import Select from '@/components/ui/Select.vue';
 import Separator from '@/components/ui/Separator.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
-import SwitchRow from '@/components/ui/SwitchRow.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import Textarea from '@/components/ui/Textarea.vue';
+import { confirmDialog } from '@/composables/useConfirm';
 import { CATEGORY_LABELS, PRIORITY_LABELS, STATUS_LABELS } from '@/lib/work-orders';
 import type { TaskStatusKey, WorkOrder, WorkOrderCategoryKey } from '@/types/work-orders';
 import type { ComboboxOption, TabItem } from '@/types/ui';
@@ -147,10 +147,16 @@ function shortDate(iso: string | null): string {
     });
 }
 
-const confirmingDelete = ref(false);
-
-function destroy(): void {
+async function destroy(): Promise<void> {
     if (props.task === null) return;
+
+    const ok = await confirmDialog({
+        title: 'Delete task',
+        description: `Delete “${props.task.title}”? This cannot be undone.`,
+        confirmLabel: 'Delete',
+        tone: 'danger',
+    });
+    if (!ok) return;
 
     router.delete(`/work-orders/${props.task.id}`, {
         preserveScroll: true,
@@ -255,7 +261,7 @@ function submit(): void {
                 </template>
             </FormField>
 
-            <Disclosure title="Add details" summary="Where the work happens, and whether it repeats">
+            <Disclosure title="Add details" summary="Where the work happens">
                 <FormField label="Vessel" :error="form.errors.vessel_id">
                     <template #default="{ id }">
                         <Combobox
@@ -283,15 +289,6 @@ function submit(): void {
                         />
                     </template>
                 </FormField>
-
-                <!-- @todo Recurring. A work order has no recurrence field, so
-                     this switch has nothing to write to; it is here because the
-                     design's Add details panel has it (321:618). -->
-                <SwitchRow
-                    :model-value="false"
-                    label="Recurring work order"
-                    hint="Repeats on a schedule once completed."
-                />
             </Disclosure>
 
             <template v-if="isEdit && task">
@@ -330,10 +327,10 @@ function submit(): void {
                 v-if="isEdit"
                 variant="ghost"
                 class="mr-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
-                @click="confirmingDelete ? destroy() : (confirmingDelete = true)"
+                @click="destroy"
             >
                 <Trash2 class="size-3.5" :stroke-width="1.5" />
-                {{ confirmingDelete ? 'Confirm delete' : 'Delete' }}
+                Delete
             </Button>
             <Button variant="outline" @click="emit('close')">Cancel</Button>
             <Button type="submit" form="task-form" :disabled="form.processing || form.title.trim() === ''">

@@ -17,10 +17,29 @@ class LookupCompanyByVatService
 {
     private const ENDPOINT = 'https://ec.europa.eu/taxation_customs/vies/rest-api/ms';
 
+    /** VIES `userError` values that mean "could not check", not "not registered". */
+    private const UNAVAILABLE = ['MS_UNAVAILABLE', 'MS_MAX_CONCURRENT_REQ', 'GLOBAL_MAX_CONCURRENT_REQ', 'SERVICE_UNAVAILABLE', 'TIMEOUT'];
+
     public function __construct(private readonly HttpFactory $http) {}
 
+    /** ISO 7064 MOD 11,10 — the check digit of a Croatian OIB. */
+    public static function validOib(string $oib): bool
+    {
+        if (preg_match('/^\d{11}$/', $oib) !== 1) {
+            return false;
+        }
+
+        $carry = 10;
+
+        for ($i = 0; $i < 10; $i++) {
+            $carry = ((($carry + (int) $oib[$i]) % 10) ?: 10) * 2 % 11;
+        }
+
+        return (11 - $carry) % 10 === (int) $oib[10];
+    }
+
     /**
-     * @return array{vat: string, name: ?string, address: ?string, city: ?string, zip: ?string, country: string}|array{error: string}
+     * @return array{details_available: bool, vat: string, name: ?string, address: ?string, city: ?string, zip: ?string, country: string}|array{error: string}
      */
     public function lookup(string $raw): array
     {
@@ -31,6 +50,11 @@ class LookupCompanyByVatService
         }
 
         [$country, $number] = $parsed;
+
+        // A Croatian OIB carries its own check digit, so a typo is caught before any network call.
+        if ($country === 'HR' && ! self::validOib($number)) {
+            return ['error' => 'This OIB is not valid — check the digits.'];
+        }
 
         try {
             $response = $this->http->acceptJson()
@@ -49,6 +73,11 @@ class LookupCompanyByVatService
 
         $valid = (bool) ($body['isValid'] ?? $body['valid'] ?? false);
 
+        // VIES answers "invalid" with a userError when it simply could not ask the member state.
+        if (! $valid && in_array($body['userError'] ?? '', self::UNAVAILABLE, true)) {
+            return ['error' => 'The VAT service is busy or that country is not responding. Try again shortly, or enter the details manually.'];
+        }
+
         if (! $valid) {
             return ['error' => 'VAT number not found or not valid.'];
         }
@@ -57,6 +86,8 @@ class LookupCompanyByVatService
         [$street, $city, $zip] = $this->parseAddress($this->cleanString($body['address'] ?? null));
 
         return [
+            // Several member states (e.g. Germany) confirm the number but never release the company's details.
+            'details_available' => $name !== null,
             'vat' => $country.$number,
             'name' => $name,
             'address' => $street,

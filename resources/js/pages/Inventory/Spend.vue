@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { Download, Plus, Upload } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -24,6 +24,9 @@ import { coverPhrase, spendSignal } from '@/lib/stock';
 import type { InventoryAnalytics, InventorySpend, OrderStockMismatchRow } from '@/types/stock';
 import type { SharedProps } from '@/types';
 import type { TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Inventory spend (Figma `386:1673`) — capital tied up against what actually
@@ -122,7 +125,7 @@ const dateRange = computed(() => {
 </script>
 
 <template>
-    <AppLayout :title="t('Inventory spend')">
+    <Head :title="t('Inventory spend')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Inventory')">
                 <template #actions>
@@ -306,5 +309,4 @@ const dateRange = computed(() => {
 
         <BulkImportDialog :open="bulkImportOpen" @close="bulkImportOpen = false" />
         <OrderStockReconciliationPanel :open="reconciliationOpen" :rows="reconciliation" @close="reconciliationOpen = false" />
-    </AppLayout>
 </template>

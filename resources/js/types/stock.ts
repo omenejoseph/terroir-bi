@@ -11,7 +11,7 @@ export interface StockCurrent {
     stock_bottles: number;
     unit: string;
     bottles_per_case: number;
-    min_stock_bottles: number;
+    min_stock_bottles: number | null;
     cost_per_bottle: MoneyValue | null;
     selling_per_bottle: MoneyValue | null;
 }
@@ -45,12 +45,64 @@ export interface StockChannel {
     bottles: number;
 }
 
+/** Customer-channel buckets of the product page's "Exit by channel" — App\Queries\ItemExitChannelsQuery. */
+export type CustomerChannelKey = 'internal' | 'distributor' | 'retailer' | 'other' | 'non_order';
+
+export interface CustomerChannelRow {
+    key: CustomerChannelKey;
+    bottles: number;
+    /** Null for exits with no customer (production, manual). */
+    revenue: MoneyValue | null;
+    /** 0–1 share of the counted exits. */
+    share: number;
+}
+
+export interface StockChannelsByCustomer {
+    rows: CustomerChannelRow[];
+    total_bottles: number;
+    /** Bottles from edited / deleted orders that never really left. */
+    excluded_bottles: number;
+    /** Genuine exits that remain (the headline's movements), and the same bottles per histogram bar. */
+    movements_count: number;
+    spark: number[];
+    /** Internal / POS bottles per histogram bucket, aligned with `exits.spark`. */
+    spark_internal: number[];
+    /** First day of the histogram (YYYY-MM-DD) and how many days each bar spans. */
+    spark_start: string;
+    spark_step_days: number;
+}
+
 export interface StockAnalytics {
     period: string;
     current: StockCurrent;
     realized: StockRealized;
     exits: StockExits;
     channels: StockChannel[];
+    channels_by_customer: StockChannelsByCustomer;
+}
+
+/** App\Queries\VintageCoverageQuery — null when the wine has a single vintage. */
+export interface VintageCoverageRow {
+    inventory_item_id: string;
+    vintage: string | null;
+    stock_bottles: number;
+    velocity_per_day: number;
+    days_left: number | null;
+    is_current: boolean;
+}
+
+export interface VintageCoverage {
+    wine_name: string;
+    display_unit: string;
+    vintages: VintageCoverageRow[];
+    total_stock_bottles: number;
+    blended_velocity_per_day: number;
+    combined_days_left: number | null;
+    selling_vintage: string | null;
+    successor_vintage: string | null;
+    selling_days_left: number | null;
+    gap_risk: boolean;
+    window_days: number;
 }
 
 export interface StockMovement {

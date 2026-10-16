@@ -114,7 +114,7 @@ const defaultMax = new Date().toISOString().slice(0, 10);
             v-if="open"
             role="dialog"
             :aria-label="label"
-            class="absolute top-9 z-30 border border-border bg-card p-3 shadow-lg"
+            class="absolute top-9 z-30 border border-border bg-card p-3"
             :class="align === 'right' ? 'right-0' : 'left-0'"
         >
             <Calendar v-model="draft" mode="range" :max="max === undefined ? defaultMax : max" />

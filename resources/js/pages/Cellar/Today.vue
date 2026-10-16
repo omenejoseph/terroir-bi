@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { Check, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -15,6 +15,9 @@ import { SKIP_REASON_LABELS, activityTitle, describeActivity } from '@/lib/cella
 import type { CellarToday } from '@/types/cellar';
 import type { TabItem } from '@/types/ui';
 import type { SharedProps } from '@/types';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Cellar › Today — the cellar team works through the planned tasks, walking
@@ -59,7 +62,7 @@ const openCount = computed(() => props.today.open.reduce((n, g) => n + g.items.l
 </script>
 
 <template>
-    <AppLayout :title="t('Cellar today')">
+    <Head :title="t('Cellar today')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Cellar today')" :description="subtitle" />
             <CellarTabs current="today" />
@@ -130,5 +133,4 @@ const openCount = computed(() => props.today.open.reduce((n, g) => n + g.items.l
                 </section>
             </div>
         </div>
-    </AppLayout>
 </template>

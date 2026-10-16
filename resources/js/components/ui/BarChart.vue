@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+
+import { useElementWidth } from '@/composables/useElementWidth';
 
 import { cn } from '@/lib/cn';
 
@@ -25,7 +27,8 @@ const props = withDefaults(
     { height: 240 },
 );
 
-const W = 720;
+const root = ref<HTMLElement | null>(null);
+const W = useElementWidth(root);
 const PAD = { top: 12, right: 8, bottom: 34, left: 46 };
 
 const seriesCount = computed(() => Math.max(1, ...props.points.map((p) => p.values.length)));
@@ -42,10 +45,10 @@ const ceiling = computed(() => {
 const ticks = computed(() => Array.from({ length: 5 }, (_, i) => Math.round((ceiling.value / 4) * i)));
 
 const plotH = computed(() => props.height - PAD.top - PAD.bottom);
-const plotW = W - PAD.left - PAD.right;
+const plotW = computed(() => W.value - PAD.left - PAD.right);
 
 const y = (value: number) => PAD.top + plotH.value - (value / ceiling.value) * plotH.value;
-const bandW = computed(() => plotW / Math.max(1, props.points.length));
+const bandW = computed(() => plotW.value / Math.max(1, props.points.length));
 
 function bar(index: number, series: number) {
     const band = bandW.value;
@@ -66,11 +69,12 @@ const labelEvery = computed(() => Math.ceil(props.points.length / 12) || 1);
 
 <template>
     <div class="flex flex-col gap-3">
-        <div class="overflow-x-auto">
+        <div ref="root" class="w-full min-w-0">
             <svg
                 :viewBox="`0 0 ${W} ${height}`"
-                :style="{ height: `${height}px` }"
-                class="w-full min-w-[36rem]"
+                :width="W"
+                :height="height"
+                class="block max-w-full"
                 role="img"
                 :aria-label="series?.join(' against ') ?? 'Values by period'"
             >

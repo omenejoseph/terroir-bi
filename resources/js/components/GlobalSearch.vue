@@ -183,7 +183,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKeydown));
             :id="listId"
             ref="list"
             role="listbox"
-            class="absolute top-10 right-0 left-0 z-30 max-h-96 overflow-y-auto border border-border bg-card shadow-lg"
+            class="absolute top-10 right-0 left-0 z-30 max-h-96 overflow-y-auto border border-border bg-card"
         >
             <p v-if="loading" class="px-3 py-3 text-xs text-muted-foreground">{{ t('Searching…') }}</p>
 

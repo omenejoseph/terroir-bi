@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Download, Plus, Search } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -13,6 +13,9 @@ import { formatMoney, formatNumber } from '@/lib/money';
 import type { CustomerAnalytics } from '@/types/customers';
 import type { SharedProps } from '@/types';
 import type { TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Customers · Analytics (Figma 230:4717): four headline cards over a table
@@ -32,6 +35,7 @@ const MODULE_TABS = computed<TabItem[]>(() => [
     { label: t('Customers'), href: '/customers' },
     { label: t('Analytics'), href: '/customers-analytics' },
     { label: t('Categories'), href: '/customers/categories' },
+    { label: t('Pricing tiers'), href: '/customers/pricing-tiers' },
 ]);
 
 const filter = ref('');
@@ -95,7 +99,7 @@ function shortDate(iso: string | null): string {
 </script>
 
 <template>
-    <AppLayout :title="t('Customer analytics')">
+    <Head :title="t('Customer analytics')" />
         <div class="space-y-5">
             <PageHeader :title="t('Customers')">
                 <template #actions>
@@ -230,5 +234,4 @@ function shortDate(iso: string | null): string {
                 </div>
             </div>
         </div>
-    </AppLayout>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { ChevronRight, Columns3, Download, Plus, Search, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -22,6 +22,9 @@ import { formatMoney, formatNumber } from '@/lib/money';
 import type { Paginated, SharedProps } from '@/types';
 import type { Order, OrderFilters, OrderPipeline, OrderStatusCounts } from '@/types/orders';
 import type { DateRange, TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Orders list, following Figma 455:1577: page header with the two primary
@@ -93,7 +96,7 @@ function clearItemFilter(): void {
     reload({ item_id: undefined });
 }
 
-/** The toolbar's Channel filter — filters by the customer's sales channel (App\Enums\CustomerType); Rep has no backing order-owner column, so it stays a dead stub. */
+/** The toolbar's Channel filter — filters by the customer's sales channel (App\Enums\CustomerType). */
 const channelFilterAnchor = ref<HTMLElement | null>(null);
 const { open: channelFilterOpen, close: closeChannelFilter, toggle: toggleChannelFilter } = usePopover(channelFilterAnchor);
 
@@ -234,6 +237,51 @@ const exportHref = computed(() => {
     return query === '' ? '/orders/export' : `/orders/export?${query}`;
 });
 
+/* ---- column chooser ------------------------------------------------------- */
+
+type ColumnKey = 'items' | 'total' | 'status' | 'date';
+
+/** The order number and customer always show; the rest can be hidden. */
+const COLUMN_OPTIONS = computed<{ key: ColumnKey; label: string }[]>(() => [
+    { key: 'items', label: t('Items') },
+    { key: 'total', label: t('Total') },
+    { key: 'status', label: t('Status') },
+    { key: 'date', label: t('Date') },
+]);
+
+const COLUMNS_STORAGE_KEY = 'orders.columns';
+const ALL_COLUMNS: ColumnKey[] = ['items', 'total', 'status', 'date'];
+
+function loadColumns(): ColumnKey[] {
+    try {
+        const stored = JSON.parse(localStorage.getItem(COLUMNS_STORAGE_KEY) ?? 'null');
+
+        if (Array.isArray(stored)) return ALL_COLUMNS.filter((key) => stored.includes(key));
+    } catch {
+        // Storage can be unavailable (private window); every column then shows.
+    }
+
+    return [...ALL_COLUMNS];
+}
+
+const visibleColumns = ref<ColumnKey[]>(loadColumns());
+const columnCount = computed(() => 2 + visibleColumns.value.length);
+
+function toggleColumn(key: ColumnKey): void {
+    visibleColumns.value = visibleColumns.value.includes(key)
+        ? visibleColumns.value.filter((k) => k !== key)
+        : ALL_COLUMNS.filter((k) => k === key || visibleColumns.value.includes(k));
+
+    try {
+        localStorage.setItem(COLUMNS_STORAGE_KEY, JSON.stringify(visibleColumns.value));
+    } catch {
+        // Not persisted; the choice still applies for this visit.
+    }
+}
+
+const columnsAnchor = ref<HTMLElement | null>(null);
+const { open: columnsOpen, toggle: toggleColumns } = usePopover(columnsAnchor);
+
 /* ---- selection + bulk status change --------------------------------------- */
 
 const selected = ref<string[]>([]);
@@ -272,7 +320,7 @@ function bulkChangeStatus(status: string): void {
 </script>
 
 <template>
-    <AppLayout :title="t('Orders')">
+    <Head :title="t('Orders')" />
         <div class="space-y-5">
             <PageHeader :title="t('Orders')">
                 <template #actions>
@@ -353,7 +401,7 @@ function bulkChangeStatus(status: string): void {
                         </button>
                         <div
                             v-if="channelFilterOpen"
-                            class="absolute top-9 left-0 z-20 min-w-40 border border-border bg-card p-1 shadow-lg"
+                            class="absolute top-9 left-0 z-20 min-w-40 border border-border bg-card p-1"
                         >
                             <button
                                 type="button"
@@ -373,16 +421,6 @@ function bulkChangeStatus(status: string): void {
                             </button>
                         </div>
                     </div>
-
-                    <!-- @todo Rep filter. There is no order-owner column to
-                         filter by yet. Rendered so the toolbar matches 455:1577. -->
-                    <button
-                        type="button"
-                        class="inline-flex h-[30px] shrink-0 items-center gap-1 border border-border bg-card px-2.5 text-xs text-foreground hover:border-foreground/40"
-                    >
-                        {{ t('Rep') }}
-                        <span aria-hidden="true" class="text-muted-foreground">▾</span>
-                    </button>
 
                     <!-- The item drawer's "Open in Orders" deep-link. -->
                     <button
@@ -415,8 +453,7 @@ function bulkChangeStatus(status: string): void {
                         <div v-if="can('orders.manage')" ref="bulkActionsAnchor" class="relative">
                             <button
                                 type="button"
-                                class="inline-flex h-[30px] items-center gap-1 border border-border bg-card px-2.5 text-xs transition-colors hover:border-foreground/40 disabled:pointer-events-none disabled:opacity-40"
-                                :disabled="selected.length === 0"
+                                class="inline-flex h-[30px] items-center gap-1 border border-border bg-card px-2.5 text-xs transition-colors hover:border-foreground/40"
                                 @click="toggleBulkActions"
                             >
                                 {{ t('Bulk actions') }}
@@ -424,11 +461,18 @@ function bulkChangeStatus(status: string): void {
                             </button>
                             <div
                                 v-if="bulkActionsOpen"
-                                class="absolute top-9 right-0 z-20 min-w-40 border border-border bg-card p-1 shadow-lg"
+                                class="absolute top-9 right-0 z-20 min-w-40 border border-border bg-card p-1"
                             >
-                                <p class="px-2 py-1 text-3xs tracking-[0.08em] text-muted-foreground uppercase">
-                                    {{ t('Move to') }}
+                                <p
+                                    v-if="selected.length === 0"
+                                    class="max-w-48 px-2 py-1.5 text-xs text-muted-foreground"
+                                >
+                                    {{ t('Tick one or more orders in the table to change their status together.') }}
                                 </p>
+                                <template v-else>
+                                    <p class="px-2 py-1 text-3xs tracking-[0.08em] text-muted-foreground uppercase">
+                                        {{ t('Move :count to', { count: selected.length }) }}
+                                    </p>
                                 <button
                                     v-for="status in statusCounts.statuses"
                                     :key="status.key"
@@ -438,17 +482,34 @@ function bulkChangeStatus(status: string): void {
                                 >
                                     {{ status.label }}
                                 </button>
+                                </template>
                             </div>
                         </div>
 
-                        <!-- @todo Column chooser. -->
-                        <button
-                            type="button"
-                            class="inline-flex h-[30px] items-center gap-1.5 border border-border bg-card px-2.5 text-xs hover:border-foreground/40"
-                        >
-                            <Columns3 class="size-3.5" :stroke-width="1.5" />
-                            {{ t('Columns') }}
-                        </button>
+                        <div ref="columnsAnchor" class="relative">
+                            <button
+                                type="button"
+                                class="inline-flex h-[30px] items-center gap-1.5 border border-border bg-card px-2.5 text-xs hover:border-foreground/40"
+                                :aria-expanded="columnsOpen"
+                                aria-haspopup="menu"
+                                @click="toggleColumns"
+                            >
+                                <Columns3 class="size-3.5" :stroke-width="1.5" />
+                                {{ t('Columns') }}
+                            </button>
+                            <div
+                                v-if="columnsOpen"
+                                class="absolute top-9 right-0 z-20 min-w-44 space-y-2 border border-border bg-card p-3"
+                            >
+                                <Checkbox
+                                    v-for="column in COLUMN_OPTIONS"
+                                    :key="column.key"
+                                    :model-value="visibleColumns.includes(column.key)"
+                                    :label="column.label"
+                                    @update:model-value="toggleColumn(column.key)"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -475,12 +536,12 @@ function bulkChangeStatus(status: string): void {
                                     />
                                 </th>
                                 <th scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">{{ t('Order') }}</th>
-                                <th scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">{{ t('Items') }}</th>
-                                <th scope="col" class="px-4 py-2.5 text-right font-medium tracking-[0.08em] uppercase">
+                                <th v-if="visibleColumns.includes('items')" scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">{{ t('Items') }}</th>
+                                <th v-if="visibleColumns.includes('total')" scope="col" class="px-4 py-2.5 text-right font-medium tracking-[0.08em] uppercase">
                                     {{ t('Total') }}
                                 </th>
-                                <th scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">{{ t('Status') }}</th>
-                                <th scope="col" class="px-4 py-2.5 text-right font-medium tracking-[0.08em] uppercase">
+                                <th v-if="visibleColumns.includes('status')" scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">{{ t('Status') }}</th>
+                                <th v-if="visibleColumns.includes('date')" scope="col" class="px-4 py-2.5 text-right font-medium tracking-[0.08em] uppercase">
                                     {{ t('Date') }}
                                 </th>
                             </tr>
@@ -511,7 +572,7 @@ function bulkChangeStatus(status: string): void {
                                     </span>
                                 </td>
 
-                                <td class="px-4 py-4">
+                                <td v-if="visibleColumns.includes('items')" class="px-4 py-4">
                                     <!--
                                       Cases read "N# x Name" — the # marks the
                                       unit as cases rather than bottles, which
@@ -536,14 +597,14 @@ function bulkChangeStatus(status: string): void {
                                     </span>
                                 </td>
 
-                                <td class="px-4 py-4 text-right">
+                                <td v-if="visibleColumns.includes('total')" class="px-4 py-4 text-right">
                                     <span class="block text-sm font-semibold tabular-nums">
                                         {{ formatMoney(row.total_amount.minor, row.total_amount.currency) }}
                                     </span>
                                     <span class="text-muted-foreground">{{ t('excl. VAT') }}</span>
                                 </td>
 
-                                <td class="px-4 py-4">
+                                <td v-if="visibleColumns.includes('status')" class="px-4 py-4">
                                     <span
                                         class="inline-flex items-center gap-2 border border-border px-2 py-1 whitespace-nowrap"
                                     >
@@ -556,14 +617,14 @@ function bulkChangeStatus(status: string): void {
                                     </span>
                                 </td>
 
-                                <td class="px-4 py-4 text-right">
+                                <td v-if="visibleColumns.includes('date')" class="px-4 py-4 text-right">
                                     <span class="block tabular-nums">{{ orderDate(row) }}</span>
                                     <span class="text-muted-foreground">{{ row.created_by?.name ?? '—' }}</span>
                                 </td>
                             </tr>
 
                             <tr v-if="orders.data.length === 0">
-                                <td colspan="6" class="px-4 py-12 text-center text-muted-foreground">
+                                <td :colspan="columnCount" class="px-4 py-12 text-center text-muted-foreground">
                                     {{ t('No orders in this period.') }}
                                 </td>
                             </tr>
@@ -582,5 +643,4 @@ function bulkChangeStatus(status: string): void {
         <OrderViewPanel :open="openId !== null" :order="order ?? null" @close="close" />
 
         <CreateOrderPanel v-if="can('orders.manage')" :open="createOpen" @close="createOpen = false" />
-    </AppLayout>
 </template>

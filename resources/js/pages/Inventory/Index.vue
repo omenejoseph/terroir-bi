@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ChevronDown, PencilLine, Upload, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -16,6 +16,8 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import Pagination from '@/components/ui/Pagination.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
+import { csrfHeader } from '@/lib/csrf';
+import { rememberListUrl } from '@/lib/listReturn';
 import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/cn';
 import { formatMoney, formatQuantity } from '@/lib/money';
@@ -29,6 +31,9 @@ import type {
 import type { Paginated, SharedProps } from '@/types';
 import type { StockMovement } from '@/types/stock';
 import type { AttentionItem, TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Inventory list, following Figma 389:1592: page header with the two primary
@@ -45,6 +50,8 @@ const props = defineProps<{
     items: Paginated<InventoryItem>;
     filters: InventoryFilters;
     attention: AttentionItem[];
+    /** Across every item the filters match, not only this page. */
+    totals: { on_hand: string };
     /** Item id -> days of stock left, null when nothing exited in the window. */
     cover: Record<string, number | null>;
     /** Only present while the Item — View drawer has asked for them. */
@@ -62,6 +69,10 @@ const { can } = useAuth();
 const { t } = useTranslations();
 
 const search = ref(props.filters.search ?? '');
+
+// Remember this exact list (search, filters, page) so the item page's back link returns here.
+rememberListUrl('inventory');
+watch(() => props.items, () => rememberListUrl('inventory'));
 
 /* The design opens New Item as a drawer over the list, not as its own page.
    The same drawer edits an existing one — see ItemFormPanel. */
@@ -112,12 +123,13 @@ function reload(overrides: Record<string, unknown>): void {
             search: props.filters.search ?? undefined,
             category: props.filters.category ?? undefined,
             missing_cost: props.filters.missing_cost ? 1 : undefined,
+            attention: props.filters.attention ?? undefined,
             // Carried forward so changing a filter does not silently reset the
             // page size back to the server default.
             per_page: props.items.meta.per_page,
             ...overrides,
         },
-        { preserveState: true, replace: true, only: ['items', 'filters'] },
+        { preserveState: true, preserveScroll: true, replace: true, only: ['items', 'filters', 'totals', 'cover', 'attention'] },
     );
 }
 
@@ -151,8 +163,150 @@ function selectCategory(value: string): void {
     reload({ category: props.filters.category === value ? undefined : value });
 }
 
-/** The attention chips double as filters. */
-const attentionFilter = ref<string | null>(null);
+/* ---- collapse a group band (the chevron) -------------------------------------- */
+
+/** Group labels folded shut. Everything starts open; the choice lasts for the visit. */
+const collapsed = ref<Set<string>>(new Set());
+
+function toggleGroup(label: string): void {
+    const next = new Set(collapsed.value);
+
+    if (next.has(label)) next.delete(label);
+    else next.add(label);
+
+    collapsed.value = next;
+}
+
+/* ---- drag and drop: arrange items, subcategories and groups ----------------- */
+
+type DragKind = 'item' | 'sub' | 'group';
+interface DragState {
+    kind: DragKind;
+    /** Item id, or the subcategory / group label. */
+    key: string;
+    /** The group a subcategory or item belongs to; items also carry their subcategory. */
+    group: string;
+    sub: string;
+}
+
+const drag = ref<DragState | null>(null);
+const dropTarget = ref<string | null>(null);
+
+const groupOf = (item: InventoryItem): string => item.group ?? t('Ungrouped');
+const subOf = (item: InventoryItem): string => item.subcategory ?? '';
+
+function startDrag(event: DragEvent, state: DragState): void {
+    drag.value = state;
+    event.dataTransfer?.setData('text/plain', state.key);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+}
+
+function endDrag(): void {
+    drag.value = null;
+    dropTarget.value = null;
+}
+
+/** Only a like-for-like drop is accepted: same kind, and the same parent band. */
+function canDrop(kind: DragKind, group: string, sub: string): boolean {
+    const d = drag.value;
+
+    if (d === null || d.kind !== kind) return false;
+    if (kind === 'group') return true;
+    if (kind === 'sub') return d.group === group;
+
+    return d.group === group && d.sub === sub;
+}
+
+function onDragOver(event: DragEvent, kind: DragKind, key: string, group: string, sub: string): void {
+    if (!canDrop(kind, group, sub)) return;
+
+    event.preventDefault();
+    dropTarget.value = `${kind}:${key}`;
+}
+
+/** Moves `from` to where `to` is: after it when travelling down, before it when travelling up. */
+function moved<T>(list: T[], from: number, to: number): T[] {
+    const next = [...list];
+    const [picked] = next.splice(from, 1);
+    next.splice(to, 0, picked!);
+
+    return next;
+}
+
+function onDrop(kind: DragKind, key: string, group: string, sub: string): void {
+    const d = drag.value;
+
+    // A drop on the wrong kind of row is left for the band around it to handle.
+    if (d === null || d.kind !== kind || (kind !== 'group' && d.group !== group) || (kind === 'item' && d.sub !== sub)) return;
+
+    endDrag();
+    if (d.key === key) return;
+
+    const rows = localItems.value;
+    const category = rows.find((item) => groupOf(item) === (kind === 'group' ? key : group))?.category ?? '';
+
+    if (kind === 'item') {
+        const band = rows.filter((item) => groupOf(item) === group && subOf(item) === sub);
+        const ids = moved(band.map((i) => i.id), band.findIndex((i) => i.id === d.key), band.findIndex((i) => i.id === key));
+        const byId = new Map(band.map((i) => [i.id, i]));
+        let slot = 0;
+
+        localItems.value = rows.map((item) =>
+            groupOf(item) === group && subOf(item) === sub ? byId.get(ids[slot++]!)! : item,
+        );
+        post({ ids });
+
+        return;
+    }
+
+    const labels = (list: string[]): string[] =>
+        moved(list, list.indexOf(d.key), list.indexOf(key));
+
+    if (kind === 'sub') {
+        const inGroup = rows.filter((item) => groupOf(item) === group);
+        const order = labels([...new Set(inGroup.map(subOf))]);
+        const arranged = order.flatMap((label) => inGroup.filter((item) => subOf(item) === label));
+        let slot = 0;
+
+        localItems.value = rows.map((item) => (groupOf(item) === group ? arranged[slot++]! : item));
+        post({
+            category,
+            entries: order.filter((label) => label !== '').map((label) => ({ group, subcategory: label })),
+        });
+
+        return;
+    }
+
+    const order = labels([...new Set(rows.map(groupOf))]);
+
+    localItems.value = order.flatMap((label) => rows.filter((item) => groupOf(item) === label));
+    post({
+        category,
+        entries: order.map((label) => ({ group: label === t('Ungrouped') ? '' : label })),
+    });
+}
+
+/**
+ * Saved in the background: the list has already moved on screen, so this is a plain request with no
+ * Inertia visit — nothing reloads, scroll and focus stay put. If the save fails the list snaps back to
+ * what the server has.
+ */
+async function post(data: Record<string, unknown>): Promise<void> {
+    try {
+        const response = await fetch('/inventory-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...csrfHeader() },
+            credentials: 'same-origin',
+            body: JSON.stringify(data),
+        });
+
+        if (!response.ok) throw new Error(String(response.status));
+    } catch {
+        localItems.value = props.items.data;
+        router.reload({ only: ['items'] });
+    }
+}
+
 
 /**
  * The design groups rows by product group with a count and a subtotal. Grouping
@@ -191,28 +345,24 @@ const groups = computed(() => {
     });
 });
 
+/*
+  Drag and drop rearranges this local copy straight away and saves it in the background; the server's
+  list replaces it on the next response.
+*/
+const localItems = ref<InventoryItem[]>(props.items.data);
+watch(
+    () => props.items.data,
+    (data) => (localItems.value = data),
+);
+
 /** Attention chips filter the visible rows client-side. */
-const visibleRows = computed(() => {
-    const key = attentionFilter.value;
-
-    if (key === null) return props.items.data;
-
-    return props.items.data.filter((item) => {
-        const stock = Number.parseFloat(item.current_stock) || 0;
-
-        if (key === 'no_min_stock') return item.min_stock === null;
-        if (key === 'no_cost_per_unit') return item.cost_per_unit === null;
-        if (key === 'zero_stock') return stock <= 0;
-
-        return true;
-    });
-});
+/** The chips filter on the server now, so what is on the page is exactly what the chip counted. */
+const visibleRows = computed(() => localItems.value);
 
 /** The card header above the table, as the design words it. */
 const listSummary = computed(() => {
-    const total = visibleRows.value.reduce((sum, r) => sum + (Number.parseFloat(r.current_stock) || 0), 0);
-
-    return t(':count products · :onHand on hand', { count: visibleRows.value.length, onHand: qty(String(total)) });
+    // Everything the filters match, from the server — not just the rows on this page.
+    return t(':count products · :onHand on hand', { count: props.items.meta.total, onHand: qty(props.totals.on_hand) });
 });
 
 const qty = (v: string | null) => formatQuantity(v, page.props.locale);
@@ -250,7 +400,7 @@ function flags(item: InventoryItem): string[] {
 </script>
 
 <template>
-    <AppLayout :title="t('Inventory')">
+    <Head :title="t('Inventory')" />
         <div class="space-y-5">
             <PageHeader :title="t('Inventory')">
                 <template #actions>
@@ -279,7 +429,7 @@ function flags(item: InventoryItem): string[] {
 
             <Tabs :items="MODULE_TABS" :current="t('Inventory')" />
 
-            <AttentionBand :items="attention" :active="attentionFilter" @select="attentionFilter = $event" />
+            <AttentionBand :items="attention" :active="filters.attention" @select="reload({ attention: $event ?? undefined, page: 1 })" />
 
             <!-- Search + category tabs -->
             <div class="flex flex-wrap items-center gap-3">
@@ -359,16 +509,45 @@ function flags(item: InventoryItem): string[] {
                             </tr>
                         </thead>
 
-                        <tbody v-for="group in groups" :key="group.label" class="divide-y divide-border">
+                        <tbody
+                            v-for="group in groups"
+                            :key="group.label"
+                            class="divide-y divide-border"
+                            :class="[
+                                drag?.kind === 'group' && drag.key === group.label && 'opacity-40',
+                                dropTarget === `group:${group.label}` && 'outline outline-2 -outline-offset-2 outline-ring/60',
+                            ]"
+                            @dragover="onDragOver($event, 'group', group.label, group.label, '')"
+                            @drop.prevent="onDrop('group', group.label, group.label, '')"
+                        >
                             <!-- Group band: name, count and the page subtotal -->
                             <tr class="bg-muted/40">
-                                <td class="py-2 pl-3"><GripHandle /></td>
+                                <td class="py-2 pl-3">
+                                    <GripHandle
+                                        v-if="can('inventory.manage')"
+                                        draggable
+                                        :label="t('Drag to reorder')"
+                                        @dragstart="startDrag($event, { kind: 'group', key: group.label, group: group.label, sub: '' })"
+                                        @dragend="endDrag"
+                                    />
+                                    <GripHandle v-else />
+                                </td>
                                 <th colspan="4" scope="colgroup" class="px-3 py-2 text-left">
-                                    <span class="inline-flex items-center gap-1.5">
-                                        <ChevronDown class="size-3 text-muted-foreground" :stroke-width="2" />
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-1.5 text-left"
+                                        :aria-expanded="!collapsed.has(group.label)"
+                                        :aria-label="collapsed.has(group.label) ? t('Expand :group', { group: group.label }) : t('Collapse :group', { group: group.label })"
+                                        @click="toggleGroup(group.label)"
+                                    >
+                                        <ChevronDown
+                                            class="size-3 text-muted-foreground transition-transform"
+                                            :class="collapsed.has(group.label) && '-rotate-90'"
+                                            :stroke-width="2"
+                                        />
                                         <span class="text-xs font-semibold text-foreground">{{ group.label }}</span>
                                         <span class="text-xs text-muted-foreground">({{ group.count }})</span>
-                                    </span>
+                                    </button>
                                 </th>
                                 <td colspan="4" class="px-3 py-2 text-right text-xs text-muted-foreground">
                                     {{ qty(String(group.onHand)) }} {{ t('on hand') }}<template v-if="group.currency">
@@ -377,10 +556,28 @@ function flags(item: InventoryItem): string[] {
                                 </td>
                             </tr>
 
-                            <template v-for="band in group.bands" :key="`${group.label}-${band.sub}`">
+                            <template v-for="band in collapsed.has(group.label) ? [] : group.bands" :key="`${group.label}-${band.sub}`">
                                 <!-- Subcategory band -->
-                                <tr v-if="band.sub" class="bg-muted/20">
-                                    <td class="py-1.5 pl-3"><GripHandle /></td>
+                                <tr
+                                    v-if="band.sub"
+                                    class="bg-muted/20"
+                                    :class="[
+                                        drag?.kind === 'sub' && drag.key === band.sub && drag.group === group.label && 'opacity-40',
+                                        dropTarget === `sub:${band.sub}` && 'outline outline-2 -outline-offset-2 outline-ring/60',
+                                    ]"
+                                    @dragover="onDragOver($event, 'sub', band.sub, group.label, '')"
+                                    @drop.prevent="onDrop('sub', band.sub, group.label, '')"
+                                >
+                                    <td class="py-1.5 pl-3">
+                                        <GripHandle
+                                            v-if="can('inventory.manage')"
+                                            draggable
+                                            :label="t('Drag to reorder')"
+                                            @dragstart.stop="startDrag($event, { kind: 'sub', key: band.sub, group: group.label, sub: '' })"
+                                            @dragend="endDrag"
+                                        />
+                                        <GripHandle v-else />
+                                    </td>
                                     <th
                                         colspan="8"
                                         scope="colgroup"
@@ -394,9 +591,24 @@ function flags(item: InventoryItem): string[] {
                                     v-for="item in band.rows"
                                     :key="item.id"
                                     class="cursor-pointer hover:bg-accent/50"
+                                    :class="[
+                                        drag?.kind === 'item' && drag.key === item.id && 'opacity-40',
+                                        dropTarget === `item:${item.id}` && 'outline outline-2 -outline-offset-2 outline-ring/60',
+                                    ]"
                                     @click="viewingId = item.id"
+                                    @dragover="onDragOver($event, 'item', item.id, group.label, band.sub)"
+                                    @drop.prevent="onDrop('item', item.id, group.label, band.sub)"
                                 >
-                                    <td class="py-3 pl-3"><GripHandle /></td>
+                                    <td class="py-3 pl-3">
+                                        <GripHandle
+                                            v-if="can('inventory.manage')"
+                                            draggable
+                                            :label="t('Drag to reorder')"
+                                            @dragstart.stop="startDrag($event, { kind: 'item', key: item.id, group: group.label, sub: band.sub })"
+                                            @dragend="endDrag"
+                                        />
+                                        <GripHandle v-else />
+                                    </td>
                                     <td class="px-3 py-3">
                                         <div class="flex items-center gap-3">
                                             <img
@@ -480,5 +692,4 @@ function flags(item: InventoryItem): string[] {
             @close="viewingId = null"
             @edit="openEdit"
         />
-    </AppLayout>
 </template>

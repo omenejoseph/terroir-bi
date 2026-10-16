@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import {
     CircleCheck,
     CircleSlash,
@@ -24,6 +24,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import Pagination from '@/components/ui/Pagination.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
+import { rememberListUrl } from '@/lib/listReturn';
 import { usePopover } from '@/composables/usePopover';
 import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
@@ -32,6 +33,9 @@ import { formatMoney, formatNumber } from '@/lib/money';
 import type { Customer, CustomerCategorySummary, CustomerFilters, PricingTierSummary } from '@/types/customers';
 import type { Paginated, SharedProps } from '@/types';
 import type { MenuItem, TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Customers list, following Figma 230:2395: page header with Export and New
@@ -57,6 +61,10 @@ const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
 const { can } = useAuth();
 const { t } = useTranslations();
+
+// Remember this exact list (search, filters, page) so a customer page's back link returns here.
+rememberListUrl('customers');
+watch(() => props.customers, () => rememberListUrl('customers'));
 
 const search = ref(props.filters.search ?? '');
 const selected = ref<string[]>([]);
@@ -107,6 +115,7 @@ const MODULE_TABS = computed<TabItem[]>(() => [
     { label: t('Customers'), href: '/customers' },
     { label: t('Analytics'), href: '/customers-analytics' },
     { label: t('Categories'), href: '/customers/categories' },
+    { label: t('Pricing tiers'), href: '/customers/pricing-tiers' },
 ]);
 
 /** Tiers are only fetched when the Tier filter is first opened. */
@@ -263,7 +272,7 @@ async function destroy(customer: Customer): Promise<void> {
 </script>
 
 <template>
-    <AppLayout :title="t('Customers')">
+    <Head :title="t('Customers')" />
         <div class="space-y-5">
             <PageHeader :title="t('Customers')">
                 <template #actions>
@@ -318,7 +327,7 @@ async function destroy(customer: Customer): Promise<void> {
                     </button>
                     <div
                         v-if="filterOpen && openFilter === 'status'"
-                        class="absolute top-9 left-0 z-20 min-w-40 border border-border bg-card p-1 shadow-lg"
+                        class="absolute top-9 left-0 z-20 min-w-40 border border-border bg-card p-1"
                     >
                         <button
                             v-for="option in [
@@ -352,7 +361,7 @@ async function destroy(customer: Customer): Promise<void> {
                     </button>
                     <div
                         v-if="filterOpen && openFilter === 'tier'"
-                        class="absolute top-9 left-0 z-20 max-h-64 min-w-48 overflow-y-auto border border-border bg-card p-1 shadow-lg"
+                        class="absolute top-9 left-0 z-20 max-h-64 min-w-48 overflow-y-auto border border-border bg-card p-1"
                     >
                         <button
                             type="button"
@@ -395,7 +404,7 @@ async function destroy(customer: Customer): Promise<void> {
                     </button>
                     <div
                         v-if="filterOpen && openFilter === 'type'"
-                        class="absolute top-9 left-0 z-20 min-w-44 border border-border bg-card p-1 shadow-lg"
+                        class="absolute top-9 left-0 z-20 min-w-44 border border-border bg-card p-1"
                     >
                         <button
                             type="button"
@@ -435,7 +444,7 @@ async function destroy(customer: Customer): Promise<void> {
                     </button>
                     <div
                         v-if="filterOpen && openFilter === 'category'"
-                        class="absolute top-9 left-0 z-20 max-h-64 min-w-48 overflow-y-auto border border-border bg-card p-1 shadow-lg"
+                        class="absolute top-9 left-0 z-20 max-h-64 min-w-48 overflow-y-auto border border-border bg-card p-1"
                     >
                         <button
                             type="button"
@@ -595,7 +604,7 @@ async function destroy(customer: Customer): Promise<void> {
         <!-- Floating selection bar (Figma 230:2395) -->
         <div
             v-if="selected.length > 0"
-            class="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 border border-border bg-card px-3 py-2 shadow-lg"
+            class="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 border border-border bg-card px-3 py-2"
         >
             <span class="px-2 text-xs">{{ t(':count selected', { count: selected.length }) }}</span>
             <Button variant="ghost" size="sm" :href="exportSelectionHref" download>
@@ -635,5 +644,4 @@ async function destroy(customer: Customer): Promise<void> {
             @close="mergeOpen = false"
             @merged="((selected = []), (mergeOpen = false))"
         />
-    </AppLayout>
 </template>

@@ -293,19 +293,32 @@ function submitNewLines(): void {
     );
 }
 
-/** Clones this order's customer, notes, shipping and lines into a fresh draft — no confirmation, it's additive, not destructive. */
-function duplicateOrder(): void {
+/** Clones this order's customer, notes, shipping and lines into a fresh draft. Asks first: it creates a real order. */
+async function duplicateOrder(): Promise<void> {
     const id = order.value?.id;
     if (id === undefined) return;
+
+    const ok = await confirmDialog({
+        title: t('Duplicate order'),
+        description: t('Create a new order with the same customer and lines as #:number?', { number: order.value?.order_number ?? '' }),
+        confirmLabel: t('Duplicate'),
+    });
+    if (!ok) return;
 
     router.post(`/orders/${id}/duplicate`, {});
 }
 
-const confirmingDelete = ref(false);
-
-function destroy(): void {
+async function destroy(): Promise<void> {
     const id = order.value?.id;
     if (id === undefined) return;
+
+    const ok = await confirmDialog({
+        title: t('Delete order'),
+        description: t('Delete order #:number? Its stock goes back on the shelf. This cannot be undone.', { number: order.value?.order_number ?? '' }),
+        confirmLabel: t('Delete'),
+        tone: 'danger',
+    });
+    if (!ok) return;
 
     router.delete(`/orders/${id}`, { onSuccess: () => emit('close') });
 }
@@ -733,9 +746,9 @@ async function onOverflowAction(key: string): Promise<void> {
                 v-if="can('orders.delete')"
                 variant="ghost"
                 class="mr-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
-                @click="confirmingDelete ? destroy() : (confirmingDelete = true)"
+                @click="destroy"
             >
-                {{ confirmingDelete ? t('Confirm delete') : t('Delete') }}
+                {{ t('Delete') }}
             </Button>
             <Button v-if="can('orders.manage')" variant="outline" @click="duplicateOrder">
                 <Copy class="size-3.5" :stroke-width="1.5" />

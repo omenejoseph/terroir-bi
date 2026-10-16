@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { ClipboardPaste, Search } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -16,6 +16,9 @@ import { useTranslations } from '@/composables/useTranslations';
 import { ANALYSIS_FIELDS, METRIC_LABELS, parseDecimal, qty } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import type { AnalysisParam, LotOption } from '@/types/cellar';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Cellar › Bulk analyses — the lab sheet for the whole cellar: one row per
@@ -147,7 +150,7 @@ function save(): void {
 </script>
 
 <template>
-    <AppLayout :title="t('Bulk analyses')">
+    <Head :title="t('Bulk analyses')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Bulk analyses')" :description="t('Enter the lab’s results for many lots at once — type them in or paste the lab’s sheet.')">
                 <template #actions><Button size="sm" variant="outline" href="/cellar/bulk-additions">{{ t('Bulk additions') }}</Button></template>
@@ -216,5 +219,4 @@ function save(): void {
                 <Button :disabled="busy || filled.length === 0" @click="save">{{ t('Save (:n)', { n: filled.length }) }}</Button>
             </div>
         </div>
-    </AppLayout>
 </template>

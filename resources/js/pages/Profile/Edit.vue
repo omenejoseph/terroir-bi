@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import Button from '@/components/ui/Button.vue';
@@ -12,6 +12,9 @@ import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import { useTranslations } from '@/composables/useTranslations';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * "My profile": the signed-in person's own name and password (Web\ProfileController). Open to every
@@ -54,7 +57,7 @@ function savePassword(): void {
 </script>
 
 <template>
-    <AppLayout :title="t('My profile')">
+    <Head :title="t('My profile')" />
         <div class="max-w-2xl space-y-5">
             <PageHeader :title="t('My profile')" :description="t('Your name and password.')" />
 
@@ -131,5 +134,4 @@ function savePassword(): void {
                 </div>
             </form>
         </div>
-    </AppLayout>
 </template>

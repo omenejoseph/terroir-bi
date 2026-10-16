@@ -49,9 +49,9 @@ class ListWineLotsQuery
         if (! empty($filters['search'])) {
             $term = '%'.$filters['search'].'%';
             $query->where(function (Builder $q) use ($term): void {
-                $q->where('lot_number', 'like', $term)
-                    ->orWhere('name', 'like', $term)
-                    ->orWhere('grape_variety', 'like', $term);
+                $q->whereLike('lot_number', $term)
+                    ->orWhereLike('name', $term)
+                    ->orWhereLike('grape_variety', $term);
             });
         }
 

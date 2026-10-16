@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -15,6 +15,9 @@ import { useTranslations } from '@/composables/useTranslations';
 import type { TastingReport } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { ComboboxOption } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /** One tasting report: who tasted, when, the average, and each wine's score and notes (linked to its lot). */
 const props = defineProps<{ report: TastingReport; lots: ComboboxOption[] }>();
@@ -32,7 +35,7 @@ async function destroy(): Promise<void> {
 </script>
 
 <template>
-    <AppLayout :title="report.title || t('Tasting')">
+    <Head :title="report.title || t('Tasting')" />
         <div class="flex flex-col gap-5">
             <Link href="/cellar/tastings" class="inline-flex w-fit items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft class="size-3.5" /> {{ t('Tasting reports') }}</Link>
             <PageHeader :title="report.title || t('Tasting')" :description="[new Date(report.date).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }), report.author?.name].filter(Boolean).join(' · ')">
@@ -62,5 +65,4 @@ async function destroy(): Promise<void> {
             </div>
         </div>
         <TastingReportPanel :open="panel" :report="report" :lots="lots" @close="panel = false" />
-    </AppLayout>
 </template>

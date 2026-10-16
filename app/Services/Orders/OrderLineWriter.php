@@ -12,7 +12,6 @@ use App\Models\OrderItem;
 use App\Services\Inventory\StockLedger;
 use App\Services\Pricing\PricingService;
 use App\Support\Money\Money;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Writes a single order line: resolves the unit price (server truth unless an
@@ -38,16 +37,10 @@ class OrderLineWriter
         $itemId = $line['inventory_item_id'] ?? null;
         $item = $itemId !== null ? InventoryItem::query()->find((string) $itemId) : null;
 
-        // A catalog item can only be ordered in its sales unit (strict). If the
-        // line omits the unit, it defaults to the item's sales unit.
+        // A catalog item may be ordered in bottles or cases; an omitted unit defaults to the
+        // item's sales unit. Price, cost and stock are all scaled per bottle, so either works.
         if ($item !== null) {
-            $salesUnit = (string) $item->sales_unit;
-            if ($requestedUnit !== null && $requestedUnit !== $salesUnit) {
-                throw ValidationException::withMessages([
-                    'items' => "{$item->name} is sold in {$salesUnit}; it can't be ordered in {$requestedUnit}.",
-                ]);
-            }
-            $unitType = $salesUnit;
+            $unitType = $requestedUnit ?? (string) $item->sales_unit;
         } else {
             $unitType = $requestedUnit ?? SalesUnit::Bottles->value;
         }

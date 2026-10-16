@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Plus } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -25,6 +25,9 @@ import { LOT_STATUS_LABELS, LOT_STATUS_TONES, lotRefFromOption, qty } from '@/li
 import { cn } from '@/lib/cn';
 import type { LotOption, MapVessel, Vessel, WineLotSummary } from '@/types/cellar';
 import type { SharedProps } from '@/types';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Cellar home — the cellar at a glance: headline figures, the map (which is
@@ -110,7 +113,7 @@ function additionLine(l: WineLotSummary): string {
 </script>
 
 <template>
-    <AppLayout :title="t('Cellar')">
+    <Head :title="t('Cellar')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Cellar')">
                 <template v-if="canManage" #actions>
@@ -216,5 +219,4 @@ function additionLine(l: WineLotSummary): string {
         <UnassignWinePanel :open="unassignIds !== null" :vessels="pick(unassignIds)" @close="unassignIds = null" />
         <MapReadingsPanel :open="readingIds !== null" :vessels="pick(readingIds)" @close="doneWithSelection" />
         <TransferPanel v-if="moveLot" :open="moveFrom !== null" :lot="moveLot" :lots="lotOptions" :vessels="vessels" :vessel-id="moveFrom" @close="doneWithSelection" />
-    </AppLayout>
 </template>

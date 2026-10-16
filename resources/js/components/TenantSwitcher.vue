@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 
 import { useTranslations } from '@/composables/useTranslations';
@@ -13,11 +13,14 @@ import type { SharedProps } from '@/types';
 const page = usePage<SharedProps>();
 const { t } = useTranslations();
 
+/** Absent until the switcher first opens and asks for it. */
+const memberships = computed(() => page.props.tenants ?? []);
+
 const open = ref(false);
 const switching = ref(false);
 
 watch(open, (isOpen) => {
-    if (isOpen && page.props.tenants.length === 0) {
+    if (isOpen && (page.props.tenants?.length ?? 0) === 0) {
         router.reload({ only: ['tenants'] });
     }
 });
@@ -59,10 +62,10 @@ function select(tenantId: string): void {
 
         <ul
             v-if="open"
-            class="absolute right-0 z-30 mt-2 min-w-52 overflow-hidden rounded-lg border border-border bg-popover py-1 shadow-lg"
+            class="absolute right-0 z-30 mt-2 min-w-52 overflow-hidden rounded-lg border border-border bg-popover py-1"
             role="listbox"
         >
-            <li v-for="membership in page.props.tenants" :key="membership.tenant_id">
+            <li v-for="membership in memberships" :key="membership.tenant_id">
                 <button
                     type="button"
                     role="option"
@@ -73,7 +76,7 @@ function select(tenantId: string): void {
                     {{ membership.name }}
                 </button>
             </li>
-            <li v-if="page.props.tenants.length === 0" class="px-3 py-2 text-sm text-muted-foreground">{{ t('Loading…') }}</li>
+            <li v-if="memberships.length === 0" class="px-3 py-2 text-sm text-muted-foreground">{{ t('Loading…') }}</li>
         </ul>
     </div>
 </template>

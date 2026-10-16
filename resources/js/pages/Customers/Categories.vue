@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { ArrowDown, ArrowUp, Check, Pencil, Plus, Trash2, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -16,6 +16,9 @@ import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import type { CustomerCategoryRow } from '@/types/customers';
 import type { TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Customer categories: the labels an organisation puts on its customers ("Restaurant",
@@ -35,6 +38,7 @@ const MODULE_TABS = computed<TabItem[]>(() => [
     { label: t('Customers'), href: '/customers' },
     { label: t('Analytics'), href: '/customers-analytics' },
     { label: t('Categories'), href: '/customers/categories' },
+    { label: t('Pricing tiers'), href: '/customers/pricing-tiers' },
 ]);
 
 const addForm = useForm({ name: '' });
@@ -95,7 +99,7 @@ async function remove(category: CustomerCategoryRow): Promise<void> {
 </script>
 
 <template>
-    <AppLayout :title="t('Customer categories')">
+    <Head :title="t('Customer categories')" />
         <div class="space-y-5">
             <PageHeader
                 :title="t('Customer categories')"
@@ -184,5 +188,4 @@ async function remove(category: CustomerCategoryRow): Promise<void> {
                 <p v-else class="px-4 py-12 text-center text-xs text-muted-foreground">{{ t('No categories yet.') }}</p>
             </div>
         </div>
-    </AppLayout>
 </template>

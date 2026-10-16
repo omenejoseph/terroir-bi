@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import CellarTabs from '@/components/cellar/CellarTabs.vue';
@@ -14,6 +14,9 @@ import { useTranslations } from '@/composables/useTranslations';
 import type { CellarActivityType, CellarPlan, CellarPreselect, LotOption, MemberOption, ParcelOption, ProductOption, Vessel } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Cellar › Plan — plan work for the cellar team (builder + map stage), and see
@@ -66,7 +69,7 @@ const vesselName = (id: string) => vesselNames.value.get(id);
 </script>
 
 <template>
-    <AppLayout :title="t('Plan work')">
+    <Head :title="t('Plan work')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Plan work')" :description="t('Plan cellar work — the team sees it on Today and confirms it at the tank.')" />
             <CellarTabs current="plan" />
@@ -120,5 +123,4 @@ const vesselName = (id: string) => vesselNames.value.get(id);
                 />
             </div>
         </div>
-    </AppLayout>
 </template>

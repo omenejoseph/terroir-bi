@@ -743,7 +743,7 @@ const tipStatus = computed(() => {
         <Teleport to="body">
             <div
                 v-if="hover"
-                class="pointer-events-none fixed z-50 w-60 border border-border bg-card p-3 text-xs shadow-lg"
+                class="pointer-events-none fixed z-50 w-60 border border-border bg-card p-3 text-xs"
                 :style="{ left: `${hover.x + 14}px`, top: `${hover.y + 14}px` }"
             >
                 <p class="font-semibold text-foreground">{{ hover.v.name }}</p>

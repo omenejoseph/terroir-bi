@@ -20,7 +20,6 @@ use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
-use Tighten\Ziggy\Ziggy;
 
 /**
  * Props shared with every Inertia response.
@@ -82,8 +81,8 @@ class HandleInertiaRequests extends Middleware
             // (not this prop) is what actually restricts what an impersonated
             // session can do.
             'impersonating' => fn () => $this->impersonating($user),
-            // Only serialised when the tenant switcher actually asks for it.
-            'tenants' => fn () => $user instanceof User ? $this->memberships($user) : [],
+            // Only serialised when the tenant switcher actually asks for it (a partial reload on first open).
+            'tenants' => Inertia::optional(fn () => $user instanceof User ? $this->memberships($user) : []),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
@@ -109,10 +108,6 @@ class HandleInertiaRequests extends Middleware
             'recentNavVisits' => Inertia::optional(fn () => $user instanceof User && $this->tenants->check()
                 ? $this->shortcuts->recent($user)
                 : []),
-            'ziggy' => fn () => [
-                ...(new Ziggy)->toArray(),
-                'location' => $request->url(),
-            ],
         ]);
     }
 

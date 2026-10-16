@@ -33,10 +33,10 @@ class ListSuppliersQuery
 
         if (! empty($filters['search'])) {
             $term = '%'.$filters['search'].'%';
-            $query->where(fn (Builder $q) => $q->where('company_name', 'like', $term)
-                ->orWhere('contact_name', 'like', $term)
-                ->orWhere('email', 'like', $term)
-                ->orWhere('tax_id', 'like', $term));
+            $query->where(fn (Builder $q) => $q->whereLike('company_name', $term)
+                ->orWhereLike('contact_name', $term)
+                ->orWhereLike('email', $term)
+                ->orWhereLike('tax_id', $term));
         }
 
         if (array_key_exists('is_active', $filters) && $filters['is_active'] !== null) {

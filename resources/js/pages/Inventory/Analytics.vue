@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { AlertTriangle, Plus, Upload } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -22,6 +22,9 @@ import { categoryLabel, channelLabel, formatMonth } from '@/lib/stock';
 import type { InventoryAnalytics } from '@/types/stock';
 import type { SharedProps } from '@/types';
 import type { TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Inventory analytics (Figma `382:1592`).
@@ -136,7 +139,7 @@ const bulkImportOpen = ref(false);
 </script>
 
 <template>
-    <AppLayout :title="t('Inventory analytics')">
+    <Head :title="t('Inventory analytics')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Inventory')">
                 <template #actions>
@@ -344,5 +347,4 @@ const bulkImportOpen = ref(false);
         </div>
 
         <BulkImportDialog :open="bulkImportOpen" @close="bulkImportOpen = false" />
-    </AppLayout>
 </template>

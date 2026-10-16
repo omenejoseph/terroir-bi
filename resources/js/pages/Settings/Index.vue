@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
+import { Head, useForm } from '@inertiajs/vue3';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import Button from '@/components/ui/Button.vue';
@@ -11,8 +12,13 @@ import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Select from '@/components/ui/Select.vue';
+import Tabs from '@/components/ui/Tabs.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import type { Org } from '@/types';
+import type { TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Organisation settings (nav's "System · Settings", capability
@@ -71,6 +77,55 @@ const form = useForm({
     cash_on_hand_as_of: props.settings.cash_on_hand_as_of ?? '',
 });
 
+/*
+  One form, three tabs: every field stays in the same form so a single Save writes them all, and the
+  tab only decides which cards show. The chosen tab is kept in the URL (?tab=) so a refresh or a link
+  lands on it.
+*/
+type SettingsTab = 'organisation' | 'revenue-target' | 'cash-on-hand';
+
+const TABS = computed<TabItem[]>(() => [
+    { value: 'organisation', label: t('Organisation') },
+    { value: 'revenue-target', label: t('Revenue target') },
+    { value: 'cash-on-hand', label: t('Cash on hand') },
+]);
+
+const FIELD_TAB: Record<string, SettingsTab> = {
+    annual_revenue_target: 'revenue-target',
+    channel_revenue_targets: 'revenue-target',
+    cash_on_hand: 'cash-on-hand',
+    cash_on_hand_as_of: 'cash-on-hand',
+};
+
+function initialTab(): SettingsTab {
+    const wanted = new URLSearchParams(window.location.search).get('tab');
+
+    return TABS.value.some((tab) => tab.value === wanted) ? (wanted as SettingsTab) : 'organisation';
+}
+
+const tab = ref<SettingsTab>(initialTab());
+
+function selectTab(value: string): void {
+    tab.value = value as SettingsTab;
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', value);
+    window.history.replaceState(window.history.state, '', url);
+}
+
+/** A validation error on a tab you are not looking at would otherwise be invisible: jump to it. */
+watch(
+    () => form.errors,
+    (errors) => {
+        const keys = Object.keys(errors);
+        if (keys.length === 0) return;
+
+        const owner = keys.map((key) => FIELD_TAB[key.split('.')[0]!] ?? 'organisation');
+
+        if (!owner.includes(tab.value)) selectTab(owner[0]!);
+    },
+);
+
 function submit(): void {
     form
         .transform((data) => ({
@@ -90,12 +145,14 @@ function submit(): void {
 </script>
 
 <template>
-    <AppLayout :title="t('Settings')">
+    <Head :title="t('Settings')" />
         <div class="max-w-2xl space-y-5">
             <PageHeader :title="t('Settings')" :description="t('Organisation-wide configuration.')" />
 
+            <Tabs :items="TABS" :current="tab" @select="selectTab" />
+
             <form class="space-y-5" @submit.prevent="submit">
-                <Card>
+                <Card v-show="tab === 'organisation'">
                     <CardHeader>
                         <CardTitle>{{ t('Organisation') }}</CardTitle>
                     </CardHeader>
@@ -129,7 +186,7 @@ function submit(): void {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card v-show="tab === 'revenue-target'">
                     <CardHeader>
                         <CardTitle>{{ t('Revenue target') }}</CardTitle>
                     </CardHeader>
@@ -176,7 +233,7 @@ function submit(): void {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card v-show="tab === 'cash-on-hand'">
                     <CardHeader>
                         <CardTitle>{{ t('Cash on hand') }}</CardTitle>
                     </CardHeader>
@@ -212,5 +269,4 @@ function submit(): void {
                 </div>
             </form>
         </div>
-    </AppLayout>
 </template>

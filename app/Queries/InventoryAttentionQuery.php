@@ -31,10 +31,10 @@ class InventoryAttentionQuery
     public function get(): array
     {
         $counts = [
-            'no_min_stock' => $this->noMinStock(),
-            'no_cost_per_unit' => $this->noCostPerUnit(),
-            'zero_stock' => $this->zeroStock(),
-            'no_movement_90d' => $this->dormant(),
+            'no_min_stock' => $this->count('no_min_stock'),
+            'no_cost_per_unit' => $this->count('no_cost_per_unit'),
+            'zero_stock' => $this->count('zero_stock'),
+            'no_movement_90d' => $this->count('no_movement_90d'),
         ];
 
         $labels = [
@@ -56,45 +56,36 @@ class InventoryAttentionQuery
         return $out;
     }
 
+    /** The chip keys the list can be filtered by. */
+    public const KEYS = ['no_min_stock', 'no_cost_per_unit', 'zero_stock', 'no_movement_90d'];
+
     /**
+     * Narrow a query to the items a chip counts. The chip's count and the rows it filters to are the
+     * same definition, so clicking a chip can never show a different number of items than it promised.
+     *
+     * @param  Builder<InventoryItem>  $query
      * @return Builder<InventoryItem>
      */
-    private function baseQuery(): Builder
+    public static function scope(Builder $query, string $key): Builder
     {
-        return InventoryItem::query()->where('is_active', true);
-    }
+        $query->where('is_active', true);
 
-    private function noMinStock(): int
-    {
-        return $this->baseQuery()->whereNull('min_stock')->count();
-    }
-
-    private function noCostPerUnit(): int
-    {
-        return $this->baseQuery()->whereNull('cost_per_unit')->count();
-    }
-
-    private function zeroStock(): int
-    {
-        return $this->baseQuery()->where('current_stock', '<=', 0)->count();
-    }
-
-    /**
-     * Active items with no stock movement in the last 90 days. Items that have
-     * never moved count as dormant too — they are exactly the stale rows the
-     * band is meant to surface.
-     */
-    private function dormant(): int
-    {
-        $cutoff = Carbon::now()->subDays(self::DORMANT_DAYS);
-
-        return $this->baseQuery()
-            ->whereNotExists(function ($query) use ($cutoff): void {
-                $query->selectRaw('1')
+        return match ($key) {
+            'no_min_stock' => $query->whereNull('min_stock'),
+            'no_cost_per_unit' => $query->whereNull('cost_per_unit'),
+            'zero_stock' => $query->where('current_stock', '<=', 0),
+            'no_movement_90d' => $query->whereNotExists(function ($sub): void {
+                $sub->selectRaw('1')
                     ->from((new StockMovement)->getTable())
                     ->whereColumn('stock_movements.inventory_item_id', 'inventory_items.id')
-                    ->where('stock_movements.created_at', '>=', $cutoff);
-            })
-            ->count();
+                    ->where('stock_movements.created_at', '>=', Carbon::now()->subDays(self::DORMANT_DAYS));
+            }),
+            default => $query,
+        };
+    }
+
+    private function count(string $key): int
+    {
+        return self::scope(InventoryItem::query(), $key)->count();
     }
 }

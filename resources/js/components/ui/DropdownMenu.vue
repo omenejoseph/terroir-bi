@@ -61,7 +61,7 @@ function choose(item: MenuItem): void {
             role="menu"
             :class="
                 cn(
-                    'absolute top-8 z-30 min-w-36 border border-border bg-card p-1 shadow-lg',
+                    'absolute top-8 z-30 min-w-36 border border-border bg-card p-1',
                     align === 'right' ? 'right-0' : 'left-0',
                     props.class,
                 )

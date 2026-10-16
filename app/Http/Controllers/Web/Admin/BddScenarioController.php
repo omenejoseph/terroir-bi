@@ -39,7 +39,7 @@ class BddScenarioController extends Controller
         $search = trim((string) $request->query('search', ''));
 
         $scenarios = $query->builder()
-            ->when($search !== '', fn ($q) => $q->where('title', 'like', "%{$search}%"))
+            ->when($search !== '', fn ($q) => $q->whereLike('title', "%{$search}%"))
             ->orderBy('title')
             ->paginate(PerPage::fromRequest($request), ['*'], 'page');
 

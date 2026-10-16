@@ -27,8 +27,13 @@ import type { SharedProps } from '@/types';
  * starts populated. Splitting them would mean maintaining the same field list
  * twice.
  */
-const props = defineProps<{ open: boolean; customer: Customer | null }>();
-const emit = defineEmits<{ close: [] }>();
+const props = defineProps<{
+    open: boolean;
+    customer: Customer | null;
+    /** Create without leaving the current page (e.g. from the Create order drawer), then emit `created`. */
+    stay?: boolean;
+}>();
+const emit = defineEmits<{ close: []; created: [] }>();
 
 const page = usePage<SharedProps>();
 const { t } = useTranslations();
@@ -113,6 +118,8 @@ watch(
 */
 const lookingUp = ref(false);
 const lookupError = ref<string | null>(null);
+/** A good lookup that still left the operator something to do (or confirm). */
+const lookupNote = ref<string | null>(null);
 
 async function lookUp(): Promise<void> {
     const vat = form.oib.trim();
@@ -120,10 +127,11 @@ async function lookUp(): Promise<void> {
 
     lookingUp.value = true;
     lookupError.value = null;
+    lookupNote.value = null;
 
     try {
-        const response = await fetch(`/api/v1/customers/lookup-vat?vat=${encodeURIComponent(vat)}`, {
-            headers: { Accept: 'application/json' },
+        const response = await fetch(`/customers/lookup-vat?vat=${encodeURIComponent(vat)}`, {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             credentials: 'same-origin',
         });
         const body = await response.json();
@@ -137,6 +145,10 @@ async function lookUp(): Promise<void> {
         // Only fill what is empty: a lookup must never overwrite something the
         // operator has already typed.
         const data = body.data ?? {};
+        lookupNote.value =
+            data.details_available === false
+                ? t('The number is valid, but this country does not share company details — enter them manually.')
+                : t('Details filled in from the VAT registry.');
         if (form.company_name === '' && typeof data.name === 'string') form.company_name = data.name;
         if (form.address === '' && typeof data.address === 'string') form.address = data.address;
         if (form.city === '' && typeof data.city === 'string') form.city = data.city;
@@ -167,6 +179,23 @@ const TIER_OPTIONS = computed(() =>
     })),
 );
 
+/*
+  The rebate field is a customer's own figure and is independent of the tier, so a customer can carry
+  a rebate (say, from the legacy import) with no tier linked. Say so, and point at a tier that matches.
+*/
+const tierHint = computed<string | undefined>(() => {
+    if (form.pricing_tier_id !== '') return undefined;
+
+    const rebate = Number.parseFloat(String(form.rebate_percent));
+    if (!Number.isFinite(rebate) || rebate <= 0) return undefined;
+
+    const match = tiers.value.find((tier) => Number.parseFloat(tier.rebate_percent) === rebate);
+
+    return match
+        ? t('Not linked to a tier. Pick :tier to match the :rebate% rebate.', { tier: match.name, rebate })
+        : t('Not linked to a tier — the :rebate% rebate is set on this customer directly.', { rebate });
+});
+
 const settingsSummary = computed(() =>
     [
         form.exclude_from_stats ? t('Excluded from stats') : t('Counted in stats'),
@@ -179,7 +208,10 @@ const settingsSummary = computed(() =>
 function submit(): void {
     const options = {
         preserveScroll: true,
-        onSuccess: () => emit('close'),
+        onSuccess: () => {
+            emit('close');
+            if (props.stay) emit('created');
+        },
         // Editing lands back on the same Customer — Show page, which may
         // already have Pricing/Order History/Komisija/the order link loaded
         // from earlier in this visit. Without `only`, this would be a full
@@ -188,6 +220,8 @@ function submit(): void {
         // navigates to a brand-new page instead, so no such prop survives to
         // lose.
         ...(isEdit.value ? { only: ['customer'] } : {}),
+        // Created from another drawer: keep that drawer (and what's typed in it) open, and refresh just the picker's list.
+        ...(props.stay && !isEdit.value ? { preserveState: true, only: ['customerOptions'] } : {}),
     };
 
     // Blank optional fields are sent as null rather than "", so clearing a
@@ -199,6 +233,7 @@ function submit(): void {
                 if (out[key] === '') out[key] = null;
             }
             out.rebate_percent = data.rebate_percent === '' ? 0 : Number(data.rebate_percent);
+            if (props.stay && !isEdit.value) out.stay = true;
 
             return out;
         })
@@ -216,7 +251,7 @@ function submit(): void {
             <FormSection :label="t('Identity')">
                 <FormField
                     :label="t('OIB / VAT')"
-                    :hint="t('Enter a Croatian OIB or EU VAT number to auto-fill name and address.')"
+                    :hint="lookupNote ?? t('Enter a Croatian OIB or EU VAT number to auto-fill name and address.')"
                     :error="form.errors.oib ?? lookupError ?? undefined"
                 >
                     <template #default="{ id, invalid }">
@@ -330,7 +365,7 @@ function submit(): void {
 
             <FormSection :label="t('Pricing')">
                 <FieldRow>
-                    <FormField :label="t('Pricing tier')" :error="form.errors.pricing_tier_id">
+                    <FormField :label="t('Pricing tier')" :hint="tierHint" :error="form.errors.pricing_tier_id">
                         <template #default="{ id }">
                             <Combobox
                                 :id="id"

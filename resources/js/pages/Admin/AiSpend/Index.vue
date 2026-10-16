@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { Cloud } from 'lucide-vue-next';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -17,6 +17,9 @@ import { csrfHeader } from '@/lib/csrf';
 import type { AdminAiSpendTenantRow, AdminAiSpendTotals, AdminOption } from '@/types/admin';
 import type { Paginated } from '@/types';
 import type { TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /**
  * AI Spend — port of App\Filament\Pages\AiSpend. Local usage totals render
@@ -124,7 +127,7 @@ function tenantCost(tenantId: string | null): string {
 </script>
 
 <template>
-    <AdminLayout :title="t('AI Spend')">
+    <Head :title="t('AI Spend')" />
         <div class="space-y-5">
             <PageHeader :title="t('AI Spend')">
                 <template #actions>
@@ -221,5 +224,4 @@ function tenantCost(tenantId: string | null): string {
                 </div>
             </Card>
         </div>
-    </AdminLayout>
 </template>

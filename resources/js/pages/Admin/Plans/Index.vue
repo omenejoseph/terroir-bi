@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { PencilLine, Plus, Search, Trash2 } from 'lucide-vue-next';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -16,6 +16,9 @@ import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminOption, AdminPlan } from '@/types/admin';
 import type { Paginated } from '@/types';
 import type { MenuItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /** Plans — port of App\Filament\Resources\Plans\**. */
 const props = defineProps<{
@@ -99,7 +102,7 @@ function price(plan: AdminPlan): string {
 </script>
 
 <template>
-    <AdminLayout :title="t('Plans')">
+    <Head :title="t('Plans')" />
         <div class="space-y-5">
             <PageHeader :title="t('Plans')">
                 <template #actions>
@@ -192,5 +195,4 @@ function price(plan: AdminPlan): string {
         </div>
 
         <PlanFormPanel :open="formOpen" :plan="editing" :module-options="moduleOptions" @close="formOpen = false" />
-    </AdminLayout>
 </template>

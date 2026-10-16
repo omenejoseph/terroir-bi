@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import Sparkline from '@/components/admin/Sparkline.vue';
@@ -17,6 +17,9 @@ import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminActiveTenant, AdminAttentionTenant, AdminDashboardStats, ChartPoint } from '@/types/admin';
 import type { Paginated } from '@/types';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /**
  * Platform dashboard — port of App\Filament\Pages\Dashboard and its 5
@@ -53,7 +56,7 @@ const PROBLEM_STATUSES = ['past_due', 'unpaid', 'incomplete', 'incomplete_expire
 </script>
 
 <template>
-    <AdminLayout :title="t('Admin dashboard')">
+    <Head :title="t('Admin dashboard')" />
         <div class="space-y-6">
             <PageHeader :title="t('Dashboard')" />
 
@@ -203,5 +206,4 @@ const PROBLEM_STATUSES = ['past_due', 'unpaid', 'incomplete', 'incomplete_expire
                 </CardContent>
             </Card>
         </div>
-    </AdminLayout>
 </template>

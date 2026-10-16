@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Queries\InventoryAttentionQuery;
 use Illuminate\Http\Request;
 
 /**
@@ -17,12 +18,13 @@ use Illuminate\Http\Request;
 final class InventoryItemFilters
 {
     /**
-     * @return array{search: ?string, category: ?string, is_active: ?bool, is_for_sale: ?bool, sellable: bool, missing_cost: bool}
+     * @return array{search: ?string, category: ?string, is_active: ?bool, is_for_sale: ?bool, sellable: bool, missing_cost: bool, attention: ?string}
      */
     public static function fromRequest(Request $request): array
     {
         $search = $request->query('search');
         $category = $request->query('category');
+        $attention = $request->query('attention');
 
         return [
             'search' => is_string($search) && $search !== '' ? $search : null,
@@ -34,6 +36,8 @@ final class InventoryItemFilters
             // cost_per_unit, same criteria InventoryAnalyticsQuery counts as
             // "not costed" so the two screens can't disagree on the set.
             'missing_cost' => $request->boolean('missing_cost'),
+            // A "Needs attention" chip, applied to the whole list on the server (see InventoryAttentionQuery::scope).
+            'attention' => is_string($attention) && in_array($attention, InventoryAttentionQuery::KEYS, true) ? $attention : null,
         ];
     }
 }

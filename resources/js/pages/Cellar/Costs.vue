@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ChevronDown, ChevronRight } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -16,6 +16,9 @@ import { cn } from '@/lib/cn';
 import { formatMoney } from '@/lib/money';
 import type { LotCostRow } from '@/types/cellar';
 import type { SharedProps } from '@/types';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Cellar › Costs (finance) — cost of goods per wine lot: grapes, additions,
@@ -60,7 +63,7 @@ const toggle = (id: string) => (open.value = open.value.includes(id) ? open.valu
 </script>
 
 <template>
-    <AppLayout :title="t('Wine production costs')">
+    <Head :title="t('Wine production costs')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Wine production costs')" :description="t('Cost of goods per wine lot')" />
             <CellarTabs current="costs" />
@@ -142,5 +145,4 @@ const toggle = (id: string) => (open.value = open.value.includes(id) ? open.valu
                 </table>
             </Card>
         </div>
-    </AppLayout>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { AlertTriangle, ArrowLeft, ExternalLink, Pencil, Trash2 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -26,6 +26,9 @@ import { ANALYSIS_FIELDS, VESSEL_TYPE_LABELS, qty } from '@/lib/cellar';
 import type { AnalysisRow, HistoryEntry, LotOption, MapVessel, Vessel, WineLotDetail } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * A vessel: how full it is, what it holds, the SO₂ in it, the analyses and
@@ -100,7 +103,7 @@ async function removeRecord(url: string, title: string): Promise<void> {
 </script>
 
 <template>
-    <AppLayout :title="v.name">
+    <Head :title="v.name" />
         <div class="flex flex-col gap-5">
             <Link href="/cellar" class="inline-flex w-fit items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft class="size-3.5" /> {{ t('Cellar') }}</Link>
             <PageHeader :title="v.name" :description="[...new Set([t(VESSEL_TYPE_LABELS[v.type] ?? v.type), v.material, v.room, v.location].filter(Boolean))].join(' · ')">
@@ -214,5 +217,4 @@ async function removeRecord(url: string, title: string): Promise<void> {
             :vessel-id="v.id"
             @close="panel = null"
         />
-    </AppLayout>
 </template>

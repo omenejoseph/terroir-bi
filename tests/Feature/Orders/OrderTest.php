@@ -120,17 +120,17 @@ class OrderTest extends TestCase
             ->assertJsonPath('data.items.0.image_url', $store->temporaryUrl($key, 900));
     }
 
-    public function test_catalog_item_can_only_be_ordered_in_its_sales_unit(): void
+    public function test_catalog_item_can_be_ordered_in_either_unit(): void
     {
         Sanctum::actingAs($this->admin);
 
-        // wine.sales_unit = cases — ordering it in bottles is rejected.
+        // wine.sales_unit = cases — the unit is a default, not a restriction: bottles are accepted too.
         $this->postJson('/api/v1/orders', [
             'customer_id' => $this->customer->getKey(),
             'items' => [['inventory_item_id' => $this->wine->getKey(), 'quantity' => 1, 'unit_type' => 'bottles']],
         ], $this->headers())
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['items']);
+            ->assertStatus(201)
+            ->assertJsonPath('data.items.0.unit_type', 'bottles');
     }
 
     public function test_create_order_is_blocked_when_stock_is_short(): void

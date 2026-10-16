@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { Copy, KeyRound, LogIn, Plus, RotateCcw, Trash2, UserCog } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -16,6 +16,9 @@ import { useTranslations } from '@/composables/useTranslations';
 import type { RoleOption, TeamInvitation, TeamMember } from '@/types/team';
 import type { SharedProps } from '@/types';
 import type { MenuItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Team (nav's "System · Team", capability `members.view`/`members.manage`)
@@ -128,7 +131,7 @@ async function copyInviteLink(): Promise<void> {
 </script>
 
 <template>
-    <AppLayout :title="t('Team')">
+    <Head :title="t('Team')" />
         <div class="space-y-5">
             <PageHeader :title="t('Team')" :description="t('Manage who has access to this organisation.')">
                 <template #actions>
@@ -253,5 +256,4 @@ async function copyInviteLink(): Promise<void> {
             @close="editingMember = null"
         />
         <SetPasswordDialog :open="settingPasswordFor !== null" :member="settingPasswordFor" @close="settingPasswordFor = null" />
-    </AppLayout>
 </template>

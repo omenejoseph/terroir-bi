@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { Check, Search } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -21,6 +21,9 @@ import { formatMoney, formatUnitPrice, unitPriceToMinor } from '@/lib/money';
 import type { LotOption, ProductOption } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { ComboboxOption } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Cellar › Bulk additions — the same product into many lots at once. The
@@ -168,7 +171,7 @@ const STATUS = computed(() => [{ value: '', label: t('All statuses') }, ...['FER
 </script>
 
 <template>
-    <AppLayout :title="t('Bulk additions')">
+    <Head :title="t('Bulk additions')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Bulk additions')" :description="t('Add the same product to multiple lots')">
                 <template #actions><Button size="sm" variant="outline" href="/cellar/bulk-analyses">{{ t('Bulk analyses') }}</Button></template>
@@ -268,5 +271,4 @@ const STATUS = computed(() => [{ value: '', label: t('All statuses') }, ...['FER
                 </Card>
             </template>
         </div>
-    </AppLayout>
 </template>

@@ -193,7 +193,7 @@ onMounted(() => {
             v-if="open && filtered.length > 0"
             :id="listId"
             role="listbox"
-            class="absolute bottom-full left-0 z-30 mb-1 max-h-56 w-64 overflow-y-auto border border-border bg-card shadow-lg"
+            class="absolute bottom-full left-0 z-30 mb-1 max-h-56 w-64 overflow-y-auto border border-border bg-card"
         >
             <li v-for="(member, i) in filtered" :key="member.id">
                 <button

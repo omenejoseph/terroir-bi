@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { History, Pencil, Plus, Search, Trash2, Upload } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -28,6 +28,9 @@ import { formatMoney, formatUnitPrice } from '@/lib/money';
 import type { EnologicalProduct, ProtocolNeed } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { ComboboxOption, MenuItem, TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Cellar › Products — the enological stock: what's on the shelf, what's low,
@@ -175,7 +178,7 @@ function draftOrders(): void {
 </script>
 
 <template>
-    <AppLayout :title="t('Enological products')">
+    <Head :title="t('Enological products')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Enological products')">
                 <template v-if="canManage" #actions>
@@ -320,5 +323,4 @@ function draftOrders(): void {
                 <Button size="lg" @click="applyBulk">{{ t('Apply') }}</Button>
             </template>
         </SidePanel>
-    </AppLayout>
 </template>

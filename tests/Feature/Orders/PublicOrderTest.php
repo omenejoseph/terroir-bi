@@ -55,6 +55,25 @@ class PublicOrderTest extends TestCase
             ->assertJsonPath('data.products.0.price.minor', 1000);
     }
 
+    public function test_catalog_carries_what_the_order_page_groups_and_shows(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        $this->wine->update(['group' => 'Wine', 'subcategory' => 'Red', 'unit_size' => '750 ml']);
+        \App\Models\InventoryImage::create([
+            'inventory_item_id' => $this->wine->getKey(), 'object_key' => 'tenants/x/inventory/plavac.jpg',
+            'content_type' => 'image/jpeg', 'size_bytes' => 10, 'sort_order' => 0,
+        ]);
+        $this->forgetTenant();
+
+        $this->getJson('/api/v1/public/TOKEN-ABC-123/catalog')
+            ->assertOk()
+            ->assertJsonPath('data.business_name', $this->tenant->name)
+            ->assertJsonPath('data.products.0.group', 'Wine')
+            ->assertJsonPath('data.products.0.subcategory', 'Red')
+            ->assertJsonPath('data.products.0.unit_size', '750 ml')
+            ->assertJsonPath('data.products.0.image_url', fn ($url) => is_string($url) && str_contains($url, 'plavac.jpg'));
+    }
+
     public function test_unknown_token_is_404(): void
     {
         $this->getJson('/api/v1/public/NOPE/catalog')->assertNotFound();

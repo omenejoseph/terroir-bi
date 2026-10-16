@@ -1,18 +1,22 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
-import { Plus, Search, Star } from 'lucide-vue-next';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { History, Plus, Search, Star } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import BoardColumnView from '@/components/work-orders/BoardColumn.vue';
+import TaskCard from '@/components/work-orders/TaskCard.vue';
 import TaskPanel from '@/components/work-orders/TaskPanel.vue';
 import Button from '@/components/ui/Button.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import { usePopover } from '@/composables/usePopover';
 import { cn } from '@/lib/cn';
 import { formatNumber } from '@/lib/money';
-import type { Board, BoardOption, TaskStatusKey, WorkOrder, WorkOrderFilters } from '@/types/work-orders';
+import type { Board, BoardOption, RecentActivityEntry, TaskStatusKey, WorkOrder, WorkOrderFilters } from '@/types/work-orders';
 import type { SharedProps } from '@/types';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Work Orders (Figma 267:1781): a board of task cards in status columns, with
@@ -28,10 +32,19 @@ const props = defineProps<{
     board: Board;
     boards: BoardOption[];
     filters: WorkOrderFilters;
+    /** Undefined until Recent Activity is switched on. */
+    recentActivity?: RecentActivityEntry[];
 }>();
 
 const page = usePage<SharedProps>();
 const locale = computed(() => page.props.locale);
+
+/** The board as shown: the server's, with ticks applied optimistically until the next response. */
+const localBoard = ref<Board>(props.board);
+watch(
+    () => props.board,
+    (board) => (localBoard.value = board),
+);
 
 const search = ref(props.filters.search ?? '');
 const panelOpen = ref(false);
@@ -67,6 +80,33 @@ function selectBoard(key: string | null): void {
 
 function toggleFilter(key: 'due_soon' | 'mine'): void {
     reload({ [key]: props.filters[key] ? undefined : 1 });
+}
+
+/* ---- recent activity -------------------------------------------------- */
+
+/** The header's toggle: on shows what was added or moved in the last hour; pressing it again hides it. */
+const recentOpen = ref(false);
+
+function toggleRecent(): void {
+    recentOpen.value = !recentOpen.value;
+
+    if (recentOpen.value) router.reload({ only: ['recentActivity'] });
+}
+
+const STATUS_LABEL: Record<string, string> = { TODO: 'To Do', IN_PROGRESS: 'In Progress', DONE: 'Done', CANCELLED: 'Cancelled' };
+
+function minutesAgo(iso: string): string {
+    const minutes = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60_000));
+
+    return minutes < 1 ? 'just now' : `${minutes} min ago`;
+}
+
+function describe(entry: RecentActivityEntry): string {
+    const when = minutesAgo(entry.at);
+
+    if (entry.kind === 'added') return `Added to ${STATUS_LABEL[entry.to ?? ''] ?? 'the board'} · ${when}`;
+
+    return `Moved from ${STATUS_LABEL[entry.from ?? ''] ?? '—'} to ${STATUS_LABEL[entry.to ?? ''] ?? '—'} · ${when}`;
 }
 
 /* ---- boards: favourite and create ------------------------------------ */
@@ -125,11 +165,15 @@ function onDrop(payload: { status: TaskStatusKey; beforeId: string | null }): vo
     const ids = orderedIdsAfterDrop(task, payload);
 
     if (movedColumn) {
+        moveLocally(task, payload.status);
+
         router.patch(
             `/work-orders/${task.id}/status`,
             { status: payload.status },
             {
                 preserveScroll: true,
+                preserveState: true,
+                only: ['board', 'boards', 'filters'],
                 onSuccess: () => persistOrder(ids),
             },
         );
@@ -143,12 +187,12 @@ function onDrop(payload: { status: TaskStatusKey; beforeId: string | null }): vo
 function persistOrder(ids: string[]): void {
     if (ids.length === 0) return;
 
-    router.post('/work-orders/reorder', { ids }, { preserveScroll: true });
+    router.post('/work-orders/reorder', { ids }, { preserveScroll: true, preserveState: true, only: ['board', 'boards', 'filters'] });
 }
 
 /** The target column's ids with the dragged card spliced into its new place. */
 function orderedIdsAfterDrop(task: WorkOrder, payload: { status: TaskStatusKey; beforeId: string | null }): string[] {
-    const column = props.board.columns.find((c) => c.key === payload.status);
+    const column = localBoard.value.columns.find((c) => c.key === payload.status);
 
     if (column === undefined) return [];
 
@@ -162,12 +206,37 @@ function orderedIdsAfterDrop(task: WorkOrder, payload: { status: TaskStatusKey; 
 
 /* ---- card actions ---------------------------------------------------- */
 
+/**
+ * Ticking a card is applied to the board straight away — the card jumps to its new column while the
+ * request is in flight — and the server's board then replaces it (or restores it if the write fails).
+ */
 function toggleDone(task: WorkOrder): void {
+    const status: TaskStatusKey = task.status === 'DONE' || task.status === 'CANCELLED' ? 'TODO' : 'DONE';
+
+    moveLocally(task, status);
+
     router.patch(
         `/work-orders/${task.id}/status`,
-        { status: task.status === 'DONE' || task.status === 'CANCELLED' ? 'TODO' : 'DONE' },
-        { preserveScroll: true },
+        { status },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            only: recentOpen.value ? ['board', 'boards', 'filters', 'recentActivity'] : ['board', 'boards', 'filters'],
+            onError: () => (localBoard.value = props.board),
+        },
     );
+}
+
+function moveLocally(task: WorkOrder, status: TaskStatusKey): void {
+    localBoard.value = {
+        ...localBoard.value,
+        columns: localBoard.value.columns.map((column) => {
+            const without = column.tasks.filter((t) => t.id !== task.id);
+            const tasks = column.key === status ? [...without, { ...task, status }] : without;
+
+            return { ...column, tasks, count: tasks.length };
+        }),
+    };
 }
 
 function open(task: WorkOrder): void {
@@ -190,14 +259,20 @@ const summary = computed(
 </script>
 
 <template>
-    <AppLayout title="Work Orders">
+    <Head title="Work Orders" />
         <div class="space-y-4">
             <PageHeader title="Work Orders" :description="summary">
                 <template #actions>
-                    <!-- @todo Recent Activity. There is no activity log for work
-                         orders — status changes are not journalled the way order
-                         status is. -->
-                    <Button variant="outline" size="sm">Recent Activity</Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :aria-pressed="recentOpen"
+                        :class="recentOpen ? 'border-foreground' : undefined"
+                        @click="toggleRecent"
+                    >
+                        <History class="size-3.5" :stroke-width="1.5" />
+                        Recent Activity
+                    </Button>
                     <Button
                         variant="outline"
                         size="sm"
@@ -217,7 +292,7 @@ const summary = computed(
                             v-if="newBoardPopover.open.value"
                             role="dialog"
                             aria-label="New board"
-                            class="absolute top-9 right-0 z-30 flex w-56 items-center gap-2 border border-border bg-card p-2 shadow-lg"
+                            class="absolute top-9 right-0 z-30 flex w-56 items-center gap-2 border border-border bg-card p-2"
                             @submit.prevent="submitNewBoard"
                         >
                             <input
@@ -341,21 +416,27 @@ const summary = computed(
                 >
                     My Tasks
                 </button>
-
-                <!-- @todo Recurring. A work order has no recurrence field, so
-                     this cannot filter anything yet. -->
-                <button
-                    type="button"
-                    class="inline-flex h-8 items-center border border-border bg-card px-2.5 text-xs hover:border-foreground/40"
-                >
-                    Recurring
-                </button>
             </div>
+
+            <!-- Recent Activity: what was added or moved in the last hour. Tick a card to complete it. -->
+            <section v-if="recentOpen" class="space-y-2 border border-border bg-muted/40 p-3" aria-label="Recent activity">
+                <h3 class="text-sm font-semibold">Last hour</h3>
+                <p v-if="!recentActivity" class="text-xs text-muted-foreground">Loading…</p>
+                <p v-else-if="recentActivity.length === 0" class="text-xs text-muted-foreground">
+                    Nothing has been added or moved in the last hour.
+                </p>
+                <div v-else class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div v-for="entry in recentActivity" :key="entry.task.id" class="flex flex-col gap-1">
+                        <TaskCard :task="entry.task" @open="open(entry.task)" @toggle="toggleDone(entry.task)" />
+                        <p class="px-1 text-xs text-muted-foreground">{{ describe(entry) }}</p>
+                    </div>
+                </div>
+            </section>
 
             <!-- The board scrolls sideways inside its own container. -->
             <div class="flex items-start gap-3 overflow-x-auto pb-4">
                 <BoardColumnView
-                    v-for="column in board.columns"
+                    v-for="column in localBoard.columns"
                     :key="column.key"
                     :column="column"
                     :dragging-id="draggingId"
@@ -366,16 +447,6 @@ const summary = computed(
                     @drag-end="dragging = null"
                     @drop="onDrop"
                 />
-
-                <!-- @todo Add another list. Columns are the TaskStatus enum, so
-                     a new one would be a new status, not a user-made list. -->
-                <button
-                    type="button"
-                    class="flex h-10 w-56 shrink-0 items-center gap-2 border border-dashed border-border px-3 text-xs text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
-                >
-                    <Plus class="size-3.5" :stroke-width="1.5" />
-                    Add another list
-                </button>
             </div>
 
             <p v-if="board.total === 0" class="border border-border bg-card px-4 py-12 text-center text-xs text-muted-foreground">
@@ -394,5 +465,4 @@ const summary = computed(
             :default-board-id="filters.board_id"
             @close="panelOpen = false"
         />
-    </AppLayout>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import { Megaphone } from 'lucide-vue-next';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -15,6 +15,9 @@ import Textarea from '@/components/ui/Textarea.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminOption } from '@/types/admin';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /**
  * Broadcast — port of App\Filament\Pages\Broadcast. No history/log page —
@@ -52,7 +55,7 @@ function submit(): void {
 </script>
 
 <template>
-    <AdminLayout :title="t('Broadcast')">
+    <Head :title="t('Broadcast')" />
         <div class="space-y-5">
             <PageHeader :title="t('Broadcast')">
                 <template #actions>
@@ -105,5 +108,4 @@ function submit(): void {
                 <Button type="submit" form="broadcast-form" :disabled="form.processing">{{ t('Send') }}</Button>
             </template>
         </Dialog>
-    </AdminLayout>
 </template>

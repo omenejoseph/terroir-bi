@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { AlertTriangle, Check, ChevronDown, ChevronRight, Copy, MessageCircle, Printer, Search } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -29,6 +29,9 @@ import { copyText, so2ShareText } from '@/lib/so2Share';
 import type { MemberOption, So2Board, So2DosePlan, So2Lot, So2Status, So2Vessel } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Cellar › SO₂ — plan and apply sulphite additions across the cellar, or
@@ -355,7 +358,7 @@ const summaryChips = computed(() =>
 </script>
 
 <template>
-    <AppLayout :title="t('SO₂ management')">
+    <Head :title="t('SO₂ management')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('SO₂ management')" :description="t('Plan and apply sulphite additions across your cellar')" />
             <CellarTabs current="so2" />
@@ -656,5 +659,4 @@ const summaryChips = computed(() =>
             </table>
             <p class="mt-3 font-semibold">{{ t('Total') }}: {{ qty(plan.totals.quantity) }} {{ plan.lines[0]?.unit }} {{ plan.product.name }} — {{ t(':n items', { n: plan.lines.length }) }}</p>
         </PrintSheet>
-    </AppLayout>
 </template>

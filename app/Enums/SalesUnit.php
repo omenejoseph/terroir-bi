@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Enums;
 
 /**
- * How an inventory item is sold — the unit an order line must use for it.
- * Mirrors the order line `unit_type`. Strict: an item sold in bottles can only
- * be ordered in bottles; an item sold in cases only in cases.
+ * How an inventory item is sold — the default unit of its order lines.
+ * Mirrors the order line `unit_type`. Default unit for new lines; either unit may be ordered (price,
+ * stock and cost scale by bottles per case).
  */
 enum SalesUnit: string
 {

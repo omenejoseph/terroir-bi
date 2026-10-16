@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
-import { Check, Copy, Link2, RefreshCw } from 'lucide-vue-next';
+import { Check, Copy, ExternalLink, Link2, RefreshCw } from 'lucide-vue-next';
 
 import Button from '@/components/ui/Button.vue';
 import Dialog from '@/components/ui/Dialog.vue';
@@ -100,17 +100,36 @@ async function revoke(): Promise<void> {
 async function copy(): Promise<void> {
     if (!url.value) return;
 
-    try {
-        if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+    let ok = false;
 
-        await navigator.clipboard.writeText(url.value);
-        copied.value = true;
-        copyBlocked.value = false;
+    try {
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(url.value);
+            ok = true;
+        }
     } catch {
-        linkInput.value?.select();
-        copyBlocked.value = true;
-        copied.value = false;
+        // Falls through to the selection-based copy below.
     }
+
+    if (!ok) {
+        // Older or locked-down browsers: select the field and use the legacy copy command.
+        const input = linkInput.value;
+
+        if (input) {
+            input.focus();
+            input.select();
+            input.setSelectionRange(0, input.value.length);
+
+            try {
+                ok = document.execCommand('copy');
+            } catch {
+                ok = false;
+            }
+        }
+    }
+
+    copied.value = ok;
+    copyBlocked.value = !ok;
 
     setTimeout(() => {
         copied.value = false;
@@ -120,7 +139,7 @@ async function copy(): Promise<void> {
 </script>
 
 <template>
-    <Dialog :open="open" :title="t('Order link')" @close="emit('close')">
+    <Dialog :open="open" :title="t('Self-service order link')" @close="emit('close')">
         <div class="space-y-4">
             <p class="text-xs text-muted-foreground">
                 {{ t('A link this customer can use to place orders themselves, without an account.') }}
@@ -150,11 +169,23 @@ async function copy(): Promise<void> {
                         {{ copied ? t('Copied') : copyBlocked ? t('Selected') : t('Copy') }}
                     </Button>
                 </div>
+                <p class="text-2xs text-muted-foreground">
+                    {{ t('Share this link with the customer. They can place orders directly without logging in.') }}
+                </p>
                 <p v-if="copyBlocked" class="text-2xs text-muted-foreground">
                     {{ t("Couldn't copy automatically — the link is selected, press Ctrl/Cmd+C.") }}
                 </p>
 
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
+                    <a
+                        :href="url ?? undefined"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex h-7 items-center justify-center gap-1 rounded-lg border border-input px-3 text-xs font-medium whitespace-nowrap transition-colors hover:bg-accent hover:text-accent-foreground"
+                    >
+                        <ExternalLink class="size-3.5" :stroke-width="1.5" />
+                        {{ t('Preview') }}
+                    </a>
                     <Button variant="outline" size="sm" :disabled="generating" @click="generate">
                         <RefreshCw class="size-3.5" :stroke-width="1.5" />
                         {{ t('Regenerate') }}

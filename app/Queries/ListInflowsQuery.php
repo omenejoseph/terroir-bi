@@ -94,7 +94,7 @@ class ListInflowsQuery
 
         if (! empty($filters['search'])) {
             $term = '%'.$filters['search'].'%';
-            $query->where(fn (Builder $q) => $q->where('reference', 'like', $term)->orWhere('notes', 'like', $term));
+            $query->where(fn (Builder $q) => $q->whereLike('reference', $term)->orWhereLike('notes', $term));
         }
 
         if (! empty($filters['date_from'])) {

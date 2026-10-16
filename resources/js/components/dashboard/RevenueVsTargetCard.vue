@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import { Target } from 'lucide-vue-next';
 
 import ProgressBar from '@/components/ui/ProgressBar.vue';
@@ -57,7 +58,7 @@ const money = (minor: number) => formatMoney(minor, props.currency);
 
         <p v-else class="mt-4 text-xs text-muted-foreground">
             {{ t("No annual target is set, so progress can't be calculated yet.") }}
-            <a v-if="can('settings.manage')" href="/settings" class="text-foreground underline">{{ t('Set one in Settings.') }}</a>
+            <Link v-if="can('settings.manage')" href="/settings" class="text-foreground underline">{{ t('Set one in Settings.') }}</Link>
         </p>
     </div>
 </template>

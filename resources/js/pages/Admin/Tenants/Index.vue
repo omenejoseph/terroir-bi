@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Link as LinkIcon, Mail, Plus, Search } from 'lucide-vue-next';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -17,6 +17,9 @@ import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminOption, AdminTenant } from '@/types/admin';
 import type { Paginated } from '@/types';
 import type { MenuItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /** Tenants — port of App\Filament\Resources\Tenants\**. */
 const props = defineProps<{
@@ -98,7 +101,7 @@ const ACCESS_VARIANT: Record<string, 'success' | 'warning' | 'destructive'> = {
 </script>
 
 <template>
-    <AdminLayout :title="t('Tenants')">
+    <Head :title="t('Tenants')" />
         <div class="space-y-5">
             <PageHeader :title="t('Tenants')">
                 <template #actions>
@@ -196,5 +199,4 @@ const ACCESS_VARIANT: Record<string, 'success' | 'warning' | 'destructive'> = {
             :tenant-id="onboardingTenantId"
             @close="onboardingTenantId = null"
         />
-    </AdminLayout>
 </template>

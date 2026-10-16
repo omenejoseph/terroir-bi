@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import {
     ArrowLeft,
     ArrowRightLeft,
@@ -73,6 +73,9 @@ import type {
 } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { MenuItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * A wine lot as one workspace: vitals on top, an action bar that records in
@@ -308,7 +311,7 @@ const readingMenu = computed<MenuItem[]>(() => (canEdit.value ? [EDIT, DELETE].m
 </script>
 
 <template>
-    <AppLayout :title="lot.name">
+    <Head :title="lot.name" />
         <div class="flex flex-col gap-4">
             <Link href="/cellar" class="inline-flex w-fit items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft class="size-3.5" /> {{ t('Cellar') }}</Link>
             <PageHeader :title="lot.name" :description="[lot.lot_number, lot.grape_variety, lot.vintage, lot.vineyard].filter(Boolean).join(' · ')">
@@ -565,5 +568,4 @@ const readingMenu = computed<MenuItem[]>(() => (canEdit.value ? [EDIT, DELETE].m
         <TastingPanel :open="panel === 'tasting'" :lot-id="lot.id" :lot-name="lot.name" :vessels="lot.vessels" :record="editing.tasting" :vessel-id="focusId" @close="panel = null" />
         <BottlingPanel :open="panel === 'bottling'" :lot="lot" @close="panel = null" />
         <VolumePanel :open="panel === 'adjust' || panel === 'assign' || panel === 'blend-in'" :mode="panel === 'assign' ? 'assign' : panel === 'blend-in' ? 'blend-in' : 'adjust'" :lot="lot" :vessels="vessels" :vessel-id="focusId" @close="panel = null" />
-    </AppLayout>
 </template>

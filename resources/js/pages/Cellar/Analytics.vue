@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import CellarTabs from '@/components/cellar/CellarTabs.vue';
@@ -17,6 +17,9 @@ import { cn } from '@/lib/cn';
 import { formatMoney } from '@/lib/money';
 import type { CellarAnalytics, LotCostRow } from '@/types/cellar';
 import type { SharedProps } from '@/types';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Cellar › Analytics — the cellar in figures: what's in it and what's ready,
@@ -47,7 +50,7 @@ const maxCost = computed(() => Math.max(1, ...(props.waterfall ?? []).map((r) =>
 </script>
 
 <template>
-    <AppLayout :title="t('Cellar analytics')">
+    <Head :title="t('Cellar analytics')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Cellar analytics')" />
             <CellarTabs current="analytics" />
@@ -133,5 +136,4 @@ const maxCost = computed(() => Math.max(1, ...(props.waterfall ?? []).map((r) =>
                 <p v-for="(a, i) in analytics.alerts" :key="i" class="mt-2"><Link :href="`/cellar/lots/${a.lot_id}`" class="font-medium hover:underline">{{ a.lot_name }}</Link> — {{ a.message }} <span class="text-muted-foreground">{{ a.suggestion }}</span></p>
             </Card>
         </div>
-    </AppLayout>
 </template>

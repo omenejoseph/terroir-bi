@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { router, useForm, usePage } from '@inertiajs/vue3';
-import { Camera, Plus } from 'lucide-vue-next';
+import { Plus } from 'lucide-vue-next';
 
+import CustomerFormPanel from '@/components/customers/CustomerFormPanel.vue';
 import OrderLineFields from '@/components/orders/OrderLineFields.vue';
 import Button from '@/components/ui/Button.vue';
 import Combobox from '@/components/ui/Combobox.vue';
@@ -14,7 +15,7 @@ import SidePanel from '@/components/ui/SidePanel.vue';
 import SwitchRow from '@/components/ui/SwitchRow.vue';
 import Textarea from '@/components/ui/Textarea.vue';
 import { useTranslations } from '@/composables/useTranslations';
-import { linesToPayload } from '@/lib/orders';
+import { linesToPayload, lineUnitMinor } from '@/lib/orders';
 import { formatMoney } from '@/lib/money';
 import type { OrderLineDraft, ProductOption } from '@/types/orders';
 import type { ComboboxOption } from '@/types/ui';
@@ -79,6 +80,36 @@ watch(
 
 const lines = ref<OrderLineDraft[]>([]);
 
+/*
+  "+" beside the customer opens the same Customer — Create drawer the Customers page uses. Once the
+  customer exists, the picker's options are re-fetched and the newest customer is selected.
+*/
+const newCustomerOpen = ref(false);
+
+/*
+  The customers on file when the drawer opened. They must be captured then: the save is a full visit,
+  which drops the lazily-loaded options, so by the time it finishes the list is empty and there would
+  be nothing to compare the refreshed list against.
+*/
+let knownCustomerIds = new Set<string>();
+
+function openNewCustomer(): void {
+    knownCustomerIds = new Set(customers.value.map((c) => c.id));
+    newCustomerOpen.value = true;
+}
+
+function onCustomerCreated(): void {
+    const select = (): void => {
+        const created = customers.value.find((c) => !knownCustomerIds.has(c.id));
+        if (created) form.customer_id = created.id;
+    };
+
+    // The save already refreshed the options; fall back to asking again if it somehow did not.
+    if (customers.value.some((c) => !knownCustomerIds.has(c.id))) return select();
+
+    router.reload({ only: ['customerOptions'], onSuccess: select });
+}
+
 const form = useForm({
     customer_id: '',
     notes: '',
@@ -96,11 +127,7 @@ const currency = computed(
 
 /** Estimate only — see the note at the top of this component. */
 const subtotal = computed(() =>
-    lines.value.reduce((sum, line) => {
-        const unit = line.inventory_item_id ? (line.preview?.minor ?? 0) : (line.unit_price ?? 0);
-
-        return sum + unit * line.quantity;
-    }, 0),
+    lines.value.reduce((sum, line) => sum + lineUnitMinor(line, products.value) * line.quantity, 0),
 );
 
 const canSubmit = computed(
@@ -174,13 +201,11 @@ function submit(): void {
                             class="flex-1"
                             @update:model-value="form.customer_id = $event ?? ''"
                         />
-                        <!-- @todo New customer inline. The design opens the
-                             Customer — Create drawer from here; that drawer
-                             arrives with Phase 4. -->
                         <button
                             type="button"
                             class="inline-flex size-9 shrink-0 items-center justify-center border border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
                             :aria-label="t('New customer')"
+                            @click="openNewCustomer"
                         >
                             <Plus class="size-4" :stroke-width="1.5" />
                         </button>
@@ -193,16 +218,7 @@ function submit(): void {
                     {{ t('Products') }}<span class="ml-1 text-destructive" aria-hidden="true">*</span>
                 </span>
 
-                <OrderLineFields v-model="lines" :products="products">
-                    <template #actions>
-                        <!-- @todo Import screenshot. The design offers reading an
-                             order off a photo; there is no such endpoint. -->
-                        <Button variant="outline" size="sm" type="button">
-                            <Camera class="size-3.5" :stroke-width="1.5" />
-                            {{ t('Import screenshot') }}
-                        </Button>
-                    </template>
-                </OrderLineFields>
+                <OrderLineFields v-model="lines" :products="products" />
 
                 <p v-if="form.errors.items" class="text-xs text-destructive" role="alert">{{ form.errors.items }}</p>
             </section>
@@ -271,4 +287,6 @@ function submit(): void {
             </Button>
         </template>
     </SidePanel>
+
+    <CustomerFormPanel :open="newCustomerOpen" :customer="null" stay @close="newCustomerOpen = false" @created="onCustomerCreated" />
 </template>

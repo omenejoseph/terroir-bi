@@ -63,7 +63,8 @@ export interface Org {
 export interface SharedProps {
     auth: Auth;
     tenant: TenantSummary | null;
-    tenants: TenantMembership[];
+    /** Only present once the tenant switcher has been opened. */
+    tenants?: TenantMembership[];
     /** Module keys the active tenant's plan includes (see App\Enums\Module). */
     modules: string[];
     flash: Flash;

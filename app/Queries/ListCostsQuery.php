@@ -36,9 +36,9 @@ class ListCostsQuery
 
         if (! empty($filters['search'])) {
             $term = '%'.$filters['search'].'%';
-            $query->where(fn (Builder $q) => $q->where('description', 'like', $term)
-                ->orWhere('reference', 'like', $term)
-                ->orWhere('category', 'like', $term));
+            $query->where(fn (Builder $q) => $q->whereLike('description', $term)
+                ->orWhereLike('reference', $term)
+                ->orWhereLike('category', $term));
         }
 
         if (! empty($filters['category'])) {

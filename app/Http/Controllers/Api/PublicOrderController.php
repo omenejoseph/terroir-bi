@@ -12,6 +12,8 @@ use App\Models\InventoryItem;
 use App\Queries\PublicCatalogQuery;
 use App\Services\Orders\PublicTokenResolver;
 use App\Services\Pricing\PricingService;
+use App\Services\Uploads\PresignedUploadService;
+use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -25,21 +27,25 @@ use Illuminate\Validation\ValidationException;
  */
 class PublicOrderController extends Controller
 {
-    public function catalog(string $token, PublicTokenResolver $resolver, PublicCatalogQuery $catalog, PricingService $pricing): JsonResponse
+    public function catalog(string $token, PublicTokenResolver $resolver, PublicCatalogQuery $catalog, PricingService $pricing, PresignedUploadService $uploads, TenantContext $tenant): JsonResponse
     {
         $customer = $resolver->resolve($token);
         abort_unless($customer instanceof Customer, 404);
 
-        $items = $catalog->forCustomer($customer);
+        $items = $catalog->forCustomer($customer)->load('firstImage');
         $prices = $pricing->resolveForCustomer($customer, $items);
 
-        $products = $items->map(function (InventoryItem $item) use ($customer, $prices) {
+        $products = $items->map(function (InventoryItem $item) use ($customer, $prices, $uploads) {
             $row = [
                 'id' => $item->getKey(),
                 'name' => $item->name,
                 'sku' => $item->sku,
                 'vintage' => $item->vintage,
                 'unit' => $item->unit,
+                'unit_size' => $item->unit_size,
+                'group' => $item->group,
+                'subcategory' => $item->subcategory,
+                'image_url' => ($key = $item->firstImage?->object_key) !== null ? $uploads->readUrl($key) : null,
                 // What this specific item must be ordered in — strict, per
                 // SalesUnit's own contract. PublicCatalogQuery has already
                 // excluded anything this customer isn't allowed to submit
@@ -57,6 +63,7 @@ class PublicOrderController extends Controller
 
         return response()->json([
             'data' => [
+                'business_name' => $tenant->current()?->name,
                 'customer' => [
                     'company_name' => $customer->company_name,
                     'hide_prices' => $customer->hide_prices,

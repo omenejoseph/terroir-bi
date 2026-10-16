@@ -4,11 +4,12 @@ import { Head } from '@inertiajs/vue3';
 import { CheckCircle2 } from 'lucide-vue-next';
 
 import AppLogo from '@/components/AppLogo.vue';
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import Button from '@/components/ui/Button.vue';
 import Callout from '@/components/ui/Callout.vue';
 import Card from '@/components/ui/Card.vue';
 import CardContent from '@/components/ui/CardContent.vue';
-import Input from '@/components/ui/Input.vue';
+import QuantityStepper from '@/components/orders/QuantityStepper.vue';
 import Label from '@/components/ui/Label.vue';
 import Textarea from '@/components/ui/Textarea.vue';
 import { useTranslations } from '@/composables/useTranslations';
@@ -90,6 +91,60 @@ function unitLabel(product: PublicCatalogProduct): string {
         : t('case');
 }
 
+/** The product's title as the winery prints it: "R3 2025 — 750 ml". */
+function productTitle(product: PublicCatalogProduct): string {
+    const base = [product.name, product.vintage].filter(Boolean).join(' ');
+
+    return product.unit_size ? `${base} — ${product.unit_size}` : base;
+}
+
+function packaging(product: PublicCatalogProduct): string {
+    return product.sales_unit === 'cases' && product.bottles_per_case && product.bottles_per_case > 1
+        ? t(':count bottles/case', { count: product.bottles_per_case })
+        : '';
+}
+
+function quantityOf(id: string): number {
+    return Number.parseInt(quantities.value[id] ?? '', 10) || 0;
+}
+
+/** Products under their group heading, then subcategory heading — the order the catalog arrives in. */
+const search = ref('');
+
+/** Matches name, vintage, SKU, size, group and subcategory, so "red 2021" or "grappa" both find things. */
+const visibleProducts = computed(() => {
+    const words = search.value.toLowerCase().split(/\s+/).filter(Boolean);
+    const all = catalog.value?.products ?? [];
+
+    if (words.length === 0) return all;
+
+    return all.filter((p) => {
+        const haystack = [p.name, p.vintage, p.sku, p.unit_size, p.group, p.subcategory].filter(Boolean).join(' ').toLowerCase();
+
+        return words.every((word) => haystack.includes(word));
+    });
+});
+
+const sections = computed(() => {
+    const groups: { group: string; subs: { sub: string; products: PublicCatalogProduct[] }[] }[] = [];
+
+    for (const product of visibleProducts.value) {
+        const groupName = product.group ?? t('Other');
+        const subName = product.subcategory ?? '';
+        let group = groups.find((g) => g.group === groupName);
+
+        if (!group) groups.push((group = { group: groupName, subs: [] }));
+
+        let sub = group.subs.find((s) => s.sub === subName);
+
+        if (!sub) group.subs.push((sub = { sub: subName, products: [] }));
+
+        sub.products.push(product);
+    }
+
+    return groups;
+});
+
 const lines = computed(() => {
     if (catalog.value === null) return [];
 
@@ -159,11 +214,12 @@ async function submit(): Promise<void> {
 <template>
     <Head :title="t('Place an order')" />
 
-    <div class="min-h-screen bg-muted/30 px-4 py-12">
+    <div class="min-h-screen bg-background px-4 pt-8 pb-32">
         <div class="mx-auto w-full max-w-2xl space-y-6">
             <header class="flex items-center gap-2.5">
                 <AppLogo :size="28" />
-                <span class="text-sm font-semibold text-muted-foreground">Terroir</span>
+                <span class="text-sm font-semibold">{{ catalog?.business_name ?? 'Terroir' }}</span>
+                <LanguageSwitcher class="ml-auto" />
             </header>
 
             <div v-if="status === 'loading'" class="flex justify-center py-20">
@@ -186,43 +242,80 @@ async function submit(): Promise<void> {
 
             <template v-else-if="catalog">
                 <div>
-                    <h1 class="text-2xl font-semibold tracking-tight">{{ t('Place an order') }}</h1>
-                    <p class="text-sm text-muted-foreground">{{ catalog.customer.company_name }}</p>
+                    <h1 class="text-2xl font-semibold tracking-tight">{{ t('Place an Order') }}</h1>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        {{ t('Welcome, :name', { name: catalog.customer.company_name }) }}
+                    </p>
                 </div>
 
-                <Card>
-                    <CardContent class="divide-y divide-border p-0">
-                        <p v-if="catalog.products.length === 0" class="px-4 py-8 text-center text-sm text-muted-foreground">
-                            {{ t('Nothing is available to order right now.') }}
-                        </p>
+                <input
+                    v-if="catalog.products.length > 0"
+                    v-model="search"
+                    type="search"
+                    :placeholder="t('Search products…')"
+                    :aria-label="t('Search products')"
+                    class="h-9 w-full border border-input bg-card px-3 text-sm placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                />
+
+                <p v-if="catalog.products.length > 0 && visibleProducts.length === 0" class="py-8 text-center text-sm text-muted-foreground">
+                    {{ t('No product matches.') }}
+                </p>
+
+                <p v-if="catalog.products.length === 0" class="py-8 text-center text-sm text-muted-foreground">
+                    {{ t('Nothing is available to order right now.') }}
+                </p>
+
+                <section v-for="section in sections" :key="section.group" class="space-y-2">
+                    <h2 class="border-b border-border pb-1.5 text-base font-semibold">{{ section.group }}</h2>
+
+                    <div v-for="sub in section.subs" :key="sub.sub" class="space-y-1">
+                        <h3
+                            v-if="sub.sub"
+                            class="pt-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                        >
+                            {{ sub.sub }}
+                        </h3>
 
                         <div
-                            v-for="product in catalog.products"
+                            v-for="product in sub.products"
                             :key="product.id"
-                            class="flex items-center justify-between gap-3 px-4 py-3"
+                            class="flex items-center gap-3 border-b border-border py-3 last:border-b-0"
                         >
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-medium">{{ product.name }}</p>
-                                <p class="truncate text-xs text-muted-foreground">
-                                    {{ t('per') }} {{ unitLabel(product) }}
+                            <img
+                                v-if="product.image_url"
+                                :src="product.image_url"
+                                :alt="product.name"
+                                loading="lazy"
+                                class="size-14 shrink-0 border border-border object-cover"
+                            />
+                            <span v-else class="size-14 shrink-0 border border-border bg-muted" aria-hidden="true" />
+
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-medium">{{ productTitle(product) }}</p>
+                                <p class="text-xs text-muted-foreground">
                                     <template v-if="showPrices && product.price">
-                                        · {{ formatMoney(unitPriceMinor(product), product.price.currency) }}
+                                        {{ formatMoney(unitPriceMinor(product), product.price.currency) }} /
                                     </template>
+                                    {{ product.sales_unit === 'cases' ? t('case') : product.sales_unit === 'bottles' ? t('bottle') : t('unit') }}
+                                    <template v-if="packaging(product)"> · {{ packaging(product) }}</template>
                                 </p>
                             </div>
-                            <Input
-                                v-model="quantities[product.id]"
-                                type="number"
-                                min="0"
-                                inputmode="numeric"
-                                :aria-label="t('Quantity for :product', { product: product.name })"
-                                class="w-20 shrink-0 text-right"
+
+                            <QuantityStepper
+                                :model-value="quantityOf(product.id)"
+                                :min="0"
+                                :label="product.name"
+                                @update:model-value="quantities[product.id] = String($event)"
                             />
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </section>
 
-                <div class="space-y-2">
+                <p v-if="lines.length === 0" class="text-sm text-muted-foreground">
+                    {{ t('Select products above to start your order.') }}
+                </p>
+
+                <div v-else class="space-y-2">
                     <Label for="po-notes">{{ t('Notes (optional)') }}</Label>
                     <Textarea id="po-notes" v-model="notes" :rows="3" :placeholder="t('Delivery instructions, anything else we should know…')" />
                 </div>
@@ -230,17 +323,25 @@ async function submit(): Promise<void> {
                 <Callout v-if="submitError" :title="t(`Couldn't submit that order`)" tone="warning">
                     {{ submitError }}
                 </Callout>
-
-                <div class="flex items-center justify-between gap-3">
-                    <p v-if="showPrices" class="text-sm">
-                        {{ t('Total') }} <span class="font-semibold tabular-nums">{{ formatMoney(totalMinor, currency) }}</span>
-                    </p>
-                    <span v-else />
-                    <Button type="button" :disabled="submitting" @click="submit">
-                        {{ submitting ? t('Placing order…') : t('Place order') }}
-                    </Button>
-                </div>
             </template>
+        </div>
+
+        <!-- The running total and the submit stay in reach while scrolling a long catalogue. -->
+        <div
+            v-if="status === 'ready' && lines.length > 0"
+            class="fixed inset-x-0 bottom-0 border-t border-border bg-card px-4 py-3"
+        >
+            <div class="mx-auto flex w-full max-w-2xl items-center justify-between gap-3">
+                <p class="text-sm">
+                    {{ t(':count products', { count: lines.length }) }}
+                    <template v-if="showPrices">
+                        · {{ t('Total') }} <span class="font-semibold tabular-nums">{{ formatMoney(totalMinor, currency) }}</span>
+                    </template>
+                </p>
+                <Button type="button" :disabled="submitting" @click="submit">
+                    {{ submitting ? t('Placing order…') : t('Place order') }}
+                </Button>
+            </div>
         </div>
     </div>
 </template>

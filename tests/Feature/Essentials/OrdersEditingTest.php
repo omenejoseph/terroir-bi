@@ -65,27 +65,22 @@ class OrdersEditingTest extends EssentialsScenarioTestCase
         $this->assertSame(5, $order->items()->firstOrFail()->quantity);
     }
 
-    public function test_ord009_strict_sales_unit_replaces_the_per_line_toggle(): void
+    public function test_ord009_a_catalog_line_can_switch_between_bottles_and_cases(): void
     {
-        // Given "Sangreal Shiraz 2021" sells in cases of 6
+        // Given "Sangreal Shiraz 2021" sells in cases of 6 (€60.00 per bottle)
         $shiraz = $this->givenCasedWine();
         $customer = $this->givenCustomer();
 
-        // When the operator tries to order 3 bottles of the cases-only product
-        $error = null;
-        try {
-            app(CreateOrderAction::class)->execute($customer, $this->admin->getKey(), [
-                'items' => [['inventory_item_id' => $shiraz->getKey(), 'quantity' => 3, 'unit_type' => 'bottles']],
-            ]);
-        } catch (ValidationException $e) {
-            $error = $e->getMessage();
-        }
+        // When the operator orders 3 loose bottles of it (the prototype's "Switch unit")
+        $order = app(CreateOrderAction::class)->execute($customer, $this->admin->getKey(), [
+            'items' => [['inventory_item_id' => $shiraz->getKey(), 'quantity' => 3, 'unit_type' => 'bottles']],
+        ]);
 
-        // Then the line is rejected with a clear unit message (the migrated
-        // contract: strict sales units; single-bottle exceptions live on the
-        // customer's portal flag, not ad-hoc per line)
-        $this->assertNotNull($error);
-        $this->assertStringContainsString('sold in cases', $error);
+        // Then the line is accepted, priced per bottle, and stock drops by half a case
+        $line = $order->items()->firstOrFail();
+        $this->assertSame('bottles', $line->unit_type);
+        $this->assertSame(6000, $line->unit_price->getMinorAmount());
+        $this->assertSame(49.5, $this->stockOf($shiraz));
 
         // And a case line prices at per-bottle × bottlesPerCase (€60 × 6 = €360)
         $order = app(CreateOrderAction::class)->execute($customer, $this->admin->getKey(), [

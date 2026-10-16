@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import Badge from '@/components/ui/Badge.vue';
@@ -13,6 +14,9 @@ import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type { ReorderRadar } from '@/types/customers';
 import type { SharedProps } from '@/types';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * Reorder radar — the Dashboard's "Reorder pipeline" card `View all`
@@ -76,7 +80,7 @@ function markContacted(customerId: string): void {
 </script>
 
 <template>
-    <AppLayout :title="t('Reorder radar')">
+    <Head :title="t('Reorder radar')" />
         <div class="space-y-5">
             <PageHeader :title="t('Reorder radar')" :description="t('Active customers overdue to reorder, ranked by value-weighted urgency.')" />
 
@@ -110,9 +114,9 @@ function markContacted(customerId: string): void {
                                 class="border-b border-border transition-colors last:border-b-0 hover:bg-muted/40"
                             >
                                 <td class="px-4 py-3">
-                                    <a :href="`/customers/${row.customer_id}`" class="font-medium text-foreground hover:underline">
+                                    <Link :href="`/customers/${row.customer_id}`" class="font-medium text-foreground hover:underline">
                                         {{ row.company_name }}
-                                    </a>
+                                    </Link>
                                 </td>
                                 <td class="px-4 py-3">
                                     <Badge :variant="STATUS_VARIANT[row.status]">{{ STATUS_LABEL[row.status] }}</Badge>
@@ -146,5 +150,4 @@ function markContacted(customerId: string): void {
                 </div>
             </div>
         </div>
-    </AppLayout>
 </template>

@@ -37,7 +37,7 @@ class PlanController extends Controller
 
         $plans = $query->builder()
             ->when($search !== '', fn ($q) => $q->where(function ($q) use ($search): void {
-                $q->where('name', 'like', "%{$search}%")->orWhere('slug', 'like', "%{$search}%");
+                $q->whereLike('name', "%{$search}%")->orWhereLike('slug', "%{$search}%");
             }))
             ->orderBy('name')
             ->paginate(PerPage::fromRequest($request), ['*'], 'page');

@@ -81,7 +81,7 @@ class GlobalSearchQuery
             ->map(fn (WineLot $lot): SearchResultData => SearchResultData::fromWineLot($lot));
         $vessels = Vessel::query()
             ->where('is_active', true)
-            ->where('name', 'like', '%'.$term.'%')
+            ->whereLike('name', '%'.$term.'%')
             ->orderBy('name')
             ->limit(self::LIMIT)
             ->get()

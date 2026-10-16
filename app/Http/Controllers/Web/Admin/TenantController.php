@@ -43,7 +43,7 @@ class TenantController extends Controller
         $search = trim((string) $request->query('search', ''));
 
         $tenants = $query->builder()
-            ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+            ->when($search !== '', fn ($q) => $q->whereLike('name', "%{$search}%"))
             ->orderBy('name')
             ->paginate(PerPage::fromRequest($request), ['*'], 'page');
 

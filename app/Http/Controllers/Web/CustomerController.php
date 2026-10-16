@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Services\Customers\LookupCompanyByVatService;
+use Illuminate\Http\JsonResponse;
 use App\Actions\Customers\CreateCustomerAction;
 use App\Actions\Customers\DeleteCustomerAction;
 use App\Actions\Customers\OrderTokenAction;
@@ -140,6 +142,7 @@ class CustomerController extends Controller
             // For the edit form's Category select, loaded on demand like the tiers on the list page.
             'categories' => Inertia::optional(fn (): array => $categories->list()),
             'tab' => $this->tab($request),
+            'hasConsignment' => Order::query()->where('customer_id', $customer->getKey())->where('is_consignment', true)->exists(),
             'rhythm' => $rhythm->get($customer),
             // The band is usually empty; each card either fires with its
             // numbers or is absent, never a zero.
@@ -274,9 +277,36 @@ class CustomerController extends Controller
         );
     }
 
+    /**
+     * OIB / EU VAT lookup for the customer form's "Look up" button — name and address from VIES.
+     * A JSON endpoint on the web routes so it rides the signed-in session and active tenant, like
+     * every other call the Inertia app makes.
+     */
+    public function lookupVat(Request $request, LookupCompanyByVatService $service): JsonResponse
+    {
+        $vat = trim((string) $request->query('vat', ''));
+
+        if ($vat === '') {
+            return response()->json(['message' => __('Enter an OIB or VAT number first.')], 422);
+        }
+
+        $result = $service->lookup($vat);
+
+        if (isset($result['error'])) {
+            return response()->json(['message' => __($result['error'])], 422);
+        }
+
+        return response()->json(['data' => $result]);
+    }
+
     public function store(StoreCustomerRequest $request, CreateCustomerAction $action): RedirectResponse
     {
         $customer = $action->execute($request->validated());
+
+        // Created from another screen's drawer (the Create order "+"): stay where the user is.
+        if ($request->boolean('stay')) {
+            return back()->with('success', __('Customer created.'));
+        }
 
         return redirect('/customers/'.$customer->id)->with('success', __('Customer created.'));
     }

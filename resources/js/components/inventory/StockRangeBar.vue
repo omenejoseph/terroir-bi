@@ -13,7 +13,7 @@ import { useTranslations } from '@/composables/useTranslations';
  * somewhere meaningful rather than pinned to an edge.
  */
 const props = defineProps<{ stock: number; min: number; unit: string }>();
-const { t } = useTranslations();
+const { t, locale } = useTranslations();
 
 const ceiling = computed(() => Math.max(props.stock, props.min * 2, 1));
 const minPct = computed(() => Math.min(100, (props.min / ceiling.value) * 100));
@@ -37,9 +37,9 @@ const headroom = computed(() => props.stock - props.min);
             />
         </div>
         <div class="flex items-baseline justify-between gap-4 text-2xs text-muted-foreground">
-            <span>{{ min > 0 ? t('minimum :min :unit', { min, unit }) : t('no minimum set') }}</span>
+            <span>{{ min > 0 ? t('minimum :min', { min: min.toLocaleString(locale) }) : t('no minimum set') }}</span>
             <span v-if="min > 0" :class="belowMin && 'text-destructive'">
-                {{ Math.abs(headroom) }} {{ unit }} {{ belowMin ? t('below minimum') : t('above minimum') }}
+                {{ headroom > 0 ? '+' : '−' }}{{ Math.abs(headroom).toLocaleString(locale) }}
             </span>
         </div>
     </div>

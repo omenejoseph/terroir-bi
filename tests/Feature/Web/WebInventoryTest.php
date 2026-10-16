@@ -751,6 +751,10 @@ class WebInventoryTest extends TestCase
                 ->has('analytics.exits.spark')
                 ->has('analytics.realized')
                 ->has('analytics.channels')
+                ->has('analytics.channels_by_customer.rows')
+                ->has('analytics.channels_by_customer.total_bottles')
+                ->has('analytics.channels_by_customer.excluded_bottles')
+                ->has('analytics.channels_by_customer.spark_internal')
                 ->has('movements')
                 ->where('filters.period', '30d'));
     }

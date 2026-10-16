@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+
+import { useElementWidth } from '@/composables/useElementWidth';
 
 /**
  * Figma's revenue trend (node `208:6043`) — a filled area under a line, one
@@ -15,7 +17,8 @@ const props = withDefaults(
     { height: 160 },
 );
 
-const W = 720;
+const root = ref<HTMLElement | null>(null);
+const W = useElementWidth(root);
 const PAD = { top: 8, right: 8, bottom: 22, left: 8 };
 
 const max = computed(() => Math.max(1, ...props.points.map((p) => p.value)));
@@ -29,11 +32,11 @@ const ceiling = computed(() => {
 });
 
 const plotH = computed(() => props.height - PAD.top - PAD.bottom);
-const plotW = W - PAD.left - PAD.right;
+const plotW = computed(() => W.value - PAD.left - PAD.right);
 
 const y = (value: number) => PAD.top + plotH.value - (value / ceiling.value) * plotH.value;
 const x = (index: number) =>
-    PAD.left + (props.points.length <= 1 ? plotW / 2 : (index / (props.points.length - 1)) * plotW);
+    PAD.left + (props.points.length <= 1 ? plotW.value / 2 : (index / (props.points.length - 1)) * plotW.value);
 
 const linePath = computed(() =>
     props.points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(p.value)}`).join(' '),
@@ -49,10 +52,12 @@ const areaPath = computed(() => {
 </script>
 
 <template>
+    <div ref="root" class="w-full min-w-0">
     <svg
         :viewBox="`0 0 ${W} ${height}`"
-        :style="{ height: `${height}px` }"
-        class="w-full"
+        :width="W"
+        :height="height"
+        class="block max-w-full"
         role="img"
         aria-label="Revenue by month"
     >
@@ -88,4 +93,5 @@ const areaPath = computed(() => {
             </text>
         </g>
     </svg>
+    </div>
 </template>

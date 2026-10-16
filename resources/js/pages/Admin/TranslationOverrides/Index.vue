@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { PencilLine, Plus, RotateCcw, Search } from 'lucide-vue-next';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -16,6 +16,9 @@ import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminOption, TranslationCatalogRow, TranslationOverride } from '@/types/admin';
 import type { Paginated } from '@/types';
 import type { MenuItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /**
  * Translation Overrides — browses every bundled UI string (the same JSON
@@ -121,7 +124,7 @@ function onRowAction(key: string, row: TranslationCatalogRow): void {
 </script>
 
 <template>
-    <AdminLayout :title="t('Translation Overrides')">
+    <Head :title="t('Translation Overrides')" />
         <div class="space-y-5">
             <PageHeader :title="t('Translation Overrides')">
                 <template #actions>
@@ -224,5 +227,4 @@ function onRowAction(key: string, row: TranslationCatalogRow): void {
             :prefill="prefill"
             @close="formOpen = false"
         />
-    </AdminLayout>
 </template>

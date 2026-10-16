@@ -38,6 +38,14 @@ class PricingTier extends Model
     }
 
     /**
+     * @return HasMany<TierPrice, $this>
+     */
+    public function tierPrices(): HasMany
+    {
+        return $this->hasMany(TierPrice::class);
+    }
+
+    /**
      * @return HasMany<Customer, $this>
      */
     public function customers(): HasMany

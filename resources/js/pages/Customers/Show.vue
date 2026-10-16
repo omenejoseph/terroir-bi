@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ArrowLeft, ChevronRight, Link2, PencilLine, Plus, Search, Trash2 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -9,23 +9,20 @@ import CustomerAttentionBand from '@/components/customers/CustomerAttentionBand.
 import CustomerFormPanel from '@/components/customers/CustomerFormPanel.vue';
 import CustomerPriceDialog from '@/components/customers/CustomerPriceDialog.vue';
 import OrderLinkDialog from '@/components/customers/OrderLinkDialog.vue';
-import SuggestOrderDialog from '@/components/customers/SuggestOrderDialog.vue';
-import SuggestUpsellDialog from '@/components/customers/SuggestUpsellDialog.vue';
 import OrderRhythm from '@/components/customers/OrderRhythm.vue';
 import PipelineCard from '@/components/orders/PipelineCard.vue';
 import BarChart from '@/components/ui/BarChart.vue';
 import DateRangePicker from '@/components/ui/DateRangePicker.vue';
 import Button from '@/components/ui/Button.vue';
 import Pagination from '@/components/ui/Pagination.vue';
-import ProgressBar from '@/components/ui/ProgressBar.vue';
 import SectionHeader from '@/components/ui/SectionHeader.vue';
-import StackedBar from '@/components/ui/StackedBar.vue';
 import StatCard from '@/components/ui/StatCard.vue';
 import StatusChips from '@/components/ui/StatusChips.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
+import { listReturnUrl } from '@/lib/listReturn';
 import { formatMoney, formatNumber } from '@/lib/money';
 import type {
     AttentionCard,
@@ -37,12 +34,14 @@ import type {
     CustomerPricing,
     CustomerProducts,
     CustomerRhythm,
-    CustomerUpsell,
 } from '@/types/customers';
 import type { MoneyValue } from '@/types/inventory';
 import type { Order, OrderPipeline, OrderStatusCounts, OrderStatusKey, ProductOption } from '@/types/orders';
 import type { Paginated, SharedProps } from '@/types';
 import type { DateRange, TabItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
 
 /**
  * One customer (Figma 231:9336), with the four tabs the design gives them.
@@ -82,10 +81,10 @@ const props = defineProps<{
     /** Null when the viewer may not see financials. */
     orderHistoryTotal?: MoneyValue | null;
     consignment?: CustomerConsignment;
+    /** True when this customer has any consignment order — the Consignment tab is hidden otherwise. */
+    hasConsignment: boolean;
     /** Undefined until the Order link dialog opens and asks for it. */
     orderToken?: string | null;
-    /** Undefined until the Suggest upsell dialog opens and asks for it. */
-    upsell?: CustomerUpsell;
 }>();
 
 const page = usePage<SharedProps>();
@@ -94,10 +93,7 @@ const { can } = useAuth();
 const { t } = useTranslations();
 
 const editOpen = ref(false);
-const confirmingDelete = ref(false);
 const orderLinkOpen = ref(false);
-const suggestOrderOpen = ref(false);
-const suggestUpsellOpen = ref(false);
 
 const money = (m: MoneyValue | null | undefined): string =>
     m ? formatMoney(m.minor, m.currency) : '—';
@@ -117,7 +113,8 @@ const TABS = computed<TabItem[]>(() => [
     { value: 'overview', label: t('Overview') },
     { value: 'pricing', label: t('Pricing (:count)', { count: props.pricing?.override_count ?? 0 }) },
     { value: 'orders', label: t('Order History (:count)', { count: props.orderHistory?.meta.total ?? 0 }) },
-    { value: 'consignment', label: t('Consignment') },
+    // Almost no customer has goods on komisija, so the tab only appears when this one does.
+    ...(props.hasConsignment || props.tab === 'consignment' ? [{ value: 'consignment', label: t('Consignment') }] : []),
 ]);
 
 /** Switching tabs asks the server for only that tab's data. */
@@ -268,35 +265,65 @@ function act(action: AttentionCard['action']): void {
     if (action === 'pricing') selectTab('pricing');
 }
 
-function destroy(): void {
+async function destroy(): Promise<void> {
+    const ok = await confirmDialog({
+        title: t('Delete customer'),
+        description: t('Delete :name? A customer with orders is deactivated instead.', { name: props.customer.company_name }),
+        confirmLabel: t('Delete'),
+        tone: 'danger',
+    });
+    if (!ok) return;
+
     router.delete(`/customers/${props.customer.id}`);
 }
 
 /* ---- Overview figures ------------------------------------------------ */
 
 /**
- * The design's "Where the money goes" splits revenue into gross profit and
- * COGS. Per-customer COGS is not computed anywhere — it would need cost
- * snapshots summed across a customer's lines, which no query does — so this
- * card splits revenue along an axis the data DOES track: direct sales against
- * goods sold on consignment. Same shape, a claim the numbers support.
+ * "Buying categories" (the prototype's category breakdown): what this customer buys, by product group
+ * and the subcategories within it, ranked by revenue. Built from CustomerProductsQuery's rows, which
+ * already carry units and revenue per product.
  */
-const moneySplit = computed(() => {
-    const insights = props.insights;
-    if (insights === null) return null;
+const buyingCategories = computed(() => {
+    const groups = new Map<
+        string,
+        { units: number; revenue: number; subs: Map<string, { units: number; revenue: number }> }
+    >();
+    let currency = 'EUR';
 
-    const revenue = insights.total_spend.minor;
-    if (revenue <= 0) return null;
+    for (const row of props.products.rows) {
+        currency = row.revenue.currency;
+        const key = row.group ?? t('Other');
+        const group = groups.get(key) ?? { units: 0, revenue: 0, subs: new Map() };
+        group.units += row.units;
+        group.revenue += row.revenue.minor;
 
-    const consignment = insights.consignment_revenue.minor;
+        const subKey = row.subcategory ?? '';
+        const sub = group.subs.get(subKey) ?? { units: 0, revenue: 0 };
+        sub.units += row.units;
+        sub.revenue += row.revenue.minor;
+        group.subs.set(subKey, sub);
+        groups.set(key, group);
+    }
+
+    const total = [...groups.values()].reduce((sum, g) => sum + g.revenue, 0);
+    const pct = (value: number): number => (total > 0 ? Math.round((value / total) * 100) : 0);
 
     return {
-        revenue,
-        currency: insights.total_spend.currency,
-        segments: [
-            { label: t('Direct sales'), value: Math.max(0, revenue - consignment) },
-            { label: t('Consignment'), value: consignment },
-        ].filter((s) => s.value > 0),
+        currency,
+        total,
+        groups: [...groups.entries()]
+            .map(([label, group]) => ({
+                label,
+                units: group.units,
+                revenue: group.revenue,
+                pct: pct(group.revenue),
+                subs: [...group.subs.entries()]
+                    .filter(([key]) => key !== '')
+                    .map(([key, sub]) => ({ label: subcategoryLabel(key), units: sub.units, revenue: sub.revenue, pct: pct(sub.revenue) }))
+                    .sort((a, b) => b.revenue - a.revenue),
+            }))
+            .sort((a, b) => b.revenue - a.revenue),
     };
 });
 
@@ -343,60 +370,6 @@ const forecast = computed(() => {
     };
 });
 
-/**
- * "Price ladder" (Figma 231:9336): revenue per bottle by product subcategory,
- * ranked highest first. Built entirely from CustomerProductsQuery's rows,
- * which already carry revenue and units per product — no new backend data.
- *
- * The design's four buckets (White / Rosé / Red / "Red Reserve") are example
- * content, not a real taxonomy: `InventoryItem.subcategory` is free text, and
- * this tenant's schema has no "reserve" tier. Buckets are whatever
- * subcategories this customer has actually bought, which is what the data can
- * honestly support.
- */
-const priceLadder = computed(() => {
-    const buckets = new Map<string, { units: number; revenueMinor: number; currency: string }>();
-
-    for (const row of props.products.rows) {
-        const key = row.subcategory ?? row.group ?? t('Other');
-        const bucket = buckets.get(key) ?? { units: 0, revenueMinor: 0, currency: row.revenue.currency };
-        bucket.units += row.units;
-        bucket.revenueMinor += row.revenue.minor;
-        buckets.set(key, bucket);
-    }
-
-    const rows = [...buckets.entries()]
-        .map(([key, bucket]) => ({
-            key,
-            label: subcategoryLabel(key),
-            units: bucket.units,
-            pricePerBottle: bucket.units > 0 ? bucket.revenueMinor / bucket.units : 0,
-            currency: bucket.currency,
-        }))
-        .filter((row) => row.units > 0)
-        .sort((a, b) => b.pricePerBottle - a.pricePerBottle);
-
-    const max = rows.reduce((m, row) => Math.max(m, row.pricePerBottle), 0);
-    const totalUnits = props.products.total_units;
-
-    return {
-        rows: rows.map((row) => ({
-            ...row,
-            barPct: max > 0 ? (row.pricePerBottle / max) * 100 : 0,
-            sharePct: totalUnits > 0 ? Math.round((row.units / totalUnits) * 100) : 0,
-        })),
-        /** "{top} earns {ratio}× {bottom}" — only claimed when there are two buckets to compare. */
-        ratio:
-            rows.length >= 2 && rows[rows.length - 1]!.pricePerBottle > 0
-                ? {
-                      top: rows[0]!.label,
-                      bottom: rows[rows.length - 1]!.label,
-                      multiple: rows[0]!.pricePerBottle / rows[rows.length - 1]!.pricePerBottle,
-                  }
-                : null,
-    };
-});
-
 /** "RED_RESERVE" -> "Red reserve"; whatever free text is on file, titled. */
 function subcategoryLabel(value: string): string {
     return value
@@ -405,24 +378,6 @@ function subcategoryLabel(value: string): string {
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 }
-
-/**
- * "Concentration" (Figma 231:9336): the customer's top products by volume,
- * with how much of their bottles the top 3 account for. CustomerProductsQuery
- * already ranks `rows` by units descending — this just takes the head of it.
- */
-const concentration = computed(() => {
-    const rows = props.products.rows;
-    const top = rows.slice(0, 6);
-    const max = top.reduce((m, row) => Math.max(m, row.units), 0);
-    const totalUnits = props.products.total_units;
-    const top3Units = rows.slice(0, 3).reduce((sum, row) => sum + row.units, 0);
-
-    return {
-        rows: top.map((row) => ({ ...row, barPct: max > 0 ? (row.units / max) * 100 : 0 })),
-        top3SharePct: totalUnits > 0 ? Math.round((top3Units / totalUnits) * 100) : 0,
-    };
-});
 
 /*
   "Products bought" has its own window (Figma 231:9336). It reloads only that
@@ -618,10 +573,10 @@ async function removePrice(row: CustomerPriceRow): Promise<void> {
 </script>
 
 <template>
-    <AppLayout :title="customer.company_name">
+    <Head :title="customer.company_name" />
         <div class="space-y-5">
             <Link
-                href="/customers"
+                :href="listReturnUrl('customers', '/customers')"
                 class="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
             >
                 <ArrowLeft class="size-3.5" :stroke-width="1.5" />
@@ -643,10 +598,10 @@ async function removePrice(row: CustomerPriceRow): Promise<void> {
                         variant="outline"
                         size="sm"
                         class="border-destructive/40 text-destructive hover:bg-destructive/10"
-                        @click="confirmingDelete ? destroy() : (confirmingDelete = true)"
+                        @click="destroy"
                     >
                         <Trash2 class="size-3.5" :stroke-width="1.5" />
-                        {{ confirmingDelete ? t('Confirm delete') : t('Delete') }}
+                        {{ t('Delete') }}
                     </Button>
                 </div>
             </div>
@@ -760,103 +715,47 @@ async function removePrice(row: CustomerPriceRow): Promise<void> {
                     </div>
                 </div>
 
-                <!-- Where the money goes · Price ladder · Concentration (Figma 231:9336's second row) -->
-                <div class="grid gap-4 xl:grid-cols-3">
-                    <div v-if="moneySplit" class="border border-border bg-card">
-                        <div class="border-b border-border px-6 py-4">
-                            <SectionHeader
-                                :title="t('Where the money comes from')"
-                                :description="t('Direct sales against goods sold on komisija')"
-                            />
-                        </div>
-                        <div class="flex flex-col gap-4 p-6">
-                            <p class="text-3xl font-semibold tabular-nums">
-                                {{ money({ minor: moneySplit.revenue, currency: moneySplit.currency, formatted: '' }) }}
-                            </p>
-                            <StackedBar
-                                :segments="
-                                    moneySplit.segments.map((s) => ({
-                                        label: s.label,
-                                        value: s.value,
-                                        caption: money({
-                                            minor: s.value,
-                                            currency: moneySplit!.currency,
-                                            formatted: '',
-                                        }),
-                                    }))
-                                "
-                            />
-                        </div>
+                <!-- Buying categories (the prototype's category breakdown) -->
+                <div v-if="buyingCategories.groups.length > 0" class="border border-border bg-card">
+                    <div class="border-b border-border px-6 py-4">
+                        <SectionHeader
+                            :title="t('Buying categories')"
+                            :description="t('What this customer buys, by category and subcategory')"
+                        />
                     </div>
-
-                    <div v-if="priceLadder.rows.length > 0" class="border border-border bg-card">
-                        <div class="flex items-start justify-between gap-3 border-b border-border px-6 py-4">
-                            <SectionHeader
-                                :title="t('Price ladder')"
-                                :description="
-                                    priceLadder.ratio
-                                        ? t('Revenue per bottle · :top earns :multiple× :bottom', {
-                                              top: priceLadder.ratio.top,
-                                              multiple: priceLadder.ratio.multiple.toFixed(1),
-                                              bottom: priceLadder.ratio.bottom,
-                                          })
-                                        : t('Revenue per bottle')
-                                "
-                            />
-                            <button
-                                type="button"
-                                class="shrink-0 text-xs text-muted-foreground hover:text-foreground"
-                                @click="suggestUpsellOpen = true"
-                            >
-                                {{ t('Suggest upsell') }}
-                            </button>
-                        </div>
-                        <ul class="space-y-4 p-6">
-                            <li v-for="row in priceLadder.rows" :key="row.key" class="space-y-1.5">
-                                <div class="flex items-baseline justify-between gap-3">
-                                    <span class="text-sm font-medium">{{ row.label }}</span>
-                                    <span class="text-xs text-muted-foreground tabular-nums">
-                                        {{ formatNumber(row.units, locale) }} btl · {{ row.sharePct }}%
+                    <ul class="divide-y divide-border">
+                        <li v-for="group in buyingCategories.groups" :key="group.label" class="space-y-3 p-6">
+                            <div class="flex items-baseline justify-between gap-3">
+                                <span class="text-base font-semibold">{{ group.label }}</span>
+                                <span class="text-sm text-muted-foreground tabular-nums">
+                                    {{ formatNumber(group.units, locale) }} {{ t('bottles') }}
+                                    <template v-if="insights">
+                                        · {{ money({ minor: group.revenue, currency: buyingCategories.currency, formatted: '' }) }}
+                                    </template>
+                                    · {{ group.pct }}%
+                                </span>
+                            </div>
+                            <span class="block h-2 w-full bg-muted" aria-hidden="true">
+                                <span class="block h-full bg-foreground" :style="{ width: `${group.pct}%` }" />
+                            </span>
+                            <ul v-if="group.subs.length > 0" class="space-y-1.5 pl-3">
+                                <li
+                                    v-for="sub in group.subs"
+                                    :key="sub.label"
+                                    class="flex items-baseline justify-between gap-3 text-sm"
+                                >
+                                    <span class="text-muted-foreground">{{ sub.label }}</span>
+                                    <span class="tabular-nums">
+                                        {{ formatNumber(sub.units, locale) }} {{ t('bottles') }}
+                                        <template v-if="insights">
+                                            · {{ money({ minor: sub.revenue, currency: buyingCategories.currency, formatted: '' }) }}
+                                        </template>
+                                        · {{ sub.pct }}%
                                     </span>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <ProgressBar class="flex-1" :value="row.barPct" :label="row.label" />
-                                    <span class="w-16 shrink-0 text-right text-sm font-semibold tabular-nums">
-                                        {{ money({ minor: Math.round(row.pricePerBottle), currency: row.currency, formatted: '' }) }}
-                                    </span>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div v-if="concentration.rows.length > 0" class="border border-border bg-card">
-                        <div class="border-b border-border px-6 py-4">
-                            <SectionHeader :title="t('Concentration')" />
-                        </div>
-                        <ul class="space-y-4 p-6">
-                            <li
-                                v-for="row in concentration.rows"
-                                :key="row.inventory_item_id"
-                                class="space-y-1.5"
-                            >
-                                <div class="flex items-baseline justify-between gap-3">
-                                    <span class="min-w-0 truncate text-sm font-medium">{{ row.name }}</span>
-                                    <span class="shrink-0 text-sm tabular-nums">
-                                        {{ formatNumber(row.units, locale) }} btl
-                                    </span>
-                                </div>
-                                <ProgressBar :value="row.barPct" :label="row.name" />
-                            </li>
-                        </ul>
-                        <p class="border-t border-border px-6 py-3 text-xs text-muted-foreground">
-                            {{
-                                t('Top 3 = :pct% of bottles · only :count SKUs bought', {
-                                    pct: concentration.top3SharePct,
-                                    count: formatNumber(products.product_count, locale),
-                                })
-                            }}
-                        </p>
-                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
                 </div>
 
                 <div class="border border-border bg-card">
@@ -871,13 +770,6 @@ async function removePrice(row: CustomerPriceRow): Promise<void> {
                                     })
                                 "
                             />
-                            <button
-                                type="button"
-                                class="shrink-0 text-xs text-muted-foreground hover:text-foreground"
-                                @click="suggestOrderOpen = true"
-                            >
-                                {{ t('Suggest order') }}
-                            </button>
                         </div>
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div class="flex flex-wrap items-center gap-2">
@@ -914,11 +806,11 @@ async function removePrice(row: CustomerPriceRow): Promise<void> {
                                         <th
                                             colspan="4"
                                             scope="colgroup"
-                                            class="px-6 py-2 text-left text-xs font-semibold"
+                                            class="px-6 py-3 text-left text-base font-semibold"
                                         >
-                                            · {{ group.label }}
+                                            {{ group.label }}
                                         </th>
-                                        <td class="px-6 py-2 text-right text-muted-foreground tabular-nums">
+                                        <td class="px-6 py-3 text-right text-sm text-muted-foreground tabular-nums">
                                             {{
                                                 t(':units bottles · :count products', {
                                                     units: formatNumber(group.units, locale),
@@ -933,7 +825,7 @@ async function removePrice(row: CustomerPriceRow): Promise<void> {
                                             <th
                                                 colspan="5"
                                                 scope="colgroup"
-                                                class="px-6 py-1.5 text-left text-2xs font-medium tracking-wide text-muted-foreground uppercase"
+                                                class="px-6 py-2 text-left text-sm font-medium tracking-wide text-muted-foreground uppercase"
                                             >
                                                 {{ subcategory.label }}
                                             </th>
@@ -945,17 +837,33 @@ async function removePrice(row: CustomerPriceRow): Promise<void> {
                                             class="border-b border-border last:border-b-0"
                                         >
                                             <td class="px-6 py-3">
-                                                <Link
-                                                    :href="`/inventory/${row.inventory_item_id}`"
-                                                    class="font-medium hover:underline"
-                                                >
-                                                    {{ row.name }}
-                                                </Link>
-                                                <span class="mt-0.5 block text-muted-foreground">
-                                                    {{ [row.vintage, row.unit_size].filter(Boolean).join(' · ') || '—' }}
-                                                </span>
+                                                <div class="flex items-center gap-3">
+                                                    <img
+                                                        v-if="row.image_url"
+                                                        :src="row.image_url"
+                                                        :alt="row.name"
+                                                        loading="lazy"
+                                                        class="size-12 shrink-0 border border-border object-cover"
+                                                    />
+                                                    <span
+                                                        v-else
+                                                        class="size-12 shrink-0 border border-border bg-muted"
+                                                        aria-hidden="true"
+                                                    />
+                                                    <div class="min-w-0">
+                                                        <Link
+                                                            :href="`/inventory/${row.inventory_item_id}`"
+                                                            class="text-sm font-medium hover:underline"
+                                                        >
+                                                            {{ row.name }}
+                                                        </Link>
+                                                        <span class="mt-0.5 block text-muted-foreground">
+                                                            {{ [row.vintage, row.unit_size].filter(Boolean).join(' · ') || '—' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </td>
-                                            <td class="px-6 py-3 text-right font-semibold tabular-nums">
+                                            <td class="px-6 py-3 text-right text-base font-semibold tabular-nums">
                                                 {{ formatNumber(row.units, locale) }}
                                             </td>
                                             <td class="px-6 py-3">
@@ -1252,7 +1160,4 @@ async function removePrice(row: CustomerPriceRow): Promise<void> {
             @close="priceDialogOpen = false"
         />
 
-        <SuggestOrderDialog :open="suggestOrderOpen" :products="products.rows" :rhythm="rhythm" @close="suggestOrderOpen = false" />
-        <SuggestUpsellDialog :open="suggestUpsellOpen" :upsell="upsell" @close="suggestUpsellOpen = false" />
-    </AppLayout>
 </template>

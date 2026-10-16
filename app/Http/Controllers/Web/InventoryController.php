@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Actions\Inventory\ReorderInventoryAction;
+use App\Http\Requests\Inventory\ReorderInventoryRequest;
 use App\Actions\Inventory\AdjustStockAction;
 use App\Actions\Inventory\ApplyInventoryCheckAction;
 use App\Actions\Inventory\BulkImportInventoryItemsAction;
@@ -57,6 +59,7 @@ use App\Services\Orders\OrderFormOptions;
 use App\Support\InventoryItemFilters;
 use App\Support\Period;
 use App\Support\PerPage;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -92,6 +95,8 @@ class InventoryController extends Controller
         return Inertia::render('Inventory/Index', [
             'items' => $presenter->page($paginated),
             'filters' => $filters,
+            // The card header's figures cover everything the filters match, not just this page.
+            'totals' => ['on_hand' => (string) $query->build($filters)->sum('current_stock')],
             // "Cover" (Figma 389:1592) — one grouped query over the page's own
             // items rather than the whole tenant, so it stays cheap regardless
             // of catalogue size. See InventoryCoverQuery for the omitted
@@ -266,6 +271,27 @@ class InventoryController extends Controller
             'analytics' => $query->get(months: $months),
             'filters' => ['months' => $months],
         ]);
+    }
+
+    /** Drag and drop on the list — items within a band, or the order of groups / subcategories. */
+    public function reorder(ReorderInventoryRequest $request, ReorderInventoryAction $action): RedirectResponse|JsonResponse
+    {
+        if ($request->has('entries')) {
+            /** @var list<array{group: string, subcategory?: string|null}> $entries */
+            $entries = array_values((array) $request->validated('entries'));
+            $action->groups((string) $request->validated('category'), $entries);
+        } else {
+            /** @var list<string> $ids */
+            $ids = array_values((array) $request->validated('ids'));
+            $action->items($ids);
+        }
+
+        // The list saves in the background (fetch), so it needs no page to come back with.
+        if ($request->expectsJson()) {
+            return response()->json(status: 204);
+        }
+
+        return back();
     }
 
     /**

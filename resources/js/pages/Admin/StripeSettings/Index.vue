@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { Bolt } from 'lucide-vue-next';
 
@@ -11,6 +12,9 @@ import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import { csrfHeader } from '@/lib/csrf';
 import type { AdminStripeAccount } from '@/types/admin';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /**
  * Stripe Settings — port of App\Filament\Pages\StripeSettings. Read-only
@@ -59,7 +63,7 @@ async function testConnection(): Promise<void> {
 </script>
 
 <template>
-    <AdminLayout :title="t('Stripe')">
+    <Head :title="t('Stripe')" />
         <div class="space-y-5">
             <PageHeader :title="t('Stripe')">
                 <template #actions>
@@ -127,5 +131,4 @@ async function testConnection(): Promise<void> {
                 </dl>
             </Card>
         </div>
-    </AdminLayout>
 </template>

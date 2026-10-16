@@ -26,7 +26,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>();
         <span
             :class="
                 cn(
-                    'inline-block size-5 rounded-full bg-card shadow-sm transition-transform',
+                    'inline-block size-5 rounded-full bg-card transition-transform',
                     props.modelValue ? 'translate-x-[22px]' : 'translate-x-0.5',
                 )
             "

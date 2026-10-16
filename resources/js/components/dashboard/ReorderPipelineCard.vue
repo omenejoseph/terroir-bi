@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
 import { RotateCcw } from 'lucide-vue-next';
 
@@ -52,9 +53,9 @@ function daysAgo(days: number): string {
                 <RotateCcw class="size-4 text-muted-foreground" :stroke-width="1.5" />
                 {{ t('Reorder pipeline') }}
             </div>
-            <a v-if="can('customers.view')" href="/customers/reorder-radar" class="shrink-0 text-xs text-muted-foreground hover:text-foreground">
+            <Link v-if="can('customers.view')" href="/customers/reorder-radar" class="shrink-0 text-xs text-muted-foreground hover:text-foreground">
                 {{ t('View all') }}
-            </a>
+            </Link>
         </div>
 
         <p class="mt-3 text-2xl font-semibold tabular-nums">{{ money(pipeline.total.minor) }}</p>

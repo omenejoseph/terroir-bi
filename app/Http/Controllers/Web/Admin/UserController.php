@@ -33,9 +33,9 @@ class UserController extends Controller
         $users = User::query()
             ->withCount('tenants')
             ->when($search !== '', fn ($query) => $query->where(function ($query) use ($search): void {
-                $query->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                $query->whereLike('first_name', "%{$search}%")
+                    ->orWhereLike('last_name', "%{$search}%")
+                    ->orWhereLike('email', "%{$search}%");
             }))
             ->orderBy('created_at', 'desc')
             ->paginate(PerPage::fromRequest($request), ['*'], 'page');

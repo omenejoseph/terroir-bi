@@ -43,9 +43,9 @@ class ListCustomersQuery
         if (! empty($filters['search'])) {
             $term = '%'.$filters['search'].'%';
             $query->where(function (Builder $q) use ($term) {
-                $q->where('company_name', 'like', $term)
-                    ->orWhere('contact_name', 'like', $term)
-                    ->orWhere('email', 'like', $term);
+                $q->whereLike('company_name', $term)
+                    ->orWhereLike('contact_name', $term)
+                    ->orWhereLike('email', $term);
             });
         }
 

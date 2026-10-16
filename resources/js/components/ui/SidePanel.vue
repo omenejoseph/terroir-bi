@@ -111,7 +111,7 @@ onBeforeUnmount(() => {
             <div
                 v-if="open"
                 ref="panel"
-                class="fixed inset-y-0 right-0 z-50 flex w-full max-w-[480px] flex-col bg-card shadow-2xl focus:outline-none"
+                class="fixed inset-y-0 right-0 z-50 flex w-full max-w-[480px] flex-col border-l border-border bg-card focus:outline-none"
                 tabindex="-1"
                 role="dialog"
                 aria-modal="true"

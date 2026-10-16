@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { Lock, LockOpen } from 'lucide-vue-next';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -12,6 +12,9 @@ import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminBddOperationSpec } from '@/types/admin';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /**
  * BDD Access — port of App\Filament\Pages\BddAccess. The fail-closed
@@ -39,7 +42,7 @@ async function revoke(spec: AdminBddOperationSpec): Promise<void> {
 </script>
 
 <template>
-    <AdminLayout :title="t('BDD Access')">
+    <Head :title="t('BDD Access')" />
         <div class="space-y-5">
             <PageHeader :title="t('BDD test access')" />
 
@@ -93,5 +96,4 @@ async function revoke(spec: AdminBddOperationSpec): Promise<void> {
                 </Disclosure>
             </Card>
         </div>
-    </AdminLayout>
 </template>

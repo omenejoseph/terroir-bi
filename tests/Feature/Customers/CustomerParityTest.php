@@ -93,10 +93,10 @@ class CustomerParityTest extends TestCase
         $admin = $this->createMember($tenant, [TenantRole::Admin]);
         Sanctum::actingAs($admin);
 
-        $this->getJson('/api/v1/customers/lookup-vat?vat=12345678901', $this->tenantHeader($tenant))
+        $this->getJson('/api/v1/customers/lookup-vat?vat=39580006726', $this->tenantHeader($tenant))
             ->assertOk()
             ->assertJsonPath('data.country', 'HR')
-            ->assertJsonPath('data.vat', 'HR12345678901')
+            ->assertJsonPath('data.vat', 'HR39580006726')
             ->assertJsonPath('data.name', 'Vinarija Test d.o.o.')
             ->assertJsonPath('data.zip', '10000')
             ->assertJsonPath('data.city', 'Zagreb');

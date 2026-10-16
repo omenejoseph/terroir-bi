@@ -25,6 +25,7 @@ use App\Models\Vessel;
 use App\Models\WineLot;
 use App\Models\WorkOrder;
 use App\Queries\FavoriteWorkOrderBoardQuery;
+use App\Queries\RecentWorkOrderActivityQuery;
 use App\Services\Tasks\WorkOrderBoardPresenter;
 use App\Support\WorkOrderFilters;
 use Illuminate\Http\RedirectResponse;
@@ -60,6 +61,8 @@ class WorkOrderController extends Controller
             // The picker's counts deliberately ignore the chosen board.
             'boards' => $board->boards($scoped, $favoriteBoardId),
             'filters' => $filters,
+            // Only fetched while the header's Recent Activity toggle is on.
+            'recentActivity' => Inertia::optional(fn (): array => app(RecentWorkOrderActivityQuery::class)->get()),
             // The task drawer's two pickers, only paid for when it opens.
             'assigneeOptions' => Inertia::optional(fn (): array => $this->assignees()),
             'vesselOptions' => Inertia::optional(fn (): array => $this->vessels()),

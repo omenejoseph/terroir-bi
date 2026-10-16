@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, Link as LinkIcon, Mail, PencilLine, Plus, Trash2 } from 'lucide-vue-next';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -18,6 +18,9 @@ import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminOption, AdminTenant, AdminTenantMember } from '@/types/admin';
 import type { MenuItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /**
  * Tenant — Show. Port of App\Filament\Resources\Tenants\Schemas\TenantInfolist
@@ -105,7 +108,7 @@ async function removeMember(member: AdminTenantMember): Promise<void> {
 </script>
 
 <template>
-    <AdminLayout :title="tenant.name">
+    <Head :title="tenant.name" />
         <div class="space-y-5">
             <PageHeader :title="tenant.name">
                 <template #actions>
@@ -302,5 +305,4 @@ async function removeMember(member: AdminTenantMember): Promise<void> {
         />
 
         <OnboardingLinkDialog :open="onboardingOpen" :tenant-id="tenant.id" @close="onboardingOpen = false" />
-    </AdminLayout>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Plus } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -15,6 +15,9 @@ import type { TastingReport } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { ComboboxOption } from '@/types/ui';
 
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AppLayout });
+
 /** Cellar › Tastings — the panel tasting reports, newest first. */
 defineProps<{ reports: TastingReport[]; lots: ComboboxOption[] }>();
 
@@ -26,7 +29,7 @@ const panel = ref(false);
 </script>
 
 <template>
-    <AppLayout :title="t('Tasting reports')">
+    <Head :title="t('Tasting reports')" />
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Tasting reports')">
                 <template v-if="can('cellar.manage')" #actions>
@@ -56,5 +59,4 @@ const panel = ref(false);
             </div>
         </div>
         <TastingReportPanel :open="panel" :report="null" :lots="lots" @close="panel = false" />
-    </AppLayout>
 </template>

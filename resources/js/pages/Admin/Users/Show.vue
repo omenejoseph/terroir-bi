@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeft, KeyRound, ShieldCheck, UserCog } from 'lucide-vue-next';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import Badge from '@/components/ui/Badge.vue';
@@ -11,6 +11,9 @@ import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminUserDetail } from '@/types/admin';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /**
  * User — Show. Port of App\Filament\Resources\Users\UserResource::infolist():
@@ -62,7 +65,7 @@ async function impersonate(): Promise<void> {
 </script>
 
 <template>
-    <AdminLayout :title="user.name">
+    <Head :title="user.name" />
         <div class="space-y-5">
             <PageHeader :title="user.name">
                 <template #actions>
@@ -145,5 +148,4 @@ async function impersonate(): Promise<void> {
                 </ul>
             </Card>
         </div>
-    </AdminLayout>
 </template>

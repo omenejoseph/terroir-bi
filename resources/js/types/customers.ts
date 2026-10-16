@@ -166,6 +166,8 @@ export interface CustomerProductRow {
     unit_size: string | null;
     group: string | null;
     subcategory: string | null;
+    /** Lead product image (signed URL), when the item has one. */
+    image_url: string | null;
     units: number;
     /** 0–1 share of this customer's units. */
     share: number;
@@ -285,4 +287,12 @@ export interface AttentionCard {
     detail: string;
     meta: string | MoneyValue;
     action: 'contact' | 'orders' | 'pricing';
+}
+
+/** A row of the Pricing tiers management page (Web\PricingTierController::index). */
+export interface PricingTierRow extends PricingTierSummary {
+    description: string | null;
+    customers_count: number;
+    /** How many items have an absolute price set for this tier. */
+    prices_count: number;
 }

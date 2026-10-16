@@ -174,7 +174,7 @@ function isCurrent(group: NavCategory, url: string): boolean {
                     v-if="open && openLabel === group.label && flyout"
                     role="menu"
                     :aria-label="t(group.label)"
-                    class="fixed z-40 w-56 rounded-nav border border-sidebar-border bg-sidebar p-2 shadow-lg"
+                    class="fixed z-40 w-56 rounded-nav border border-sidebar-border bg-sidebar p-2"
                     :style="{ top: `${flyout.top}px`, left: `${flyout.left}px` }"
                 >
                     <div class="flex items-center justify-between gap-2 px-2 pb-1">

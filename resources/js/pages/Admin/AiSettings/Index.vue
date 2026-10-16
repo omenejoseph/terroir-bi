@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { Bolt, Check, Cog, X } from 'lucide-vue-next';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -12,6 +12,9 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminAiCapabilityRow, AdminAiRequiredKeys } from '@/types/admin';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /** AI Settings — port of App\Filament\Pages\AiSettings. */
 const props = defineProps<{
@@ -46,7 +49,7 @@ function disable(key: string): void {
 </script>
 
 <template>
-    <AdminLayout :title="t('AI')">
+    <Head :title="t('AI')" />
         <div class="space-y-5">
             <PageHeader :title="t('AI')">
                 <template #actions>
@@ -149,5 +152,4 @@ function disable(key: string): void {
             :model-options="modelOptions"
             @close="configureOpen = false"
         />
-    </AdminLayout>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { ArrowUpCircle, Ban, Plus } from 'lucide-vue-next';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -13,6 +13,9 @@ import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { PlatformAdmin } from '@/types/admin';
 import type { ComboboxOption } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /**
  * Platform Admins — port of App\Filament\Resources\PlatformAdmins\**. Create,
@@ -47,7 +50,7 @@ async function revoke(admin: PlatformAdmin): Promise<void> {
 </script>
 
 <template>
-    <AdminLayout :title="t('Platform Admins')">
+    <Head :title="t('Platform Admins')" />
         <div class="space-y-5">
             <PageHeader :title="t('Platform Admins')">
                 <template #actions>
@@ -111,5 +114,4 @@ async function revoke(admin: PlatformAdmin): Promise<void> {
 
         <PlatformAdminFormPanel :open="formOpen" @close="formOpen = false" />
         <PromotePlatformAdminDialog :open="promoteOpen" :candidates="candidates" @close="promoteOpen = false" />
-    </AdminLayout>
 </template>

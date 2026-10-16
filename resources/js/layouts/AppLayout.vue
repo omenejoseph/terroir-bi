@@ -10,7 +10,7 @@ import RecordDrawer from '@/components/cellar/RecordDrawer.vue';
 import FlashMessages from '@/components/ui/FlashMessages.vue';
 import { cn } from '@/lib/cn';
 
-defineProps<{ title: string }>();
+defineProps<{ title?: string }>();
 
 /** The 240px rail is fixed on desktop and a drawer below lg, per the design. */
 const mobileOpen = ref(false);
@@ -58,7 +58,7 @@ function toggleNav(): void {
 </script>
 
 <template>
-    <Head :title="title" />
+    <Head v-if="title" :title="title" />
 
     <div class="flex min-h-screen flex-col bg-background">
         <ImpersonationBanner />

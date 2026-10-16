@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { PencilLine, Play, Plus, Search, Trash2 } from 'lucide-vue-next';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -16,6 +16,9 @@ import { ADMIN_BASE } from '@/lib/adminNavigation';
 import type { AdminBddScenarioSummary } from '@/types/admin';
 import type { Paginated } from '@/types';
 import type { MenuItem } from '@/types/ui';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /**
  * BDD Scenarios — port of App\Filament\Resources\BddScenarios\**, an AI
@@ -152,7 +155,7 @@ const runStatusVariant = computed(() => (status: string) => RUN_STATUS_VARIANT[s
 </script>
 
 <template>
-    <AdminLayout :title="t('BDD Scenarios')">
+    <Head :title="t('BDD Scenarios')" />
         <div class="space-y-5">
             <PageHeader :title="t('BDD Scenarios')">
                 <template #actions>
@@ -248,5 +251,4 @@ const runStatusVariant = computed(() => (status: string) => RUN_STATUS_VARIANT[s
         </div>
 
         <BddScenarioFormPanel :open="formOpen" :scenario="editing" @close="formOpen = false" />
-    </AdminLayout>
 </template>

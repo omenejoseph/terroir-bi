@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
@@ -9,6 +9,9 @@ import { ADMIN_BASE } from '@/lib/adminNavigation';
 import { formatActionLabel, formatMetadata } from '@/lib/auditLog';
 import type { AdminAuditLog } from '@/types/admin';
 import type { Paginated } from '@/types';
+
+/** The shell persists between visits, so navigating does not remount the nav. */
+defineOptions({ layout: AdminLayout });
 
 /**
  * A read-only, reverse-chronological view of `audit_logs` — currently written
@@ -47,7 +50,7 @@ function subject(row: AdminAuditLog): string {
 </script>
 
 <template>
-    <AdminLayout :title="t('Audit Logs')">
+    <Head :title="t('Audit Logs')" />
         <div class="space-y-5">
             <PageHeader :title="t('Audit Logs')" />
 
@@ -92,5 +95,4 @@ function subject(row: AdminAuditLog): string {
                 </div>
             </div>
         </div>
-    </AdminLayout>
 </template>

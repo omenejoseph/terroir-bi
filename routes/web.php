@@ -39,6 +39,7 @@ use App\Http\Controllers\Web\TeamController;
 use App\Http\Controllers\Web\TeamImpersonationController;
 use App\Http\Controllers\Web\TeamInvitationController;
 use App\Http\Controllers\Web\TeamMembersController;
+use App\Http\Controllers\Web\PricingTierController;
 use App\Http\Controllers\Web\TierPriceController;
 use App\Http\Controllers\Web\UploadController;
 use App\Http\Controllers\Web\WelcomeController;
@@ -186,6 +187,8 @@ Route::middleware('tenant.web')->group(function () {
 
     Route::middleware('can:inventory.manage')->group(function () {
         Route::post('inventory', [InventoryController::class, 'store'])->name('inventory.store');
+        // Drag and drop on the list: items within a band, and the order of groups / subcategories.
+        Route::post('inventory-order', [InventoryController::class, 'reorder'])->name('inventory.reorder');
         Route::patch('inventory/{item}', [InventoryController::class, 'update'])->name('inventory.update');
 
         // Bulk Import — shared by the Inventory list, Analytics and Spend
@@ -306,6 +309,7 @@ Route::middleware('tenant.web')->group(function () {
     // TEAM and ORDERS create customers, see the reorder radar and mark customers contacted in the old app; editing is admin-only.
     Route::middleware('can:customers.create')->group(function () {
         Route::get('customers/reorder-radar', [CustomerController::class, 'reorderRadar'])->name('customers.reorder-radar');
+        Route::get('customers/lookup-vat', [CustomerController::class, 'lookupVat'])->name('customers.lookup-vat');
         Route::post('customers', [CustomerController::class, 'store'])->name('customers.store');
         Route::post('customers/{customer}/contacted', [CustomerController::class, 'markContacted'])
             ->name('customers.contacted');
@@ -322,10 +326,14 @@ Route::middleware('tenant.web')->group(function () {
         // The Dashboard's Reorder pipeline card "View all" (Figma 208:5921).
         // Before customers/{customer}, which would otherwise swallow "categories" as an id.
         Route::get('customers/categories', [CustomerCategoryController::class, 'index'])->name('customers.categories.index');
+        Route::get('customers/pricing-tiers', [PricingTierController::class, 'index'])->name('customers.pricing-tiers.index');
         Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
     });
 
     Route::middleware('can:customers.manage')->group(function () {
+        Route::post('customers/pricing-tiers', [PricingTierController::class, 'store'])->name('customers.pricing-tiers.store');
+        Route::patch('customers/pricing-tiers/{pricing_tier}', [PricingTierController::class, 'update'])->name('customers.pricing-tiers.update');
+        Route::delete('customers/pricing-tiers/{pricing_tier}', [PricingTierController::class, 'destroy'])->name('customers.pricing-tiers.destroy');
         Route::post('customers/categories', [CustomerCategoryController::class, 'store'])->name('customers.categories.store');
         Route::post('customers/categories/reorder', [CustomerCategoryController::class, 'reorder'])->name('customers.categories.reorder');
         Route::patch('customers/categories/{category}', [CustomerCategoryController::class, 'update'])->name('customers.categories.update');

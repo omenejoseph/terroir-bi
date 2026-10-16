@@ -151,7 +151,7 @@ class InventorySpendQuery
      * @param  list<string>  $orderNumbers
      * @return array<string, array<string, float>> order number => item id => factor (0..1)
      */
-    private function deductFactors(array $orderNumbers): array
+    public function deductFactors(array $orderNumbers): array
     {
         // Live bottles per (order, item) from the orders as they read TODAY.
         $liveLines = OrderItem::query()

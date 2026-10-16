@@ -13,7 +13,6 @@ use App\Services\Orders\OrderEditGuard;
 use App\Services\Orders\OrderTotals;
 use App\Support\Money\Money;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Edit a line's quantity and/or unit type within the edit window. Reverses the
@@ -41,13 +40,6 @@ class UpdateOrderItemAction
             $newUnit = $unitType ?? $oldUnit;
 
             $product = $item->inventoryItem;
-
-            // A catalog line can only use the item's sales unit (strict).
-            if ($product instanceof InventoryItem && $newUnit !== (string) $product->sales_unit) {
-                throw ValidationException::withMessages([
-                    'unit_type' => "{$product->name} is sold in {$product->sales_unit}; it can't be ordered in {$newUnit}.",
-                ]);
-            }
 
             $currency = $this->totals->currency($order);
 
