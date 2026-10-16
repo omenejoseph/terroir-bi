@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Cellar;
 
 use App\Actions\Cellar\ExecuteBlendAction;
+use App\Actions\Cellar\SaveBlendTrialAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cellar\ExecuteBlendRequest;
 use App\Http\Requests\Cellar\ProjectBlendRequest;
+use App\Http\Requests\Cellar\StoreBlendTrialRequest;
+use App\Models\BlendTrial;
 use App\Models\User;
 use App\Models\Vessel;
 use App\Queries\CellarPickerOptions;
@@ -30,6 +33,8 @@ class BlendController extends Controller
     {
         return Inertia::render('Cellar/Blend', [
             'preselect' => CellarPreselect::from($request),
+            'trials' => BlendTrial::query()->with('createdBy')->latest()->limit(30)->get()
+                ->map(fn (BlendTrial $trial): array => $trial->toListArray())->values()->all(),
             'vessels' => $options->vessels(),
             'lots' => $options->lots(),
         ]);
@@ -75,6 +80,22 @@ class BlendController extends Controller
         $vessel = Vessel::query()->whereKey((string) $request->validated('destination_vessel_id'))->firstOrFail();
 
         return max(0.0, (float) $vessel->capacity_liters - (float) $vessel->current_volume);
+    }
+
+    public function storeTrial(StoreBlendTrialRequest $request, SaveBlendTrialAction $action): RedirectResponse
+    {
+        /** @var array{name: string, components: list<array{wine_lot_id: string, ratio: float|int|string}>, target_volume?: float|int|string|null, destination_vessel_id?: string|null, projection?: array<string, mixed>|null} $data */
+        $data = $request->validated();
+        $action->execute($data, $this->userId($request));
+
+        return back()->with('success', __('Trial saved.'));
+    }
+
+    public function destroyTrial(BlendTrial $blendTrial): RedirectResponse
+    {
+        $blendTrial->delete();
+
+        return back()->with('success', __('Trial deleted.'));
     }
 
     private function userId(Request $request): string

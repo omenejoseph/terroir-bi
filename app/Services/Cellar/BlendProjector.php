@@ -110,6 +110,8 @@ class BlendProjector
             'wine_type' => $types->count() === 1 ? $types->first() : null,
             'cost_per_liter' => (int) round($costPerLiter),
             'feasible' => collect($parts)->every(fn (array $p): bool => $p['enough']),
+            // The ranges behind each grade, so the workbench can show what "optimal" means.
+            'ranges' => self::RANGES,
         ];
     }
 

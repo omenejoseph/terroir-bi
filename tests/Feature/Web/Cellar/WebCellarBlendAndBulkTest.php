@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Web\Cellar;
 
 use App\Enums\TenantRole;
+use App\Models\AuditLog;
+use App\Models\BlendTrial;
 use App\Models\CellarAddition;
 use App\Models\CellarAnalysis;
 use App\Models\EnologicalProduct;
@@ -92,7 +94,8 @@ class WebCellarBlendAndBulkTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.components.0.volume', '100.000')
             ->assertJsonPath('data.feasible', true)
-            ->assertJsonPath('data.analysis.ph.value', 3.56);     // via [H⁺]: −log10((10^−3.4 + 10^−3.8)/2) = 3.5555
+            ->assertJsonPath('data.analysis.ph.value', 3.56)      // via [H⁺]: −log10((10^−3.4 + 10^−3.8)/2) = 3.5555
+            ->assertJsonPath('data.ranges.ph.optimal', [3.1, 3.6]);
 
         $sources = $this->inSources();
         $response = $this->web('POST', '/cellar/blend', ['destination_vessel_id' => $this->empty->getKey(), 'name' => 'Cuvée', 'sources' => $sources]);
@@ -114,6 +117,32 @@ class WebCellarBlendAndBulkTest extends TestCase
             $this->assertSame('300.000', (string) $this->b->refresh()->current_volume);
             $this->assertSame('400.000', (string) $this->empty->refresh()->current_volume);
         });
+    }
+
+    public function test_blend_trials_are_saved_listed_and_deleted_within_the_tenant(): void
+    {
+        $components = [['wine_lot_id' => $this->a->getKey(), 'ratio' => 70], ['wine_lot_id' => $this->b->getKey(), 'ratio' => 30]];
+        $this->web('POST', '/cellar/blend/trials', ['name' => 'Trial 1', 'components' => $components, 'target_volume' => 200, 'projection' => ['analysis' => ['ph' => ['value' => 3.5]]]])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->web('POST', '/cellar/blend/trials', ['name' => '', 'components' => [$components[0]]])->assertSessionHasErrors(['name', 'components']);
+
+        $this->web('GET', '/cellar/blend')->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('trials', 1)
+            ->where('trials.0.name', 'Trial 1')
+            ->where('trials.0.components.0.ratio', 70)
+            ->where('trials.0.projection.analysis.ph.value', 3.5));
+
+        $trial = $this->inTenant(fn () => BlendTrial::query()->sole());
+        $this->inTenant(fn () => $this->assertTrue(AuditLog::query()->where('subject_id', $trial->getKey())->exists()));
+
+        // Another winery's member can't reach it.
+        $other = $this->createTenant();
+        $stranger = $this->createMember($other, [TenantRole::Admin]);
+        $this->actingAs($stranger)->withSession([ActiveTenantSession::KEY => $other->getKey()])
+            ->delete("/cellar/blend/trials/{$trial->getKey()}")->assertNotFound();
+
+        $this->web('DELETE', "/cellar/blend/trials/{$trial->getKey()}")->assertRedirect();
+        $this->inTenant(fn () => $this->assertSame(0, BlendTrial::query()->count()));
     }
 
     public function test_bulk_additions_and_bulk_analyses(): void

@@ -480,6 +480,8 @@ Route::middleware('tenant.web')->group(function () {
 
         Route::post('cellar/blend', [BlendController::class, 'execute'])->name('cellar.blend.execute');
         Route::post('cellar/blend/by-ratio', [BlendController::class, 'byRatio'])->name('cellar.blend.by-ratio');
+        Route::post('cellar/blend/trials', [BlendController::class, 'storeTrial'])->name('cellar.blend.trials.store');
+        Route::delete('cellar/blend/trials/{blendTrial}', [BlendController::class, 'destroyTrial'])->name('cellar.blend.trials.destroy');
         Route::post('cellar/bulk-additions', [CellarController::class, 'storeBulkAdditions'])->name('cellar.bulk-additions.store');
         Route::post('cellar/bulk-analyses', [CellarController::class, 'storeBulkAnalyses'])->name('cellar.bulk-analyses.store');
 
