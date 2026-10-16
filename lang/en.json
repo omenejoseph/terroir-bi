@@ -1550,5 +1550,12 @@
     "Total after / EU": "Total after / EU",
     "above target": "above target",
     "Below target": "Below target",
-    "No reading in 30 days": "No reading in 30 days"
+    "No reading in 30 days": "No reading in 30 days",
+    ":done of :total done": ":done of :total done",
+    ":n waiting to sync": ":n waiting to sync",
+    "Offline — ticks are kept on this phone": "Offline — ticks are kept on this phone",
+    "Save · next": "Save · next",
+    "moved": "moved",
+    "waiting to sync": "waiting to sync",
+    "Could not save.": "Could not save."
 }

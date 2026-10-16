@@ -231,6 +231,25 @@ class WebCellarPlannedWorkTest extends TestCase
             ->where('preselect.type', null));
     }
 
+    public function test_today_answers_json_so_offline_ticks_can_be_replayed(): void
+    {
+        [$lot, $a] = $this->seedLot();
+        $pump = $this->plan($lot, $a);
+        $reading = $this->plan($lot, $a, 'ANALYSIS', ['metrics' => ['free_so2']]);
+        $json = fn (string $uri, array $data = []) => $this->actingAs($this->cellar)
+            ->withSession([ActiveTenantSession::KEY => $this->tenant->getKey()])
+            ->postJson($uri, $data);
+
+        $json("/cellar/activities/{$pump->getKey()}/complete")->assertOk()->assertJsonPath('data.status', 'DONE');
+        // The queue replays a tick that already reached the server: settled, not an error.
+        $json("/cellar/activities/{$pump->getKey()}/complete")->assertStatus(409)->assertJsonPath('data.status', 'DONE');
+        $json("/cellar/activities/{$pump->getKey()}/skip", ['reason' => 'not_needed'])->assertStatus(409);
+
+        // A real problem is still a 422 on the field.
+        $json("/cellar/activities/{$reading->getKey()}/complete")->assertUnprocessable()->assertJsonValidationErrors(['values']);
+        $json("/cellar/activities/{$reading->getKey()}/reschedule", ['planned_for' => '2026-10-15'])->assertOk()->assertJsonPath('data.planned_for', '2026-10-15');
+    }
+
     public function test_invalid_payload_errors_come_back_on_the_field(): void
     {
         [$lot, $a] = $this->seedLot();

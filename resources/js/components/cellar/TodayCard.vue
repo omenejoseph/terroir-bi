@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { router } from '@inertiajs/vue3';
-import type { RequestPayload } from '@inertiajs/core';
-import { Check, Loader2 } from 'lucide-vue-next';
+import { Check } from 'lucide-vue-next';
 
 import Input from '@/components/ui/Input.vue';
+import { type QueuedAction, useActivityQueue } from '@/composables/useActivityQueue';
 import { useTranslations } from '@/composables/useTranslations';
 import { ACTIVITY_ICONS, METRIC_LABELS, activityTitle, addDays, describeActivity, parseDecimal, qty } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
@@ -13,7 +12,10 @@ import type { AnalysisParam, CellarActivity } from '@/types/cellar';
 /**
  * One planned task on Cellar › Today, built for a phone held at the tank:
  * the vessel is the headline, the one-tap ✓ is 56px, and every number field
- * opens the decimal keypad.
+ * opens the decimal keypad. Readings are typed right on the card ("Save ·
+ * next" moves to the next card's first field); swiping the card left opens
+ * Skip / postpone. Ticks go through the offline queue: the card is done at
+ * once and the server hears about it as soon as it can.
  *
  * Adjust is offered where a planned amount can differ in practice (addition,
  * transfer, topping). The prototype also offered it on vineyard work, where it
@@ -24,15 +26,17 @@ const props = defineProps<{
     today: string;
     meId: string | null;
     canManage: boolean;
-    busy: boolean;
 }>();
 
-const emit = defineEmits<{ busy: [id: string | null] }>();
+const emit = defineEmits<{ next: [id: string] }>();
 
 const { t } = useTranslations();
+const queue = useActivityQueue();
+const error = computed(() => queue.errors[props.activity.id] ?? null);
 
 type Panel = 'adjust' | 'readings' | 'skip' | null;
-const panel = ref<Panel>(null);
+// Reading tasks open with their fields — that's the whole job at the tank.
+const panel = ref<Panel>(props.activity.type === 'ANALYSIS' && props.canManage ? 'readings' : null);
 const amount = ref('');
 const readings = ref<Partial<Record<AnalysisParam, string>>>({});
 const otherDate = ref('');
@@ -68,15 +72,8 @@ function toggle(next: Exclude<Panel, null>): void {
     }
 }
 
-function post(path: string, data: RequestPayload = {}): void {
-    emit('busy', a.value.id);
-    router.post(`/cellar/activities/${a.value.id}/${path}`, data, {
-        preserveScroll: true,
-        onSuccess: () => {
-            panel.value = null;
-        },
-        onFinish: () => emit('busy', null),
-    });
+function post(action: QueuedAction, data: Record<string, unknown> = {}): void {
+    void queue.submit(a.value.id, action, data);
 }
 
 function done(): void {
@@ -91,6 +88,24 @@ function saveAdjusted(): void {
 function saveReadings(): void {
     if (Object.keys(parsedReadings.value).length === 0) return;
     post('complete', { values: parsedReadings.value });
+    emit('next', a.value.id);
+}
+
+// ── Swipe left → Skip / postpone (the buttons stay for everyone else) ──────
+let startX: number | null = null;
+const offset = ref(0);
+function onDown(e: PointerEvent): void {
+    if (!props.canManage || e.pointerType === 'mouse' || (e.target as HTMLElement).closest('input, button, label')) return;
+    startX = e.clientX;
+}
+function onMove(e: PointerEvent): void {
+    if (startX === null) return;
+    offset.value = Math.min(0, Math.max(-120, e.clientX - startX));
+}
+function onUp(): void {
+    if (startX !== null && offset.value <= -80) panel.value = 'skip';
+    startX = null;
+    offset.value = 0;
 }
 
 function moveTo(date: string, reason: string | null = null): void {
@@ -107,11 +122,17 @@ function skip(reason: 'not_needed' | 'other'): void {
     <div
         :class="
             cn(
-                'border bg-card p-4',
+                'touch-pan-y border bg-card p-4 transition-transform',
                 a.overdue ? 'border-tag-orange-foreground/50' : 'border-border',
+                error !== null && 'border-destructive',
             )
         "
+        :style="offset ? { transform: `translateX(${offset}px)` } : undefined"
         :data-activity="a.id"
+        @pointerdown="onDown"
+        @pointermove="onMove"
+        @pointerup="onUp"
+        @pointercancel="onUp"
     >
         <div class="flex items-start gap-3">
             <div class="min-w-0 flex-1">
@@ -135,28 +156,18 @@ function skip(reason: 'not_needed' | 'other'): void {
                     <span class="min-w-0">{{ describeActivity(a, t) }}</span>
                 </div>
                 <p v-if="a.note" class="mt-1 truncate text-xs text-muted-foreground">{{ a.note }}</p>
+                <p v-if="error !== null" class="mt-1 text-xs text-destructive" role="alert">{{ error || t('Could not save.') }}</p>
             </div>
 
             <template v-if="canManage">
                 <button
-                    v-if="isAnalysis"
+                    v-if="!isAnalysis"
                     type="button"
-                    class="flex size-14 shrink-0 items-center justify-center bg-primary text-sm font-semibold text-primary-foreground transition-transform active:scale-95 disabled:opacity-50"
-                    :disabled="busy"
-                    @click="toggle('readings')"
-                >
-                    {{ t('Enter') }}
-                </button>
-                <button
-                    v-else
-                    type="button"
-                    class="flex size-14 shrink-0 items-center justify-center bg-success text-success-foreground transition-transform active:scale-95 disabled:opacity-50"
+                    class="flex size-14 shrink-0 items-center justify-center bg-success text-success-foreground transition-transform active:scale-95"
                     :aria-label="t('Done as planned')"
-                    :disabled="busy"
                     @click="done"
                 >
-                    <Loader2 v-if="busy" class="size-6 animate-spin" />
-                    <Check v-else class="size-7" :stroke-width="2.5" />
+                    <Check class="size-7" :stroke-width="2.5" />
                 </button>
             </template>
         </div>
@@ -166,7 +177,7 @@ function skip(reason: 'not_needed' | 'other'): void {
                 v-if="canAdjust"
                 type="button"
                 :class="cn('h-9 flex-1 text-xs font-medium transition-colors', panel === 'adjust' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-accent')"
-                :disabled="busy"
+               
                 @click="toggle('adjust')"
             >
                 {{ t('Adjust') }}
@@ -174,7 +185,7 @@ function skip(reason: 'not_needed' | 'other'): void {
             <button
                 type="button"
                 :class="cn('h-9 flex-1 text-xs font-medium transition-colors', panel === 'skip' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-accent')"
-                :disabled="busy"
+               
                 @click="toggle('skip')"
             >
                 {{ t('Skip / postpone') }}
@@ -193,7 +204,7 @@ function skip(reason: 'not_needed' | 'other'): void {
             <button
                 type="button"
                 class="h-12 bg-success px-5 text-sm font-semibold text-success-foreground disabled:opacity-50"
-                :disabled="busy || amountValue === null || amountValue <= 0"
+                :disabled="amountValue === null || amountValue <= 0"
                 @click="saveAdjusted"
             >
                 {{ t('Done') }}
@@ -204,15 +215,15 @@ function skip(reason: 'not_needed' | 'other'): void {
         <div v-if="panel === 'readings'" class="mt-3 flex flex-col gap-2">
             <label v-for="m in metrics" :key="m" class="flex items-center gap-3">
                 <span class="w-28 shrink-0 text-sm text-muted-foreground">{{ t(METRIC_LABELS[m] ?? m) }}</span>
-                <Input v-model="readings[m]" inputmode="decimal" class="h-12 flex-1 text-center text-lg" />
+                <Input v-model="readings[m]" inputmode="decimal" data-reading class="h-12 flex-1 text-center text-lg" @keydown.enter.prevent="saveReadings" />
             </label>
             <button
                 type="button"
                 class="h-12 bg-success text-sm font-semibold text-success-foreground disabled:opacity-50"
-                :disabled="busy || Object.keys(parsedReadings).length === 0"
+                :disabled="Object.keys(parsedReadings).length === 0"
                 @click="saveReadings"
             >
-                {{ t('Save readings') }}
+                {{ t('Save · next') }}
             </button>
         </div>
 
@@ -221,10 +232,10 @@ function skip(reason: 'not_needed' | 'other'): void {
             <div>
                 <p class="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{{ t('Move to') }}</p>
                 <div class="grid grid-cols-3 gap-2">
-                    <button type="button" class="h-10 bg-muted text-xs font-medium hover:bg-accent" :disabled="busy" @click="moveTo(addDays(today, 1), t('No time'))">
+                    <button type="button" class="h-10 bg-muted text-xs font-medium hover:bg-accent" @click="moveTo(addDays(today, 1), t('No time'))">
                         {{ t('Tomorrow') }}
                     </button>
-                    <button type="button" class="h-10 bg-muted text-xs font-medium hover:bg-accent" :disabled="busy" @click="moveTo(addDays(today, 3), t('No time'))">
+                    <button type="button" class="h-10 bg-muted text-xs font-medium hover:bg-accent" @click="moveTo(addDays(today, 3), t('No time'))">
                         {{ t('+3 days') }}
                     </button>
                     <input
@@ -240,10 +251,10 @@ function skip(reason: 'not_needed' | 'other'): void {
             <div>
                 <p class="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{{ t('Skip') }}</p>
                 <div class="grid grid-cols-2 gap-2">
-                    <button type="button" class="h-10 bg-muted text-xs font-medium hover:bg-accent" :disabled="busy" @click="skip('not_needed')">
+                    <button type="button" class="h-10 bg-muted text-xs font-medium hover:bg-accent" @click="skip('not_needed')">
                         {{ t('Not needed') }}
                     </button>
-                    <button type="button" class="h-10 bg-muted text-xs font-medium hover:bg-accent" :disabled="busy" @click="skip('other')">
+                    <button type="button" class="h-10 bg-muted text-xs font-medium hover:bg-accent" @click="skip('other')">
                         {{ t('Other') }}
                     </button>
                 </div>

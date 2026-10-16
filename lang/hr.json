@@ -1550,5 +1550,12 @@
     "Total after / EU": "Ukupni nakon / EU",
     "above target": "iznad cilja",
     "Below target": "Ispod cilja",
-    "No reading in 30 days": "Bez mjerenja 30 dana"
+    "No reading in 30 days": "Bez mjerenja 30 dana",
+    ":done of :total done": ":done od :total gotovo",
+    ":n waiting to sync": "Čeka slanje: :n",
+    "Offline — ticks are kept on this phone": "Izvan mreže — oznake se čuvaju na ovom telefonu",
+    "Save · next": "Spremi · dalje",
+    "moved": "premješteno",
+    "waiting to sync": "čeka slanje",
+    "Could not save.": "Spremanje nije uspjelo."
 }

@@ -104,7 +104,10 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // JSON for the API, and for the web routes a page calls with fetch() asking for JSON
+        // (SO₂ preview, Today's offline queue, the Record drawer). Inertia visits accept HTML
+        // and send X-Inertia, so their validation errors still redirect back with the errors.
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*') || ($request->expectsJson() && ! $request->hasHeader('X-Inertia')),
         );
     })->create();
