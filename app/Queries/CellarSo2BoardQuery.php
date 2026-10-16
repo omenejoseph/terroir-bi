@@ -66,11 +66,12 @@ class CellarSo2BoardQuery
             $lotPh = isset($ph[$key]) ? (float) $ph[$key]->ph : null;
             $lotSugar = isset($sugar[$key]) ? (float) $sugar[$key]->residual_sugar : null;
 
-            // Lot reading: the lot-level one, else the newest across its vessels.
+            // The lot-level reading (else the newest across its vessels) — what a vessel without its own inherits.
             $byVessel = $so2[$key] ?? [];
             $lotReading = $this->latest->lotReading($byVessel);
 
             $vessels = [];
+            $effective = [];
             $firstOak = false;
             foreach ($lot->vesselLots->sortBy(fn (VesselLot $vl) => (string) $vl->vessel?->name, SORT_NATURAL | SORT_FLAG_CASE) as $vl) {
                 $vessel = $vl->vessel;
@@ -78,6 +79,9 @@ class CellarSo2BoardQuery
                     continue;
                 }
                 $own = $byVessel[(string) $vl->vessel_id] ?? null;
+                if (($own ?? $lotReading) !== null) {
+                    $effective[] = $own ?? $lotReading;
+                }
                 $oak = $this->so2->isOak($vessel->material, $vessel->type);
                 $firstOak = $vessels === [] ? $oak : $firstOak;
 
@@ -95,8 +99,16 @@ class CellarSo2BoardQuery
                 ];
             }
 
-            $reading = $this->reading($lotReading, $lotPh, $today);
-            $totalSo2 = $lotReading?->total_so2 !== null ? (float) $lotReading->total_so2 : null;
+            // The lot row shows its worst vessel — the lowest free SO₂ any vessel is at (the one
+            // that gets dosed, and the one at risk); a lot without vessels shows its own reading.
+            // Doses are planned per vessel from these same readings, so the row and the dose agree.
+            $withFree = array_values(array_filter($effective, fn (CellarAnalysis $a): bool => $a->free_so2 !== null));
+            usort($withFree, fn (CellarAnalysis $a, CellarAnalysis $b): int => (float) $a->free_so2 <=> (float) $b->free_so2);
+            $shown = $withFree[0] ?? $lotReading;
+            $reading = $this->reading($shown, $lotPh, $today);
+            // EU limits apply to the highest total SO₂ in the lot.
+            $totals = array_values(array_filter(array_map(fn (CellarAnalysis $a): ?float => $a->total_so2 !== null ? (float) $a->total_so2 : null, [...$effective, ...($lotReading !== null ? [$lotReading] : [])]), fn (?float $v): bool => $v !== null));
+            $totalSo2 = $totals === [] ? null : max($totals);
 
             $rows[] = [
                 'id' => $key,

@@ -116,6 +116,20 @@ class WebCellarSo2Test extends TestCase
         $this->assertTrue(AuditLog::query()->where('action', 'cellar.so2_applied')->exists());
     }
 
+    public function test_target_mode_doses_the_difference_to_the_target_the_page_starts_from(): void
+    {
+        // The page starts each row at the wine's reference target (red: 28)…
+        $this->web('GET', '/cellar/so2')->assertInertia(fn (AssertableInertia $page) => $page->where('board.lots.0.reference_target', 28));
+
+        // …and target mode books only what's missing: 18 → 28 is +10 mg/L, 15 g in 1000 L.
+        $this->web('POST', '/cellar/so2/apply', [...$this->dose(28), 'mode' => 'target'])->assertRedirect('/cellar/so2')->assertSessionHasNoErrors();
+
+        $this->actingAsTenant($this->tenant);
+        $addition = CellarAddition::query()->sole();
+        $this->assertSame('15.000', (string) $addition->quantity);
+        $this->assertStringContainsString('18 → 28', (string) $addition->note);
+    }
+
     public function test_a_stock_shortfall_comes_back_as_an_error(): void
     {
         $this->web('POST', '/cellar/so2/apply', $this->dose(100))->assertSessionHasErrors();

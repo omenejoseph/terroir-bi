@@ -1535,5 +1535,20 @@
     "rack, top up": "rack, top up",
     "pump-over, filtration…": "pump-over, filtration…",
     "notes, score": "notes, score",
-    "loss or gain": "loss or gain"
+    "loss or gain": "loss or gain",
+    ":type default :n mg/L": ":type default :n mg/L",
+    "Add SO₂ now?": "Add SO₂ now?",
+    "Add a fixed amount": "Add a fixed amount",
+    "Add now": "Add now",
+    "Add now to :n vessels…": "Add now to :n vessels…",
+    "Draws from stock": "Draws from stock",
+    "Each addition is booked on its lot and vessel.": "Each addition is booked on its lot and vessel.",
+    "Molecular": "Molecular",
+    "Molecular SO₂ at the measured pH: free ÷ (1 + 10^(pH − 1.81)). 0.5–0.8 mg/L is the usual protective range.": "Molecular SO₂ at the measured pH: free ÷ (1 + 10^(pH − 1.81)). 0.5–0.8 mg/L is the usual protective range.",
+    "Stock after": "Stock after",
+    "To a target": "To a target",
+    "Total after / EU": "Total after / EU",
+    "above target": "above target",
+    "Below target": "Below target",
+    "No reading in 30 days": "No reading in 30 days"
 }

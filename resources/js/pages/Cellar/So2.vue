@@ -16,28 +16,32 @@ import Checkbox from '@/components/ui/Checkbox.vue';
 import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import ProgressBar from '@/components/ui/ProgressBar.vue';
 import Select from '@/components/ui/Select.vue';
+import SidePanel from '@/components/ui/SidePanel.vue';
 import Tabs from '@/components/ui/Tabs.vue';
-import { confirmDialog } from '@/composables/useConfirm';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
-import { LOT_STATUS_LABELS, SO2_STATUS_BG, SO2_STATUS_LABELS, SO2_STATUS_TONES, dayLabel, parseDecimal, qty, so2Status } from '@/lib/cellar';
+import { LOT_STATUS_LABELS, SO2_STATUS_BG, SO2_STATUS_LABELS, SO2_STATUS_TONES, WINE_TYPE_LABELS, dayLabel, molecularSo2, parseDecimal, qty, so2Status } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import { csrfHeader } from '@/lib/csrf';
 import { formatMoney, formatUnitPrice } from '@/lib/money';
 import { copyText, so2ShareText } from '@/lib/so2Share';
-import type { MemberOption, So2Board, So2DosePlan, So2Lot, So2Status, So2Vessel } from '@/types/cellar';
+import type { CellarPreselect, MemberOption, So2Board, So2DosePlan, So2Lot, So2Status, So2Vessel } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { TabItem } from '@/types/ui';
 
 /**
- * Cellar › SO₂ — plan and apply sulphite additions across the cellar, or
- * record the lab's readings. Doses are never computed here: every selection
- * is sent to the server's dose planner (So2DosePlanner) for a live preview,
- * and Apply / Plan recompute on the server, so the numbers on screen are the
- * numbers that get booked.
+ * Cellar › SO₂ — bring each wine to its target free SO₂ (or add a fixed
+ * amount), or record the lab's readings. Each row starts at the wine's
+ * reference target (type, +3 in oak) and the wines below it start selected;
+ * the row shows molecular SO₂ now and after, and total SO₂ after against the
+ * EU limit. Doses are never computed here: every selection is sent to the
+ * server's dose planner (So2DosePlanner) for a live preview, and Apply / Plan
+ * recompute on the server, so the numbers on screen are the numbers booked.
+ * Apply opens a confirmation listing every line and the stock it draws.
  */
-const props = defineProps<{ board: So2Board; members?: MemberOption[] }>();
+const props = defineProps<{ board: So2Board; members?: MemberOption[]; preselect: CellarPreselect }>();
 
 const page = usePage<SharedProps>();
 const { t } = useTranslations();
@@ -56,7 +60,7 @@ const modeTabs = computed<TabItem[]>(() => [
 const productId = ref<string>(props.board.products[0]?.id ?? '');
 const product = computed(() => props.board.products.find((p) => p.id === productId.value) ?? null);
 const productOptions = computed(() => props.board.products.map((p) => ({ value: p.id, label: `${p.name} (${qty(p.current_stock)} ${p.unit})` })));
-const doseMode = ref<'add' | 'target'>('add');
+const doseMode = ref<'add' | 'target'>('target');
 const setAllValue = ref('30');
 const note = ref('');
 
@@ -66,6 +70,11 @@ const lotStatus = ref('');
 const material = ref('');
 const search = ref('');
 const onlyNeeding = ref(false);
+/** Which wines the table shows: below their target, all, or with no reading in 30 days. */
+const view = ref<'below' | 'all' | 'stale'>(props.preselect.lots.length ? 'all' : 'below');
+const belowTarget = (lot: So2Lot) => lot.free_so2 !== null && lot.free_so2 < lot.reference_target;
+const stale = (lot: So2Lot) => lot.days_since === null || lot.days_since >= 30;
+const viewCounts = computed(() => ({ below: props.board.lots.filter(belowTarget).length, all: props.board.lots.length, stale: props.board.lots.filter(stale).length }));
 
 const MATERIALS = computed(() => [
     { value: '', label: t('All vessels') },
@@ -95,14 +104,33 @@ const values = reactive<Record<string, string>>({});
 const selected = ref<string[]>([]);
 const expanded = ref<string[]>([]);
 
+/** Target mode starts every row at its reference target; add mode starts empty. */
 function initValues(): void {
     for (const key of Object.keys(values)) delete values[key];
+    const target = doseMode.value === 'target';
     for (const lot of props.board.lots) {
-        values[lot.id] = '';
-        for (const v of lot.vessels) values[`${lot.id}:${v.id}`] = '';
+        values[lot.id] = target ? String(lot.reference_target) : '';
+        for (const v of lot.vessels) values[`${lot.id}:${v.id}`] = target && v.reference_target !== lot.reference_target ? String(v.reference_target) : '';
     }
 }
-watch(() => props.board.lots, initValues, { immediate: true });
+
+/** Start with the wines that need it: those passed in the link, else (target mode) those below target. */
+function autoSelect(): void {
+    if (props.preselect.lots.length) {
+        selected.value = props.board.lots.filter((l) => props.preselect.lots.includes(l.id)).map((l) => l.id);
+
+        return;
+    }
+    selected.value = doseMode.value === 'target' ? props.board.lots.filter(belowTarget).map((l) => l.id) : [];
+}
+watch(
+    () => props.board.lots,
+    () => {
+        initValues();
+        autoSelect();
+    },
+    { immediate: true },
+);
 
 const vkey = (lot: So2Lot, v: So2Vessel) => `${lot.id}:${v.id}`;
 const isSel = (key: string) => selected.value.includes(key);
@@ -117,6 +145,8 @@ const visible = computed(() => {
     const q = search.value.trim().toLowerCase();
 
     return props.board.lots.filter((lot) => {
+        if (view.value === 'below' && !belowTarget(lot) && !isSel(lot.id)) return false;
+        if (view.value === 'stale' && !stale(lot)) return false;
         if (statusFilter.value !== null && lot.so2_status !== statusFilter.value) return false;
         if (lotStatus.value !== '' && lot.status !== lotStatus.value) return false;
         if (material.value !== '' && materialOf(lot) !== material.value) return false;
@@ -235,10 +265,11 @@ async function fetchPreview(): Promise<void> {
     }
 }
 
+// Immediate: the page opens with the wines below target already selected.
 watch([items, productId, doseMode], () => {
     if (timer) clearTimeout(timer);
     timer = setTimeout(fetchPreview, 250);
-}, { deep: true });
+}, { deep: true, immediate: true });
 
 const lineByKey = computed(() => new Map((plan.value?.lines ?? []).map((l) => [`${l.wine_lot_id}:${l.vessel_id ?? ''}`, l])));
 
@@ -263,6 +294,27 @@ function projected(current: number | null, key: string, fallback?: string): numb
 
     return doseMode.value === 'target' ? v : (current ?? 0) + v;
 }
+
+/** Molecular SO₂ at the free level the row would end at (its own value, or the lot's when a vessel has none). */
+function molecularAfter(ph: number | null, current: number | null, key: string, fallback?: string): number | null {
+    const a = projected(current, key, fallback);
+
+    return a === null ? null : molecularSo2(a, ph);
+}
+/** Total SO₂ after the addition — what the EU limit applies to. */
+function totalAfter(current: number | null, total: number | null, key: string, fallback?: string): number | null {
+    const a = projected(current, key, fallback);
+    if (a === null || total === null) return null;
+
+    return Math.round(total + Math.max(0, a - (current ?? 0)));
+}
+const isAbove = (lot: So2Lot) => doseMode.value === 'target' && lot.free_so2 !== null && lot.free_so2 >= (parseDecimal(values[lot.id]) ?? lot.reference_target);
+
+watch(doseMode, () => {
+    expanded.value = [];
+    initValues();
+    autoSelect();
+});
 
 const currency = computed(() => product.value?.cost_per_unit?.currency ?? page.props.org?.default_currency ?? 'EUR');
 const money = (minor: number | null) => (minor === null ? '—' : formatMoney(minor, currency.value));
@@ -297,25 +349,20 @@ function payload(): Record<string, unknown> {
     return { enological_product_id: productId.value, mode: doseMode.value, note: note.value.trim() || null, items: items.value };
 }
 
-async function apply(): Promise<void> {
-    if (plan.value === null) return;
-    const snapshot = plan.value;
-    const ok = await confirmDialog({
-        title: t('Apply SO₂ to :n vessels?', { n: snapshot.lines.length }),
-        description: t('Draws :qty :unit of :product from stock (:left left). Each addition is booked on its lot and vessel.', {
-            qty: qty(snapshot.totals.quantity),
-            unit: snapshot.product.unit,
-            product: snapshot.product.name,
-            left: qty(snapshot.totals.stock_after),
-        }),
-        confirmLabel: t('Apply now'),
-    });
-    if (!ok) return;
+/** "Add now…" opens a sheet listing every line and the stock it draws; this books it. */
+const confirming = ref<So2DosePlan | null>(null);
+function apply(): void {
+    if (plan.value !== null) confirming.value = plan.value;
+}
+function confirmApply(): void {
+    const snapshot = confirming.value;
+    if (snapshot === null) return;
     busy.value = true;
     router.post('/cellar/so2/apply', payload() as never, {
         preserveScroll: true,
         onSuccess: () => {
             applied.value = snapshot;
+            confirming.value = null;
             resetSelection();
         },
         onFinish: () => (busy.value = false),
@@ -348,6 +395,13 @@ function resetSelection(): void {
     initValues();
     plan.value = null;
 }
+
+const stockPct = computed(() => {
+    const p = plan.value;
+    const stock = Number(p?.product.current_stock ?? 0);
+
+    return p && stock > 0 ? Math.max(0, Math.min(100, (Number(p.totals.stock_after) / stock) * 100)) : 0;
+});
 
 const summaryChips = computed(() =>
     (['critical', 'low', 'ok', 'high', 'no_data'] as So2Status[]).map((s) => ({ key: s, label: t(SO2_STATUS_LABELS[s]), count: props.board.summary[s] })),
@@ -422,18 +476,18 @@ const summaryChips = computed(() =>
                         </p>
                     </FormField>
                     <FormField :label="doseMode === 'add' ? t('Set all to (+mg/L)') : t('Set all targets to (mg/L)')" :hint="t('Applies to the lots shown; edit per lot below.')">
-                        <div class="flex gap-2">
-                            <Input v-model="setAllValue" inputmode="decimal" class="w-20" />
-                            <Button size="sm" variant="outline" @click="setAll">{{ t('Set') }}</Button>
+                        <div class="flex flex-wrap gap-2">
                             <Tabs
                                 variant="solid"
                                 :items="[
-                                    { label: t('Add'), value: 'add' },
-                                    { label: t('Target'), value: 'target' },
+                                    { label: t('To a target'), value: 'target' },
+                                    { label: t('Add a fixed amount'), value: 'add' },
                                 ]"
                                 :current="doseMode"
                                 @select="doseMode = $event as 'add' | 'target'"
                             />
+                            <Input v-model="setAllValue" inputmode="decimal" class="w-20" :aria-label="doseMode === 'add' ? t('Set all to (+mg/L)') : t('Set all targets to (mg/L)')" />
+                            <Button size="sm" variant="outline" @click="setAll">{{ t('Set') }}</Button>
                         </div>
                     </FormField>
                     <FormField v-slot="{ id, invalid }" :label="t('Note (optional)')">
@@ -456,6 +510,18 @@ const summaryChips = computed(() =>
                             <Button v-if="selected.length" size="sm" variant="ghost" @click="selected = []">{{ t('Clear') }}</Button>
                         </div>
                     </div>
+                    <div class="flex flex-wrap items-center gap-1.5 border-b border-border px-3 pt-3" role="group" :aria-label="t('Show')">
+                        <button
+                            v-for="[key, label] in ([['below', 'Below target'], ['all', 'All'], ['stale', 'No reading in 30 days']] as const)"
+                            :key="key"
+                            type="button"
+                            :aria-pressed="view === key"
+                            :class="cn('mb-3 px-2.5 py-1 text-xs', view === key ? 'bg-primary text-primary-foreground' : 'border border-border hover:bg-accent')"
+                            @click="view = key"
+                        >
+                            {{ t(label) }} · {{ viewCounts[key] }}
+                        </button>
+                    </div>
                     <div class="flex flex-wrap items-center gap-2 border-b border-border p-3">
                         <Select v-model="lotStatus" :options="LOT_STATUSES" class="w-36" />
                         <Select v-model="material" :options="MATERIALS" class="w-40" />
@@ -476,8 +542,8 @@ const summaryChips = computed(() =>
                                     <th class="px-2 py-2 text-right font-medium">{{ t('Free SO₂') }}</th>
                                     <th class="px-2 py-2 text-right font-medium">{{ doseMode === 'add' ? '+mg/L' : t('Target') }}</th>
                                     <th class="px-2 py-2 text-right font-medium">{{ product?.name ?? t('Dose') }}</th>
-                                    <th class="hidden px-2 py-2 text-right font-medium sm:table-cell">→ SO₂</th>
-                                    <th class="hidden px-2 py-2 text-right font-medium md:table-cell">{{ t('Analysed') }}</th>
+                                    <th class="hidden px-2 py-2 text-right font-medium sm:table-cell" :title="t('Molecular SO₂ at the measured pH: free ÷ (1 + 10^(pH − 1.81)). 0.5–0.8 mg/L is the usual protective range.')">{{ t('Molecular') }}</th>
+                                    <th class="hidden px-2 py-2 text-right font-medium md:table-cell">{{ t('Total after / EU') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -516,6 +582,7 @@ const summaryChips = computed(() =>
                                                 <AlertTriangle v-if="lot.so2_status === 'critical'" class="size-3" />
                                                 {{ lot.free_so2 ?? '—' }}
                                             </span>
+                                            <div class="text-[10px] text-muted-foreground">{{ lot.days_since === null ? t('no reading') : lot.days_since === 0 ? t('today') : t(':nd ago', { n: lot.days_since }) }}</div>
                                         </td>
                                         <td class="px-2 py-1">
                                             <Input
@@ -524,16 +591,29 @@ const summaryChips = computed(() =>
                                                 inputmode="decimal"
                                                 class="ml-auto h-8 w-16 text-right"
                                                 :placeholder="doseMode === 'target' ? String(lot.reference_target) : ''"
+                                                :title="doseMode === 'target' ? t(':type default :n mg/L', { type: t(WINE_TYPE_LABELS[lot.wine_type ?? 'RED'] ?? 'Wine'), n: lot.reference_target }) : undefined"
                                                 :aria-label="t('mg/L for :lot', { lot: lot.name })"
                                                 @update:model-value="onValue(lot.id, $event)"
                                             />
                                         </td>
-                                        <td class="px-2 py-1.5 text-right font-semibold tabular-nums">{{ lotDose(lot) ?? '' }}</td>
-                                        <td class="hidden px-2 py-1.5 text-right tabular-nums text-tag-blue-foreground sm:table-cell">
-                                            <template v-if="!expanded.includes(lot.id)">{{ qty(projected(lot.free_so2, lot.id)) === '—' ? '' : qty(projected(lot.free_so2, lot.id)) }}</template>
+                                        <td class="px-2 py-1.5 text-right font-semibold tabular-nums">
+                                            <template v-if="lotDose(lot)">{{ lotDose(lot) }}</template>
+                                            <span v-else-if="isAbove(lot)" class="text-[11px] font-normal text-muted-foreground">{{ t('above target') }}</span>
                                         </td>
-                                        <td class="hidden px-2 py-1.5 text-right text-muted-foreground md:table-cell">
-                                            {{ lot.days_since === null ? '—' : lot.days_since === 0 ? t('today') : t(':nd ago', { n: lot.days_since }) }}
+                                        <td class="hidden px-2 py-1.5 text-right tabular-nums sm:table-cell">
+                                            {{ qty(molecularSo2(lot.free_so2, lot.ph)) }}
+                                            <template v-if="!expanded.includes(lot.id) && isSel(lot.id) && molecularAfter(lot.ph, lot.free_so2, lot.id) !== null">
+                                                → <b class="text-tag-blue-foreground">{{ qty(molecularAfter(lot.ph, lot.free_so2, lot.id)) }}</b>
+                                            </template>
+                                        </td>
+                                        <td class="hidden px-2 py-1.5 text-right tabular-nums md:table-cell">
+                                            <template v-if="lot.compliance">
+                                                <span :class="(totalAfter(lot.free_so2, lot.total_so2, lot.id) ?? lot.total_so2 ?? 0) > lot.compliance.limit ? 'font-semibold text-destructive' : ''">
+                                                    {{ isSel(lot.id) && totalAfter(lot.free_so2, lot.total_so2, lot.id) !== null ? totalAfter(lot.free_so2, lot.total_so2, lot.id) : lot.total_so2 }}
+                                                </span>
+                                                <span class="text-muted-foreground"> / {{ lot.compliance.limit }}</span>
+                                            </template>
+                                            <span v-else class="text-muted-foreground">—</span>
                                         </td>
                                     </tr>
                                     <template v-if="expanded.includes(lot.id)">
@@ -559,8 +639,11 @@ const summaryChips = computed(() =>
                                                 />
                                             </td>
                                             <td class="px-2 text-right font-semibold tabular-nums">{{ vesselDose(lot, v) ?? '' }}</td>
-                                            <td class="hidden px-2 text-right tabular-nums text-tag-blue-foreground sm:table-cell">
-                                                {{ projected(v.free_so2, vkey(lot, v)) === null ? '' : qty(projected(v.free_so2, vkey(lot, v))) }}
+                                            <td class="hidden px-2 text-right tabular-nums sm:table-cell">
+                                                {{ qty(molecularSo2(v.free_so2, lot.ph)) }}
+                                                <template v-if="isSel(vkey(lot, v)) && molecularAfter(lot.ph, v.free_so2, vkey(lot, v), values[lot.id]) !== null">
+                                                    → <b class="text-tag-blue-foreground">{{ qty(molecularAfter(lot.ph, v.free_so2, vkey(lot, v), values[lot.id])) }}</b>
+                                                </template>
                                             </td>
                                             <td class="hidden md:table-cell" />
                                         </tr>
@@ -593,6 +676,11 @@ const summaryChips = computed(() =>
                         </div>
                     </div>
 
+                    <div class="flex flex-col gap-1 text-xs">
+                        <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Stock after') }}</span><span class="tabular-nums">{{ qty(plan.totals.stock_after) }} / {{ qty(plan.product.current_stock) }} {{ plan.product.unit }}</span></div>
+                        <ProgressBar :value="stockPct" />
+                    </div>
+
                     <Callout v-if="plan.totals.short_by" tone="warning" :title="t('Not enough stock')">
                         {{ t('Need :need :unit, available :have :unit.', { need: qty(plan.totals.quantity), have: qty(plan.product.current_stock), unit: plan.product.unit }) }}
                     </Callout>
@@ -606,7 +694,7 @@ const summaryChips = computed(() =>
                         <Button size="sm" variant="outline" @click="sheet?.print()"><Printer class="size-3.5" /> {{ t('Print') }}</Button>
                         <div v-if="canManage" class="ml-auto flex gap-2">
                             <Button variant="outline" :disabled="busy" @click="planning = !planning">{{ t('Plan for cellar team') }}</Button>
-                            <Button :disabled="busy || plan.totals.short_by !== null" @click="apply">{{ t('Apply SO₂ to :n vessels', { n: plan.lines.length }) }}</Button>
+                            <Button :disabled="busy || plan.totals.short_by !== null" @click="apply">{{ t('Add now to :n vessels…', { n: plan.lines.length }) }}</Button>
                         </div>
                     </div>
 
@@ -625,6 +713,37 @@ const summaryChips = computed(() =>
                 </p>
             </template>
         </div>
+
+        <SidePanel :open="confirming !== null" :title="t('Add SO₂ now?')" :subtitle="confirming ? `${confirming.product.name} · ${t(':n vessels', { n: confirming.lines.length })}` : ''" @close="confirming = null">
+            <div v-if="confirming" class="flex flex-col gap-4 text-xs">
+                <table class="w-full">
+                    <thead class="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        <tr>
+                            <th class="py-1 text-left font-medium">{{ t('Vessel') }}</th>
+                            <th class="py-1 text-right font-medium">{{ t('Dose') }}</th>
+                            <th class="py-1 text-right font-medium">{{ t('Free SO₂') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="l in confirming.lines" :key="`${l.wine_lot_id}:${l.vessel_id}`" class="border-t border-border">
+                            <td class="py-1.5"><span class="font-medium">{{ l.vessel_name ?? '—' }}</span> <span class="text-muted-foreground">{{ l.lot_name }}</span></td>
+                            <td class="py-1.5 text-right font-semibold tabular-nums">{{ qty(l.quantity) }} {{ l.unit }}</td>
+                            <td class="py-1.5 text-right tabular-nums">{{ l.current_free_so2 ?? '?' }} → {{ qty(l.target_mg_l) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="flex flex-col gap-1 border-t border-border pt-3">
+                    <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Draws from stock') }}</span><span class="font-semibold tabular-nums">{{ qty(confirming.totals.quantity) }} {{ confirming.product.unit }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Stock after') }}</span><span class="tabular-nums">{{ qty(confirming.totals.stock_after) }} {{ confirming.product.unit }}</span></div>
+                    <div v-if="can('finance.view') && confirming.totals.cost !== null" class="flex justify-between"><span class="text-muted-foreground">{{ t('Cost') }}</span><span class="tabular-nums">{{ money(confirming.totals.cost) }}</span></div>
+                </div>
+                <p class="text-muted-foreground">{{ t('Each addition is booked on its lot and vessel.') }}</p>
+            </div>
+            <template #footer>
+                <Button variant="outline" size="lg" @click="confirming = null">{{ t('Cancel') }}</Button>
+                <Button size="lg" :disabled="busy" @click="confirmApply">{{ t('Add now') }}</Button>
+            </template>
+        </SidePanel>
 
         <PrintSheet v-if="plan" ref="sheet" :title="`${t('SO₂ correction')} — ${todayLabel}`">
             <p class="mb-3 text-xs">{{ t('Product') }}: {{ plan.product.name }}<template v-if="note"> | {{ note }}</template></p>

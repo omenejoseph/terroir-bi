@@ -1535,5 +1535,20 @@
     "rack, top up": "pretok, dolijevanje",
     "pump-over, filtration…": "prepumpavanje, filtracija…",
     "notes, score": "bilješke, ocjena",
-    "loss or gain": "gubitak ili dobitak"
+    "loss or gain": "gubitak ili dobitak",
+    ":type default :n mg/L": ":type, zadano :n mg/L",
+    "Add SO₂ now?": "Dodati SO₂ sada?",
+    "Add a fixed amount": "Dodaj fiksnu količinu",
+    "Add now": "Dodaj sada",
+    "Add now to :n vessels…": "Dodaj sada u :n spremnika…",
+    "Draws from stock": "Uzima sa zalihe",
+    "Each addition is booked on its lot and vessel.": "Svaki dodatak knjiži se na svoj lot i spremnik.",
+    "Molecular": "Molekularni",
+    "Molecular SO₂ at the measured pH: free ÷ (1 + 10^(pH − 1.81)). 0.5–0.8 mg/L is the usual protective range.": "Molekularni SO₂ pri izmjerenom pH: slobodni ÷ (1 + 10^(pH − 1,81)). Uobičajeni zaštitni raspon je 0,5–0,8 mg/L.",
+    "Stock after": "Zaliha nakon",
+    "To a target": "Do cilja",
+    "Total after / EU": "Ukupni nakon / EU",
+    "above target": "iznad cilja",
+    "Below target": "Ispod cilja",
+    "No reading in 30 days": "Bez mjerenja 30 dana"
 }

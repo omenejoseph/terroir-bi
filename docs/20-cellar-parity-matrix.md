@@ -397,6 +397,10 @@ rules apply:
     prices keep four decimals of a cent (`UnitPrice`), totals are whole cents.
 16. **Additions from stock are costed** at the product's price unless one is
     given, so the lot's cost of goods includes them.
+17. **The SO₂ board shows a lot's worst vessel.** The lot row's free SO₂ is
+    the lowest any of its vessels is at — the reading doses are planned
+    from — not a lot-level reading that a newer vessel reading contradicts;
+    EU limits use the highest total SO₂ in the lot.
 
 ## Sign-off
 
