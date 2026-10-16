@@ -127,7 +127,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
         label: 'Production',
         icon: Factory,
         items: [
-            { key: 'cellar', label: 'Cellar', href: null, icon: Warehouse, capability: 'cellar.view', module: 'cellar' },
+            { key: 'cellar', label: 'Cellar', href: '/cellar', icon: Warehouse, capability: 'cellar.view', module: 'cellar' },
             { key: 'harvest', label: 'Harvest', href: null, icon: Grape, capability: 'vineyards.view', module: 'vineyards' },
             { key: 'production-plan', label: 'Production Plan', href: null, icon: Sprout, capability: 'production.view', module: 'production' },
         ],

@@ -1340,7 +1340,7 @@ class DemoSeeder extends Seeder
 
         // Enological products (one linked to a supplier; used in additions).
         $ep = app(CreateEnologicalProductAction::class);
-        $so2 = $ep->execute(['name' => 'Potassium metabisulphite', 'category' => 'Antioxidant', 'unit' => 'g', 'current_stock' => '50000', 'min_stock' => '5000', 'cost_per_unit' => 1, 'manufacturer' => 'Enartis', 'supplier_id' => $suppliers['enartis']->getKey(), 'so2_uplift_per_unit' => '0.5700']);
+        $so2 = $ep->execute(['name' => 'Potassium metabisulphite', 'category' => 'Antioxidant', 'unit' => 'g', 'current_stock' => '50000', 'min_stock' => '5000', 'cost_per_unit' => 1, 'manufacturer' => 'Enartis', 'supplier_id' => $suppliers['enartis']->getKey(), 'so2_uplift_per_unit' => '570']);
         $ep->execute(['name' => 'Tartaric acid', 'category' => 'Acidulant', 'unit' => 'g', 'current_stock' => '40000', 'min_stock' => '4000', 'cost_per_unit' => 1, 'manufacturer' => 'Enartis', 'supplier_id' => $suppliers['enartis']->getKey()]);
         $ep->execute(['name' => 'Lalvin EC-1118 yeast', 'category' => 'Yeast', 'unit' => 'g', 'current_stock' => '5000', 'min_stock' => '500', 'cost_per_unit' => 4, 'manufacturer' => 'Lallemand']);
         $ep->execute(['name' => 'Bentonite', 'category' => 'Fining', 'unit' => 'g', 'current_stock' => '20000', 'min_stock' => '2000', 'cost_per_unit' => 1]);

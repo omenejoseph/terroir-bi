@@ -28,6 +28,7 @@ final class NavCatalog
         'customers' => 'customers',
         'work-orders' => 'work-orders',
         'inventory' => 'inventory',
+        'cellar' => 'cellar',
     ];
 
     /**

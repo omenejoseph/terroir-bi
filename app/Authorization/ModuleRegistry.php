@@ -93,6 +93,7 @@ final class ModuleRegistry
             Module::Orders->value => ['orders'],
             Module::Customers->value => ['customers', 'customers-analytics'],
             Module::WorkOrders->value => ['work-orders'],
+            Module::Cellar->value => ['cellar'],
             Module::AuditLog->value => ['logs'],
         ];
     }

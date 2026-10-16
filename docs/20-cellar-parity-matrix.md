@@ -29,8 +29,8 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 
 - **Old** — the prototype source, as a path under `order-mgmt/src`.
 - **BE** — backend in this repo. ✅ exists · 🟡 partial · ⬜ missing.
-- **UI** — Inertia screen. ✅ shipped · 🟡 partial · ⬜ missing. Today there
-  is no cellar UI, so every row is ⬜.
+- **UI** — Inertia screen. ✅ shipped (page and component named) · 🟡 partial
+  · ⬜ missing · — no screen needed.
 - **Fix** — the correctness change applied while porting.
 
 **Abbreviations**
@@ -49,20 +49,20 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | B. Cellar map | 22 | 22 | 0 | 0 | 0 |
 | C. Vessels | 11 | 11 | 0 | 0 | 0 |
 | D. Wine lots | 30 | 29 | 0 | 1 | 0 |
-| E. SO₂ | 14 | 14 | 0 | 0 | 0 |
+| E. SO₂ | 14 | 14 | 0 | 0 | 14 |
 | F. Additions & enological stock | 18 | 18 | 0 | 0 | 0 |
 | G. Lab analyses | 9 | 7 | 0 | 2 | 0 |
 | H. Transfers & racking | 4 | 4 | 0 | 0 | 0 |
 | I. Blending | 9 | 8 | 0 | 1 | 0 |
-| J. Planned work & Today | 20 | 20 | 0 | 0 | 0 |
+| J. Planned work & Today | 20 | 20 | 0 | 0 | 18 |
 | K. Tastings | 9 | 9 | 0 | 0 | 0 |
 | L. Bottling | 4 | 4 | 0 | 0 | 0 |
 | M. Fermentation protocols & monitoring | 7 | 7 | 0 | 0 | 0 |
 | N. Analytics & costs | 10 | 10 | 0 | 0 | 0 |
 | O. Compliance & records | 4 | 4 | 0 | 0 | 0 |
-| P. Work-order integration | 3 | 3 | 0 | 0 | 0 |
+| P. Work-order integration | 3 | 3 | 0 | 0 | 1 |
 | Q. Audit logging | 11 | 11 | 0 | 0 | 0 |
-| **Total** | **193** | **189** | **0** | **4** | **0** |
+| **Total** | **193** | **189** | **0** | **4** | **33** |
 
 ---
 
@@ -163,20 +163,20 @@ Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePla
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| E1 | Load lots (FERMENTING/AGING/READY) + latest free SO₂ per lot+vessel | `P/so2/page.tsx` (raw `DISTINCT ON`) | `CellarSo2BoardQuery`, `GET cellar/so2` (latest per lot+vessel via `LatestAnalyses`) | ✅ | ⬜ | `CellarSo2BoardQuery` |
-| E2 | SO₂ product list (name match on sulfit/so2/metabisulfit/sumpor; fallback all) | `P/so2/page.tsx` | `CellarSo2BoardQuery::products` (category SO2/SULFITE or name; fallback all) | ✅ | ⬜ | Match on category SO2/SULFITE first |
-| E3 | Quick free/total SO₂ entry per lot and per vessel; "N entered"; save | `C/so2-management.tsx` | `BulkAddAnalysesAction` | ✅ | ⬜ | Vessel id saved on each row |
-| E4 | Plan mode: status chips Critical <15 / Low 15–24 / OK 25–45 / High >45 / No data | `C/so2-management.tsx` | `So2Calculator::status`, board `summary` | ✅ | ⬜ | |
-| E5 | Product picker with stock | `C/so2-management.tsx` | `EnologicalProductData` | ✅ | ⬜ | |
-| E6 | "Set all" mg/L to add; per-row override; expanding a lot copies value to vessels | `C/so2-management.tsx` | `So2DosePlanner` (`mode` add or target), `POST cellar/so2/preview` | ✅ | ⬜ | Label honestly as "mg/L to add" (target mode in Phase 3) |
-| E7 | Reference targets by wine type (red 28, white 35, rosé 32, orange 25, sparkling 30; +3 oak) | `C/so2-management.tsx` | `So2Calculator::referenceTarget` (+3 oak) | ✅ | ⬜ | Shared constant in the calculator service |
-| E8 | Filters: status, material, search, "only needing SO₂" | `C/so2-management.tsx` | board fields (status, material/oak, search on client) | ✅ | ⬜ | |
-| E9 | Row: current free + days since reading, add, projected, dose | `C/so2-management.tsx` | board `days_since`, preview lines | ✅ | ⬜ | |
-| E10 | Dose calculation: uplift coefficient or K₂S₂O₅ fallback (×1.5), kg conversion | `lib/enological-calculators.ts` | `So2Calculator::doseForProduct` (uplift, K₂S₂O₅ g/kg; other units need uplift) | ✅ | ⬜ | Port the fallback and expose it |
-| E11 | Summary: total dose, cost, low-stock warning; Select all needing SO₂ | `C/so2-management.tsx` | preview `totals` (`quantity`, `cost`, `short_by`) | ✅ | ⬜ | Stock shortfall **blocks** apply |
-| E12 | Copy list / WhatsApp share / Print sheet | `C/so2-management.tsx` | preview lines carry the text (`note`); copy/share rendered in the UI | ✅ | ⬜ | Text translated via `hr.json` |
-| E13 | Apply now (bulk additions per vessel) | `CA:1348 bulkAddAdditions` | `ApplySo2Action`, `POST cellar/so2/apply` | ✅ | ⬜ | Per-vessel `vessel_id`; stock-checked |
-| E14 | Plan for cellar team (SO₂ round) + success screen | `CAA createSo2Round` | `CreateSo2RoundAction` (server doses), `POST cellar/so2-rounds` | ✅ | ⬜ | Depends on J |
+| E1 | Load lots (FERMENTING/AGING/READY) + latest free SO₂ per lot+vessel | `P/so2/page.tsx` (raw `DISTINCT ON`) | `CellarSo2BoardQuery`, `GET cellar/so2` (latest per lot+vessel via `LatestAnalyses`) | ✅ | ✅ `Cellar/So2` | `CellarSo2BoardQuery` |
+| E2 | SO₂ product list (name match on sulfit/so2/metabisulfit/sumpor; fallback all) | `P/so2/page.tsx` | `CellarSo2BoardQuery::products` (category SO2/SULFITE or name; fallback all) | ✅ | ✅ `Cellar/So2` | Match on category SO2/SULFITE first |
+| E3 | Quick free/total SO₂ entry per lot and per vessel; "N entered"; save | `C/so2-management.tsx` | `BulkAddAnalysesAction` | ✅ | ✅ `Cellar/So2` (Update tab, `So2UpdateTable`) | Vessel id saved on each row |
+| E4 | Plan mode: status chips Critical <15 / Low 15–24 / OK 25–45 / High >45 / No data | `C/so2-management.tsx` | `So2Calculator::status`, board `summary` | ✅ | ✅ `Cellar/So2` | |
+| E5 | Product picker with stock | `C/so2-management.tsx` | `EnologicalProductData` | ✅ | ✅ `Cellar/So2` | |
+| E6 | "Set all" mg/L to add; per-row override; expanding a lot copies value to vessels | `C/so2-management.tsx` | `So2DosePlanner` (`mode` add or target), `POST cellar/so2/preview` | ✅ | ✅ `Cellar/So2` | Label honestly as "mg/L to add" (target mode in Phase 3) |
+| E7 | Reference targets by wine type (red 28, white 35, rosé 32, orange 25, sparkling 30; +3 oak) | `C/so2-management.tsx` | `So2Calculator::referenceTarget` (+3 oak) | ✅ | ✅ `Cellar/So2` | Shared constant in the calculator service |
+| E8 | Filters: status, material, search, "only needing SO₂" | `C/so2-management.tsx` | board fields (status, material/oak, search on client) | ✅ | ✅ `Cellar/So2` | |
+| E9 | Row: current free + days since reading, add, projected, dose | `C/so2-management.tsx` | board `days_since`, preview lines | ✅ | ✅ `Cellar/So2` | |
+| E10 | Dose calculation: uplift coefficient or K₂S₂O₅ fallback (×1.5), kg conversion | `lib/enological-calculators.ts` | `So2Calculator::doseForProduct` (uplift, K₂S₂O₅ g/kg; other units need uplift) | ✅ | ✅ `Cellar/So2` | Port the fallback and expose it |
+| E11 | Summary: total dose, cost, low-stock warning; Select all needing SO₂ | `C/so2-management.tsx` | preview `totals` (`quantity`, `cost`, `short_by`) | ✅ | ✅ `Cellar/So2` | Stock shortfall **blocks** apply |
+| E12 | Copy list / WhatsApp share / Print sheet | `C/so2-management.tsx` | preview lines carry the text (`note`); copy/share rendered in the UI | ✅ | ✅ `Cellar/So2` (copy, WhatsApp, `PrintSheet`) | Text translated via `hr.json` |
+| E13 | Apply now (bulk additions per vessel) | `CA:1348 bulkAddAdditions` | `ApplySo2Action`, `POST cellar/so2/apply` | ✅ | ✅ `Cellar/So2` | Per-vessel `vessel_id`; stock-checked |
+| E14 | Plan for cellar team (SO₂ round) + success screen | `CAA createSo2Round` | `CreateSo2RoundAction` (server doses), `POST cellar/so2-rounds` | ✅ | ✅ `Cellar/So2` | Depends on J |
 
 ## F. Additions & enological stock
 
@@ -246,24 +246,24 @@ Backend shipped in Phase 1a: `app/Actions/Cellar/Activities/*`, `CellarTodayQuer
 |---|---|---|---|---|---|---|
 | J1 | Data model: activities (type, status, payload, planned_for, sort, round, assignee, skip reason, deviated, applied_at, planned_by, executed_by) + rounds (name, work order) | `prisma/schema.prisma:623,656` | `cellar_activities`, `cellar_activity_rounds` | ✅ | — | `assigned_to_id` is a real FK |
 | J2 | Legacy import of 11 activities + 3 rounds | — | `ProductionStep::activityRounds/activities` | ✅ | — | |
-| J3 | Planner type chips: Addition, Analysis, Transfer, Process, Topping, Vineyard | `C/cellar-activities-planner.tsx` | — | ✅ | ⬜ | |
-| J4 | Scope: one lot (+ its vessels) or whole cellar (spatial vessel picker: rooms, search, select per room, rubber band, fullscreen) | `C/vessel-map-picker.tsx` | — | ✅ | ⬜ | |
-| J5 | Addition fields: product search with stock or free name; dose per hL / per L / per vessel / total split by volume | planner | — | ✅ | ⬜ | |
-| J6 | Analysis fields: which readings to take | planner | — | ✅ | ⬜ | |
-| J7 | Transfer fields: from/to vessel and litres | planner | — | ✅ | ⬜ | |
-| J8 | Process kind / Topping litres / Vineyard task + parcels | planner | — | ✅ | ⬜ | Topping requires a source lot/vessel (no wine from nowhere) |
-| J9 | Common: date, who (anyone/me/member), note, round name (auto) | planner | — | ✅ | ⬜ | |
-| J10 | Named round mirrors a work-order card on the default board | `CAA:52` | — | ✅ | ⬜ | |
-| J11 | Open plan grouped by day → round; move round (date + reason); delete round (keeps executed); delete single (not when done) | `P/activities` | — | ✅ | ⬜ | |
-| J12 | Recently executed list with deviated / skipped badges | `P/activities` | — | ✅ | ⬜ | |
-| J13 | Today: due today + overdue + done/skipped today; Mine/Everyone | `C/cellar-today.tsx` | — | ✅ | ⬜ | |
-| J14 | Round progress bars; grouped by room, walking order by vessel name; overdue badge; assignee chip | `C/cellar-today.tsx` | — | ✅ | ⬜ | |
-| J15 | ✓ Done as planned | `CAA:356` | — | ✅ | ⬜ | Dispatches to the same Actions as manual forms |
-| J16 | Adjust (quantity/litres) → marks deviated | `CAA:356` | — | ✅ | ⬜ | |
-| J17 | Analysis card "Enter" keypad for readings | `C/cellar-today.tsx` | — | ✅ | ⬜ | |
-| J18 | Skip: Tomorrow / +3 days / date, or Not needed / Other | `skipCellarActivity` | — | ✅ | ⬜ | Reasons translated, not hard-coded Croatian |
-| J19 | Completed-today list; "All done!" empty state | `C/cellar-today.tsx` | — | ✅ | ⬜ | |
-| J20 | Round card closes when nothing left open | `CAA:356` | — | ✅ | ⬜ | Two-way: completing the card prompts to complete activities |
+| J3 | Planner type chips: Addition, Analysis, Transfer, Process, Topping, Vineyard | `C/cellar-activities-planner.tsx` | — | ✅ | ✅ `Cellar/Plan` (`PlanBuilder`) | |
+| J4 | Scope: one lot (+ its vessels) or whole cellar (spatial vessel picker: rooms, search, select per room, rubber band, fullscreen) | `C/vessel-map-picker.tsx` | — | ✅ | ✅ `Cellar/Plan` (`VesselMapPicker`) | |
+| J5 | Addition fields: product search with stock or free name; dose per hL / per L / per vessel / total split by volume | planner | — | ✅ | ✅ `Cellar/Plan` (`PlanBuilder`) | |
+| J6 | Analysis fields: which readings to take | planner | — | ✅ | ✅ `Cellar/Plan` (`PlanBuilder`) | |
+| J7 | Transfer fields: from/to vessel and litres | planner | — | ✅ | ✅ `Cellar/Plan` (`PlanBuilder`) | |
+| J8 | Process kind / Topping litres / Vineyard task + parcels | planner | — | ✅ | ✅ `Cellar/Plan` (`PlanBuilder`) | Topping requires a source lot/vessel (no wine from nowhere) |
+| J9 | Common: date, who (anyone/me/member), note, round name (auto) | planner | — | ✅ | ✅ `Cellar/Plan` (`PlanBuilder`) | |
+| J10 | Named round mirrors a work-order card on the default board | `CAA:52` | — | ✅ | ✅ `Cellar/Plan` (`PlanBuilder`) | |
+| J11 | Open plan grouped by day → round; move round (date + reason); delete round (keeps executed); delete single (not when done) | `P/activities` | — | ✅ | ✅ `Cellar/Plan` (`PlanList`) | |
+| J12 | Recently executed list with deviated / skipped badges | `P/activities` | — | ✅ | ✅ `Cellar/Plan` (`PlanList`) | |
+| J13 | Today: due today + overdue + done/skipped today; Mine/Everyone | `C/cellar-today.tsx` | — | ✅ | ✅ `Cellar/Today` (`TodayCard`) | |
+| J14 | Round progress bars; grouped by room, walking order by vessel name; overdue badge; assignee chip | `C/cellar-today.tsx` | — | ✅ | ✅ `Cellar/Today` (`TodayCard`) | |
+| J15 | ✓ Done as planned | `CAA:356` | — | ✅ | ✅ `Cellar/Today` (`TodayCard`) | Dispatches to the same Actions as manual forms |
+| J16 | Adjust (quantity/litres) → marks deviated | `CAA:356` | — | ✅ | ✅ `Cellar/Today` (`TodayCard`) | |
+| J17 | Analysis card "Enter" keypad for readings | `C/cellar-today.tsx` | — | ✅ | ✅ `Cellar/Today` (`TodayCard`) | |
+| J18 | Skip: Tomorrow / +3 days / date, or Not needed / Other | `skipCellarActivity` | — | ✅ | ✅ `Cellar/Today` (`TodayCard`) | Reasons translated, not hard-coded Croatian |
+| J19 | Completed-today list; "All done!" empty state | `C/cellar-today.tsx` | — | ✅ | ✅ `Cellar/Today` (`TodayCard`) | |
+| J20 | Round card closes when nothing left open | `CAA:356` | — | ✅ | ✅ automatic (round card closes server-side) | Two-way: completing the card prompts to complete activities |
 
 ## K. Tastings — `/cellar/tastings`
 
@@ -330,7 +330,7 @@ Backend shipped in Phase 1a: `app/Actions/Cellar/Activities/*`, `CellarTodayQuer
 |---|---|---|---|---|---|---|
 | P1 | Work order linked to wine lot and vessel | `work-order-form.tsx` | `work_orders.wine_lot_id/vessel_id` | ✅ | 🟡 | Add a wine-lot `Combobox` to `TaskPanel` |
 | P2 | Protocol-generated tasks visible on board | `HA:2196` (board-less) | `GenerateWorkOrdersFromProtocolAction` → `WorkOrderBoard::defaultBoard()` | ✅ | ⬜ | Assign to default board/list |
-| P3 | Cellar round cards on board | `CAA:52` | `CreateCellarActivitiesAction` → default board | ✅ | ⬜ | Depends on J |
+| P3 | Cellar round cards on board | `CAA:52` | `CreateCellarActivitiesAction` → default board | ✅ | ✅ rounds land on the board from `Cellar/Plan` and `Cellar/So2` | Depends on J |
 
 ## Q. Audit logging
 

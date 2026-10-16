@@ -8,6 +8,8 @@ use App\Http\Controllers\Web\Auth\PasswordResetController;
 use App\Http\Controllers\Web\Auth\StopImpersonationController;
 use App\Http\Controllers\Web\Auth\TenantSwitchController;
 use App\Http\Controllers\Web\BottleAnalysisController;
+use App\Http\Controllers\Web\Cellar\CellarActivityController;
+use App\Http\Controllers\Web\Cellar\CellarSo2Controller;
 use App\Http\Controllers\Web\CustomerCategoryController;
 use App\Http\Controllers\Web\CustomerConsignmentController;
 use App\Http\Controllers\Web\CustomerController;
@@ -390,5 +392,31 @@ Route::middleware('tenant.web')->group(function () {
         Route::post('work-order-boards', [WorkOrderController::class, 'storeBoard'])->name('work-order-boards.store');
         Route::patch('work-order-boards/favorite', [WorkOrderController::class, 'setFavoriteBoard'])
             ->name('work-order-boards.favorite');
+    });
+
+    // Cellar (parity with the prototype's /dashboard/cellar — see
+    // docs/20-cellar-parity-matrix.md). Every page lives under /cellar so the
+    // module owns one web prefix. Same Queries and Actions as routes/api.php.
+    Route::middleware('can:cellar.view')->group(function () {
+        Route::get('cellar', fn () => redirect('/cellar/today'))->name('cellar');
+        Route::get('cellar/today', [CellarActivityController::class, 'today'])->name('cellar.today');
+        Route::get('cellar/plan', [CellarActivityController::class, 'plan'])->name('cellar.plan');
+        Route::get('cellar/so2', [CellarSo2Controller::class, 'index'])->name('cellar.so2');
+        Route::post('cellar/so2/preview', [CellarSo2Controller::class, 'preview'])->name('cellar.so2.preview');
+    });
+
+    Route::middleware('can:cellar.manage')->group(function () {
+        Route::post('cellar/activities', [CellarActivityController::class, 'store'])->name('cellar.activities.store');
+        Route::post('cellar/activities/{activity}/complete', [CellarActivityController::class, 'complete'])->name('cellar.activities.complete');
+        Route::post('cellar/activities/{activity}/skip', [CellarActivityController::class, 'skip'])->name('cellar.activities.skip');
+        Route::post('cellar/activities/{activity}/reschedule', [CellarActivityController::class, 'reschedule'])->name('cellar.activities.reschedule');
+        Route::delete('cellar/activities/{activity}', [CellarActivityController::class, 'destroy'])->name('cellar.activities.destroy');
+        Route::post('cellar/activity-rounds/{round}/reschedule', [CellarActivityController::class, 'rescheduleRound'])->name('cellar.rounds.reschedule');
+        Route::delete('cellar/activity-rounds/{round}', [CellarActivityController::class, 'destroyRound'])->name('cellar.rounds.destroy');
+        Route::post('cellar/lots/{wineLot}/protocol/plan-additions', [CellarActivityController::class, 'planProtocolAdditions'])->name('cellar.lots.protocol.plan-additions');
+
+        Route::post('cellar/so2/apply', [CellarSo2Controller::class, 'apply'])->name('cellar.so2.apply');
+        Route::post('cellar/so2/round', [CellarSo2Controller::class, 'planRound'])->name('cellar.so2.round');
+        Route::post('cellar/so2/readings', [CellarSo2Controller::class, 'readings'])->name('cellar.so2.readings');
     });
 });

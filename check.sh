@@ -88,7 +88,10 @@ fi
 # ---- Legacy Next.js frontend -------------------------------------------------
 if $run_fe; then
   section "Legacy Next.js frontend checks (npm run check)"
-  if ! command -v npm >/dev/null 2>&1; then
+  if [ ! -d "$ROOT/frontend" ]; then
+    # The Next.js app has been retired; the Vue app is checked by `in`.
+    echo "./frontend has been removed — nothing to check."
+  elif ! command -v npm >/dev/null 2>&1; then
     echo "${RED}npm not found on PATH${RESET}" >&2
     fe_status="fail"
   else

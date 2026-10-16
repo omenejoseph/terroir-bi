@@ -330,3 +330,14 @@
         transition-duration: 0.001ms !important;
     }
 }
+
+/*
+  A print sheet (components/cellar/PrintSheet.vue) prints on its own: while one
+  is printing, everything else on the page is hidden, so the sheet is the
+  whole document — the prototype opened a new window for this.
+*/
+@media print {
+    body.print-sheet-active > *:not(.print-sheet) {
+        display: none !important;
+    }
+}
