@@ -14,16 +14,17 @@ use App\Actions\Cellar\UpdateEnologicalProductAction;
 use App\DataTransferObjects\EnologicalProductData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cellar\AdjustEnologicalStockRequest;
+use App\Http\Requests\Cellar\BulkUpdateEnologicalProductsRequest;
+use App\Http\Requests\Cellar\DraftEnologicalOrdersRequest;
+use App\Http\Requests\Cellar\ImportEnologicalProductsRequest;
 use App\Http\Requests\Cellar\StoreEnologicalProductRequest;
 use App\Http\Requests\Cellar\UpdateEnologicalProductRequest;
 use App\Models\EnologicalProduct;
 use App\Models\EnologicalStockMovement;
 use App\Models\User;
 use App\Queries\ProtocolNeedsQuery;
-use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class EnologicalProductController extends Controller
 {
@@ -96,31 +97,17 @@ class EnologicalProductController extends Controller
         return response()->json(['data' => $query->get()]);
     }
 
-    public function import(Request $request, ImportEnologicalProductsAction $action): JsonResponse
+    public function import(ImportEnologicalProductsRequest $request, ImportEnologicalProductsAction $action): JsonResponse
     {
-        $data = $request->validate([
-            'text' => ['required', 'string', 'max:200000'],
-            'dry_run' => ['sometimes', 'boolean'],
-        ]);
+        $data = $request->validated();
         $result = $action->execute((string) $data['text'], (bool) ($data['dry_run'] ?? false));
 
         return response()->json(['data' => $result], $result['errors'] === [] ? 200 : 422);
     }
 
-    public function bulkUpdate(Request $request, BulkUpdateEnologicalProductsAction $action): JsonResponse
+    public function bulkUpdate(BulkUpdateEnologicalProductsRequest $request, BulkUpdateEnologicalProductsAction $action): JsonResponse
     {
-        $tenantId = app(TenantContext::class)->id();
-        $data = $request->validate([
-            'ids' => ['required', 'array', 'min:1', 'max:500'],
-            'ids.*' => ['string', Rule::exists('enological_products', 'id')->where('tenant_id', $tenantId)],
-            'fields' => ['required', 'array'],
-            'fields.category' => ['sometimes', 'string', 'max:255'],
-            'fields.supplier_id' => ['sometimes', 'nullable', 'string', Rule::exists('suppliers', 'id')->where('tenant_id', $tenantId)],
-            'fields.min_stock' => ['sometimes', 'nullable', 'numeric', 'min:0'],
-            'fields.cost_per_unit' => ['sometimes', 'nullable', 'integer', 'min:0'],
-            'fields.is_active' => ['sometimes', 'boolean'],
-            'fields.manufacturer' => ['sometimes', 'nullable', 'string', 'max:255'],
-        ]);
+        $data = $request->validated();
 
         /** @var list<string> $ids */
         $ids = array_values($data['ids']);
@@ -128,13 +115,9 @@ class EnologicalProductController extends Controller
         return response()->json(['data' => ['updated' => $action->execute($ids, (array) $data['fields'])]]);
     }
 
-    public function draftOrders(Request $request, DraftEnologicalPurchaseOrdersAction $action): JsonResponse
+    public function draftOrders(DraftEnologicalOrdersRequest $request, DraftEnologicalPurchaseOrdersAction $action): JsonResponse
     {
-        $data = $request->validate([
-            'lines' => ['sometimes', 'nullable', 'array'],
-            'lines.*.enological_product_id' => ['required', 'string', Rule::exists('enological_products', 'id')->where('tenant_id', app(TenantContext::class)->id())],
-            'lines.*.quantity' => ['required', 'numeric', 'gt:0'],
-        ]);
+        $data = $request->validated();
         $user = $request->user();
         abort_unless($user instanceof User, 401);
 

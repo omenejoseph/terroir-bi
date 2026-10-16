@@ -12,6 +12,9 @@ use App\Http\Controllers\Web\Cellar\BlendController;
 use App\Http\Controllers\Web\Cellar\CellarActivityController;
 use App\Http\Controllers\Web\Cellar\CellarController;
 use App\Http\Controllers\Web\Cellar\CellarSo2Controller;
+use App\Http\Controllers\Web\Cellar\EnologicalProductController;
+use App\Http\Controllers\Web\Cellar\ProtocolController;
+use App\Http\Controllers\Web\Cellar\TastingReportController;
 use App\Http\Controllers\Web\Cellar\VesselController;
 use App\Http\Controllers\Web\Cellar\WineLotController;
 use App\Http\Controllers\Web\CustomerCategoryController;
@@ -410,6 +413,11 @@ Route::middleware('tenant.web')->group(function () {
         Route::post('cellar/blend/project', [BlendController::class, 'project'])->name('cellar.blend.project');
         Route::get('cellar/bulk-additions', [CellarController::class, 'bulkAdditions'])->name('cellar.bulk-additions');
         Route::get('cellar/bulk-analyses', [CellarController::class, 'bulkAnalyses'])->name('cellar.bulk-analyses');
+        Route::get('cellar/tastings', [TastingReportController::class, 'index'])->name('cellar.tastings.index');
+        Route::get('cellar/tastings/{tastingReport}', [TastingReportController::class, 'show'])->name('cellar.tastings.show');
+        Route::get('cellar/products', [EnologicalProductController::class, 'index'])->name('cellar.products.index');
+        Route::get('cellar/products/{enologicalProduct}/movements', [EnologicalProductController::class, 'movements'])->name('cellar.products.movements');
+        Route::get('cellar/protocols', [ProtocolController::class, 'index'])->name('cellar.protocols.index');
         Route::get('cellar/today', [CellarActivityController::class, 'today'])->name('cellar.today');
         Route::get('cellar/plan', [CellarActivityController::class, 'plan'])->name('cellar.plan');
         Route::get('cellar/so2', [CellarSo2Controller::class, 'index'])->name('cellar.so2');
@@ -466,10 +474,26 @@ Route::middleware('tenant.web')->group(function () {
         Route::post('cellar/blend/by-ratio', [BlendController::class, 'byRatio'])->name('cellar.blend.by-ratio');
         Route::post('cellar/bulk-additions', [CellarController::class, 'storeBulkAdditions'])->name('cellar.bulk-additions.store');
         Route::post('cellar/bulk-analyses', [CellarController::class, 'storeBulkAnalyses'])->name('cellar.bulk-analyses.store');
+
+        Route::post('cellar/tastings', [TastingReportController::class, 'store'])->name('cellar.tastings.store');
+        Route::patch('cellar/tastings/{tastingReport}', [TastingReportController::class, 'update'])->name('cellar.tastings.update');
+        Route::delete('cellar/tastings/{tastingReport}', [TastingReportController::class, 'destroy'])->name('cellar.tastings.destroy');
+
+        Route::post('cellar/products', [EnologicalProductController::class, 'store'])->name('cellar.products.store');
+        Route::post('cellar/products/import', [EnologicalProductController::class, 'import'])->name('cellar.products.import');
+        Route::patch('cellar/products/bulk', [EnologicalProductController::class, 'bulkUpdate'])->name('cellar.products.bulk');
+        Route::post('cellar/products/draft-orders', [EnologicalProductController::class, 'draftOrders'])->name('cellar.products.draft-orders');
+        Route::patch('cellar/products/{enologicalProduct}', [EnologicalProductController::class, 'update'])->name('cellar.products.update');
+        Route::post('cellar/products/{enologicalProduct}/adjust-stock', [EnologicalProductController::class, 'adjustStock'])->name('cellar.products.adjust');
+
+        Route::post('cellar/protocols', [ProtocolController::class, 'store'])->name('cellar.protocols.store');
+        Route::patch('cellar/protocols/{fermentationTemplate}', [ProtocolController::class, 'update'])->name('cellar.protocols.update');
     });
 
     Route::middleware('can:cellar.delete')->group(function () {
         Route::delete('cellar/vessels/{vessel}', [VesselController::class, 'destroy'])->name('cellar.vessels.destroy');
         Route::delete('cellar/lots/{wineLot}', [WineLotController::class, 'destroy'])->name('cellar.lots.destroy');
+        Route::delete('cellar/products/{enologicalProduct}', [EnologicalProductController::class, 'destroy'])->name('cellar.products.destroy');
+        Route::delete('cellar/protocols/{fermentationTemplate}', [ProtocolController::class, 'destroy'])->name('cellar.protocols.destroy');
     });
 });

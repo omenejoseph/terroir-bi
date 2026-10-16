@@ -426,10 +426,77 @@ export interface FermentationTemplate {
     punchdown_schedule: string | null;
     maceration: string | null;
     nutrients: string | null;
-    mlf: string | null;
+    mlf: boolean;
     description: string | null;
     estimated_duration: number | null;
-    stages: { name: string; day_start?: number; day_end?: number; actions?: string[] }[];
+    /** Legacy-imported stages use camelCase day keys; the editor writes snake_case. */
+    stages: { name: string; day_start?: number; day_end?: number; dayStart?: number; dayEnd?: number; actions?: { type?: string; description?: string }[] }[];
+    lots_in_use?: number;
     is_active: boolean;
     additives: { id: string; name: string; enological_product_id: string | null; dose: string; basis: string; stage: string | null; notes: string | null }[];
+}
+
+/** App\DataTransferObjects\TastingReportData */
+export interface TastingReportWine {
+    note_id: string;
+    wine_lot: { id: string; lot_number: string; name: string; vintage: string | null } | null;
+    vessel: { id: string; name: string } | null;
+    score: number | null;
+    appearance: string | null;
+    nose: string | null;
+    palate: string | null;
+    overall: string | null;
+    note: string | null;
+}
+
+export interface TastingReport {
+    id: string;
+    title: string | null;
+    date: string;
+    note: string | null;
+    author: { id: string; name: string } | null;
+    wine_count: number;
+    average_score: number | null;
+    wines_preview: string[];
+    wines?: TastingReportWine[];
+}
+
+/** App\DataTransferObjects\EnologicalProductData */
+export interface EnologicalProduct {
+    id: string;
+    name: string;
+    category: string | null;
+    unit: string;
+    current_stock: string;
+    min_stock: string | null;
+    cost_per_unit: MoneyValue | null;
+    manufacturer: string | null;
+    packaging_size: string | null;
+    so2_uplift_per_unit: string | null;
+    supplier_id: string | null;
+    is_active: boolean;
+    notes: string | null;
+}
+
+/** App\Queries\ProtocolNeedsQuery */
+export interface ProtocolNeed {
+    enological_product_id: string | null;
+    product_name: string;
+    unit: string;
+    current_stock: string;
+    cost_per_unit: number | null;
+    supplier: { id: string; name: string } | null;
+    total_needed: number;
+    deficit: number;
+    lots: { id?: string; name?: string; needed?: number }[];
+}
+
+/** App\Queries\FermentationMonitorQuery */
+export interface FermentationAlert {
+    type: string;
+    severity: string;
+    lot_id: string;
+    lot_name: string;
+    message: string;
+    suggestion: string;
 }

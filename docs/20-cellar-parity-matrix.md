@@ -50,19 +50,19 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | C. Vessels | 11 | 11 | 0 | 0 | 10 |
 | D. Wine lots | 30 | 29 | 0 | 1 | 27 |
 | E. SO₂ | 14 | 14 | 0 | 0 | 14 |
-| F. Additions & enological stock | 18 | 18 | 0 | 0 | 9 |
+| F. Additions & enological stock | 18 | 18 | 0 | 0 | 18 |
 | G. Lab analyses | 9 | 7 | 0 | 2 | 7 |
 | H. Transfers & racking | 4 | 4 | 0 | 0 | 3 |
 | I. Blending | 9 | 8 | 0 | 1 | 9 |
 | J. Planned work & Today | 20 | 20 | 0 | 0 | 18 |
-| K. Tastings | 9 | 9 | 0 | 0 | 3 |
+| K. Tastings | 9 | 9 | 0 | 0 | 8 |
 | L. Bottling | 4 | 4 | 0 | 0 | 4 |
-| M. Fermentation protocols & monitoring | 7 | 7 | 0 | 0 | 0 |
+| M. Fermentation protocols & monitoring | 7 | 7 | 0 | 0 | 7 |
 | N. Analytics & costs | 10 | 10 | 0 | 0 | 0 |
 | O. Compliance & records | 4 | 4 | 0 | 0 | 0 |
 | P. Work-order integration | 3 | 3 | 0 | 0 | 3 |
 | Q. Audit logging | 11 | 11 | 0 | 0 | 2 |
-| **Total** | **193** | **189** | **0** | **4** | **138** |
+| **Total** | **193** | **189** | **0** | **4** | **159** |
 
 ---
 
@@ -191,15 +191,15 @@ Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePla
 | F7 | Edit addition | — | `UpdateCellarAdditionAction`, `PATCH wine-lots/{lot}/additions/{addition}` (stock moved under the stock rule) | ✅ | ✅ `AdditionPanel` | Added (re-applies the stock delta) |
 | F8 | Bulk additions page: product, dose + unit (g/L, g/hL, mg/L, mg/hL, mL/L, mL/hL, kg/hL), unit conversion, note | `P/bulk-additions`, `C/bulk-additions.tsx` | `BulkAddAdditionsAction` | ✅ | ✅ `Cellar/BulkAdditions` (unit conversion mg/g/kg, mL/L) | |
 | F9 | Lot table: filters (status, grape, search), select all, per-lot amount/cost/vessel; summary; success screen | `C/bulk-additions.tsx` | — | ✅ | ✅ `Cellar/BulkAdditions` | Stock shortfall blocks |
-| F10 | Products list: category chips, stats (total, low stock, value) | `components/harvest/enological-products.tsx` | `EnologicalProductController::index` | ✅ | ⬜ | |
-| F11 | Create/edit product incl. packaging, cost per package → per unit, min stock, manufacturer, supplier/price-list, SO₂ uplift + helper | `enological-products.tsx:108` | `Create/UpdateEnologicalProductAction` | ✅ | ⬜ | |
-| F12 | Add/remove stock | `HA:1602` | `AdjustEnologicalStockAction` → `EnologicalStockLedger` (note saved) | ✅ | ⬜ | Note saved |
-| F13 | Stock movement history | — | `enological_stock_movements` via `EnologicalStockLedger`, `GET enological-products/{p}/movements` | ✅ | ⬜ | Added (prototype lost this) |
-| F14 | Delete product (deactivate if used) | `HA` | `DeleteEnologicalProductAction` | ✅ | ⬜ | |
-| F15 | Bulk import (paste TSV/CSV) | `enological-products.tsx` | `ImportEnologicalProductsAction`, `POST enological-products/import` (TSV/CSV, EN/HR headers, dry run) | ✅ | ⬜ | |
-| F16 | Bulk edit | `enological-products.tsx` | `BulkUpdateEnologicalProductsAction`, `PATCH enological-products/bulk` | ✅ | ⬜ | |
-| F17 | Protocol needs / deficits | `getProtocolNeeds` | `ProtocolNeedsQuery`, `GET enological-products/needs` (structured doses × basis) | ✅ | ⬜ | |
-| F18 | Generate draft purchase orders by supplier | `generateDraftPurchaseOrders` | `DraftEnologicalPurchaseOrdersAction` → `CreateSupplierOrderAction`, `POST enological-products/draft-orders` | ✅ | ⬜ | Reuse existing supplier order creation |
+| F10 | Products list: category chips, stats (total, low stock, value) | `components/harvest/enological-products.tsx` | `EnologicalProductController::index` | ✅ | ✅ `Cellar/Products` | |
+| F11 | Create/edit product incl. packaging, cost per package → per unit, min stock, manufacturer, supplier/price-list, SO₂ uplift + helper | `enological-products.tsx:108` | `Create/UpdateEnologicalProductAction` | ✅ | ✅ `ProductFormPanel` (package → per-unit cost, SO₂ uplift helper) | |
+| F12 | Add/remove stock | `HA:1602` | `AdjustEnologicalStockAction` → `EnologicalStockLedger` (note saved) | ✅ | ✅ `Cellar/Products` | Note saved |
+| F13 | Stock movement history | — | `enological_stock_movements` via `EnologicalStockLedger`, `GET enological-products/{p}/movements` | ✅ | ✅ `Cellar/Products` (stock history drawer) | Added (prototype lost this) |
+| F14 | Delete product (deactivate if used) | `HA` | `DeleteEnologicalProductAction` | ✅ | ✅ `Cellar/Products` | |
+| F15 | Bulk import (paste TSV/CSV) | `enological-products.tsx` | `ImportEnologicalProductsAction`, `POST enological-products/import` (TSV/CSV, EN/HR headers, dry run) | ✅ | ✅ `Cellar/Products` (paste import with preview) | |
+| F16 | Bulk edit | `enological-products.tsx` | `BulkUpdateEnologicalProductsAction`, `PATCH enological-products/bulk` | ✅ | ✅ `Cellar/Products` (bulk edit drawer) | |
+| F17 | Protocol needs / deficits | `getProtocolNeeds` | `ProtocolNeedsQuery`, `GET enological-products/needs` (structured doses × basis) | ✅ | ✅ `Cellar/Products` (Protocol needs tab) | |
+| F18 | Generate draft purchase orders by supplier | `generateDraftPurchaseOrders` | `DraftEnologicalPurchaseOrdersAction` → `CreateSupplierOrderAction`, `POST enological-products/draft-orders` | ✅ | ✅ `Cellar/Products` | Reuse existing supplier order creation |
 
 ## G. Lab analyses
 
@@ -272,11 +272,11 @@ Backend shipped in Phase 1a: `app/Actions/Cellar/Activities/*`, `CellarTodayQuer
 | K1 | Lot/vessel tasting note: date, score 0–100, vessel, appearance, nose, palate, overall, note | `C/tasting-note-form.tsx` | `AddTastingNoteAction` | ✅ | ✅ `TastingPanel` | |
 | K2 | Delete note | | `DeleteTastingNoteAction` | ✅ | ✅ `Cellar/Lots/Show` | |
 | K3 | Edit note | `updateCellarTastingNote` | `UpdateTastingNoteAction`, `PATCH wine-lots/{lot}/tasting-notes/{note}` | ✅ | ✅ `TastingPanel` (edit) | |
-| K4 | Reports list: title, date, wine count, first 4 wines, author, empty state | `P/tastings`, `actions/tastings.actions.ts` | `TastingReportController::index` + `TastingReportData` (author, wine count, average, preview) | ✅ | ⬜ | Add wines + author to the payload |
-| K5 | New report: title, date, note, search-to-add wines (any non-archived lot), per-wine note + score | `C/tasting-report-form.tsx` | `SaveTastingReportAction`, `POST tasting-reports` (wines → lot notes) | ✅ | ⬜ | Move to an Action + DTO |
-| K6 | Report detail: date, author, count, average score, per-wine cards linking to lot | `P/tastings/[id]` | `GET tasting-reports/{report}` (wines, scores, lot links) | ✅ | ⬜ | |
-| K7 | Edit report (syncs lot notes: add/update/remove) | `P/tastings/[id]/edit` | `SaveTastingReportAction`, `PATCH tasting-reports/{report}` (sync notes by lot) | ✅ | ⬜ | |
-| K8 | Delete report (removes its lot notes) | `tastings.actions.ts` | `DeleteTastingReportAction`, `DELETE tasting-reports/{report}` | ✅ | ⬜ | |
+| K4 | Reports list: title, date, wine count, first 4 wines, author, empty state | `P/tastings`, `actions/tastings.actions.ts` | `TastingReportController::index` + `TastingReportData` (author, wine count, average, preview) | ✅ | ✅ `Cellar/Tastings/Index` | Add wines + author to the payload |
+| K5 | New report: title, date, note, search-to-add wines (any non-archived lot), per-wine note + score | `C/tasting-report-form.tsx` | `SaveTastingReportAction`, `POST tasting-reports` (wines → lot notes) | ✅ | ✅ `TastingReportPanel` | Move to an Action + DTO |
+| K6 | Report detail: date, author, count, average score, per-wine cards linking to lot | `P/tastings/[id]` | `GET tasting-reports/{report}` (wines, scores, lot links) | ✅ | ✅ `Cellar/Tastings/Show` | |
+| K7 | Edit report (syncs lot notes: add/update/remove) | `P/tastings/[id]/edit` | `SaveTastingReportAction`, `PATCH tasting-reports/{report}` (sync notes by lot) | ✅ | ✅ `TastingReportPanel` (edit) | |
+| K8 | Delete report (removes its lot notes) | `tastings.actions.ts` | `DeleteTastingReportAction`, `DELETE tasting-reports/{report}` | ✅ | ✅ `Cellar/Tastings/Show` (delete) | |
 | K9 | Each wine in a report becomes a lot note | `tastings.actions.ts` | `TastingReportController::store` | ✅ | — | |
 
 ## L. Bottling
@@ -292,13 +292,13 @@ Backend shipped in Phase 1a: `app/Actions/Cellar/Activities/*`, `CellarTodayQuer
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| M1 | Protocol list + create/edit (stages: days, temp range, actions with type/product/dose/unit/timing) | `harvest/fermentation-templates.tsx` | `Create/UpdateFermentationTemplateAction` | ✅ | ⬜ | |
-| M2 | Quick-start "Standard Red/White" templates | same | — | ✅ | ⬜ | Client-side presets |
-| M3 | Duplicate template | same | `CreateFermentationTemplateAction` | ✅ | ⬜ | |
-| M4 | Timeline view of stages | same | — | ✅ | ⬜ | |
-| M5 | Structured additive doses (per_L/per_hL/per_kg/per_100kg) | `protocol-doses-editor.tsx`, `final-plan.actions.ts:86` | `protocol_additives`, template `additives[]` | ✅ | ⬜ | Needed by D27 |
-| M6 | Delete (deactivate if used) | | `DeleteFermentationTemplateAction` | ✅ | ⬜ | |
-| M7 | Fermentation monitor alerts (stuck, temp, VA, pH, MLF/ferment complete, stale) | `api/fermentation-monitor` (unrendered) | `CellarAnalyticsQuery` `alerts` (`FermentationMonitorQuery`) | ✅ | ⬜ | Rendered as an `AttentionBand` (prototype never showed it) |
+| M1 | Protocol list + create/edit (stages: days, temp range, actions with type/product/dose/unit/timing) | `harvest/fermentation-templates.tsx` | `Create/UpdateFermentationTemplateAction` | ✅ | ✅ `ProtocolFormPanel` (stages by day with tasks; doses are the structured additives) | |
+| M2 | Quick-start "Standard Red/White" templates | same | — | ✅ | ✅ `ProtocolFormPanel` quick start (red, white) | Client-side presets |
+| M3 | Duplicate template | same | `CreateFermentationTemplateAction` | ✅ | ✅ `Cellar/Protocols` | |
+| M4 | Timeline view of stages | same | — | ✅ | ✅ `Cellar/Protocols` (stage timeline on each card) | |
+| M5 | Structured additive doses (per_L/per_hL/per_kg/per_100kg) | `protocol-doses-editor.tsx`, `final-plan.actions.ts:86` | `protocol_additives`, template `additives[]` | ✅ | ✅ `ProtocolFormPanel` (additive doses per L / hL / kg / 100 kg) | Needed by D27 |
+| M6 | Delete (deactivate if used) | | `DeleteFermentationTemplateAction` | ✅ | ✅ `Cellar/Protocols` | |
+| M7 | Fermentation monitor alerts (stuck, temp, VA, pH, MLF/ferment complete, stale) | `api/fermentation-monitor` (unrendered) | `CellarAnalyticsQuery` `alerts` (`FermentationMonitorQuery`) | ✅ | ✅ `Cellar/Protocols` (fermentation monitor) | Rendered as an `AttentionBand` (prototype never showed it) |
 
 ## N. Analytics & costs
 
