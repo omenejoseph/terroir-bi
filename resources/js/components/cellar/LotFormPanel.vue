@@ -62,7 +62,8 @@ watch(
             name: l?.name ?? '',
             vintage: l?.vintage ?? String(new Date().getFullYear()),
             vineyard: l?.vineyard ?? '',
-            wine_type: l?.wine_type ?? '',
+            // The prototype's form starts a new lot as a Red: a lot with no type draws as a grey tile.
+            wine_type: l?.wine_type ?? 'RED',
             status: l?.status ?? 'FERMENTING',
             initial_volume: '',
             vessel_id: null,
@@ -111,7 +112,9 @@ function submit(): void {
             ...(finance.value ? { price_per_kg: toMinor(g.price) } : {}),
         })),
         ...(finance.value ? { grape_price_per_kg: toMinor(d.price) } : {}),
-        ...(props.lot ? { status: d.status } : { initial_volume: parseDecimal(d.initial_volume), vessel_id: d.vessel_id }),
+        // Stage is set when the lot is created as well as when it is edited, as in the prototype.
+        status: d.status,
+        ...(props.lot ? {} : { initial_volume: parseDecimal(d.initial_volume), vessel_id: d.vessel_id }),
     }));
 
     if (props.lot) form.patch(`/cellar/lots/${props.lot.id}`, { preserveScroll: true, onSuccess: () => emit('close') });
@@ -127,23 +130,23 @@ const STATUS_OPTIONS = computed(() => Object.entries(LOT_STATUS_LABELS).map(([va
 <template>
     <SidePanel :open="open" :title="lot ? t('Edit wine lot') : t('New wine lot')" @close="emit('close')">
         <div class="flex flex-col gap-4">
-            <FormField v-slot="{ id, invalid }" :label="t('Name')" required :error="form.errors.name"><Input :id="id" :invalid="invalid" v-model="form.name" /></FormField>
+            <FormField v-slot="{ id, invalid }" :label="t('Name')" required :error="form.errors.name"><Input :id="id" :invalid="invalid" v-model="form.name" :placeholder="t('e.g. Plavac Mali Reserve 2025')" /></FormField>
             <FieldRow>
                 <FormField v-slot="{ id, invalid }" :label="t('Vintage')" required :error="form.errors.vintage"><Input :id="id" :invalid="invalid" v-model="form.vintage" inputmode="numeric" /></FormField>
-                <FormField v-slot="{ id, invalid }" :label="t('Wine type')" :error="form.errors.wine_type">
+                <FormField v-slot="{ id, invalid }" :label="t('Wine type')" required :error="form.errors.wine_type">
                     <Select :id="id" :invalid="invalid" v-model="form.wine_type" :placeholder="t('Select…')" :options="WINE_TYPE_OPTIONS.map((o) => ({ ...o, label: t(o.label) }))" />
                 </FormField>
             </FieldRow>
 
             <div class="flex flex-col gap-2">
                 <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium">{{ t('Grapes') }}</span>
+                    <span class="text-sm font-medium">{{ t('Grapes') }}<span class="ml-1 text-destructive" aria-hidden="true">*</span></span>
                     <button type="button" class="inline-flex items-center gap-1 text-xs underline-offset-2 hover:underline" @click="form.grapes.push({ grape_variety: '', percentage: '', weight_kg: '', price: '' })">
                         <Plus class="size-3" /> {{ t('Add grape') }}
                     </button>
                 </div>
                 <div v-for="(g, i) in form.grapes" :key="i" class="grid grid-cols-[1fr_60px_70px_auto] items-end gap-2" :class="finance && 'grid-cols-[1fr_60px_70px_70px_auto]'">
-                    <FormField v-slot="{ id, invalid }" :label="i === 0 ? t('Variety') : ''" :error="err(`grapes.${i}.grape_variety`)"><Input :id="id" :invalid="invalid" v-model="g.grape_variety" /></FormField>
+                    <FormField v-slot="{ id, invalid }" :label="i === 0 ? t('Variety') : ''" :error="err(`grapes.${i}.grape_variety`)"><Input :id="id" :invalid="invalid" v-model="g.grape_variety" :placeholder="t('e.g. Plavac Mali')" /></FormField>
                     <FormField v-slot="{ id, invalid }" :label="i === 0 ? '%' : ''"><Input :id="id" :invalid="invalid" v-model="g.percentage" inputmode="decimal" /></FormField>
                     <FormField v-slot="{ id, invalid }" :label="i === 0 ? 'kg' : ''"><Input :id="id" :invalid="invalid" v-model="g.weight_kg" inputmode="decimal" /></FormField>
                     <FormField v-slot="{ id, invalid }" v-if="finance" :label="i === 0 ? '€/kg' : ''"><Input :id="id" :invalid="invalid" v-model="g.price" inputmode="decimal" /></FormField>
@@ -154,13 +157,14 @@ const STATUS_OPTIONS = computed(() => Object.entries(LOT_STATUS_LABELS).map(([va
                 <p v-if="err('grape_variety')" class="text-xs text-destructive">{{ err('grape_variety') }}</p>
             </div>
 
-            <FormField v-slot="{ id, invalid }" :label="t('Vineyard')" :error="form.errors.vineyard"><Input :id="id" :invalid="invalid" v-model="form.vineyard" /></FormField>
+            <FormField v-slot="{ id, invalid }" :label="t('Vineyard / origin')" :error="form.errors.vineyard"><Input :id="id" :invalid="invalid" v-model="form.vineyard" :placeholder="t('e.g. Block A, Primosten')" /></FormField>
 
             <template v-if="!lot">
                 <FieldRow>
                     <FormField v-slot="{ id, invalid }" :label="t('Initial volume (L)')" required :error="err('initial_volume')"><Input :id="id" :invalid="invalid" v-model="form.initial_volume" inputmode="decimal" /></FormField>
                     <FormField v-slot="{ id, invalid }" :label="t('Harvest weight (kg)')" :error="form.errors.harvest_weight_kg"><Input :id="id" :invalid="invalid" v-model="form.harvest_weight_kg" inputmode="decimal" /></FormField>
                 </FieldRow>
+                <FormField v-slot="{ id, invalid }" :label="t('Stage')" :error="form.errors.status"><Select :id="id" :invalid="invalid" v-model="form.status" :options="STATUS_OPTIONS" /></FormField>
                 <FormField v-slot="{ id, invalid }" :label="t('Starting vessel (optional)')" :error="form.errors.vessel_id">
                     <Combobox :id="id" :invalid="invalid" v-model="form.vessel_id" :options="vesselOptions" :placeholder="t('Select vessel…')" clearable />
                 </FormField>

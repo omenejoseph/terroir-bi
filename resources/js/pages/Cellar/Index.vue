@@ -40,6 +40,8 @@ const props = defineProps<{
     vessels: MapVessel[];
     lots: WineLotSummary[];
     bottled: WineLotSummary[];
+    /** All bottled lots; `bottled` is only the latest few. */
+    bottledTotal: number;
     lotOptions: LotOption[];
     attention: CellarAttentionItem[];
 }>();
@@ -200,7 +202,7 @@ function additionLine(l: WineLotSummary): string {
                 </div>
             </section>
 
-            <Disclosure v-if="bottled.length" :title="t('Bottled wines (:n)', { n: bottled.length })">
+            <Disclosure v-if="bottled.length" :title="t('Bottled wines (:n)', { n: bottledTotal })">
                 <div v-for="g in archive" :key="g.vintage" class="mb-3">
                     <h4 class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{{ t('Vintage :v', { v: g.vintage }) }}</h4>
                     <div v-for="l in g.lots" :key="l.id" class="flex flex-wrap items-center justify-between gap-2 border-b border-border py-2 text-xs last:border-0">
@@ -213,6 +215,9 @@ function additionLine(l: WineLotSummary): string {
                         </span>
                     </div>
                 </div>
+                <Link v-if="bottledTotal > bottled.length" href="/cellar/lots?status=BOTTLED" class="inline-block pt-1 text-xs underline underline-offset-2 hover:text-foreground">
+                    {{ t('Showing the latest :n — view all :total bottled lots →', { n: bottled.length, total: bottledTotal }) }}
+                </Link>
             </Disclosure>
         </div>
 

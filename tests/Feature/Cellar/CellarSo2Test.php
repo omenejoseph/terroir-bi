@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\Vessel;
 use App\Models\VesselLot;
 use App\Models\WineLot;
+use App\Support\Quantity;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
@@ -243,7 +244,7 @@ class CellarSo2Test extends TestCase
         });
     }
 
-    public function test_apply_is_all_or_nothing_when_stock_is_short(): void
+    public function test_apply_goes_through_when_stock_is_short_and_stock_goes_negative(): void
     {
         [$lot, $f11, $b1, $product] = $this->cellar('g', null, '10.000');
 
@@ -253,11 +254,11 @@ class CellarSo2Test extends TestCase
                 ['wine_lot_id' => $lot->getKey(), 'vessel_id' => $f11->getKey(), 'mg_l' => 10],
                 ['wine_lot_id' => $lot->getKey(), 'vessel_id' => $b1->getKey(), 'mg_l' => 10],
             ],
-        ])->assertUnprocessable()->assertJsonValidationErrors(['quantity']);
+        ])->assertCreated();
 
         $this->inTenant(function () use ($product): void {
-            $this->assertSame('10.000', (string) $product->refresh()->current_stock);
-            $this->assertSame(0, CellarAddition::query()->count());
+            $this->assertSame(2, CellarAddition::query()->count());
+            $this->assertTrue(Quantity::isNegative((string) $product->refresh()->current_stock), 'the 10 g on the shelf was overdrawn');
         });
     }
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
+import { ChevronDown } from 'lucide-vue-next';
 
 import Button from '@/components/ui/Button.vue';
 import { useAuth } from '@/composables/useAuth';
@@ -12,8 +13,9 @@ import type { CellarAttentionItem } from '@/types/cellar';
  * The cellar's "needs attention" list (CellarAttentionQuery): one row per
  * problem — what's wrong, with which wine, and the one action that deals with
  * it (plan a reading, plan SO₂, a warm/cool task, open the lot or Today).
- * "Hide until tomorrow" is a per-browser convenience; the list itself always
- * comes from the server.
+ * Folded shut until opened — a header with the count is enough to know something needs a look.
+ * "Hide until tomorrow" removes it altogether and is a per-browser convenience; the list itself
+ * always comes from the server.
  */
 const props = withDefaults(defineProps<{ items: CellarAttentionItem[]; showLot?: boolean }>(), { showLot: true });
 
@@ -44,6 +46,9 @@ function hideAll(): void {
 const visible = computed(() => props.items.filter((i) => hidden.value[i.key] === undefined && (i.action.post === null || canManage.value || i.action.href !== null)));
 const SQUARE: Record<string, string> = { critical: 'bg-destructive', high: 'bg-tag-orange-foreground', medium: 'bg-tag-orange-foreground/50' };
 
+/** Closed by default: the header (with its count) is the cue, the rows are one click away. */
+const open = ref(false);
+
 const busy = ref<string | null>(null);
 function act(item: CellarAttentionItem): void {
     if (!item.action.post) return;
@@ -54,11 +59,19 @@ function act(item: CellarAttentionItem): void {
 
 <template>
     <section v-if="visible.length" :aria-label="t('Needs attention')" class="border border-tag-orange-foreground/30 bg-tag-orange/20">
-        <div class="flex items-center justify-between gap-2 border-b border-tag-orange-foreground/20 px-4 py-2.5">
-            <span class="text-sm font-semibold text-tag-orange-foreground">{{ t('Needs attention · :n', { n: visible.length }) }}</span>
-            <button type="button" class="text-xs text-muted-foreground hover:text-foreground" @click="hideAll">{{ t('Hide until tomorrow') }}</button>
+        <div class="flex items-center justify-between gap-2 px-4 py-2.5" :class="open && 'border-b border-tag-orange-foreground/20'">
+            <button
+                type="button"
+                class="flex min-w-0 flex-1 items-center gap-2 text-left"
+                :aria-expanded="open"
+                @click="open = !open"
+            >
+                <ChevronDown class="size-4 shrink-0 text-tag-orange-foreground transition-transform" :class="!open && '-rotate-90'" :stroke-width="2" aria-hidden="true" />
+                <span class="text-sm font-semibold text-tag-orange-foreground">{{ t('Needs attention · :n', { n: visible.length }) }}</span>
+            </button>
+            <button type="button" class="shrink-0 text-xs text-muted-foreground hover:text-foreground" @click="hideAll">{{ t('Hide until tomorrow') }}</button>
         </div>
-        <ul>
+        <ul v-show="open">
             <li v-for="item in visible" :key="item.key" class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-tag-orange-foreground/10 px-4 py-2.5 text-sm last:border-0">
                 <span :class="cn('size-2.5 shrink-0', SQUARE[item.severity])" :title="t(item.severity)" />
                 <Link v-if="showLot" :href="`/cellar/lots/${item.lot_id}`" class="min-w-0 flex-1 truncate font-semibold hover:underline sm:w-44 sm:flex-none">{{ item.lot_name }}</Link>

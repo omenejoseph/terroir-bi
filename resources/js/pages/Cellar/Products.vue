@@ -55,6 +55,8 @@ const tabs = computed<TabItem[]>(() => [
     { label: t('Protocol needs · :n', { n: deficits.value.length }), value: 'needs' },
 ]);
 
+/** A balance below zero means more was used than was ever recorded in: someone needs to recount it. */
+const negative = (p: EnologicalProduct) => Number(p.current_stock) < 0;
 const low = (p: EnologicalProduct) => p.min_stock !== null && Number(p.current_stock) < Number(p.min_stock);
 const value = computed(() => props.products.reduce((n, p) => n + (p.cost_per_unit ? p.cost_per_unit.minor * Number(p.current_stock) : 0), 0));
 
@@ -225,7 +227,10 @@ function draftOrders(): void {
                                 <td class="px-3 py-1.5"><input v-if="canManage" v-model="selected" type="checkbox" :value="p.id" class="size-4 accent-primary" :aria-label="p.name" /></td>
                                 <td class="px-2 py-1.5"><p class="font-medium">{{ p.name }}</p><p v-if="p.manufacturer" class="text-[11px] text-muted-foreground">{{ p.manufacturer }}</p></td>
                                 <td class="px-2 py-1.5">{{ p.category }}</td>
-                                <td :class="cn('px-2 py-1.5 text-right tabular-nums', low(p) && 'font-semibold text-destructive')">{{ qty(p.current_stock) }} {{ p.unit }}</td>
+                                <td :class="cn('px-2 py-1.5 text-right tabular-nums', (low(p) || negative(p)) && 'font-semibold text-destructive')">
+                                    {{ qty(p.current_stock) }} {{ p.unit }}
+                                    <span v-if="negative(p)" class="ml-1 border border-destructive px-1 text-[10px] font-medium" :title="t('More has been used than was recorded in. Record a stock count to correct it.')">{{ t('Recount') }}</span>
+                                </td>
                                 <td class="px-2 py-1.5 text-right tabular-nums text-muted-foreground">{{ p.min_stock ? qty(p.min_stock) : '—' }}</td>
                                 <td v-if="finance" class="px-2 py-1.5 text-right tabular-nums">{{ p.cost_per_unit ? `${formatUnitPrice(p.cost_per_unit.minor, currency)}/${p.unit}` : '—' }}</td>
                                 <td class="hidden px-2 py-1.5 md:table-cell">{{ supplierName(p.supplier_id) }}</td>

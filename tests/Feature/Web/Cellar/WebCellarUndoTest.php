@@ -126,7 +126,7 @@ class WebCellarUndoTest extends TestCase
         });
     }
 
-    public function test_an_undo_that_is_no_longer_possible_says_why_and_can_be_tried_again(): void
+    public function test_an_undo_still_goes_through_when_the_stock_was_used_elsewhere_meanwhile(): void
     {
         $product = $this->inTenant(function (): EnologicalProduct {
             $p = EnologicalProduct::create(['name' => 'Bentonite', 'category' => 'FINING', 'unit' => 'g', 'current_stock' => '50.000']);
@@ -139,12 +139,12 @@ class WebCellarUndoTest extends TestCase
         // Meanwhile the stock is used elsewhere.
         $this->inTenant(fn () => $product->forceFill(['current_stock' => '10.000'])->save());
 
-        $this->web('POST', '/cellar/undo/'.$token)->assertSessionHas('error');
-        $this->inTenant(fn () => $this->assertSame(0, CellarAddition::query()->count()));
-
-        $this->inTenant(fn () => $product->forceFill(['current_stock' => '80.000'])->save());
+        // The addition happened, so bringing it back is never refused for stock: 10 − 50 leaves the balance negative.
         $this->web('POST', '/cellar/undo/'.$token)->assertSessionHas('success');
-        $this->inTenant(fn () => $this->assertSame(1, CellarAddition::query()->count()));
+        $this->inTenant(function () use ($product): void {
+            $this->assertSame(1, CellarAddition::query()->count());
+            $this->assertSame('-40.000', (string) $product->fresh()?->current_stock);
+        });
     }
 
     public function test_readings_processes_and_tasting_notes_come_back_as_they_were(): void

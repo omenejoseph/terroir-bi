@@ -15,9 +15,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * The single sink for enological stock: every change locks the product,
- * refuses to go below zero (the one stock rule), writes a movement with its
- * cause and an `enological_product.stock_adjusted` audit entry.
+ * The single sink for enological stock: every change locks the product, writes a movement with its
+ * cause and an `enological_product.stock_adjusted` audit entry, and — for a deliberate stock change
+ * (receiving, counting, adjusting) — refuses to go below zero.
+ *
+ * Recording work that has already happened (an addition made to a wine) passes `allowNegative`: the
+ * wine got the product whether or not the book was right, so the use is never refused. The balance is
+ * allowed to go (further) negative and the Products page flags it for a recount.
  */
 class EnologicalStockLedger
 {
@@ -30,10 +34,11 @@ class EnologicalStockLedger
         ?Model $reference = null,
         ?string $note = null,
         string $errorField = 'quantity',
+        bool $allowNegative = false,
     ): EnologicalProduct {
         $delta = Quantity::normalize($delta);
 
-        return DB::transaction(function () use ($product, $delta, $source, $reference, $note, $errorField): EnologicalProduct {
+        return DB::transaction(function () use ($product, $delta, $source, $reference, $note, $errorField, $allowNegative): EnologicalProduct {
             /** @var EnologicalProduct $locked */
             $locked = EnologicalProduct::query()
                 ->whereKey($product instanceof EnologicalProduct ? $product->getKey() : $product)
@@ -42,7 +47,7 @@ class EnologicalStockLedger
 
             $before = Quantity::normalize((string) $locked->current_stock);
             $after = Quantity::add($before, $delta);
-            if (Quantity::isNegative($after)) {
+            if (! $allowNegative && Quantity::isNegative($after)) {
                 throw ValidationException::withMessages([
                     $errorField => "Not enough {$locked->name} in stock — {$before} {$locked->unit} available, ".Quantity::negate($delta).' needed.',
                 ]);

@@ -221,7 +221,7 @@ class CellarActivitiesTest extends TestCase
         });
     }
 
-    public function test_an_addition_is_refused_when_stock_is_short(): void
+    public function test_an_addition_completes_even_when_stock_is_short_and_stock_goes_negative(): void
     {
         $activity = $this->inTenant(function () {
             $v = $this->vessel('F11');
@@ -235,13 +235,16 @@ class CellarActivitiesTest extends TestCase
             ]);
         });
 
+        // The wine got the product whether or not the book was right: completing never blocks on stock.
         $this->api('POST', "cellar/activities/{$activity->getKey()}/complete")
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['quantity']);
+            ->assertOk()
+            ->assertJsonPath('data.status', 'DONE');
 
         $this->inTenant(function () use ($activity): void {
-            $this->assertSame('PLANNED', $activity->refresh()->status->value);
-            $this->assertSame(0, CellarAddition::query()->count());
+            $this->assertSame('DONE', $activity->refresh()->status->value);
+            $this->assertSame(1, CellarAddition::query()->count());
+            // 10 on the shelf, 50 used: the balance goes negative for someone to recount.
+            $this->assertSame('-40.000', (string) EnologicalProduct::query()->sole()->current_stock);
         });
     }
 

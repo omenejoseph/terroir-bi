@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { MoreHorizontal } from 'lucide-vue-next';
 
 import { usePopover } from '@/composables/usePopover';
@@ -31,7 +31,57 @@ const props = withDefaults(
 const emit = defineEmits<{ select: [key: string] }>();
 
 const anchor = ref<HTMLElement | null>(null);
-const { open, close, toggle } = usePopover(anchor);
+const menu = ref<HTMLElement | null>(null);
+const { open, close, toggle } = usePopover(anchor, menu);
+
+/*
+  The menu is teleported to <body> and fixed to the trigger: inside a table's scroll container (every
+  table here has one) an absolutely positioned menu is clipped, and the last row's menu vanished
+  behind the table's edge. It opens downwards, or upwards when there is no room below, and closes if
+  the page scrolls or resizes under it.
+*/
+const position = ref<Record<string, string>>({});
+const dismiss = (): void => close();
+
+function place(): void {
+    const trigger = anchor.value;
+    if (!trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const height = (menu.value?.offsetHeight ?? props.items.length * 28 + 8) + 8;
+    const up = window.innerHeight - rect.bottom < height && rect.top > window.innerHeight - rect.bottom;
+
+    position.value = {
+        ...(up ? { bottom: `${window.innerHeight - rect.top + 4}px` } : { top: `${rect.bottom + 4}px` }),
+        ...(props.align === 'right' ? { right: `${Math.max(8, window.innerWidth - rect.right)}px` } : { left: `${Math.max(8, rect.left)}px` }),
+    };
+}
+
+watch(open, async (isOpen) => {
+    if (!isOpen) {
+        window.removeEventListener('scroll', onScroll, true);
+        window.removeEventListener('resize', dismiss);
+
+        return;
+    }
+
+    place();
+    await nextTick();
+    place(); // again with the menu's real height
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', dismiss);
+});
+
+/** Scrolling inside the menu itself is not the page moving away from it. */
+function onScroll(event: Event): void {
+    if (menu.value && event.target instanceof Node && menu.value.contains(event.target)) return;
+    dismiss();
+}
+
+onBeforeUnmount(() => {
+    window.removeEventListener('scroll', onScroll, true);
+    window.removeEventListener('resize', dismiss);
+});
 
 function choose(item: MenuItem): void {
     if (item.disabled) return;
@@ -56,16 +106,13 @@ function choose(item: MenuItem): void {
             </slot>
         </button>
 
+        <Teleport to="body">
         <div
             v-if="open"
+            ref="menu"
             role="menu"
-            :class="
-                cn(
-                    'absolute top-8 z-30 min-w-36 border border-border bg-card p-1',
-                    align === 'right' ? 'right-0' : 'left-0',
-                    props.class,
-                )
-            "
+            :class="cn('fixed z-[60] min-w-36 border border-border bg-card p-1', props.class)"
+            :style="position"
         >
             <button
                 v-for="item in items"
@@ -91,5 +138,6 @@ function choose(item: MenuItem): void {
                 {{ item.label }}
             </button>
         </div>
+        </Teleport>
     </div>
 </template>

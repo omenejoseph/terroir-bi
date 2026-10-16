@@ -168,7 +168,7 @@ class CellarLifecycleTest extends TestCase
             ->assertJsonPath('data.current_stock', '300.000');
     }
 
-    public function test_addition_records_its_vessel_and_is_refused_when_stock_is_short(): void
+    public function test_addition_records_its_vessel_and_is_recorded_even_when_stock_is_short(): void
     {
         $tenant = $this->createTenant();
         $admin = $this->createMember($tenant, [TenantRole::Admin]);
@@ -189,14 +189,14 @@ class CellarLifecycleTest extends TestCase
         $this->postJson("/api/v1/wine-lots/{$lot->getKey()}/additions", [
             'name' => 'Bentonite', 'quantity' => 30, 'unit' => 'g', 'enological_product_id' => $product->getKey(),
         ], $this->tenantHeader($tenant))
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['quantity']);
+            ->assertCreated();
 
-        $this->assertSame('10.000', (string) $product->refresh()->current_stock);
-        $this->assertSame(1, $lot->additions()->count());
+        // 40 − 30 − 30: the second use is recorded and the balance goes negative.
+        $this->assertSame('-20.000', (string) $product->refresh()->current_stock);
+        $this->assertSame(2, $lot->additions()->count());
     }
 
-    public function test_bulk_additions_are_all_or_nothing_when_stock_runs_out(): void
+    public function test_bulk_additions_are_recorded_even_when_stock_runs_out(): void
     {
         $tenant = $this->createTenant();
         $admin = $this->createMember($tenant, [TenantRole::Admin]);
@@ -211,9 +211,10 @@ class CellarLifecycleTest extends TestCase
         $this->postJson('/api/v1/wine-lots/additions/bulk', [
             'name' => 'K2S2O5', 'unit' => 'g', 'enological_product_id' => $product->getKey(),
             'lots' => [['wine_lot_id' => $lotA->getKey(), 'quantity' => 30], ['wine_lot_id' => $lotB->getKey(), 'quantity' => 30]],
-        ], $this->tenantHeader($tenant))->assertUnprocessable();
+        ], $this->tenantHeader($tenant))->assertCreated();
 
-        $this->assertSame('50.000', (string) $product->refresh()->current_stock);
-        $this->assertSame(0, $lotA->additions()->count());
+        // 50 − 30 − 30: both are recorded and the balance goes negative.
+        $this->assertSame('-10.000', (string) $product->refresh()->current_stock);
+        $this->assertSame(1, $lotA->additions()->count());
     }
 }

@@ -123,15 +123,33 @@ export const WINE_TYPE_LABELS: Record<WineType, string> = {
     DESSERT: 'Dessert',
 };
 
-/** Swatch colour per wine type, for vessel tiles and lot chips. */
+/** Swatch colour per wine type, for vessel tiles and lot chips (the prototype's palette). */
 export const WINE_TYPE_SWATCH: Record<WineType, string> = {
-    RED: '#7f1d1d',
-    WHITE: '#eab308',
-    ROSE: '#f472b6',
-    ORANGE: '#ea580c',
-    SPARKLING: '#a3e635',
-    DESSERT: '#b45309',
+    RED: '#6b2138',
+    WHITE: '#c4a43c',
+    ROSE: '#d4728a',
+    ORANGE: '#c47a2c',
+    SPARKLING: '#c8b840',
+    DESSERT: '#8b6914',
 };
+
+/**
+ * The colour a lot's wine is drawn in. The explicit wine type wins; when a lot has none, the grape
+ * says what colour it must be (as the prototype's map does): "blanc / bianco / white / grigio / gris"
+ * are white, "rosé" is rosé, and any other named grape is a red. No grape and no type is a neutral tone.
+ */
+export function wineColour(lot: { wine_type: WineType | null; grape_variety: string | null } | null | undefined): string {
+    if (!lot) return '#d1d5db';
+    if (lot.wine_type) return WINE_TYPE_SWATCH[lot.wine_type];
+
+    const grape = (lot.grape_variety ?? '').trim().toLowerCase();
+
+    if (grape === '') return '#a88070';
+    if (/(blanc|bianco|white|grigio|gris|chardonnay|riesling|pošip|posip|maraština|marastina|malvazija|graševina|grasevina|grk|debit)/.test(grape)) return WINE_TYPE_SWATCH.WHITE;
+    if (/(rosé|rose|ružičast)/.test(grape)) return WINE_TYPE_SWATCH.ROSE;
+
+    return WINE_TYPE_SWATCH.RED;
+}
 
 export const LOT_STATUS_LABELS: Record<string, string> = {
     FERMENTING: 'Fermenting',

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Cellar;
 
 use App\Actions\Cellar\BulkCreateVesselsAction;
+use App\Actions\Cellar\BulkDeleteVesselsAction;
 use App\Actions\Cellar\CreateVesselAction;
 use App\Actions\Cellar\DeleteVesselAction;
 use App\Actions\Cellar\DuplicateVesselsAction;
@@ -14,6 +15,7 @@ use App\Actions\Cellar\UpdateVesselLayoutAction;
 use App\DataTransferObjects\VesselData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cellar\BulkCreateVesselsRequest;
+use App\Http\Requests\Cellar\BulkDeleteVesselsRequest;
 use App\Http\Requests\Cellar\DuplicateVesselsRequest;
 use App\Http\Requests\Cellar\RenameRoomRequest;
 use App\Http\Requests\Cellar\StoreVesselRequest;
@@ -101,6 +103,22 @@ class VesselController extends Controller
         $action->execute($vessel);
 
         return redirect('/cellar')->with('success', __('Vessel deleted.'));
+    }
+
+    /** The map's "Delete" on a selection: empty vessels go, vessels holding wine stay and are named. */
+    public function bulkDestroy(BulkDeleteVesselsRequest $request, BulkDeleteVesselsAction $action): RedirectResponse
+    {
+        /** @var list<string> $ids */
+        $ids = array_values((array) $request->validated('ids'));
+        $result = $action->execute($ids);
+
+        if ($result['deleted'] === 0) {
+            return back()->with('error', __('Nothing deleted — :names hold wine. Empty them first.', ['names' => implode(', ', $result['kept'])]));
+        }
+
+        $message = __(':n vessel(s) deleted.', ['n' => $result['deleted']]);
+
+        return back()->with('success', $result['kept'] === [] ? $message : $message.' '.__(':names hold wine and were kept.', ['names' => implode(', ', $result['kept'])]));
     }
 
     /**

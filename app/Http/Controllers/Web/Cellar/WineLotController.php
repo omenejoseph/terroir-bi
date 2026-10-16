@@ -62,12 +62,15 @@ use App\Models\User;
 use App\Models\Vessel;
 use App\Models\VesselLot;
 use App\Models\WineLot;
+use App\Support\LotScope;
+use App\Support\PerPage;
 use App\Queries\CellarAttentionQuery;
 use App\Queries\CellarHistoryQuery;
 use App\Queries\CellarPickerOptions;
 use App\Queries\ListWineLotsQuery;
 use App\Queries\LotAnalysisTrendQuery;
-use App\Queries\LotTimelineQuery;
+use App\Queries\LotBarrelsQuery;
+use App\Queries\LotTablesQuery;
 use App\Queries\TraceabilityQuery;
 use App\Services\Cellar\CellarClock;
 use App\Services\Cellar\LotCostService;
@@ -101,23 +104,43 @@ class WineLotController extends Controller
             'wine_type' => $request->string('wine_type')->toString() ?: null,
         ];
 
-        $lots = $query->build(['status' => $filters['status'], 'search' => $filters['search']])
-            ->with(['grapes', 'latestAnalysis', 'latestAddition'])
+        $matching = $query->build(['status' => $filters['status'], 'search' => $filters['search']])
             ->when($filters['vintage'] !== null, fn ($q) => $q->where('vintage', $filters['vintage']))
-            ->when($filters['wine_type'] !== null, fn ($q) => $q->where('wine_type', $filters['wine_type']))
+            ->when($filters['wine_type'] !== null, fn ($q) => $q->where('wine_type', $filters['wine_type']));
+
+        // The header's count and litres cover every lot the filters match, not just this page of them.
+        $totals = ['count' => (clone $matching)->count(), 'volume' => number_format((float) (clone $matching)->sum('current_volume'), 3, '.', '')];
+
+        $lots = $matching
+            ->with(['grapes', 'latestAnalysis', 'latestAddition'])
             ->orderByDesc('vintage')
             ->orderBy('name')
-            ->get();
+            ->paginate(PerPage::fromRequest($request));
 
         return Inertia::render('Cellar/Lots/Index', [
-            'lots' => array_values($lots->map(fn (WineLot $l): array => $this->strip(WineLotData::fromModel($l)->toArray()))->all()),
+            'lots' => [
+                'data' => array_values($lots->getCollection()->map(fn (WineLot $l): array => $this->strip(WineLotData::fromModel($l)->toArray()))->all()),
+                'meta' => ['current_page' => $lots->currentPage(), 'last_page' => $lots->lastPage(), 'per_page' => $lots->perPage(), 'total' => $lots->total()],
+            ],
+            'totals' => $totals,
             'filters' => $filters,
             'vintages' => array_values(WineLot::query()->whereNotNull('vintage')->distinct()->orderByDesc('vintage')->pluck('vintage')->map(fn ($v): string => (string) $v)->all()),
             'vessels' => fn (): array => $options->vessels(),
         ]);
     }
 
-    public function show(WineLot $wineLot, LotTimelineQuery $timeline, LotAnalysisTrendQuery $trend, CellarHistoryQuery $history, TraceabilityQuery $trace, CellarPickerOptions $options, CellarClock $clock, CellarAttentionQuery $attention): Response
+    /** The journey's filter chips and the record kinds each one covers. */
+    private const JOURNEY_KINDS = [
+        'analysis' => ['analysis'],
+        'addition' => ['addition'],
+        'move' => ['transfer', 'transfer_in', 'vessel'],
+        'process' => ['process'],
+        'tasting' => ['tasting'],
+        'bottling' => ['bottling'],
+        'planned' => ['planned_done', 'planned_skipped'],
+    ];
+
+    public function show(Request $request, WineLot $wineLot, LotTablesQuery $tables, LotBarrelsQuery $barrels, LotAnalysisTrendQuery $trend, CellarHistoryQuery $history, TraceabilityQuery $trace, CellarPickerOptions $options, CellarClock $clock, CellarAttentionQuery $attention): Response
     {
         $today = $clock->today();
         $next = CellarActivity::query()->with(['vessel', 'round'])
@@ -126,12 +149,44 @@ class WineLotController extends Controller
             ->orderBy('planned_for')->orderBy('sort_order')
             ->first();
 
+        // What part of the lot is on screen: the whole lot or one barrel (?vessel=), and which tab.
+        $vessel = LotScope::resolve($wineLot, $request->query('vessel') !== null ? (string) $request->query('vessel') : null);
+        $tab = in_array($request->query('tab'), ['overview', 'barrels', 'analysis', 'additions', 'tasting', 'transfers', 'processes', 'details'], true)
+            ? (string) $request->query('tab')
+            : 'overview';
+        $perPage = PerPage::fromRequest($request);
+        $page = max(1, (int) $request->query('page', 1));
+        $kind = (string) $request->query('kind', '');
+
+        // In a barrel's view the barrels table is that barrel (and its "whole lot" row is just it), not all of them.
+        $overview = $barrels->get($wineLot, $vessel);
+
+        // The tab's own table, one page of it. Only the active tab's rows are read.
+        $table = match ($tab) {
+            'overview' => $tables->journey($wineLot, $vessel, self::JOURNEY_KINDS[$kind] ?? null, $perPage, $page),
+            'barrels' => $tables->slice($overview['rows'], $perPage, $page),
+            'analysis' => $tables->analyses($wineLot, $vessel, $perPage, $page),
+            'additions' => $tables->additions($wineLot, $vessel, $perPage, $page),
+            'tasting' => $tables->tastings($wineLot, $vessel, $perPage, $page),
+            'transfers' => $tables->transfers($wineLot, $vessel, $perPage, $page),
+            'processes' => $tables->processes($wineLot, $vessel, $perPage, $page),
+            default => null,
+        };
+        $scopeRow = $vessel === null ? null : (collect($overview['rows'])->firstWhere('vessel_id', $vessel));
+
         return Inertia::render('Cellar/Lots/Show', [
             'lot' => $this->present($wineLot),
+            'scope' => ['vessel_id' => $vessel, 'vessel' => $scopeRow, 'tab' => $tab, 'kind' => $kind !== '' && isset(self::JOURNEY_KINDS[$kind]) ? $kind : null],
+            'table' => $table,
+            // Bottlings sit under the Transfers tab (a bottling is where wine leaves the lot).
+            'bottlings' => $tab === 'transfers' ? $tables->bottlings($wineLot, 10, 1) : null,
+            'counts' => [...$tables->counts($wineLot, $vessel), 'barrels' => count($overview['rows'])],
+            // The barrels at a glance (the Barrels tab pages through all of them) and the combined figures.
+            'barrels' => ['rows' => array_slice($overview['rows'], 0, 8), 'combined' => $overview['combined']],
             // The lot's next planned task (overdue ones first), for the workspace's "Next" tile.
             'nextPlanned' => $next !== null ? CellarActivityData::fromModel($next, $today)->toArray() : null,
-            'timeline' => $timeline->get($wineLot),
             'attention' => fn (): array => $attention->get((string) $wineLot->getKey()),
+            // Every reading, oldest first, tagged by barrel: the charts and the stat tiles read it.
             'trend' => $trend->get($wineLot),
             'blendSources' => $this->blendSources($wineLot),
             'vessels' => fn (): array => $options->vessels(),
@@ -380,11 +435,8 @@ class WineLotController extends Controller
      */
     private function present(WineLot $lot): array
     {
-        $lot->loadMissing([
-            'grapes', 'vesselLots.vessel', 'analyses.vessel', 'additions.vessel',
-            'processes.vessel', 'tastingNotes', 'transfersOut.toLot', 'transfersOut.fromVessel', 'transfersOut.toVessel',
-            'transfersIn.fromLot', 'transfersIn.fromVessel', 'transfersIn.toVessel', 'bottlings.inventoryItem', 'plannedAdditions.vessel',
-        ]);
+        // The lot page pages its child tables itself (LotTablesQuery), so it loads only what it shows whole.
+        $lot->loadMissing(['grapes', 'vesselLots.vessel', 'plannedAdditions.vessel']);
 
         $finance = $this->membership->can('finance.view');
         $data = WineLotData::fromModel($lot, withDetail: true, costBreakdown: $finance ? $this->costs->breakdown($lot) : null)->toArray();

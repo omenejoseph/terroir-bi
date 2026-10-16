@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button.vue';
 import FieldRow from '@/components/ui/FieldRow.vue';
 import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
-import Select from '@/components/ui/Select.vue';
+import Combobox from '@/components/ui/Combobox.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import Textarea from '@/components/ui/Textarea.vue';
 import { useTranslations } from '@/composables/useTranslations';
@@ -46,7 +46,7 @@ function submit(): void {
                 <datalist id="process-kinds"><option v-for="k in KINDS" :key="k" :value="t(k)" /></datalist>
             </FormField>
             <FieldRow>
-                <FormField v-slot="{ id, invalid }" :label="t('Vessel')" :error="form.errors.vessel_id"><Select :id="id" :invalid="invalid" v-model="form.vessel_id" :options="vesselOptions" /></FormField>
+                <FormField v-slot="{ id, invalid }" :label="t('Vessel')" :error="form.errors.vessel_id"><Combobox :id="id" :invalid="invalid" v-model="form.vessel_id" :options="vesselOptions" :empty-text="t('No vessel matches.')" /></FormField>
                 <FormField v-slot="{ id, invalid }" :label="t('Date')" :error="form.errors.date"><Input :id="id" :invalid="invalid" v-model="form.date" type="date" /></FormField>
             </FieldRow>
             <FormField v-slot="{ id, invalid }" :label="t('Litres (optional)')" :error="form.errors.volume"><Input :id="id" :invalid="invalid" v-model="form.volume" inputmode="decimal" /></FormField>

@@ -431,14 +431,15 @@ const chip = (on: boolean) =>
             <template v-if="type === 'TRANSFER' && lot">
                 <div class="grid grid-cols-2 gap-2">
                     <FormField v-slot="{ id, invalid }" :label="t('From vessel')">
-                        <Select :id="id" :invalid="invalid"
+                        <Combobox :id="id" :invalid="invalid"
+                            :empty-text="t('No vessel matches.')"
                             v-model="fromVessel"
                             :placeholder="t('Select…')"
                             :options="lot.vessels.map((v) => ({ value: v.id, label: `${v.name} · ${qty(v.volume)} L` }))"
                         />
                     </FormField>
                     <FormField v-slot="{ id, invalid }" :label="t('To vessel')">
-                        <Select :id="id" :invalid="invalid" v-model="toVessel" :placeholder="t('Select…')" :options="allVesselOptions" />
+                        <Combobox :id="id" :invalid="invalid" v-model="toVessel" :placeholder="t('Select…')" :options="allVesselOptions" :empty-text="t('No vessel matches.')" />
                     </FormField>
                 </div>
                 <FormField v-slot="{ id, invalid }" :label="t('Liters')">

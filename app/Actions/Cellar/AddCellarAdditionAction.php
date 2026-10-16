@@ -58,9 +58,10 @@ class AddCellarAdditionAction
                 'note' => $data['note'] ?? null,
             ]);
 
-            // Draws the product's stock — refused (and rolled back) if it would go negative.
+            // Draws the product's stock. The addition has happened, so it is recorded even when the book says
+            // there is none (the balance goes negative and the Products page flags it for a recount).
             if (! empty($data['enological_product_id'])) {
-                $this->ledger->move((string) $data['enological_product_id'], Quantity::negate($quantity), EnologicalStockSource::Addition, $addition, $lot->lot_number);
+                $this->ledger->move((string) $data['enological_product_id'], Quantity::negate($quantity), EnologicalStockSource::Addition, $addition, $lot->lot_number, allowNegative: true);
             }
 
             return $addition;

@@ -10,20 +10,23 @@ import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
 import Input from '@/components/ui/Input.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
+import Pagination from '@/components/ui/Pagination.vue';
 import Select from '@/components/ui/Select.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import { LOT_STATUS_LABELS, LOT_STATUS_TONES, WINE_TYPE_OPTIONS, qty } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import type { Vessel, WineLotSummary } from '@/types/cellar';
-import type { SharedProps } from '@/types';
+import type { Paginated, SharedProps } from '@/types';
 
 /** The shell persists between visits, so navigating does not remount the nav. */
 defineOptions({ layout: AppLayout });
 
 /** Every wine lot, bottled and blended included, filterable by status, vintage, type and text. */
 const props = defineProps<{
-    lots: WineLotSummary[];
+    lots: Paginated<WineLotSummary>;
+    /** Across every lot the filters match, not only this page. */
+    totals: { count: number; volume: string };
     filters: { status: string | null; search: string | null; vintage: string | null; wine_type: string | null };
     vintages: string[];
     vessels: Vessel[];
@@ -37,8 +40,9 @@ const locale = computed(() => page.props.locale);
 const search = ref(props.filters.search ?? '');
 const panel = ref(false);
 
-function apply(patch: Partial<typeof props.filters>): void {
-    const next = { ...props.filters, search: search.value || null, ...patch };
+/** Filtering, searching and paging are all server-side visits; a new filter starts again at page 1. */
+function apply(patch: Partial<typeof props.filters> & { page?: number; per_page?: number } = {}): void {
+    const next = { ...props.filters, search: search.value || null, per_page: props.lots.meta.per_page, ...patch };
     router.get('/cellar/lots', Object.fromEntries(Object.entries(next).filter(([, v]) => v)), { preserveState: true, preserveScroll: true, replace: true });
 }
 
@@ -51,13 +55,12 @@ function onSearch(): void {
 const STATUS = computed(() => [{ value: '', label: t('All statuses') }, ...Object.entries(LOT_STATUS_LABELS).map(([value, label]) => ({ value, label: t(label) }))]);
 const VINTAGES = computed(() => [{ value: '', label: t('All vintages') }, ...props.vintages.map((v) => ({ value: v, label: v }))]);
 const TYPES = computed(() => [{ value: '', label: t('All types') }, ...WINE_TYPE_OPTIONS.map((o) => ({ ...o, label: t(o.label) }))]);
-const total = computed(() => props.lots.reduce((s, l) => s + Number(l.current_volume), 0));
 </script>
 
 <template>
     <Head :title="t('Wine lots')" />
         <div class="flex flex-col gap-5">
-            <PageHeader :title="t('Wine lots')" :description="t(':n lots · :l L', { n: lots.length, l: qty(total) })">
+            <PageHeader :title="t('Wine lots')" :description="t(':n lots · :l L', { n: totals.count, l: qty(totals.volume) })">
                 <template #actions>
                     <Button size="sm" variant="outline" href="/cellar/bulk-analyses">{{ t('Bulk analyses') }}</Button>
                     <Button size="sm" variant="outline" href="/cellar/bulk-additions">{{ t('Bulk additions') }}</Button>
@@ -76,7 +79,8 @@ const total = computed(() => props.lots.reduce((s, l) => s + Number(l.current_vo
                 <Select :model-value="filters.wine_type ?? ''" :options="TYPES" class="w-36" @update:model-value="apply({ wine_type: $event || null })" />
             </div>
 
-            <Card class="overflow-x-auto">
+            <Card>
+                <div class="overflow-x-auto">
                 <table class="w-full text-xs">
                     <thead class="bg-muted text-[10px] uppercase tracking-wide text-muted-foreground">
                         <tr>
@@ -89,7 +93,7 @@ const total = computed(() => props.lots.reduce((s, l) => s + Number(l.current_vo
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="l in lots" :key="l.id" class="border-t border-border hover:bg-accent/50">
+                        <tr v-for="l in lots.data" :key="l.id" class="border-t border-border hover:bg-accent/50">
                             <td class="px-3 py-2">
                                 <Link :href="`/cellar/lots/${l.id}`" class="font-medium hover:underline">{{ l.name }}</Link>
                                 <div class="text-[11px] text-muted-foreground">{{ l.lot_number }}</div>
@@ -106,9 +110,14 @@ const total = computed(() => props.lots.reduce((s, l) => s + Number(l.current_vo
                             </td>
                             <td class="px-3 py-2 text-right tabular-nums">{{ qty(l.current_volume) }} <span class="text-muted-foreground">/ {{ qty(l.initial_volume) }} L</span></td>
                         </tr>
-                        <tr v-if="lots.length === 0"><td colspan="6" class="px-3 py-10 text-center text-muted-foreground">{{ t('No wine lots match these filters.') }}</td></tr>
+                        <tr v-if="lots.data.length === 0"><td colspan="6" class="px-3 py-10 text-center text-muted-foreground">{{ t('No wine lots match these filters.') }}</td></tr>
                     </tbody>
                 </table>
+                </div>
+                <div v-if="lots.meta.total > 10" class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-3">
+                    <p class="text-xs text-muted-foreground">{{ t('Showing :from–:to of :total', { from: (lots.meta.current_page - 1) * lots.meta.per_page + 1, to: Math.min(lots.meta.current_page * lots.meta.per_page, lots.meta.total), total: lots.meta.total }) }}</p>
+                    <Pagination :meta="lots.meta" @update:page="(p) => apply({ page: p })" @update:per-page="(n) => apply({ per_page: n, page: 1 })" />
+                </div>
             </Card>
         </div>
         <LotFormPanel :open="panel" :lot="null" :vessels="vessels" @close="panel = false" />

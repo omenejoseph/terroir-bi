@@ -165,7 +165,11 @@ class WebCellarLotsAndVesselsTest extends TestCase
             ->where('lot.vessels.0.vessel_name', 'T1')
             ->where('lot.cost_breakdown', null)
             ->where('lot.grape_price_per_kg', null)
-            ->has('timeline')
+            ->has('table.data')
+            ->where('scope.vessel_id', null)
+            ->where('scope.tab', 'overview')
+            ->has('counts')
+            ->has('barrels.combined')
             ->has('vessels', 2)
             ->missing('history'));
 
@@ -185,10 +189,10 @@ class WebCellarLotsAndVesselsTest extends TestCase
             }
         });
 
-        $this->web('GET', "/cellar/lots/{$this->lot->getKey()}")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('lot.analyses.0.free_so2', '42.00')
-            ->where('lot.analyses.1.free_so2', '22.00')
-            ->where('lot.analyses.2.free_so2', '29.00'));
+        $this->web('GET', "/cellar/lots/{$this->lot->getKey()}?tab=analysis")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('table.data.0.free_so2', '42.00')
+            ->where('table.data.1.free_so2', '22.00')
+            ->where('table.data.2.free_so2', '29.00'));
     }
 
     public function test_lot_workspace_shows_the_next_planned_task_and_tags_journey_events_with_vessels(): void
@@ -207,7 +211,7 @@ class WebCellarLotsAndVesselsTest extends TestCase
         $this->web('GET', "/cellar/lots/{$this->lot->getKey()}")->assertOk()->assertInertia(function (AssertableInertia $page): void {
             $page->where('nextPlanned.note', 'sooner')->where('nextPlanned.vessel.name', 'T1');
             /** @var list<array{type: string, vessel_ids: list<string>, detail: string|null}> $timeline */
-            $timeline = $page->toArray()['props']['timeline'];
+            $timeline = $page->toArray()['props']['table']['data'];
             $analyses = array_values(array_filter($timeline, fn (array $e): bool => $e['type'] === 'analysis'));
             // Newest first: the lot-wide pH reading, then the one taken in T1.
             $this->assertSame([[], [(string) $this->t1->getKey()]], array_column($analyses, 'vessel_ids'));
@@ -265,7 +269,7 @@ class WebCellarLotsAndVesselsTest extends TestCase
 
         // The journey mixes every record type — tasting notes and transfers included.
         $this->web('GET', "/cellar/lots/{$id}")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('timeline', function (mixed $events): bool {
+            ->where('table.data', function (mixed $events): bool {
                 $types = [];
                 foreach ($events instanceof Collection ? $events->all() : (array) $events as $e) {
                     $types[] = $e instanceof Collection ? $e->get('type') : ((array) $e)['type'];
@@ -292,8 +296,8 @@ class WebCellarLotsAndVesselsTest extends TestCase
     public function test_lots_list_filters_and_vessel_page(): void
     {
         $this->web('GET', '/cellar/lots?vintage=2026&status=AGING')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
-            ->component('Cellar/Lots/Index')->has('lots', 1)->where('filters.vintage', '2026'));
-        $this->web('GET', '/cellar/lots?vintage=2020')->assertInertia(fn (AssertableInertia $page) => $page->has('lots', 0));
+            ->component('Cellar/Lots/Index')->has('lots.data', 1)->where('filters.vintage', '2026'));
+        $this->web('GET', '/cellar/lots?vintage=2020')->assertInertia(fn (AssertableInertia $page) => $page->has('lots.data', 0));
 
         $this->web('GET', '/cellar/vessels/'.$this->t1->getKey())->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Cellar/Vessels/Show')

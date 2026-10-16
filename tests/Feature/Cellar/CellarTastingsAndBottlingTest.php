@@ -140,7 +140,7 @@ class CellarTastingsAndBottlingTest extends TestCase
         $this->inTenant(fn () => $this->assertSame(0, CellarTastingNote::query()->count()));
     }
 
-    public function test_correcting_an_addition_moves_stock_between_products_under_the_stock_rule(): void
+    public function test_correcting_an_addition_moves_stock_between_products_and_may_overdraw_the_new_one(): void
     {
         [$lot, $addition, $first, $second] = $this->inTenant(function () {
             $lot = $this->lot('LOT-2025-001', '100.000');
@@ -158,8 +158,11 @@ class CellarTastingsAndBottlingTest extends TestCase
         });
 
         $this->api('PATCH', "wine-lots/{$lot->getKey()}/additions/{$addition->getKey()}", ['enological_product_id' => $second->getKey(), 'quantity' => 60])
-            ->assertUnprocessable()->assertJsonValidationErrors(['quantity']);
-        $this->inTenant(fn () => $this->assertSame('50.000', (string) $first->refresh()->current_stock, 'rolled back'));
+            ->assertOk();
+        $this->inTenant(function () use ($first, $second): void {
+            $this->assertSame('100.000', (string) $first->refresh()->current_stock, 'the old product gets its 50 back');
+            $this->assertSame('-20.000', (string) $second->refresh()->current_stock, '40 on the shelf, 60 used');
+        });
 
         $this->api('PATCH', "wine-lots/{$lot->getKey()}/additions/{$addition->getKey()}", ['enological_product_id' => $second->getKey(), 'quantity' => 40])->assertOk();
         $this->inTenant(function () use ($first, $second): void {

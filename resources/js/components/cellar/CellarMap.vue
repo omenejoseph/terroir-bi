@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
-import { AlertTriangle, ArrowRightLeft, Blend, CalendarPlus, Copy, FlaskConical, Lock, Maximize2, MousePointerClick, Minus, Pencil, Plus, Ruler, Trash2, Undo2, Unlock, Wine, X } from 'lucide-vue-next';
+import { AlertTriangle, ArrowRightLeft, Blend, Box, CalendarPlus, CircleDot, Container, Copy, Cylinder, ExternalLink, FlaskConical, Lock, Maximize2, MousePointerClick, Minus, Pencil, Plus, Ruler, Trash2, Undo2, Unlock, Wine, X } from 'lucide-vue-next';
 
 import Button from '@/components/ui/Button.vue';
 import Input from '@/components/ui/Input.vue';
+import { useAuth } from '@/composables/useAuth';
+import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
-import { WINE_TYPE_SWATCH, qty, so2Status, SO2_STATUS_BG } from '@/lib/cellar';
+import { qty, so2Status, SO2_STATUS_BG, wineColour } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import { csrfHeader } from '@/lib/csrf';
 import type { MapVessel } from '@/types/cellar';
@@ -33,9 +35,35 @@ const props = defineProps<{ vessels: MapVessel[]; canManage: boolean }>();
 const emit = defineEmits<{ assign: [ids: string[]]; unassign: [ids: string[]]; addVessels: [room: string]; recordSo2: [ids: string[]]; move: [id: string] }>();
 
 const { t } = useTranslations();
+const { can } = useAuth();
 
 const DEFAULT_W = 80;
 const DEFAULT_H = 80;
+
+/** The prototype's default footprint by vessel type and capacity, for a vessel never resized by hand. */
+function defaultSize(v: { type: string; capacity_liters: string }): { w: number; h: number } {
+    const litres = Number(v.capacity_liters);
+
+    switch (v.type) {
+        case 'TANK':
+            if (litres >= 5000) return { w: 70, h: 110 };
+            if (litres >= 2000) return { w: 60, h: 100 };
+            if (litres >= 1000) return { w: 55, h: 90 };
+            if (litres >= 500) return { w: 50, h: 80 };
+
+            return { w: 40, h: 70 };
+        case 'BARREL':
+            return litres >= 400 ? { w: 60, h: 42 } : { w: 50, h: 35 };
+        case 'BARRIQUE':
+            return { w: 45, h: 32 };
+        case 'VAT':
+            return litres >= 2000 ? { w: 90, h: 70 } : { w: 70, h: 55 };
+        case 'AMPHORA':
+            return { w: 35, h: 55 };
+        default:
+            return { w: DEFAULT_W, h: DEFAULT_H };
+    }
+}
 const GRID = 10;
 
 // ── Local layout state (the source of truth while editing) ───────────────────
@@ -51,7 +79,7 @@ const boxes = reactive<Record<string, Box>>({});
 function syncFromProps(): void {
     for (const key of Object.keys(boxes)) if (!props.vessels.some((v) => v.id === key)) delete boxes[key];
     for (const v of props.vessels) {
-        boxes[v.id] = { x: v.position_x, y: v.position_y, w: v.map_width ?? DEFAULT_W, h: v.map_height ?? DEFAULT_H, room: v.room ?? 'Main Cellar' };
+        boxes[v.id] = { x: v.position_x, y: v.position_y, w: v.map_width ?? defaultSize(v).w, h: v.map_height ?? defaultSize(v).h, room: v.room ?? 'Main Cellar' };
     }
 }
 watch(() => props.vessels, syncFromProps, { immediate: true, deep: false });
@@ -174,10 +202,11 @@ function fillPct(v: MapVessel): number {
 
     return cap > 0 ? Math.min(100, (Number(v.current_volume) / cap) * 100) : 0;
 }
+/** The wine's colour, from the first lot in the vessel (wine type, else grape), as the prototype does. */
 function colour(v: MapVessel): string {
-    const type = v.lots?.find((l) => l.lot?.wine_type)?.lot?.wine_type;
+    const lot = v.lots?.find((l) => l.lot !== null)?.lot;
 
-    return type ? WINE_TYPE_SWATCH[type] : '#94a3b8';
+    return lot ? wineColour(lot) : '#94a3b8';
 }
 
 // ── Colour by (remembered per browser) ──────────────────────────────────────
@@ -201,11 +230,49 @@ watch(colourBy, (c) => {
 });
 /** Free-SO₂ status colours (the same scale as the SO₂ page). */
 const SO2_HEX: Record<string, string> = { critical: '#c10007', low: '#ca3500', ok: '#008236', high: '#1447e6', no_data: '#94a3b8' };
+/*
+  The liquid is always the wine's own colour — a red stays red whatever the tiles are being coloured
+  by. "SO₂" mode shows the status on the tile's outline and badge instead of repainting the wine
+  (a healthy SO₂ is green, which made a red wine look green); "Fill" mode drops the colour for grey.
+*/
 function tileColour(v: MapVessel): string {
-    if (colourBy.value === 'fill') return '#525252';
-    if (colourBy.value === 'so2') return (v.lots ?? []).length ? SO2_HEX[so2Status(so2Of(v)?.free ?? null)]! : '#cbd5e1';
+    return colourBy.value === 'fill' ? '#525252' : colour(v);
+}
+/** Border colour by status, as the prototype has it; faulty is red. In SO₂ mode the status of the SO₂ takes over. */
+const STATUS_BORDER: Record<string, string> = { AVAILABLE: '#4ade80', IN_USE: '#60a5fa', MAINTENANCE: '#facc15', RETIRED: '#9ca3af' };
+function borderColour(v: MapVessel): string {
+    if (v.is_faulty) return '#ef4444';
+    if (colourBy.value === 'so2' && (v.lots ?? []).length) return SO2_HEX[so2Status(so2Of(v)?.free ?? null)]!;
 
-    return colour(v);
+    return STATUS_BORDER[v.status] ?? '#d1d5db';
+}
+/** Border weight by type: thick staves for barrels, thicker still for vats. */
+function typeBorder(v: MapVessel): string {
+    switch (v.type) {
+        case 'BARREL':
+        case 'BARRIQUE':
+            return 'border-[2.5px]';
+        case 'VAT':
+            return 'border-[3px]';
+        default:
+            return 'border-2';
+    }
+}
+/** Empty either with no wine or with only rounding dust left. */
+const isEmpty = (v: MapVessel): boolean => !(v.lots ?? []).some((l) => l.lot !== null) || Number(v.current_volume) <= 0.01;
+const firstLot = (v: MapVessel) => v.lots?.find((l) => l.lot !== null)?.lot ?? null;
+function typeIcon(v: MapVessel) {
+    switch (v.type) {
+        case 'BARREL':
+        case 'BARRIQUE':
+            return Cylinder;
+        case 'TANK':
+            return Container;
+        case 'AMPHORA':
+            return CircleDot;
+        default:
+            return Box;
+    }
 }
 const daysSince = (iso: string | null | undefined) => (iso ? Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)) : null);
 function shape(v: MapVessel): string {
@@ -213,12 +280,14 @@ function shape(v: MapVessel): string {
         case 'BARREL':
         case 'BARRIQUE':
             return 'rounded-[45%]';
-        case 'AMPHORA':
-            return 'rounded-t-[35%] rounded-b-[50%]';
         case 'TANK':
-            return 'rounded-t-[40%]';
+            return 'rounded-t-[30%] rounded-b-sm';
+        case 'VAT':
+            return 'rounded-lg';
+        case 'AMPHORA':
+            return 'rounded-t-[50%] rounded-b-[25%]';
         default:
-            return '';
+            return 'rounded-md';
     }
 }
 function so2Of(v: MapVessel): { free: number | null; total: number | null; date: string | null } | null {
@@ -367,6 +436,19 @@ function onTileClick(v: MapVessel): void {
 
         return;
     }
+    // Members who can act on vessels get the action bar and stay on the map: a click selects the
+    // vessel (a second click clears it), and the bar's "Open" goes to its page. Read-only members
+    // have no bar, so a click still takes them straight to the page.
+    if (props.canManage) {
+        selected.value = isSel(v.id) ? [] : [v.id];
+
+        return;
+    }
+    openVessel(v);
+}
+
+/** The lot page focused on this vessel, or the vessel's own page when it holds no wine. */
+function openVessel(v: MapVessel): void {
     const lot = v.lots?.find((l) => l.lot !== null);
     router.visit(lot ? `/cellar/lots/${lot.wine_lot_id}?vessel=${v.id}` : `/cellar/vessels/${v.id}`);
 }
@@ -402,6 +484,29 @@ function removeFromMap(): void {
     for (const id of selected.value) Object.assign(boxes[id]!, { x: null, y: null });
     queueSave(selected.value);
     selected.value = [];
+}
+
+/**
+ * Delete the selected vessels for good. Empty ones go; any that hold wine are kept (the server skips
+ * them and says which), so the confirmation spells out how many of each.
+ */
+async function deleteSelected(): Promise<void> {
+    const ids = [...selected.value];
+    const withContents = selectedVessels.value.filter((v) => (v.lots ?? []).some((l) => l.lot !== null)).length;
+    const empty = ids.length - withContents;
+    if (empty === 0) return void router.delete('/cellar/vessels', { data: { ids }, preserveScroll: true });
+
+    const ok = await confirmDialog({
+        title: t('Delete :n vessels', { n: empty }),
+        description: withContents > 0
+            ? t(':n of the :total selected hold wine and will be kept. The rest are deleted for good.', { n: withContents, total: ids.length })
+            : t('These vessels are deleted for good. This cannot be undone.'),
+        confirmLabel: t('Delete'),
+        tone: 'danger',
+    });
+    if (!ok) return;
+
+    router.delete('/cellar/vessels', { data: { ids }, preserveScroll: true, onSuccess: () => (selected.value = []) });
 }
 
 /** Put an unplaced vessel on this room's map, at the first free spot along the bottom. */
@@ -612,6 +717,7 @@ const tipStatus = computed(() => {
             <Button size="sm" variant="outline" @click="emit('assign', selected)"><Wine class="size-3.5" /> {{ t('Assign wine') }}</Button>
             <Button v-if="selectionHoldsWine" size="sm" variant="outline" @click="unassignSelected">{{ t('Unassign wine') }}</Button>
             <Button size="sm" variant="ghost" @click="removeFromMap"><Trash2 class="size-3.5" /> {{ t('Remove from map') }}</Button>
+            <Button v-if="can('cellar.delete')" size="sm" variant="ghost" class="text-destructive hover:bg-destructive/10" @click="deleteSelected"><Trash2 class="size-3.5" /> {{ t('Delete vessels') }}</Button>
             <Button size="sm" variant="ghost" :disabled="undoStack.length === 0" @click="undo"><Undo2 class="size-3.5" /> {{ t('Undo') }}</Button>
             <Button size="sm" variant="ghost" @click="selected = []">{{ t('Clear') }}</Button>
         </div>
@@ -628,6 +734,7 @@ const tipStatus = computed(() => {
                 <Button v-if="withWine.length === 1" size="sm" variant="ghost" class="text-primary-foreground hover:bg-primary-foreground/10" @click="emit('move', withWine[0]!.id)"><ArrowRightLeft class="size-3.5" /> {{ t('Move wine') }}</Button>
             </template>
             <Button size="sm" variant="ghost" class="text-primary-foreground hover:bg-primary-foreground/10" @click="emit('assign', selected)"><Wine class="size-3.5" /> {{ t('Assign wine') }}</Button>
+            <Button v-if="selectedVessels.length === 1" size="sm" variant="ghost" class="text-primary-foreground hover:bg-primary-foreground/10" @click="openVessel(selectedVessels[0]!)"><ExternalLink class="size-3.5" /> {{ t('Open') }}</Button>
             <button type="button" class="ml-auto p-1 opacity-70 hover:opacity-100" :aria-label="t('Clear selection')" @click="selected = []"><X class="size-4" /></button>
         </div>
 
@@ -652,20 +759,19 @@ const tipStatus = computed(() => {
                         @pointerup="onUp"
                         @pointercancel="onUp"
                     >
+                        <!--
+                          One vessel, drawn as the prototype draws it: a bordered body (shape and border
+                          weight by type, border colour by status, dashed when empty) filled to its level
+                          in the wine's colour, with the vessel name on top, the wine / grape / vintage in
+                          the middle (as many lines as fit), the litres below, the free/total SO₂ in the
+                          corner, and legs under a tank.
+                        -->
                         <div
                             v-for="v in placed"
                             :key="v.id"
                             :data-vessel="v.id"
-                            :class="
-                                cn(
-                                    'absolute flex flex-col items-center justify-center overflow-hidden border-2 bg-card text-center leading-tight',
-                                    shape(v),
-                                    editing ? 'cursor-move' : 'cursor-pointer hover:border-foreground/50',
-                                    isSel(v.id) ? 'border-primary ring-2 ring-primary/30' : 'border-border',
-                                    v.is_faulty && 'border-destructive',
-                                )
-                            "
-                            :style="{ left: `${boxes[v.id]!.x}px`, top: `${boxes[v.id]!.y}px`, width: `${boxes[v.id]!.w}px`, height: `${boxes[v.id]!.h}px` }"
+                            :class="cn('group absolute select-none', editing ? 'cursor-move' : 'cursor-pointer', isSel(v.id) && 'z-20')"
+                            :style="{ left: `${boxes[v.id]!.x}px`, top: `${boxes[v.id]!.y}px`, width: `${boxes[v.id]!.w}px`, height: `${boxes[v.id]!.h + (v.type === 'TANK' ? 6 : 0)}px` }"
                             role="button"
                             :aria-label="`${v.name} · ${qty(v.current_volume)}/${qty(v.capacity_liters)} L`"
                             @pointerdown="onTileDown(v, $event)"
@@ -673,32 +779,69 @@ const tipStatus = computed(() => {
                             @mousemove="showTip(v, $event)"
                             @mouseleave="hover = null"
                         >
-                            <!-- fill level in the wine's colour -->
-                            <div :class="cn('absolute inset-x-0 bottom-0', colourBy === 'wine' ? 'opacity-25' : 'opacity-20')" :style="{ height: colourBy === 'so2' && Number(v.current_volume) > 0 ? '100%' : `${fillPct(v)}%`, background: tileColour(v) }" />
-                            <!-- barrel hoops -->
-                            <template v-if="v.type === 'BARREL' || v.type === 'BARRIQUE'">
-                                <div class="absolute inset-y-0 left-[28%] w-px bg-border" />
-                                <div class="absolute inset-y-0 right-[28%] w-px bg-border" />
-                            </template>
-                            <div v-if="v.is_faulty" class="absolute inset-0 bg-destructive/15" />
-                            <span class="relative z-10 flex items-center gap-1 text-[11px] font-semibold text-foreground">
-                                <AlertTriangle v-if="v.is_faulty" class="size-3 text-destructive" />
-                                {{ v.name }}
-                            </span>
-                            <span v-if="v.lots?.[0]?.lot" class="relative z-10 max-w-full truncate px-1 text-[9px] text-muted-foreground">{{ v.lots[0].lot.name }}</span>
-                            <span class="relative z-10 text-[9px] tabular-nums text-muted-foreground">
-                                <template v-if="Number(v.current_volume) > 0">{{ qty(v.current_volume) }}/{{ qty(v.capacity_liters) }} L</template>
-                                <template v-else>{{ t('Available') }}</template>
-                            </span>
-                            <span v-if="so2Of(v)" :class="cn('relative z-10 mt-0.5 px-1 text-[9px] tabular-nums', SO2_STATUS_BG[so2Status(so2Of(v)!.free)])" :title="t('Free SO₂ (mg/L) · days since the reading')">
-                                {{ so2Of(v)!.free === null ? '—' : Math.round(so2Of(v)!.free!) }}<template v-if="daysSince(so2Of(v)!.date) !== null"> · {{ t(':nd', { n: daysSince(so2Of(v)!.date)! }) }}</template>
-                            </span>
-                            <!-- resize handle -->
-                            <span
-                                v-if="editing && isSel(v.id)"
-                                class="absolute bottom-0 right-0 z-20 size-3 cursor-nwse-resize bg-primary"
-                                @pointerdown.stop="onTileDown(v, $event, 'resize')"
-                            />
+                            <!-- selection ring -->
+                            <div v-if="isSel(v.id)" class="pointer-events-none absolute -inset-1.5 z-0 rounded-md border-2 border-primary" />
+
+                            <div
+                                :class="cn('relative overflow-hidden bg-muted/40', shape(v), typeBorder(v), isEmpty(v) && 'border-dashed opacity-60')"
+                                :style="{ width: `${boxes[v.id]!.w}px`, height: `${boxes[v.id]!.h}px`, borderColor: borderColour(v) }"
+                            >
+                                <!-- faulty: the whole vessel goes red with a danger sign -->
+                                <div v-if="v.is_faulty" class="absolute inset-0 z-[25] flex items-center justify-center bg-red-600/80" :title="v.fault_note ? `${t('Faulty')}: ${v.fault_note}` : t('Faulty')">
+                                    <AlertTriangle class="size-1/2 max-h-7 max-w-7 text-white drop-shadow" :stroke-width="2.5" />
+                                </div>
+
+                                <!-- barrel hoops: horizontal bands -->
+                                <template v-if="(v.type === 'BARREL' || v.type === 'BARRIQUE') && !isEmpty(v)">
+                                    <div class="absolute inset-x-0 top-[20%] z-[5] h-[1.5px] bg-white/20" />
+                                    <div class="absolute inset-x-0 top-[50%] z-[5] h-[1.5px] bg-white/20" />
+                                    <div class="absolute inset-x-0 top-[80%] z-[5] h-[1.5px] bg-white/20" />
+                                </template>
+                                <!-- tank dome highlight -->
+                                <div v-if="v.type === 'TANK' && !isEmpty(v)" class="absolute inset-x-[15%] top-0 z-[5] h-1.5 rounded-b-full bg-white/10" />
+
+                                <!-- liquid, to its level, in the wine's colour -->
+                                <div class="absolute inset-x-0 bottom-0" :style="{ height: `${fillPct(v)}%`, backgroundColor: tileColour(v), opacity: isEmpty(v) ? 0.15 : 0.8 }" />
+
+                                <!-- what the tile says -->
+                                <div class="absolute inset-0 z-10 flex flex-col items-center justify-between p-1">
+                                    <span :class="cn('w-full truncate text-center text-[7px] leading-tight font-bold drop-shadow-sm', isEmpty(v) ? 'text-muted-foreground' : 'text-white/90')">{{ v.name }}</span>
+
+                                    <div class="flex w-full min-w-0 flex-col items-center">
+                                        <template v-if="firstLot(v)">
+                                            <span v-if="boxes[v.id]!.w >= 40 && boxes[v.id]!.h >= 50" class="w-full truncate text-center text-[8px] leading-tight font-bold text-white drop-shadow-sm">{{ firstLot(v)!.name }}</span>
+                                            <span v-if="boxes[v.id]!.w >= 35 && boxes[v.id]!.h >= 40 && firstLot(v)!.grape_variety" class="w-full truncate text-center text-[7px] leading-tight text-white/80 drop-shadow-sm">{{ firstLot(v)!.grape_variety }}</span>
+                                            <span v-if="boxes[v.id]!.w >= 40 && boxes[v.id]!.h >= 60 && firstLot(v)!.vintage" class="w-full truncate text-center text-[7px] leading-tight text-white/70 drop-shadow-sm">{{ firstLot(v)!.vintage }}</span>
+                                        </template>
+                                        <component :is="typeIcon(v)" v-else class="size-3.5 text-muted-foreground drop-shadow" />
+                                    </div>
+
+                                    <span :class="cn('text-[7px] font-medium drop-shadow-sm', isEmpty(v) ? 'text-muted-foreground/60' : 'text-white/90')">{{ qty(v.current_volume) }}L</span>
+                                </div>
+
+                                <!-- free / total SO₂ (blue; the status colour in "Colour by SO₂") -->
+                                <div
+                                    v-if="!isEmpty(v) && so2Of(v)?.free != null && boxes[v.id]!.w >= 40"
+                                    class="absolute top-0 right-0 z-20 rounded-bl-sm px-0.5 text-[6px] leading-tight font-bold text-white"
+                                    :style="{ background: colourBy === 'so2' ? SO2_HEX[so2Status(so2Of(v)!.free)] : '#2563eb' }"
+                                    :title="t('Free SO₂ (mg/L) · days since the reading')"
+                                >
+                                    {{ so2Of(v)!.free }}/{{ so2Of(v)!.total ?? '—' }}
+                                </div>
+
+                                <!-- resize handle -->
+                                <span
+                                    v-if="editing && isSel(v.id)"
+                                    class="absolute right-0 bottom-0 z-30 size-3 cursor-nwse-resize bg-primary"
+                                    @pointerdown.stop="onTileDown(v, $event, 'resize')"
+                                />
+                            </div>
+
+                            <!-- tank legs -->
+                            <div v-if="v.type === 'TANK'" class="flex justify-between px-[15%]" :style="{ width: `${boxes[v.id]!.w}px` }">
+                                <div class="h-2 w-1.5 rounded-b-sm bg-muted-foreground/30" />
+                                <div class="h-2 w-1.5 rounded-b-sm bg-muted-foreground/30" />
+                            </div>
                         </div>
 
                         <div v-if="lasso" class="pointer-events-none absolute border border-primary bg-primary/10" :style="{ left: `${lasso.x}px`, top: `${lasso.y}px`, width: `${lasso.w}px`, height: `${lasso.h}px` }" />

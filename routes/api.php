@@ -466,6 +466,7 @@ Route::prefix('v1')->group(function () {
             Route::post('cellar/so2-rounds', [CellarSo2Controller::class, 'planRound']);
         });
         Route::middleware('can:cellar.delete')->group(function () {
+            Route::delete('vessels', [VesselController::class, 'bulkDestroy']);
             Route::delete('vessels/{vessel}', [VesselController::class, 'destroy']);
             Route::delete('wine-lots/{wineLot}', [WineLotController::class, 'destroy']);
             Route::delete('enological-products/{enologicalProduct}', [EnologicalProductController::class, 'destroy']);

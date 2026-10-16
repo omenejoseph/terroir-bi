@@ -6,7 +6,6 @@ import Button from '@/components/ui/Button.vue';
 import Combobox from '@/components/ui/Combobox.vue';
 import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
-import Select from '@/components/ui/Select.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { parseDecimal, qty } from '@/lib/cellar';
@@ -75,7 +74,7 @@ function submit(): void {
                     <datalist id="volume-reasons"><option v-for="r in REASONS" :key="r" :value="t(r)" /></datalist>
                 </FormField>
                 <FormField v-slot="{ id, invalid }" :label="t('Vessel')" :hint="t('Without one, the change is spread over the lot’s vessels by volume.')" :error="err('vessel_id')">
-                    <Select :id="id" :invalid="invalid" v-model="form.vessel_id" :options="[{ value: '', label: t('Spread over all vessels') }, ...lotVessels]" />
+                    <Combobox :id="id" :invalid="invalid" v-model="form.vessel_id" :options="[{ value: '', label: t('Spread over all vessels') }, ...lotVessels]" :placeholder="t('Spread over all vessels')" :empty-text="t('No vessel matches.')" />
                 </FormField>
             </template>
             <template v-else-if="mode === 'assign'">
@@ -87,7 +86,7 @@ function submit(): void {
                 <FormField v-slot="{ id, invalid }" :label="t('From (another lot’s vessel)')" required :error="err('from_vessel_id')">
                     <Combobox :id="id" :invalid="invalid" v-model="form.from_vessel_id" :options="otherWine" :placeholder="t('Select vessel…')" />
                 </FormField>
-                <FormField v-slot="{ id, invalid }" :label="t('Into this lot’s vessel')" required :error="err('to_vessel_id')"><Select :id="id" :invalid="invalid" v-model="form.to_vessel_id" :options="lotVessels" /></FormField>
+                <FormField v-slot="{ id, invalid }" :label="t('Into this lot’s vessel')" required :error="err('to_vessel_id')"><Combobox :id="id" :invalid="invalid" v-model="form.to_vessel_id" :options="lotVessels" :empty-text="t('No vessel matches.')" /></FormField>
                 <FormField v-slot="{ id, invalid }" :label="t('Litres')" required :error="err('volume')"><Input :id="id" :invalid="invalid" v-model="form.volume" inputmode="decimal" /></FormField>
             </template>
         </div>

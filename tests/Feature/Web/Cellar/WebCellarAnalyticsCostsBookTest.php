@@ -95,7 +95,7 @@ class WebCellarAnalyticsCostsBookTest extends TestCase
         $this->web('GET', "/cellar/book?from={$from}&to={$to}")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Cellar/CellarBook')
             ->where('filters.from', $from)
-            ->where('rows', fn ($rows): bool => count($rows) >= 4));
+            ->where('rows.data', fn ($rows): bool => count($rows) >= 4)->has('rows.meta.total'));
 
         $csv = $this->web('GET', "/cellar/book.csv?from={$from}&to={$to}");
         $csv->assertOk();

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Actions\Cellar\BulkCreateVesselsAction;
+use App\Actions\Cellar\BulkDeleteVesselsAction;
 use App\Actions\Cellar\CreateVesselAction;
 use App\Actions\Cellar\DeleteVesselAction;
 use App\Actions\Cellar\DuplicateVesselsAction;
@@ -14,6 +15,7 @@ use App\Actions\Cellar\UpdateVesselLayoutAction;
 use App\DataTransferObjects\VesselData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cellar\BulkCreateVesselsRequest;
+use App\Http\Requests\Cellar\BulkDeleteVesselsRequest;
 use App\Http\Requests\Cellar\DuplicateVesselsRequest;
 use App\Http\Requests\Cellar\RenameRoomRequest;
 use App\Http\Requests\Cellar\StoreVesselRequest;
@@ -103,6 +105,15 @@ class VesselController extends Controller
         $count = $action->execute((string) $request->validated('from'), (string) $request->validated('to'));
 
         return response()->json(['data' => ['updated' => $count]]);
+    }
+
+    /** Delete several vessels: empty ones go, vessels holding wine are kept and named. */
+    public function bulkDestroy(BulkDeleteVesselsRequest $request, BulkDeleteVesselsAction $action): JsonResponse
+    {
+        /** @var list<string> $ids */
+        $ids = array_values((array) $request->validated('ids'));
+
+        return response()->json(['data' => $action->execute($ids)]);
     }
 
     public function destroy(Vessel $vessel, DeleteVesselAction $action): JsonResponse

@@ -8,7 +8,6 @@ import Combobox from '@/components/ui/Combobox.vue';
 import FieldRow from '@/components/ui/FieldRow.vue';
 import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
-import Select from '@/components/ui/Select.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import Textarea from '@/components/ui/Textarea.vue';
 import { useAuth } from '@/composables/useAuth';
@@ -124,7 +123,7 @@ function submit(): void {
                     <datalist id="addition-categories"><option v-for="c in CATEGORIES" :key="c" :value="c" /></datalist>
                 </FormField>
             </FieldRow>
-            <FormField v-slot="{ id, invalid }" :label="t('Vessel')" :error="form.errors.vessel_id"><Select :id="id" :invalid="invalid" v-model="form.vessel_id" :options="vesselOptions" /></FormField>
+            <FormField v-slot="{ id, invalid }" :label="t('Vessel')" :error="form.errors.vessel_id"><Combobox :id="id" :invalid="invalid" v-model="form.vessel_id" :options="vesselOptions" :empty-text="t('No vessel matches.')" /></FormField>
             <div class="grid grid-cols-3 gap-3">
                 <FormField v-slot="{ id, invalid }" :label="t('Dose / hL')" :hint="t(':n L', { n: qty(liters) })"><Input :id="id" :invalid="invalid" v-model="doseHl" inputmode="decimal" @input="fromDose" /></FormField>
                 <FormField v-slot="{ id, invalid }" :label="t('Quantity')" required :error="err('quantity')"><Input :id="id" :invalid="invalid" v-model="form.quantity" inputmode="decimal" /></FormField>

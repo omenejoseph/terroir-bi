@@ -515,6 +515,7 @@ Route::middleware('tenant.web')->group(function () {
     });
 
     Route::middleware('can:cellar.delete')->group(function () {
+        Route::delete('cellar/vessels', [VesselController::class, 'bulkDestroy'])->name('cellar.vessels.bulk-destroy');
         Route::delete('cellar/vessels/{vessel}', [VesselController::class, 'destroy'])->name('cellar.vessels.destroy');
         Route::get('cellar/lots/{wineLot}/delete-impact', [WineLotController::class, 'deleteImpact'])->name('cellar.lots.delete-impact');
         Route::delete('cellar/lots/{wineLot}', [WineLotController::class, 'destroy'])->name('cellar.lots.destroy');

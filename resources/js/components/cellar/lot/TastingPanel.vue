@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button.vue';
 import FieldRow from '@/components/ui/FieldRow.vue';
 import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
-import Select from '@/components/ui/Select.vue';
+import Combobox from '@/components/ui/Combobox.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import Textarea from '@/components/ui/Textarea.vue';
 import { useTranslations } from '@/composables/useTranslations';
@@ -69,7 +69,7 @@ function submit(): void {
                 <FormField v-slot="{ id, invalid }" :label="t('Date')" :error="form.errors.date"><Input :id="id" :invalid="invalid" v-model="form.date" type="date" /></FormField>
                 <FormField v-slot="{ id, invalid }" :label="t('Score (/100)')" :error="form.errors.score"><Input :id="id" :invalid="invalid" v-model="form.score" inputmode="numeric" /></FormField>
             </FieldRow>
-            <FormField v-slot="{ id, invalid }" :label="t('Vessel')" :error="form.errors.vessel_id"><Select :id="id" :invalid="invalid" v-model="form.vessel_id" :options="vesselOptions" /></FormField>
+            <FormField v-slot="{ id, invalid }" :label="t('Vessel')" :error="form.errors.vessel_id"><Combobox :id="id" :invalid="invalid" v-model="form.vessel_id" :options="vesselOptions" :empty-text="t('No vessel matches.')" /></FormField>
             <FormField v-slot="{ id, invalid }" :label="t('Appearance')" :error="form.errors.appearance"><Input :id="id" :invalid="invalid" v-model="form.appearance" /></FormField>
             <FormField v-slot="{ id, invalid }" :label="t('Nose')" :error="form.errors.nose"><Input :id="id" :invalid="invalid" v-model="form.nose" /></FormField>
             <FormField v-slot="{ id, invalid }" :label="t('Palate')" :error="form.errors.palate"><Input :id="id" :invalid="invalid" v-model="form.palate" /></FormField>

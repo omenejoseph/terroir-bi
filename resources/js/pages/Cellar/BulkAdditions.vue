@@ -240,11 +240,12 @@ const STATUS = computed(() => [{ value: '', label: t('All statuses') }, ...['FER
                                     <td class="px-3 py-1.5"><input type="checkbox" class="size-4 accent-primary" :checked="selected.includes(l.id)" :aria-label="l.name" @change="toggle(l.id)" /></td>
                                     <td class="px-2 py-1.5"><span class="font-medium">{{ l.name }}</span> <span class="text-muted-foreground">{{ [l.grape_variety, l.vintage].filter(Boolean).join(' ') }}</span></td>
                                     <td class="px-2 py-1">
-                                        <Select
+                                        <Combobox
+                                            :empty-text="t('No vessel matches.')"
                                             :model-value="vesselFor[l.id] ?? ''"
                                             :options="[{ value: '', label: t('Whole lot') }, ...l.vessels.map((v) => ({ value: v.id, label: `${v.name} · ${qty(v.volume)} L` }))]"
                                             class="w-44"
-                                            @update:model-value="vesselFor[l.id] = $event"
+                                            @update:model-value="vesselFor[l.id] = $event ?? ''"
                                         />
                                     </td>
                                     <td class="px-2 py-1.5 text-right tabular-nums">{{ qty(litres(l)) }}</td>

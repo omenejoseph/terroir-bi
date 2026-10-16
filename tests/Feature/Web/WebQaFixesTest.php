@@ -557,4 +557,55 @@ class WebQaFixesTest extends TestCase
                 ->has('items.data', 1)
                 ->where('items.data.0.sku', 'NEEDLE'));
     }
+
+    /* ---- Cellar: new wine lot form ------------------------------------ */
+
+    public function test_a_new_lot_can_be_created_with_its_stage_and_wine_type(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAs($admin)->withSession($this->tenantSession($tenant))
+            ->post('/cellar/lots', [
+                'name' => 'Plavac Mali Reserve 2025', 'grape_variety' => 'Plavac Mali', 'vintage' => '2025',
+                'wine_type' => 'RED', 'status' => 'AGING', 'initial_volume' => 450,
+            ])
+            ->assertRedirect();
+
+        $this->actingAsTenant($tenant);
+        $lot = \App\Models\WineLot::query()->where('name', 'Plavac Mali Reserve 2025')->firstOrFail();
+        $this->assertSame('AGING', $lot->status->value);
+        $this->assertSame('RED', $lot->wine_type->value);
+    }
+
+    public function test_a_new_lot_goes_into_a_part_full_vessel_when_it_fits_and_is_refused_when_it_does_not(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $barrel = \App\Models\Vessel::create(['name' => 'B1', 'type' => 'BARREL', 'capacity_liters' => '225.000']);
+        $existing = \App\Models\WineLot::create(['lot_number' => 'L-1', 'name' => 'Already here', 'grape_variety' => 'Syrah', 'vintage' => '2024', 'wine_type' => 'RED', 'status' => 'AGING', 'initial_volume' => '150.000', 'current_volume' => '150.000']);
+        app(\App\Services\Cellar\LotVolumeService::class)->assignToVessel($existing, $barrel, '150.000');
+        $this->forgetTenant();
+
+        $lot = fn (int $litres) => [
+            'name' => "New {$litres}", 'grape_variety' => 'Merlot', 'vintage' => '2025', 'wine_type' => 'RED',
+            'initial_volume' => $litres, 'vessel_id' => $barrel->getKey(),
+        ];
+
+        // 100 L cannot join 150 L in a 225 L barrel: refused, with the error on the vessel field, nothing saved.
+        $this->actingAs($admin)->withSession($this->tenantSession($tenant))
+            ->post('/cellar/lots', $lot(100))
+            ->assertSessionHasErrors('vessel_id');
+        $this->actingAsTenant($tenant);
+        $this->assertSame(0, \App\Models\WineLot::query()->where('name', 'New 100')->count());
+        $this->forgetTenant();
+
+        // 75 L fits exactly; the barrel then holds both lots and is full.
+        $this->actingAs($admin)->withSession($this->tenantSession($tenant))
+            ->post('/cellar/lots', $lot(75))
+            ->assertSessionHasNoErrors();
+        $this->actingAsTenant($tenant);
+        $this->assertSame(2, $barrel->vesselLots()->count());
+        $this->assertSame('225.000', (string) $barrel->refresh()->current_volume);
+    }
 }

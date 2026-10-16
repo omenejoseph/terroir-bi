@@ -27,6 +27,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Support\ArrayPage;
+use App\Support\PerPage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -44,11 +46,16 @@ class CellarController extends Controller
             ->orderBy('name')
             ->get();
 
-        $bottled = $lots->build(['status' => WineLotStatus::Bottled->value])
+        // The bottled archive grows with every vintage: the home shows the latest few and links to the
+        // paginated lots list for the rest.
+        $bottledQuery = $lots->build(['status' => WineLotStatus::Bottled->value]);
+        $bottledTotal = (clone $bottledQuery)->count();
+        $bottled = $bottledQuery
             ->withCount(['additions', 'analyses', 'bottlings'])
             ->with('latestBottling.inventoryItem')
             ->orderByDesc('vintage')
             ->orderBy('name')
+            ->limit(12)
             ->get();
 
         $manage = $membership->can('cellar.manage');
@@ -62,6 +69,7 @@ class CellarController extends Controller
             'vessels' => $map->get(),
             'lots' => array_values($active->map(fn (WineLot $l): array => WineLotData::fromModel($l)->toArray())->all()),
             'bottled' => array_values($bottled->map(fn (WineLot $l): array => WineLotData::fromModel($l)->toArray())->all()),
+            'bottledTotal' => $bottledTotal,
             'lotOptions' => fn (): array => $manage ? $options->lots() : [],
             // What needs someone now, each with the action that deals with it.
             'attention' => fn (): array => $attention->get(),
@@ -131,6 +139,7 @@ class CellarController extends Controller
         $to = Carbon::parse($data['to'] ?? now()->toDateString())->endOfDay();
         $rows = $query->get($from, $to);
 
+        // The CSV is the whole register; only the on-screen table is paged.
         if ($request->routeIs('cellar.book.csv')) {
             return response()->streamDownload(function () use ($rows): void {
                 $out = fopen('php://output', 'wb');
@@ -146,7 +155,7 @@ class CellarController extends Controller
         }
 
         return Inertia::render('Cellar/CellarBook', [
-            'rows' => $rows,
+            'rows' => ArrayPage::of($rows, PerPage::fromRequest($request, 50), max(1, (int) $request->query('page', 1))),
             'filters' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
         ]);
     }

@@ -11,9 +11,10 @@ import { onBeforeUnmount, ref, watch, type Ref } from 'vue';
  * swallows the first click of whatever you were reaching for next.
  *
  * `anchor` should wrap both the trigger and the panel, so a click inside the
- * panel is not treated as an outside click.
+ * panel is not treated as an outside click — or pass the teleported panel's own
+ * ref as `panel`.
  */
-export function usePopover(anchor: Ref<HTMLElement | null>) {
+export function usePopover(anchor: Ref<HTMLElement | null>, panel?: Ref<HTMLElement | null>) {
     const open = ref(false);
 
     /** The element to hand focus back to — normally the trigger. */
@@ -22,7 +23,10 @@ export function usePopover(anchor: Ref<HTMLElement | null>) {
     function onPointerDown(event: PointerEvent): void {
         const el = anchor.value;
 
-        if (el !== null && !el.contains(event.target as Node)) close();
+        const target = event.target as Node;
+
+        // `panel` is for a menu teleported out of the anchor (so no table can clip it): a press inside it is not outside.
+        if (el !== null && !el.contains(target) && !(panel?.value?.contains(target) ?? false)) close();
     }
 
     function onKeydown(event: KeyboardEvent): void {

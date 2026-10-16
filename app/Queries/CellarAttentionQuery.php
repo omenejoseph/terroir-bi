@@ -57,10 +57,9 @@ class CellarAttentionQuery
     {
         $this->items = [];
         $this->today = $this->clock->today();
-        $this->names = WineLot::query()->where('status', '!=', WineLotStatus::Bottled)
+        $this->names = $this->labels(WineLot::query()->where('status', '!=', WineLotStatus::Bottled)
             ->when($lotId !== null, fn ($q) => $q->whereKey($lotId))
-            ->get(['id', 'name'])
-            ->mapWithKeys(fn (WineLot $l): array => [(string) $l->getKey() => $l->name])->all();
+            ->get(['id', 'name', 'vintage', 'lot_number']));
         if ($this->names === []) {
             return [];
         }
@@ -130,6 +129,32 @@ class CellarAttentionQuery
         usort($items, fn (array $a, array $b): int => [self::RANK[$a['severity']] ?? 9, $a['lot_name']] <=> [self::RANK[$b['severity']] ?? 9, $b['lot_name']]);
 
         return $items;
+    }
+
+    /**
+     * Each lot's display name, unique within the list: lots often share a wine name ("Aleph" in five
+     * vintages), so the vintage is appended (as the rest of the cellar writes it — "Aleph 2022"), and
+     * the lot number too when two lots would still read the same.
+     *
+     * @param  \Illuminate\Support\Collection<int, WineLot>  $lots
+     * @return array<string, string> lot id → label
+     */
+    private function labels($lots): array
+    {
+        $base = [];
+        foreach ($lots as $lot) {
+            $vintage = (string) ($lot->vintage ?? '');
+            $base[(string) $lot->getKey()] = $vintage === '' || str_contains($lot->name, $vintage) ? $lot->name : "{$lot->name} {$vintage}";
+        }
+
+        $count = array_count_values($base);
+        $out = [];
+        foreach ($lots as $lot) {
+            $id = (string) $lot->getKey();
+            $out[$id] = $count[$base[$id]] > 1 && $lot->lot_number !== null ? "{$base[$id]} · {$lot->lot_number}" : $base[$id];
+        }
+
+        return $out;
     }
 
     private function has(string $lot, string $key): bool

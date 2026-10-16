@@ -49,7 +49,7 @@ class UpdateCellarAdditionAction
             }
 
             if ($addition->enological_product_id !== null) {
-                $this->ledger->move($addition->enological_product_id, Quantity::negate((string) $addition->quantity), EnologicalStockSource::AdditionCorrected, $addition, 'Addition corrected');
+                $this->ledger->move($addition->enological_product_id, Quantity::negate((string) $addition->quantity), EnologicalStockSource::AdditionCorrected, $addition, 'Addition corrected', allowNegative: true);
             }
 
             $addition->save();

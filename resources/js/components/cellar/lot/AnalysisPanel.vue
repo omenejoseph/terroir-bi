@@ -5,7 +5,7 @@ import { Link, useForm } from '@inertiajs/vue3';
 import Button from '@/components/ui/Button.vue';
 import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
-import Select from '@/components/ui/Select.vue';
+import Combobox from '@/components/ui/Combobox.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import Textarea from '@/components/ui/Textarea.vue';
 import { useTranslations } from '@/composables/useTranslations';
@@ -87,7 +87,7 @@ function submit(): void {
         <div class="flex flex-col gap-4">
             <div class="grid grid-cols-2 gap-3">
                 <FormField v-slot="{ id, invalid }" :label="t('Date')" :error="form.errors.date"><Input :id="id" :invalid="invalid" v-model="form.date" type="date" /></FormField>
-                <FormField v-slot="{ id, invalid }" :label="t('Vessel')" :error="form.errors.vessel_id"><Select :id="id" :invalid="invalid" v-model="form.vessel_id" :options="vesselOptions" /></FormField>
+                <FormField v-slot="{ id, invalid }" :label="t('Vessel')" :error="form.errors.vessel_id"><Combobox :id="id" :invalid="invalid" v-model="form.vessel_id" :options="vesselOptions" :empty-text="t('No vessel matches.')" /></FormField>
             </div>
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <FormField v-slot="{ id, invalid }" v-for="f in ANALYSIS_FIELDS" :key="f.key" :label="t(f.label)" :error="err(f.key)">

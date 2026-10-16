@@ -130,11 +130,11 @@ class WebCellarSo2Test extends TestCase
         $this->assertStringContainsString('18 → 28', (string) $addition->note);
     }
 
-    public function test_a_stock_shortfall_comes_back_as_an_error(): void
+    public function test_a_stock_shortfall_does_not_stop_the_dose_being_recorded(): void
     {
-        $this->web('POST', '/cellar/so2/apply', $this->dose(100))->assertSessionHasErrors();
+        $this->web('POST', '/cellar/so2/apply', $this->dose(100))->assertSessionHasNoErrors();
         $this->actingAsTenant($this->tenant);
-        $this->assertSame(0, CellarAddition::query()->count());
+        $this->assertSame(1, CellarAddition::query()->count());
     }
 
     public function test_plan_round_and_readings(): void

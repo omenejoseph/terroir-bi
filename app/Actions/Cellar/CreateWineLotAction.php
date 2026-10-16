@@ -12,6 +12,7 @@ use App\Services\Cellar\LotNumberGenerator;
 use App\Services\Cellar\LotVolumeService;
 use App\Support\Quantity;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Create a wine lot: assign a tenant-scoped lot number, record its grape
@@ -34,6 +35,19 @@ class CreateWineLotAction
     {
         return DB::transaction(function () use ($data): WineLot {
             $initialVolume = Quantity::normalize((string) $data['initial_volume']);
+
+            // Check the starting vessel up front, and name the error after the field that causes it, so the
+            // form can show it next to the vessel picker (a bare "volume" error has no field on this form).
+            if (! empty($data['vessel_id'])) {
+                $vessel = Vessel::query()->whereKey((string) $data['vessel_id'])->firstOrFail();
+                $free = Quantity::sub((string) $vessel->capacity_liters, (string) $vessel->current_volume);
+
+                if (Quantity::compare($initialVolume, $free) > 0) {
+                    throw ValidationException::withMessages([
+                        'vessel_id' => "{$vessel->name} has only {$free} L free, and this lot is {$initialVolume} L.",
+                    ]);
+                }
+            }
 
             $pricePerKg = isset($data['grape_price_per_kg']) ? (int) $data['grape_price_per_kg'] : null;
             $grapeCost = null;

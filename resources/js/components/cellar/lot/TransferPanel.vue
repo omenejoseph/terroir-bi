@@ -6,7 +6,6 @@ import Button from '@/components/ui/Button.vue';
 import Combobox from '@/components/ui/Combobox.vue';
 import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
-import Select from '@/components/ui/Select.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import Textarea from '@/components/ui/Textarea.vue';
@@ -75,7 +74,7 @@ function submit(): void {
             <FormField v-slot="{ id, invalid }" v-if="form.type !== 'RACK'" :label="t('Into lot')" required :error="err('to_lot_id')">
                 <Combobox :id="id" :invalid="invalid" v-model="form.to_lot_id" :options="lotOptions" :placeholder="t('Select lot…')" />
             </FormField>
-            <FormField v-slot="{ id, invalid }" :label="t('From vessel')" :error="err('from_vessel_id')"><Select :id="id" :invalid="invalid" v-model="form.from_vessel_id" :options="fromOptions" :placeholder="t('Select…')" /></FormField>
+            <FormField v-slot="{ id, invalid }" :label="t('From vessel')" :error="err('from_vessel_id')"><Combobox :id="id" :invalid="invalid" v-model="form.from_vessel_id" :options="fromOptions" :placeholder="t('Select…')" :empty-text="t('No vessel matches.')" /></FormField>
             <FormField v-slot="{ id, invalid }" :label="t('To vessel')" :required="form.type === 'RACK'" :error="err('to_vessel_id')">
                 <Combobox :id="id" :invalid="invalid" v-model="form.to_vessel_id" :options="toVesselOptions" :placeholder="t('Select vessel…')" clearable />
             </FormField>

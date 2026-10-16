@@ -603,3 +603,81 @@ export interface CellarAttentionItem {
     suggestion: string | null;
     action: AttentionAction;
 }
+
+/* ---- Lot page (tabs, scope, barrels) — App\Queries\LotBarrelsQuery / LotTablesQuery ---- */
+
+export type LotTab = 'overview' | 'barrels' | 'analysis' | 'additions' | 'tasting' | 'transfers' | 'processes' | 'details';
+
+export interface LotScopeInfo {
+    /** The barrel in view, or null for the whole lot. */
+    vessel_id: string | null;
+    tab: LotTab;
+    /** The active journey filter chip. */
+    kind: string | null;
+}
+
+export interface BarrelReading {
+    value: number;
+    date: string;
+    /** false when no reading was taken in this barrel and the lot-level one is shown. */
+    in_vessel: boolean;
+}
+
+export interface BarrelRow {
+    vessel_id: string;
+    name: string;
+    type: VesselType;
+    material: string | null;
+    room: string | null;
+    location: string | null;
+    capacity_liters: string;
+    /** Litres of THIS lot in the barrel. */
+    volume: string;
+    fill_percent: number;
+    is_faulty: boolean;
+    /** Other wine in the same barrel. */
+    others: { lot_id: string; name: string; vintage: string | null; volume: string }[];
+    readings: Partial<Record<'free_so2' | 'total_so2' | 'ph' | 'alcohol' | 'volatile_acidity' | 'total_acidity' | 'temperature', BarrelReading | null>>;
+}
+
+export interface BarrelsCombined {
+    barrels: number;
+    volume: string;
+    capacity: string;
+    parameters: Record<string, { average: number | null; min: number | null; max: number | null; barrels_counted: number }>;
+}
+
+export interface LotCounts {
+    barrels: number;
+    analysis: number;
+    additions: number;
+    tasting: number;
+    transfers: number;
+    processes: number;
+}
+
+export interface LotTransferRow {
+    id: string;
+    type: string;
+    direction: 'in' | 'out';
+    from_lot_id: string;
+    to_lot_id: string;
+    from_lot_name: string | null;
+    to_lot_name: string | null;
+    from_vessel_name: string | null;
+    to_vessel_name: string | null;
+    volume_liters: string;
+    note: string | null;
+    date: string | null;
+}
+
+export interface LotBottlingRow {
+    id: string;
+    bottle_count: number;
+    bottle_volume_ml: number;
+    volume_used: string;
+    inventory_item_id: string | null;
+    inventory_item_name: string | null;
+    note: string | null;
+    date: string;
+}

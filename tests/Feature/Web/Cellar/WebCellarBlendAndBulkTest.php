@@ -158,7 +158,7 @@ class WebCellarBlendAndBulkTest extends TestCase
         $this->web('POST', '/cellar/bulk-additions', [
             'name' => 'Tannin', 'unit' => 'g', 'enological_product_id' => $product->getKey(),
             'lots' => [['wine_lot_id' => $this->a->getKey(), 'quantity' => 500]],
-        ])->assertSessionHasErrors();
+        ])->assertSessionHas('success'); // never refused for stock: the balance just goes negative
 
         $this->web('POST', '/cellar/bulk-analyses', ['analyses' => [
             ['wine_lot_id' => $this->a->getKey(), 'vessel_id' => $this->ta->getKey(), 'free_so2' => 31, 'ph' => 3.41],
@@ -166,8 +166,8 @@ class WebCellarBlendAndBulkTest extends TestCase
         ]])->assertSessionHas('success');
 
         $this->inTenant(function () use ($product): void {
-            $this->assertSame('50.000', (string) $product->refresh()->current_stock);
-            $this->assertSame(2, CellarAddition::query()->count());
+            $this->assertSame('-450.000', (string) $product->refresh()->current_stock);
+            $this->assertSame(3, CellarAddition::query()->count());
             $this->assertSame(4, CellarAnalysis::query()->count());
         });
     }

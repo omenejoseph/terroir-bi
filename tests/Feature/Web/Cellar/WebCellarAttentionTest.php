@@ -97,7 +97,7 @@ class WebCellarAttentionTest extends TestCase
         $this->assertSame('high', $this->attention()[0]['severity']);
 
         $stale = $items['stale_analysis'] ?? $this->fail('no stale analysis item');
-        $this->assertSame('Ostro Crna', $stale['lot_name']);
+        $this->assertSame('Ostro Crna 2023', $stale['lot_name']);
         $this->assertSame('plan_reading', $stale['action']['kind']);
         $this->assertSame('/cellar/activities', $stale['action']['post']['url']);
         $this->assertSame([['type' => 'ANALYSIS', 'planned_for' => '2026-10-16', 'wine_lot_id' => $this->red->getKey(), 'vessel_id' => $this->t1->getKey(), 'payload' => ['metrics' => ['free_so2', 'total_so2', 'ph']]]], $stale['action']['post']['data']['activities']);
@@ -106,7 +106,7 @@ class WebCellarAttentionTest extends TestCase
         $this->assertSame('process_task', $items['temperature']['action']['kind']);
         $this->assertSame(rtrim(__('Warm the vessel.', [], 'hr'), '.'), $items['temperature']['action']['post']['data']['activities'][0]['payload']['kind']);
         $this->assertSame('open_today', $items['overdue']['action']['kind']);
-        $this->assertSame('Velika Bjelica', $items['overdue']['lot_name']);
+        $this->assertSame('Velika Bjelica 2022', $items['overdue']['lot_name']);
         $this->assertArrayNotHasKey('so2_stale', $items, 'the stale analysis already covers the SO₂ reading');
     }
 
@@ -128,5 +128,25 @@ class WebCellarAttentionTest extends TestCase
     {
         $items = $this->attention('/cellar/lots/'.$this->white->getKey());
         $this->assertSame(['overdue'], array_map(fn (array $i): string => explode(':', $i['key'])[1], $items));
+    }
+
+    public function test_lots_that_share_a_wine_name_are_told_apart_by_vintage_then_lot_number(): void
+    {
+        $this->actingAsTenant($this->tenant);
+        $by = $this->cellar->getKey();
+        $make = function (string $number, string $vintage) use ($by): void {
+            $lot = WineLot::create(['lot_number' => $number, 'name' => 'Aleph', 'grape_variety' => 'Merlot', 'vintage' => $vintage, 'wine_type' => 'RED', 'status' => 'AGING', 'initial_volume' => '500.000', 'current_volume' => '500.000']);
+            // Last analysed 105 days ago: each lot raises the same "No analysis in 105 days" alert.
+            CellarAnalysis::create(['wine_lot_id' => $lot->getKey(), 'vessel_id' => $this->t1->getKey(), 'date' => '2026-07-03', 'free_so2' => 30, 'created_by_id' => $by]);
+        };
+        $make('A-2022', '2022');
+        $make('A-2023', '2023');
+        $make('A-2023-B', '2023');
+        $this->forgetTenant();
+
+        $names = collect($this->attention())->filter(fn (array $i): bool => str_ends_with($i['key'], ':stale_analysis') && str_starts_with($i['lot_name'], 'Aleph'))->pluck('lot_name')->sort()->values()->all();
+
+        $this->assertSame(['Aleph 2022', 'Aleph 2023 · A-2023', 'Aleph 2023 · A-2023-B'], $names);
+        $this->assertSame($names, array_values(array_unique($names)));
     }
 }
