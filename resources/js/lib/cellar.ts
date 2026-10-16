@@ -88,6 +88,20 @@ export function so2Status(free: number | null): So2Status {
     return 'high';
 }
 
+/** App\Services\Cellar\So2Calculator::referenceTarget — free SO₂ to aim for, by wine type; +3 in oak. */
+export function so2ReferenceTarget(wineType: string | null | undefined, oak = false): number {
+    const base = ({ RED: 28, WHITE: 35, ROSE: 32, ORANGE: 25 } as Record<string, number>)[wineType ?? ''] ?? 30;
+
+    return oak ? base + 3 : base;
+}
+
+/** App\Services\Cellar\So2Calculator::molecular — the protective share of free SO₂ at a pH. */
+export function molecularSo2(free: number | null, ph: number | null): number | null {
+    if (free === null || ph === null) return null;
+
+    return Math.round((free / (1 + 10 ** (ph - 1.81))) * 100) / 100;
+}
+
 export const WINE_TYPE_LABELS: Record<WineType, string> = {
     RED: 'Red',
     WHITE: 'White',

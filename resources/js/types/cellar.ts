@@ -335,6 +335,19 @@ export interface WineLotSummary {
 export type AnalysisRow = { id: string; vessel_id: string | null; vessel_name?: string | null; date: string; note: string | null } & Partial<Record<AnalysisParam, string | null>>;
 
 /** App\DataTransferObjects\WineLotData (detail form). */
+/**
+ * What a record panel needs to know about a lot — the lot page's WineLotDetail
+ * satisfies it, and so does a picker option mapped by the Record drawer.
+ */
+export interface LotRef {
+    id: string;
+    name: string;
+    vintage: string | null;
+    wine_type?: string | null;
+    current_volume: string;
+    vessels: { vessel_id: string; vessel_name: string | null; volume: string }[];
+}
+
 export interface WineLotDetail extends WineLotSummary {
     cost_breakdown: { total: number; additions: number; grape: number; linked: number; carried: number; per_liter: number; per_bottle_750: number } | null;
     grapes: { id: string; grape_variety: string; percentage: string | null; price_per_kg: MoneyValue | null; weight_kg: string | null }[];
@@ -390,6 +403,8 @@ export interface TimelineEvent {
     title: string;
     detail: string | null;
     ref_id: string | null;
+    /** The lot's vessels this event touched (empty = the whole lot). */
+    vessel_ids: string[];
 }
 
 /** App\Queries\CellarHistoryQuery */

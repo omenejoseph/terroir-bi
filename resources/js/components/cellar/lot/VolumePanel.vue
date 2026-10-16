@@ -10,7 +10,7 @@ import Select from '@/components/ui/Select.vue';
 import SidePanel from '@/components/ui/SidePanel.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { parseDecimal, qty } from '@/lib/cellar';
-import type { Vessel, WineLotDetail } from '@/types/cellar';
+import type { LotRef, Vessel } from '@/types/cellar';
 import type { ComboboxOption } from '@/types/ui';
 
 /**
@@ -19,8 +19,8 @@ import type { ComboboxOption } from '@/types/ui';
  * - assign: put unallocated wine into a vessel (capped at the vessel's room);
  * - blend-in: pull wine from another lot's vessel into one of this lot's.
  */
-const props = defineProps<{ open: boolean; mode: 'adjust' | 'assign' | 'blend-in'; lot: WineLotDetail; vessels: Vessel[]; vesselId?: string | null }>();
-const emit = defineEmits<{ close: [] }>();
+const props = defineProps<{ open: boolean; mode: 'adjust' | 'assign' | 'blend-in'; lot: LotRef; vessels: Vessel[]; vesselId?: string | null }>();
+const emit = defineEmits<{ close: []; saved: [] }>();
 
 const { t } = useTranslations();
 
@@ -51,7 +51,7 @@ const err = (key: string): string | undefined => (form.errors as Record<string, 
 
 function submit(): void {
     const base = `/cellar/lots/${props.lot.id}`;
-    const opts = { preserveScroll: true, onSuccess: () => emit('close') };
+    const opts = { preserveScroll: true, onSuccess: () => { emit('saved'); emit('close'); } };
     if (props.mode === 'adjust') {
         form.transform((d) => ({ delta: parseDecimal(d.delta), reason: d.reason || null, vessel_id: d.vessel_id || null }));
         form.post(`${base}/adjust-volume`, opts);

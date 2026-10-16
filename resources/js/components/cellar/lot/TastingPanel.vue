@@ -16,7 +16,7 @@ import type { WineLotDetail } from '@/types/cellar';
 type Note = WineLotDetail['tasting_notes'][number];
 
 const props = defineProps<{ open: boolean; lotId: string; lotName: string; vessels: { vessel_id: string; vessel_name: string | null }[]; record: Note | null; vesselId?: string | null }>();
-const emit = defineEmits<{ close: [] }>();
+const emit = defineEmits<{ close: []; saved: [] }>();
 
 const { t } = useTranslations();
 
@@ -57,8 +57,8 @@ function submit(): void {
         note: d.note || null,
     }));
     const url = `/cellar/lots/${props.lotId}/tasting-notes`;
-    if (props.record) form.patch(`${url}/${props.record.id}`, { preserveScroll: true, onSuccess: () => emit('close') });
-    else form.post(url, { preserveScroll: true, onSuccess: () => emit('close') });
+    if (props.record) form.patch(`${url}/${props.record.id}`, { preserveScroll: true, onSuccess: () => { emit('saved'); emit('close'); } });
+    else form.post(url, { preserveScroll: true, onSuccess: () => { emit('saved'); emit('close'); } });
 }
 </script>
 

@@ -1,7 +1,23 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, Cylinder, Droplets, FlaskConical, Grape, GlassWater, Pencil, Trash2, Wine, Wrench, ArrowRightLeft } from 'lucide-vue-next';
+import {
+    ArrowLeft,
+    ArrowRightLeft,
+    CalendarCheck,
+    CalendarX,
+    Cylinder,
+    Droplets,
+    FlaskConical,
+    GlassWater,
+    Grape,
+    Info,
+    Pencil,
+    RotateCcw,
+    Trash2,
+    Wine,
+    Wrench,
+} from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import CellarTabs from '@/components/cellar/CellarTabs.vue';
@@ -18,21 +34,34 @@ import VolumePanel from '@/components/cellar/lot/VolumePanel.vue';
 import AreaChart from '@/components/ui/AreaChart.vue';
 import Button from '@/components/ui/Button.vue';
 import Card from '@/components/ui/Card.vue';
+import Disclosure from '@/components/ui/Disclosure.vue';
 import DropdownMenu from '@/components/ui/DropdownMenu.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import ProgressBar from '@/components/ui/ProgressBar.vue';
 import SectionHeader from '@/components/ui/SectionHeader.vue';
 import Select from '@/components/ui/Select.vue';
-import Tabs from '@/components/ui/Tabs.vue';
+import SidePanel from '@/components/ui/SidePanel.vue';
+import StatCard from '@/components/ui/StatCard.vue';
 import { confirmDialog } from '@/composables/useConfirm';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
-import { ANALYSIS_FIELDS, LOT_STATUS_LABELS, LOT_STATUS_TONES, WINE_TYPE_LABELS, qty } from '@/lib/cellar';
+import {
+    ANALYSIS_FIELDS,
+    LOT_STATUS_LABELS,
+    LOT_STATUS_TONES,
+    WINE_TYPE_LABELS,
+    describeActivity,
+    molecularSo2,
+    qty,
+    so2ReferenceTarget,
+    so2Status,
+} from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import { formatMoney } from '@/lib/money';
 import type {
     AnalysisParam,
     AnalysisRow,
+    CellarActivity,
     FermentationTemplate,
     HistoryEntry,
     LotOption,
@@ -43,16 +72,18 @@ import type {
     WineLotDetail,
 } from '@/types/cellar';
 import type { SharedProps } from '@/types';
-import type { MenuItem, TabItem } from '@/types/ui';
+import type { MenuItem } from '@/types/ui';
 
 /**
- * A wine lot: where it is and how much, what was done to it, what it tastes
- * and measures like, what it cost, and where it came from. `?vessel=` focuses
- * the page on one vessel (from a map click): lists filter to it and new
- * records default to it.
+ * A wine lot as one workspace: vitals on top, an action bar that records in
+ * place, and the lot's journey as the main feed (filter by kind; edit, delete
+ * or reverse from each row). The vessel switcher focuses the whole page on one
+ * vessel (`?vessel=`, as a map click opens it). Details, history and
+ * traceability live in the "Lot details" drawer; every reading in "All readings".
  */
 const props = defineProps<{
     lot: WineLotDetail;
+    nextPlanned: CellarActivity | null;
     timeline: TimelineEvent[];
     trend: AnalysisRow[];
     blendSources: { lot_id: string; name: string; lot_number: string; liters: string }[];
@@ -73,52 +104,42 @@ const locale = computed(() => page.props.locale);
 const currency = computed(() => page.props.org?.default_currency ?? 'EUR');
 const money = (minor: number | null | undefined) => (minor === null || minor === undefined ? '—' : formatMoney(minor, currency.value));
 const date = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleDateString(locale.value, { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+const shortDate = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleDateString(locale.value, { day: 'numeric', month: 'short' }) : '—');
 
 // ── Vessel focus ────────────────────────────────────────────────────────────
 const focusId = ref<string | null>(new URLSearchParams(window.location.search).get('vessel'));
 const focus = computed(() => props.lot.vessels.find((v) => v.vessel_id === focusId.value) ?? null);
-function clearFocus(): void {
-    focusId.value = null;
-    window.history.replaceState({}, '', `/cellar/lots/${props.lot.id}`);
-}
+const vesselChoice = computed({
+    get: () => focusId.value ?? '',
+    set: (id: string) => {
+        focusId.value = id || null;
+        window.history.replaceState({}, '', id ? `/cellar/lots/${props.lot.id}?vessel=${id}` : `/cellar/lots/${props.lot.id}`);
+    },
+});
+const vesselChoices = computed(() => [{ value: '', label: t('All vessels') }, ...props.lot.vessels.map((v) => ({ value: v.vessel_id, label: `${v.vessel_name ?? '—'} · ${qty(v.volume)} L` }))]);
 const inFocus = <T extends { vessel_id?: string | null }>(rows: T[]) => (focusId.value ? rows.filter((r) => r.vessel_id === focusId.value) : rows);
 
-// ── Tabs ────────────────────────────────────────────────────────────────────
-type TabKey = 'overview' | 'additions' | 'analysis' | 'tasting' | 'transfers' | 'processes' | 'bottling' | 'history' | 'details';
-const tab = ref<TabKey>(focusId.value ? 'analysis' : 'overview');
-const tabs = computed<TabItem[]>(() => [
-    { label: t('Overview'), value: 'overview' },
-    { label: `${t('Additions')} (${inFocus(props.lot.additions).length})`, value: 'additions' },
-    { label: `${t('Analysis')} (${inFocus(props.lot.analyses).length})`, value: 'analysis' },
-    { label: `${t('Tasting')} (${props.lot.tasting_notes.length})`, value: 'tasting' },
-    { label: `${t('Transfers')} (${props.lot.transfers.length})`, value: 'transfers' },
-    { label: `${t('Processes')} (${inFocus(props.lot.processes).length})`, value: 'processes' },
-    { label: `${t('Bottling')} (${props.lot.bottlings.length})`, value: 'bottling' },
-    { label: t('History'), value: 'history' },
-    { label: t('Details'), value: 'details' },
-]);
-watch(tab, (k) => {
-    if (k === 'history' && props.history === undefined) router.reload({ only: ['history'] });
-    if (k === 'details' && props.trace === undefined) router.reload({ only: ['trace'] });
-});
-
 // ── Panels ──────────────────────────────────────────────────────────────────
-type Panel = 'edit' | 'analysis' | 'addition' | 'transfer' | 'process' | 'tasting' | 'bottling' | 'adjust' | 'assign' | 'blend-in' | null;
+type Panel = 'edit' | 'analysis' | 'addition' | 'transfer' | 'process' | 'tasting' | 'bottling' | 'adjust' | 'assign' | 'blend-in' | 'details' | 'readings' | null;
 const panel = ref<Panel>(null);
 const editing = ref<{ analysis: AnalysisRow | null; addition: WineLotDetail['additions'][number] | null; tasting: WineLotDetail['tasting_notes'][number] | null }>({ analysis: null, addition: null, tasting: null });
 function open(p: Exclude<Panel, null>, record: Partial<typeof editing.value> = {}): void {
     editing.value = { analysis: null, addition: null, tasting: null, ...record };
     panel.value = p;
 }
+watch(panel, (p) => {
+    if (p !== 'details') return;
+    if (props.trace === undefined) router.reload({ only: ['trace'] });
+    if (props.history === undefined) router.reload({ only: ['history'] });
+});
 
 const bottled = computed(() => props.lot.status === 'BOTTLED');
 /** A bottled lot is read-only — only reversing its bottling stays available. */
 const canEdit = computed(() => canManage.value && !bottled.value);
 
-async function remove(kind: string, url: string, title: string): Promise<void> {
+async function remove(url: string, title: string): Promise<void> {
     if (!(await confirmDialog({ title, confirmLabel: t('Delete'), tone: 'danger' }))) return;
     router.delete(url, { preserveScroll: true });
-    void kind;
 }
 
 async function deleteLot(): Promise<void> {
@@ -131,72 +152,175 @@ async function deleteLot(): Promise<void> {
     if (ok) router.delete(`/cellar/lots/${props.lot.id}`);
 }
 
-// ── Overview figures ────────────────────────────────────────────────────────
+// ── Vitals ──────────────────────────────────────────────────────────────────
 const fill = computed(() => {
     if (focus.value) {
         const v = props.vessels.find((x) => x.id === focus.value!.vessel_id);
         const cap = Number(v?.capacity_liters ?? 0);
 
-        return { now: Number(focus.value.volume), of: cap, pct: cap > 0 ? (Number(focus.value.volume) / cap) * 100 : 0, label: t('of :n L capacity', { n: qty(cap) }) };
+        return { now: Number(focus.value.volume), pct: cap > 0 ? (Number(focus.value.volume) / cap) * 100 : 0, label: t('of :n L capacity', { n: qty(cap) }) };
     }
     const init = Number(props.lot.initial_volume);
 
-    return { now: Number(props.lot.current_volume), of: init, pct: init > 0 ? (Number(props.lot.current_volume) / init) * 100 : 0, label: t('of :n L initial', { n: qty(init) }) };
+    return { now: Number(props.lot.current_volume), pct: init > 0 ? (Number(props.lot.current_volume) / init) * 100 : 0, label: t('of :n L initial', { n: qty(init) }) };
 });
 
-const grapeTotals = computed(() => ({
-    kg: props.lot.grapes.reduce((n, g) => n + Number(g.weight_kg ?? 0), 0),
-    cost: props.lot.grapes.reduce((n, g) => n + (g.price_per_kg && g.weight_kg ? Math.round(g.price_per_kg.minor * Number(g.weight_kg)) : 0), 0),
-}));
-const latest = computed(() => inFocus(props.lot.analyses)[0] ?? null);
-const SO2_KEYS: AnalysisParam[] = ['free_so2', 'total_so2'];
-const latestParams = computed(() => ANALYSIS_FIELDS.filter((f) => !SO2_KEYS.includes(f.key) && latest.value?.[f.key] !== null && latest.value?.[f.key] !== undefined));
+/** The newest reading of one parameter (analyses are newest first). */
+function latestOf(key: AnalysisParam): { value: number; date: string } | null {
+    const row = inFocus(props.lot.analyses).find((a) => a[key] !== null && a[key] !== undefined);
 
-// ── Trend chart ─────────────────────────────────────────────────────────────
+    return row ? { value: Number(row[key]), date: row.date } : null;
+}
+const free = computed(() => latestOf('free_so2'));
+const total = computed(() => latestOf('total_so2'));
+const ph = computed(() => latestOf('ph'));
+const alcohol = computed(() => latestOf('alcohol'));
+const va = computed(() => latestOf('volatile_acidity'));
+const target = computed(() => so2ReferenceTarget(props.lot.wine_type));
+const molecular = computed(() => molecularSo2(free.value?.value ?? null, ph.value?.value ?? null));
+const so2Alert = computed(() => ['critical', 'low'].includes(so2Status(free.value?.value ?? null)));
+const nextLabel = computed(() => (props.nextPlanned ? describeActivity(props.nextPlanned, t) : null));
+
+// ── Journey feed ────────────────────────────────────────────────────────────
+const KINDS: { key: string; label: string; types: string[] }[] = [
+    { key: 'analysis', label: 'Readings', types: ['analysis'] },
+    { key: 'addition', label: 'Additions', types: ['addition'] },
+    { key: 'move', label: 'Moves', types: ['transfer', 'transfer_in', 'vessel'] },
+    { key: 'process', label: 'Processes', types: ['process'] },
+    { key: 'tasting', label: 'Tastings', types: ['tasting'] },
+    { key: 'bottling', label: 'Bottling', types: ['bottling'] },
+    { key: 'planned', label: 'Planned work', types: ['planned_done', 'planned_skipped'] },
+];
+const kind = ref('all');
+/** In focus: events on that vessel, plus lot-wide ones (creation, additions to the whole lot…). */
+const focused = computed(() => (focusId.value ? props.timeline.filter((e) => e.vessel_ids.length === 0 || e.vessel_ids.includes(focusId.value!)) : props.timeline));
+const kindCounts = computed(() => Object.fromEntries(KINDS.map((k) => [k.key, focused.value.filter((e) => k.types.includes(e.type)).length])));
+const feed = computed(() => {
+    const types = KINDS.find((k) => k.key === kind.value)?.types;
+
+    return types ? focused.value.filter((e) => types.includes(e.type)) : focused.value;
+});
+
+const TIMELINE_ICONS: Record<string, unknown> = {
+    vessel: Cylinder,
+    addition: Droplets,
+    analysis: FlaskConical,
+    tasting: Wine,
+    transfer: ArrowRightLeft,
+    transfer_in: ArrowRightLeft,
+    process: Wrench,
+    bottling: GlassWater,
+    created: Grape,
+    planned_done: CalendarCheck,
+    planned_skipped: CalendarX,
+};
+const TIMELINE_TONES: Record<string, string> = {
+    addition: 'text-tag-violet-foreground',
+    analysis: 'text-tag-blue-foreground',
+    tasting: 'text-tag-green-foreground',
+    process: 'text-tag-orange-foreground',
+    bottling: 'text-tag-slate-foreground',
+};
+
+const EDIT: MenuItem = { key: 'edit', label: 'Edit', icon: Pencil };
+const DELETE: MenuItem = { key: 'delete', label: 'Delete', icon: Trash2, destructive: true };
+const REVERSE: MenuItem = { key: 'reverse', label: 'Reverse', icon: RotateCcw, destructive: true };
+
+/** What can be done from a journey row — the record behind it is found by ref_id. */
+function rowMenu(e: TimelineEvent): MenuItem[] {
+    if (!e.ref_id) return [];
+    const items = (() => {
+        switch (e.type) {
+            case 'addition':
+            case 'analysis':
+            case 'tasting':
+                return canEdit.value ? [EDIT, DELETE] : [];
+            case 'process':
+                return canEdit.value ? [DELETE] : [];
+            case 'transfer':
+            case 'transfer_in':
+                return canEdit.value ? [REVERSE] : [];
+            case 'bottling':
+                return canManage.value ? [REVERSE] : [];
+            default:
+                return [];
+        }
+    })();
+
+    return items.map((m) => ({ ...m, label: t(m.label) }));
+}
+
+function onRow(e: TimelineEvent, action: string): void {
+    const id = e.ref_id!;
+    const base = `/cellar/lots/${props.lot.id}`;
+    switch (e.type) {
+        case 'addition': {
+            const record = props.lot.additions.find((a) => a.id === id) ?? null;
+            if (action === 'edit' && record) open('addition', { addition: record });
+            else if (action === 'delete') void remove(`${base}/additions/${id}`, t('Delete this addition? Its stock is put back.'));
+            break;
+        }
+        case 'analysis': {
+            const record = props.lot.analyses.find((a) => a.id === id) ?? null;
+            if (action === 'edit' && record) open('analysis', { analysis: record });
+            else if (action === 'delete') void remove(`${base}/analyses/${id}`, t('Delete this analysis?'));
+            break;
+        }
+        case 'tasting': {
+            const record = props.lot.tasting_notes.find((n) => n.id === id) ?? null;
+            if (action === 'edit' && record) open('tasting', { tasting: record });
+            else if (action === 'delete') void remove(`${base}/tasting-notes/${id}`, t('Delete this tasting note?'));
+            break;
+        }
+        case 'process':
+            void remove(`${base}/processes/${id}`, t('Delete this process?'));
+            break;
+        case 'transfer':
+        case 'transfer_in':
+            void remove(`${base}/transfers/${id}`, t('Reverse this transfer? The wine goes back where it came from.'));
+            break;
+        case 'bottling':
+            void remove(`${base}/bottlings/${id}`, t('Reverse this bottling? The wine goes back into its vessels and the bottles leave stock.'));
+            break;
+    }
+}
+
+// ── Trend (side column) ─────────────────────────────────────────────────────
 const trendParam = ref<AnalysisParam>('free_so2');
-const trendVessel = ref(focusId.value ?? '');
 const trendParams = computed(() => ANALYSIS_FIELDS.filter((f) => props.trend.some((r) => r[f.key] !== null && r[f.key] !== undefined)));
-const trendVessels = computed(() => [{ value: '', label: t('All vessels (averaged)') }, ...props.lot.vessels.map((v) => ({ value: v.vessel_id, label: v.vessel_name ?? '—' }))]);
 const trendPoints = computed(() => {
-    const rows = props.trend.filter((r) => r[trendParam.value] !== null && r[trendParam.value] !== undefined && (trendVessel.value === '' || r.vessel_id === trendVessel.value));
+    const rows = props.trend.filter((r) => r[trendParam.value] !== null && r[trendParam.value] !== undefined && (!focusId.value || r.vessel_id === focusId.value));
     const byDay = new Map<string, number[]>();
     for (const r of [...rows].sort((a, b) => a.date.localeCompare(b.date))) {
         const day = r.date.slice(0, 10);
         byDay.set(day, [...(byDay.get(day) ?? []), Number(r[trendParam.value])]);
     }
 
-    return [...byDay.entries()].map(([d, vals]) => ({ label: new Date(d).toLocaleDateString(locale.value, { day: 'numeric', month: 'short' }), value: Math.round((vals.reduce((s, v) => s + v, 0) / vals.length) * 100) / 100 }));
+    return [...byDay.entries()].map(([d, vals]) => ({ label: shortDate(d), value: Math.round((vals.reduce((s, v) => s + v, 0) / vals.length) * 100) / 100 }));
 });
 
-const rowMenu: MenuItem[] = [
-    { key: 'edit', label: 'Edit', icon: Pencil },
-    { key: 'delete', label: 'Delete', icon: Trash2, destructive: true },
-];
-const menu = computed(() => rowMenu.map((m) => ({ ...m, label: t(m.label) })));
+const grapeTotals = computed(() => ({
+    kg: props.lot.grapes.reduce((n, g) => n + Number(g.weight_kg ?? 0), 0),
+    cost: props.lot.grapes.reduce((n, g) => n + (g.price_per_kg && g.weight_kg ? Math.round(g.price_per_kg.minor * Number(g.weight_kg)) : 0), 0),
+}));
 
-const vesselName = (id: string | null) => props.lot.vessels.find((v) => v.vessel_id === id)?.vessel_name ?? props.vessels.find((v) => v.id === id)?.name ?? null;
-
-const TIMELINE_ICONS: Record<string, unknown> = { vessel: Cylinder, addition: Droplets, analysis: FlaskConical, tasting: Wine, transfer: ArrowRightLeft, transfer_in: ArrowRightLeft, process: Wrench, bottling: GlassWater, created: Grape };
+const readingMenu = computed<MenuItem[]>(() => (canEdit.value ? [EDIT, DELETE].map((m) => ({ ...m, label: t(m.label) })) : []));
 </script>
 
 <template>
     <AppLayout :title="lot.name">
-        <div class="flex flex-col gap-5">
+        <div class="flex flex-col gap-4">
             <Link href="/cellar" class="inline-flex w-fit items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft class="size-3.5" /> {{ t('Cellar') }}</Link>
             <PageHeader :title="lot.name" :description="[lot.lot_number, lot.grape_variety, lot.vintage, lot.vineyard].filter(Boolean).join(' · ')">
                 <template #actions>
                     <span :class="cn('px-2 py-0.5 text-[11px] font-medium', LOT_STATUS_TONES[lot.status])">{{ t(LOT_STATUS_LABELS[lot.status] ?? lot.status) }}</span>
                     <span v-if="lot.wine_type" class="bg-muted px-2 py-0.5 text-[11px]">{{ t(WINE_TYPE_LABELS[lot.wine_type]) }}</span>
+                    <Select v-if="lot.vessels.length > 1 || focusId" v-model="vesselChoice" :options="vesselChoices" :aria-label="t('Show vessel')" class="w-52" />
                     <Button v-if="canManage" size="sm" variant="outline" @click="open('edit')"><Pencil class="size-3.5" /> {{ t('Edit') }}</Button>
                     <Button v-if="can('cellar.delete')" size="sm" variant="ghost" :aria-label="t('Delete lot')" @click="deleteLot"><Trash2 class="size-3.5" /></Button>
                 </template>
             </PageHeader>
             <CellarTabs current="lots" />
-
-            <div v-if="focus" class="flex flex-wrap items-center gap-2 border border-border bg-muted/50 px-3 py-2 text-sm">
-                {{ t('Viewing vessel :name — :n L', { name: focus.vessel_name ?? '', n: qty(focus.volume) }) }}
-                <button type="button" class="text-xs underline underline-offset-2" @click="clearFocus">{{ t('Show all →') }}</button>
-            </div>
 
             <div v-if="blendSources.length" class="border border-tag-violet-foreground/30 bg-tag-violet px-3 py-2 text-xs text-tag-violet-foreground">
                 <p class="font-medium">{{ t('Blend sources · :n', { n: blendSources.length }) }}</p>
@@ -207,300 +331,196 @@ const TIMELINE_ICONS: Record<string, unknown> = { vessel: Cylinder, addition: Dr
                 </p>
             </div>
 
-            <ProtocolCard v-if="lot.status === 'FERMENTING' || lot.fermentation_template_id" :lot="lot" :templates="templates" :can-manage="canManage" />
-
-            <div v-if="canManage && !bottled" class="flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" @click="open('addition')"><Droplets class="size-3.5" /> {{ t('Addition') }}</Button>
-                <Button size="sm" variant="outline" @click="open('analysis')"><FlaskConical class="size-3.5" /> {{ t('Analysis') }}</Button>
-                <Button size="sm" variant="outline" @click="open('transfer')"><ArrowRightLeft class="size-3.5" /> {{ t('Move wine') }}</Button>
-                <Button size="sm" variant="outline" @click="open('process')"><Wrench class="size-3.5" /> {{ t('Process') }}</Button>
-                <Button size="sm" variant="outline" @click="open('tasting')"><Wine class="size-3.5" /> {{ t('Tasting') }}</Button>
-                <Button size="sm" variant="outline" @click="open('bottling')"><GlassWater class="size-3.5" /> {{ t('Bottle') }}</Button>
+            <!-- Vitals -->
+            <div class="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">
+                <StatCard :label="focus ? t('Volume in :vessel', { vessel: focus.vessel_name ?? '' }) : t('Volume')" :value="`${qty(fill.now)} L`" :hint="`${Math.round(fill.pct)}% · ${fill.label}`" />
+                <StatCard
+                    :label="t('Free / total SO₂')"
+                    :value="free ? `${Math.round(free.value)} / ${total ? Math.round(total.value) : '—'}` : '—'"
+                    :hint="free ? [molecular !== null ? t('molecular :m', { m: qty(molecular) }) : null, t('target :n', { n: target }), shortDate(free.date)].filter(Boolean).join(' · ') : t('No reading yet')"
+                    :alert="so2Alert"
+                />
+                <StatCard
+                    :label="t('pH')"
+                    :value="ph ? qty(ph.value) : '—'"
+                    :hint="[alcohol ? t('alc :a %', { a: qty(alcohol.value) }) : null, va ? t('VA :v g/L', { v: qty(va.value) }) : null].filter(Boolean).join(' · ') || undefined"
+                    :alert="(va?.value ?? 0) > 0.7"
+                />
+                <StatCard v-if="finance" :label="t('Cost / L')" :value="lot.cost_breakdown ? money(lot.cost_breakdown.per_liter) : '—'" :hint="lot.cost_breakdown ? t(':total total', { total: money(lot.cost_breakdown.total) }) : undefined" />
+                <Link
+                    :href="nextPlanned ? '/cellar/today' : '/cellar/plan'"
+                    :class="cn('flex flex-col justify-between border p-4 hover:bg-accent', nextPlanned?.overdue ? 'border-tag-orange-foreground/40 bg-tag-orange/40' : 'border-border')"
+                >
+                    <span class="text-xs text-muted-foreground">{{ t('Next') }}</span>
+                    <template v-if="nextPlanned">
+                        <span class="text-sm font-semibold">{{ nextLabel }}</span>
+                        <span class="text-[11px] text-muted-foreground">
+                            {{ nextPlanned.overdue ? t('overdue since :d', { d: shortDate(nextPlanned.planned_for) }) : shortDate(nextPlanned.planned_for) }}<template v-if="nextPlanned.vessel"> · {{ nextPlanned.vessel.name }}</template><template v-if="nextPlanned.round"> · {{ nextPlanned.round.name }}</template>
+                        </span>
+                    </template>
+                    <template v-else>
+                        <span class="text-sm font-semibold">{{ t('Nothing planned') }}</span>
+                        <span class="text-[11px] text-muted-foreground">{{ t('Plan work →') }}</span>
+                    </template>
+                </Link>
             </div>
 
-            <div class="-mx-1 overflow-x-auto px-1"><Tabs :items="tabs" :current="tab" @select="tab = $event as TabKey" /></div>
+            <!-- Action bar -->
+            <div class="flex flex-wrap items-center gap-2 border border-border bg-muted/40 p-2">
+                <template v-if="canEdit">
+                    <Button size="sm" @click="open('analysis')"><FlaskConical class="size-3.5" /> {{ t('Reading') }}</Button>
+                    <Button size="sm" variant="outline" @click="open('addition')"><Droplets class="size-3.5" /> {{ t('Addition') }}</Button>
+                    <Button size="sm" variant="outline" @click="open('transfer')"><ArrowRightLeft class="size-3.5" /> {{ t('Move wine') }}</Button>
+                    <Button size="sm" variant="outline" @click="open('process')"><Wrench class="size-3.5" /> {{ t('Process') }}</Button>
+                    <Button size="sm" variant="outline" @click="open('tasting')"><Wine class="size-3.5" /> {{ t('Tasting') }}</Button>
+                    <Button size="sm" variant="outline" @click="open('bottling')"><GlassWater class="size-3.5" /> {{ t('Bottle') }}</Button>
+                </template>
+                <span class="flex-1" />
+                <Button size="sm" variant="ghost" @click="open('details')"><Info class="size-3.5" /> {{ t('Lot details') }}</Button>
+            </div>
 
-            <!-- OVERVIEW -->
-            <div v-if="tab === 'overview'" class="grid gap-4 lg:grid-cols-2">
-                <Card class="flex flex-col gap-3 p-4">
-                    <SectionHeader :title="t('Volume')" />
-                    <div>
-                        <p class="text-3xl font-semibold tabular-nums">{{ qty(fill.now) }} L</p>
-                        <p class="text-xs text-muted-foreground">{{ fill.label }} · {{ Math.round(fill.pct) }}%</p>
+            <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <!-- Journey -->
+                <Card class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-1.5 border-b border-border px-3 py-2.5">
+                        <span class="mr-2 text-sm font-semibold">{{ t('Journey') }}</span>
+                        <button type="button" :aria-pressed="kind === 'all'" :class="cn('px-2 py-1 text-[11px]', kind === 'all' ? 'bg-primary text-primary-foreground' : 'border border-border hover:bg-accent')" @click="kind = 'all'">
+                            {{ t('All') }} {{ focused.length }}
+                        </button>
+                        <template v-for="k in KINDS" :key="k.key">
+                            <button
+                                v-if="kindCounts[k.key]"
+                                type="button"
+                                :aria-pressed="kind === k.key"
+                                :class="cn('px-2 py-1 text-[11px]', kind === k.key ? 'bg-primary text-primary-foreground' : 'border border-border hover:bg-accent')"
+                                @click="kind = k.key"
+                            >
+                                {{ t(k.label) }} {{ kindCounts[k.key] }}
+                            </button>
+                        </template>
                     </div>
-                    <ProgressBar :value="fill.pct" />
-                    <div class="flex flex-col">
+                    <ol>
+                        <li v-for="(e, i) in feed" :key="`${e.type}-${e.ref_id ?? i}`" class="grid grid-cols-[64px_16px_minmax(0,1fr)_auto] items-start gap-2.5 border-b border-border px-3 py-2.5 text-xs last:border-0">
+                            <span class="pt-0.5 text-[11px] text-muted-foreground">{{ shortDate(e.date) }}</span>
+                            <component :is="TIMELINE_ICONS[e.type] ?? Wrench" :class="cn('mt-0.5 size-3.5', TIMELINE_TONES[e.type] ?? 'text-muted-foreground')" />
+                            <div class="min-w-0">
+                                <p class="font-medium">{{ e.title }}</p>
+                                <p v-if="e.detail" class="text-muted-foreground">{{ e.detail }}</p>
+                            </div>
+                            <DropdownMenu v-if="rowMenu(e).length" :items="rowMenu(e)" align="right" @select="(k) => onRow(e, k)" />
+                        </li>
+                        <li v-if="feed.length === 0" class="px-3 py-10 text-center text-xs text-muted-foreground">{{ t('Nothing recorded yet.') }}</li>
+                    </ol>
+                </Card>
+
+                <!-- Side column -->
+                <aside class="flex flex-col gap-3">
+                    <Card v-if="trend.length" class="flex flex-col gap-2 p-3 text-xs">
+                        <div class="flex items-center gap-2">
+                            <Select v-model="trendParam" :options="trendParams.map((f) => ({ value: f.key, label: t(f.label) }))" :aria-label="t('Parameter')" class="flex-1" />
+                            <span v-if="trendParam === 'free_so2'" class="text-muted-foreground">{{ t('target :n', { n: target }) }}</span>
+                        </div>
+                        <AreaChart v-if="trendPoints.length > 1" :points="trendPoints" :height="110" />
+                        <p v-else class="py-4 text-center text-muted-foreground">{{ t('Two or more readings are needed for a trend.') }}</p>
+                        <button type="button" class="self-start underline underline-offset-2" @click="open('readings')">{{ t('All readings (:n)', { n: inFocus(lot.analyses).length }) }}</button>
+                    </Card>
+
+                    <Card class="flex flex-col gap-2 p-3 text-xs">
+                        <SectionHeader :title="t('In vessels')" />
+                        <ProgressBar :value="fill.pct" />
                         <Link
                             v-for="v in lot.vessels"
                             :key="v.vessel_lot_id"
                             :href="`/cellar/vessels/${v.vessel_id}`"
-                            :class="cn('flex justify-between border-b border-border py-1.5 text-xs last:border-0 hover:bg-accent', v.vessel_id === focusId && 'font-semibold')"
+                            :class="cn('flex justify-between border-b border-border py-1.5 last:border-0 hover:bg-accent', v.vessel_id === focusId && 'font-semibold')"
                         >
                             <span>{{ v.vessel_name }}</span><span class="tabular-nums">{{ qty(v.volume) }} L</span>
                         </Link>
-                        <p v-if="lot.vessels.length === 0" class="text-xs text-muted-foreground">{{ t('Not in a vessel.') }}</p>
-                    </div>
-                    <div v-if="canManage && !bottled" class="flex flex-wrap gap-2">
-                        <Button size="sm" variant="outline" @click="open('adjust')">{{ t('Adjust volume') }}</Button>
-                        <Button size="sm" variant="outline" @click="open('assign')">{{ t('Assign vessel') }}</Button>
-                        <Button size="sm" variant="outline" @click="open('blend-in')">{{ t('Blend in') }}</Button>
-                    </div>
-                </Card>
-
-                <Card v-if="finance" class="flex flex-col gap-2 p-4 text-xs">
-                    <SectionHeader :title="t('Cost breakdown')" />
-                    <template v-if="lot.cost_breakdown && lot.cost_breakdown.total > 0">
-                        <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Grape price') }}</span><span>{{ lot.grape_price_per_kg ? `${money(lot.grape_price_per_kg.minor)}/kg` : '—' }}</span></div>
-                        <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Harvest weight') }}</span><span>{{ lot.harvest_weight_kg ? `${qty(lot.harvest_weight_kg)} kg` : '—' }}</span></div>
-                        <div v-if="lot.harvest_weight_kg && Number(lot.harvest_weight_kg) > 0" class="flex justify-between">
-                            <span class="text-muted-foreground">{{ t('Yield') }}</span><span>{{ qty((Number(lot.initial_volume) / Number(lot.harvest_weight_kg)) * 100) }} L / 100 kg</span>
+                        <p v-if="lot.vessels.length === 0" class="text-muted-foreground">{{ t('Not in a vessel.') }}</p>
+                        <div v-if="canEdit" class="flex flex-wrap gap-1.5">
+                            <Button size="sm" variant="outline" @click="open('adjust')">{{ t('Adjust volume') }}</Button>
+                            <Button size="sm" variant="outline" @click="open('assign')">{{ t('Assign vessel') }}</Button>
+                            <Button size="sm" variant="outline" @click="open('blend-in')">{{ t('Blend in') }}</Button>
                         </div>
-                        <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Grape cost') }}</span><span>{{ money(lot.cost_breakdown.grape) }}</span></div>
-                        <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Additions') }}</span><span>{{ money(lot.cost_breakdown.additions) }}</span></div>
-                        <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Linked costs') }}</span><span>{{ money(lot.cost_breakdown.linked) }}</span></div>
-                        <div v-if="lot.cost_breakdown.carried" class="flex justify-between"><span class="text-muted-foreground">{{ t('Carried in by blends') }}</span><span>{{ money(lot.cost_breakdown.carried) }}</span></div>
-                        <div class="flex justify-between border-t border-border pt-2 font-semibold"><span>{{ t('Total') }}</span><span>{{ money(lot.cost_breakdown.total) }}</span></div>
-                        <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Per litre') }}</span><span>{{ money(lot.cost_breakdown.per_liter) }}</span></div>
-                        <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Per 750 ml bottle') }}</span><span>{{ money(lot.cost_breakdown.per_bottle_750) }}</span></div>
-                    </template>
-                    <p v-else class="text-muted-foreground">{{ t('No cost data yet.') }}</p>
-                </Card>
+                    </Card>
 
-                <Card v-if="lot.grapes.length > 1 || (finance && lot.grapes.some((g) => g.price_per_kg))" class="p-4 text-xs">
-                    <SectionHeader :title="t('Grapes')" />
-                    <table class="mt-2 w-full">
-                        <thead class="text-[10px] uppercase text-muted-foreground">
-                            <tr>
-                                <th class="py-1 text-left font-medium">{{ t('Variety') }}</th>
-                                <th class="py-1 text-right font-medium">%</th>
-                                <th class="py-1 text-right font-medium">kg</th>
-                                <th v-if="finance" class="py-1 text-right font-medium">{{ t('Price / kg') }}</th>
-                                <th v-if="finance" class="py-1 text-right font-medium">{{ t('Cost') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="g in lot.grapes" :key="g.id" class="border-t border-border">
-                                <td class="py-1">{{ g.grape_variety }}</td>
-                                <td class="py-1 text-right tabular-nums">{{ qty(g.percentage) }}</td>
-                                <td class="py-1 text-right tabular-nums">{{ qty(g.weight_kg) }}</td>
-                                <td v-if="finance" class="py-1 text-right tabular-nums">{{ g.price_per_kg ? money(g.price_per_kg.minor) : '—' }}</td>
-                                <td v-if="finance" class="py-1 text-right tabular-nums">{{ g.price_per_kg && g.weight_kg ? money(Math.round(g.price_per_kg.minor * Number(g.weight_kg))) : '—' }}</td>
-                            </tr>
-                            <tr class="border-t border-border font-medium">
-                                <td class="py-1">{{ t('Total') }}</td>
-                                <td />
-                                <td class="py-1 text-right tabular-nums">{{ qty(grapeTotals.kg) }}</td>
-                                <td v-if="finance" />
-                                <td v-if="finance" class="py-1 text-right tabular-nums">{{ money(grapeTotals.cost) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </Card>
-
-                <Card class="p-4 text-xs">
-                    <SectionHeader :title="t('Latest analysis')" />
-                    <template v-if="latest">
-                        <p class="mb-2 text-muted-foreground">{{ date(latest.date) }}<template v-if="latest.vessel_name"> · {{ latest.vessel_name }}</template></p>
-                        <div class="mb-3 grid grid-cols-2 gap-2">
-                            <div class="bg-muted px-3 py-2"><p class="text-[10px] uppercase text-muted-foreground">{{ t('Free SO₂') }}</p><p class="text-lg font-semibold">{{ qty(latest.free_so2) }}</p></div>
-                            <div class="bg-muted px-3 py-2"><p class="text-[10px] uppercase text-muted-foreground">{{ t('Total SO₂') }}</p><p class="text-lg font-semibold">{{ qty(latest.total_so2) }}</p></div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-1">
-                            <div v-for="f in latestParams" :key="f.key" class="flex justify-between"><span class="text-muted-foreground">{{ t(f.label) }}</span><span class="tabular-nums">{{ qty(latest[f.key]) }}</span></div>
-                        </div>
-                    </template>
-                    <p v-else class="text-muted-foreground">{{ t('No analysis yet.') }}</p>
-                </Card>
-
-                <Card class="p-4 text-xs lg:col-span-2">
-                    <SectionHeader :title="t('Lot journey')" />
-                    <ol class="mt-2 flex flex-col">
-                        <li v-for="(e, i) in timeline" :key="i" class="flex gap-3 border-l border-border py-1.5 pl-3">
-                            <component :is="TIMELINE_ICONS[e.type] ?? Wrench" class="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                            <div class="min-w-0 flex-1">
-                                <p class="font-medium">{{ e.title }}</p>
-                                <p v-if="e.detail" class="truncate text-muted-foreground">{{ e.detail }}</p>
-                            </div>
-                            <span class="shrink-0 text-muted-foreground">{{ date(e.date) }}</span>
-                        </li>
-                    </ol>
-                </Card>
-            </div>
-
-            <!-- ADDITIONS -->
-            <Card v-else-if="tab === 'additions'" class="overflow-x-auto">
-                <div v-if="lot.planned_additions.length" class="m-3 border border-dashed border-border p-3 text-xs">
-                    <p class="mb-1 font-medium">{{ t('Planned — waiting for the cellar team · :n', { n: lot.planned_additions.length }) }}</p>
-                    <p v-for="p in lot.planned_additions" :key="p.id" class="text-muted-foreground">
-                        {{ p.planned_for }} · {{ p.product_name }} {{ qty(p.quantity) }} {{ p.unit }}<template v-if="p.vessel"> → {{ p.vessel.name }}</template>
-                    </p>
-                </div>
-                <table class="w-full text-xs">
-                    <thead class="bg-muted text-[10px] uppercase tracking-wide text-muted-foreground">
-                        <tr>
-                            <th class="px-3 py-2 text-left font-medium">{{ t('Addition') }}</th>
-                            <th class="px-3 py-2 text-left font-medium">{{ t('Vessel') }}</th>
-                            <th class="px-3 py-2 text-right font-medium">{{ t('Quantity') }}</th>
-                            <th v-if="finance" class="px-3 py-2 text-right font-medium">{{ t('Cost') }}</th>
-                            <th class="px-3 py-2 text-left font-medium">{{ t('Date') }}</th>
-                            <th class="w-10" />
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="a in inFocus(lot.additions)" :key="a.id" class="border-t border-border">
-                            <td class="px-3 py-2"><p class="font-medium">{{ a.name }}</p><p v-if="a.note" class="text-muted-foreground">{{ a.note }}</p></td>
-                            <td class="px-3 py-2">{{ a.vessel?.name ?? '—' }}</td>
-                            <td class="px-3 py-2 text-right tabular-nums">{{ qty(a.quantity) }} {{ a.unit }}</td>
-                            <td v-if="finance" class="px-3 py-2 text-right tabular-nums">{{ a.total_cost ? money(a.total_cost.minor) : '—' }}</td>
-                            <td class="px-3 py-2 text-muted-foreground">{{ date(a.date) }}</td>
-                            <td class="px-2">
-                                <DropdownMenu v-if="canEdit" :items="menu" @select="(k) => (k === 'edit' ? open('addition', { addition: a }) : remove('addition', `/cellar/lots/${lot.id}/additions/${a.id}`, t('Delete this addition? Its stock is put back.')))" />
-                            </td>
-                        </tr>
-                        <tr v-if="inFocus(lot.additions).length === 0"><td colspan="6" class="px-3 py-8 text-center text-muted-foreground">{{ t('No additions recorded yet.') }}</td></tr>
-                    </tbody>
-                </table>
-            </Card>
-
-            <!-- ANALYSIS -->
-            <div v-else-if="tab === 'analysis'" class="flex flex-col gap-4">
-                <Card v-if="trend.length" class="p-4">
-                    <div class="mb-3 flex flex-wrap items-center gap-2">
-                        <SectionHeader :title="t('Trend')" />
-                        <Select v-model="trendParam" :options="trendParams.map((f) => ({ value: f.key, label: t(f.label) }))" class="ml-auto w-48" />
-                        <Select v-model="trendVessel" :options="trendVessels" class="w-48" />
-                    </div>
-                    <AreaChart v-if="trendPoints.length > 1" :points="trendPoints" :height="180" />
-                    <p v-else class="py-6 text-center text-xs text-muted-foreground">{{ t('Two or more readings are needed for a trend.') }}</p>
-                </Card>
-                <Card class="overflow-x-auto">
-                    <table class="w-full text-xs">
-                        <thead class="bg-muted text-[10px] uppercase tracking-wide text-muted-foreground">
-                            <tr>
-                                <th class="px-3 py-2 text-left font-medium">{{ t('Date') }}</th>
-                                <th class="px-3 py-2 text-left font-medium">{{ t('Vessel') }}</th>
-                                <th class="px-3 py-2 text-left font-medium">{{ t('Readings') }}</th>
-                                <th class="w-10" />
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="a in inFocus(lot.analyses)" :key="a.id" class="border-t border-border">
-                                <td class="whitespace-nowrap px-3 py-2">{{ date(a.date) }}</td>
-                                <td class="px-3 py-2">{{ a.vessel_name ?? '—' }}</td>
-                                <td class="px-3 py-2">
-                                    <span v-for="f in ANALYSIS_FIELDS.filter((x) => a[x.key] !== null && a[x.key] !== undefined)" :key="f.key" class="mr-3 inline-block">
-                                        <span class="text-muted-foreground">{{ t(f.label) }}</span> {{ qty(a[f.key]) }}
-                                    </span>
-                                    <p v-if="a.note" class="text-muted-foreground">{{ a.note }}</p>
-                                </td>
-                                <td class="px-2">
-                                    <DropdownMenu v-if="canEdit" :items="menu" @select="(k) => (k === 'edit' ? open('analysis', { analysis: a }) : remove('analysis', `/cellar/lots/${lot.id}/analyses/${a.id}`, t('Delete this analysis?')))" />
-                                </td>
-                            </tr>
-                            <tr v-if="inFocus(lot.analyses).length === 0"><td colspan="4" class="px-3 py-8 text-center text-muted-foreground">{{ t('No analyses yet.') }}</td></tr>
-                        </tbody>
-                    </table>
-                </Card>
-            </div>
-
-            <!-- TASTING -->
-            <div v-else-if="tab === 'tasting'" class="flex flex-col gap-2">
-                <Card v-for="n in lot.tasting_notes" :key="n.id" class="flex gap-4 p-4 text-xs">
-                    <div class="w-14 shrink-0 text-center"><p class="text-2xl font-semibold">{{ n.score ?? '—' }}</p><p class="text-muted-foreground">/100</p></div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-muted-foreground">{{ date(n.date) }}<template v-if="vesselName(n.vessel_id)"> · {{ vesselName(n.vessel_id) }}</template></p>
-                        <p v-if="n.appearance"><span class="text-muted-foreground">{{ t('Appearance') }}:</span> {{ n.appearance }}</p>
-                        <p v-if="n.nose"><span class="text-muted-foreground">{{ t('Nose') }}:</span> {{ n.nose }}</p>
-                        <p v-if="n.palate"><span class="text-muted-foreground">{{ t('Palate') }}:</span> {{ n.palate }}</p>
-                        <p v-if="n.overall"><span class="text-muted-foreground">{{ t('Overall') }}:</span> {{ n.overall }}</p>
-                        <p v-if="n.note" class="text-muted-foreground">{{ n.note }}</p>
-                    </div>
-                    <DropdownMenu v-if="canEdit" :items="menu" @select="(k) => (k === 'edit' ? open('tasting', { tasting: n }) : remove('tasting', `/cellar/lots/${lot.id}/tasting-notes/${n.id}`, t('Delete this tasting note?')))" />
-                </Card>
-                <p v-if="lot.tasting_notes.length === 0" class="border border-dashed border-border p-8 text-center text-xs text-muted-foreground">{{ t('No tasting notes yet.') }}</p>
-            </div>
-
-            <!-- TRANSFERS -->
-            <Card v-else-if="tab === 'transfers'">
-                <div v-for="tr in lot.transfers" :key="tr.id" class="flex items-center gap-3 border-b border-border px-3 py-2 text-xs last:border-0">
-                    <div class="min-w-0 flex-1">
-                        <p class="font-medium">
-                            <template v-if="tr.from_lot_id === tr.to_lot_id">{{ t('Racked') }} {{ tr.from_vessel_name }} → {{ tr.to_vessel_name }}</template>
-                            <template v-else-if="tr.direction === 'in'">{{ t('From :lot', { lot: tr.from_lot_name ?? '—' }) }}</template>
-                            <template v-else>{{ t('To :lot', { lot: tr.to_lot_name ?? '—' }) }}</template>
+                    <div v-if="lot.planned_additions.length" class="border border-dashed border-border p-3 text-xs">
+                        <p class="mb-1 font-medium">{{ t('Planned — waiting for the cellar team · :n', { n: lot.planned_additions.length }) }}</p>
+                        <p v-for="p in lot.planned_additions" :key="p.id" class="text-muted-foreground">
+                            {{ p.planned_for }} · {{ p.product_name }} {{ qty(p.quantity) }} {{ p.unit }}<template v-if="p.vessel"> → {{ p.vessel.name }}</template>
                         </p>
-                        <p class="text-muted-foreground">{{ tr.type }} · {{ date(tr.date) }}<template v-if="tr.note"> · {{ tr.note }}</template></p>
                     </div>
-                    <span :class="cn('tabular-nums font-semibold', tr.from_lot_id === tr.to_lot_id ? '' : tr.direction === 'in' ? 'text-success' : 'text-destructive')">
-                        {{ tr.from_lot_id === tr.to_lot_id ? '' : tr.direction === 'in' ? '+' : '−' }}{{ qty(tr.volume_liters) }} L
-                    </span>
-                    <button
-                        v-if="canEdit"
-                        type="button"
-                        class="p-1 text-muted-foreground hover:text-destructive"
-                        :aria-label="t('Reverse')"
-                        @click="remove('transfer', `/cellar/lots/${lot.id}/transfers/${tr.id}`, t('Reverse this transfer? The wine goes back where it came from.'))"
-                    >
-                        <Trash2 class="size-3.5" />
-                    </button>
-                </div>
-                <p v-if="lot.transfers.length === 0" class="p-8 text-center text-xs text-muted-foreground">{{ t('No transfers yet.') }}</p>
-            </Card>
 
-            <!-- PROCESSES -->
-            <Card v-else-if="tab === 'processes'" class="overflow-x-auto">
-                <table class="w-full text-xs">
-                    <thead class="bg-muted text-[10px] uppercase tracking-wide text-muted-foreground">
-                        <tr>
-                            <th class="px-3 py-2 text-left font-medium">{{ t('Process') }}</th>
-                            <th class="px-3 py-2 text-left font-medium">{{ t('Vessel') }}</th>
-                            <th class="px-3 py-2 text-right font-medium">L</th>
-                            <th class="px-3 py-2 text-left font-medium">{{ t('Date') }}</th>
-                            <th class="w-10" />
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="p in inFocus(lot.processes)" :key="p.id" class="border-t border-border">
-                            <td class="px-3 py-2"><p class="font-medium">{{ p.kind }}</p><p v-if="p.note" class="text-muted-foreground">{{ p.note }}</p></td>
-                            <td class="px-3 py-2">{{ p.vessel_name ?? '—' }}</td>
-                            <td class="px-3 py-2 text-right tabular-nums">{{ qty(p.volume) }}</td>
-                            <td class="px-3 py-2 text-muted-foreground">{{ date(p.date) }}</td>
-                            <td class="px-2">
-                                <button v-if="canEdit" type="button" class="p-1 text-muted-foreground hover:text-destructive" :aria-label="t('Delete')" @click="remove('process', `/cellar/lots/${lot.id}/processes/${p.id}`, t('Delete this process?'))">
-                                    <Trash2 class="size-3.5" />
-                                </button>
-                            </td>
-                        </tr>
-                        <tr v-if="inFocus(lot.processes).length === 0"><td colspan="5" class="px-3 py-8 text-center text-muted-foreground">{{ t('No processes recorded yet.') }}</td></tr>
-                    </tbody>
-                </table>
-            </Card>
+                    <ProtocolCard v-if="lot.status === 'FERMENTING' || lot.fermentation_template_id" :lot="lot" :templates="templates" :can-manage="canManage" />
 
-            <!-- BOTTLING -->
-            <Card v-else-if="tab === 'bottling'">
-                <div v-for="b in lot.bottlings" :key="b.id" class="flex items-center gap-3 border-b border-border px-3 py-2 text-xs last:border-0">
+                    <Card v-if="lot.grapes.length || finance" class="p-3 text-xs">
+                        <Disclosure :title="finance ? t('Grapes & cost') : t('Grapes')" :summary="finance && lot.cost_breakdown ? money(lot.cost_breakdown.total) : undefined">
+                            <table class="mt-1 w-full">
+                                <thead class="text-[10px] uppercase text-muted-foreground">
+                                    <tr>
+                                        <th class="py-1 text-left font-medium">{{ t('Variety') }}</th>
+                                        <th class="py-1 text-right font-medium">%</th>
+                                        <th class="py-1 text-right font-medium">kg</th>
+                                        <th v-if="finance" class="py-1 text-right font-medium">{{ t('Cost') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="g in lot.grapes" :key="g.id" class="border-t border-border">
+                                        <td class="py-1">{{ g.grape_variety }}<span v-if="finance && g.price_per_kg" class="text-muted-foreground"> · {{ money(g.price_per_kg.minor) }}/kg</span></td>
+                                        <td class="py-1 text-right tabular-nums">{{ qty(g.percentage) }}</td>
+                                        <td class="py-1 text-right tabular-nums">{{ qty(g.weight_kg) }}</td>
+                                        <td v-if="finance" class="py-1 text-right tabular-nums">{{ g.price_per_kg && g.weight_kg ? money(Math.round(g.price_per_kg.minor * Number(g.weight_kg))) : '—' }}</td>
+                                    </tr>
+                                    <tr v-if="lot.grapes.length > 1" class="border-t border-border font-medium">
+                                        <td class="py-1">{{ t('Total') }}</td>
+                                        <td />
+                                        <td class="py-1 text-right tabular-nums">{{ qty(grapeTotals.kg) }}</td>
+                                        <td v-if="finance" class="py-1 text-right tabular-nums">{{ money(grapeTotals.cost) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div v-if="finance && lot.cost_breakdown && lot.cost_breakdown.total > 0" class="mt-3 flex flex-col gap-1 border-t border-border pt-2">
+                                <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Grape cost') }}</span><span>{{ money(lot.cost_breakdown.grape) }}</span></div>
+                                <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Additions') }}</span><span>{{ money(lot.cost_breakdown.additions) }}</span></div>
+                                <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Linked costs') }}</span><span>{{ money(lot.cost_breakdown.linked) }}</span></div>
+                                <div v-if="lot.cost_breakdown.carried" class="flex justify-between"><span class="text-muted-foreground">{{ t('Carried in by blends') }}</span><span>{{ money(lot.cost_breakdown.carried) }}</span></div>
+                                <div class="flex justify-between font-semibold"><span>{{ t('Total') }}</span><span>{{ money(lot.cost_breakdown.total) }}</span></div>
+                                <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Per 750 ml bottle') }}</span><span>{{ money(lot.cost_breakdown.per_bottle_750) }}</span></div>
+                            </div>
+                        </Disclosure>
+                    </Card>
+                </aside>
+            </div>
+        </div>
+
+        <!-- All readings -->
+        <SidePanel :open="panel === 'readings'" :title="t('All readings')" :subtitle="focus ? `${lot.name} · ${focus.vessel_name}` : lot.name" @close="panel = null">
+            <div class="flex flex-col">
+                <div v-for="a in inFocus(lot.analyses)" :key="a.id" class="flex gap-2 border-b border-border py-2 text-xs last:border-0">
                     <div class="min-w-0 flex-1">
-                        <p class="font-medium">{{ t(':n × :ml ml', { n: b.bottle_count, ml: b.bottle_volume_ml }) }}<template v-if="b.inventory_item_name"> → {{ b.inventory_item_name }}</template></p>
-                        <p class="text-muted-foreground">{{ date(b.date) }} · {{ qty(b.volume_used) }} L<template v-if="b.note"> · {{ b.note }}</template></p>
+                        <p class="font-medium">{{ date(a.date) }}<template v-if="a.vessel_name"> · {{ a.vessel_name }}</template></p>
+                        <p>
+                            <span v-for="f in ANALYSIS_FIELDS.filter((x) => a[x.key] !== null && a[x.key] !== undefined)" :key="f.key" class="mr-3 inline-block">
+                                <span class="text-muted-foreground">{{ t(f.label) }}</span> {{ qty(a[f.key]) }}
+                            </span>
+                        </p>
+                        <p v-if="a.note" class="text-muted-foreground">{{ a.note }}</p>
                     </div>
-                    <Button
-                        v-if="canManage"
-                        size="sm"
-                        variant="ghost"
-                        @click="remove('bottling', `/cellar/lots/${lot.id}/bottlings/${b.id}`, t('Reverse this bottling? The wine goes back into its vessels and the bottles leave stock.'))"
-                    >
-                        {{ t('Reverse') }}
-                    </Button>
+                    <DropdownMenu
+                        v-if="readingMenu.length"
+                        :items="readingMenu"
+                        align="right"
+                        @select="(k) => (k === 'edit' ? open('analysis', { analysis: a }) : remove(`/cellar/lots/${lot.id}/analyses/${a.id}`, t('Delete this analysis?')))"
+                    />
                 </div>
-                <p v-if="lot.bottlings.length === 0" class="p-8 text-center text-xs text-muted-foreground">{{ t('Not bottled yet.') }}</p>
-            </Card>
+                <p v-if="inFocus(lot.analyses).length === 0" class="py-8 text-center text-xs text-muted-foreground">{{ t('No analyses yet.') }}</p>
+            </div>
+        </SidePanel>
 
-            <!-- HISTORY -->
-            <HistoryList v-else-if="tab === 'history'" :entries="history" />
-
-            <!-- DETAILS -->
-            <div v-else class="grid gap-4 lg:grid-cols-2">
-                <Card class="flex flex-col gap-1.5 p-4 text-xs">
+        <!-- Lot details: details, traceability, history -->
+        <SidePanel :open="panel === 'details'" :title="t('Lot details')" :subtitle="lot.name" @close="panel = null">
+            <div class="flex flex-col gap-5 text-xs">
+                <section class="flex flex-col gap-1.5">
                     <SectionHeader :title="t('Details')" />
                     <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Lot number') }}</span><span>{{ lot.lot_number }}</span></div>
                     <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Grape') }}</span><span>{{ lot.grape_variety }}</span></div>
@@ -508,10 +528,12 @@ const TIMELINE_ICONS: Record<string, unknown> = { vessel: Cylinder, addition: Dr
                     <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Vineyard') }}</span><span>{{ lot.vineyard ?? '—' }}</span></div>
                     <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Initial volume') }}</span><span>{{ qty(lot.initial_volume) }} L</span></div>
                     <div class="flex justify-between"><span class="text-muted-foreground">{{ t('Harvest weight') }}</span><span>{{ lot.harvest_weight_kg ? `${qty(lot.harvest_weight_kg)} kg` : '—' }}</span></div>
+                    <div v-if="lot.harvest_weight_kg && Number(lot.harvest_weight_kg) > 0" class="flex justify-between">
+                        <span class="text-muted-foreground">{{ t('Yield') }}</span><span>{{ qty((Number(lot.initial_volume) / Number(lot.harvest_weight_kg)) * 100) }} L / 100 kg</span>
+                    </div>
                     <p v-if="lot.notes" class="mt-2 whitespace-pre-line">{{ lot.notes }}</p>
-                    <Button v-if="canManage" size="sm" variant="outline" class="mt-2 w-fit" @click="open('edit')"><Pencil class="size-3.5" /> {{ t('Edit') }}</Button>
-                </Card>
-                <Card class="p-4 text-xs">
+                </section>
+                <section>
                     <SectionHeader :title="t('Traceability')" />
                     <p v-if="trace === undefined" class="text-muted-foreground">{{ t('Loading…') }}</p>
                     <template v-else>
@@ -527,9 +549,13 @@ const TIMELINE_ICONS: Record<string, unknown> = { vessel: Cylinder, addition: Dr
                         <p v-for="b in trace.bottlings" :key="b.id" class="text-muted-foreground">{{ b.date }} · {{ b.bottles }} × {{ b.bottle_volume_ml }} ml<template v-if="b.item"> → {{ b.item.name }}</template></p>
                         <p v-if="trace.bottlings.length === 0" class="text-muted-foreground">—</p>
                     </template>
-                </Card>
+                </section>
+                <section>
+                    <SectionHeader :title="t('History')" />
+                    <HistoryList :entries="history" />
+                </section>
             </div>
-        </div>
+        </SidePanel>
 
         <LotFormPanel :open="panel === 'edit'" :lot="lot" :vessels="vessels" @close="panel = null" />
         <AnalysisPanel :open="panel === 'analysis'" :lot="lot" :record="editing.analysis" :vessel-id="focusId" @close="panel = null" />

@@ -121,8 +121,13 @@ class CellarRecordsAndAnalyticsTest extends TestCase
 
         $this->assertSame(['process', 'analysis', 'addition'], array_column($events, 'type'));
         $this->assertSame('Loss 5 L', $events[0]['title']);
-        $this->assertSame('free SO₂ 30 · pH 3.4', $events[1]['detail']);
+        // Labels are translated into the member's locale (this tenant's is Croatian).
+        $this->assertSame('slobodni SO₂ 30 · pH 3.4', $events[1]['detail']);
         $this->assertSame('SO2 10 g → F11', $events[2]['title']);
+        // Each event names the lot's vessels it touched, so the lot page can focus on one.
+        $vesselId = $this->inTenant(fn () => (string) VesselLot::query()->where('wine_lot_id', $lot->getKey())->value('vessel_id'));
+        $this->assertSame([$vesselId], $events[2]['vessel_ids']);
+        $this->assertSame([], $events[1]['vessel_ids']);
     }
 
     public function test_analytics_kpis_timeline_health_and_cost_gating(): void

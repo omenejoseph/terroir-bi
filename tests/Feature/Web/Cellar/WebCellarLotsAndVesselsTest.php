@@ -6,6 +6,7 @@ namespace Tests\Feature\Web\Cellar;
 
 use App\Enums\TenantRole;
 use App\Models\AuditLog;
+use App\Models\CellarActivity;
 use App\Models\CellarAddition;
 use App\Models\CellarAnalysis;
 use App\Models\CellarProcess;
@@ -188,6 +189,29 @@ class WebCellarLotsAndVesselsTest extends TestCase
             ->where('lot.analyses.0.free_so2', '42.00')
             ->where('lot.analyses.1.free_so2', '22.00')
             ->where('lot.analyses.2.free_so2', '29.00'));
+    }
+
+    public function test_lot_workspace_shows_the_next_planned_task_and_tags_journey_events_with_vessels(): void
+    {
+        $this->inTenant(function (): void {
+            CellarAnalysis::create(['wine_lot_id' => $this->lot->getKey(), 'vessel_id' => $this->t1->getKey(), 'date' => '2026-10-01', 'free_so2' => 30, 'created_by_id' => $this->cellar->getKey()]);
+            CellarAnalysis::create(['wine_lot_id' => $this->lot->getKey(), 'date' => '2026-10-02', 'ph' => 3.4, 'created_by_id' => $this->cellar->getKey()]);
+            foreach (['2026-10-20' => 'later', '2026-10-18' => 'sooner'] as $day => $note) {
+                CellarActivity::create([
+                    'type' => 'ANALYSIS', 'planned_for' => $day, 'wine_lot_id' => $this->lot->getKey(), 'vessel_id' => $this->t1->getKey(),
+                    'planned_by_id' => $this->cellar->getKey(), 'payload' => ['metrics' => ['free_so2']], 'note' => $note,
+                ]);
+            }
+        });
+
+        $this->web('GET', "/cellar/lots/{$this->lot->getKey()}")->assertOk()->assertInertia(function (AssertableInertia $page): void {
+            $page->where('nextPlanned.note', 'sooner')->where('nextPlanned.vessel.name', 'T1');
+            /** @var list<array{type: string, vessel_ids: list<string>, detail: string|null}> $timeline */
+            $timeline = $page->toArray()['props']['timeline'];
+            $analyses = array_values(array_filter($timeline, fn (array $e): bool => $e['type'] === 'analysis'));
+            // Newest first: the lot-wide pH reading, then the one taken in T1.
+            $this->assertSame([[], [(string) $this->t1->getKey()]], array_column($analyses, 'vessel_ids'));
+        });
     }
 
     public function test_every_lot_write_from_the_lot_page(): void

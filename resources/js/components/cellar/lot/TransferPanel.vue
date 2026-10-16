@@ -12,7 +12,7 @@ import Tabs from '@/components/ui/Tabs.vue';
 import Textarea from '@/components/ui/Textarea.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { parseDecimal, qty } from '@/lib/cellar';
-import type { LotOption, Vessel, WineLotDetail } from '@/types/cellar';
+import type { LotOption, LotRef, Vessel } from '@/types/cellar';
 import type { ComboboxOption } from '@/types/ui';
 
 /**
@@ -20,8 +20,8 @@ import type { ComboboxOption } from '@/types/ui';
  * another lot, or split it off into another lot. The receiving lot picks up
  * grape share and cost by volume (server side).
  */
-const props = defineProps<{ open: boolean; lot: WineLotDetail; lots: LotOption[]; vessels: Vessel[]; vesselId?: string | null }>();
-const emit = defineEmits<{ close: [] }>();
+const props = defineProps<{ open: boolean; lot: LotRef; lots: LotOption[]; vessels: Vessel[]; vesselId?: string | null }>();
+const emit = defineEmits<{ close: []; saved: [] }>();
 
 const { t } = useTranslations();
 
@@ -55,7 +55,7 @@ function submit(): void {
         volume_liters: parseDecimal(d.volume_liters),
         note: d.note || null,
     }));
-    form.post(`/cellar/lots/${props.lot.id}/transfers`, { preserveScroll: true, onSuccess: () => emit('close') });
+    form.post(`/cellar/lots/${props.lot.id}/transfers`, { preserveScroll: true, onSuccess: () => { emit('saved'); emit('close'); } });
 }
 </script>
 

@@ -30,8 +30,10 @@ use App\Actions\Cellar\UpdateCellarAnalysisAction;
 use App\Actions\Cellar\UpdateTastingNoteAction;
 use App\Actions\Cellar\UpdateWineLotAction;
 use App\Authorization\MembershipContext;
+use App\DataTransferObjects\CellarActivityData;
 use App\DataTransferObjects\FermentationTemplateData;
 use App\DataTransferObjects\WineLotData;
+use App\Enums\CellarActivityStatus;
 use App\Enums\InventoryCategory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cellar\AdjustLotVolumeRequest;
@@ -50,6 +52,7 @@ use App\Http\Requests\Cellar\UpdateCellarAdditionRequest;
 use App\Http\Requests\Cellar\UpdateTastingNoteRequest;
 use App\Http\Requests\Cellar\UpdateWineLotRequest;
 use App\Models\Bottling;
+use App\Models\CellarActivity;
 use App\Models\CellarAddition;
 use App\Models\CellarAnalysis;
 use App\Models\CellarProcess;
@@ -67,6 +70,7 @@ use App\Queries\ListWineLotsQuery;
 use App\Queries\LotAnalysisTrendQuery;
 use App\Queries\LotTimelineQuery;
 use App\Queries\TraceabilityQuery;
+use App\Services\Cellar\CellarClock;
 use App\Services\Cellar\LotCostService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -113,10 +117,19 @@ class WineLotController extends Controller
         ]);
     }
 
-    public function show(WineLot $wineLot, LotTimelineQuery $timeline, LotAnalysisTrendQuery $trend, CellarHistoryQuery $history, TraceabilityQuery $trace, CellarPickerOptions $options): Response
+    public function show(WineLot $wineLot, LotTimelineQuery $timeline, LotAnalysisTrendQuery $trend, CellarHistoryQuery $history, TraceabilityQuery $trace, CellarPickerOptions $options, CellarClock $clock): Response
     {
+        $today = $clock->today();
+        $next = CellarActivity::query()->with(['vessel', 'round'])
+            ->where('wine_lot_id', $wineLot->getKey())
+            ->where('status', CellarActivityStatus::Planned->value)
+            ->orderBy('planned_for')->orderBy('sort_order')
+            ->first();
+
         return Inertia::render('Cellar/Lots/Show', [
             'lot' => $this->present($wineLot),
+            // The lot's next planned task (overdue ones first), for the workspace's "Next" tile.
+            'nextPlanned' => $next !== null ? CellarActivityData::fromModel($next, $today)->toArray() : null,
             'timeline' => $timeline->get($wineLot),
             'trend' => $trend->get($wineLot),
             'blendSources' => $this->blendSources($wineLot),

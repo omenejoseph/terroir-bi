@@ -15,7 +15,7 @@ import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import { parseDecimal, qty } from '@/lib/cellar';
 import { unitPriceToMinor } from '@/lib/money';
-import type { ProductOption, WineLotDetail } from '@/types/cellar';
+import type { LotRef, ProductOption, WineLotDetail } from '@/types/cellar';
 import type { ComboboxOption } from '@/types/ui';
 
 /**
@@ -26,8 +26,8 @@ import type { ComboboxOption } from '@/types/ui';
  */
 type Addition = WineLotDetail['additions'][number] & { enological_product_id?: string | null };
 
-const props = defineProps<{ open: boolean; lot: WineLotDetail; products: ProductOption[]; record: Addition | null; vesselId?: string | null }>();
-const emit = defineEmits<{ close: [] }>();
+const props = defineProps<{ open: boolean; lot: LotRef; products: ProductOption[]; record: Addition | null; vesselId?: string | null }>();
+const emit = defineEmits<{ close: []; saved: [] }>();
 
 const { t } = useTranslations();
 const { can } = useAuth();
@@ -107,8 +107,8 @@ function submit(): void {
         ...(finance.value && !d.enological_product_id && parseDecimal(d.cost) !== null ? { cost_per_unit: unitPriceToMinor(parseDecimal(d.cost) ?? 0) } : {}),
     }));
     const url = `/cellar/lots/${props.lot.id}/additions`;
-    if (props.record) form.patch(`${url}/${props.record.id}`, { preserveScroll: true, onSuccess: () => emit('close') });
-    else form.post(url, { preserveScroll: true, onSuccess: () => emit('close') });
+    if (props.record) form.patch(`${url}/${props.record.id}`, { preserveScroll: true, onSuccess: () => { emit('saved'); emit('close'); } });
+    else form.post(url, { preserveScroll: true, onSuccess: () => { emit('saved'); emit('close'); } });
 }
 </script>
 

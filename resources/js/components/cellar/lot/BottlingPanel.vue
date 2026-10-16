@@ -14,7 +14,7 @@ import Textarea from '@/components/ui/Textarea.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import { parseDecimal, qty } from '@/lib/cellar';
-import type { WineLotDetail } from '@/types/cellar';
+import type { LotRef } from '@/types/cellar';
 import type { ComboboxOption } from '@/types/ui';
 
 /**
@@ -22,8 +22,8 @@ import type { ComboboxOption } from '@/types/ui';
  * a new one created on the spot, or none. The wine is drawn from the lot's
  * vessels and comes back to them if the bottling is reversed.
  */
-const props = defineProps<{ open: boolean; lot: WineLotDetail }>();
-const emit = defineEmits<{ close: [] }>();
+const props = defineProps<{ open: boolean; lot: LotRef; inventoryItems?: ComboboxOption[] | null }>();
+const emit = defineEmits<{ close: []; saved: [] }>();
 
 const page = usePage();
 const { t } = useTranslations();
@@ -43,14 +43,15 @@ const form = useForm({
     new_price: '',
 });
 
-const items = computed<ComboboxOption[]>(() => (page.props.inventoryItems as ComboboxOption[] | undefined) ?? []);
+// Finished items come from the caller when it has them (the Record drawer); on the lot page they're its lazy prop.
+const items = computed<ComboboxOption[]>(() => props.inventoryItems ?? (page.props.inventoryItems as ComboboxOption[] | undefined) ?? []);
 
 watch(() => props.open, (open) => {
     if (!open) return;
     form.defaults({ ...form.data(), bottle_count: '', date: new Date().toISOString().slice(0, 10), inventory_item_id: null, note: '', new_name: `${props.lot.name} ${props.lot.vintage ?? ''}`.trim(), new_sku: '', new_price: '' });
     form.reset();
     form.clearErrors();
-    if (page.props.inventoryItems === undefined) router.reload({ only: ['inventoryItems'] });
+    if (!props.inventoryItems && page.props.inventoryItems === undefined) router.reload({ only: ['inventoryItems'] });
 });
 
 const litres = computed(() => ((parseDecimal(form.bottle_count) ?? 0) * (Number(form.bottle_volume_ml) || 0)) / 1000);
@@ -74,7 +75,7 @@ function submit(): void {
                   }
                 : null,
     }));
-    form.post(`/cellar/lots/${props.lot.id}/bottlings`, { preserveScroll: true, onSuccess: () => emit('close') });
+    form.post(`/cellar/lots/${props.lot.id}/bottlings`, { preserveScroll: true, onSuccess: () => { emit('saved'); emit('close'); } });
 }
 </script>
 

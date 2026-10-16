@@ -10,14 +10,14 @@ import SidePanel from '@/components/ui/SidePanel.vue';
 import Textarea from '@/components/ui/Textarea.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { ANALYSIS_FIELDS, parseDecimal } from '@/lib/cellar';
-import type { AnalysisParam, AnalysisRow, WineLotDetail } from '@/types/cellar';
+import type { AnalysisParam, AnalysisRow, LotRef } from '@/types/cellar';
 
 /**
  * Record or correct an analysis: any of the 14 parameters, typed with a comma
  * or a point. Brix and Baumé convert into each other as you type.
  */
-const props = defineProps<{ open: boolean; lot: WineLotDetail; record: AnalysisRow | null; vesselId?: string | null }>();
-const emit = defineEmits<{ close: [] }>();
+const props = defineProps<{ open: boolean; lot: LotRef; record: AnalysisRow | null; vesselId?: string | null }>();
+const emit = defineEmits<{ close: []; saved: [] }>();
 
 const { t } = useTranslations();
 
@@ -68,8 +68,8 @@ function submit(): void {
         ...Object.fromEntries(ANALYSIS_FIELDS.map((f) => [f.key, parseDecimal(values.value[f.key])])),
     }));
     const url = `/cellar/lots/${props.lot.id}/analyses`;
-    if (props.record) form.patch(`${url}/${props.record.id}`, { preserveScroll: true, onSuccess: () => emit('close') });
-    else form.post(url, { preserveScroll: true, onSuccess: () => emit('close') });
+    if (props.record) form.patch(`${url}/${props.record.id}`, { preserveScroll: true, onSuccess: () => { emit('saved'); emit('close'); } });
+    else form.post(url, { preserveScroll: true, onSuccess: () => { emit('saved'); emit('close'); } });
 }
 </script>
 

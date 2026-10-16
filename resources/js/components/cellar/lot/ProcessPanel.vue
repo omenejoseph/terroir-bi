@@ -11,11 +11,11 @@ import SidePanel from '@/components/ui/SidePanel.vue';
 import Textarea from '@/components/ui/Textarea.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { parseDecimal, qty } from '@/lib/cellar';
-import type { WineLotDetail } from '@/types/cellar';
+import type { LotRef } from '@/types/cellar';
 
 /** Record a cellar operation (pump-over, bâtonnage, filtration…) on the lot or one of its vessels. */
-const props = defineProps<{ open: boolean; lot: WineLotDetail; vesselId?: string | null }>();
-const emit = defineEmits<{ close: [] }>();
+const props = defineProps<{ open: boolean; lot: LotRef; vesselId?: string | null }>();
+const emit = defineEmits<{ close: []; saved: [] }>();
 
 const { t } = useTranslations();
 
@@ -34,7 +34,7 @@ const vesselOptions = computed(() => [{ value: '', label: t('Whole lot') }, ...p
 
 function submit(): void {
     form.transform((d) => ({ kind: d.kind, vessel_id: d.vessel_id || null, date: d.date || null, volume: parseDecimal(d.volume), note: d.note || null }));
-    form.post(`/cellar/lots/${props.lot.id}/processes`, { preserveScroll: true, onSuccess: () => emit('close') });
+    form.post(`/cellar/lots/${props.lot.id}/processes`, { preserveScroll: true, onSuccess: () => { emit('saved'); emit('close'); } });
 }
 </script>
 
