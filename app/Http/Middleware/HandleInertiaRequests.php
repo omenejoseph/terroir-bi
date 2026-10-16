@@ -87,6 +87,8 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+                // A cellar delete's undo token (UndoStash) — the toast offers Undo for ten seconds.
+                'undo' => fn () => $request->session()->get('undo'),
                 // The Team page's own "Invite" action — a one-time link that
                 // can never be re-shown after this request (only the
                 // invitation's hashed token is stored).

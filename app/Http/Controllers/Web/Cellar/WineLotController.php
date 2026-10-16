@@ -71,6 +71,7 @@ use App\Queries\LotTimelineQuery;
 use App\Queries\TraceabilityQuery;
 use App\Services\Cellar\CellarClock;
 use App\Services\Cellar\LotCostService;
+use App\Services\Cellar\UndoStash;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -158,6 +159,27 @@ class WineLotController extends Controller
         return back()->with('success', __('Wine lot saved.'));
     }
 
+    /**
+     * What deleting a lot takes with it — the delete sheet names it before
+     * anyone types the lot number.
+     */
+    public function deleteImpact(WineLot $wineLot): JsonResponse
+    {
+        $wineLot->loadMissing('vesselLots.vessel', 'bottlings');
+
+        return response()->json([
+            'lot_number' => $wineLot->lot_number,
+            'vessels' => $wineLot->vesselLots->map(fn ($vl): string => (string) $vl->vessel?->name)->filter()->values()->all(),
+            'bottlings' => $wineLot->bottlings->count(),
+            'bottles' => (int) $wineLot->bottlings->sum('bottle_count'),
+            'additions' => $wineLot->additions()->count(),
+            'analyses' => $wineLot->analyses()->count(),
+            'tastings' => $wineLot->tastingNotes()->count(),
+            'processes' => $wineLot->processes()->count(),
+            'transfers' => CellarTransfer::query()->where('from_lot_id', $wineLot->getKey())->orWhere('to_lot_id', $wineLot->getKey())->count(),
+        ]);
+    }
+
     public function destroy(WineLot $wineLot, DeleteWineLotAction $action): RedirectResponse
     {
         $action->execute($wineLot);
@@ -234,12 +256,13 @@ class WineLotController extends Controller
         return back()->with('success', __('Analysis saved.'));
     }
 
-    public function deleteAnalysis(WineLot $wineLot, CellarAnalysis $analysis, DeleteCellarAnalysisAction $action): RedirectResponse
+    public function deleteAnalysis(Request $request, WineLot $wineLot, CellarAnalysis $analysis, DeleteCellarAnalysisAction $action, UndoStash $undo): RedirectResponse
     {
         abort_unless($analysis->wine_lot_id === $wineLot->getKey(), 404);
+        $token = $undo->stash($analysis, $this->userId($request));
         $action->execute($analysis);
 
-        return back()->with('success', __('Analysis deleted.'));
+        return back()->with('success', __('Analysis deleted.'))->with('undo', $token);
     }
 
     public function addAddition(StoreCellarAdditionRequest $request, WineLot $wineLot, AddCellarAdditionAction $action): RedirectResponse
@@ -257,12 +280,13 @@ class WineLotController extends Controller
         return back()->with('success', __('Addition saved.'));
     }
 
-    public function deleteAddition(WineLot $wineLot, CellarAddition $addition, DeleteCellarAdditionAction $action): RedirectResponse
+    public function deleteAddition(Request $request, WineLot $wineLot, CellarAddition $addition, DeleteCellarAdditionAction $action, UndoStash $undo): RedirectResponse
     {
         abort_unless($addition->wine_lot_id === $wineLot->getKey(), 404);
+        $token = $undo->stash($addition, $this->userId($request));
         $action->execute($addition);
 
-        return back()->with('success', __('Addition deleted — stock restored.'));
+        return back()->with('success', __('Addition deleted — stock restored.'))->with('undo', $token);
     }
 
     public function addProcess(StoreCellarProcessRequest $request, WineLot $wineLot, AddCellarProcessAction $action): RedirectResponse
@@ -272,12 +296,13 @@ class WineLotController extends Controller
         return back()->with('success', __('Process saved.'));
     }
 
-    public function deleteProcess(WineLot $wineLot, CellarProcess $process, DeleteCellarProcessAction $action): RedirectResponse
+    public function deleteProcess(Request $request, WineLot $wineLot, CellarProcess $process, DeleteCellarProcessAction $action, UndoStash $undo): RedirectResponse
     {
         abort_unless($process->wine_lot_id === $wineLot->getKey(), 404);
+        $token = $undo->stash($process, $this->userId($request));
         $action->execute($process);
 
-        return back()->with('success', __('Process deleted.'));
+        return back()->with('success', __('Process deleted.'))->with('undo', $token);
     }
 
     public function addTasting(StoreTastingNoteRequest $request, WineLot $wineLot, AddTastingNoteAction $action): RedirectResponse
@@ -295,12 +320,13 @@ class WineLotController extends Controller
         return back()->with('success', __('Tasting note saved.'));
     }
 
-    public function deleteTasting(WineLot $wineLot, CellarTastingNote $tastingNote, DeleteTastingNoteAction $action): RedirectResponse
+    public function deleteTasting(Request $request, WineLot $wineLot, CellarTastingNote $tastingNote, DeleteTastingNoteAction $action, UndoStash $undo): RedirectResponse
     {
         abort_unless($tastingNote->wine_lot_id === $wineLot->getKey(), 404);
+        $token = $undo->stash($tastingNote, $this->userId($request));
         $action->execute($tastingNote);
 
-        return back()->with('success', __('Tasting note deleted.'));
+        return back()->with('success', __('Tasting note deleted.'))->with('undo', $token);
     }
 
     public function addTransfer(StoreTransferRequest $request, WineLot $wineLot, CreateTransferAction $action): RedirectResponse
@@ -310,12 +336,13 @@ class WineLotController extends Controller
         return back()->with('success', __('Transfer saved.'));
     }
 
-    public function deleteTransfer(WineLot $wineLot, CellarTransfer $transfer, DeleteTransferAction $action): RedirectResponse
+    public function deleteTransfer(Request $request, WineLot $wineLot, CellarTransfer $transfer, DeleteTransferAction $action, UndoStash $undo): RedirectResponse
     {
         abort_unless($transfer->from_lot_id === $wineLot->getKey() || $transfer->to_lot_id === $wineLot->getKey(), 404);
+        $token = $undo->stash($transfer, $this->userId($request));
         $action->execute($transfer);
 
-        return back()->with('success', __('Transfer reversed.'));
+        return back()->with('success', __('Transfer reversed.'))->with('undo', $token);
     }
 
     public function addBottling(StoreBottlingRequest $request, WineLot $wineLot, CreateBottlingAction $action): RedirectResponse

@@ -55,7 +55,7 @@ function act(item: CellarAttentionItem): void {
 <template>
     <section v-if="visible.length" :aria-label="t('Needs attention')" class="border border-tag-orange-foreground/30 bg-tag-orange/20">
         <div class="flex items-center justify-between gap-2 border-b border-tag-orange-foreground/20 px-4 py-2.5">
-            <span class="text-sm font-semibold text-tag-orange-foreground">{{ t(':n things need attention', { n: visible.length }) }}</span>
+            <span class="text-sm font-semibold text-tag-orange-foreground">{{ t('Needs attention · :n', { n: visible.length }) }}</span>
             <button type="button" class="text-xs text-muted-foreground hover:text-foreground" @click="hideAll">{{ t('Hide until tomorrow') }}</button>
         </div>
         <ul>

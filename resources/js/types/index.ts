@@ -43,6 +43,8 @@ export interface Flash {
     error: string | null;
     /** The Team page's own "Invite" action — a one-time link, never re-shown after this request. */
     inviteLink: string | null;
+    /** A cellar delete's undo token (App\Services\Cellar\UndoStash) — UndoToast offers it. */
+    undo?: string | null;
 }
 
 /** Org-wide settings (App\DataTransferObjects\OrganizationSettingsData). */

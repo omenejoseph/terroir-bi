@@ -7,6 +7,7 @@ import AppSidebar from '@/components/AppSidebar.vue';
 import ImpersonationBanner from '@/components/ImpersonationBanner.vue';
 import NavRail from '@/components/NavRail.vue';
 import RecordDrawer from '@/components/cellar/RecordDrawer.vue';
+import UndoToast from '@/components/ui/UndoToast.vue';
 import FlashMessages from '@/components/ui/FlashMessages.vue';
 import { cn } from '@/lib/cn';
 
@@ -101,6 +102,7 @@ function toggleNav(): void {
                 </main>
                 <!-- The cellar's Record drawer (renders nothing without the module and cellar.manage). -->
                 <RecordDrawer />
+                <UndoToast />
             </div>
         </div>
     </div>
