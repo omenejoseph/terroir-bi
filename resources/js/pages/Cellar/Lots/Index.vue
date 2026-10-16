@@ -55,8 +55,10 @@ const total = computed(() => props.lots.reduce((s, l) => s + Number(l.current_vo
     <AppLayout :title="t('Wine lots')">
         <div class="flex flex-col gap-5">
             <PageHeader :title="t('Wine lots')" :description="t(':n lots · :l L', { n: lots.length, l: qty(total) })">
-                <template v-if="can('cellar.manage')" #actions>
-                    <Button size="sm" @click="panel = true"><Plus class="size-3.5" /> {{ t('Wine lot') }}</Button>
+                <template #actions>
+                    <Button size="sm" variant="outline" href="/cellar/bulk-analyses">{{ t('Bulk analyses') }}</Button>
+                    <Button size="sm" variant="outline" href="/cellar/bulk-additions">{{ t('Bulk additions') }}</Button>
+                    <Button v-if="can('cellar.manage')" size="sm" @click="panel = true"><Plus class="size-3.5" /> {{ t('Wine lot') }}</Button>
                 </template>
             </PageHeader>
             <CellarTabs current="lots" />

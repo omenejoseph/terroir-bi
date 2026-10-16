@@ -141,6 +141,8 @@ export interface VesselLotContent {
         status?: WineLotStatus;
         free_so2: string | null;
         total_so2: string | null;
+        ph?: string | null;
+        alcohol?: string | null;
     } | null;
 }
 

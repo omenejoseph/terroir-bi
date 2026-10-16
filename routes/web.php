@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\Auth\PasswordResetController;
 use App\Http\Controllers\Web\Auth\StopImpersonationController;
 use App\Http\Controllers\Web\Auth\TenantSwitchController;
 use App\Http\Controllers\Web\BottleAnalysisController;
+use App\Http\Controllers\Web\Cellar\BlendController;
 use App\Http\Controllers\Web\Cellar\CellarActivityController;
 use App\Http\Controllers\Web\Cellar\CellarController;
 use App\Http\Controllers\Web\Cellar\CellarSo2Controller;
@@ -405,6 +406,10 @@ Route::middleware('tenant.web')->group(function () {
         Route::get('cellar/lots', [WineLotController::class, 'index'])->name('cellar.lots.index');
         Route::get('cellar/lots/{wineLot}', [WineLotController::class, 'show'])->name('cellar.lots.show');
         Route::get('cellar/vessels/{vessel}', [VesselController::class, 'show'])->name('cellar.vessels.show');
+        Route::get('cellar/blend', [BlendController::class, 'index'])->name('cellar.blend');
+        Route::post('cellar/blend/project', [BlendController::class, 'project'])->name('cellar.blend.project');
+        Route::get('cellar/bulk-additions', [CellarController::class, 'bulkAdditions'])->name('cellar.bulk-additions');
+        Route::get('cellar/bulk-analyses', [CellarController::class, 'bulkAnalyses'])->name('cellar.bulk-analyses');
         Route::get('cellar/today', [CellarActivityController::class, 'today'])->name('cellar.today');
         Route::get('cellar/plan', [CellarActivityController::class, 'plan'])->name('cellar.plan');
         Route::get('cellar/so2', [CellarSo2Controller::class, 'index'])->name('cellar.so2');
@@ -456,6 +461,11 @@ Route::middleware('tenant.web')->group(function () {
         Route::delete('cellar/lots/{wineLot}/bottlings/{bottling}', [WineLotController::class, 'deleteBottling'])->name('cellar.lots.bottlings.destroy');
         Route::post('cellar/lots/{wineLot}/protocol', [WineLotController::class, 'assignProtocol'])->name('cellar.lots.protocol');
         Route::post('cellar/lots/{wineLot}/protocol/generate', [WineLotController::class, 'generateProtocol'])->name('cellar.lots.protocol.generate');
+
+        Route::post('cellar/blend', [BlendController::class, 'execute'])->name('cellar.blend.execute');
+        Route::post('cellar/blend/by-ratio', [BlendController::class, 'byRatio'])->name('cellar.blend.by-ratio');
+        Route::post('cellar/bulk-additions', [CellarController::class, 'storeBulkAdditions'])->name('cellar.bulk-additions.store');
+        Route::post('cellar/bulk-analyses', [CellarController::class, 'storeBulkAnalyses'])->name('cellar.bulk-analyses.store');
     });
 
     Route::middleware('can:cellar.delete')->group(function () {

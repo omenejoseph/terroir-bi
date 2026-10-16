@@ -50,10 +50,10 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | C. Vessels | 11 | 11 | 0 | 0 | 10 |
 | D. Wine lots | 30 | 29 | 0 | 1 | 27 |
 | E. SO₂ | 14 | 14 | 0 | 0 | 14 |
-| F. Additions & enological stock | 18 | 18 | 0 | 0 | 7 |
-| G. Lab analyses | 9 | 7 | 0 | 2 | 6 |
+| F. Additions & enological stock | 18 | 18 | 0 | 0 | 9 |
+| G. Lab analyses | 9 | 7 | 0 | 2 | 7 |
 | H. Transfers & racking | 4 | 4 | 0 | 0 | 3 |
-| I. Blending | 9 | 8 | 0 | 1 | 0 |
+| I. Blending | 9 | 8 | 0 | 1 | 9 |
 | J. Planned work & Today | 20 | 20 | 0 | 0 | 18 |
 | K. Tastings | 9 | 9 | 0 | 0 | 3 |
 | L. Bottling | 4 | 4 | 0 | 0 | 4 |
@@ -62,7 +62,7 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | O. Compliance & records | 4 | 4 | 0 | 0 | 0 |
 | P. Work-order integration | 3 | 3 | 0 | 0 | 3 |
 | Q. Audit logging | 11 | 11 | 0 | 0 | 2 |
-| **Total** | **193** | **189** | **0** | **4** | **126** |
+| **Total** | **193** | **189** | **0** | **4** | **138** |
 
 ---
 
@@ -189,8 +189,8 @@ Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePla
 | F5 | Stock check blocks save | `CA:1197` | `AddCellarAdditionAction` (one rule) | ✅ | ✅ `AdditionPanel` | One rule for every addition path |
 | F6 | Delete addition restores stock | `CA:1265` | `DeleteCellarAdditionAction` | ✅ | ✅ `Cellar/Lots/Show` (delete, stock restored) | |
 | F7 | Edit addition | — | `UpdateCellarAdditionAction`, `PATCH wine-lots/{lot}/additions/{addition}` (stock moved under the stock rule) | ✅ | ✅ `AdditionPanel` | Added (re-applies the stock delta) |
-| F8 | Bulk additions page: product, dose + unit (g/L, g/hL, mg/L, mg/hL, mL/L, mL/hL, kg/hL), unit conversion, note | `P/bulk-additions`, `C/bulk-additions.tsx` | `BulkAddAdditionsAction` | ✅ | ⬜ | |
-| F9 | Lot table: filters (status, grape, search), select all, per-lot amount/cost/vessel; summary; success screen | `C/bulk-additions.tsx` | — | ✅ | ⬜ | Stock shortfall blocks |
+| F8 | Bulk additions page: product, dose + unit (g/L, g/hL, mg/L, mg/hL, mL/L, mL/hL, kg/hL), unit conversion, note | `P/bulk-additions`, `C/bulk-additions.tsx` | `BulkAddAdditionsAction` | ✅ | ✅ `Cellar/BulkAdditions` (unit conversion mg/g/kg, mL/L) | |
+| F9 | Lot table: filters (status, grape, search), select all, per-lot amount/cost/vessel; summary; success screen | `C/bulk-additions.tsx` | — | ✅ | ✅ `Cellar/BulkAdditions` | Stock shortfall blocks |
 | F10 | Products list: category chips, stats (total, low stock, value) | `components/harvest/enological-products.tsx` | `EnologicalProductController::index` | ✅ | ⬜ | |
 | F11 | Create/edit product incl. packaging, cost per package → per unit, min stock, manufacturer, supplier/price-list, SO₂ uplift + helper | `enological-products.tsx:108` | `Create/UpdateEnologicalProductAction` | ✅ | ⬜ | |
 | F12 | Add/remove stock | `HA:1602` | `AdjustEnologicalStockAction` → `EnologicalStockLedger` (note saved) | ✅ | ⬜ | Note saved |
@@ -211,7 +211,7 @@ Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePla
 | G4 | Edit analysis | `CA:1536` | `UpdateCellarAnalysisAction` | ✅ | ✅ `AnalysisPanel` | The vessel can be changed |
 | G5 | Delete analysis | `C/editable-analysis-list.tsx` | `DeleteCellarAnalysisAction` | ✅ | ✅ `AnalysisPanel` | |
 | G6 | Parameter trends: chart per selected parameter, all vessels (daily avg) or one vessel, min/max, fewer than 2 readings note | `C/charts/parameter-trends.tsx`, `CA:2639` | `LotAnalysisTrendQuery` | ✅ | ✅ `Cellar/Lots/Show` (trend chart per parameter, per vessel or averaged) | Hand-written SVG (`AreaChart`) |
-| G7 | Bulk analysis entry | `P/bulk-analysis` (photo) | `BulkAddAnalysesAction` | ✅ | ⬜ | Typed grid + CSV/paste; saves vessel and lab date |
+| G7 | Bulk analysis entry | `P/bulk-analysis` (photo) | `BulkAddAnalysesAction` | ✅ | ✅ `Cellar/BulkAnalyses` (grid + paste from the lab sheet) | Typed grid + CSV/paste; saves vessel and lab date |
 | G8 | Photo scan → fields (single and bulk) | `api/parse-analysis`, `api/bulk-analysis` | — | — | — | **Deferred** (out of parity scope) |
 | G9 | Bottle analysis on inventory item | `inventory/bottle-analysis-panel.tsx` | Inventory module | — | — | Tracked in the inventory matrix |
 
@@ -228,15 +228,15 @@ Backend shipped in Phase 1b: every dose is computed on the server by `So2DosePla
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| I1 | Blend by vessels: source vessels grouped by room, filter | `C/vessel-blend.tsx` | `ListVesselsQuery` | ✅ | ⬜ | |
-| I2 | Source row: lot L, capacity, latest SO₂/pH/alc; All/Half; over-volume warning | `C/vessel-blend.tsx` | `VesselData` | ✅ | ⬜ | |
-| I3 | Destination vessel (free space or in-place); blend name | `C/vessel-blend.tsx` | `BlendService` (in-place destination; drawn from each chosen vessel) | ✅ | ⬜ | Support in-place destination |
-| I4 | Execute → new BLEND lot (BLEND-YYMMDD-n, AGING, type, default name, latest vintage, grape %) | `CA:1752 executeBlend` | `BlendService` (BLEND-YYMMDD[-n], default name/vintage/type, `carried_cost`) — status stays BLENDED (rebuild choice) | ✅ | ⬜ | BLEND-YYMMDD numbering; **carry volume-weighted cost** |
-| I5 | Projected blend by lot ratios: add lots, ratio %, distribute evenly, must total 100 | `C/blend-projection.tsx` | — (client side) | ✅ | ⬜ | |
-| I6 | Target volume or vessel capacity; breakdown bar | `C/blend-projection.tsx` | — | ✅ | ⬜ | |
-| I7 | Projected analysis + grading (optimal/watch/concern) + projected type | `C/blend-projection.tsx` | `BlendProjector`, `POST wine-lots/blend/project` (pH via [H⁺], grades, composition, cost/L) | ✅ | ⬜ | pH computed through [H⁺], not averaged |
-| I8 | Print blend sheet | `C/blend-projection.tsx` | Client-side print of the projection | — | ⬜ | |
-| I9 | Execute projection (pull from lots' vessels oldest-first) | `C/blend-projection.tsx` | `BlendProjector::sources`, `POST wine-lots/blend/by-ratio` (oldest vessel first) | ✅ | ⬜ | Map ratios → vessel sources server-side |
+| I1 | Blend by vessels: source vessels grouped by room, filter | `C/vessel-blend.tsx` | `ListVesselsQuery` | ✅ | ✅ `Cellar/Blend` | |
+| I2 | Source row: lot L, capacity, latest SO₂/pH/alc; All/Half; over-volume warning | `C/vessel-blend.tsx` | `VesselData` | ✅ | ✅ `Cellar/Blend` | |
+| I3 | Destination vessel (free space or in-place); blend name | `C/vessel-blend.tsx` | `BlendService` (in-place destination; drawn from each chosen vessel) | ✅ | ✅ `Cellar/Blend` | Support in-place destination |
+| I4 | Execute → new BLEND lot (BLEND-YYMMDD-n, AGING, type, default name, latest vintage, grape %) | `CA:1752 executeBlend` | `BlendService` (BLEND-YYMMDD[-n], default name/vintage/type, `carried_cost`) — status stays BLENDED (rebuild choice) | ✅ | ✅ `Cellar/Blend` | BLEND-YYMMDD numbering; **carry volume-weighted cost** |
+| I5 | Projected blend by lot ratios: add lots, ratio %, distribute evenly, must total 100 | `C/blend-projection.tsx` | — (client side) | ✅ | ✅ `Cellar/Blend` | |
+| I6 | Target volume or vessel capacity; breakdown bar | `C/blend-projection.tsx` | — | ✅ | ✅ `Cellar/Blend` | |
+| I7 | Projected analysis + grading (optimal/watch/concern) + projected type | `C/blend-projection.tsx` | `BlendProjector`, `POST wine-lots/blend/project` (pH via [H⁺], grades, composition, cost/L) | ✅ | ✅ `Cellar/Blend` | pH computed through [H⁺], not averaged |
+| I8 | Print blend sheet | `C/blend-projection.tsx` | Client-side print of the projection | — | ✅ `Cellar/Blend` (`PrintSheet`) | |
+| I9 | Execute projection (pull from lots' vessels oldest-first) | `C/blend-projection.tsx` | `BlendProjector::sources`, `POST wine-lots/blend/by-ratio` (oldest vessel first) | ✅ | ✅ `Cellar/Blend` | Map ratios → vessel sources server-side |
 
 ## J. Planned work & Today — `/cellar/plan`, `/cellar/today`
 

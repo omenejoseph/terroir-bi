@@ -70,6 +70,8 @@ final class VesselData implements Arrayable, JsonSerializable
                             ? (string) $vl->wineLot->latestAnalysis->free_so2 : null,
                         'total_so2' => $vl->wineLot->latestAnalysis?->total_so2 !== null
                             ? (string) $vl->wineLot->latestAnalysis->total_so2 : null,
+                        'ph' => $vl->wineLot->latestAnalysis?->ph !== null ? (string) $vl->wineLot->latestAnalysis->ph : null,
+                        'alcohol' => $vl->wineLot->latestAnalysis?->alcohol !== null ? (string) $vl->wineLot->latestAnalysis->alcohol : null,
                     ] : null,
                 ])->all();
         }
