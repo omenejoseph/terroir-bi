@@ -15,13 +15,18 @@ use App\Http\Requests\Cellar\BulkAnalysesRequest;
 use App\Models\User;
 use App\Models\Vessel;
 use App\Models\WineLot;
+use App\Queries\CellarAnalyticsQuery;
+use App\Queries\CellarBookQuery;
+use App\Queries\CellarCostsQuery;
 use App\Queries\CellarMapQuery;
 use App\Queries\CellarPickerOptions;
 use App\Queries\ListWineLotsQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Cellar home: headline figures, the cellar map (view and edit), the active
@@ -91,6 +96,56 @@ class CellarController extends Controller
         $created = $action->execute($rows, $this->userId($request));
 
         return back()->with('success', __('Saved :n analyses.', ['n' => count($created)]));
+    }
+
+    /** Cellar › Analytics. Money (average cost per litre, cost waterfall) only with finance.view. */
+    public function analytics(CellarAnalyticsQuery $analytics, CellarCostsQuery $costs, MembershipContext $membership): Response
+    {
+        $finance = $membership->can('finance.view');
+
+        return Inertia::render('Cellar/Analytics', [
+            'analytics' => $analytics->get(withCosts: $finance),
+            'waterfall' => $finance
+                ? array_values(collect($costs->get())->sortByDesc(fn (array $r): int => (int) $r['cost']['total'])->take(10)->values()->all())
+                : null,
+        ]);
+    }
+
+    /** Cellar › Costs (finance.view): cost of goods per lot, bottled lots included, with margin. */
+    public function costs(CellarCostsQuery $costs): Response
+    {
+        return Inertia::render('Cellar/Costs', ['lots' => $costs->get(detailed: true)]);
+    }
+
+    /** Cellar › Cellar book: every cellar event in a date range, as a table or a CSV download. */
+    public function book(Request $request, CellarBookQuery $query): Response|StreamedResponse
+    {
+        $data = $request->validate([
+            'from' => ['sometimes', 'nullable', 'date'],
+            'to' => ['sometimes', 'nullable', 'date', 'after_or_equal:from'],
+        ]);
+        $from = Carbon::parse($data['from'] ?? now()->startOfYear()->toDateString())->startOfDay();
+        $to = Carbon::parse($data['to'] ?? now()->toDateString())->endOfDay();
+        $rows = $query->get($from, $to);
+
+        if ($request->routeIs('cellar.book.csv')) {
+            return response()->streamDownload(function () use ($rows): void {
+                $out = fopen('php://output', 'wb');
+                if ($out === false) {
+                    return;
+                }
+                fputcsv($out, ['Date', 'Lot', 'Name', 'Vintage', 'Event', 'Vessel', 'Quantity', 'Unit', 'Detail', 'By'], ',', '"', '');
+                foreach ($rows as $r) {
+                    fputcsv($out, array_values($r), ',', '"', '');
+                }
+                fclose($out);
+            }, 'cellar-book-'.$from->toDateString().'-'.$to->toDateString().'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        }
+
+        return Inertia::render('Cellar/CellarBook', [
+            'rows' => $rows,
+            'filters' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
+        ]);
     }
 
     private function userId(Request $request): string

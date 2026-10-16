@@ -17,7 +17,7 @@ const props = defineProps<{ current: string }>();
 const { t } = useTranslations();
 const { can } = useAuth();
 
-const BUILT = new Set(['overview', 'today', 'plan', 'so2', 'lots', 'blend', 'tastings', 'products', 'protocols']);
+const BUILT = new Set(['overview', 'today', 'plan', 'so2', 'lots', 'blend', 'tastings', 'products', 'protocols', 'analytics', 'costs', 'book']);
 
 const items = computed<TabItem[]>(() =>
     [

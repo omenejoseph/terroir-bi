@@ -119,6 +119,33 @@ function commitRename(): void {
 const zoom = ref(1);
 const fullscreen = ref(false);
 const editing = ref(false);
+/** The Unplaced list; starts hidden on narrow screens, where it would squeeze the map. */
+const showUnplaced = ref(typeof window === 'undefined' || window.matchMedia('(min-width: 768px)').matches);
+
+// Two-finger pinch on the map scales it like the zoom buttons (0.5–2).
+const touches = new Map<number, { x: number; y: number }>();
+let pinch: { distance: number; zoom: number } | null = null;
+function pinchDistance(): number {
+    const [a, b] = [...touches.values()];
+
+    return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+}
+function onTouchDown(e: PointerEvent): void {
+    if (e.pointerType !== 'touch') return;
+    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (touches.size === 2) pinch = { distance: pinchDistance(), zoom: zoom.value };
+}
+function onTouchMove(e: PointerEvent): void {
+    if (e.pointerType !== 'touch' || !touches.has(e.pointerId)) return;
+    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && touches.size === 2 && pinch.distance > 0) {
+        zoom.value = Math.min(2, Math.max(0.5, Math.round(pinch.zoom * (pinchDistance() / pinch.distance) * 20) / 20));
+    }
+}
+function onTouchUp(e: PointerEvent): void {
+    touches.delete(e.pointerId);
+    if (touches.size < 2) pinch = null;
+}
 
 const placed = computed(() => props.vessels.filter((v) => boxes[v.id]?.room === room.value && boxes[v.id]?.x !== null && boxes[v.id]?.y !== null));
 const unplaced = computed(() => props.vessels.filter((v) => boxes[v.id]?.x === null || boxes[v.id]?.y === null));
@@ -471,6 +498,9 @@ const tipStatus = computed(() => {
                     <X v-if="fullscreen" class="size-4" />
                     <Maximize2 v-else class="size-4" />
                 </button>
+                <Button v-if="editing" size="sm" variant="ghost" :aria-pressed="showUnplaced" @click="showUnplaced = !showUnplaced">
+                    {{ t('Unplaced · :n', { n: unplaced.length }) }}
+                </Button>
                 <Button v-if="canManage" size="sm" :variant="editing ? 'primary' : 'outline'" @click="toggleEdit">
                     <Unlock v-if="editing" class="size-3.5" /><Lock v-else class="size-3.5" />
                     {{ editing ? t('Done editing') : t('Edit map') }}
@@ -502,7 +532,14 @@ const tipStatus = computed(() => {
 
         <div class="flex gap-3">
             <!-- Map -->
-            <div class="min-w-0 flex-1 overflow-auto border border-border bg-muted/40" :class="fullscreen ? 'h-[calc(100vh-140px)]' : 'max-h-[70vh]'">
+            <div
+                class="min-w-0 flex-1 touch-pan-x touch-pan-y overflow-auto border border-border bg-muted/40"
+                :class="fullscreen ? 'h-[calc(100vh-140px)]' : 'max-h-[70vh]'"
+                @pointerdown="onTouchDown"
+                @pointermove="onTouchMove"
+                @pointerup="onTouchUp"
+                @pointercancel="onTouchUp"
+            >
                 <div :style="{ width: `${canvas.w * zoom}px`, height: `${canvas.h * zoom}px` }">
                     <div
                         ref="stage"
@@ -574,7 +611,7 @@ const tipStatus = computed(() => {
             </div>
 
             <!-- Unplaced vessels -->
-            <aside v-if="editing" class="w-48 shrink-0 border border-border bg-card p-2 text-xs">
+            <aside v-if="editing && showUnplaced" class="w-48 shrink-0 border border-border bg-card p-2 text-xs">
                 <div class="mb-2 flex items-center justify-between">
                     <span class="font-semibold">{{ t('Unplaced · :n', { n: unplaced.length }) }}</span>
                     <button type="button" class="text-muted-foreground hover:text-foreground" :aria-label="t('Add vessels')" @click="emit('addVessels', room)"><Plus class="size-4" /></button>

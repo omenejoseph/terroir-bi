@@ -500,3 +500,67 @@ export interface FermentationAlert {
     message: string;
     suggestion: string;
 }
+
+/** App\Queries\CellarAnalyticsQuery */
+export interface CellarAnalytics {
+    kpis: {
+        wine_in_cellar: number;
+        ready_to_bottle: number;
+        estimated_bottles: number;
+        average_cost_per_liter: number | null;
+        overdue_tasks: number;
+        needs_so2: number;
+        needs_analysis: number;
+        vessel_utilisation: number | null;
+        empty_vessels: number;
+    };
+    by_vintage: { label: string; volume: number }[];
+    by_type: { label: string; volume: number }[];
+    by_grape: { label: string; volume: number }[];
+    pipeline: { status: string; count: number; volume: number }[];
+    timeline: { month: string; in: number; out: number }[];
+    health: {
+        wine_lot_id: string;
+        lot_number: string;
+        name: string;
+        volatile_acidity: number | null;
+        free_so2: number | null;
+        analysis_age_days: number | null;
+        so2_age_days: number | null;
+        flags: string[];
+        level: 'red' | 'amber' | 'green';
+    }[];
+    alerts: FermentationAlert[];
+}
+
+/** App\Queries\CellarCostsQuery (detailed) */
+export interface LotCostRow {
+    id: string;
+    lot_number: string;
+    name: string;
+    vintage: string | null;
+    current_volume: string;
+    cost: { total: number; additions: number; grape: number; linked: number; carried: number; per_liter: number; per_bottle_750: number };
+    grape_variety?: string;
+    status?: string;
+    initial_volume?: string;
+    selling_price?: number | null;
+    bottle_volume_ml?: number | null;
+    grapes?: { grape_variety: string; weight_kg: string | null; price_per_kg: number | null }[];
+    additions?: { name: string; quantity: string; unit: string; total_cost: number | null }[];
+    linked?: { description: string | null; total: number }[];
+}
+
+/** App\Queries\CellarBookQuery */
+export interface CellarBookRow {
+    date: string;
+    lot_number: string;
+    lot_name: string;
+    vintage: string;
+    event: string;
+    vessel: string | null;
+    quantity: string | null;
+    unit: string | null;
+    detail: string | null;
+    by: string | null;
+}

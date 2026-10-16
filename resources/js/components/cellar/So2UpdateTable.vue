@@ -149,7 +149,12 @@ function ago(days: number | null): string {
                                 <span :class="SO2_STATUS_TONES[lot.so2_status]">{{ lot.free_so2 ?? '—' }}</span>
                                 <div class="text-[10px] text-muted-foreground">{{ ago(lot.days_since) }}</div>
                             </td>
-                            <td class="hidden px-3 py-2 text-right tabular-nums sm:table-cell">{{ lot.total_so2 ?? '—' }}</td>
+                            <td class="hidden px-3 py-2 text-right tabular-nums sm:table-cell">
+                                <span :class="lot.compliance && !lot.compliance.compliant ? 'font-semibold text-destructive' : ''">{{ lot.total_so2 ?? '—' }}</span>
+                                <div v-if="lot.compliance" :class="['text-[10px]', lot.compliance.compliant ? 'text-muted-foreground' : 'text-destructive']" :title="t('EU total SO₂ limit for this wine')">
+                                    {{ t('EU limit :n', { n: lot.compliance.limit }) }}
+                                </div>
+                            </td>
                             <template v-if="expanded.includes(lot.id)">
                                 <td colspan="2" class="px-3 py-2 text-right text-[11px] text-muted-foreground">{{ t('Enter per vessel below') }}</td>
                             </template>

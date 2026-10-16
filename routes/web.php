@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\CellarSo2Controller as ApiCellarSo2Controller;
 use App\Http\Controllers\Web\Auth\AcceptInvitationController;
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Auth\PasswordResetController;
@@ -418,6 +419,11 @@ Route::middleware('tenant.web')->group(function () {
         Route::get('cellar/products', [EnologicalProductController::class, 'index'])->name('cellar.products.index');
         Route::get('cellar/products/{enologicalProduct}/movements', [EnologicalProductController::class, 'movements'])->name('cellar.products.movements');
         Route::get('cellar/protocols', [ProtocolController::class, 'index'])->name('cellar.protocols.index');
+        Route::get('cellar/analytics', [CellarController::class, 'analytics'])->name('cellar.analytics');
+        Route::get('cellar/book', [CellarController::class, 'book'])->name('cellar.book');
+        Route::get('cellar/book.csv', [CellarController::class, 'book'])->name('cellar.book.csv');
+        // The enological calculators answer as JSON; same endpoint as the API.
+        Route::post('cellar/calculators', [ApiCellarSo2Controller::class, 'calculate'])->name('cellar.calculators');
         Route::get('cellar/today', [CellarActivityController::class, 'today'])->name('cellar.today');
         Route::get('cellar/plan', [CellarActivityController::class, 'plan'])->name('cellar.plan');
         Route::get('cellar/so2', [CellarSo2Controller::class, 'index'])->name('cellar.so2');
@@ -488,6 +494,10 @@ Route::middleware('tenant.web')->group(function () {
 
         Route::post('cellar/protocols', [ProtocolController::class, 'store'])->name('cellar.protocols.store');
         Route::patch('cellar/protocols/{fermentationTemplate}', [ProtocolController::class, 'update'])->name('cellar.protocols.update');
+    });
+
+    Route::middleware(['can:cellar.view', 'can:finance.view'])->group(function () {
+        Route::get('cellar/costs', [CellarController::class, 'costs'])->name('cellar.costs');
     });
 
     Route::middleware('can:cellar.delete')->group(function () {

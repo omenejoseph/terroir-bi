@@ -7,6 +7,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import CellarTabs from '@/components/cellar/CellarTabs.vue';
 import PrintSheet from '@/components/cellar/PrintSheet.vue';
 import So2UpdateTable from '@/components/cellar/So2UpdateTable.vue';
+import Calculators from '@/components/cellar/Calculators.vue';
+import Disclosure from '@/components/ui/Disclosure.vue';
 import Button from '@/components/ui/Button.vue';
 import Callout from '@/components/ui/Callout.vue';
 import Card from '@/components/ui/Card.vue';
@@ -367,6 +369,9 @@ const summaryChips = computed(() =>
             </div>
 
             <So2UpdateTable v-if="tab === 'update'" :lots="board.lots" :can-manage="canManage" />
+            <Disclosure v-if="tab === 'update'" :title="t('Calculators')" :summary="t('SO₂ and molecular SO₂, acid, additions, chaptalisation, EU SO₂ limits')">
+                <Calculators />
+            </Disclosure>
 
             <!-- Success view after Apply -->
             <Card v-else-if="applied" class="flex flex-col items-center gap-3 p-8 text-center">

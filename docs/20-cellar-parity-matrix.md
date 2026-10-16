@@ -43,26 +43,26 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 
 ## Summary
 
-| Area | Rows | BE ✅ | BE 🟡/⬜ | BE n/a | UI ✅ |
-|---|---|---|---|---|---|
-| A. Cellar home | 8 | 8 | 0 | 0 | 8 |
-| B. Cellar map | 22 | 22 | 0 | 0 | 21 |
-| C. Vessels | 11 | 11 | 0 | 0 | 10 |
-| D. Wine lots | 30 | 29 | 0 | 1 | 27 |
-| E. SO₂ | 14 | 14 | 0 | 0 | 14 |
-| F. Additions & enological stock | 18 | 18 | 0 | 0 | 18 |
-| G. Lab analyses | 9 | 7 | 0 | 2 | 7 |
-| H. Transfers & racking | 4 | 4 | 0 | 0 | 3 |
-| I. Blending | 9 | 8 | 0 | 1 | 9 |
-| J. Planned work & Today | 20 | 20 | 0 | 0 | 18 |
-| K. Tastings | 9 | 9 | 0 | 0 | 8 |
-| L. Bottling | 4 | 4 | 0 | 0 | 4 |
-| M. Fermentation protocols & monitoring | 7 | 7 | 0 | 0 | 7 |
-| N. Analytics & costs | 10 | 10 | 0 | 0 | 0 |
-| O. Compliance & records | 4 | 4 | 0 | 0 | 0 |
-| P. Work-order integration | 3 | 3 | 0 | 0 | 3 |
-| Q. Audit logging | 11 | 11 | 0 | 0 | 2 |
-| **Total** | **193** | **189** | **0** | **4** | **159** |
+| Area | Rows | BE ✅ | BE 🟡/⬜ | BE n/a | UI ✅ | UI n/a |
+|---|---|---|---|---|---|---|
+| A. Cellar home | 8 | 8 | 0 | 0 | 8 | 0 |
+| B. Cellar map | 22 | 22 | 0 | 0 | 22 | 0 |
+| C. Vessels | 11 | 11 | 0 | 0 | 10 | 1 |
+| D. Wine lots | 30 | 29 | 0 | 1 | 27 | 3 |
+| E. SO₂ | 14 | 14 | 0 | 0 | 14 | 0 |
+| F. Additions & enological stock | 18 | 18 | 0 | 0 | 18 | 0 |
+| G. Lab analyses | 9 | 7 | 0 | 2 | 7 | 2 |
+| H. Transfers & racking | 4 | 4 | 0 | 0 | 3 | 1 |
+| I. Blending | 9 | 8 | 0 | 1 | 9 | 0 |
+| J. Planned work & Today | 20 | 20 | 0 | 0 | 18 | 2 |
+| K. Tastings | 9 | 9 | 0 | 0 | 8 | 1 |
+| L. Bottling | 4 | 4 | 0 | 0 | 4 | 0 |
+| M. Fermentation protocols & monitoring | 7 | 7 | 0 | 0 | 7 | 0 |
+| N. Analytics & costs | 10 | 10 | 0 | 0 | 9 | 1 |
+| O. Compliance & records | 4 | 4 | 0 | 0 | 4 | 0 |
+| P. Work-order integration | 3 | 3 | 0 | 0 | 3 | 0 |
+| Q. Audit logging | 11 | 11 | 0 | 0 | 2 | 9 |
+| **Total** | **193** | **189** | **0** | **4** | **173** | **20** |
 
 ---
 
@@ -103,7 +103,7 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | B18 | Quick bulk-add vessels (prefix, start #, count 1–50, type, material, capacity, name preview) | `CA:214 bulkCreateVessels` | `BulkCreateVesselsAction` | ✅ | ✅ `BulkVesselsPanel` | BARRIQUE valid everywhere |
 | B19 | Assign wine to selected vessels: existing (≤ unallocated) or new wine (grows lot); fill to capacity or split equally; preview | `CA:1085 bulkAssignLotToVessels` | `BulkAssignLotToVesselsAction`, `POST wine-lots/{lot}/vessels/bulk` (fill or split, dry run) | ✅ | ✅ `AssignWinePanel` (server dry-run preview) | |
 | B20 | Unassign one row / Remove all | `CA unassignLotFromVessel` | `UnassignLotFromVesselAction` | ✅ | ✅ `UnassignWinePanel` | |
-| B21 | Fullscreen, zoom buttons, mobile pinch-zoom, sidebar toggle | `C/cellar-map.tsx` | — | ✅ | 🟡 `CellarMap` zoom buttons + fullscreen; no pinch-zoom of the canvas (the browser pinch zooms the page) | |
+| B21 | Fullscreen, zoom buttons, mobile pinch-zoom, sidebar toggle | `C/cellar-map.tsx` | — | ✅ | ✅ `CellarMap` zoom buttons, two-finger pinch zoom, fullscreen, Unplaced sidebar toggle | |
 | B22 | Errors surfaced | `alert()` | — | ✅ | ✅ flash + inline field errors | Inline flash / `InputError`, never `alert()` |
 
 ## C. Vessels
@@ -149,7 +149,7 @@ cellar section of [`15-prototype-parity-audit.md`](15-prototype-parity-audit.md)
 | D21 | Tasting tab: form + editable list | `C/tasting-note-form.tsx` | `UpdateTastingNoteAction`, `PATCH wine-lots/{lot}/tasting-notes/{note}` | ✅ | ✅ `TastingPanel` | |
 | D22 | Transfers tab: form + in/out list | `C/transfer-form.tsx` | see H | ✅ | ✅ `TransferPanel` | |
 | D23 | Processes tab: quick-pick chips + custom kind, date, volume, vessel, note; list; delete | `C/process-form.tsx`, `CA:1303` | `AddCellarProcessAction`, `DeleteCellarProcessAction` | ✅ | ✅ `ProcessPanel` (suggested kinds + free text) | |
-| D24 | Edit a process | — (prototype has none) | — | — | ⬜ | Added for symmetry (`UpdateCellarProcess`) |
+| D24 | Edit a process | — (prototype has none) | — | — | — | Added for symmetry (`UpdateCellarProcess`) |
 | D25 | Protocol card (FERMENTING only): assign template | `C/lot-protocol-actions.tsx`, `HA:2156` | `AssignFermentationTemplateAction` | ✅ | ✅ `ProtocolCard` | |
 | D26 | Generate today's tasks from protocol | `HA:2196` | `GenerateWorkOrdersFromProtocolAction` (default board) | ✅ | ✅ `ProtocolCard` | Tasks land on the default board (prototype's were invisible) |
 | D27 | Plan protocol additions (per additive per vessel; per_L / per_hL / per_kg / per_100kg; round + board card) | `CAA:515` | `PlanProtocolAdditionsAction`, `POST wine-lots/{lot}/protocol/plan-additions` | ✅ | ✅ `ProtocolCard` | Depends on J |
@@ -304,25 +304,25 @@ Backend shipped in Phase 1a: `app/Actions/Cellar/Activities/*`, `CellarTodayQuer
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| N1 | KPIs: wine in cellar, ready to bottle, avg cost/L (admin), est. bottles, overdue tasks | `P/analytics` | `CellarAnalyticsQuery` `kpis` (avg cost/L only with finance.view) | ✅ | ⬜ | |
-| N2 | KPIs: needs SO₂ (≥30 d), needs analysis (≥30 d), vessel utilisation, empty vessels | `P/analytics` | `CellarAnalyticsQuery` `kpis` (needs SO₂ by SO2/SULFITE category or name, needs analysis, utilisation, empty vessels) | ✅ | ⬜ | Needs-SO₂ counts category SO2 **and** SULFITE |
-| N3 | 12-month in/out timeline | `C/charts` | `CellarAnalyticsQuery` `timeline` (12 months in/out) | ✅ | ⬜ | |
-| N4 | Pipeline by status; volume by type; by vintage; grape mix | `C/charts` | `CellarAnalyticsQuery` | ✅ | ⬜ | |
-| N5 | Cost waterfall top 10 (admin) | `C/charts` | `CellarCostsQuery` breakdown per lot (grape, additions, linked, carried) — waterfall drawn client-side | ✅ | ⬜ | |
-| N6 | Lot health board (VA >0.7, free SO₂ <20, analysis age, SO₂ age) | `P/analytics` | `CellarAnalyticsQuery` `health` (VA, free SO₂, ages → red/amber/green) | ✅ | ⬜ | |
-| N7 | Costs page (admin): per lot grape + additions + linked costs, cost/L, per bottle, margin vs selling price | `P/costs`, `wine-cost-breakdown.tsx`, `api/wine-costs` | `CellarCostsQuery` | ✅ | ⬜ | Same cost/L as the lot page |
-| N8 | Costs totals: COGS, average, cheapest, most expensive | `wine-cost-breakdown.tsx` | `CellarCostsQuery` | ✅ | ⬜ | |
-| N9 | Costs filters (vintage, status) + expandable rows | same | — | ✅ | ⬜ | |
+| N1 | KPIs: wine in cellar, ready to bottle, avg cost/L (admin), est. bottles, overdue tasks | `P/analytics` | `CellarAnalyticsQuery` `kpis` (avg cost/L only with finance.view) | ✅ | ✅ `Cellar/Analytics` | |
+| N2 | KPIs: needs SO₂ (≥30 d), needs analysis (≥30 d), vessel utilisation, empty vessels | `P/analytics` | `CellarAnalyticsQuery` `kpis` (needs SO₂ by SO2/SULFITE category or name, needs analysis, utilisation, empty vessels) | ✅ | ✅ `Cellar/Analytics` | Needs-SO₂ counts category SO2 **and** SULFITE |
+| N3 | 12-month in/out timeline | `C/charts` | `CellarAnalyticsQuery` `timeline` (12 months in/out) | ✅ | ✅ `Cellar/Analytics` | |
+| N4 | Pipeline by status; volume by type; by vintage; grape mix | `C/charts` | `CellarAnalyticsQuery` | ✅ | ✅ `Cellar/Analytics` | |
+| N5 | Cost waterfall top 10 (admin) | `C/charts` | `CellarCostsQuery` breakdown per lot (grape, additions, linked, carried) — waterfall drawn client-side | ✅ | ✅ `Cellar/Analytics` (most expensive lots, finance only) | |
+| N6 | Lot health board (VA >0.7, free SO₂ <20, analysis age, SO₂ age) | `P/analytics` | `CellarAnalyticsQuery` `health` (VA, free SO₂, ages → red/amber/green) | ✅ | ✅ `Cellar/Analytics` (lot health table) | |
+| N7 | Costs page (admin): per lot grape + additions + linked costs, cost/L, per bottle, margin vs selling price | `P/costs`, `wine-cost-breakdown.tsx`, `api/wine-costs` | `CellarCostsQuery` | ✅ | ✅ `Cellar/Costs` | Same cost/L as the lot page |
+| N8 | Costs totals: COGS, average, cheapest, most expensive | `wine-cost-breakdown.tsx` | `CellarCostsQuery` | ✅ | ✅ `Cellar/Costs` | |
+| N9 | Costs filters (vintage, status) + expandable rows | same | — | ✅ | ✅ `Cellar/Costs` | |
 | N10 | Bulk wine drift between cellar and inventory (`produceItem` never drains lot) | `inventory.actions.ts:311` | Production module | ✅ | — | Rebuild drains through `LotVolumeService` — verify |
 
 ## O. Compliance & records
 
 | # | Feature / action | Old | New backend | BE | UI | Fix |
 |---|---|---|---|---|---|---|
-| O1 | Cellar book event log (intake, press, vessel, addition, transfer, bottling) + CSV | `harvest/harvest-compliance.tsx` | `CellarBookQuery`, `GET cellar/book` (+ `format=csv`, quoted) | ✅ | ⬜ | Include **all** lots (blends, manual), processes, analyses and losses; CSV escaped |
-| O2 | EU total-SO₂ compliance (red 150/200, white/rosé/orange 200/250 by sugar, sparkling 185) | `checkSO2Compliance` | `WineCompliance::checkSo2`, board `compliance`, `POST cellar/calculators` | ✅ | ⬜ | Uses `wine_type` enum (no ROSE/ROSÉ mismatch) |
-| O3 | Traceability vineyard → harvest → lot → vessel → bottle | same | `TraceabilityQuery`, `GET wine-lots/{lot}/trace` (parcel → harvest → lot ← blends → vessels → bottles) | ✅ | ⬜ | |
-| O4 | Enological calculators (SO₂ + molecular, acid, general addition, chaptalisation) | `harvest/enological-calculators.tsx` (unrendered) | `So2Calculator`, `EnologicalCalculator`, `POST cellar/calculators` | ✅ | ⬜ | Rendered as a Calculators drawer |
+| O1 | Cellar book event log (intake, press, vessel, addition, transfer, bottling) + CSV | `harvest/harvest-compliance.tsx` | `CellarBookQuery`, `GET cellar/book` (+ `format=csv`, quoted) | ✅ | ✅ `Cellar/CellarBook` + CSV | Include **all** lots (blends, manual), processes, analyses and losses; CSV escaped |
+| O2 | EU total-SO₂ compliance (red 150/200, white/rosé/orange 200/250 by sugar, sparkling 185) | `checkSO2Compliance` | `WineCompliance::checkSo2`, board `compliance`, `POST cellar/calculators` | ✅ | ✅ `Cellar/So2` (EU limit on each lot) + `Calculators` | Uses `wine_type` enum (no ROSE/ROSÉ mismatch) |
+| O3 | Traceability vineyard → harvest → lot → vessel → bottle | same | `TraceabilityQuery`, `GET wine-lots/{lot}/trace` (parcel → harvest → lot ← blends → vessels → bottles) | ✅ | ✅ `Cellar/Lots/Show` (Details › Traceability) | |
+| O4 | Enological calculators (SO₂ + molecular, acid, general addition, chaptalisation) | `harvest/enological-calculators.tsx` (unrendered) | `So2Calculator`, `EnologicalCalculator`, `POST cellar/calculators` | ✅ | ✅ `Calculators` on `Cellar/So2` | Rendered as a Calculators drawer |
 
 ## P. Work-order integration
 
@@ -398,7 +398,7 @@ rules apply:
 | Step | Owner | Status |
 |---|---|---|
 | Matrix reviewed | product | ⬜ |
-| Backend gaps closed (all BE ✅) | eng | ⬜ |
-| Screens shipped (all UI ✅) | eng | ⬜ |
+| Backend gaps closed (all BE ✅) | eng | ✅ 189 rows; 4 not applicable |
+| Screens shipped (all UI ✅) | eng | ✅ 173 rows; 20 need no screen |
 | Side-by-side walkthrough on imported tenant data | product + eng | ⬜ |
 | Phase 3 experience proposals approved | product | ⬜ |
