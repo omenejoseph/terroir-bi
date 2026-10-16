@@ -20,6 +20,7 @@ import {
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
+import AttentionList from '@/components/cellar/AttentionList.vue';
 import CellarTabs from '@/components/cellar/CellarTabs.vue';
 import HistoryList from '@/components/cellar/HistoryList.vue';
 import LotFormPanel from '@/components/cellar/LotFormPanel.vue';
@@ -62,6 +63,7 @@ import type {
     AnalysisParam,
     AnalysisRow,
     CellarActivity,
+    CellarAttentionItem,
     FermentationTemplate,
     HistoryEntry,
     LotOption,
@@ -84,6 +86,7 @@ import type { MenuItem } from '@/types/ui';
 const props = defineProps<{
     lot: WineLotDetail;
     nextPlanned: CellarActivity | null;
+    attention: CellarAttentionItem[];
     timeline: TimelineEvent[];
     trend: AnalysisRow[];
     blendSources: { lot_id: string; name: string; lot_number: string; liters: string }[];
@@ -321,6 +324,8 @@ const readingMenu = computed<MenuItem[]>(() => (canEdit.value ? [EDIT, DELETE].m
                 </template>
             </PageHeader>
             <CellarTabs current="lots" />
+
+            <AttentionList :items="attention" :show-lot="false" />
 
             <div v-if="blendSources.length" class="border border-tag-violet-foreground/30 bg-tag-violet px-3 py-2 text-xs text-tag-violet-foreground">
                 <p class="font-medium">{{ t('Blend sources · :n', { n: blendSources.length }) }}</p>

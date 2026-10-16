@@ -62,6 +62,7 @@ use App\Models\User;
 use App\Models\Vessel;
 use App\Models\VesselLot;
 use App\Models\WineLot;
+use App\Queries\CellarAttentionQuery;
 use App\Queries\CellarHistoryQuery;
 use App\Queries\CellarPickerOptions;
 use App\Queries\ListWineLotsQuery;
@@ -115,7 +116,7 @@ class WineLotController extends Controller
         ]);
     }
 
-    public function show(WineLot $wineLot, LotTimelineQuery $timeline, LotAnalysisTrendQuery $trend, CellarHistoryQuery $history, TraceabilityQuery $trace, CellarPickerOptions $options, CellarClock $clock): Response
+    public function show(WineLot $wineLot, LotTimelineQuery $timeline, LotAnalysisTrendQuery $trend, CellarHistoryQuery $history, TraceabilityQuery $trace, CellarPickerOptions $options, CellarClock $clock, CellarAttentionQuery $attention): Response
     {
         $today = $clock->today();
         $next = CellarActivity::query()->with(['vessel', 'round'])
@@ -129,6 +130,7 @@ class WineLotController extends Controller
             // The lot's next planned task (overdue ones first), for the workspace's "Next" tile.
             'nextPlanned' => $next !== null ? CellarActivityData::fromModel($next, $today)->toArray() : null,
             'timeline' => $timeline->get($wineLot),
+            'attention' => fn (): array => $attention->get((string) $wineLot->getKey()),
             'trend' => $trend->get($wineLot),
             'blendSources' => $this->blendSources($wineLot),
             'vessels' => fn (): array => $options->vessels(),

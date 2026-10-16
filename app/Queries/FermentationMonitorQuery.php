@@ -37,7 +37,7 @@ class FermentationMonitorQuery
             if ($latest === null) {
                 if ($lot->created_at !== null && $lot->created_at->diffInDays(now()) > 1) {
                     $alerts[] = $this->alert('no_analysis', 'medium', $lot,
-                        'No analysis recorded yet.', 'Record a baseline analysis.');
+                        __('No analysis recorded yet.'), __('Record a baseline analysis.'));
                 }
 
                 continue;
@@ -66,10 +66,10 @@ class FermentationMonitorQuery
     {
         $days = (int) $latest->date->diffInDays(now());
         if ($days > 10) {
-            return $this->alert('stale_analysis', 'high', $lot, "No analysis in {$days} days.", 'Take a fresh sample.');
+            return $this->alert('stale_analysis', 'high', $lot, __('No analysis in :days days.', ['days' => $days]), __('Take a fresh sample.'));
         }
         if ($days > 5) {
-            return $this->alert('stale_analysis', 'info', $lot, "Last analysis was {$days} days ago.", 'Consider sampling again.');
+            return $this->alert('stale_analysis', 'info', $lot, __('Last analysis was :days days ago.', ['days' => $days]), __('Consider sampling again.'));
         }
 
         return null;
@@ -84,8 +84,8 @@ class FermentationMonitorQuery
         $drop = (float) $prev->brix - (float) $latest->brix;
         if ($drop < 0.5 && (float) $latest->brix > 2) {
             return $this->alert('stuck_fermentation', 'high', $lot,
-                'Sugar is barely dropping — fermentation may be stuck.',
-                'Check temperature and nutrients; consider a restart.');
+                __('Sugar is barely dropping — fermentation may be stuck.'),
+                __('Check temperature and nutrients; consider a restart.'));
         }
 
         return null;
@@ -101,13 +101,13 @@ class FermentationMonitorQuery
         $isRed = $lot->wine_type === WineType::Red;
         [$min, $max, $hardMax] = $isRed ? [18.0, 28.0, 32.0] : [10.0, 18.0, 22.0];
         if ($t > $hardMax) {
-            return $this->alert('temperature', 'critical', $lot, "Temperature {$t}°C is too high.", 'Cool the vessel.');
+            return $this->alert('temperature', 'critical', $lot, __('Temperature :t °C is too high.', ['t' => $t]), __('Cool the vessel.'));
         }
         if ($t < $min) {
-            return $this->alert('temperature', 'medium', $lot, "Temperature {$t}°C is below the ideal range.", 'Warm the vessel.');
+            return $this->alert('temperature', 'medium', $lot, __('Temperature :t °C is below the ideal range.', ['t' => $t]), __('Warm the vessel.'));
         }
         if ($t > $max) {
-            return $this->alert('temperature', 'medium', $lot, "Temperature {$t}°C is above the ideal range.", 'Cool the vessel.');
+            return $this->alert('temperature', 'medium', $lot, __('Temperature :t °C is above the ideal range.', ['t' => $t]), __('Cool the vessel.'));
         }
 
         return null;
@@ -121,10 +121,10 @@ class FermentationMonitorQuery
         }
         $va = (float) $latest->volatile_acidity;
         if ($va > 0.8) {
-            return $this->alert('volatile_acidity', 'critical', $lot, "Volatile acidity {$va} g/L is dangerously high.", 'Investigate spoilage immediately.');
+            return $this->alert('volatile_acidity', 'critical', $lot, __('Volatile acidity :va g/L is dangerously high.', ['va' => $va]), __('Investigate spoilage immediately.'));
         }
         if ($va > 0.6) {
-            return $this->alert('volatile_acidity', 'high', $lot, "Volatile acidity {$va} g/L is elevated.", 'Check for acetobacter.');
+            return $this->alert('volatile_acidity', 'high', $lot, __('Volatile acidity :va g/L is elevated.', ['va' => $va]), __('Check for acetobacter.'));
         }
 
         return null;
@@ -134,7 +134,7 @@ class FermentationMonitorQuery
     private function phAlert(WineLot $lot, CellarAnalysis $latest): ?array
     {
         if ($latest->ph !== null && (float) $latest->ph > 3.8) {
-            return $this->alert('high_ph', 'medium', $lot, "pH {$latest->ph} is high — spoilage risk.", 'Consider acidification.');
+            return $this->alert('high_ph', 'medium', $lot, __('pH :ph is high — spoilage risk.', ['ph' => (string) $latest->ph]), __('Consider acidification.'));
         }
 
         return null;
@@ -144,7 +144,7 @@ class FermentationMonitorQuery
     private function mlfAlert(WineLot $lot, CellarAnalysis $latest): ?array
     {
         if ($latest->malic !== null && (float) $latest->malic < 0.1 && $latest->lactic !== null && (float) $latest->lactic > 0) {
-            return $this->alert('mlf_complete', 'info', $lot, 'Malolactic fermentation appears complete.', 'Add SO₂ to stabilise.');
+            return $this->alert('mlf_complete', 'info', $lot, __('Malolactic fermentation appears complete.'), __('Add SO₂ to stabilise.'));
         }
 
         return null;
@@ -154,7 +154,7 @@ class FermentationMonitorQuery
     private function completeAlert(WineLot $lot, CellarAnalysis $latest): ?array
     {
         if ($latest->brix !== null && (float) $latest->brix <= 2 && (float) $latest->brix >= -1) {
-            return $this->alert('fermentation_complete', 'info', $lot, 'Sugar is depleted — fermentation looks complete.', 'Plan pressing/racking.');
+            return $this->alert('fermentation_complete', 'info', $lot, __('Sugar is depleted — fermentation looks complete.'), __('Plan pressing/racking.'));
         }
 
         return null;

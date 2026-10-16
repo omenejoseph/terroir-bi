@@ -143,6 +143,16 @@ class CellarAnalyticsQuery
     }
 
     /**
+     * The lot-health rows on their own (for the cellar's attention list).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function lotHealth(): array
+    {
+        return $this->health(WineLot::query()->where('status', '!=', WineLotStatus::Bottled)->with(['latestAnalysis'])->get());
+    }
+
+    /**
      * Per-lot traffic lights: VA above 0.7, free SO₂ below 20, and the age of
      * the last analysis and of the last SO₂ reading.
      *
