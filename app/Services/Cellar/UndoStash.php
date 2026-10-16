@@ -10,7 +10,12 @@ use App\Actions\Cellar\AddCellarProcessAction;
 use App\Actions\Cellar\AddTastingNoteAction;
 use App\Actions\Cellar\BlendIntoLotAction;
 use App\Actions\Cellar\CreateTransferAction;
+use App\Actions\Tasks\UpdateWorkOrderStatusAction;
+use App\Enums\CellarActivityStatus;
 use App\Enums\CellarTransferType;
+use App\Enums\TaskStatus;
+use App\Models\CellarActivity;
+use App\Models\CellarActivityRound;
 use App\Models\CellarAddition;
 use App\Models\CellarAnalysis;
 use App\Models\CellarProcess;
@@ -18,21 +23,26 @@ use App\Models\CellarTastingNote;
 use App\Models\CellarTransfer;
 use App\Models\User;
 use App\Models\WineLot;
+use App\Models\WorkOrder;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Undo for the cellar's reversible deletes — an addition, a reading, a
- * process, a tasting note, a transfer. Before the delete, the record's
+ * process, a tasting note, a transfer — and for skipping or moving a task
+ * on Today. Before the delete, the record's
  * create payload is kept for ten minutes under a token that only the same
  * person in the same workspace can use, once. Undo runs the same Action that
  * created it (an addition draws its stock again, a transfer moves the wine
  * again) and keeps the original date and author; if that's no longer
  * possible — the stock has gone, the vessel has filled — the Action's own
- * validation error says why.
+ * validation error says why. A skipped or moved task goes back to how it
+ * was (planned, on its old date, its note as it was), and the round's board
+ * card reopens if the skip had closed it.
  *
  * @phpstan-type Entry array{tenant_id: string, user_id: string, kind: string, lot_id: string, data: array<string, mixed>, at: string|null, by: string|null}
  */
@@ -48,6 +58,8 @@ class UndoStash
         private readonly AddTastingNoteAction $addTasting,
         private readonly CreateTransferAction $createTransfer,
         private readonly BlendIntoLotAction $blendInto,
+        private readonly RoundWorkOrderSync $rounds,
+        private readonly UpdateWorkOrderStatusAction $cardStatus,
     ) {}
 
     /**
@@ -101,15 +113,43 @@ class UndoStash
             ]],
         };
 
+        return $this->keep($kind, (string) $lotId, $data, $record->created_at?->toIso8601String(), $record->created_by_id, $userId);
+    }
+
+    /**
+     * Keep a planned task as it is now, before Today skips or moves it.
+     */
+    public function stashActivity(CellarActivity $activity, string $userId): string
+    {
+        $card = null;
+        if ($activity->round_id !== null) {
+            $workOrderId = CellarActivityRound::query()->whereKey($activity->round_id)->value('work_order_id');
+            $card = $workOrderId !== null ? WorkOrder::query()->whereKey($workOrderId)->first() : null;
+        }
+
+        return $this->keep('activity', (string) $activity->wine_lot_id, [
+            'activity_id' => (string) $activity->getKey(),
+            'planned_for' => $activity->planned_for->toDateString(),
+            'note' => $activity->note,
+            'card_id' => $card?->getKey(),
+            'card_status' => $card?->status->value,
+        ], null, null, $userId);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function keep(string $kind, string $lotId, array $data, ?string $at, ?string $by, string $userId): string
+    {
         $token = Str::random(40);
         Cache::put($this->key($token), [
             'tenant_id' => (string) $this->tenant->id(),
             'user_id' => $userId,
             'kind' => $kind,
-            'lot_id' => (string) $lotId,
+            'lot_id' => $lotId,
             'data' => $data,
-            'at' => $record->created_at?->toIso8601String(),
-            'by' => $record->created_by_id,
+            'at' => $at,
+            'by' => $by,
         ], self::TTL_SECONDS);
 
         return $token;
@@ -150,6 +190,10 @@ class UndoStash
      */
     public function restore(array $entry, string $userId): Model
     {
+        if ($entry['kind'] === 'activity') {
+            return DB::transaction(fn (): Model => $this->restoreActivity($entry['data']));
+        }
+
         return DB::transaction(function () use ($entry, $userId): Model {
             $lot = WineLot::query()->whereKey($entry['lot_id'])->firstOrFail();
             $by = $entry['by'] !== null && User::query()->whereKey($entry['by'])->exists() ? $entry['by'] : $userId;
@@ -198,6 +242,42 @@ class UndoStash
         }
 
         return $this->createTransfer->execute($from, $data, $by);
+    }
+
+    /**
+     * Back to planned, on its old date, with its old note — unless it has
+     * been done since.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function restoreActivity(array $data): CellarActivity
+    {
+        /** @var CellarActivity $activity */
+        $activity = CellarActivity::query()->whereKey((string) $data['activity_id'])->lockForUpdate()->firstOrFail();
+        if ($activity->status === CellarActivityStatus::Done) {
+            throw ValidationException::withMessages(['status' => __('It has been done since.')]);
+        }
+
+        $activity->forceFill([
+            'status' => CellarActivityStatus::Planned,
+            'planned_for' => (string) $data['planned_for'],
+            'note' => $data['note'],
+            'skip_reason' => null,
+            'skipped_at' => null,
+            'executed_by_id' => null,
+        ])->save();
+
+        // The skip may have closed the round's card (nothing left planned) — open it again.
+        if (is_string($data['card_id'] ?? null) && is_string($data['card_status'] ?? null)) {
+            $card = WorkOrder::query()->whereKey($data['card_id'])->first();
+            $before = TaskStatus::tryFrom($data['card_status']);
+            if ($card !== null && $before !== null && ! $before->isClosed() && $card->status === TaskStatus::Done) {
+                $this->cardStatus->execute($card, $before);
+            }
+        }
+        $this->rounds->sync($activity->round_id);
+
+        return $activity;
     }
 
     private function key(string $token): string

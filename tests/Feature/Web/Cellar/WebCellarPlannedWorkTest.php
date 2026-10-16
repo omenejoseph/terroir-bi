@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Web\Cellar;
 
+use App\Enums\CellarActivityStatus;
 use App\Enums\MembershipStatus;
+use App\Enums\TaskStatus;
 use App\Enums\TenantRole;
 use App\Models\AuditLog;
 use App\Models\CellarActivity;
@@ -292,5 +294,75 @@ class WebCellarPlannedWorkTest extends TestCase
     public function test_guests_are_sent_to_login(): void
     {
         $this->get('/cellar/today')->assertRedirect('/login');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return TestResponse<Response>
+     */
+    private function tick(string $uri, array $data = []): TestResponse
+    {
+        return $this->actingAs($this->cellar)->withSession([ActiveTenantSession::KEY => $this->tenant->getKey()])->postJson($uri, $data);
+    }
+
+    public function test_a_skip_on_today_can_be_undone_and_its_round_card_reopens(): void
+    {
+        [$lot, $a] = $this->seedLot();
+        $task = $this->plan($lot, $a, round: 'Pump-overs');
+        $card = $this->inTenant(fn () => WorkOrder::query()->sole());
+
+        $token = $this->tick("/cellar/activities/{$task->getKey()}/skip", ['reason' => 'not_needed'])->assertOk()->json('data.undo');
+        $this->assertIsString($token);
+        $this->inTenant(fn () => $this->assertSame(TaskStatus::Done, $card->fresh()?->status, 'the last open task skipped closes the card'));
+
+        $this->tick('/cellar/undo/'.$token)->assertOk()->assertJsonPath('data.kind', 'activity');
+
+        $this->inTenant(function () use ($task, $card): void {
+            $back = $task->fresh();
+            $this->assertNotNull($back);
+            $this->assertSame(CellarActivityStatus::Planned, $back->status);
+            $this->assertNull($back->skip_reason);
+            $this->assertNull($back->skipped_at);
+            $this->assertNull($back->executed_by_id);
+            $this->assertNotSame(TaskStatus::Done, $card->fresh()?->status);
+            $this->assertTrue(AuditLog::query()->where('action', 'cellar.undo')->exists());
+        });
+        $this->tick('/cellar/undo/'.$token)->assertStatus(410);
+    }
+
+    public function test_a_move_on_today_can_be_undone_back_to_its_old_day_and_note(): void
+    {
+        [$lot, $a] = $this->seedLot();
+        $task = $this->plan($lot, $a);
+
+        $token = $this->tick("/cellar/activities/{$task->getKey()}/reschedule", ['planned_for' => '2026-10-17', 'reason' => 'No time'])->assertOk()->json('data.undo');
+        $this->inTenant(fn () => $this->assertSame('⏭ No time', $task->fresh()?->note));
+
+        $this->tick('/cellar/undo/'.$token)->assertOk();
+        $this->inTenant(function () use ($task): void {
+            $back = $task->fresh();
+            $this->assertNotNull($back);
+            $this->assertSame('2026-10-14', $back->planned_for->toDateString());
+            $this->assertNull($back->note);
+        });
+    }
+
+    public function test_a_task_done_since_is_not_undone(): void
+    {
+        [$lot, $a] = $this->seedLot();
+        $task = $this->plan($lot, $a);
+        $token = $this->tick("/cellar/activities/{$task->getKey()}/reschedule", ['planned_for' => '2026-10-14'])->json('data.undo');
+        $this->tick("/cellar/activities/{$task->getKey()}/complete")->assertOk();
+
+        $this->tick('/cellar/undo/'.$token)->assertUnprocessable();
+        $this->inTenant(fn () => $this->assertSame(CellarActivityStatus::Done, $task->fresh()?->status));
+    }
+
+    public function test_skipping_from_the_page_flashes_an_undo(): void
+    {
+        [$lot, $a] = $this->seedLot();
+        $task = $this->plan($lot, $a);
+
+        $this->web('POST', "/cellar/activities/{$task->getKey()}/skip", ['reason' => 'other'])->assertRedirect()->assertSessionHas('undo');
     }
 }

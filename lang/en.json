@@ -1645,5 +1645,9 @@
     "transfers": "transfers",
     "Deleted.": "Deleted.",
     "Needs attention · :n": "Needs attention · :n",
-    "Emptied: :list.": "Emptied: :list."
+    "Emptied: :list.": "Emptied: :list.",
+    "Could not undo — it stays as it is. Try again from Plan.": "Could not undo — it stays as it is. Try again from Plan.",
+    "Moved to :date": "Moved to :date",
+    "Task skipped.": "Task skipped.",
+    "It has been done since.": "It has been done since."
 }

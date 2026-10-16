@@ -5,7 +5,8 @@ import { Check } from 'lucide-vue-next';
 import Input from '@/components/ui/Input.vue';
 import { type QueuedAction, useActivityQueue } from '@/composables/useActivityQueue';
 import { useTranslations } from '@/composables/useTranslations';
-import { ACTIVITY_ICONS, METRIC_LABELS, activityTitle, addDays, describeActivity, lotLabel, parseDecimal, qty } from '@/lib/cellar';
+import { useUndoToast } from '@/composables/useUndoToast';
+import { ACTIVITY_ICONS, METRIC_LABELS, activityTitle, addDays, dayLabel, describeActivity, lotLabel, parseDecimal, qty } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import type { AnalysisParam, CellarActivity } from '@/types/cellar';
 
@@ -30,8 +31,9 @@ const props = defineProps<{
 
 const emit = defineEmits<{ next: [id: string] }>();
 
-const { t } = useTranslations();
+const { t, locale } = useTranslations();
 const queue = useActivityQueue();
+const toast = useUndoToast();
 const error = computed(() => queue.errors[props.activity.id] ?? null);
 
 type Panel = 'adjust' | 'readings' | 'skip' | null;
@@ -108,13 +110,24 @@ function onUp(): void {
     offset.value = 0;
 }
 
+/** Skips and moves can be taken back from the Undo toast. */
+function offerUndo(message: string): void {
+    const id = a.value.id;
+    const name = a.value.vessel?.name ?? activityTitle(a.value);
+    toast.offer(`${name}: ${message}`, async () => {
+        if (!(await queue.undo(id))) toast.offer(t('Could not undo — it stays as it is. Try again from Plan.'), null);
+    });
+}
+
 function moveTo(date: string, reason: string | null = null): void {
     if (date === '') return;
     post('reschedule', { planned_for: date, reason });
+    offerUndo(t('Moved to :date', { date: dayLabel(date, locale.value) }));
 }
 
 function skip(reason: 'not_needed' | 'other'): void {
     post('skip', { reason });
+    offerUndo(t('Task skipped.'));
 }
 </script>
 

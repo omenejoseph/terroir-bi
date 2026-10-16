@@ -1645,5 +1645,9 @@
     "transfers": "pretakanja",
     "Deleted.": "Obrisano.",
     "Needs attention · :n": "Traži pažnju · :n",
-    "Emptied: :list.": "Prazni se: :list."
+    "Emptied: :list.": "Prazni se: :list.",
+    "Could not undo — it stays as it is. Try again from Plan.": "Poništavanje nije uspjelo — ostaje kako jest. Pokušajte iz Plana.",
+    "Moved to :date": "Premješteno na :date",
+    "Task skipped.": "Zadatak preskočen.",
+    "It has been done since.": "U međuvremenu je obavljeno."
 }
