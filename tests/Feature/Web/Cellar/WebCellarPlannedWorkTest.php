@@ -208,6 +208,29 @@ class WebCellarPlannedWorkTest extends TestCase
         $this->inTenant(fn () => $this->assertSame(0, CellarActivity::query()->count()));
     }
 
+    public function test_pages_opened_from_the_map_start_with_its_vessels_and_drop_foreign_ids(): void
+    {
+        [$lot, $a, $b] = $this->seedLot();
+        $other = $this->createTenant();
+        $this->actingAsTenant($other);
+        $foreign = (string) Vessel::create(['name' => 'X1', 'type' => 'TANK', 'capacity_liters' => '100.000'])->getKey();
+        $this->forgetTenant();
+
+        $ids = implode(',', [$a->getKey(), $foreign, 'nonsense']);
+
+        $this->web('GET', "/cellar/plan?vessels={$ids}&type=analysis")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('preselect.vessels', [(string) $a->getKey()])
+            ->where('preselect.type', 'ANALYSIS')
+            ->where('preselect.lots', []));
+
+        $this->web('GET', "/cellar/blend?vessels={$ids}")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('preselect.vessels', [(string) $a->getKey()]));
+
+        $this->web('GET', "/cellar/so2?lots={$lot->getKey()},{$foreign}&type=bogus")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('preselect.lots', [(string) $lot->getKey()])
+            ->where('preselect.type', null));
+    }
+
     public function test_invalid_payload_errors_come_back_on_the_field(): void
     {
         [$lot, $a] = $this->seedLot();

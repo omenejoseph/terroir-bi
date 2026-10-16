@@ -11,7 +11,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
-import type { CellarActivityType, CellarPlan, LotOption, MemberOption, ParcelOption, ProductOption, Vessel } from '@/types/cellar';
+import type { CellarActivityType, CellarPlan, CellarPreselect, LotOption, MemberOption, ParcelOption, ProductOption, Vessel } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { TabItem } from '@/types/ui';
 
@@ -27,6 +27,7 @@ const props = defineProps<{
     products: ProductOption[];
     members: MemberOption[];
     parcels: ParcelOption[];
+    preselect: CellarPreselect;
 }>();
 
 const page = usePage<SharedProps>();
@@ -37,9 +38,10 @@ const canManage = computed(() => can('cellar.manage'));
 const locale = computed(() => page.props.locale);
 const errors = computed(() => Object.values(page.props.errors ?? {}));
 
-const type = ref<CellarActivityType>('ADDITION');
-const scope = ref<'lot' | 'cellar'>('lot');
-const selected = ref<string[]>([]);
+// The map's action bar opens this page with `?vessels=…&type=…`: start in whole-cellar mode with them ticked.
+const type = ref<CellarActivityType>((props.preselect.type as CellarActivityType | null) ?? 'ADDITION');
+const scope = ref<'lot' | 'cellar'>(props.preselect.vessels.length ? 'cellar' : 'lot');
+const selected = ref<string[]>([...props.preselect.vessels]);
 
 const showMap = computed(() => scope.value === 'cellar' && !['TRANSFER', 'VINEYARD'].includes(type.value));
 const mappedVessels = computed(() => props.vessels.filter((v) => v.position_x !== null && v.position_y !== null));

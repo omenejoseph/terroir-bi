@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Vessel;
 use App\Queries\CellarPickerOptions;
 use App\Services\Cellar\BlendProjector;
+use App\Support\Cellar\CellarPreselect;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,9 +26,10 @@ use Inertia\Response;
  */
 class BlendController extends Controller
 {
-    public function index(CellarPickerOptions $options): Response
+    public function index(Request $request, CellarPickerOptions $options): Response
     {
         return Inertia::render('Cellar/Blend', [
+            'preselect' => CellarPreselect::from($request),
             'vessels' => $options->vessels(),
             'lots' => $options->lots(),
         ]);

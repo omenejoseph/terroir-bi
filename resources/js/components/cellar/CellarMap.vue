@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
-import { AlertTriangle, Copy, Lock, Maximize2, Minus, Pencil, Plus, Ruler, Trash2, Undo2, Unlock, Wine, X } from 'lucide-vue-next';
+import { AlertTriangle, ArrowRightLeft, Blend, CalendarPlus, Copy, FlaskConical, Lock, Maximize2, MousePointerClick, Minus, Pencil, Plus, Ruler, Trash2, Undo2, Unlock, Wine, X } from 'lucide-vue-next';
 
 import Button from '@/components/ui/Button.vue';
 import Input from '@/components/ui/Input.vue';
@@ -20,11 +20,17 @@ import type { MapVessel } from '@/types/cellar';
  * every change autosaves. Rooms are tabs that can be renamed, and reordered
  * per browser.
  *
- * Selection-based actions that need a form (assign wine, unassign) are raised
- * to the page via events so they live in the page's SidePanels.
+ * Outside edit mode the map is also where cellar work starts: select vessels
+ * (shift/⌘-click, a mouse drag on the floor, or "Select" for touch) and an
+ * action bar records SO₂, plans an addition or readings, blends them, moves
+ * wine or assigns wine. Tiles can be coloured by SO₂, by wine or by fill.
+ *
+ * Selection-based actions that need a form (assign wine, unassign, record
+ * SO₂, move wine) are raised to the page via events so they live in the
+ * page's SidePanels.
  */
 const props = defineProps<{ vessels: MapVessel[]; canManage: boolean }>();
-const emit = defineEmits<{ assign: [ids: string[]]; unassign: [ids: string[]]; addVessels: [room: string] }>();
+const emit = defineEmits<{ assign: [ids: string[]]; unassign: [ids: string[]]; addVessels: [room: string]; recordSo2: [ids: string[]]; move: [id: string] }>();
 
 const { t } = useTranslations();
 
@@ -173,6 +179,35 @@ function colour(v: MapVessel): string {
 
     return type ? WINE_TYPE_SWATCH[type] : '#94a3b8';
 }
+
+// ── Colour by (remembered per browser) ──────────────────────────────────────
+type ColourBy = 'so2' | 'wine' | 'fill';
+const COLOUR_KEY = 'terroir.cellar.colourBy';
+const colourBy = ref<ColourBy>('wine');
+onMounted(() => {
+    try {
+        const saved = window.localStorage.getItem(COLOUR_KEY);
+        if (saved === 'so2' || saved === 'wine' || saved === 'fill') colourBy.value = saved;
+    } catch {
+        // storage unavailable — keep the default
+    }
+});
+watch(colourBy, (c) => {
+    try {
+        window.localStorage.setItem(COLOUR_KEY, c);
+    } catch {
+        // storage unavailable — the choice lasts for this visit
+    }
+});
+/** Free-SO₂ status colours (the same scale as the SO₂ page). */
+const SO2_HEX: Record<string, string> = { critical: '#c10007', low: '#ca3500', ok: '#008236', high: '#1447e6', no_data: '#94a3b8' };
+function tileColour(v: MapVessel): string {
+    if (colourBy.value === 'fill') return '#525252';
+    if (colourBy.value === 'so2') return (v.lots ?? []).length ? SO2_HEX[so2Status(so2Of(v)?.free ?? null)]! : '#cbd5e1';
+
+    return colour(v);
+}
+const daysSince = (iso: string | null | undefined) => (iso ? Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)) : null);
 function shape(v: MapVessel): string {
     switch (v.type) {
         case 'BARREL':
@@ -186,10 +221,10 @@ function shape(v: MapVessel): string {
             return '';
     }
 }
-function so2Of(v: MapVessel): { free: number | null; total: number | null } | null {
+function so2Of(v: MapVessel): { free: number | null; total: number | null; date: string | null } | null {
     const s = v.lots?.find((l) => l.so2 && (l.so2.free !== null || l.so2.total !== null))?.so2;
 
-    return s ? { free: s.free, total: s.total } : null;
+    return s ? { free: s.free, total: s.total, date: s.date } : null;
 }
 
 // ── Tooltip ─────────────────────────────────────────────────────────────────
@@ -237,8 +272,26 @@ function local(e: PointerEvent): { x: number; y: number } {
     return { x: (e.clientX - r.left) / zoom.value, y: (e.clientY - r.top) / zoom.value };
 }
 
+// ── Selection in view mode (acting on vessels, not moving them) ─────────────
+const selectMode = ref(false);
+let skipClick = false;
+function toggleSelectMode(): void {
+    selectMode.value = !selectMode.value;
+    if (!selectMode.value) selected.value = [];
+}
+const toggleSel = (id: string) => (selected.value = isSel(id) ? selected.value.filter((x) => x !== id) : [...selected.value, id]);
+
 function onTileDown(v: MapVessel, e: PointerEvent, mode: 'move' | 'resize' = 'move'): void {
-    if (!editing.value || e.button !== 0) return;
+    if (!editing.value) {
+        if (props.canManage && e.button === 0 && (selectMode.value || e.shiftKey || e.metaKey || e.ctrlKey)) {
+            e.stopPropagation();
+            toggleSel(v.id);
+            skipClick = true;
+        }
+
+        return;
+    }
+    if (e.button !== 0) return;
     e.stopPropagation();
     if (e.shiftKey || e.metaKey || e.ctrlKey) {
         selected.value = isSel(v.id) ? selected.value.filter((id) => id !== v.id) : [...selected.value, v.id];
@@ -252,7 +305,9 @@ function onTileDown(v: MapVessel, e: PointerEvent, mode: 'move' | 'resize' = 'mo
 }
 
 function onStageDown(e: PointerEvent): void {
-    if (!editing.value || e.button !== 0) return;
+    if (e.button !== 0) return;
+    // In view mode only a mouse drag lassos — a finger on the floor pans the map.
+    if (!editing.value && (!props.canManage || e.pointerType !== 'mouse')) return;
     if (!(e.shiftKey || e.metaKey || e.ctrlKey)) selected.value = [];
     const p = local(e);
     drag = { mode: 'lasso', startX: p.x, startY: p.y, origin: {}, moved: false };
@@ -307,6 +362,11 @@ function onUp(): void {
 
 function onTileClick(v: MapVessel): void {
     if (editing.value) return;
+    if (skipClick) {
+        skipClick = false;
+
+        return;
+    }
     const lot = v.lots?.find((l) => l.lot !== null);
     router.visit(lot ? `/cellar/lots/${lot.wine_lot_id}?vessel=${v.id}` : `/cellar/vessels/${v.id}`);
 }
@@ -398,9 +458,10 @@ async function flush(): Promise<void> {
 }
 
 function toggleEdit(): void {
+    selected.value = [];
+    selectMode.value = false;
     if (editing.value) {
         void flush();
-        selected.value = [];
         // Pick up what other members changed, and our own saved layout.
         router.reload({ only: ['vessels'] });
     }
@@ -446,6 +507,14 @@ function unassignSelected(): void {
 
 defineExpose({ select: (ids: string[]) => (selected.value = ids) });
 
+const selectedVessels = computed(() => selected.value.map((id) => byId.value.get(id)).filter((v): v is MapVessel => v !== undefined));
+const selectedLitres = computed(() => selectedVessels.value.reduce((n, v) => n + Number(v.current_volume), 0));
+const withWine = computed(() => selectedVessels.value.filter((v) => (v.lots ?? []).some((l) => l.lot !== null)));
+const ids = (list: MapVessel[]) => list.map((v) => v.id).join(',');
+function go(path: string, type?: string): void {
+    router.visit(`${path}?vessels=${ids(withWine.value)}${type ? `&type=${type}` : ''}`);
+}
+
 const tipStatus = computed(() => {
     const s = hover.value ? so2Of(hover.value.v) : null;
 
@@ -489,7 +558,24 @@ const tipStatus = computed(() => {
                 </template>
             </div>
 
+            <div v-if="!editing" class="flex items-center gap-1 text-xs" role="group" :aria-label="t('Colour by')">
+                <span class="text-muted-foreground">{{ t('Colour by') }}</span>
+                <button
+                    v-for="c in (['so2', 'wine', 'fill'] as const)"
+                    :key="c"
+                    type="button"
+                    :aria-pressed="colourBy === c"
+                    :class="cn('h-6 px-2', colourBy === c ? 'bg-primary text-primary-foreground' : 'border border-border hover:bg-accent')"
+                    @click="colourBy = c"
+                >
+                    {{ c === 'so2' ? 'SO₂' : c === 'wine' ? t('Wine') : t('Fill') }}
+                </button>
+            </div>
+
             <div class="ml-auto flex items-center gap-1">
+                <Button v-if="canManage && !editing" size="sm" :variant="selectMode ? 'primary' : 'ghost'" :aria-pressed="selectMode" @click="toggleSelectMode">
+                    <MousePointerClick class="size-3.5" /> {{ t('Select') }}
+                </Button>
                 <span v-if="editing" class="mr-2 text-xs text-muted-foreground">{{ saving ? t('Saving…') : t('All changes saved') }}</span>
                 <button type="button" class="p-1.5 text-muted-foreground hover:bg-accent" :aria-label="t('Zoom out')" @click="zoom = Math.max(0.5, +(zoom - 0.1).toFixed(1))"><Minus class="size-4" /></button>
                 <span class="w-10 text-center text-xs tabular-nums">{{ Math.round(zoom * 100) }}%</span>
@@ -528,6 +614,21 @@ const tipStatus = computed(() => {
             <Button size="sm" variant="ghost" @click="removeFromMap"><Trash2 class="size-3.5" /> {{ t('Remove from map') }}</Button>
             <Button size="sm" variant="ghost" :disabled="undoStack.length === 0" @click="undo"><Undo2 class="size-3.5" /> {{ t('Undo') }}</Button>
             <Button size="sm" variant="ghost" @click="selected = []">{{ t('Clear') }}</Button>
+        </div>
+
+        <!-- Actions on the selected vessels (view mode) -->
+        <div v-if="!editing && selected.length" role="toolbar" :aria-label="t('Selected vessels')" class="flex flex-wrap items-center gap-2 bg-primary px-3 py-2 text-xs text-primary-foreground">
+            <span class="font-semibold">{{ t(':n vessels · :l L', { n: selected.length, l: qty(selectedLitres) }) }}</span>
+            <span class="mx-1 h-4 w-px bg-primary-foreground/30" />
+            <template v-if="withWine.length">
+                <Button size="sm" variant="secondary" @click="emit('recordSo2', withWine.map((v) => v.id))"><FlaskConical class="size-3.5" /> {{ t('Record SO₂') }}</Button>
+                <Button size="sm" variant="ghost" class="text-primary-foreground hover:bg-primary-foreground/10" @click="go('/cellar/plan', 'ADDITION')"><CalendarPlus class="size-3.5" /> {{ t('Plan addition') }}</Button>
+                <Button size="sm" variant="ghost" class="text-primary-foreground hover:bg-primary-foreground/10" @click="go('/cellar/plan', 'ANALYSIS')"><CalendarPlus class="size-3.5" /> {{ t('Plan readings') }}</Button>
+                <Button size="sm" variant="ghost" class="text-primary-foreground hover:bg-primary-foreground/10" @click="go('/cellar/blend')"><Blend class="size-3.5" /> {{ t('Blend these') }}</Button>
+                <Button v-if="withWine.length === 1" size="sm" variant="ghost" class="text-primary-foreground hover:bg-primary-foreground/10" @click="emit('move', withWine[0]!.id)"><ArrowRightLeft class="size-3.5" /> {{ t('Move wine') }}</Button>
+            </template>
+            <Button size="sm" variant="ghost" class="text-primary-foreground hover:bg-primary-foreground/10" @click="emit('assign', selected)"><Wine class="size-3.5" /> {{ t('Assign wine') }}</Button>
+            <button type="button" class="ml-auto p-1 opacity-70 hover:opacity-100" :aria-label="t('Clear selection')" @click="selected = []"><X class="size-4" /></button>
         </div>
 
         <div class="flex gap-3">
@@ -573,7 +674,7 @@ const tipStatus = computed(() => {
                             @mouseleave="hover = null"
                         >
                             <!-- fill level in the wine's colour -->
-                            <div class="absolute inset-x-0 bottom-0 opacity-25" :style="{ height: `${fillPct(v)}%`, background: colour(v) }" />
+                            <div :class="cn('absolute inset-x-0 bottom-0', colourBy === 'wine' ? 'opacity-25' : 'opacity-20')" :style="{ height: colourBy === 'so2' && Number(v.current_volume) > 0 ? '100%' : `${fillPct(v)}%`, background: tileColour(v) }" />
                             <!-- barrel hoops -->
                             <template v-if="v.type === 'BARREL' || v.type === 'BARRIQUE'">
                                 <div class="absolute inset-y-0 left-[28%] w-px bg-border" />
@@ -589,8 +690,8 @@ const tipStatus = computed(() => {
                                 <template v-if="Number(v.current_volume) > 0">{{ qty(v.current_volume) }}/{{ qty(v.capacity_liters) }} L</template>
                                 <template v-else>{{ t('Available') }}</template>
                             </span>
-                            <span v-if="so2Of(v)" :class="cn('relative z-10 mt-0.5 px-1 text-[9px] tabular-nums', SO2_STATUS_BG[so2Status(so2Of(v)!.free)])">
-                                {{ so2Of(v)!.free ?? '—' }}/{{ so2Of(v)!.total ?? '—' }}
+                            <span v-if="so2Of(v)" :class="cn('relative z-10 mt-0.5 px-1 text-[9px] tabular-nums', SO2_STATUS_BG[so2Status(so2Of(v)!.free)])" :title="t('Free SO₂ (mg/L) · days since the reading')">
+                                {{ so2Of(v)!.free === null ? '—' : Math.round(so2Of(v)!.free!) }}<template v-if="daysSince(so2Of(v)!.date) !== null"> · {{ t(':nd', { n: daysSince(so2Of(v)!.date)! }) }}</template>
                             </span>
                             <!-- resize handle -->
                             <span
@@ -629,6 +730,13 @@ const tipStatus = computed(() => {
                     <span class="shrink-0 text-muted-foreground">{{ qty(v.capacity_liters) }} L</span>
                 </button>
             </aside>
+        </div>
+
+        <div v-if="!editing && colourBy === 'so2'" class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+            <span v-for="[key, label] in ([['critical', 'below 15'], ['low', '15–25'], ['ok', '25–45'], ['high', 'above 45'], ['no_data', 'no reading']] as const)" :key="key" class="flex items-center gap-1.5">
+                <span class="inline-block size-2.5" :style="{ background: SO2_HEX[key] }" />{{ t(label) }}
+            </span>
+            <span>{{ t('Free SO₂, mg/L · days since the reading') }}</span>
         </div>
 
         <!-- Tooltip -->

@@ -5,7 +5,7 @@
 
 import { ArrowRightLeft, Droplets, FlaskConical, Grape, PlusCircle, Wrench } from 'lucide-vue-next';
 
-import type { ActivityPayload, AnalysisParam, CellarActivity, CellarActivityType, So2Status, WineType } from '@/types/cellar';
+import type { ActivityPayload, AnalysisParam, CellarActivity, CellarActivityType, LotOption, LotRef, So2Status, WineType } from '@/types/cellar';
 
 export const ACTIVITY_TYPES: CellarActivityType[] = ['ADDITION', 'ANALYSIS', 'TRANSFER', 'PROCESS', 'TOPPING', 'VINEYARD'];
 
@@ -86,6 +86,18 @@ export function so2Status(free: number | null): So2Status {
     if (free <= 45) return 'ok';
 
     return 'high';
+}
+
+/** A picker lot (CellarPickerOptions::lots) in the shape the record panels take. */
+export function lotRefFromOption(l: LotOption): LotRef {
+    return {
+        id: l.id,
+        name: l.name,
+        vintage: l.vintage,
+        wine_type: l.wine_type,
+        current_volume: l.current_volume,
+        vessels: l.vessels.map((v) => ({ vessel_id: v.id, vessel_name: v.name, volume: v.volume })),
+    };
 }
 
 /** App\Services\Cellar\So2Calculator::referenceTarget — free SO₂ to aim for, by wine type; +3 in oak. */

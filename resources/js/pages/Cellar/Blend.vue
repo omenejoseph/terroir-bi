@@ -22,7 +22,7 @@ import { ANALYSIS_FIELDS, WINE_TYPE_LABELS, parseDecimal, qty } from '@/lib/cell
 import { cn } from '@/lib/cn';
 import { csrfHeader } from '@/lib/csrf';
 import { formatMoney } from '@/lib/money';
-import type { AnalysisParam, LotOption, Vessel, WineType } from '@/types/cellar';
+import type { AnalysisParam, CellarPreselect, LotOption, Vessel, WineType } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { ComboboxOption } from '@/types/ui';
 
@@ -33,7 +33,7 @@ import type { ComboboxOption } from '@/types/ui';
  * - by lot ratios: a projection of the blend's analysis, graded, with cost
  *   per litre and the litres each lot gives — then execute or print it.
  */
-const props = defineProps<{ vessels: Vessel[]; lots: LotOption[] }>();
+const props = defineProps<{ vessels: Vessel[]; lots: LotOption[]; preselect: CellarPreselect }>();
 
 const page = usePage<SharedProps>();
 const { t } = useTranslations();
@@ -98,6 +98,9 @@ const over = (s: Source) => (parseDecimal(pull[s.vesselLotId]) ?? 0) > s.availab
 function toggle(s: Source, on: boolean): void {
     pull[s.vesselLotId] = on ? String(s.available) : '';
 }
+
+// Opened from the map with `?vessels=…`: start with all of those vessels' wine pulled.
+for (const s of sources.value) if (props.preselect.vessels.includes(s.vesselId)) toggle(s, true);
 
 const destination = ref<string | null>(null);
 const blendName = ref('');

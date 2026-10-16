@@ -27,6 +27,7 @@ use App\Models\WineLot;
 use App\Queries\CellarPickerOptions;
 use App\Queries\CellarPlanQuery;
 use App\Queries\CellarTodayQuery;
+use App\Support\Cellar\CellarPreselect;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -54,12 +55,13 @@ class CellarActivityController extends Controller
      * planning redirects back here, and a full visit would otherwise drop
      * them mid-session. Members who cannot plan don't pay for them.
      */
-    public function plan(CellarPlanQuery $query, CellarPickerOptions $options, MembershipContext $membership): Response
+    public function plan(Request $request, CellarPlanQuery $query, CellarPickerOptions $options, MembershipContext $membership): Response
     {
         $manage = $membership->can('cellar.manage');
 
         return Inertia::render('Cellar/Plan', [
             'plan' => $query->get(),
+            'preselect' => CellarPreselect::from($request),
             'lots' => fn (): array => $manage ? $options->lots() : [],
             'vessels' => fn (): array => $options->vessels(),
             'products' => fn (): array => $manage ? $options->products() : [],

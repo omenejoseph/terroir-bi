@@ -20,7 +20,7 @@ import type { ComboboxOption } from '@/types/ui';
  * another lot, or split it off into another lot. The receiving lot picks up
  * grape share and cost by volume (server side).
  */
-const props = defineProps<{ open: boolean; lot: LotRef; lots: LotOption[]; vessels: Vessel[]; vesselId?: string | null }>();
+const props = defineProps<{ open: boolean; lot: LotRef; lots: LotOption[]; vessels: Pick<Vessel, 'id' | 'name' | 'room' | 'capacity_liters' | 'current_volume'>[]; vesselId?: string | null }>();
 const emit = defineEmits<{ close: []; saved: [] }>();
 
 const { t } = useTranslations();

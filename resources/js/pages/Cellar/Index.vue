@@ -9,6 +9,8 @@ import BulkVesselsPanel from '@/components/cellar/BulkVesselsPanel.vue';
 import CellarMap from '@/components/cellar/CellarMap.vue';
 import CellarTabs from '@/components/cellar/CellarTabs.vue';
 import LotFormPanel from '@/components/cellar/LotFormPanel.vue';
+import MapReadingsPanel from '@/components/cellar/MapReadingsPanel.vue';
+import TransferPanel from '@/components/cellar/lot/TransferPanel.vue';
 import UnassignWinePanel from '@/components/cellar/UnassignWinePanel.vue';
 import VesselFormPanel from '@/components/cellar/VesselFormPanel.vue';
 import Button from '@/components/ui/Button.vue';
@@ -19,7 +21,7 @@ import SectionHeader from '@/components/ui/SectionHeader.vue';
 import StatCard from '@/components/ui/StatCard.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
-import { LOT_STATUS_LABELS, LOT_STATUS_TONES, qty } from '@/lib/cellar';
+import { LOT_STATUS_LABELS, LOT_STATUS_TONES, lotRefFromOption, qty } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import type { LotOption, MapVessel, Vessel, WineLotSummary } from '@/types/cellar';
 import type { SharedProps } from '@/types';
@@ -71,6 +73,24 @@ const assignIds = ref<string[] | null>(null);
 const unassignIds = ref<string[] | null>(null);
 const pick = (ids: string[] | null) => props.vessels.filter((v) => (ids ?? []).includes(v.id));
 
+// From the map's action bar: record SO₂ for the picked vessels, or move one vessel's wine.
+const readingIds = ref<string[] | null>(null);
+const map = ref<InstanceType<typeof CellarMap> | null>(null);
+/** An action on the selection is done — start the next one from a clean map. */
+function doneWithSelection(): void {
+    readingIds.value = null;
+    moveFrom.value = null;
+    map.value?.select([]);
+}
+const moveFrom = ref<string | null>(null);
+const moveLot = computed(() => {
+    const v = props.vessels.find((x) => x.id === moveFrom.value);
+    const lotId = v?.lots?.find((l) => l.lot !== null)?.wine_lot_id;
+    const option = props.lotOptions.find((l) => l.id === lotId);
+
+    return option ? lotRefFromOption(option) : null;
+});
+
 function analysisLine(l: WineLotSummary): string {
     const a = l.latest_analysis;
     if (!a) return '';
@@ -109,11 +129,14 @@ function additionLine(l: WineLotSummary): string {
             <Card class="p-4">
                 <SectionHeader :title="t('Cellar map')" />
                 <CellarMap
+                    ref="map"
                     class="mt-3"
                     :vessels="vessels"
                     :can-manage="canManage"
                     @assign="assignIds = $event"
                     @unassign="unassignIds = $event"
+                    @record-so2="readingIds = $event"
+                    @move="moveFrom = $event"
                     @add-vessels="(r) => ((bulkRoom = r), (bulkPanel = true))"
                 />
             </Card>
@@ -191,5 +214,7 @@ function additionLine(l: WineLotSummary): string {
         <BulkVesselsPanel :open="bulkPanel" :room="bulkRoom" @close="bulkPanel = false" />
         <AssignWinePanel :open="assignIds !== null" :vessels="pick(assignIds)" :lots="lotOptions" @close="assignIds = null" />
         <UnassignWinePanel :open="unassignIds !== null" :vessels="pick(unassignIds)" @close="unassignIds = null" />
+        <MapReadingsPanel :open="readingIds !== null" :vessels="pick(readingIds)" @close="doneWithSelection" />
+        <TransferPanel v-if="moveLot" :open="moveFrom !== null" :lot="moveLot" :lots="lotOptions" :vessels="vessels" :vessel-id="moveFrom" @close="doneWithSelection" />
     </AppLayout>
 </template>

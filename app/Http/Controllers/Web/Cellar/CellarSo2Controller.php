@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Queries\CellarPickerOptions;
 use App\Queries\CellarSo2BoardQuery;
 use App\Services\Cellar\So2DosePlanner;
+use App\Support\Cellar\CellarPreselect;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,10 +29,11 @@ use Inertia\Response;
  */
 class CellarSo2Controller extends Controller
 {
-    public function index(CellarSo2BoardQuery $query, CellarPickerOptions $options): Response
+    public function index(Request $request, CellarSo2BoardQuery $query, CellarPickerOptions $options): Response
     {
         return Inertia::render('Cellar/So2', [
             'board' => $query->get(),
+            'preselect' => CellarPreselect::from($request),
             'members' => Inertia::optional(fn (): array => $options->members()),
         ]);
     }

@@ -579,3 +579,10 @@ export interface CellarBookRow {
     detail: string | null;
     by: string | null;
 }
+
+/** App\Support\Cellar\CellarPreselect — what a page starts with selected (from the query string). */
+export interface CellarPreselect {
+    vessels: string[];
+    lots: string[];
+    type: string | null;
+}
