@@ -179,7 +179,9 @@ const STATUS = computed(() => [{ value: '', label: t('All statuses') }, ...['FER
                 <Check class="size-10 text-success" />
                 <h3 class="text-lg font-semibold">{{ t(':name added to :n lots', { name: done.name, n: done.lines.length }) }}</h3>
                 <table class="w-full max-w-md text-left text-xs">
-                    <tr v-for="(l, i) in done.lines" :key="i" class="border-t border-border"><td class="py-1.5">{{ l.lot }}</td><td class="py-1.5 text-right tabular-nums">{{ qty(l.quantity) }} {{ l.unit }}</td></tr>
+                    <tbody>
+                        <tr v-for="(l, i) in done.lines" :key="i" class="border-t border-border"><td class="py-1.5">{{ l.lot }}</td><td class="py-1.5 text-right tabular-nums">{{ qty(l.quantity) }} {{ l.unit }}</td></tr>
+                    </tbody>
                 </table>
                 <div class="flex gap-2"><Button variant="outline" href="/cellar">{{ t('Back to cellar') }}</Button><Button @click="done = null">{{ t('Add another') }}</Button></div>
             </Card>

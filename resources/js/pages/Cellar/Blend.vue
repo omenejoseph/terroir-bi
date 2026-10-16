@@ -370,20 +370,24 @@ const today = new Date().toLocaleDateString();
         <PrintSheet v-if="projection" ref="sheet" :title="`${t('Blend sheet')} — ${today}`">
             <p class="mb-2">{{ ratioName || t('New blend') }} · {{ qty(projection.target_volume) }} L</p>
             <table class="mb-4 w-full border-collapse">
-                <tr class="bg-[#f3f4f6]"><th class="border border-[#ddd] px-2 py-1 text-left">{{ t('Lot') }}</th><th class="border border-[#ddd] px-2 py-1 text-right">%</th><th class="border border-[#ddd] px-2 py-1 text-right">L</th></tr>
+                <thead><tr class="bg-[#f3f4f6]"><th class="border border-[#ddd] px-2 py-1 text-left">{{ t('Lot') }}</th><th class="border border-[#ddd] px-2 py-1 text-right">%</th><th class="border border-[#ddd] px-2 py-1 text-right">L</th></tr></thead>
+                <tbody>
                 <tr v-for="c in projection.components" :key="c.wine_lot_id">
                     <td class="border border-[#ddd] px-2 py-1">{{ c.name }} ({{ c.lot_number }})</td>
                     <td class="border border-[#ddd] px-2 py-1 text-right">{{ qty(c.ratio) }}</td>
                     <td class="border border-[#ddd] px-2 py-1 text-right font-bold">{{ qty(c.volume) }}</td>
                 </tr>
+                </tbody>
             </table>
             <table class="w-full border-collapse">
-                <tr class="bg-[#f3f4f6]"><th class="border border-[#ddd] px-2 py-1 text-left">{{ t('Projected analysis') }}</th><th class="border border-[#ddd] px-2 py-1 text-right" /><th class="border border-[#ddd] px-2 py-1" /></tr>
+                <thead><tr class="bg-[#f3f4f6]"><th class="border border-[#ddd] px-2 py-1 text-left">{{ t('Projected analysis') }}</th><th class="border border-[#ddd] px-2 py-1 text-right" /><th class="border border-[#ddd] px-2 py-1" /></tr></thead>
+                <tbody>
                 <tr v-for="f in projectedRows" :key="f.key">
                     <td class="border border-[#ddd] px-2 py-1">{{ t(f.label) }}</td>
                     <td class="border border-[#ddd] px-2 py-1 text-right">{{ qty(projection.analysis[f.key]!.value) }}</td>
                     <td class="border border-[#ddd] px-2 py-1">{{ projection.analysis[f.key]!.grade ? t(GRADE_LABELS[projection.analysis[f.key]!.grade!]!) : '' }}</td>
                 </tr>
+                </tbody>
             </table>
         </PrintSheet>
     </AppLayout>
