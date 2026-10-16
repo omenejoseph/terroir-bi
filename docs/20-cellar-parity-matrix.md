@@ -406,7 +406,7 @@ rules apply:
 | Backend gaps closed (all BE ✅) | eng | ✅ 189 rows; 4 not applicable |
 | Screens shipped (all UI ✅) | eng | ✅ 173 rows; 20 need no screen |
 | Side-by-side walkthrough on imported tenant data | product + eng | ✅ eng — 16 screens; 9 findings fixed, 6 differences kept (below) |
-| Phase 3 experience proposals approved | product | ⬜ |
+| Phase 3 experience proposals approved | product | ⬜ mocks ready for review: lot workspace, map actions, one Record flow, SO₂ by target, Today on a phone, blend workbench, alerts, undo |
 
 ## Side-by-side walkthrough (slice 2.9)
 
