@@ -5,7 +5,6 @@ import { Trash2 } from 'lucide-vue-next';
 
 import Button from '@/components/ui/Button.vue';
 import Combobox from '@/components/ui/Combobox.vue';
-import Disclosure from '@/components/ui/Disclosure.vue';
 import FieldRow from '@/components/ui/FieldRow.vue';
 import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
@@ -44,12 +43,6 @@ const locale = computed(() => page.props.locale);
 
 const assignees = computed<ComboboxOption[]>(
     () => (page.props.assigneeOptions as ComboboxOption[] | undefined) ?? [],
-);
-const vessels = computed<ComboboxOption[]>(
-    () => (page.props.vesselOptions as ComboboxOption[] | undefined) ?? [],
-);
-const wineLots = computed<ComboboxOption[]>(
-    () => (page.props.wineLotOptions as ComboboxOption[] | undefined) ?? [],
 );
 
 const isEdit = computed(() => props.task !== null);
@@ -260,36 +253,6 @@ function submit(): void {
                     />
                 </template>
             </FormField>
-
-            <Disclosure title="Add details" summary="Where the work happens">
-                <FormField label="Vessel" :error="form.errors.vessel_id">
-                    <template #default="{ id }">
-                        <Combobox
-                            :id="id"
-                            :model-value="form.vessel_id === '' ? null : form.vessel_id"
-                            placeholder="No vessel"
-                            empty-text="No vessel matches."
-                            clearable
-                            :options="vessels"
-                            @update:model-value="form.vessel_id = $event ?? ''"
-                        />
-                    </template>
-                </FormField>
-
-                <FormField label="Wine lot" :error="form.errors.wine_lot_id">
-                    <template #default="{ id }">
-                        <Combobox
-                            :id="id"
-                            :model-value="form.wine_lot_id === '' ? null : form.wine_lot_id"
-                            placeholder="No wine lot"
-                            empty-text="No wine lot matches."
-                            clearable
-                            :options="wineLots"
-                            @update:model-value="form.wine_lot_id = $event ?? ''"
-                        />
-                    </template>
-                </FormField>
-            </Disclosure>
 
             <template v-if="isEdit && task">
                 <Separator />
