@@ -158,7 +158,7 @@ class StockLedger
      * item's storage unit, bridging through bottles via bottles_per_case.
      * Unknown/equal units pass through unchanged.
      */
-    private function toStorageQuantity(InventoryItem $item, string $quantity, string $unitType): string
+    public function toStorageQuantity(InventoryItem $item, string $quantity, string $unitType): string
     {
         $storageUnit = (string) $item->unit;
 

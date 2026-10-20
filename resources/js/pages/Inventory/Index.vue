@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ChevronDown, PencilLine, Search, Upload, X } from 'lucide-vue-next';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { ChevronDown, ChevronRight, Columns3, ListTree, PencilLine, Search, Upload, X } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import BulkEditTable from '@/components/inventory/BulkEditTable.vue';
@@ -10,15 +10,17 @@ import ItemFormPanel from '@/components/inventory/ItemFormPanel.vue';
 import ItemViewPanel from '@/components/inventory/ItemViewPanel.vue';
 import AttentionBand from '@/components/ui/AttentionBand.vue';
 import Button from '@/components/ui/Button.vue';
+import Checkbox from '@/components/ui/Checkbox.vue';
+import Combobox from '@/components/ui/Combobox.vue';
 import GripHandle from '@/components/ui/GripHandle.vue';
 import LevelBar from '@/components/ui/LevelBar.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
-import Pagination from '@/components/ui/Pagination.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { csrfHeader } from '@/lib/csrf';
 import { rememberListUrl } from '@/lib/listReturn';
 import { useTranslations } from '@/composables/useTranslations';
+import { usePopover } from '@/composables/usePopover';
 import { useVisitPending } from '@/composables/useVisitPending';
 import { cn } from '@/lib/cn';
 import { formatMoney, formatQuantity } from '@/lib/money';
@@ -26,12 +28,14 @@ import type {
     InventoryFilters,
     InventoryItem,
     ItemAuditTrailEntry,
+    ItemAvailability,
     ItemCustomerAttributionRow,
     ItemStockRank,
+    ProductCategory,
 } from '@/types/inventory';
 import type { Paginated, SharedProps } from '@/types';
 import type { StockMovement } from '@/types/stock';
-import type { AttentionItem, TabItem } from '@/types/ui';
+import type { AttentionItem, ComboboxOption, TabItem } from '@/types/ui';
 
 /** The shell persists between visits, so navigating does not remount the nav. */
 defineOptions({ layout: AppLayout });
@@ -63,6 +67,10 @@ const props = defineProps<{
     itemStockRank?: ItemStockRank | null;
     /** Only present while the Item — View drawer has asked for it. */
     itemCustomerAttribution?: ItemCustomerAttributionRow[];
+    /** Only present while the Item — View drawer has asked for it. */
+    itemAvailability?: ItemAvailability | null;
+    /** The category tree, for the filter. Absent on partial reloads that don't ask for it. */
+    productCategories?: ProductCategory[];
 }>();
 
 const page = usePage<SharedProps>();
@@ -105,7 +113,12 @@ const bulkEditing = ref(false);
   the same object reference from before would otherwise go stale.
 */
 const viewingId = ref<string | null>(null);
-const viewing = computed(() => props.items.data.find((item) => item.id === viewingId.value) ?? null);
+const viewing = computed(
+    () =>
+        localItems.value
+            .flatMap((item) => [item, ...(item.previous_vintages ?? [])])
+            .find((item) => item.id === viewingId.value) ?? null,
+);
 const bulkTable = ref<InstanceType<typeof BulkEditTable> | null>(null);
 
 /* Debounced server-side search; `preserveState` keeps focus and the typed value
@@ -122,7 +135,7 @@ watch(search, (value) => {
   it is about to replace dim (after a beat, so a quick answer never flickers) until the response lands.
 */
 const pending = useVisitPending();
-const chosen = ref<{ category?: string | null; attention?: string | null }>({});
+const chosen = ref<{ category?: string | null; product_category_id?: string | null; attention?: string | null }>({});
 const categoryCurrent = computed(() => ('category' in chosen.value ? chosen.value.category ?? '' : (props.filters.category ?? '')));
 const attentionCurrent = computed(() => ('attention' in chosen.value ? chosen.value.attention ?? null : props.filters.attention));
 
@@ -132,6 +145,7 @@ function reload(overrides: Record<string, unknown>): void {
         {
             search: props.filters.search ?? undefined,
             category: props.filters.category ?? undefined,
+            product_category_id: props.filters.product_category_id ?? undefined,
             missing_cost: props.filters.missing_cost ? 1 : undefined,
             attention: props.filters.attention ?? undefined,
             // Carried forward so changing a filter does not silently reset the
@@ -148,17 +162,12 @@ function clearMissingCostFilter(): void {
     reload({ missing_cost: undefined });
 }
 
-function setPerPage(perPage: number): void {
-    // Changing the page size while sitting on a later page would silently
-    // show nothing if the list is now shorter — reset to page 1 with it.
-    reload({ per_page: perPage, page: 1 });
-}
-
 const MODULE_TABS: TabItem[] = [
     { label: t('Inventory'), href: '/inventory' },
     { label: t('Analytics'), href: '/inventory-analytics' },
     { label: t('Inventory Spend'), href: '/inventory-spend' },
     { label: t('Inventory Check'), href: '/inventory-check' },
+    { label: t('Categories'), href: '/inventory/categories' },
 ];
 
 /** Mirrors the InventoryCategory enum; the design shows exactly these three. */
@@ -171,8 +180,97 @@ const CATEGORY_TABS: TabItem[] = [
 /** The design shows no "All" chip; pressing the active category clears it. */
 function selectCategory(value: string): void {
     chosen.value = { ...chosen.value, category: props.filters.category === value ? null : value };
-    reload({ category: props.filters.category === value ? undefined : value });
+    const next = props.filters.category === value ? undefined : value;
+
+    // A category belongs to one type, so switching type drops a category filter that no longer fits.
+    const keep = (props.productCategories ?? []).some(
+        (c) =>
+            (next === undefined || c.type === next) &&
+            (c.id === props.filters.product_category_id || (c.children ?? []).some((sub) => sub.id === props.filters.product_category_id)),
+    );
+    reload({ category: next, product_category_id: keep ? props.filters.product_category_id ?? undefined : undefined });
 }
+
+/** "Wine" and "Wine · Red" in one picker; narrowed to the chosen type. A top-level pick covers its subcategories. */
+const categoryFilterOptions = computed<ComboboxOption[]>(() => [
+    { value: '', label: t('All categories') },
+    ...(props.productCategories ?? [])
+        .filter((c) => !props.filters.category || c.type === props.filters.category)
+        .flatMap((c) => [
+            { value: c.id, label: c.name, description: String(c.items_count) },
+            ...(c.children ?? []).map((s) => ({ value: s.id, label: `${c.name} · ${s.name}`, description: String(s.items_count) })),
+        ]),
+]);
+const productCategoryCurrent = computed(() => ('product_category_id' in chosen.value ? chosen.value.product_category_id ?? '' : (props.filters.product_category_id ?? '')));
+
+function selectProductCategory(value: string | null): void {
+    chosen.value = { ...chosen.value, product_category_id: value || null };
+    reload({ product_category_id: value || undefined, page: 1 });
+}
+
+/* ---- column chooser ------------------------------------------------------- */
+
+type ColumnKey = 'size' | 'sku' | 'vintage' | 'on_hand' | 'cover' | 'level' | 'flags';
+
+/** The name always shows; the rest can be hidden. Same order as the table. */
+const ALL_COLUMNS: ColumnKey[] = ['size', 'sku', 'vintage', 'on_hand', 'cover', 'level', 'flags'];
+
+const COLUMN_OPTIONS = computed<{ key: ColumnKey; label: string }[]>(() => [
+    { key: 'size', label: t('Size') },
+    { key: 'sku', label: t('SKU') },
+    { key: 'vintage', label: t('Vintage') },
+    { key: 'on_hand', label: t('On hand') },
+    { key: 'cover', label: t('Cover') },
+    { key: 'level', label: t('Level') },
+    { key: 'flags', label: t('Flags') },
+]);
+
+/** Off until someone turns them on; a saved choice always wins. */
+const HIDDEN_BY_DEFAULT: ColumnKey[] = ['level', 'flags'];
+
+const COLUMNS_STORAGE_KEY = 'inventory.columns';
+
+function loadColumns(): ColumnKey[] {
+    try {
+        const stored = JSON.parse(localStorage.getItem(COLUMNS_STORAGE_KEY) ?? 'null');
+
+        if (Array.isArray(stored)) return ALL_COLUMNS.filter((key) => stored.includes(key));
+    } catch {
+        // Storage can be unavailable (private window); the defaults then apply.
+    }
+
+    return ALL_COLUMNS.filter((key) => !HIDDEN_BY_DEFAULT.includes(key));
+}
+
+const visibleColumns = ref<ColumnKey[]>(loadColumns());
+const col = (key: ColumnKey): boolean => visibleColumns.value.includes(key);
+
+function toggleColumn(key: ColumnKey): void {
+    visibleColumns.value = ALL_COLUMNS.filter((k) => (k === key ? !col(k) : col(k)));
+
+    try {
+        localStorage.setItem(COLUMNS_STORAGE_KEY, JSON.stringify(visibleColumns.value));
+    } catch {
+        // Not persisted; the choice still applies for this visit.
+    }
+}
+
+const columnsAnchor = ref<HTMLElement | null>(null);
+const { open: columnsOpen, toggle: toggleColumns } = usePopover(columnsAnchor);
+
+/** Grip + name + the visible columns — what a full-width band must span. */
+const columnCount = computed(() => 2 + visibleColumns.value.length);
+/** Width of a group band's right-hand figures: over the stock columns when shown, else a single cell. */
+const bandRight = computed(() => {
+    const stock = (['on_hand', 'cover', 'level', 'flags'] as ColumnKey[]).filter(col).length;
+
+    return Math.min(Math.max(stock, 1), columnCount.value - 2);
+});
+
+/* ---- arrange categories: hide the products so only the categories are left to drag ----- */
+
+/** With the products hidden, a long list is just its categories and subcategories — short enough to reorder by dragging. */
+const arranging = ref(false);
 
 /* ---- collapse a group band (the chevron) -------------------------------------- */
 
@@ -186,6 +284,32 @@ function toggleGroup(label: string): void {
     else next.add(label);
 
     collapsed.value = next;
+}
+
+/* ---- older vintages folded under a product's latest one ------------------------- */
+
+/** Products whose older vintages are showing. Folded by default; the choice lasts for the visit. */
+const unfolded = ref<Set<string>>(new Set());
+
+function toggleVintages(id: string): void {
+    const next = new Set(unfolded.value);
+
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+
+    unfolded.value = next;
+}
+
+/** Stock across a product's whole chain — the latest vintage plus the older ones under it. */
+function chainStock(item: InventoryItem): number {
+    return [item, ...(item.previous_vintages ?? [])].reduce((sum, i) => sum + (Number.parseFloat(i.current_stock) || 0), 0);
+}
+
+function chainValue(item: InventoryItem): number {
+    return [item, ...(item.previous_vintages ?? [])].reduce(
+        (sum, i) => sum + (i.default_price ? i.default_price.minor * (Number.parseFloat(i.current_stock) || 0) : 0),
+        0,
+    );
 }
 
 /* ---- drag and drop: arrange items, subcategories and groups ----------------- */
@@ -228,7 +352,32 @@ function canDrop(kind: DragKind, group: string, sub: string): boolean {
     return d.group === group && d.sub === sub;
 }
 
+/**
+ * Dropping a product on a row of another band (or on another subcategory's header) moves it — and all its
+ * vintages — into that category. Only within the same type of item: a finished wine does not become a raw
+ * material by being dropped on one.
+ */
+function moveTarget(kind: DragKind, group: string, sub: string): InventoryItem | null {
+    const d = drag.value;
+
+    if (d === null || d.kind !== 'item' || (kind !== 'item' && kind !== 'sub')) return null;
+    if (d.group === group && d.sub === sub) return null;
+
+    const dragged = localItems.value.find((item) => item.id === d.key);
+    const representative = localItems.value.find((item) => groupOf(item) === group && subOf(item) === sub);
+
+    return dragged && representative && representative.category === dragged.category ? representative : null;
+}
+
 function onDragOver(event: DragEvent, kind: DragKind, key: string, group: string, sub: string): void {
+    // A sub header carries its own label as the band; an item row carries its band's.
+    if (moveTarget(kind, group, kind === 'sub' ? key : sub) !== null) {
+        event.preventDefault();
+        dropTarget.value = `${kind}:${key}`;
+
+        return;
+    }
+
     if (!canDrop(kind, group, sub)) return;
 
     event.preventDefault();
@@ -246,6 +395,21 @@ function moved<T>(list: T[], from: number, to: number): T[] {
 
 function onDrop(kind: DragKind, key: string, group: string, sub: string): void {
     const d = drag.value;
+
+    const target = moveTarget(kind, group, kind === 'sub' ? key : sub);
+    if (d !== null && target !== null) {
+        endDrag();
+
+        const category = target.product_category_id;
+        localItems.value = localItems.value.map((item) =>
+            item.id === d.key
+                ? { ...item, group: target.group, subcategory: target.subcategory, product_category_id: category }
+                : item,
+        );
+        post({ ids: [d.key], product_category_id: category }, '/inventory-move');
+
+        return;
+    }
 
     // A drop on the wrong kind of row is left for the band around it to handle.
     if (d === null || d.kind !== kind || (kind !== 'group' && d.group !== group) || (kind === 'item' && d.sub !== sub)) return;
@@ -302,9 +466,9 @@ function onDrop(kind: DragKind, key: string, group: string, sub: string): void {
  * Inertia visit — nothing reloads, scroll and focus stay put. If the save fails the list snaps back to
  * what the server has.
  */
-async function post(data: Record<string, unknown>): Promise<void> {
+async function post(data: Record<string, unknown>, url = '/inventory-order'): Promise<void> {
     try {
-        const response = await fetch('/inventory-order', {
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...csrfHeader() },
             credentials: 'same-origin',
@@ -345,12 +509,9 @@ const groups = computed(() => {
             label,
             count: rows.length,
             bands: [...bySub.entries()].map(([sub, subRows]) => ({ sub, rows: subRows })),
-            onHand: rows.reduce((sum, r) => sum + (Number.parseFloat(r.current_stock) || 0), 0),
-            value: rows.reduce(
-                (sum, r) =>
-                    sum + (r.default_price ? r.default_price.minor * (Number.parseFloat(r.current_stock) || 0) : 0),
-                0,
-            ),
+            // A product's older vintages hold stock too, so the band's figures count the whole chain.
+            onHand: rows.reduce((sum, r) => sum + chainStock(r), 0),
+            value: rows.reduce((sum, r) => sum + chainValue(r), 0),
             currency: rows.find((r) => r.default_price)?.default_price?.currency ?? null,
         };
     });
@@ -361,10 +522,117 @@ const groups = computed(() => {
   list replaces it on the next response.
 */
 const localItems = ref<InventoryItem[]>(props.items.data);
+
+/*
+  Infinite scroll: the list opens with the first page and fetches the next as the end comes into view,
+  appending to what is already shown. These are background requests (like the drag-and-drop saves), so
+  the URL stays on page 1 and an edit's reload simply replaces page 1 — after which the pages that had
+  been scrolled through are fetched again, so the list does not collapse under the reader.
+*/
+const coverById = ref<Record<string, number | null>>({ ...props.cover });
+const loadedPages = ref(props.items.meta.current_page);
+const loadingMore = ref(false);
+const hasMore = computed(() => loadedPages.value < props.items.meta.last_page);
+const sentinel = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | null = null;
+
+/** The same query string `reload()` builds, for one page. */
+function pageUrl(pageNumber: number): string {
+    const params = new URLSearchParams();
+    const f = props.filters;
+
+    if (f.search) params.set('search', f.search);
+    if (f.category) params.set('category', f.category);
+    if (f.product_category_id) params.set('product_category_id', f.product_category_id);
+    if (f.missing_cost) params.set('missing_cost', '1');
+    if (f.attention) params.set('attention', f.attention);
+    params.set('per_page', String(props.items.meta.per_page));
+    params.set('page', String(pageNumber));
+
+    return `/inventory?${params.toString()}`;
+}
+
+/** Fetches the next page and appends it. Returns false when there was nothing to add or it failed. */
+async function appendNextPage(): Promise<boolean> {
+    try {
+        const response = await fetch(pageUrl(loadedPages.value + 1), {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-Inertia': 'true',
+                'X-Inertia-Version': page.version ?? '',
+                'X-Inertia-Partial-Component': 'Inventory/Index',
+                'X-Inertia-Partial-Data': 'items,cover',
+            },
+            credentials: 'same-origin',
+        });
+
+        if (!response.ok) return false;
+
+        const body = (await response.json()) as { props: { items: Paginated<InventoryItem>; cover: Record<string, number | null> } };
+        const known = new Set(localItems.value.map((item) => item.id));
+
+        localItems.value = [...localItems.value, ...body.props.items.data.filter((item) => !known.has(item.id))];
+        coverById.value = { ...coverById.value, ...body.props.cover };
+        loadedPages.value = body.props.items.meta.current_page;
+
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+async function loadMore(): Promise<void> {
+    if (loadingMore.value || !hasMore.value || bulkEditing.value) return;
+
+    loadingMore.value = true;
+    await appendNextPage();
+    loadingMore.value = false;
+
+    // Still in view (a tall screen, a short page)? The observer only fires on a change, so nudge it.
+    await nextTick();
+    if (observer && sentinel.value) {
+        observer.unobserve(sentinel.value);
+        observer.observe(sentinel.value);
+    }
+}
+
+let lastListKey = JSON.stringify([props.filters, props.items.meta.per_page]);
+
 watch(
-    () => props.items.data,
-    (data) => (localItems.value = data),
+    () => props.items,
+    async (items) => {
+        const key = JSON.stringify([props.filters, items.meta.per_page]);
+        // A new search / filter starts over; anything else (an edit, a stock change) keeps the depth reached.
+        const depth = key === lastListKey ? loadedPages.value : 1;
+        lastListKey = key;
+
+        localItems.value = items.data;
+        coverById.value = { ...props.cover };
+        loadedPages.value = items.meta.current_page;
+
+        if (depth > loadedPages.value) {
+            loadingMore.value = true;
+            while (loadedPages.value < depth && hasMore.value && (await appendNextPage()));
+            loadingMore.value = false;
+        }
+    },
 );
+
+onMounted(() => {
+    if (typeof IntersectionObserver === 'undefined') return;
+
+    observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) void loadMore();
+    }, { rootMargin: '400px' });
+
+    watch(sentinel, (el, previous) => {
+        if (previous) observer?.unobserve(previous);
+        if (el) observer?.observe(el);
+    }, { immediate: true });
+});
+
+onBeforeUnmount(() => observer?.disconnect());
 
 /** Attention chips filter the visible rows client-side. */
 /** The chips filter on the server now, so what is on the page is exactly what the chip counted. */
@@ -385,7 +653,7 @@ const qty = (v: string | null) => formatQuantity(v, page.props.locale);
  * runs past a couple of months, otherwise ":count days".
  */
 function cover(item: InventoryItem): string {
-    const days = props.cover[item.id] ?? null;
+    const days = coverById.value[item.id] ?? null;
 
     if (days === null) return t('No exits recorded');
     if (days > 365) return t('Beyond horizon');
@@ -464,6 +732,15 @@ function flags(item: InventoryItem): string[] {
                     @select="selectCategory"
                 />
 
+                <div v-if="(productCategories?.length ?? 0) > 0" class="w-56">
+                    <Combobox
+                        :model-value="productCategoryCurrent"
+                        :options="categoryFilterOptions"
+                        :placeholder="t('All categories')"
+                        @update:model-value="selectProductCategory"
+                    />
+                </div>
+
                 <button
                     v-if="filters.missing_cost"
                     type="button"
@@ -475,16 +752,39 @@ function flags(item: InventoryItem): string[] {
                 </button>
 
                 <!-- The count lives in the table's own header, not here. -->
-                <Button
-                    v-if="can('inventory.bulk') && !bulkEditing"
-                    variant="outline"
-                    size="sm"
-                    class="ml-auto"
-                    @click="bulkEditing = true"
-                >
-                    <PencilLine class="size-4" :stroke-width="1.5" />
-                    {{ t('Bulk edit') }}
-                </Button>
+                <div class="ml-auto flex items-center gap-2">
+                    <Button
+                        v-if="can('inventory.manage') && !bulkEditing"
+                        :variant="arranging ? 'primary' : 'outline'"
+                        size="sm"
+                        :aria-pressed="arranging"
+                        @click="arranging = !arranging"
+                    >
+                        <ListTree class="size-4" :stroke-width="1.5" />
+                        {{ arranging ? t('Show products') : t('Arrange categories') }}
+                    </Button>
+
+                    <div v-if="!bulkEditing && !arranging" ref="columnsAnchor" class="relative">
+                        <Button variant="outline" size="sm" :aria-expanded="columnsOpen" aria-haspopup="menu" @click="toggleColumns">
+                            <Columns3 class="size-4" :stroke-width="1.5" />
+                            {{ t('Columns') }}
+                        </Button>
+                        <div v-if="columnsOpen" class="absolute top-10 right-0 z-20 min-w-44 space-y-2 border border-border bg-card p-3">
+                            <Checkbox
+                                v-for="column in COLUMN_OPTIONS"
+                                :key="column.key"
+                                :model-value="col(column.key)"
+                                :label="column.label"
+                                @update:model-value="toggleColumn(column.key)"
+                            />
+                        </div>
+                    </div>
+
+                    <Button v-if="can('inventory.bulk') && !bulkEditing" variant="outline" size="sm" @click="bulkEditing = true">
+                        <PencilLine class="size-4" :stroke-width="1.5" />
+                        {{ t('Bulk edit') }}
+                    </Button>
+                </div>
             </div>
 
             <BulkEditTable
@@ -504,19 +804,23 @@ function flags(item: InventoryItem): string[] {
                     <p class="mt-0.5 text-xs text-muted-foreground">{{ listSummary }}</p>
                 </div>
 
+                <p v-if="arranging" class="border-b border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">
+                    {{ t('Products are hidden. Drag a category or subcategory by its handle to reorder it; the order is kept for everyone.') }}
+                </p>
+
                 <div class="overflow-x-auto transition-opacity duration-150" :class="pending ? 'opacity-50 delay-150' : ''" :aria-busy="pending">
                     <table class="w-full min-w-[64rem] text-sm">
                         <thead class="border-b border-border text-left text-3xs text-muted-foreground">
                             <tr>
                                 <th scope="col" class="w-8 py-2.5 pl-3"><span class="sr-only">{{ t('Reorder') }}</span></th>
                                 <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Name') }}</th>
-                                <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Size') }}</th>
-                                <th scope="col" class="px-3 py-2.5 font-medium">{{ t('SKU') }}</th>
-                                <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Vintage') }}</th>
-                                <th scope="col" class="px-3 py-2.5 text-right font-medium">{{ t('On hand') }}</th>
-                                <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Cover') }}</th>
-                                <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Level') }}</th>
-                                <th scope="col" class="px-3 py-2.5 font-medium">{{ t('Flags') }}</th>
+                                <th v-if="col('size')" scope="col" class="px-3 py-2.5 font-medium">{{ t('Size') }}</th>
+                                <th v-if="col('sku')" scope="col" class="px-3 py-2.5 font-medium">{{ t('SKU') }}</th>
+                                <th v-if="col('vintage')" scope="col" class="px-3 py-2.5 font-medium">{{ t('Vintage') }}</th>
+                                <th v-if="col('on_hand')" scope="col" class="px-3 py-2.5 text-right font-medium">{{ t('On hand') }}</th>
+                                <th v-if="col('cover')" scope="col" class="px-3 py-2.5 font-medium">{{ t('Cover') }}</th>
+                                <th v-if="col('level')" scope="col" class="px-3 py-2.5 font-medium">{{ t('Level') }}</th>
+                                <th v-if="col('flags')" scope="col" class="px-3 py-2.5 font-medium">{{ t('Flags') }}</th>
                             </tr>
                         </thead>
 
@@ -543,7 +847,7 @@ function flags(item: InventoryItem): string[] {
                                     />
                                     <GripHandle v-else />
                                 </td>
-                                <th colspan="4" scope="colgroup" class="px-3 py-2 text-left">
+                                <th :colspan="columnCount - 1 - bandRight" scope="colgroup" class="px-3 py-2 text-left">
                                     <button
                                         type="button"
                                         class="inline-flex items-center gap-1.5 text-left"
@@ -560,7 +864,7 @@ function flags(item: InventoryItem): string[] {
                                         <span class="text-xs text-muted-foreground">({{ group.count }})</span>
                                     </button>
                                 </th>
-                                <td colspan="4" class="px-3 py-2 text-right text-xs text-muted-foreground">
+                                <td v-if="columnCount > 2" :colspan="bandRight" class="px-3 py-2 text-right text-xs text-muted-foreground">
                                     {{ qty(String(group.onHand)) }} {{ t('on hand') }}<template v-if="group.currency">
                                         · {{ formatMoney(group.value, group.currency) }}</template
                                     >
@@ -590,7 +894,7 @@ function flags(item: InventoryItem): string[] {
                                         <GripHandle v-else />
                                     </td>
                                     <th
-                                        colspan="8"
+                                        :colspan="columnCount - 1"
                                         scope="colgroup"
                                         class="px-3 py-1.5 text-left text-3xs font-medium tracking-[0.08em] text-muted-foreground uppercase"
                                     >
@@ -598,9 +902,8 @@ function flags(item: InventoryItem): string[] {
                                     </th>
                                 </tr>
 
+                                <template v-for="item in arranging ? [] : band.rows" :key="item.id">
                                 <tr
-                                    v-for="item in band.rows"
-                                    :key="item.id"
                                     class="cursor-pointer hover:bg-accent/50"
                                     :class="[
                                         drag?.kind === 'item' && drag.key === item.id && 'opacity-40',
@@ -622,6 +925,17 @@ function flags(item: InventoryItem): string[] {
                                     </td>
                                     <td class="px-3 py-3">
                                         <div class="flex items-center gap-3">
+                                            <!-- Older vintages fold under the latest one; the chevron opens them. -->
+                                            <button
+                                                v-if="item.previous_vintages?.length"
+                                                type="button"
+                                                class="-ml-1 shrink-0 p-0.5 text-muted-foreground hover:text-foreground"
+                                                :aria-expanded="unfolded.has(item.id)"
+                                                :aria-label="unfolded.has(item.id) ? t('Hide older vintages') : t('Show older vintages')"
+                                                @click.stop="toggleVintages(item.id)"
+                                            >
+                                                <ChevronRight class="size-3.5 transition-transform" :class="unfolded.has(item.id) && 'rotate-90'" :stroke-width="2" />
+                                            </button>
                                             <img
                                                 v-if="item.image_url"
                                                 :src="item.image_url"
@@ -633,23 +947,22 @@ function flags(item: InventoryItem): string[] {
                                                 class="size-7 shrink-0 border border-border bg-muted"
                                                 aria-hidden="true"
                                             />
-                                            <Link
-                                                :href="`/inventory/${item.id}`"
-                                                class="font-medium hover:underline"
-                                                @click.stop
-                                            >
-                                                {{ item.name }}
-                                            </Link>
+                                            <div class="min-w-0">
+                                                <span class="font-medium">{{ item.name }}</span>
+                                                <p v-if="item.previous_vintages?.length" class="text-xs text-muted-foreground">
+                                                    {{ t(':count older vintages · :stock on hand in all', { count: item.previous_vintages.length, stock: qty(String(chainStock(item))) }) }}
+                                                </p>
+                                            </div>
                                         </div>
                                     </td>
-                                    <td class="px-3 py-3 text-muted-foreground">{{ item.unit_size ?? '—' }}</td>
-                                    <td class="px-3 py-3 text-muted-foreground">{{ item.sku }}</td>
-                                    <td class="px-3 py-3 text-muted-foreground">{{ item.vintage ?? '—' }}</td>
-                                    <td class="px-3 py-3 text-right font-semibold tabular-nums">
+                                    <td v-if="col('size')" class="px-3 py-3 text-muted-foreground">{{ item.unit_size ?? '—' }}</td>
+                                    <td v-if="col('sku')" class="px-3 py-3 text-muted-foreground">{{ item.sku }}</td>
+                                    <td v-if="col('vintage')" class="px-3 py-3 text-muted-foreground">{{ item.vintage ?? '—' }}</td>
+                                    <td v-if="col('on_hand')" class="px-3 py-3 text-right font-semibold tabular-nums">
                                         {{ qty(item.current_stock) }}
                                     </td>
-                                    <td class="px-3 py-3 text-muted-foreground">{{ cover(item) }}</td>
-                                    <td class="px-3 py-3">
+                                    <td v-if="col('cover')" class="px-3 py-3 text-muted-foreground">{{ cover(item) }}</td>
+                                    <td v-if="col('level')" class="px-3 py-3">
                                         <LevelBar :value="item.current_stock" :min="item.min_stock">
                                             <template v-if="item.min_stock">
                                                 {{ t(':stock of :min min', { stock: qty(item.current_stock), min: qty(item.min_stock) }) }}
@@ -657,7 +970,7 @@ function flags(item: InventoryItem): string[] {
                                             <template v-else>{{ t('No min stock set') }}</template>
                                         </LevelBar>
                                     </td>
-                                    <td class="px-3 py-3">
+                                    <td v-if="col('flags')" class="px-3 py-3">
                                         <span
                                             v-for="(flag, i) in flags(item)"
                                             :key="flag"
@@ -669,12 +982,56 @@ function flags(item: InventoryItem): string[] {
                                         <span v-if="!flags(item).length" class="text-muted-foreground">—</span>
                                     </td>
                                 </tr>
+
+                                <!-- The older vintages, newest first -->
+                                <template v-if="unfolded.has(item.id)">
+                                    <tr
+                                        v-for="older in item.previous_vintages"
+                                        :key="older.id"
+                                        class="cursor-pointer bg-muted/20 hover:bg-accent/50"
+                                        @click="viewingId = older.id"
+                                    >
+                                        <td class="py-2.5 pl-3" />
+                                        <td class="px-3 py-2.5">
+                                            <div class="flex items-center gap-3 pl-6">
+                                                <img
+                                                    v-if="older.image_url"
+                                                    :src="older.image_url"
+                                                    alt=""
+                                                    class="size-6 shrink-0 border border-border object-cover"
+                                                />
+                                                <span v-else class="size-6 shrink-0 border border-border bg-muted" aria-hidden="true" />
+                                                <span class="text-muted-foreground">{{ older.name }}</span>
+                                            </div>
+                                        </td>
+                                        <td v-if="col('size')" class="px-3 py-2.5 text-muted-foreground">{{ older.unit_size ?? '—' }}</td>
+                                        <td v-if="col('sku')" class="px-3 py-2.5 text-muted-foreground">{{ older.sku }}</td>
+                                        <td v-if="col('vintage')" class="px-3 py-2.5 text-muted-foreground">{{ older.vintage ?? '—' }}</td>
+                                        <td v-if="col('on_hand')" class="px-3 py-2.5 text-right tabular-nums">{{ qty(older.current_stock) }}</td>
+                                        <td v-if="col('cover')" class="px-3 py-2.5 text-muted-foreground">{{ cover(older) }}</td>
+                                        <td v-if="col('level')" class="px-3 py-2.5">
+                                            <LevelBar :value="older.current_stock" :min="older.min_stock">
+                                                <template v-if="older.min_stock">
+                                                    {{ t(':stock of :min min', { stock: qty(older.current_stock), min: qty(older.min_stock) }) }}
+                                                </template>
+                                                <template v-else>{{ t('No min stock set') }}</template>
+                                            </LevelBar>
+                                        </td>
+                                        <td v-if="col('flags')" class="px-3 py-2.5">
+                                            <span v-for="(flag, i) in flags(older)" :key="flag" class="block text-xs" :class="i === 0 ? 'text-foreground' : 'text-muted-foreground'">
+                                                {{ flag }}
+                                            </span>
+                                            <span v-if="!flags(older).length" class="text-muted-foreground">—</span>
+                                        </td>
+                                    </tr>
+                                </template>
+                                </template>
                             </template>
                         </tbody>
 
                         <tbody v-if="!groups.length">
                             <tr>
-                                <td colspan="9" class="px-4 py-10 text-center text-muted-foreground">
+                                <td :colspan="columnCount" class="px-4 py-10 text-center text-muted-foreground">
                                     {{ t('No items match these filters.') }}
                                 </td>
                             </tr>
@@ -683,12 +1040,14 @@ function flags(item: InventoryItem): string[] {
                 </div>
             </div>
 
-            <div v-if="!bulkEditing && items.meta.total > 0" class="flex items-center justify-end">
-                <Pagination
-                    :meta="items.meta"
-                    @update:page="(pageNumber) => reload({ page: pageNumber })"
-                    @update:per-page="setPerPage"
-                />
+            <!-- Scrolling to here loads the next page. -->
+            <div v-if="!bulkEditing && items.meta.total > 0" class="flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground">
+                <div ref="sentinel" aria-hidden="true" />
+                <template v-if="loadingMore">
+                    <span class="size-3.5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-foreground" />
+                    {{ t('Loading more…') }}
+                </template>
+                <template v-else>{{ t('Showing :shown of :total products', { shown: localItems.length, total: items.meta.total }) }}</template>
             </div>
         </div>
 
@@ -700,6 +1059,7 @@ function flags(item: InventoryItem): string[] {
             :audit-trail="itemAuditTrail ?? []"
             :stock-rank="itemStockRank ?? null"
             :customer-attribution="itemCustomerAttribution ?? []"
+            :availability="itemAvailability && itemAvailability.item_id === viewing?.id ? itemAvailability : null"
             @close="viewingId = null"
             @edit="openEdit"
         />

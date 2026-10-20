@@ -54,6 +54,7 @@ class DashboardSummary
         private readonly ReorderRadarQuery $reorderRadar,
         private readonly TenantContext $tenant,
         private readonly MembershipContext $membership,
+        private readonly RevenueBasis $basis,
     ) {}
 
     /** @return list<string> */
@@ -101,6 +102,15 @@ class DashboardSummary
                 ->get(['id', 'order_number', 'created_at', 'total_amount', 'status', 'customer_id'])
             : new Collection;
 
+        // Revenue is counted on the tenant's revenue basis (shipped by default),
+        // which is not the same set of orders / dates as the creation-based
+        // order counts above.
+        $revenueOrders = ($money || $finance)
+            ? $this->basis->apply(Order::query(), $this->excludedCustomers(), $since, $until)
+                ->selectRaw('orders.total_amount as total_amount, '.$this->basis->dateExpression().' as revenue_at')
+                ->get()
+            : [];
+
         // Bucket the window into at most 30 points for the trend charts.
         $spanStart = $since ?? $until->copy()->subDays(self::RANGE_DAYS['ALL']);
         $days = max(1, (int) $spanStart->diffInDays($until));
@@ -113,7 +123,16 @@ class DashboardSummary
             $bucket = intdiv((int) ($order->created_at?->diffInDays($until) ?? 0), $step);
             if ($bucket >= 0 && $bucket < $points) {
                 $orderCounts[$bucket]++;
-                $revenueBuckets[$bucket] += $order->total_amount->getMinorAmount();
+            }
+        }
+
+        $revenueTotal = 0;
+        foreach ($revenueOrders as $row) {
+            $amount = (int) $row->getRawOriginal('total_amount');
+            $revenueTotal += $amount;
+            $bucket = intdiv((int) Carbon::parse($row->getAttribute('revenue_at'))->diffInDays($until), $step);
+            if ($bucket >= 0 && $bucket < $points) {
+                $revenueBuckets[$bucket] += $amount;
             }
         }
 
@@ -145,12 +164,12 @@ class DashboardSummary
             'revenue_by_channel' => $money ? $this->revenueByChannel($since, $until, $channelTotals) : null,
             'revenue_trend' => $money && ! $screen ? $this->revenueTrend() : null,
             // Cost and salary ratios, so admin-only like the costs themselves.
-            'key_ratios' => $finance ? $this->keyRatios($orders, $since, $until, $channelTotals, $costs) : null,
+            'key_ratios' => $finance ? $this->keyRatios(count($revenueOrders), $since, $until, $channelTotals, $costs) : null,
             'stats' => [
                 'total_orders' => $orderAccess ? $orders->count() : null,
                 'customers' => $customerAccess ? Customer::query()->where('is_active', true)
                     ->where('exclude_from_stats', false)->count() : null,
-                'revenue' => $money ? (int) $orders->sum(fn (Order $o) => $o->total_amount->getMinorAmount()) : null,
+                'revenue' => $money ? $revenueTotal : null,
                 'low_stock' => $stockAccess ? $this->analytics->lowStockCount() : null,
                 'outstanding_ar' => $finance ? $this->outstandingAr() : null,
                 'tasks_overdue' => $taskAccess ? $this->overdueTasks() : null,
@@ -247,12 +266,8 @@ class DashboardSummary
      */
     private function channelTotals(?Carbon $since, Carbon $until): array
     {
-        $rows = Order::query()
+        $rows = $this->basis->apply(Order::query(), $this->excludedCustomers(), $since, $until)
             ->join('customers', 'customers.id', '=', 'orders.customer_id')
-            ->where('orders.is_consignment', false)
-            ->whereNotIn('orders.customer_id', $this->excludedCustomers())
-            ->when($since !== null, fn (Builder $q) => $q->where('orders.created_at', '>=', $since))
-            ->where('orders.created_at', '<=', $until)
             ->selectRaw(
                 "CASE WHEN LOWER(customers.customer_type) IN ('wholesale', 'retail', 'agency', 'shipshop')
                       THEN LOWER(customers.customer_type)
@@ -316,11 +331,10 @@ class DashboardSummary
      * @param  array{total: int, salary: int, marketing: int, operations: int, headcount: int}  $costs
      * @return array<string, mixed>
      */
-    private function keyRatios(Collection $orders, ?Carbon $since, Carbon $until, array $channels, array $costs): array
+    private function keyRatios(int $orderCount, ?Carbon $since, Carbon $until, array $channels, array $costs): array
     {
         $currency = $this->currency();
         $totalRevenue = $channels['total'];
-        $orderCount = $orders->count();
         // DTC = retail (the rebuild has no separate hospitality channel).
         $dtc = $channels['retail'];
 
@@ -366,12 +380,7 @@ class DashboardSummary
     {
         // Both halves summed in SQL rather than hydrating every shipped
         // order plus all its line items just to multiply and add in PHP.
-        $shippedOrders = fn (): Builder => Order::query()
-            ->where('status', OrderStatus::Shipped->value)
-            ->where('is_consignment', false)
-            ->whereNotIn('customer_id', $this->excludedCustomers())
-            ->when($since !== null, fn (Builder $q) => $q->where('created_at', '>=', $since))
-            ->where('created_at', '<=', $until);
+        $shippedOrders = fn (): Builder => $this->shippedInWindow(Order::query(), $since, $until);
 
         // Aliased as something other than "total" deliberately: OrderItem
         // itself has a real `total` column cast through MoneyCast, and
@@ -380,21 +389,41 @@ class DashboardSummary
         // SUM in a Money object instead of returning the int it says it does.
         $lineCogs = (int) (OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->where('orders.status', OrderStatus::Shipped->value)
-            ->where('orders.is_consignment', false)
-            ->whereNotIn('orders.customer_id', $this->excludedCustomers())
-            ->when($since !== null, fn (Builder $q) => $q->where('orders.created_at', '>=', $since))
-            ->where('orders.created_at', '<=', $until)
+            ->tap(fn (Builder $q) => $this->shippedInWindow($q, $since, $until))
             ->whereNotNull('order_items.cost_per_unit')
             ->selectRaw('SUM(order_items.cost_per_unit * order_items.quantity) as line_cogs_minor')
             ->value('line_cogs_minor') ?? 0);
 
         $shippingCogs = (int) $shippedOrders()
-            ->where('shipping_paid_by_us', true)
-            ->whereNotNull('shipping_cost')
-            ->sum('shipping_cost');
+            ->where('orders.shipping_paid_by_us', true)
+            ->whereNotNull('orders.shipping_cost')
+            ->sum('orders.shipping_cost');
 
         return $lineCogs + $shippingCogs;
+    }
+
+    /**
+     * Restrict an orders query (or one joined to orders) to non-consignment
+     * orders SHIPPED in the window. COGS is a shipped-goods measure whatever
+     * the revenue basis; only the date it is placed on follows the basis.
+     *
+     * @param  Builder<Order>|Builder<OrderItem>  $query
+     * @return Builder<Order>|Builder<OrderItem>
+     */
+    private function shippedInWindow(Builder $query, ?Carbon $since, Carbon $until): Builder
+    {
+        $expr = $this->basis->dateExpression();
+
+        $query->where('orders.status', OrderStatus::Shipped->value)
+            ->where('orders.is_consignment', false)
+            ->whereNotIn('orders.customer_id', $this->excludedCustomers())
+            ->whereRaw("{$expr} <= ?", [$until]);
+
+        if ($since !== null) {
+            $query->whereRaw("{$expr} >= ?", [$since]);
+        }
+
+        return $query;
     }
 
     /** Bottles sold in the window (catalog lines only; cases → bottles). */
@@ -403,10 +432,7 @@ class DashboardSummary
         $lines = OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->leftJoin('inventory_items', 'inventory_items.id', '=', 'order_items.inventory_item_id')
-            ->where('orders.is_consignment', false)
-            ->whereNotIn('orders.customer_id', $this->excludedCustomers())
-            ->when($since !== null, fn (Builder $q) => $q->where('orders.created_at', '>=', $since))
-            ->where('orders.created_at', '<=', $until)
+            ->tap(fn (Builder $q) => $this->basis->apply($q, $this->excludedCustomers(), $since, $until))
             ->whereNotNull('order_items.inventory_item_id')
             ->get(['order_items.quantity', 'order_items.unit_type', 'inventory_items.bottles_per_case']);
 
@@ -442,12 +468,8 @@ class DashboardSummary
     /** Sum of non-consignment order revenue (minor units) in an optional window. */
     private function revenueBetween(?Carbon $since, ?Carbon $until): int
     {
-        return (int) Order::query()
-            ->where('is_consignment', false)
-            ->whereNotIn('customer_id', $this->excludedCustomers())
-            ->when($since !== null, fn ($q) => $q->where('created_at', '>=', $since))
-            ->when($until !== null, fn ($q) => $q->where('created_at', '<=', $until))
-            ->sum('total_amount');
+        return (int) $this->basis->apply(Order::query(), $this->excludedCustomers(), $since, $until)
+            ->sum('orders.total_amount');
     }
 
     /**
@@ -546,10 +568,7 @@ class DashboardSummary
     {
         $rows = OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->where('orders.is_consignment', false)
-            ->whereNotIn('orders.customer_id', $this->excludedCustomers())
-            ->when($since !== null, fn ($q) => $q->where('orders.created_at', '>=', $since))
-            ->where('orders.created_at', '<=', $until)
+            ->tap(fn (Builder $q) => $this->basis->apply($q, $this->excludedCustomers(), $since, $until))
             ->whereNotNull('order_items.inventory_item_id')
             ->groupBy('order_items.inventory_item_id')
             ->orderByDesc('rev')
@@ -660,12 +679,9 @@ class DashboardSummary
         // driver (sqlite locally/CI's default test run, DATE_FORMAT on
         // MySQL, both genuinely covered by CI) — instead of pulling every
         // order in the trailing 6 months into PHP just to add them up.
-        $monthBucket = SqlDate::month('created_at');
-        $rows = Order::query()
-            ->where('is_consignment', false)
-            ->whereNotIn('customer_id', $this->excludedCustomers())
-            ->where('created_at', '>=', $from)
-            ->select(DB::raw("{$monthBucket} as bucket_month, SUM(total_amount) as bucket_total"))
+        $monthBucket = SqlDate::month($this->basis->dateExpression());
+        $rows = $this->basis->apply(Order::query(), $this->excludedCustomers(), $from, null)
+            ->select(DB::raw("{$monthBucket} as bucket_month, SUM(orders.total_amount) as bucket_total"))
             ->groupBy('bucket_month')
             ->get()
             ->keyBy('bucket_month');

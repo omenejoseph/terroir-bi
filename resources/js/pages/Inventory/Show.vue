@@ -25,6 +25,7 @@ import CardContent from '@/components/ui/CardContent.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { confirmDialog } from '@/composables/useConfirm';
+import { useUrlTab } from '@/composables/useUrlTab';
 import { useTranslations } from '@/composables/useTranslations';
 import { formatMoney, formatNumber } from '@/lib/money';
 import { listReturnUrl } from '@/lib/listReturn';
@@ -39,8 +40,12 @@ import type {
     ItemPricing,
     ItemTierPriceRow,
     MoneyValue,
+    ProductionRun,
+    RecipeCellarLot,
+    RecipeCostSummary,
     RecipeInputOption,
     RecipeLine,
+    RecipeSource,
 } from '@/types/inventory';
 import type { StockAnalytics, StockMovement, VintageCoverage } from '@/types/stock';
 import type { SharedProps } from '@/types';
@@ -71,6 +76,10 @@ const props = defineProps<{
     recipe: RecipeLine[];
     /** Every other active catalog item — only present once the Recipe tab has asked for it. */
     recipeInputOptions?: RecipeInputOption[];
+    recipeCellarLots?: RecipeCellarLot[];
+    recipeSources?: RecipeSource[];
+    recipeCost: RecipeCostSummary;
+    productionRuns: ProductionRun[];
     images: InventoryImageItem[];
     techSheets: InventoryFileItem[];
     documents: InventoryFileItem[];
@@ -124,8 +133,8 @@ const subline = computed(() => {
         .join(' · ');
 });
 
-/** Which of DETAIL_TABS is showing. Client-side only — no route change. */
-const activeDetailTab = ref('stock');
+/** Which of DETAIL_TABS is showing — kept in `?tab=` so a refresh lands on the same tab. */
+const { tab: activeDetailTab, select: selectDetailTab } = useUrlTab(DETAIL_TABS.value.flatMap((tab) => (tab.value ? [tab.value] : [])), 'stock');
 
 /** The Details tab's "Edit" opens the same form the Inventory list uses. */
 const itemFormOpen = ref(false);
@@ -255,7 +264,7 @@ async function destroy(): Promise<void> {
                 </div>
             </div>
 
-            <Tabs :items="DETAIL_TABS" :current="activeDetailTab" variant="segmented" @select="activeDetailTab = $event" />
+            <Tabs :items="DETAIL_TABS" :current="activeDetailTab" variant="segmented" @select="selectDetailTab" />
 
             <template v-if="activeDetailTab === 'stock'">
                 <StockPositionSection :analytics="analytics" :economics="economics" :movements="movements" :period="filters.period" />
@@ -280,7 +289,14 @@ async function destroy(): Promise<void> {
             <template v-else-if="activeDetailTab === 'recipe'">
                 <Card>
                     <CardContent class="p-6">
-                        <RecipeEditor :item="item" :lines="recipe" :inputs="recipeInputOptions" />
+                        <RecipeEditor
+                            :item="item"
+                            :lines="recipe"
+                            :inputs="recipeInputOptions"
+                            :cellar-lots="recipeCellarLots"
+                            :sources="recipeSources"
+                            :summary="recipeCost"
+                        />
                     </CardContent>
                 </Card>
             </template>
@@ -288,7 +304,7 @@ async function destroy(): Promise<void> {
             <template v-else-if="activeDetailTab === 'produce'">
                 <Card>
                     <CardContent class="p-6">
-                        <ProduceForm :item="item" :lines="recipe" />
+                        <ProduceForm :item="item" :lines="recipe" :runs="productionRuns" />
                     </CardContent>
                 </Card>
             </template>

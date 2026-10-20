@@ -61,6 +61,7 @@ const MODULE_TABS: TabItem[] = [
     { label: t('Analytics'), href: '/inventory-analytics' },
     { label: t('Inventory Spend'), href: '/inventory-spend' },
     { label: t('Inventory Check'), href: '/inventory-check' },
+    { label: t('Categories'), href: '/inventory/categories' },
 ];
 
 const currency = computed(() => props.portfolio.value.currency);

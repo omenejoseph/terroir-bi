@@ -9,16 +9,19 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Services\Notifications\Notifier;
 use App\Services\Orders\OrderLineWriter;
+use App\Services\Orders\OrderModeGuard;
 use App\Services\Orders\OrderNumberGenerator;
 use App\Services\Orders\OrderTotals;
 use App\Support\Money\Money;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Create an internal order (flow 01): generate a number, snapshot COGS per line,
  * deduct stock (overdraw-guarded) when the order deducts (backorders default to
- * no deduction but may opt in), record the opening status, and total it up —
+ * no deduction but may opt in; an allocation sets stock aside instead of deducting
+ * it), record the opening status, and total it up —
  * all in one transaction.
  */
 class CreateOrderAction
@@ -78,13 +81,25 @@ class CreateOrderAction
                 : OrderStatus::Received;
 
             $isBackorder = (bool) ($data['is_backorder'] ?? false);
+            $isConsignment = (bool) ($data['is_consignment'] ?? false);
+            $isAllocation = (bool) ($data['is_allocation'] ?? false);
+
+            $problems = OrderModeGuard::violations(
+                $isBackorder, $isConsignment, $isAllocation, $status,
+                array_key_exists('deduct_stock', $data) ? (bool) $data['deduct_stock'] : null,
+            );
+            if ($problems !== []) {
+                throw ValidationException::withMessages($problems);
+            }
+
             $shippingCost = isset($data['shipping_cost']) ? (int) $data['shipping_cost'] : null;
 
             // Standard/consignment orders deduct now; a backorder defaults to no
             // deduction (stock leaves when fulfilled) but may opt in via deduct_stock.
-            $deductStock = array_key_exists('deduct_stock', $data)
-                ? (bool) $data['deduct_stock']
-                : ! $isBackorder;
+            // An allocation sets stock aside instead: it deducts when it ships.
+            $deductStock = $isAllocation
+                ? false
+                : (array_key_exists('deduct_stock', $data) ? (bool) $data['deduct_stock'] : ! $isBackorder);
 
             $order = Order::create([
                 'order_number' => $this->numbers->next(),
@@ -95,7 +110,8 @@ class CreateOrderAction
                 'is_backorder' => $isBackorder,
                 'backorder_date' => $isBackorder ? ($data['backorder_date'] ?? null) : null,
                 'deduct_stock' => $deductStock,
-                'is_consignment' => (bool) ($data['is_consignment'] ?? false),
+                'is_consignment' => $isConsignment,
+                'is_allocation' => $isAllocation,
                 'shipping_paid_by_us' => (bool) ($data['shipping_paid_by_us'] ?? ($shippingCost !== null)),
             ]);
 

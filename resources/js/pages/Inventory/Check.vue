@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
+import { computed, nextTick, reactive, ref } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { History, X } from 'lucide-vue-next';
 
@@ -7,16 +7,19 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import CheckHistoryPanel from '@/components/inventory/CheckHistoryPanel.vue';
 import type { CheckHistoryEntry } from '@/components/inventory/CheckHistoryPanel.vue';
 import Button from '@/components/ui/Button.vue';
+import Combobox from '@/components/ui/Combobox.vue';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/cn';
 import { formatQuantity } from '@/lib/money';
-import { categoryLabel } from '@/lib/stock';
-import type { InventoryItem } from '@/types/inventory';
+import { categoryLabel, isWholeUnit } from '@/lib/stock';
+import type { InventoryItem, ProductCategory } from '@/types/inventory';
+
+type SheetItem = InventoryItem & { is_older_vintage?: boolean };
 import type { SharedProps } from '@/types';
-import type { TabItem } from '@/types/ui';
+import type { ComboboxOption, TabItem } from '@/types/ui';
 
 /** The shell persists between visits, so navigating does not remount the nav. */
 defineOptions({ layout: AppLayout });
@@ -24,17 +27,19 @@ defineOptions({ layout: AppLayout });
 /**
  * Inventory check (Figma `271:12639`) — the physical count sheet.
  *
- * The design groups it as a card per category, then bands per group and
- * subcategory ("WINE — WHITE", "TASTING BOARDS"), with System beside an
- * editable Physical Count and the Difference derived.
+ * A card per type (finished, semi-finished, raw materials), then a band per category and subcategory
+ * in the order the Inventory list arranges them, an older vintage sitting right under its product.
+ * System sits beside an editable Physical Count and the Difference is derived. Each row carries the
+ * product's photo, which makes a miscount easier to spot.
  *
  * Only rows whose count differs from the system are submitted: the action
  * writes one reconciliation movement per adjusted item, so sending unchanged
  * rows would add ledger noise for no change.
  */
 const props = defineProps<{
-    items: InventoryItem[];
+    items: SheetItem[];
     history: CheckHistoryEntry[];
+    productCategories: ProductCategory[];
 }>();
 
 const page = usePage<SharedProps>();
@@ -46,9 +51,40 @@ const MODULE_TABS: TabItem[] = [
     { label: t('Analytics'), href: '/inventory-analytics' },
     { label: t('Inventory Spend'), href: '/inventory-spend' },
     { label: t('Inventory Check'), href: '/inventory-check' },
+    { label: t('Categories'), href: '/inventory/categories' },
 ];
 
 const search = ref('');
+/** '' = every type. Raw materials are counted here too, so the sheet can be narrowed to one type. */
+const typeFilter = ref('');
+/** A category id from the tree; a top-level one covers its subcategories. '' = every category. */
+const categoryFilter = ref('');
+
+const categoryOptions = computed<ComboboxOption[]>(() => [
+    { value: '', label: t('All categories') },
+    ...props.productCategories
+        .filter((c) => typeFilter.value === '' || c.type === typeFilter.value)
+        .flatMap((c) => [
+            { value: c.id, label: c.name, description: String(c.items_count) },
+            ...(c.children ?? []).map((s) => ({ value: s.id, label: `${c.name} · ${s.name}`, description: String(s.items_count) })),
+        ]),
+]);
+
+/** The picked category plus its subcategories. */
+const inCategory = computed<Set<string> | null>(() => {
+    if (categoryFilter.value === '') return null;
+
+    const top = props.productCategories.find((c) => c.id === categoryFilter.value);
+
+    return new Set([categoryFilter.value, ...(top?.children ?? []).map((s) => s.id)]);
+});
+
+function selectType(value: string): void {
+    typeFilter.value = value;
+
+    // A category belongs to one type; drop a pick that no longer fits.
+    if (!categoryOptions.value.some((o) => o.value === categoryFilter.value)) categoryFilter.value = '';
+}
 const saving = ref(false);
 const historyOpen = ref(false);
 
@@ -61,32 +97,65 @@ function trim(value: string): string {
     return value.includes('.') ? value.replace(/\.?0+$/, '') : value;
 }
 
+const TYPES = ['FINISHED', 'SEMI_FINISHED', 'RAW_MATERIAL'];
+
+const typeTabs = computed<TabItem[]>(() => [
+    { value: '', label: `${t('All')} (${props.items.length})` },
+    ...TYPES.map((type) => ({
+        value: type,
+        label: `${categoryLabel(type)} (${props.items.filter((i) => i.category === type).length})`,
+    })),
+]);
+
 const visible = computed(() => {
     const term = search.value.trim().toLowerCase();
-
-    if (!term) return props.items;
+    const categoryIds = categoryFilter.value === '' ? null : (inCategory.value as Set<string>);
 
     return props.items.filter(
-        (i) => i.name.toLowerCase().includes(term) || i.sku.toLowerCase().includes(term),
+        (i) =>
+            (typeFilter.value === '' || i.category === typeFilter.value) &&
+            (categoryIds === null || (i.product_category_id !== null && categoryIds.has(i.product_category_id))) &&
+            (!term ||
+                i.name.toLowerCase().includes(term) ||
+                i.sku.toLowerCase().includes(term) ||
+                String(i.vintage ?? '').includes(term)),
     );
 });
 
-/** Category card → band (group — subcategory) → rows, mirroring the design. */
+/** Type card → category band → subcategory band → rows, in the order the server arranged them. */
 const sections = computed(() => {
-    const byCategory = new Map<string, Map<string, InventoryItem[]>>();
+    type Sub = { sub: string; rows: SheetItem[] };
+    type Band = { group: string; subs: Sub[] };
+    const byType = new Map<string, Map<string, Map<string, SheetItem[]>>>();
 
     for (const item of visible.value) {
-        const band = [item.group, item.subcategory].filter(Boolean).join(' — ') || t('Ungrouped');
-        const bands = byCategory.get(item.category) ?? new Map<string, InventoryItem[]>();
-        bands.set(band, [...(bands.get(band) ?? []), item]);
-        byCategory.set(item.category, bands);
+        const groups = byType.get(item.category) ?? new Map<string, Map<string, SheetItem[]>>();
+        const subs = groups.get(item.group ?? '') ?? new Map<string, SheetItem[]>();
+        subs.set(item.subcategory ?? '', [...(subs.get(item.subcategory ?? '') ?? []), item]);
+        groups.set(item.group ?? '', subs);
+        byType.set(item.category, groups);
     }
 
-    return [...byCategory.entries()].map(([category, bands]) => ({
+    return [...byType.entries()].map(([category, groups]) => ({
         category,
-        bands: [...bands.entries()].map(([band, rows]) => ({ band, rows })),
+        bands: [...groups.entries()].map(
+            ([group, subs]): Band => ({
+                group: group || t('Ungrouped'),
+                subs: [...subs.entries()].map(([sub, rows]): Sub => ({ sub, rows })),
+            }),
+        ),
     }));
 });
+
+/** Enter moves to the next count box, so a whole shelf can be counted without the mouse. */
+async function nextCount(event: KeyboardEvent): Promise<void> {
+    const inputs = [...document.querySelectorAll<HTMLInputElement>('input[data-count]')];
+    const at = inputs.indexOf(event.target as HTMLInputElement);
+
+    await nextTick();
+    inputs[at + 1]?.focus();
+    inputs[at + 1]?.select();
+}
 
 function difference(item: InventoryItem): number | null {
     const counted = Number.parseFloat(counts[item.id] ?? '');
@@ -132,10 +201,14 @@ function save(): void {
             <Tabs :items="MODULE_TABS" :current="t('Inventory Check')" />
 
             <div class="flex flex-wrap items-center gap-3">
+                <Tabs :items="typeTabs" :current="typeFilter" variant="filter" @select="selectType" />
+                <div v-if="productCategories.length" class="w-56">
+                    <Combobox v-model="categoryFilter" :options="categoryOptions" :placeholder="t('All categories')" />
+                </div>
                 <input
                     v-model="search"
                     type="search"
-                    :placeholder="t('Search name or SKU…')"
+                    :placeholder="t('Search name, SKU or vintage…')"
                     class="h-9 max-w-xs flex-1 rounded-lg border border-input bg-card px-3 text-sm placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 />
                 <div class="ml-auto flex items-center gap-2">
@@ -170,63 +243,88 @@ function save(): void {
                             </tr>
                         </thead>
 
-                        <tbody v-for="band in section.bands" :key="band.band" class="divide-y divide-border">
+                        <tbody v-for="band in section.bands" :key="band.group" class="divide-y divide-border">
                             <tr class="bg-muted/50">
                                 <th
                                     colspan="7"
                                     scope="colgroup"
                                     class="px-6 py-2 text-left text-3xs font-medium tracking-[0.08em] text-muted-foreground uppercase"
                                 >
-                                    {{ band.band }}
+                                    {{ band.group }}
                                 </th>
                             </tr>
-                            <tr
-                                v-for="item in band.rows"
-                                :key="item.id"
-                                :class="
-                                    cn(difference(item) !== null && 'bg-[color-mix(in_oklch,var(--color-primary)_5%,transparent)]')
-                                "
-                            >
-                                <td class="px-6 py-3 font-medium">{{ item.name }}</td>
-                                <td class="px-4 py-3 text-muted-foreground">{{ item.unit_size ?? '—' }}</td>
-                                <td class="px-4 py-3 text-muted-foreground">{{ item.vintage ?? '—' }}</td>
-                                <td class="px-4 py-3 text-muted-foreground">{{ item.unit }}</td>
-                                <td class="px-4 py-3 text-right font-semibold tabular-nums">
-                                    {{ formatQuantity(item.current_stock, locale) }}
-                                </td>
-                                <td class="px-4 py-3">
-                                    <input
-                                        v-model="counts[item.id]"
-                                        inputmode="decimal"
-                                        :aria-label="t('Physical count for :name', { name: item.name })"
-                                        class="h-8 w-28 rounded-md border border-input bg-card px-2 text-right text-sm tabular-nums focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                                    />
-                                </td>
-                                <td
-                                    class="px-6 py-3 text-right tabular-nums"
+                            <template v-for="sub in band.subs" :key="sub.sub">
+                                <tr v-if="sub.sub">
+                                    <th colspan="7" scope="colgroup" class="bg-muted/20 px-6 py-1.5 text-left text-3xs font-medium text-muted-foreground">
+                                        {{ sub.sub }}
+                                    </th>
+                                </tr>
+                                <tr
+                                    v-for="item in sub.rows"
+                                    :key="item.id"
                                     :class="
-                                        difference(item) === null
-                                            ? 'text-muted-foreground'
-                                            : difference(item)! < 0
-                                              ? 'text-destructive'
-                                              : 'font-medium text-foreground'
+                                        cn(
+                                            item.is_older_vintage && 'bg-muted/20',
+                                            difference(item) !== null && 'bg-[color-mix(in_oklch,var(--color-primary)_5%,transparent)]',
+                                        )
                                     "
                                 >
-                                    <template v-if="difference(item) === null">—</template>
-                                    <template v-else>
-                                        {{ difference(item)! > 0 ? '+' : '' }}{{ formatQuantity(String(difference(item)), locale) }}
-                                    </template>
-                                </td>
-                            </tr>
+                                    <td class="px-6 py-3">
+                                        <div class="flex items-center gap-3" :class="item.is_older_vintage && 'pl-6'">
+                                            <img
+                                                v-if="item.image_url"
+                                                :src="item.image_url"
+                                                :alt="item.name"
+                                                loading="lazy"
+                                                class="size-10 shrink-0 border border-border object-cover"
+                                            />
+                                            <span v-else class="size-10 shrink-0 border border-border bg-muted" aria-hidden="true" />
+                                            <span :class="item.is_older_vintage ? 'text-muted-foreground' : 'font-medium'">{{ item.name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-muted-foreground">{{ item.unit_size ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-muted-foreground">{{ item.vintage ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-muted-foreground">{{ item.unit }}</td>
+                                    <td class="px-4 py-3 text-right font-semibold tabular-nums">
+                                        {{ formatQuantity(item.current_stock, locale) }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <input
+                                            v-model="counts[item.id]"
+                                            data-count
+                                            :inputmode="isWholeUnit(item.unit) ? 'numeric' : 'decimal'"
+                                            :aria-label="t('Physical count for :name', { name: item.name })"
+                                            class="ml-auto block h-8 w-28 rounded-md border border-input bg-card px-2 text-right text-sm tabular-nums focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                                            @input="isWholeUnit(item.unit) && (counts[item.id] = (counts[item.id] ?? '').replace(/[^0-9]/g, ''))"
+                                            @keydown.enter.prevent="nextCount"
+                                        />
+                                    </td>
+                                    <td
+                                        class="px-6 py-3 text-right tabular-nums"
+                                        :class="
+                                            difference(item) === null
+                                                ? 'text-muted-foreground'
+                                                : difference(item)! < 0
+                                                  ? 'text-destructive'
+                                                  : 'font-medium text-foreground'
+                                        "
+                                    >
+                                        <template v-if="difference(item) === null">—</template>
+                                        <template v-else>
+                                            {{ difference(item)! > 0 ? '+' : '' }}{{ formatQuantity(String(difference(item)), locale) }}
+                                        </template>
+                                    </td>
+                                </tr>
+                            </template>
                         </tbody>
                     </table>
                 </div>
 
                 <p
-                    v-if="section.bands.some((b) => b.rows.some((r) => difference(r) !== null))"
+                    v-if="section.bands.some((b) => b.subs.some((x) => x.rows.some((r) => difference(r) !== null)))"
                     class="border-t border-border bg-[color-mix(in_oklch,var(--color-primary)_5%,transparent)] px-6 py-2.5 text-xs font-medium"
                 >
-                    {{ t(':count item(s) modified', { count: section.bands.flatMap((b) => b.rows).filter((r) => difference(r) !== null).length }) }}
+                    {{ t(':count item(s) modified', { count: section.bands.flatMap((b) => b.subs.flatMap((x) => x.rows)).filter((r) => difference(r) !== null).length }) }}
                 </p>
             </Card>
 

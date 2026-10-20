@@ -17,6 +17,7 @@ use App\Models\OrderItem;
 use App\Models\Supplier;
 use App\Models\WorkOrder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\InteractsWithTenancy;
 use Tests\TestCase;
@@ -90,8 +91,8 @@ class DashboardTest extends TestCase
         // Today (this year) and exactly one year ago today. The latter falls inside
         // last year's today / month-to-date / year-to-date windows, so all three
         // comparisons resolve (instead of "—").
-        Order::create(['order_number' => 'TY', 'status' => OrderStatus::Received->value, 'total_amount' => 16000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
-        $ly = Order::create(['order_number' => 'LY', 'status' => OrderStatus::Received->value, 'total_amount' => 20000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        Order::create(['order_number' => 'TY', 'status' => OrderStatus::Shipped->value, 'total_amount' => 16000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        $ly = Order::create(['order_number' => 'LY', 'status' => OrderStatus::Shipped->value, 'total_amount' => 20000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
         $ly->created_at = now()->subYear();
         $ly->save();
         $this->forgetTenant();
@@ -133,6 +134,7 @@ class DashboardTest extends TestCase
             'customer_id' => $retail->getKey(),
             'items' => [['inventory_item_id' => $wine->getKey(), 'quantity' => 1, 'unit_type' => 'cases']],
         ], $headers)->assertCreated();
+        DB::table('orders')->update(['status' => OrderStatus::Shipped->value]); // revenue counts on shipment
 
         $this->getJson('/api/v1/dashboard?period=ytd', $headers)
             ->assertOk()
@@ -153,8 +155,8 @@ class DashboardTest extends TestCase
         $wholesale = Customer::create(['company_name' => 'Distributor', 'email' => 'd@example.com', 'customer_type' => 'WHOLESALE']);
 
         // Current-window order (now) + prior-window order (~45 days ago) → trend.
-        Order::create(['order_number' => 'O-CUR', 'status' => OrderStatus::Received->value, 'total_amount' => 24000, 'customer_id' => $wholesale->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
-        $prev = Order::create(['order_number' => 'O-PREV', 'status' => OrderStatus::Received->value, 'total_amount' => 10000, 'customer_id' => $wholesale->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        Order::create(['order_number' => 'O-CUR', 'status' => OrderStatus::Shipped->value, 'total_amount' => 24000, 'customer_id' => $wholesale->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        $prev = Order::create(['order_number' => 'O-PREV', 'status' => OrderStatus::Shipped->value, 'total_amount' => 10000, 'customer_id' => $wholesale->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
         $prev->created_at = now()->subDays(45);
         $prev->save();
 
@@ -232,7 +234,7 @@ class DashboardTest extends TestCase
 
         // Two order lines of the same item: 7,000 + 5,000 = 12,000 of revenue.
         foreach ([7000, 5000] as $i => $total) {
-            $order = Order::create(['order_number' => "TP{$i}", 'status' => OrderStatus::Received->value, 'total_amount' => $total, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+            $order = Order::create(['order_number' => "TP{$i}", 'status' => OrderStatus::Shipped->value, 'total_amount' => $total, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
             OrderItem::create(['order_id' => $order->getKey(), 'inventory_item_id' => $item->getKey(), 'quantity' => 10, 'unit_type' => 'bottles', 'unit_price' => 700, 'total' => $total]);
         }
         $this->forgetTenant();
@@ -253,7 +255,7 @@ class DashboardTest extends TestCase
 
         // Three orders inside the 30-day window (well clear of the bucket edges).
         foreach ([[0, 10000], [3, 6000], [7, 4000]] as [$days, $total]) {
-            $order = Order::create(['order_number' => "S{$days}", 'status' => OrderStatus::Received->value, 'total_amount' => $total, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+            $order = Order::create(['order_number' => "S{$days}", 'status' => OrderStatus::Shipped->value, 'total_amount' => $total, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
             if ($days > 0) {
                 $order->created_at = now()->subDays($days);
                 $order->save();
@@ -434,7 +436,7 @@ class DashboardTest extends TestCase
         $admin = $this->createMember($tenant, [TenantRole::Admin]);
         $this->actingAsTenant($tenant);
         $wholesale = Customer::create(['company_name' => 'Distributor', 'email' => 'd@example.com', 'customer_type' => 'WHOLESALE']);
-        Order::create(['order_number' => 'O-1', 'status' => OrderStatus::Received->value, 'total_amount' => 10000, 'customer_id' => $wholesale->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        Order::create(['order_number' => 'O-1', 'status' => OrderStatus::Shipped->value, 'total_amount' => 10000, 'customer_id' => $wholesale->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
 
         Cost::create(['category' => 'Salary', 'description' => 'Payroll', 'total_amount' => 3000, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
         Cost::create(['category' => 'Marketing', 'description' => 'Ads', 'total_amount' => 2000, 'date' => now(), 'status' => CostStatus::Paid->value, 'created_by_id' => $admin->getKey()]);
@@ -484,9 +486,9 @@ class DashboardTest extends TestCase
         $retail = Customer::create(['company_name' => 'Shop', 'email' => 'r@example.com', 'customer_type' => 'RETAIL']);
         $agency = Customer::create(['company_name' => 'Agent', 'email' => 'a@example.com', 'customer_type' => 'AGENCY']);
 
-        Order::create(['order_number' => 'O-W', 'status' => OrderStatus::Received->value, 'total_amount' => 30000, 'customer_id' => $wholesale->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
-        Order::create(['order_number' => 'O-R', 'status' => OrderStatus::Received->value, 'total_amount' => 20000, 'customer_id' => $retail->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
-        Order::create(['order_number' => 'O-A', 'status' => OrderStatus::Received->value, 'total_amount' => 10000, 'customer_id' => $agency->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        Order::create(['order_number' => 'O-W', 'status' => OrderStatus::Shipped->value, 'total_amount' => 30000, 'customer_id' => $wholesale->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        Order::create(['order_number' => 'O-R', 'status' => OrderStatus::Shipped->value, 'total_amount' => 20000, 'customer_id' => $retail->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        Order::create(['order_number' => 'O-A', 'status' => OrderStatus::Shipped->value, 'total_amount' => 10000, 'customer_id' => $agency->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
         $this->forgetTenant();
 
         Sanctum::actingAs($admin);
@@ -525,6 +527,8 @@ class DashboardTest extends TestCase
             'current_stock' => '500.000', 'bottles_per_case' => 12, 'is_for_sale' => true, 'default_price' => 1000,
         ]);
         WorkOrder::create(['title' => 'Overdue', 'created_by_id' => $admin->getKey(), 'due_date' => now()->subDay(), 'status' => 'TODO']);
+        // This test counts a just-received order as revenue, so use the creation basis.
+        $tenant->settings()->update(['revenue_basis' => 'created']);
         $this->forgetTenant();
 
         Sanctum::actingAs($admin);
@@ -577,7 +581,7 @@ class DashboardTest extends TestCase
         $admin = $this->createMember($tenant, [TenantRole::Admin]);
         $this->actingAsTenant($tenant);
         $customer = Customer::create(['company_name' => 'Co', 'email' => 'c@example.com']);
-        $order = Order::create(['order_number' => 'OLD', 'status' => OrderStatus::Received->value, 'total_amount' => 5000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        $order = Order::create(['order_number' => 'OLD', 'status' => OrderStatus::Shipped->value, 'total_amount' => 5000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
         $order->forceFill(['created_at' => now()->subMonthsNoOverflow(2)])->save();
         $this->forgetTenant();
 
@@ -600,7 +604,7 @@ class DashboardTest extends TestCase
         $admin = $this->createMember($tenant, [TenantRole::Admin]);
         $this->actingAsTenant($tenant);
         $customer = Customer::create(['company_name' => 'Co', 'email' => 'c@example.com', 'customer_type' => 'WHOLESALE']);
-        Order::create(['order_number' => 'ORD-1', 'status' => OrderStatus::Received->value, 'total_amount' => 5000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        Order::create(['order_number' => 'ORD-1', 'status' => OrderStatus::Shipped->value, 'total_amount' => 5000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
         $this->forgetTenant();
 
         Sanctum::actingAs($admin);
@@ -625,7 +629,7 @@ class DashboardTest extends TestCase
         $admin = $this->createMember($tenant, [TenantRole::Admin]);
         $this->actingAsTenant($tenant);
         $customer = Customer::create(['company_name' => 'Co', 'email' => 'c@example.com', 'customer_type' => 'WHOLESALE']);
-        Order::create(['order_number' => 'ORD-1', 'status' => OrderStatus::Received->value, 'total_amount' => 20_000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
+        Order::create(['order_number' => 'ORD-1', 'status' => OrderStatus::Shipped->value, 'total_amount' => 20_000, 'customer_id' => $customer->getKey(), 'created_by_id' => $admin->getKey(), 'is_consignment' => false]);
         $this->forgetTenant();
 
         Sanctum::actingAs($admin);

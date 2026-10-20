@@ -4,20 +4,30 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Web;
 
+use App\Actions\Orders\CreateOrderAction;
+use App\Actions\Orders\UpdateOrderItemAction;
 use App\Enums\OrderStatus;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Enums\TenantRole;
+use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Models\InventoryImage;
 use App\Models\InventoryItem;
 use App\Models\Order;
+use App\Models\PricingTier;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\Vessel;
+use App\Models\WineLot;
 use App\Models\WorkOrder;
 use App\Services\Auth\ActiveTenantSession;
+use App\Services\Cellar\LotVolumeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Inertia\Inertia;
 use Inertia\Testing\AssertableInertia;
+use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\InteractsWithTenancy;
 use Tests\TestCase;
 
@@ -53,7 +63,7 @@ class WebQaFixesTest extends TestCase
     {
         $order = Order::create([
             'order_number' => 'QA-'.uniqid(),
-            'status' => OrderStatus::Received->value,
+            'status' => OrderStatus::Shipped->value,
             'total_amount' => $minor,
             'customer_id' => $customer->getKey(),
             'created_by_id' => $by->getKey(),
@@ -249,13 +259,13 @@ class WebQaFixesTest extends TestCase
         $this->item('Cork', 'Closures');
         $this->forgetTenant();
 
-        // Unarranged: alphabetical by group, then subcategory.
-        $this->assertSame(['Cork', 'Pinot', 'Malvazija'], $this->listed($admin, $tenant));
+        // Unarranged: categories in the order they were created (a new one goes last).
+        $this->assertSame(['Pinot', 'Malvazija', 'Cork'], $this->listed($admin, $tenant));
 
         $this->actingAs($admin)->withSession($this->tenantSession($tenant))
-            ->post('/inventory-order', ['category' => 'FINISHED', 'entries' => [['group' => 'Wine'], ['group' => 'Closures']]])
+            ->post('/inventory-order', ['category' => 'FINISHED', 'entries' => [['group' => 'Closures'], ['group' => 'Wine']]])
             ->assertRedirect();
-        $this->assertSame(['Pinot', 'Malvazija', 'Cork'], $this->listed($admin, $tenant));
+        $this->assertSame(['Cork', 'Pinot', 'Malvazija'], $this->listed($admin, $tenant));
 
         $this->actingAs($admin)->withSession($this->tenantSession($tenant))
             ->post('/inventory-order', ['category' => 'FINISHED', 'entries' => [
@@ -263,7 +273,7 @@ class WebQaFixesTest extends TestCase
                 ['group' => 'Wine', 'subcategory' => 'Red'],
             ]])
             ->assertRedirect();
-        $this->assertSame(['Malvazija', 'Pinot', 'Cork'], $this->listed($admin, $tenant));
+        $this->assertSame(['Cork', 'Malvazija', 'Pinot'], $this->listed($admin, $tenant));
     }
 
     public function test_only_members_who_can_manage_inventory_may_rearrange(): void
@@ -297,12 +307,12 @@ class WebQaFixesTest extends TestCase
             'name' => 'Teran', 'sku' => 'TER-1', 'category' => 'FINISHED', 'unit' => 'bottles', 'sales_unit' => 'bottles',
             'bottles_per_case' => 6, 'current_stock' => '100', 'default_price' => 1000, 'is_for_sale' => true,
         ]);
-        $order = app(\App\Actions\Orders\CreateOrderAction::class)->execute($customer, $admin->getKey(), [
+        $order = app(CreateOrderAction::class)->execute($customer, $admin->getKey(), [
             'items' => [['inventory_item_id' => $wine->getKey(), 'quantity' => 2, 'unit_type' => 'bottles']],
         ]);
         $line = $order->items()->firstOrFail();
 
-        app(\App\Actions\Orders\UpdateOrderItemAction::class)->execute($line, null, 'cases');
+        app(UpdateOrderItemAction::class)->execute($line, null, 'cases');
 
         $line->refresh();
         $this->assertSame('cases', $line->unit_type);
@@ -332,7 +342,7 @@ class WebQaFixesTest extends TestCase
             ->patch("/work-orders/{$movedRecently->getKey()}/status", ['status' => 'IN_PROGRESS']);
         $this->actingAs($admin)->withSession($this->tenantSession($tenant))
             ->patch("/work-orders/{$movedLongAgo->getKey()}/status", ['status' => 'DONE']);
-        \App\Models\AuditLog::query()
+        AuditLog::query()
             ->where('subject_id', $movedLongAgo->getKey())
             ->update(['created_at' => now()->subHours(3)]);
 
@@ -342,12 +352,12 @@ class WebQaFixesTest extends TestCase
             ->assertInertia(fn (AssertableInertia $page) => $page->missing('recentActivity'));
 
         $this->actingAs($admin)->withSession($this->tenantSession($tenant))
-            ->get('/work-orders', ['X-Inertia' => 'true', 'X-Inertia-Version' => \Inertia\Inertia::getVersion(), 'X-Inertia-Partial-Component' => 'WorkOrders/Index', 'X-Inertia-Partial-Data' => 'recentActivity'])
+            ->get('/work-orders', ['X-Inertia' => 'true', 'X-Inertia-Version' => Inertia::getVersion(), 'X-Inertia-Partial-Component' => 'WorkOrders/Index', 'X-Inertia-Partial-Data' => 'recentActivity'])
             ->assertOk()
             ->assertJsonCount(2, 'props.recentActivity');
 
         $rows = $this->actingAs($admin)->withSession($this->tenantSession($tenant))
-            ->get('/work-orders', ['X-Inertia' => 'true', 'X-Inertia-Version' => \Inertia\Inertia::getVersion(), 'X-Inertia-Partial-Component' => 'WorkOrders/Index', 'X-Inertia-Partial-Data' => 'recentActivity'])
+            ->get('/work-orders', ['X-Inertia' => 'true', 'X-Inertia-Version' => Inertia::getVersion(), 'X-Inertia-Partial-Component' => 'WorkOrders/Index', 'X-Inertia-Partial-Data' => 'recentActivity'])
             ->json('props.recentActivity');
 
         $byTitle = collect($rows)->keyBy('task.title');
@@ -363,7 +373,7 @@ class WebQaFixesTest extends TestCase
 
     public function test_lookup_fills_name_and_address_for_a_croatian_oib(): void
     {
-        \Illuminate\Support\Facades\Http::fake(['ec.europa.eu/*' => \Illuminate\Support\Facades\Http::response([
+        Http::fake(['ec.europa.eu/*' => Http::response([
             'isValid' => true, 'name' => 'NEVER GREEN D.O.O.', 'address' => 'SUĆIDAR 1, SPLIT, 21000 Split',
         ])]);
         [$tenant, $admin] = $this->tenantAndAdmin();
@@ -382,19 +392,19 @@ class WebQaFixesTest extends TestCase
 
     public function test_lookup_rejects_a_mistyped_oib_without_calling_vies(): void
     {
-        \Illuminate\Support\Facades\Http::fake();
+        Http::fake();
         [$tenant, $admin] = $this->tenantAndAdmin();
 
         $this->actingAs($admin)->withSession($this->tenantSession($tenant))
             ->getJson('/customers/lookup-vat?vat=39580006727')
             ->assertStatus(422);
 
-        \Illuminate\Support\Facades\Http::assertNothingSent();
+        Http::assertNothingSent();
     }
 
     public function test_lookup_works_for_other_eu_countries_and_says_when_details_are_withheld(): void
     {
-        \Illuminate\Support\Facades\Http::fake(['ec.europa.eu/*' => \Illuminate\Support\Facades\Http::response([
+        Http::fake(['ec.europa.eu/*' => Http::response([
             'isValid' => true, 'name' => '---', 'address' => '---',
         ])]);
         [$tenant, $admin] = $this->tenantAndAdmin();
@@ -406,14 +416,14 @@ class WebQaFixesTest extends TestCase
             ->assertJsonPath('data.name', null)
             ->assertJsonPath('data.details_available', false);
 
-        \Illuminate\Support\Facades\Http::assertSent(fn ($request) => str_contains($request->url(), '/DE/vat/811128135'));
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/DE/vat/811128135'));
     }
 
     public function test_lookup_distinguishes_unregistered_from_service_unavailable(): void
     {
         [$tenant, $admin] = $this->tenantAndAdmin();
 
-        \Illuminate\Support\Facades\Http::fake(['ec.europa.eu/*' => \Illuminate\Support\Facades\Http::sequence()
+        Http::fake(['ec.europa.eu/*' => Http::sequence()
             ->push(['isValid' => false, 'userError' => 'INVALID'])
             ->push(['isValid' => false, 'userError' => 'MS_UNAVAILABLE'])]);
         $unregistered = $this->actingAs($admin)->withSession($this->tenantSession($tenant))
@@ -448,7 +458,7 @@ class WebQaFixesTest extends TestCase
             ->assertRedirect();
 
         $this->actingAsTenant($tenant);
-        $tier = \App\Models\PricingTier::query()->where('name', 'Distributor')->firstOrFail();
+        $tier = PricingTier::query()->where('name', 'Distributor')->firstOrFail();
         $customer = $this->customer();
         $customer->forceFill(['pricing_tier_id' => $tier->getKey()])->save();
         $this->forgetTenant();
@@ -475,7 +485,7 @@ class WebQaFixesTest extends TestCase
             ->assertRedirect();
 
         $this->actingAsTenant($tenant);
-        $this->assertSame(0, \App\Models\PricingTier::query()->count());
+        $this->assertSame(0, PricingTier::query()->count());
         $this->assertNull($customer->refresh()->pricing_tier_id);
     }
 
@@ -532,7 +542,7 @@ class WebQaFixesTest extends TestCase
         $this->forgetTenant();
 
         $this->actingAs($admin)->withSession($this->tenantSession($tenant))
-            ->get('/inventory')
+            ->get('/inventory?per_page=25')
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->has('items.data', 25)
                 ->where('items.meta.total', 30)
@@ -572,7 +582,7 @@ class WebQaFixesTest extends TestCase
             ->assertRedirect();
 
         $this->actingAsTenant($tenant);
-        $lot = \App\Models\WineLot::query()->where('name', 'Plavac Mali Reserve 2025')->firstOrFail();
+        $lot = WineLot::query()->where('name', 'Plavac Mali Reserve 2025')->firstOrFail();
         $this->assertSame('AGING', $lot->status->value);
         $this->assertSame('RED', $lot->wine_type->value);
     }
@@ -582,9 +592,9 @@ class WebQaFixesTest extends TestCase
         [$tenant, $admin] = $this->tenantAndAdmin();
 
         $this->actingAsTenant($tenant);
-        $barrel = \App\Models\Vessel::create(['name' => 'B1', 'type' => 'BARREL', 'capacity_liters' => '225.000']);
-        $existing = \App\Models\WineLot::create(['lot_number' => 'L-1', 'name' => 'Already here', 'grape_variety' => 'Syrah', 'vintage' => '2024', 'wine_type' => 'RED', 'status' => 'AGING', 'initial_volume' => '150.000', 'current_volume' => '150.000']);
-        app(\App\Services\Cellar\LotVolumeService::class)->assignToVessel($existing, $barrel, '150.000');
+        $barrel = Vessel::create(['name' => 'B1', 'type' => 'BARREL', 'capacity_liters' => '225.000']);
+        $existing = WineLot::create(['lot_number' => 'L-1', 'name' => 'Already here', 'grape_variety' => 'Syrah', 'vintage' => '2024', 'wine_type' => 'RED', 'status' => 'AGING', 'initial_volume' => '150.000', 'current_volume' => '150.000']);
+        app(LotVolumeService::class)->assignToVessel($existing, $barrel, '150.000');
         $this->forgetTenant();
 
         $lot = fn (int $litres) => [
@@ -597,7 +607,7 @@ class WebQaFixesTest extends TestCase
             ->post('/cellar/lots', $lot(100))
             ->assertSessionHasErrors('vessel_id');
         $this->actingAsTenant($tenant);
-        $this->assertSame(0, \App\Models\WineLot::query()->where('name', 'New 100')->count());
+        $this->assertSame(0, WineLot::query()->where('name', 'New 100')->count());
         $this->forgetTenant();
 
         // 75 L fits exactly; the barrel then holds both lots and is full.
@@ -620,7 +630,7 @@ class WebQaFixesTest extends TestCase
                 ->has('summary.stats')
                 ->has('summary.revenue_by_channel'));
 
-        \Laravel\Sanctum\Sanctum::actingAs($admin);
+        Sanctum::actingAs($admin);
         $this->getJson('/api/v1/dashboard?period=ytd', $this->tenantHeader($tenant))->assertOk()
             ->assertJsonStructure(['data' => ['revenue_summary', 'revenue_trend', 'top_products', 'recent_orders']]);
     }

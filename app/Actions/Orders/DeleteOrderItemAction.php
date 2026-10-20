@@ -37,7 +37,8 @@ class DeleteOrderItemAction
         DB::transaction(function () use ($item, $order): void {
             $product = $item->inventoryItem;
 
-            if ($product !== null && ! $order->is_backorder) {
+            // A backorder or a held allocation never took the stock, so there is nothing to put back.
+            if ($product !== null && $order->deduct_stock) {
                 $this->ledger->restore($product, (string) $item->quantity, $item->unit_type, reference: $order->order_number.':remove');
             }
 

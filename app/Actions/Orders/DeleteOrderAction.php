@@ -28,7 +28,8 @@ class DeleteOrderAction
     public function execute(Order $order): void
     {
         DB::transaction(function () use ($order): void {
-            if (! $order->is_backorder) {
+            // A backorder or a held allocation never took the stock — deleting just lets the reservation go.
+            if ($order->deduct_stock) {
                 $tally = $order->is_consignment ? $this->consignment->tally($order) : null;
 
                 foreach ($order->items()->with('inventoryItem')->get() as $item) {

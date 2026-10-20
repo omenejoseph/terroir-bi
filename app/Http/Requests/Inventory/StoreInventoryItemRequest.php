@@ -6,7 +6,13 @@ namespace App\Http\Requests\Inventory;
 
 use App\Enums\InventoryCategory;
 use App\Enums\SalesUnit;
+use App\Models\InventoryItem;
+use App\Models\ProductCategory;
+use App\Rules\ValidPreviousVintage;
+use App\Support\StockUnits;
 use App\Tenancy\Contracts\TenantContext;
+use Closure;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -51,6 +57,12 @@ class StoreInventoryItemRequest extends FormRequest
             'pack_size' => ['sometimes', 'integer', 'min:1'],
             'is_for_sale' => ['sometimes', 'boolean'],
             'hide_from_portal' => ['sometimes', 'boolean'],
+            'product_category_id' => [
+                'sometimes', 'nullable', 'string',
+                Rule::exists('product_categories', 'id')->where('tenant_id', $tenantId),
+                $this->categoryMatchesType(),
+            ],
+            'previous_vintage_id' => ['sometimes', 'nullable', 'string', new ValidPreviousVintage(null)],
             'base_product_id' => [
                 'sometimes', 'nullable', 'string',
                 Rule::exists('inventory_items', 'id')->where('tenant_id', $tenantId),
@@ -58,5 +70,36 @@ class StoreInventoryItemRequest extends FormRequest
             // Optional — COGS can instead be derived from the item's recipe.
             'cost_per_unit' => ['sometimes', 'nullable', 'integer', 'min:0'],
         ];
+    }
+
+    /** Bottles, cases and units are counted in whole pieces, so a minimum stock for them is too. */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $v): void {
+            $item = $this->route('item');
+            $unit = $this->input('unit') ?? ($item instanceof InventoryItem ? $item->unit : null);
+
+            if (($message = StockUnits::wholeError($unit, $this->input('min_stock'))) !== null) {
+                $v->errors()->add('min_stock', $message);
+            }
+        });
+    }
+
+    /** The category an item is filed under must belong to the item's own type (finished, raw material, …). */
+    private function categoryMatchesType(): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail): void {
+            if ($value === null || $value === '') {
+                return;
+            }
+
+            $item = $this->route('item');
+            $type = $this->input('category') ?? ($item instanceof InventoryItem ? $item->category->value : null);
+            $category = ProductCategory::query()->find($value);
+
+            if ($category !== null && $type !== null && $category->type->value !== $type) {
+                $fail(__('That category belongs to a different type of item.'));
+            }
+        };
     }
 }

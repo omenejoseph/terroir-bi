@@ -21,7 +21,11 @@ export interface InventoryItem {
     description: string | null;
     group: string | null;
     subcategory: string | null;
+    /** The category record this item is filed under (its leaf: the subcategory when it has one). */
+    product_category_id: string | null;
     vintage: number | null;
+    /** The vintage this one follows — the chain the list folds under the latest vintage. */
+    previous_vintage_id: string | null;
     unit_size: string | null;
     unit: string;
     sales_unit: string | null;
@@ -40,6 +44,33 @@ export interface InventoryItem {
     cost_per_unit: MoneyValue | null;
     /** Signed read URL for the lead image, added by InventoryItemPresenter. */
     image_url: string | null;
+    /** Only on the Inventory list: the older vintages under this product's latest one, newest first. */
+    previous_vintages?: InventoryItem[];
+}
+
+/** Mirrors App\Services\Inventory\ProductCategoryOptions::tree(). */
+export interface ProductCategory {
+    id: string;
+    name: string;
+    /** The InventoryCategory enum value the category lives under. */
+    type: string;
+    has_vintage: boolean;
+    sort_order: number;
+    /** A top-level category counts its subcategories' items too. */
+    items_count: number;
+    children?: ProductCategory[];
+}
+
+/** Mirrors App\Services\Inventory\ProductCategoryOptions::vintageCandidates(). */
+export interface VintageOption {
+    id: string;
+    name: string;
+    vintage: string | null;
+    unit_size: string | null;
+    type: string;
+    product_category_id: string;
+    /** Already the previous vintage of another product, so it can't be picked again. */
+    has_next: boolean;
 }
 
 /** Mirrors App\Queries\ItemAuditTrailQuery::get() — the Item — View drawer's Timeline section and Provenance line. */
@@ -89,7 +120,7 @@ export interface ItemCustomerAttributionRow {
 
 /** Mirrors App\DataTransferObjects\RecipeLineData::toArray() — Product Detail's Recipe and Produce tabs. */
 export interface RecipeLine {
-    /** Null for a custom (non-catalog) line — not reachable from any UI yet; the write path only ever creates catalog lines. */
+    /** Null for a cellar-wine or custom line. */
     input_id: string | null;
     input_name: string;
     input_sku: string;
@@ -98,6 +129,53 @@ export interface RecipeLine {
     input_group: string | null;
     /** Decimal string — the input's current stock, null for a custom line. */
     input_stock: string | null;
+    /** catalog = an inventory item, cellar = wine from a lot, custom = a free-text ingredient. */
+    kind: 'catalog' | 'cellar' | 'custom';
+    wine_lot_id: string | null;
+    /** The unit `quantity` is entered in (ml, cl, l, g, kg); null = the input's own unit. */
+    unit: string | null;
+    /** Units the quantity can be entered in — empty when the input's unit does not convert. */
+    unit_options: string[];
+    /** What one of the line's own unit costs (a fraction of a minor unit is normal for ml). Null when unpriced. */
+    unit_cost: { minor: number; currency: string } | null;
+    line_cost: MoneyValue | null;
+    /** Custom lines only: cost per custom unit, minor units. */
+    custom_cost: number | null;
+}
+
+/** Mirrors App\Services\Inventory\RecipeCostSummary::for(). */
+export interface RecipeCostSummary {
+    per_unit: MoneyValue | null;
+    /** False when some line has no cost, so per_unit understates the real figure. */
+    complete: boolean;
+    /** Bottles per output unit (12 for an item stocked in cases of 12), 1 otherwise. */
+    multiplier: number;
+}
+
+/** Mirrors App\Services\Inventory\RecipeInputOptions::cellarLots(). */
+export interface RecipeCellarLot {
+    id: string;
+    name: string;
+    lot_number: string;
+    vintage: number | null;
+    current_volume: string;
+    cost_per_liter: { minor: number; currency: string };
+}
+
+/** Mirrors App\Services\Inventory\RecipeInputOptions::sources() — a product with a recipe, to copy from. */
+export interface RecipeSource {
+    id: string;
+    name: string;
+    vintage: number | null;
+    lines: {
+        input_id: string | null;
+        wine_lot_id: string | null;
+        quantity: string;
+        unit: string | null;
+        custom_name: string | null;
+        custom_unit: string | null;
+        custom_cost: number | null;
+    }[];
 }
 
 /** Mirrors App\Services\Inventory\RecipeInputOptions::list() — the Recipe tab's "add ingredient" picker. */
@@ -108,6 +186,10 @@ export interface RecipeInputOption {
     vintage: number | null;
     unit: string;
     group: string | null;
+    /** What one unit costs: the cost per pack divided by the pack size. Fractional minor units are normal. */
+    unit_cost: { minor: number; currency: string } | null;
+    pack_size: number;
+    unit_options: string[];
 }
 
 /** Mirrors App\Services\Inventory\InventoryMediaPresenter::image() — Product Detail's Images tab. */
@@ -151,6 +233,8 @@ export interface BottleAnalysisRow {
 export interface InventoryFilters {
     search: string | null;
     category: string | null;
+    /** A category (or, for a top-level one, any of its subcategories). */
+    product_category_id: string | null;
     is_active: boolean | null;
     is_for_sale: boolean | null;
     sellable: boolean;
@@ -158,4 +242,32 @@ export interface InventoryFilters {
     missing_cost: boolean;
     /** The active "Needs attention" chip, applied on the server. */
     attention: string | null;
+}
+
+/** Mirrors App\Queries\ItemAvailabilityQuery::get() — the drawer's stock waterfall. Quantities are decimal strings in the item's unit. */
+export interface ItemAvailability {
+    /** The item these figures are for — the drawer ignores a stale response for the previous item. */
+    item_id: string;
+    unit: string;
+    on_hand: string;
+    /** Set aside for customers by allocation orders that have not shipped: still on hand, but not free to sell. */
+    allocated: string;
+    /** On hand minus allocated; negative when more has been promised than the cellar holds. */
+    free_to_sell: string;
+    allocations: { order_id: string; order_number: string; customer: string | null; quantity: string }[];
+    /** Already taken off the shelf by orders that have not shipped yet — context, not subtracted again. */
+    in_open_orders: string;
+    /** Already out with customers on open consignments — context, not subtracted again. */
+    on_consignment: string;
+}
+
+/** Mirrors the `productionRuns` prop — one run of the Produce tab. */
+export interface ProductionRun {
+    id: string;
+    quantity: string;
+    reference: string;
+    /** What the run took from stock; null for runs recorded before inputs were kept. */
+    inputs: { name: string; sku: string; unit: string; quantity: string }[] | null;
+    by: string | null;
+    at: string;
 }

@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\InventoryCategory;
 use App\Enums\SalesUnit;
 use App\Services\Audit\Auditable;
+use App\Services\Inventory\ProductCategoryResolver;
 use App\Support\Money\Money;
 use App\Support\Money\MoneyCast;
 use App\Tenancy\BelongsToTenant;
@@ -37,6 +38,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $pack_size Generic packaging multiplier (legacy); distinct from bottles_per_case.
  * @property bool $is_auto_created
  * @property string|null $base_product_id
+ * @property string|null $product_category_id
+ * @property string|null $previous_vintage_id
  */
 class InventoryItem extends Model
 {
@@ -51,7 +54,9 @@ class InventoryItem extends Model
         'category',
         'group',
         'subcategory',
+        'product_category_id',
         'vintage',
+        'previous_vintage_id',
         'unit_size',
         'unit',
         'sales_unit',
@@ -106,6 +111,65 @@ class InventoryItem extends Model
     }
 
     /**
+     * Keeps the `group` / `subcategory` text in step with the category record, whichever side was set:
+     * choosing a category writes the names; naming a group (API, bulk import, a cloned vintage) finds or
+     * creates the category. Reports read the text, the list and the form read the record.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (InventoryItem $item): void {
+            if ($item->isDirty('product_category_id')) {
+                $category = $item->product_category_id === null ? null : ProductCategory::query()->with('parent')->find($item->product_category_id);
+
+                $item->group = $category === null ? null : ($category->parent?->name ?? $category->name);
+                $item->subcategory = $category?->parent !== null ? $category->name : null;
+
+                return;
+            }
+
+            if ($item->isDirty('group') || $item->isDirty('subcategory') || (! $item->exists && $item->group !== null)) {
+                $resolved = app(ProductCategoryResolver::class)->resolve($item->category->value, $item->group, $item->subcategory);
+
+                // A subcategory text with no group can't name a category; it stays as plain text.
+                $item->product_category_id = $resolved?->getKey();
+
+                if ($resolved !== null) {
+                    $item->group = $resolved->parent_id !== null ? ProductCategory::query()->find($resolved->parent_id)?->name : $resolved->name;
+                    $item->subcategory = $resolved->parent_id !== null ? $resolved->name : null;
+                }
+            }
+        });
+    }
+
+    /**
+     * @return BelongsTo<ProductCategory, $this>
+     */
+    public function productCategory(): BelongsTo
+    {
+        return $this->belongsTo(ProductCategory::class, 'product_category_id');
+    }
+
+    /**
+     * The vintage this one follows (2022 for a 2023), null for the oldest.
+     *
+     * @return BelongsTo<InventoryItem, $this>
+     */
+    public function previousVintage(): BelongsTo
+    {
+        return $this->belongsTo(InventoryItem::class, 'previous_vintage_id');
+    }
+
+    /**
+     * The vintage that follows this one, null for the latest.
+     *
+     * @return HasOne<InventoryItem, $this>
+     */
+    public function nextVintage(): HasOne
+    {
+        return $this->hasOne(InventoryItem::class, 'previous_vintage_id');
+    }
+
+    /**
      * The base product this is a vintage/variant of (self-reference).
      *
      * @return BelongsTo<InventoryItem, $this>
@@ -132,13 +196,23 @@ class InventoryItem extends Model
     }
 
     /**
+     * Runs of the Produce tab for this item, newest first.
+     *
+     * @return HasMany<ProductionRun, $this>
+     */
+    public function productionRuns(): HasMany
+    {
+        return $this->hasMany(ProductionRun::class)->latest();
+    }
+
+    /**
      * The recipe (bill of materials) producing this item.
      *
      * @return HasMany<RecipeItem, $this>
      */
     public function recipe(): HasMany
     {
-        return $this->hasMany(RecipeItem::class, 'output_id');
+        return $this->hasMany(RecipeItem::class, 'output_id')->orderBy('sort_order')->orderBy('id');
     }
 
     /**

@@ -60,6 +60,8 @@ export interface Org {
     /** Dashboard "Runway" inputs — minor units, null until set. */
     cash_on_hand: number | null;
     cash_on_hand_as_of: string | null;
+    /** When the Dashboard counts revenue: when shipped (invoiced) or when the order is created. */
+    revenue_basis: 'shipped' | 'created';
 }
 
 export interface SharedProps {

@@ -8,6 +8,7 @@ use App\Enums\PlanUnit;
 use App\Models\InventoryItem;
 use App\Models\ProductionPlan;
 use App\Models\RecipeItem;
+use App\Support\Measure;
 
 /**
  * Expands a production plan's rows into per-product revenue/cost/margin and
@@ -52,12 +53,14 @@ class ProductionCalculator
 
             // Expand the recipe into raw-material requirements.
             foreach ($recipesByOutput->get($item->getKey()) ?? [] as $line) {
-                $required = (float) $line->quantity * $bottles;
-                $key = $line->input_id ?? ('custom:'.$line->custom_name);
+                // A line entered in ml / cl / g is required in the input's own unit (litres, kg).
+                $ownUnit = $line->input instanceof InventoryItem ? (string) $line->input->unit : ($line->wine_lot_id !== null ? 'l' : $line->custom_unit);
+                $required = (float) $line->quantity * (Measure::factor($line->unit, $ownUnit) ?? 1.0) * $bottles;
+                $key = $line->input_id ?? ($line->wine_lot_id !== null ? 'lot:'.$line->wine_lot_id : 'custom:'.$line->custom_name);
                 $name = $line->input instanceof InventoryItem ? $line->input->name : (string) $line->custom_name;
                 $unit = $line->input instanceof InventoryItem ? (string) $line->input->unit : (string) $line->custom_unit;
                 $unitCost = $line->input instanceof InventoryItem
-                    ? ($line->input->cost_per_unit?->getMinorAmount() ?? 0)
+                    ? (($line->input->cost_per_unit?->getMinorAmount() ?? 0) / max(1, (int) $line->input->pack_size))
                     : ($line->custom_cost?->getMinorAmount() ?? 0);
                 $materials[$key] ??= ['name' => $name, 'unit' => $unit, 'quantity' => 0.0, 'cost' => 0];
                 $materials[$key]['quantity'] += $required;

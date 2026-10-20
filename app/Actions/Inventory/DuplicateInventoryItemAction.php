@@ -31,7 +31,9 @@ class DuplicateInventoryItemAction
             foreach ($item->recipe as $line) {
                 $copy->recipe()->create([
                     'input_id' => $line->input_id,
+                    'wine_lot_id' => $line->wine_lot_id,
                     'quantity' => $line->quantity,
+                    'unit' => $line->unit,
                     'custom_name' => $line->custom_name,
                     'custom_unit' => $line->custom_unit,
                     'custom_cost' => $line->custom_cost,

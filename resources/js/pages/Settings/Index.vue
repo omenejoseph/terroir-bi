@@ -75,7 +75,13 @@ const form = useForm({
     ) as Record<string, string>,
     cash_on_hand: toMajorString(props.settings.cash_on_hand),
     cash_on_hand_as_of: props.settings.cash_on_hand_as_of ?? '',
+    revenue_basis: props.settings.revenue_basis ?? 'shipped',
 });
+
+const revenueBasisOptions = computed(() => [
+    { value: 'shipped', label: t('When shipped (invoiced)') },
+    { value: 'created', label: t('When the order is created') },
+]);
 
 /*
   One form, three tabs: every field stays in the same form so a single Save writes them all, and the
@@ -91,6 +97,7 @@ const TABS = computed<TabItem[]>(() => [
 ]);
 
 const FIELD_TAB: Record<string, SettingsTab> = {
+    revenue_basis: 'revenue-target',
     annual_revenue_target: 'revenue-target',
     channel_revenue_targets: 'revenue-target',
     cash_on_hand: 'cash-on-hand',
@@ -194,6 +201,15 @@ function submit(): void {
                         <p class="text-xs text-muted-foreground">
                             {{ t('Backs the Dashboard\'s "Revenue vs. target" card. Leave blank to keep it showing "not set" instead of a number.') }}
                         </p>
+
+                        <FormField
+                            v-slot="{ id, invalid }"
+                            :label="t('Count revenue')"
+                            :hint="t('Shipped: only shipped orders count, on the date they shipped. Created: every order counts on the date it was placed. Order analytics always uses the creation date.')"
+                            :error="form.errors.revenue_basis"
+                        >
+                            <Select :id="id" v-model="form.revenue_basis" :invalid="invalid" :options="revenueBasisOptions" />
+                        </FormField>
 
                         <FormField
                             v-slot="{ id, invalid }"

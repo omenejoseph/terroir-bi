@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property array<string, int>|null $channel_revenue_targets
  * @property int|null $cash_on_hand
  * @property Carbon|null $cash_on_hand_as_of
+ * @property string $revenue_basis
  */
 class TenantSetting extends Model
 {
@@ -42,6 +43,7 @@ class TenantSetting extends Model
         'channel_revenue_targets',
         'cash_on_hand',
         'cash_on_hand_as_of',
+        'revenue_basis',
     ];
 
     protected $attributes = [

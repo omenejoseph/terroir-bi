@@ -22,6 +22,7 @@ import SidePanel from '@/components/ui/SidePanel.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
+import { useUrlTab } from '@/composables/useUrlTab';
 import { LOT_STATUS_LABELS, SO2_STATUS_BG, SO2_STATUS_LABELS, SO2_STATUS_TONES, WINE_TYPE_LABELS, dayLabel, molecularSo2, parseDecimal, qty, so2Status } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import { csrfHeader } from '@/lib/csrf';
@@ -53,7 +54,7 @@ const canManage = computed(() => can('cellar.manage'));
 const locale = computed(() => page.props.locale);
 const errors = computed(() => Object.values(page.props.errors ?? {}));
 
-const tab = ref<'plan' | 'update'>('plan');
+const { tab, select: selectTab } = useUrlTab(['plan', 'update'] as const, 'plan');
 const modeTabs = computed<TabItem[]>(() => [
     { label: t('Plan SO₂ additions'), value: 'plan' },
     { label: t('Update SO₂ analyses'), value: 'update' },
@@ -418,7 +419,7 @@ const summaryChips = computed(() =>
             <CellarTabs current="so2" />
 
             <div class="print:hidden">
-                <Tabs :items="modeTabs" :current="tab" @select="tab = $event as 'plan' | 'update'" />
+                <Tabs :items="modeTabs" :current="tab" @select="selectTab" />
             </div>
 
             <div v-if="errors.length" class="border border-destructive/40 bg-tag-red px-3 py-2 text-sm text-tag-red-foreground" role="alert">

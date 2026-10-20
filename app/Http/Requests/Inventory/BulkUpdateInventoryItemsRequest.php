@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Inventory;
 
+use App\Models\InventoryItem;
+use App\Support\StockUnits;
 use App\Tenancy\Contracts\TenantContext;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -35,5 +38,20 @@ class BulkUpdateInventoryItemsRequest extends FormRequest
             'items.*.is_active' => ['sometimes', 'boolean'],
             'items.*.is_for_sale' => ['sometimes', 'boolean'],
         ];
+    }
+
+    /** A minimum stock for bottles, cases or units is a whole number. */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $v): void {
+            $rows = (array) $this->input('items', []);
+            $units = InventoryItem::query()->whereIn('id', array_filter(array_column($rows, 'id'), 'is_string'))->pluck('unit', 'id');
+
+            foreach ($rows as $index => $row) {
+                if (($message = StockUnits::wholeError($units[$row['id'] ?? ''] ?? null, $row['min_stock'] ?? null)) !== null) {
+                    $v->errors()->add("items.{$index}.min_stock", $message);
+                }
+            }
+        });
     }
 }

@@ -18,12 +18,12 @@ use App\Http\Requests\Inventory\ProduceItemRequest;
 use App\Http\Requests\Inventory\SetRecipeRequest;
 use App\Http\Requests\Inventory\SetReconciliationRequest;
 use App\Models\InventoryItem;
-use App\Models\RecipeItem;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Queries\InventoryItemStockAnalyticsQuery;
 use App\Queries\ItemMovementsQuery;
 use App\Queries\VintageCoverageQuery;
+use App\Services\Inventory\RecipeCost;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -45,15 +45,9 @@ class StockController extends Controller
     }
 
     /** The item's recipe (bill of materials), with input display fields resolved. */
-    public function recipe(InventoryItem $item): JsonResponse
+    public function recipe(InventoryItem $item, RecipeCost $cost): JsonResponse
     {
-        $lines = $item->recipe()->with('input')->get();
-
-        return response()->json([
-            'data' => $lines
-                ->map(fn (RecipeItem $line) => RecipeLineData::fromModel($line)->toArray())
-                ->all(),
-        ]);
+        return response()->json(['data' => RecipeLineData::collection($item->recipe()->with(['input', 'wineLot'])->get(), $cost)]);
     }
 
     public function adjust(
@@ -117,15 +111,6 @@ class StockController extends Controller
         InventoryItem $item,
         SetRecipeAction $action,
     ): JsonResponse {
-        /** @var list<array{input_id: string, quantity: string}> $lines */
-        $lines = array_values(array_map(
-            fn (array $line) => [
-                'input_id' => (string) $line['input_id'],
-                'quantity' => (string) $line['quantity'],
-            ],
-            (array) $request->validated('items', []),
-        ));
-
-        return response()->json(['data' => $action->execute($item, $lines)]);
+        return response()->json(['data' => $action->execute($item, $request->lines())]);
     }
 }

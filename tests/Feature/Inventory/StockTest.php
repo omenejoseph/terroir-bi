@@ -22,7 +22,7 @@ class StockTest extends TestCase
             'name' => 'Cork',
             'sku' => 'CORK',
             'category' => 'RAW_MATERIAL',
-            'unit' => 'units',
+            'unit' => 'kg',
             'current_stock' => '100.000',
         ]);
     }

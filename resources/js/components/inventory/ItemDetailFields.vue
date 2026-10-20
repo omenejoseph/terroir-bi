@@ -34,6 +34,8 @@ const details = computed(() => {
         { label: t('Category'), value: [item.group, item.subcategory].filter(Boolean).join(' · ') || '—' },
         { label: t('Unit size / unit'), value: [item.unit_size, item.unit].filter(Boolean).join(' · ') },
         { label: t('Sales unit'), value: item.sales_unit ?? '—' },
+        ...(item.category === 'RAW_MATERIAL' && (item.pack_size ?? 1) > 1 ? [{ label: t('Pack size'), value: t(':count per pack', { count: item.pack_size ?? 1 }) }] : []),
+        { label: t('Per case'), value: item.bottles_per_case ? t(':count per case', { count: item.bottles_per_case }) : '—' },
         { label: t('Vintage'), value: item.vintage ? String(item.vintage) : '—' },
         {
             label: t('Min stock'),

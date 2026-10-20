@@ -33,6 +33,7 @@ final class OrganizationSettingsData implements Arrayable, JsonSerializable
         public readonly ?array $channelRevenueTargets = null,
         public readonly ?int $cashOnHand = null,
         public readonly ?string $cashOnHandAsOf = null,
+        public readonly string $revenueBasis = 'shipped',
     ) {}
 
     public static function fromTenant(Tenant $tenant): self
@@ -56,6 +57,7 @@ final class OrganizationSettingsData implements Arrayable, JsonSerializable
             channelRevenueTargets: $settings->channel_revenue_targets,
             cashOnHand: $settings->cash_on_hand,
             cashOnHandAsOf: $settings->cash_on_hand_as_of?->toDateString(),
+            revenueBasis: self::str($settings, 'revenue_basis', 'shipped'),
         );
     }
 
@@ -82,6 +84,7 @@ final class OrganizationSettingsData implements Arrayable, JsonSerializable
             'channel_revenue_targets' => $this->channelRevenueTargets,
             'cash_on_hand' => $this->cashOnHand,
             'cash_on_hand_as_of' => $this->cashOnHandAsOf,
+            'revenue_basis' => $this->revenueBasis,
         ];
     }
 

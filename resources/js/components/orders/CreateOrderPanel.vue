@@ -116,6 +116,7 @@ const form = useForm({
     status: 'RECEIVED',
     is_backorder: false,
     is_consignment: false,
+    is_allocation: false,
     shipping_cost: '',
     shipping_paid_by_us: true,
     items: [] as ReturnType<typeof linesToPayload>,
@@ -148,12 +149,30 @@ const CUSTOMER_OPTIONS = computed<ComboboxOption[]>(() =>
     })),
 );
 
-const STATUS_OPTIONS = computed(() => [
-    { value: 'RECEIVED', label: t('Received') },
-    { value: 'IN_PROCESS', label: t('In Process') },
-    { value: 'READY_TO_SHIP', label: t('Ready to Ship') },
-    { value: 'SHIPPED', label: t('Shipped') },
-]);
+const STATUS_OPTIONS = computed(() =>
+    [
+        { value: 'RECEIVED', label: t('Received') },
+        { value: 'IN_PROCESS', label: t('In Process') },
+        { value: 'READY_TO_SHIP', label: t('Ready to Ship') },
+        { value: 'SHIPPED', label: t('Shipped') },
+        // An allocation leaves the cellar when it ships, so it cannot start out already shipped.
+    ].filter((option) => !(form.is_allocation && option.value === 'SHIPPED')),
+);
+
+/*
+  Backorder, consignment and allocation each say something different about where the goods are — not
+  here yet, with the customer, set aside in our cellar — so no two can be on at once. Turning one on
+  turns the others off, rather than leaving a combination the server would refuse.
+*/
+type StockMode = 'is_backorder' | 'is_consignment' | 'is_allocation';
+
+function setMode(mode: StockMode, on: boolean): void {
+    form.is_backorder = mode === 'is_backorder' && on;
+    form.is_consignment = mode === 'is_consignment' && on;
+    form.is_allocation = mode === 'is_allocation' && on;
+
+    if (form.is_allocation && form.status === 'SHIPPED') form.status = 'RECEIVED';
+}
 
 /** The collapsed disclosure summarises what it hides (Figma 335:4233). */
 const settingsSummary = computed(() =>
@@ -161,6 +180,7 @@ const settingsSummary = computed(() =>
         STATUS_OPTIONS.value.find((s) => s.value === form.status)?.label ?? form.status,
         form.is_backorder ? t('Backorder') : t('Not backorder'),
         form.is_consignment ? t('Consignment') : null,
+        form.is_allocation ? t('Allocation') : null,
         form.shipping_paid_by_us ? t('We pay logistics') : t('Customer pays logistics'),
     ]
         .filter(Boolean)
@@ -247,16 +267,30 @@ function submit(): void {
                 </FormField>
 
                 <SwitchRow
-                    v-model="form.is_backorder"
+                    :model-value="form.is_backorder"
                     :label="t('Backorder')"
                     :hint="t('Stock isn\'t available yet — reserve and fulfil later.')"
+                    @update:model-value="setMode('is_backorder', $event)"
                 />
 
                 <SwitchRow
-                    v-model="form.is_consignment"
+                    :model-value="form.is_consignment"
                     :label="t('Consignment (komisija)')"
                     :hint="t('Goods stay ours until the customer sells them.')"
+                    @update:model-value="setMode('is_consignment', $event)"
                 />
+                <p v-if="form.errors.is_consignment" class="text-xs text-destructive" role="alert">{{ form.errors.is_consignment }}</p>
+
+                <SwitchRow
+                    :model-value="form.is_allocation"
+                    :label="t('Allocate to this customer')"
+                    :hint="t('Sets the stock aside for them. It stays in the cellar but isn\'t free to sell, and leaves when the order ships.')"
+                    @update:model-value="setMode('is_allocation', $event)"
+                />
+                <p v-if="form.errors.is_allocation" class="text-xs text-destructive" role="alert">{{ form.errors.is_allocation }}</p>
+                <p v-if="form.is_backorder || form.is_consignment || form.is_allocation" class="text-xs text-muted-foreground">
+                    {{ t('Backorder, consignment and allocation can\'t be combined — each describes where the goods are.') }}
+                </p>
 
                 <SwitchRow
                     v-model="form.shipping_paid_by_us"

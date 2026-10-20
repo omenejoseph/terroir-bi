@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Settings;
 
+use App\Services\Dashboard\RevenueBasis;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -36,6 +37,9 @@ class UpdateSettingsRequest extends FormRequest
             'channel_revenue_targets.*' => ['integer', 'min:0'],
             'cash_on_hand' => ['nullable', 'integer', 'min:0'],
             'cash_on_hand_as_of' => ['nullable', 'date'],
+
+            // When the Dashboard counts an order as revenue (see RevenueBasis).
+            'revenue_basis' => ['sometimes', 'string', Rule::in(RevenueBasis::OPTIONS)],
         ];
     }
 }

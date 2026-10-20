@@ -11,6 +11,7 @@ use App\Actions\Inventory\BulkUpdateInventoryItemsAction;
 use App\Actions\Inventory\CreateInventoryItemAction;
 use App\Actions\Inventory\DeleteInventoryItemAction;
 use App\Actions\Inventory\DuplicateInventoryItemAction;
+use App\Actions\Inventory\MoveInventoryItemsAction;
 use App\Actions\Inventory\ProduceItemAction;
 use App\Actions\Inventory\ReorderInventoryAction;
 use App\Actions\Inventory\SetRecipeAction;
@@ -24,6 +25,7 @@ use App\Http\Requests\Inventory\AdjustStockRequest;
 use App\Http\Requests\Inventory\BulkImportInventoryItemsRequest;
 use App\Http\Requests\Inventory\BulkUpdateInventoryItemsRequest;
 use App\Http\Requests\Inventory\InventoryCheckRequest;
+use App\Http\Requests\Inventory\MoveInventoryItemsRequest;
 use App\Http\Requests\Inventory\ProduceItemRequest;
 use App\Http\Requests\Inventory\ReorderInventoryRequest;
 use App\Http\Requests\Inventory\SetRecipeRequest;
@@ -35,7 +37,7 @@ use App\Models\InventoryDocument;
 use App\Models\InventoryImage;
 use App\Models\InventoryItem;
 use App\Models\InventoryTechSheet;
-use App\Models\RecipeItem;
+use App\Models\ProductionRun;
 use App\Queries\InventoryAnalyticsQuery;
 use App\Queries\InventoryAttentionQuery;
 use App\Queries\InventoryCoverQuery;
@@ -43,6 +45,7 @@ use App\Queries\InventoryItemStockAnalyticsQuery;
 use App\Queries\InventorySpendQuery;
 use App\Queries\InventoryTaxonomyQuery;
 use App\Queries\ItemAuditTrailQuery;
+use App\Queries\ItemAvailabilityQuery;
 use App\Queries\ItemCustomerAttributionQuery;
 use App\Queries\ItemMovementsQuery;
 use App\Queries\ItemPricingQuery;
@@ -54,11 +57,16 @@ use App\Services\Customers\PricingTierOptions;
 use App\Services\Export\CsvExporter;
 use App\Services\Inventory\InventoryItemPresenter;
 use App\Services\Inventory\InventoryMediaPresenter;
+use App\Services\Inventory\InventoryVintageChains;
+use App\Services\Inventory\ProductCategoryOptions;
+use App\Services\Inventory\RecipeCost;
+use App\Services\Inventory\RecipeCostSummary;
 use App\Services\Inventory\RecipeInputOptions;
 use App\Services\Orders\OrderFormOptions;
 use App\Support\InventoryItemFilters;
 use App\Support\Period;
 use App\Support\PerPage;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -88,12 +96,17 @@ class InventoryController extends Controller
         ItemAuditTrailQuery $auditTrail,
         ItemStockRankingQuery $ranking,
         ItemCustomerAttributionQuery $attribution,
+        ItemAvailabilityQuery $availability,
+        InventoryVintageChains $chains,
+        ProductCategoryOptions $categoryOptions,
     ): Response {
         $filters = InventoryItemFilters::fromRequest($request);
-        $paginated = $query->paginate($filters, PerPage::fromRequest($request));
+        $paginated = $query->paginateProducts($filters, PerPage::fromRequest($request, 100));
+        // Each product shows its latest vintage; the older ones ride along beneath it.
+        $older = $chains->olderThan($paginated->items());
 
         return Inertia::render('Inventory/Index', [
-            'items' => $presenter->page($paginated),
+            'items' => $presenter->page($paginated, $older),
             'filters' => $filters,
             // The card header's figures cover everything the filters match, not just this page.
             'totals' => ['on_hand' => (string) $query->build($filters)->sum('current_stock')],
@@ -103,13 +116,17 @@ class InventoryController extends Controller
             // "Free to sell" column's reasoning (still no order-line
             // reservations to subtract, unlike Cover which is honestly
             // computable from stock movements).
-            'cover' => $cover->forItems($paginated->items()),
+            'cover' => $cover->forItems([...$paginated->items(), ...array_merge(...array_values($older))]),
             // The "Needs attention" band (Figma 389:1592). Counts span the whole
             // tenant, not the filtered page, so they stay stable as you filter.
             'attention' => $attention->get(),
             // Only fetched when the filter bar asks for it — the taxonomy is a
             // distinct-scan and most visits never open the category picker.
             'taxonomy' => Inertia::optional(fn () => $taxonomy->get()),
+            // The item form's Category / Subcategory selects and its previous-vintage picker — loaded
+            // when the form opens, like the taxonomy, since most visits never open it.
+            'productCategories' => fn (): array => $categoryOptions->tree(),
+            'vintageOptions' => Inertia::optional(fn (): array => $categoryOptions->vintageCandidates()),
             // The Item — View drawer (Figma 378:1592) pulls the open item's
             // recent ledger entries via a partial reload, so the list itself
             // never pays for movements nobody looked at.
@@ -130,6 +147,12 @@ class InventoryController extends Controller
                 $item = $this->viewedItem($request);
 
                 return $item === null ? null : $ranking->get($item);
+            }),
+            // The drawer's stock waterfall — on hand, allocated, free to sell. See ItemAvailabilityQuery.
+            'itemAvailability' => Inertia::optional(function () use ($request, $availability): ?array {
+                $item = $this->viewedItem($request);
+
+                return $item === null ? null : $availability->get($item);
             }),
             // "Who's buying it" — see ItemCustomerAttributionQuery.
             'itemCustomerAttribution' => Inertia::optional(function () use ($request, $attribution): array {
@@ -173,7 +196,10 @@ class InventoryController extends Controller
         PricingTierOptions $tierOptions,
         OrderFormOptions $customerOptions,
         RecipeInputOptions $recipeInputs,
+        RecipeCost $recipeCost,
+        RecipeCostSummary $recipeCostSummary,
         InventoryMediaPresenter $media,
+        ProductCategoryOptions $categoryOptions,
     ): Response {
         $item->loadMissing('firstImage');
 
@@ -182,6 +208,9 @@ class InventoryController extends Controller
 
         return Inertia::render('Inventory/Show', [
             'item' => $presenter->item($item),
+            // The edit form's Category select and previous-vintage picker, loaded when it opens.
+            'productCategories' => Inertia::optional(fn (): array => $categoryOptions->tree()),
+            'vintageOptions' => Inertia::optional(fn (): array => $categoryOptions->vintageCandidates()),
             // Every prop below is a closure: a partial visit (the period strip) evaluates only what it asks
             // for, instead of rebuilding movements, pricing, images and the rest on every click.
             'analytics' => fn (): array => $analytics->get($item, $period),
@@ -205,9 +234,23 @@ class InventoryController extends Controller
             // Api\StockController::recipe() returns, so the two transports
             // can't disagree about what an item's recipe is. Also what the
             // Produce tab checks before offering a production run.
-            'recipe' => fn (): array => array_values($item->recipe()->with('input')->get()
-                ->map(fn (RecipeItem $line): array => RecipeLineData::fromModel($line)->toArray())
-                ->all()),
+            'recipe' => fn (): array => RecipeLineData::collection($item->recipe()->with(['input', 'wineLot'])->get(), $recipeCost),
+            // Every production run of this item — what was made, by whom, and what it took from stock.
+            'productionRuns' => fn (): array => $item->productionRuns()->with('createdBy')->limit(50)->get()
+                ->map(fn (ProductionRun $run): array => [
+                    'id' => (string) $run->getKey(),
+                    'quantity' => (string) $run->quantity,
+                    'reference' => $run->reference,
+                    'inputs' => $run->inputs,
+                    'by' => $run->createdBy?->name,
+                    'at' => $run->created_at?->toIso8601String(),
+                ])->all(),
+            // What the recipe costs per unit, for the cost / margin summary — null when no line is priced.
+            'recipeCost' => fn (): array => $recipeCostSummary->for($item),
+            // Ready / ageing wine in the cellar and the products that already have a recipe (to copy from) —
+            // only fetched when the Recipe tab's pickers open.
+            'recipeCellarLots' => Inertia::optional(fn (): array => $recipeInputs->cellarLots()),
+            'recipeSources' => Inertia::optional(fn (): array => $recipeInputs->sources($item)),
             // The Recipe tab's "add ingredient" picker — a whole-catalog scan,
             // so withheld until it actually opens.
             'recipeInputOptions' => Inertia::optional(fn (): array => $recipeInputs->list($item)),
@@ -297,22 +340,37 @@ class InventoryController extends Controller
     }
 
     /**
+     * Drag a product onto another category: it and all its vintages move together (MoveInventoryItemsAction).
+     */
+    public function move(MoveInventoryItemsRequest $request, MoveInventoryItemsAction $action): RedirectResponse|JsonResponse
+    {
+        /** @var list<string> $ids */
+        $ids = array_values((array) $request->validated('ids'));
+        $action->execute($ids, $request->validated('product_category_id'));
+
+        if ($request->expectsJson()) {
+            return response()->json(status: 204);
+        }
+
+        return back();
+    }
+
+    /**
      * Inventory check (Figma 271:12639) — the count sheet, grouped the way the
      * design groups it: a card per category, then bands per group/subcategory.
      */
-    public function check(InventoryItemPresenter $presenter): Response
+    public function check(InventoryItemPresenter $presenter, ListInventoryItemsQuery $query, ProductCategoryOptions $categoryOptions): Response
     {
-        $items = InventoryItem::query()
-            ->where('is_active', true)
-            ->orderBy('category')
-            ->orderBy('group')
-            ->orderBy('subcategory')
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        // Same order as the Inventory list, older vintages under their product, photos loaded in one query.
+        $rows = $query->countSheet();
+        EloquentCollection::make(array_column($rows, 'item'))->loadMissing('firstImage');
 
         return Inertia::render('Inventory/Check', [
-            'items' => $items->map(fn (InventoryItem $item) => $presenter->item($item))->values()->all(),
+            'productCategories' => $categoryOptions->tree(),
+            'items' => array_map(
+                fn (array $row): array => $presenter->item($row['item'], $row['later']) + ['is_older_vintage' => $row['older']],
+                $rows,
+            ),
             // Past stocktakes for the design's "History" affordance.
             'history' => InventoryCheck::query()
                 ->with('performedBy')
@@ -478,16 +536,7 @@ class InventoryController extends Controller
      */
     public function updateRecipe(SetRecipeRequest $request, InventoryItem $item, SetRecipeAction $action): RedirectResponse
     {
-        /** @var list<array{input_id: string, quantity: string}> $lines */
-        $lines = array_values(array_map(
-            fn (array $line): array => [
-                'input_id' => (string) $line['input_id'],
-                'quantity' => (string) $line['quantity'],
-            ],
-            (array) $request->validated('items', []),
-        ));
-
-        $action->execute($item, $lines);
+        $action->execute($item, $request->lines());
 
         return back()->with('success', __('Recipe saved.'));
     }

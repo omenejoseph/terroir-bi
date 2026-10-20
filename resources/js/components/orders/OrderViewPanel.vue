@@ -398,6 +398,8 @@ async function onOverflowAction(key: string): Promise<void> {
                 <Badge v-if="rebate !== null" variant="outline">{{ t('Rebate :percent%', { percent: rebate }) }}</Badge>
                 <Badge v-if="order!.is_backorder" variant="warning">{{ t('Backorder') }}</Badge>
                 <Badge v-if="order!.is_consignment" variant="outline">{{ t('Consignment') }}</Badge>
+                <Badge v-if="order!.holds_allocation" variant="warning" :title="t('Stock is set aside for this customer and leaves when the order ships.')">{{ t('Allocated') }}</Badge>
+                <Badge v-else-if="order!.is_allocation" variant="outline">{{ t('Allocation') }}</Badge>
                 <Badge
                     v-if="order!.payment"
                     :variant="order!.payment.status === 'PAID' ? 'success' : order!.payment.status === 'PARTIAL' ? 'warning' : 'outline'"

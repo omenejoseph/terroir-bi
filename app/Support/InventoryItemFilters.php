@@ -18,17 +18,20 @@ use Illuminate\Http\Request;
 final class InventoryItemFilters
 {
     /**
-     * @return array{search: ?string, category: ?string, is_active: ?bool, is_for_sale: ?bool, sellable: bool, missing_cost: bool, attention: ?string}
+     * @return array{search: ?string, category: ?string, product_category_id: ?string, is_active: ?bool, is_for_sale: ?bool, sellable: bool, missing_cost: bool, attention: ?string}
      */
     public static function fromRequest(Request $request): array
     {
         $search = $request->query('search');
         $category = $request->query('category');
         $attention = $request->query('attention');
+        $productCategory = $request->query('product_category_id');
 
         return [
             'search' => is_string($search) && $search !== '' ? $search : null,
             'category' => is_string($category) && $category !== '' ? $category : null,
+            // A category from the Categories tab; a top-level one also matches its subcategories.
+            'product_category_id' => is_string($productCategory) && $productCategory !== '' ? $productCategory : null,
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : null,
             'is_for_sale' => $request->has('is_for_sale') ? $request->boolean('is_for_sale') : null,
             'sellable' => $request->boolean('sellable'),

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { ChevronRight, Columns3, Download, Plus, Search, X } from 'lucide-vue-next';
 
@@ -63,6 +63,19 @@ const createOpen = ref(false);
   page believes is open; `props.order` is what the server has sent back for it.
 */
 const openId = ref<string | null>(null);
+
+/*
+  `order` is an optional prop, so a fresh visit to /orders?order=… (a shared link, a refresh, or the
+  Allocated links in the item drawer) arrives without it. Pick the id up from the URL and ask for it.
+*/
+onMounted(() => {
+    const id = new URLSearchParams(window.location.search).get('order');
+
+    if (id) {
+        openId.value = id;
+        router.reload({ data: { order: id }, only: ['order'], replace: true });
+    }
+});
 
 /** Debounced server-side search; `preserveState` keeps focus and the typed value. */
 let timer: ReturnType<typeof setTimeout> | undefined;

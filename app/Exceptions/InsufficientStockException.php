@@ -6,6 +6,7 @@ namespace App\Exceptions;
 
 use App\Models\InventoryItem;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
 
@@ -40,8 +41,13 @@ class InsufficientStockException extends RuntimeException
         );
     }
 
-    public function render(Request $request): JsonResponse
+    public function render(Request $request): JsonResponse|RedirectResponse
     {
+        // A page (Inertia) can't show a bare JSON body — it pops it up in a modal. Send it back as a form error instead.
+        if ($request->header('X-Inertia') !== null) {
+            return back()->withErrors(['quantity' => $this->getMessage()]);
+        }
+
         return new JsonResponse([
             'message' => $this->getMessage(),
             'errors' => [

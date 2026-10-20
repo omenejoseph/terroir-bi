@@ -22,6 +22,7 @@ import Tabs from '@/components/ui/Tabs.vue';
 import { confirmDialog } from '@/composables/useConfirm';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
+import { useUrlTab } from '@/composables/useUrlTab';
 import { ANALYSIS_FIELDS, VESSEL_TYPE_LABELS, qty } from '@/lib/cellar';
 import type { AnalysisRow, HistoryEntry, LotOption, MapVessel, Vessel, WineLotDetail } from '@/types/cellar';
 import type { SharedProps } from '@/types';
@@ -53,7 +54,7 @@ const v = computed(() => props.vessel);
 const pct = computed(() => (Number(v.value.capacity_liters) > 0 ? (Number(v.value.current_volume) / Number(v.value.capacity_liters)) * 100 : 0));
 
 type TabKey = 'overview' | 'analysis' | 'tasting' | 'history' | 'details';
-const tab = ref<TabKey>('overview');
+const { tab, select: selectTab } = useUrlTab(['overview', 'analysis', 'tasting', 'history', 'details'] as const satisfies readonly TabKey[], 'overview');
 const tabs = computed<TabItem[]>(() => [
     { label: t('Overview'), value: 'overview' },
     { label: `${t('Analysis')} (${v.value.analyses.length})`, value: 'analysis' },
@@ -115,7 +116,7 @@ function removeRecord(url: string): void {
                 </template>
             </PageHeader>
             <CellarTabs current="overview" />
-            <Tabs :items="tabs" :current="tab" @select="tab = $event as TabKey" />
+            <Tabs :items="tabs" :current="tab" @select="selectTab" />
 
             <div v-if="tab === 'overview'" class="grid gap-4 lg:grid-cols-2">
                 <Card class="flex flex-col gap-3 p-4">

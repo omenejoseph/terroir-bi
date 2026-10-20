@@ -8,6 +8,7 @@ import FormField from '@/components/ui/FormField.vue';
 import Input from '@/components/ui/Input.vue';
 import Select from '@/components/ui/Select.vue';
 import { useTranslations } from '@/composables/useTranslations';
+import { isWholeUnit } from '@/lib/stock';
 
 /**
  * "Quick stock entry" (Figma `449:1577`) — records one ledger movement without
@@ -46,6 +47,7 @@ const TYPES = [
     { value: 'ADJUSTMENT', label: t('Adjustment') },
 ];
 
+const whole = computed(() => isWholeUnit(props.unit));
 const isOutbound = computed(() => form.type === 'MANUAL_OUT');
 
 function submit(): void {
@@ -75,7 +77,10 @@ function submit(): void {
             </FormField>
 
             <FormField v-slot="{ id, invalid }" :label="t('Quantity (:unit)', { unit })" :error="form.errors.quantity">
-                <Input :id="id" v-model="form.quantity" :invalid="invalid" placeholder="0" inputmode="decimal" />
+                <Input :id="id" v-model="form.quantity" :invalid="invalid" placeholder="0" 
+                    :inputmode="whole ? 'numeric' : 'decimal'"
+                    @input="whole && (form.quantity = form.quantity.replace(/[^0-9]/g, ''))"
+                />
             </FormField>
 
             <FormField v-slot="{ id, invalid }" :label="t('Note')" :error="form.errors.note">

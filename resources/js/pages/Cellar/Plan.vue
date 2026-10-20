@@ -11,6 +11,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
+import { useUrlTab } from '@/composables/useUrlTab';
 import type { CellarActivityType, CellarPlan, CellarPreselect, LotOption, MemberOption, ParcelOption, ProductOption, Vessel } from '@/types/cellar';
 import type { SharedProps } from '@/types';
 import type { TabItem } from '@/types/ui';
@@ -58,7 +59,7 @@ const placeholder = computed(() => {
 });
 
 const openCount = computed(() => props.plan.open.reduce((n, d) => n + d.singles.length + d.rounds.reduce((m, r) => m + r.items.length, 0), 0));
-const drawer = ref<'open' | 'executed'>('open');
+const { tab: drawer, select: selectDrawer } = useUrlTab(['open', 'executed'] as const, 'open');
 const drawerTabs = computed<TabItem[]>(() => [
     { label: t('Open plan · :n', { n: openCount.value }), value: 'open' },
     { label: t('Recently executed'), value: 'executed' },
@@ -113,7 +114,7 @@ const vesselName = (id: string) => vesselNames.value.get(id);
             </div>
 
             <div class="flex flex-col gap-3">
-                <Tabs :items="drawerTabs" :current="drawer" @select="drawer = $event as 'open' | 'executed'" />
+                <Tabs :items="drawerTabs" :current="drawer" @select="selectDrawer" />
                 <PlanList
                     :days="drawer === 'open' ? plan.open : plan.executed"
                     :mode="drawer"

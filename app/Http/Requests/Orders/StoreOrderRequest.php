@@ -6,6 +6,7 @@ namespace App\Http\Requests\Orders;
 
 use App\Enums\OrderStatus;
 use App\Enums\SalesUnit;
+use App\Services\Orders\OrderModeGuard;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -36,6 +37,7 @@ class StoreOrderRequest extends FormRequest
             'backorder_date' => ['sometimes', 'nullable', 'date'],
             'deduct_stock' => ['sometimes', 'boolean'],
             'is_consignment' => ['sometimes', 'boolean'],
+            'is_allocation' => ['sometimes', 'boolean'],
             'shipping_cost' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'shipping_paid_by_us' => ['sometimes', 'boolean'],
             'items' => ['required', 'array', 'min:1'],
@@ -53,6 +55,19 @@ class StoreOrderRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
+            // The three stock modes are mutually exclusive — the same rule CreateOrderAction enforces.
+            $status = $this->filled('status') ? OrderStatus::tryFrom((string) $this->input('status')) : null;
+
+            foreach (OrderModeGuard::violations(
+                $this->boolean('is_backorder'),
+                $this->boolean('is_consignment'),
+                $this->boolean('is_allocation'),
+                $status,
+                $this->has('deduct_stock') ? $this->boolean('deduct_stock') : null,
+            ) as $field => $message) {
+                $validator->errors()->add($field, $message);
+            }
+
             /** @var array<int, array<string, mixed>> $items */
             $items = (array) $this->input('items', []);
 

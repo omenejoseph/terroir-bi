@@ -100,6 +100,10 @@ export interface Order {
     shipping_cost: MoneyValue | null;
     shipping_paid_by_us: boolean;
     is_consignment: boolean;
+    /** Created as an allocation: stock set aside for the customer. */
+    is_allocation: boolean;
+    /** An allocation that has not shipped yet — its stock is still in the cellar, set aside. */
+    holds_allocation: boolean;
     consignment_closed_at: string | null;
     /** Only present when the viewer may see finance. */
     payment: OrderPayment | null;

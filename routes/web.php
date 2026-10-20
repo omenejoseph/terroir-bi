@@ -31,6 +31,8 @@ use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\LogController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\OrderController;
+use App\Http\Controllers\Web\PricingTierController;
+use App\Http\Controllers\Web\ProductCategoryController;
 use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\PublicOrderController;
 use App\Http\Controllers\Web\SearchController;
@@ -40,7 +42,6 @@ use App\Http\Controllers\Web\TeamController;
 use App\Http\Controllers\Web\TeamImpersonationController;
 use App\Http\Controllers\Web\TeamInvitationController;
 use App\Http\Controllers\Web\TeamMembersController;
-use App\Http\Controllers\Web\PricingTierController;
 use App\Http\Controllers\Web\TierPriceController;
 use App\Http\Controllers\Web\UploadController;
 use App\Http\Controllers\Web\WelcomeController;
@@ -181,6 +182,8 @@ Route::middleware('tenant.web')->group(function () {
     Route::middleware('can:inventory.view')->group(function () {
         Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
         Route::get('inventory-check', [InventoryController::class, 'check'])->name('inventory.check');
+        // Before inventory/{item}, which would otherwise swallow "categories" as an id.
+        Route::get('inventory/categories', [ProductCategoryController::class, 'index'])->name('inventory.categories.index');
         Route::get('inventory/{item}', [InventoryController::class, 'show'])->name('inventory.show');
         Route::get('inventory/{item}/movements/export', [InventoryController::class, 'exportMovements'])
             ->name('inventory.movements.export');
@@ -190,6 +193,12 @@ Route::middleware('tenant.web')->group(function () {
         Route::post('inventory', [InventoryController::class, 'store'])->name('inventory.store');
         // Drag and drop on the list: items within a band, and the order of groups / subcategories.
         Route::post('inventory-order', [InventoryController::class, 'reorder'])->name('inventory.reorder');
+        // Drag a product (with its vintages) onto another category.
+        Route::post('inventory-move', [InventoryController::class, 'move'])->name('inventory.move');
+        Route::post('inventory/categories', [ProductCategoryController::class, 'store'])->name('inventory.categories.store');
+        Route::post('inventory/categories/reorder', [ProductCategoryController::class, 'reorder'])->name('inventory.categories.reorder');
+        Route::patch('inventory/categories/{category}', [ProductCategoryController::class, 'update'])->name('inventory.categories.update');
+        Route::delete('inventory/categories/{category}', [ProductCategoryController::class, 'destroy'])->name('inventory.categories.destroy');
         Route::patch('inventory/{item}', [InventoryController::class, 'update'])->name('inventory.update');
 
         // Bulk Import — shared by the Inventory list, Analytics and Spend

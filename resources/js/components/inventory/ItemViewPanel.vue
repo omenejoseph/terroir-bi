@@ -18,6 +18,7 @@ import { categoryLabel, formatMovementDate, movementTypeLabel } from '@/lib/stoc
 import type {
     InventoryItem,
     ItemAuditTrailEntry,
+    ItemAvailability,
     ItemCustomerAttributionRow,
     ItemStockRank,
     MoneyValue,
@@ -41,6 +42,8 @@ const props = defineProps<{
     auditTrail: ItemAuditTrailEntry[];
     stockRank: ItemStockRank | null;
     customerAttribution: ItemCustomerAttributionRow[];
+    /** The stock waterfall; null until the drawer's partial reload lands. */
+    availability: ItemAvailability | null;
 }>();
 const emit = defineEmits<{ close: []; edit: [item: InventoryItem] }>();
 
@@ -61,7 +64,7 @@ watch(
 
         if (id) {
             router.reload({
-                only: ['itemMovements', 'itemAuditTrail', 'itemStockRank', 'itemCustomerAttribution'],
+                only: ['itemMovements', 'itemAuditTrail', 'itemStockRank', 'itemCustomerAttribution', 'itemAvailability'],
                 data: { item: id },
             });
         }
@@ -135,17 +138,8 @@ const cases = computed(() => {
     return per > 0 && Number.isFinite(stock) ? Math.floor(stock / per) : null;
 });
 
-/**
- * The design's waterfall deducts allocations, open-order reservations and
- * consignment from physical stock. None of the three exists in the schema, so
- * each row says so rather than showing 0 — a zero would assert there are none,
- * which is a claim the data cannot make.
- */
-const deductions = [
-    { label: t('Allocated'), note: t('allocations are not tracked') },
-    { label: t('Reserved by open orders'), note: t('order lines do not reserve stock') },
-    { label: t('On consignment'), note: t('consignment is not attributed per item') },
-];
+/** Negative free-to-sell: more is set aside for customers than the cellar holds. */
+const overAllocated = computed(() => (Number.parseFloat(props.availability?.free_to_sell ?? '0') || 0) < 0);
 
 </script>
 
@@ -196,42 +190,67 @@ const deductions = [
                     v-if="adjusting"
                     :item-id="item.id"
                     :unit="item.unit"
-                    :only="['items', 'itemMovements']"
+                    :only="['items', 'itemMovements', 'itemAvailability']"
                 />
 
-                <!--
-                  The design leads with free-to-sell. We cannot compute it, so
-                  physical stock leads instead and the label says which figure
-                  this is — rather than presenting physical as if it were
-                  available.
-                -->
+                <!-- Free to sell leads, as in the design; physical stock stands in until the figures arrive. -->
                 <p class="flex items-baseline gap-2">
-                    <span class="text-3xl font-semibold tabular-nums">{{ qty(item.current_stock) }}</span>
-                    <span class="text-sm text-muted-foreground">{{ t('physical stock') }}</span>
+                    <span class="text-3xl font-semibold tabular-nums" :class="overAllocated && 'text-destructive'">
+                        {{ qty(availability ? availability.free_to_sell : item.current_stock) }}
+                    </span>
+                    <span class="text-sm text-muted-foreground">{{ availability ? t('free to sell') : t('physical stock') }}</span>
                 </p>
 
-                <!--
-                  The design's free-to-sell waterfall. Allocations and order
-                  reservations do not exist in the schema, so those rows say
-                  "not tracked" rather than 0 — a zero would assert there are
-                  none, which is a claim the data cannot make. The total is
-                  withheld for the same reason.
-                -->
                 <dl class="divide-y divide-border text-sm">
                     <div class="flex items-start justify-between gap-3 py-3">
                         <dt>{{ t('Physical stock') }}</dt>
                         <dd class="shrink-0 font-medium tabular-nums">{{ qty(item.current_stock) }}</dd>
                     </div>
-                    <div v-for="row in deductions" :key="row.label" class="flex items-start justify-between gap-3 py-3">
+
+                    <!-- Allocation orders set stock aside: still in the cellar, not free to sell. -->
+                    <div class="flex items-start justify-between gap-3 py-3">
                         <dt class="min-w-0">
-                            <span class="block text-muted-foreground">− {{ row.label }}</span>
-                            <span class="block text-xs text-muted-foreground">{{ row.note }}</span>
+                            <span class="block text-muted-foreground">− {{ t('Allocated') }}</span>
+                            <span v-if="!availability" class="block text-xs text-muted-foreground">{{ t('Loading…') }}</span>
+                            <span v-else-if="!availability.allocations.length" class="block text-xs text-muted-foreground">{{ t('nothing set aside for a customer') }}</span>
+                            <Link
+                                v-for="allocation in availability?.allocations ?? []"
+                                :key="allocation.order_id"
+                                :href="`/orders?order=${allocation.order_id}`"
+                                class="block text-xs text-muted-foreground hover:text-foreground hover:underline"
+                            >
+                                {{ allocation.customer ?? '—' }} · #{{ allocation.order_number }} · {{ qty(allocation.quantity) }}
+                            </Link>
                         </dt>
-                        <dd class="shrink-0 text-xs text-muted-foreground">—</dd>
+                        <dd class="shrink-0 font-medium tabular-nums">{{ availability ? qty(availability.allocated) : '—' }}</dd>
+                    </div>
+
+                    <div class="flex items-start justify-between gap-3 py-3">
+                        <dt class="min-w-0">
+                            <span class="block font-medium">{{ t('= Free to sell') }}</span>
+                            <span v-if="overAllocated" class="block text-xs text-destructive">{{ t('More is allocated than is on hand.') }}</span>
+                        </dt>
+                        <dd class="shrink-0 font-medium tabular-nums" :class="overAllocated && 'text-destructive'">
+                            {{ availability ? qty(availability.free_to_sell) : '—' }}
+                        </dd>
+                    </div>
+                </dl>
+
+                <!-- Already out of the cellar: orders deduct when placed, consignments when placed with the customer. -->
+                <dl v-if="availability" class="divide-y divide-border border-t border-border text-sm">
+                    <div class="flex items-start justify-between gap-3 py-3">
+                        <dt class="min-w-0">
+                            <span class="block text-muted-foreground">{{ t('In open orders') }}</span>
+                            <span class="block text-xs text-muted-foreground">{{ t('already taken off physical stock') }}</span>
+                        </dt>
+                        <dd class="shrink-0 tabular-nums text-muted-foreground">{{ qty(availability.in_open_orders) }}</dd>
                     </div>
                     <div class="flex items-start justify-between gap-3 py-3">
-                        <dt class="font-medium">{{ t('= Free to sell') }}</dt>
-                        <dd class="shrink-0 text-xs text-muted-foreground">{{ t('needs order reservations') }}</dd>
+                        <dt class="min-w-0">
+                            <span class="block text-muted-foreground">{{ t('On consignment') }}</span>
+                            <span class="block text-xs text-muted-foreground">{{ t('with customers, already taken off physical stock') }}</span>
+                        </dt>
+                        <dd class="shrink-0 tabular-nums text-muted-foreground">{{ qty(availability.on_consignment) }}</dd>
                     </div>
                 </dl>
             </section>
@@ -373,6 +392,7 @@ const deductions = [
             <Button v-if="item" variant="outline" class="mr-auto border-destructive/40 text-destructive" :href="`/inventory/${item.id}`">
                 {{ t('Delete') }}
             </Button>
+            <Button v-if="item" variant="outline" :href="`/inventory/${item.id}`">{{ t('Details') }}</Button>
             <Button v-if="item" variant="outline" @click="adjusting = !adjusting">{{ t('Adjust stock') }}</Button>
             <Button v-if="item" @click="emit('edit', item)">{{ t('Edit item') }}</Button>
         </template>

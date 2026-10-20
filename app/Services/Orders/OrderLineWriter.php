@@ -16,7 +16,8 @@ use App\Support\Money\Money;
 /**
  * Writes a single order line: resolves the unit price (server truth unless an
  * explicit override is given), snapshots COGS, persists the line, and — for
- * catalog lines when the order deducts stock — deducts it (overdraw-guarded).
+ * catalog lines when the order deducts stock — deducts it (overdraw-guarded). An allocation order
+ * deducts nothing; it only checks the cellar can cover what has been set aside.
  * Shared by order creation and add-items so the rules live in one place.
  */
 class OrderLineWriter
@@ -25,6 +26,7 @@ class OrderLineWriter
         private readonly PricingService $pricing,
         private readonly CogsSnapshot $cogs,
         private readonly StockLedger $ledger,
+        private readonly AllocationService $allocations,
     ) {}
 
     /**
@@ -78,7 +80,12 @@ class OrderLineWriter
             'custom_description' => $line['custom_description'] ?? null,
         ]);
 
-        if ($item !== null && $order->deduct_stock) {
+        if ($item !== null && $order->holdsAllocation()) {
+            // Set aside, not taken: no ledger movement, but the cellar must cover everything promised.
+            $this->allocations->assertNotOverAllocated($item);
+        } elseif ($item !== null && $order->deduct_stock) {
+            // Taking stock may not eat into what is set aside for another customer.
+            $this->allocations->assertCanDeduct($item, (string) $quantity, $unitType);
             $this->ledger->deduct($item, (string) $quantity, $unitType, $order->order_number);
         }
 

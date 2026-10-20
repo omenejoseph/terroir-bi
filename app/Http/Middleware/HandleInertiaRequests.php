@@ -83,7 +83,9 @@ class HandleInertiaRequests extends Middleware
             'impersonating' => fn () => $this->impersonating($user),
             // Only serialised when the tenant switcher actually asks for it (a partial reload on first open).
             'tenants' => Inertia::optional(fn () => $user instanceof User ? $this->memberships($user) : []),
-            'flash' => [
+            // Always sent, even to a partial reload that names its props: a write that answers with `only: […]`
+            // still has to show its success / error message.
+            'flash' => Inertia::always([
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 // A cellar delete's undo token (UndoStash) — the toast offers Undo for ten seconds.
@@ -92,7 +94,7 @@ class HandleInertiaRequests extends Middleware
                 // can never be re-shown after this request (only the
                 // invitation's hashed token is stored).
                 'inviteLink' => fn () => $request->session()->get('invite_link'),
-            ],
+            ]),
             // Closures so these read the locale SetLocale resolved for THIS
             // request, evaluated when Inertia builds the response (after the
             // full middleware stack has run) rather than at share()-call time.

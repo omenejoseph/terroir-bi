@@ -12,6 +12,7 @@ use App\Models\CustomerPrice;
 use App\Models\InventoryItem;
 use App\Models\Order;
 use App\Models\PricingTier;
+use App\Models\ProductCategory;
 use App\Models\RecipeItem;
 use App\Models\StockMovement;
 use App\Models\Tenant;
@@ -131,9 +132,63 @@ class WebInventoryTest extends TestCase
                 ->has('items.data', 2)
                 ->where('items.meta.current_page', 2));
 
+        // Not an allowed size: back to the list's default of 100.
         $this->actingAs($admin)->withSession($session)->get('/inventory?per_page=999')
             ->assertInertia(fn (AssertableInertia $page) => $page
-                ->where('items.meta.per_page', 25));
+                ->where('items.meta.per_page', 100));
+    }
+
+    public function test_index_filters_by_category_and_a_parent_covers_its_subcategories(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $red = $this->makeItem('Red One', 'R-1');
+        $red->update(['group' => 'Wine', 'subcategory' => 'Red']);
+        $white = $this->makeItem('White One', 'W-1');
+        $white->update(['group' => 'Wine', 'subcategory' => 'White']);
+        $cork = $this->makeItem('Cork', 'C-1');
+        $cork->update(['group' => 'Closures']);
+        $wineId = (string) $red->refresh()->productCategory->parent_id;
+        $redId = (string) $red->product_category_id;
+        $this->forgetTenant();
+
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+        $names = fn (string $query): array => collect(
+            $this->actingAs($admin)->withSession($session)->get('/inventory?'.$query)->viewData('page')['props']['items']['data'],
+        )->pluck('name')->sort()->values()->all();
+
+        $this->assertSame(['Red One', 'White One'], $names('product_category_id='.$wineId));
+        $this->assertSame(['Red One'], $names('product_category_id='.$redId));
+        $this->assertSame(['Cork', 'Red One', 'White One'], $names(''));
+    }
+
+    /** The list scrolls: the first request is 100 rows, and the page the scroll asks for next carries the rest. */
+    public function test_index_defaults_to_a_hundred_rows_and_serves_the_next_page_as_a_partial(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        for ($i = 0; $i < 105; $i++) {
+            $this->makeItem(sprintf('Item %03d', $i), sprintf('SKU-%03d', $i));
+        }
+        $this->forgetTenant();
+
+        $session = [ActiveTenantSession::KEY => $tenant->getKey()];
+
+        $this->actingAs($admin)->withSession($session)->get('/inventory')
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('items.data', 100)
+                ->where('items.meta.last_page', 2)
+                ->where('items.meta.total', 105));
+
+        // What the scroll fetches: just `items` and `cover` of page 2, no other props.
+        $this->actingAs($admin)->withSession($session)
+            ->get('/inventory?per_page=100&page=2', $this->inertiaPartial('Inventory/Index', ['items', 'cover']))
+            ->assertOk()
+            ->assertJsonCount(5, 'props.items.data')
+            ->assertJsonPath('props.items.data.0.name', 'Item 100')
+            ->assertJsonMissingPath('props.totals');
     }
 
     public function test_index_filters_by_search(): void
@@ -1056,6 +1111,96 @@ class WebInventoryTest extends TestCase
                 ->component('Inventory/Check')
                 ->has('items', 1)
                 ->has('history'));
+    }
+
+    public function test_check_page_follows_the_inventory_order_with_older_vintages_under_their_product(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $old = $this->makeItem('Shiraz 2021', 'S-21');
+        $old->update(['group' => 'Wine', 'vintage' => 2021]);
+        $new = $this->makeItem('Shiraz 2024', 'S-24');
+        $new->update(['group' => 'Wine', 'vintage' => 2024, 'previous_vintage_id' => $old->getKey()]);
+        $this->makeItem('Cork', 'C-1')->update(['group' => 'Closures']);
+        // Arranged: Closures before Wine, whatever their names say.
+        $closures = ProductCategory::query()->where('name', 'Closures')->firstOrFail();
+        $wine = ProductCategory::query()->where('name', 'Wine')->firstOrFail();
+        $closures->update(['sort_order' => 0]);
+        $wine->update(['sort_order' => 1]);
+        $this->forgetTenant();
+
+        $this->actingAs($admin)
+            ->withSession([ActiveTenantSession::KEY => $tenant->getKey()])
+            ->get('/inventory-check')
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('items', 3)
+                ->where('items.0.name', 'Cork')
+                ->where('items.1.name', 'Shiraz 2024')
+                ->where('items.1.is_older_vintage', false)
+                ->where('items.2.name', 'Shiraz 2021')
+                ->where('items.2.is_older_vintage', true)
+                ->has('items.0.image_url'));
+    }
+
+    public function test_whole_unit_items_refuse_decimal_counts_and_adjustments_but_measured_ones_allow_them(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $bottles = $this->makeItem('R3', 'R3');
+        $bottles->update(['unit' => 'bottles']);
+        $litres = $this->makeItem('Must', 'MUST');
+        $litres->update(['unit' => 'liters']);
+        $this->forgetTenant();
+
+        $as = fn () => $this->actingAs($admin)->withSession([ActiveTenantSession::KEY => $tenant->getKey()]);
+
+        $as()->post('/inventory-check', ['items' => [['item_id' => $bottles->getKey(), 'physical_count' => '1.3']]])
+            ->assertSessionHasErrors('items.0.physical_count');
+        $as()->post('/inventory-check', ['items' => [['item_id' => $litres->getKey(), 'physical_count' => '1.3']]])
+            ->assertSessionHasNoErrors();
+        $as()->post('/inventory/'.$bottles->getKey().'/stock', ['type' => 'MANUAL_IN', 'quantity' => '1.5'])
+            ->assertSessionHasErrors('quantity');
+        $as()->post('/inventory/'.$bottles->getKey().'/stock', ['type' => 'MANUAL_IN', 'quantity' => '2'])
+            ->assertSessionHasNoErrors();
+    }
+
+    public function test_the_other_inventory_forms_also_keep_whole_unit_items_whole(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+
+        $this->actingAsTenant($tenant);
+        $bottles = $this->makeItem('R3', 'R3');
+        $bottles->update(['unit' => 'bottles']);
+        $this->forgetTenant();
+
+        $as = fn () => $this->actingAs($admin)->withSession([ActiveTenantSession::KEY => $tenant->getKey()]);
+
+        $as()->patch('/inventory/'.$bottles->getKey(), ['min_stock' => '2.5'])->assertSessionHasErrors('min_stock');
+        $as()->patch('/inventory/'.$bottles->getKey(), ['min_stock' => '3'])->assertSessionHasNoErrors();
+        $as()->post('/inventory/'.$bottles->getKey().'/produce', ['display_quantity' => '1.5'])->assertSessionHasErrors('display_quantity');
+        $as()->patch('/inventory-bulk', ['items' => [['id' => $bottles->getKey(), 'min_stock' => '1.5']]])->assertSessionHasErrors('items.0.min_stock');
+    }
+
+    public function test_bottles_per_case_can_be_set_on_create_and_changed_on_edit(): void
+    {
+        [$tenant, $admin] = $this->tenantAndAdmin();
+        $as = fn () => $this->actingAs($admin)->withSession([ActiveTenantSession::KEY => $tenant->getKey()]);
+
+        $as()->post('/inventory', [
+            'name' => 'Case wine', 'sku' => 'CW', 'category' => 'FINISHED', 'unit' => 'bottles',
+            'sales_unit' => 'cases', 'bottles_per_case' => 12,
+        ])->assertSessionHasNoErrors();
+
+        $this->actingAsTenant($tenant);
+        $item = InventoryItem::query()->where('sku', 'CW')->firstOrFail();
+        $this->assertSame(12, (int) $item->bottles_per_case);
+        $this->forgetTenant();
+
+        $as()->patch('/inventory/'.$item->getKey(), ['bottles_per_case' => 6])->assertSessionHasNoErrors();
+        $this->actingAsTenant($tenant);
+        $this->assertSame(6, (int) $item->refresh()->bottles_per_case);
     }
 
     public function test_applying_a_check_writes_a_reconciliation_movement(): void

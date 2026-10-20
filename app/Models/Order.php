@@ -9,6 +9,7 @@ use App\Services\Audit\Auditable;
 use App\Support\Money\Money;
 use App\Support\Money\MoneyCast;
 use App\Tenancy\BelongsToTenant;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,6 +33,7 @@ use Illuminate\Support\Carbon;
  * @property Money|null $shipping_cost
  * @property bool $shipping_paid_by_us
  * @property bool $is_consignment
+ * @property bool $is_allocation
  * @property Carbon|null $consignment_closed_at
  * @property Carbon|null $last_stale_notified_at
  * @property Carbon|null $created_at
@@ -55,6 +57,7 @@ class Order extends Model
         'shipping_cost',
         'shipping_paid_by_us',
         'is_consignment',
+        'is_allocation',
         'consignment_closed_at',
         'last_stale_notified_at',
         'is_ai_generated',
@@ -68,6 +71,7 @@ class Order extends Model
         'deduct_stock' => true,
         'shipping_paid_by_us' => false,
         'is_consignment' => false,
+        'is_allocation' => false,
     ];
 
     protected function casts(): array
@@ -80,12 +84,31 @@ class Order extends Model
             'deduct_stock' => 'boolean',
             'shipping_paid_by_us' => 'boolean',
             'is_consignment' => 'boolean',
+            'is_allocation' => 'boolean',
             'backorder_date' => 'datetime',
             'consignment_closed_at' => 'datetime',
             'last_stale_notified_at' => 'datetime',
             'is_ai_generated' => 'boolean',
             'ai_metadata' => 'array',
         ];
+    }
+
+    /**
+     * Stock is set aside for this order's customer but has not left yet: an allocation that has not
+     * shipped. Its lines count as "allocated" on the items, and no ledger movement exists for them.
+     */
+    public function holdsAllocation(): bool
+    {
+        return $this->is_allocation && ! $this->deduct_stock;
+    }
+
+    /**
+     * @param  Builder<Order>  $query
+     * @return Builder<Order>
+     */
+    public function scopeHoldingAllocation(Builder $query): Builder
+    {
+        return $query->where('is_allocation', true)->where('deduct_stock', false);
     }
 
     /**

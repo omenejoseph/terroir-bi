@@ -7,6 +7,7 @@ namespace App\Services\Orders;
 use App\Enums\SalesUnit;
 use App\Models\InventoryItem;
 use App\Models\RecipeItem;
+use App\Services\Inventory\RecipeCost;
 use App\Support\Money\Money;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -75,27 +76,19 @@ class CogsSnapshot
      */
     private function recipeRollup($recipe): ?Money
     {
+        $recipe->loadMissing('wineLot');
         $totalMinor = 0;
         $currency = null;
-        $priced = false;
 
-        foreach ($recipe as $line) {
-            $input = $line->input;
-            $lineCost = $input instanceof InventoryItem ? $input->cost_per_unit : $line->custom_cost;
-
-            if ($lineCost === null) {
+        foreach (app(RecipeCost::class)->lines($recipe) as $line) {
+            if ($line['line_cost'] === null) {
                 continue;
             }
 
-            $currency ??= $lineCost->getCurrencyCode();
-            $totalMinor += (int) round($lineCost->getMinorAmount() * (float) $line->quantity);
-            $priced = true;
+            $currency ??= $line['line_cost']->getCurrencyCode();
+            $totalMinor += $line['line_cost']->getMinorAmount();
         }
 
-        if (! $priced || $currency === null) {
-            return null;
-        }
-
-        return Money::fromMinor($totalMinor, $currency);
+        return $currency === null ? null : Money::fromMinor($totalMinor, $currency);
     }
 }

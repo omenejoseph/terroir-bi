@@ -156,3 +156,34 @@ const CUSTOMER_CHANNELS: Record<string, string> = {
 export function customerChannelLabel(key: string): string {
     return CUSTOMER_CHANNELS[key] ?? key;
 }
+
+/** Bottles, cases and units are counted in whole pieces; kilograms and litres are measured. Mirrors App\Support\StockUnits. */
+export function isWholeUnit(unit: string | null | undefined): boolean {
+    return ['bottle', 'bottles', 'case', 'cases', 'unit', 'units'].includes((unit ?? '').trim().toLowerCase());
+}
+
+const MEASURES: Record<string, [family: string, toBase: number]> = {
+    ml: ['volume', 0.001],
+    cl: ['volume', 0.01],
+    l: ['volume', 1],
+    g: ['mass', 0.001],
+    kg: ['mass', 1],
+};
+const MEASURE_ALIASES: Record<string, string> = { liter: 'l', liters: 'l', litre: 'l', litres: 'l', lt: 'l', gram: 'g', grams: 'g', kilogram: 'kg', kilograms: 'kg' };
+
+function measureCode(unit: string | null | undefined): string | null {
+    const raw = (unit ?? '').trim().toLowerCase();
+    const code = MEASURE_ALIASES[raw] ?? raw;
+
+    return code in MEASURES ? code : null;
+}
+
+/** How many `to` make one `from` (1 ml = 0.001 l); null when they do not convert. Mirrors App\Support\Measure::factor(). */
+export function measureFactor(from: string | null | undefined, to: string | null | undefined): number | null {
+    const a = measureCode(from);
+    const b = measureCode(to);
+
+    if (a === null || b === null || MEASURES[a]![0] !== MEASURES[b]![0]) return null;
+
+    return MEASURES[a]![1] / MEASURES[b]![1];
+}

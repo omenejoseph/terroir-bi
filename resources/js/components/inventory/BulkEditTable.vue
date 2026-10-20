@@ -7,7 +7,7 @@ import Checkbox from '@/components/ui/Checkbox.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/cn';
 import { formatQuantity } from '@/lib/money';
-import { categoryLabel } from '@/lib/stock';
+import { categoryLabel, isWholeUnit } from '@/lib/stock';
 import type { InventoryItem } from '@/types/inventory';
 
 /**
@@ -172,8 +172,9 @@ const cellInput =
                             <input
                                 v-model="drafts[item.id]!.min_stock"
                                 :class="cn(cellInput, 'text-right tabular-nums')"
-                                inputmode="decimal"
+                                :inputmode="isWholeUnit(item.unit) ? 'numeric' : 'decimal'"
                                 :aria-label="t('Minimum stock')"
+                                @input="isWholeUnit(item.unit) && (drafts[item.id]!.min_stock = drafts[item.id]!.min_stock.replace(/[^0-9]/g, ''))"
                             />
                         </td>
                         <td class="px-2 py-1.5">

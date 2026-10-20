@@ -8,6 +8,7 @@ use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Services\Audit\AuditLogger;
 use App\Services\Notifications\Notifier;
+use App\Services\Orders\AllocationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -16,6 +17,7 @@ class UpdateOrderStatusAction
     public function __construct(
         private readonly Notifier $notifier,
         private readonly AuditLogger $audit,
+        private readonly AllocationService $allocations,
     ) {}
 
     public function execute(Order $order, OrderStatus $status, ?string $note, string $changedById): Order
@@ -23,6 +25,11 @@ class UpdateOrderStatusAction
         $from = $order->status;
 
         DB::transaction(function () use ($order, $status, $note, $changedById): void {
+            // An allocation leaves the cellar when it ships; if it can't, the order does not ship.
+            if ($status->isShipped()) {
+                $this->allocations->convertOnShip($order);
+            }
+
             $order->status = $status;
             $order->save();
 

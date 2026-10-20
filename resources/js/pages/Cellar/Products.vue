@@ -21,6 +21,7 @@ import Textarea from '@/components/ui/Textarea.vue';
 import { confirmDialog } from '@/composables/useConfirm';
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
+import { useUrlTab } from '@/composables/useUrlTab';
 import { parseDecimal, qty } from '@/lib/cellar';
 import { cn } from '@/lib/cn';
 import { csrfHeader } from '@/lib/csrf';
@@ -48,7 +49,7 @@ const currency = computed(() => page.props.org?.default_currency ?? 'EUR');
 const locale = computed(() => page.props.locale);
 const money = (m: number) => formatMoney(m, currency.value);
 
-const tab = ref<'products' | 'needs'>('products');
+const { tab, select: selectTab } = useUrlTab(['products', 'needs'] as const, 'products');
 const deficits = computed(() => props.needs.filter((n) => n.deficit > 0));
 const tabs = computed<TabItem[]>(() => [
     { label: t('Products'), value: 'products' },
@@ -197,7 +198,7 @@ function draftOrders(): void {
                 <StatCard :label="t('Protocol deficits')" :value="String(deficits.length)" :alert="deficits.length > 0" />
             </div>
 
-            <Tabs :items="tabs" :current="tab" @select="tab = $event as 'products' | 'needs'" />
+            <Tabs :items="tabs" :current="tab" @select="selectTab" />
 
             <template v-if="tab === 'products'">
                 <div class="flex flex-wrap items-center gap-2">

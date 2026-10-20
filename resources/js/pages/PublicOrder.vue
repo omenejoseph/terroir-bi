@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import { CheckCircle2 } from 'lucide-vue-next';
+import { CheckCircle2, ShoppingCart } from 'lucide-vue-next';
 
 import AppLogo from '@/components/AppLogo.vue';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
@@ -9,6 +9,8 @@ import Button from '@/components/ui/Button.vue';
 import Callout from '@/components/ui/Callout.vue';
 import Card from '@/components/ui/Card.vue';
 import CardContent from '@/components/ui/CardContent.vue';
+import CardHeader from '@/components/ui/CardHeader.vue';
+import CardTitle from '@/components/ui/CardTitle.vue';
 import QuantityStepper from '@/components/orders/QuantityStepper.vue';
 import Label from '@/components/ui/Label.vue';
 import Textarea from '@/components/ui/Textarea.vue';
@@ -153,11 +155,31 @@ const lines = computed(() => {
         .filter((line) => line.quantity > 0);
 });
 
+/** "3 cases" / "1 bottle" — the unit the line is ordered in, pluralised. */
+function lineUnit(product: PublicCatalogProduct, quantity: number): string {
+    if (product.sales_unit === 'cases') return quantity === 1 ? t('case') : t('cases');
+
+    return quantity === 1 ? t('bottle') : t('bottles');
+}
+
+/** For case lines, the bottle count the cases add up to — "(36 bottles)". */
+function lineBottles(product: PublicCatalogProduct, quantity: number): string {
+    if (product.sales_unit !== 'cases') return '';
+
+    const bottles = quantity * Math.max(1, product.bottles_per_case ?? 1);
+
+    return `(${bottles} ${bottles === 1 ? t('bottle') : t('bottles')})`;
+}
+
 const currency = computed(() => catalog.value?.products.find((p) => p.price)?.price?.currency ?? 'EUR');
 
 const totalMinor = computed(() =>
     lines.value.reduce((sum, line) => sum + unitPriceMinor(line.product) * line.quantity, 0),
 );
+
+function goToSummary(): void {
+    document.getElementById('po-summary')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 async function submit(): Promise<void> {
     submitError.value = null;
@@ -214,13 +236,24 @@ async function submit(): Promise<void> {
 <template>
     <Head :title="t('Place an order')" />
 
-    <div class="min-h-screen bg-background px-4 pt-8 pb-32">
+    <div class="min-h-screen bg-background px-4 pb-8">
         <div class="mx-auto w-full max-w-2xl space-y-6">
-            <header class="flex items-center gap-2.5">
-                <AppLogo :size="28" />
-                <span class="text-sm font-semibold">{{ catalog?.business_name ?? 'Terroir' }}</span>
-                <LanguageSwitcher class="ml-auto" />
-            </header>
+            <div class="sticky top-0 z-10 -mx-4 border-b border-border bg-background px-4">
+                <header class="flex items-center gap-2.5 py-3">
+                    <AppLogo :size="28" />
+                    <span class="text-sm font-semibold">{{ catalog?.business_name ?? 'Terroir' }}</span>
+                    <LanguageSwitcher class="ml-auto" />
+                </header>
+
+                <input
+                    v-if="status === 'ready' && catalog && catalog.products.length > 0"
+                    v-model="search"
+                    type="search"
+                    :placeholder="t('Search products…')"
+                    :aria-label="t('Search products')"
+                    class="mb-3 h-9 w-full border border-input bg-card px-3 text-sm placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                />
+            </div>
 
             <div v-if="status === 'loading'" class="flex justify-center py-20">
                 <div class="size-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-foreground" />
@@ -248,14 +281,6 @@ async function submit(): Promise<void> {
                     </p>
                 </div>
 
-                <input
-                    v-if="catalog.products.length > 0"
-                    v-model="search"
-                    type="search"
-                    :placeholder="t('Search products…')"
-                    :aria-label="t('Search products')"
-                    class="h-9 w-full border border-input bg-card px-3 text-sm placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                />
 
                 <p v-if="catalog.products.length > 0 && visibleProducts.length === 0" class="py-8 text-center text-sm text-muted-foreground">
                     {{ t('No product matches.') }}
@@ -311,37 +336,69 @@ async function submit(): Promise<void> {
                     </div>
                 </section>
 
-                <p v-if="lines.length === 0" class="text-sm text-muted-foreground">
+                <p v-if="lines.length === 0" class="py-8 text-center text-sm text-muted-foreground">
+                    <ShoppingCart class="mx-auto mb-2 size-8 opacity-40" :stroke-width="1.5" />
                     {{ t('Select products above to start your order.') }}
                 </p>
 
-                <div v-else class="space-y-2">
-                    <Label for="po-notes">{{ t('Notes (optional)') }}</Label>
-                    <Textarea id="po-notes" v-model="notes" :rows="3" :placeholder="t('Delivery instructions, anything else we should know…')" />
-                </div>
+                <Card v-else id="po-summary" class="scroll-mt-20">
+                    <CardHeader class="p-4 pb-2">
+                        <CardTitle class="flex items-center gap-2 text-base">
+                            <ShoppingCart class="size-4" />
+                            {{ t('Order summary') }}
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent class="space-y-3 p-4 pt-0">
+                        <div class="space-y-2">
+                            <div v-for="line in lines" :key="line.product.id" class="flex items-center justify-between gap-3 text-sm">
+                                <span>
+                                    {{ line.quantity }} {{ lineUnit(line.product, line.quantity) }} × {{ [line.product.name, line.product.vintage].filter(Boolean).join(' ') }}
+                                    <span v-if="lineBottles(line.product, line.quantity)" class="ml-1 text-[10px] text-muted-foreground">
+                                        {{ lineBottles(line.product, line.quantity) }}
+                                    </span>
+                                </span>
+                                <span v-if="showPrices" class="font-medium tabular-nums">
+                                    {{ formatMoney(unitPriceMinor(line.product) * line.quantity, currency) }}
+                                </span>
+                            </div>
+                        </div>
 
-                <Callout v-if="submitError" :title="t(`Couldn't submit that order`)" tone="warning">
-                    {{ submitError }}
-                </Callout>
+                        <div v-if="showPrices" class="flex items-center justify-between border-t border-border pt-2">
+                            <span class="font-medium">
+                                {{ t('Total') }} <span class="text-[10px] font-normal text-muted-foreground">{{ t('excl. VAT') }}</span>
+                            </span>
+                            <span class="text-lg font-bold tabular-nums">{{ formatMoney(totalMinor, currency) }}</span>
+                        </div>
+
+                        <div class="space-y-2">
+                            <Label for="po-notes">{{ t('Notes (optional)') }}</Label>
+                            <Textarea id="po-notes" v-model="notes" :rows="2" :placeholder="t('Delivery instructions, anything else we should know…')" />
+                        </div>
+
+                        <Callout v-if="submitError" :title="t(`Couldn't submit that order`)" tone="warning">
+                            {{ submitError }}
+                        </Callout>
+
+                        <Button type="button" class="w-full" size="lg" :disabled="submitting" @click="submit">
+                            {{ submitting ? t('Placing order…') : t('Place order') }}
+                        </Button>
+                    </CardContent>
+                </Card>
             </template>
         </div>
 
-        <!-- The running total and the submit stay in reach while scrolling a long catalogue. -->
-        <div
+        <!-- Floating cart: the number of products chosen, tapping it jumps to the order summary. -->
+        <button
             v-if="status === 'ready' && lines.length > 0"
-            class="fixed inset-x-0 bottom-0 border-t border-border bg-card px-4 py-3"
+            type="button"
+            :aria-label="t('Order summary')"
+            class="fixed right-4 bottom-4 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            @click="goToSummary"
         >
-            <div class="mx-auto flex w-full max-w-2xl items-center justify-between gap-3">
-                <p class="text-sm">
-                    {{ t(':count products', { count: lines.length }) }}
-                    <template v-if="showPrices">
-                        · {{ t('Total') }} <span class="font-semibold tabular-nums">{{ formatMoney(totalMinor, currency) }}</span>
-                    </template>
-                </p>
-                <Button type="button" :disabled="submitting" @click="submit">
-                    {{ submitting ? t('Placing order…') : t('Place order') }}
-                </Button>
-            </div>
-        </div>
+            <ShoppingCart class="size-6" :stroke-width="1.75" />
+            <span class="absolute -top-1 -right-1 flex min-w-5 items-center justify-center rounded-full bg-foreground px-1 text-[11px] leading-5 font-semibold text-background tabular-nums">
+                {{ lines.length }}
+            </span>
+        </button>
     </div>
 </template>

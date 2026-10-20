@@ -124,6 +124,7 @@ class CustomerController extends Controller
         CustomerProductsQuery $products,
         CustomerAttentionQuery $attention,
         CustomerCategoryOptions $categories,
+        PricingTierOptions $tiers,
     ): Response {
         $financials = $this->membership->canSeeFinancials();
 
@@ -141,7 +142,8 @@ class CustomerController extends Controller
             // Closures, so a partial visit (a tab, the product range, the revenue months) evaluates only
             // the props it names instead of rebuilding the whole overview each time.
             'customer' => fn (): array => $presenter->detail($customer),
-            // For the edit form's Category select, loaded on demand like the tiers on the list page.
+            // For the edit form's Pricing tier and Category selects, loaded on demand.
+            'tiers' => Inertia::optional(fn (): array => $tiers->list()),
             'categories' => Inertia::optional(fn (): array => $categories->list()),
             'tab' => $this->tab($request),
             'hasConsignment' => fn (): bool => Order::query()->where('customer_id', $customer->getKey())->where('is_consignment', true)->exists(),
