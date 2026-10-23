@@ -23,7 +23,7 @@ class PromotePlatformAdminRequest extends FormRequest
         return [
             'user_id' => [
                 'required',
-                Rule::exists((new User)->getTable(), 'id')->where('is_platform_admin', false),
+                Rule::exists((new User)->getTable(), 'id')->where(fn ($query) => $query->where('is_platform_admin', false)),
             ],
         ];
     }
