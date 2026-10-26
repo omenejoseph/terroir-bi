@@ -67,8 +67,11 @@ class UpdateProductCategoryAction
     private function scope(ProductCategory $category): array
     {
         return [
-            $category->getKey(),
-            ...ProductCategory::query()->where('parent_id', $category->getKey())->pluck('id')->all(),
+            (string) $category->getKey(),
+            ...array_values(array_map(
+                fn (mixed $id): string => (string) $id,
+                ProductCategory::query()->where('parent_id', $category->getKey())->pluck('id')->all(),
+            )),
         ];
     }
 }

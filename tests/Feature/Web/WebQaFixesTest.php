@@ -361,7 +361,7 @@ class WebQaFixesTest extends TestCase
             ->json('props.recentActivity');
 
         /** @var list<array<string, mixed>> $rows */
-        $byTitle = collect($rows)->keyBy('task.title');
+        $byTitle = collect($rows)->keyBy('task.title')->all();
         $this->assertSame('added', $byTitle['Fresh task']['kind']);
         $this->assertSame('moved', $byTitle['Moved task']['kind']);
         $this->assertSame('TODO', $byTitle['Moved task']['from']);

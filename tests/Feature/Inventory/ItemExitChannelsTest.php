@@ -102,7 +102,7 @@ class ItemExitChannelsTest extends TestCase
 
     /** @return array<string, mixed> */
     /**
-     * @return array{rows: list<array<string, mixed>>, total_bottles: int}
+     * @return array<string, mixed>
      */
     private function channels(string $period = '30d'): array
     {
@@ -116,7 +116,9 @@ class ItemExitChannelsTest extends TestCase
     public function test_exits_are_split_by_customer_channel_with_revenue(): void
     {
         $result = $this->channels();
-        $rows = collect($result['rows'])->keyBy('key');
+        /** @var list<array<string, mixed>> $list */
+        $list = $result['rows'];
+        $rows = array_column($list, null, 'key');
 
         $this->assertSame(30, $rows['internal']['bottles']);
         $this->assertSame(50, $rows['distributor']['bottles']);
@@ -129,7 +131,7 @@ class ItemExitChannelsTest extends TestCase
         $this->assertNull($rows['non_order']['revenue']);
 
         $this->assertSame(95, $result['total_bottles']);
-        $this->assertEqualsWithDelta(1.0, collect($result['rows'])->sum('share'), 0.001);
+        $this->assertEqualsWithDelta(1.0, array_sum(array_column($list, 'share')), 0.001);
     }
 
     public function test_deducts_for_deleted_orders_are_reported_as_excluded_not_counted(): void
