@@ -9,6 +9,7 @@ use App\Actions\Customers\DeleteCustomerAction;
 use App\Actions\Customers\OrderTokenAction;
 use App\Actions\Customers\UpdateCustomerAction;
 use App\Authorization\MembershipContext;
+use App\Enums\Module;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customers\MergeCustomersRequest;
 use App\Http\Requests\Customers\StoreCustomerRequest;
@@ -17,8 +18,10 @@ use App\Models\Customer;
 use App\Models\CustomerPrice;
 use App\Models\InventoryItem;
 use App\Models\Order;
+use App\Models\Reservation;
 use App\Queries\CustomerAnalyticsQuery;
 use App\Queries\CustomerAttentionQuery;
+use App\Queries\CustomerHospitalityQuery;
 use App\Queries\CustomerInsightsQuery;
 use App\Queries\CustomerOrderAnalyticsQuery;
 use App\Queries\CustomerProductsQuery;
@@ -48,6 +51,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -146,6 +150,11 @@ class CustomerController extends Controller
             'tiers' => Inertia::optional(fn (): array => $tiers->list()),
             'categories' => Inertia::optional(fn (): array => $categories->list()),
             'tab' => $this->tab($request),
+            // The Hospitality tab (agency prices and reservations) — only for agencies, or any
+            // customer that already has bookings, and only for members who work in that module.
+            'hasHospitality' => fn (): bool => $this->hospitalityVisible()
+                && ((bool) $customer->is_agency || Reservation::query()->where('customer_id', $customer->getKey())->exists()),
+            'hospitality' => Inertia::optional(fn (): ?array => $this->hospitalityVisible() ? app(CustomerHospitalityQuery::class)->get($customer) : null),
             'hasConsignment' => fn (): bool => Order::query()->where('customer_id', $customer->getKey())->where('is_consignment', true)->exists(),
             'rhythm' => fn (): array => $rhythm->get($customer),
             // The band is usually empty; each card either fires with its
@@ -576,8 +585,16 @@ class CustomerController extends Controller
     private function tab(Request $request): string
     {
         $tab = $request->query('tab');
-        $allowed = ['overview', 'pricing', 'orders', 'consignment'];
+        $allowed = ['overview', 'pricing', 'orders', 'consignment', 'hospitality'];
 
         return is_string($tab) && in_array($tab, $allowed, true) ? $tab : 'overview';
+    }
+
+    /** The hospitality module is in the plan and this member may see it. */
+    private function hospitalityVisible(): bool
+    {
+        $plan = app(TenantContext::class)->current()?->plan;
+
+        return Gate::allows('hospitality.view') && ($plan === null || $plan->hasModule(Module::Hospitality));
     }
 }

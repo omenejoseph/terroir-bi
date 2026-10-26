@@ -4,6 +4,7 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { Plus, Search } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
+import AnalyticsTab from '@/components/hospitality/AnalyticsTab.vue';
 import ProgramFormPanel from '@/components/hospitality/ProgramFormPanel.vue';
 import ProgramPricesPanel from '@/components/hospitality/ProgramPricesPanel.vue';
 import ReservationFormPanel from '@/components/hospitality/ReservationFormPanel.vue';
@@ -25,7 +26,9 @@ import { formatMoney, formatNumber } from '@/lib/money';
 import type { Paginated, SharedProps } from '@/types';
 import type {
     AgencyOption,
+    AgencyPerformance,
     AgencyPriceRow,
+    HospitalityAnalytics,
     HospitalityStats,
     ProgramRow,
     ReservationFilters,
@@ -39,11 +42,10 @@ defineOptions({ layout: AppLayout });
 
 /**
  * Hospitality — the old app's "Agencies" page (/dashboard/hospitality): the reservation list with
- * its tiles and filters, and the Programs tab with each program's agency price book. Analytics is
- * the next tab to land (docs/21 §7, step 1c).
+ * its tiles and filters, the Programs tab with each program's agency price book, and Analytics.
  */
 const props = defineProps<{
-    tab: 'reservations' | 'programs';
+    tab: 'reservations' | 'programs' | 'analytics';
     filters: ReservationFilters;
     reservations: Paginated<ReservationRow>;
     stats: HospitalityStats;
@@ -51,6 +53,9 @@ const props = defineProps<{
     programs: ProgramRow[];
     agencies: AgencyOption[];
     programPrices?: AgencyPriceRow[];
+    /** The Analytics tab's two optional props, fetched when it opens. */
+    analytics?: HospitalityAnalytics;
+    agencyPerformance?: AgencyPerformance;
 }>();
 
 const page = usePage<SharedProps>();
@@ -60,12 +65,45 @@ const { t } = useTranslations();
 
 const canManage = computed(() => can('hospitality.manage'));
 
-const TABS = ['reservations', 'programs'] as const;
-const { tab, select: selectTab } = useUrlTab(TABS, 'reservations');
+const TABS = ['reservations', 'programs', 'analytics'] as const;
+const { tab, select: selectUrlTab } = useUrlTab(TABS, 'reservations');
 const TAB_ITEMS = computed<TabItem[]>(() => [
     { value: 'reservations', label: t('Reservations') },
     { value: 'programs', label: t('Programs') },
+    { value: 'analytics', label: t('Analytics') },
 ]);
+
+/* ---- analytics ----------------------------------------------------------------- */
+
+/* Analytics is paid for only when its tab is open; the year and the agency range ride in the URL. */
+const compare = ref(new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search).get('perf_compare') === '1');
+
+function loadAnalytics(): void {
+    if (props.analytics === undefined) router.reload({ only: ['analytics', 'agencyPerformance'] });
+}
+
+function selectTab(value: string): void {
+    selectUrlTab(value);
+    if (value === 'analytics') loadAnalytics();
+}
+
+onMounted(() => {
+    if (tab.value === 'analytics') loadAnalytics();
+});
+
+function selectYear(year: number): void {
+    // A new year resets the agency table to that whole year.
+    router.reload({ data: { year, perf_from: undefined, perf_to: undefined }, only: ['analytics', 'agencyPerformance'], replace: true });
+}
+
+function selectPerformance(range: { from: string | null; to: string | null; compare: boolean }): void {
+    compare.value = range.compare;
+    router.reload({
+        data: { perf_from: range.from ?? undefined, perf_to: range.to ?? undefined, perf_compare: range.compare ? 1 : undefined },
+        only: ['agencyPerformance'],
+        replace: true,
+    });
+}
 
 onMounted(() => rememberListUrl('hospitality'));
 
@@ -390,6 +428,16 @@ function programMeta(program: ProgramRow): string {
                 </div>
             </div>
         </template>
+
+        <!-- ================= Analytics ================= -->
+        <AnalyticsTab
+            v-else-if="tab === 'analytics'"
+            :analytics="analytics"
+            :performance="agencyPerformance"
+            :compare="compare"
+            @year="selectYear"
+            @performance="selectPerformance"
+        />
 
         <!-- ================= Programs ================= -->
         <template v-else>

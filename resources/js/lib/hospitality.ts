@@ -39,3 +39,13 @@ export const TIME_SLOTS: string[] = Array.from({ length: (24 - 6) * 4 }, (_, i) 
 
     return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 });
+
+/** The status's label key (App\Enums\ReservationStatus::label), for `t()` where the server sent no status list. */
+export const RESERVATION_STATUS_LABEL: Record<ReservationStatus, string> = {
+    PENDING: 'Pending',
+    CONFIRMED: 'Confirmed',
+    INVOICE_SENT: 'Invoice Sent',
+    PAID: 'Paid',
+    COMPLETED: 'Completed',
+    CANCELLED: 'Cancelled',
+};

@@ -10,6 +10,7 @@ import CustomerFormPanel from '@/components/customers/CustomerFormPanel.vue';
 import CustomerPriceDialog from '@/components/customers/CustomerPriceDialog.vue';
 import OrderLinkDialog from '@/components/customers/OrderLinkDialog.vue';
 import OrderRhythm from '@/components/customers/OrderRhythm.vue';
+import CustomerHospitalityTab from '@/components/hospitality/CustomerHospitalityTab.vue';
 import PipelineCard from '@/components/orders/PipelineCard.vue';
 import BarChart from '@/components/ui/BarChart.vue';
 import DateRangePicker from '@/components/ui/DateRangePicker.vue';
@@ -35,6 +36,7 @@ import type {
     CustomerProducts,
     CustomerRhythm,
 } from '@/types/customers';
+import type { CustomerHospitality } from '@/types/hospitality';
 import type { MoneyValue } from '@/types/inventory';
 import type { Order, OrderPipeline, OrderStatusCounts, OrderStatusKey, ProductOption } from '@/types/orders';
 import type { Paginated, SharedProps } from '@/types';
@@ -83,6 +85,10 @@ const props = defineProps<{
     consignment?: CustomerConsignment;
     /** True when this customer has any consignment order — the Consignment tab is hidden otherwise. */
     hasConsignment: boolean;
+    /** True for an agency, or a customer with reservations, when the viewer works in hospitality. */
+    hasHospitality: boolean;
+    /** Undefined until the Hospitality tab asks for it; null when the viewer may not see it. */
+    hospitality?: CustomerHospitality | null;
     /** Undefined until the Order link dialog opens and asks for it. */
     orderToken?: string | null;
 }>();
@@ -115,6 +121,7 @@ const TABS = computed<TabItem[]>(() => [
     { value: 'orders', label: t('Order History (:count)', { count: props.orderHistory?.meta.total ?? 0 }) },
     // Almost no customer has goods on komisija, so the tab only appears when this one does.
     ...(props.hasConsignment || props.tab === 'consignment' ? [{ value: 'consignment', label: t('Consignment') }] : []),
+    ...(props.hasHospitality ? [{ value: 'hospitality', label: t('Hospitality') }] : []),
 ]);
 
 /** Switching tabs asks the server for only that tab's data. */
@@ -124,6 +131,7 @@ function selectTab(value: string): void {
         pricing: ['pricing'],
         orders: ['orderHistory', 'orderPipeline', 'orderStatusCounts'],
         consignment: ['consignment'],
+        hospitality: ['hospitality'],
     };
 
     router.get(
@@ -235,6 +243,9 @@ watch(
 
         if (props.pricing === undefined) only.push('pricing');
         if (props.orderHistory === undefined) only.push('orderHistory');
+
+        // A direct link into the Hospitality tab needs its data; selectTab() never ran for it.
+        if (props.tab === 'hospitality' && props.hospitality === undefined) only.push('hospitality');
 
         if (props.tab === 'orders') {
             if (props.orderPipeline === undefined) only.push('orderPipeline');
@@ -1123,6 +1134,16 @@ async function removePrice(row: CustomerPriceRow): Promise<void> {
                         />
                     </div>
                 </div>
+            </template>
+
+            <!-- ==================== Hospitality ==================== -->
+            <template v-else-if="tab === 'hospitality'">
+                <CustomerHospitalityTab
+                    :customer-id="customer.id"
+                    :is-agency="Boolean(customer.is_agency)"
+                    :hospitality="hospitality"
+                    :can-manage="can('hospitality.manage')"
+                />
             </template>
 
             <!-- ==================== Komisija ==================== -->

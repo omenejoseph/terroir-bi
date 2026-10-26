@@ -22,6 +22,8 @@ use App\Models\HospitalityAgencyPrice;
 use App\Models\HospitalityProgram;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Queries\AgencyPerformanceQuery;
+use App\Queries\HospitalityAnalyticsQuery;
 use App\Queries\HospitalityQuickStatsQuery;
 use App\Queries\ReservationListQuery;
 use App\Services\Hospitality\HospitalityOptions;
@@ -32,6 +34,7 @@ use App\Support\ReservationFilters;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -43,7 +46,7 @@ use Inertia\Response;
 class ReservationController extends Controller
 {
     /** @var list<string> */
-    private const TABS = ['reservations', 'programs'];
+    private const TABS = ['reservations', 'programs', 'analytics'];
 
     public function index(
         Request $request,
@@ -67,6 +70,19 @@ class ReservationController extends Controller
             'agencies' => fn (): array => $options->agencies(),
             // A program's agency prices, only fetched while its drawer is open (?program=…).
             'programPrices' => Inertia::optional(fn (): array => $options->agencyPrices((string) $request->query('program'))),
+            // The Analytics tab, only paid for while it is open (?year=…, and the agency table's own range).
+            'analytics' => Inertia::optional(fn (): array => app(HospitalityAnalyticsQuery::class)->get($this->analyticsYear($request))),
+            'agencyPerformance' => Inertia::optional(function () use ($request): array {
+                $year = $this->analyticsYear($request);
+                $from = $this->date($request->query('perf_from')) ?? Carbon::now()->setYear($year)->startOfYear();
+                $to = $this->date($request->query('perf_to')) ?? Carbon::now()->setYear($year)->endOfYear();
+
+                return app(AgencyPerformanceQuery::class)->get(
+                    $from->lessThanOrEqualTo($to) ? $from : $to,
+                    $from->lessThanOrEqualTo($to) ? $to : $from,
+                    $request->boolean('perf_compare'),
+                );
+            }),
         ]);
     }
 
@@ -156,6 +172,20 @@ class ReservationController extends Controller
         }
 
         return redirect('/hospitality')->with('success', __('Reservation deleted.'));
+    }
+
+    /** The Analytics tab's year: this one unless a sensible other is asked for. */
+    private function analyticsYear(Request $request): int
+    {
+        $year = (int) $request->query('year', (string) Carbon::now()->year);
+
+        return $year >= 2000 && $year <= Carbon::now()->year + 1 ? $year : Carbon::now()->year;
+    }
+
+    /** Only `YYYY-MM-DD`; anything else is ignored rather than handed to a date parser. */
+    private function date(mixed $value): ?Carbon
+    {
+        return is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1 ? Carbon::parse($value) : null;
     }
 
     private function userId(Request $request): string

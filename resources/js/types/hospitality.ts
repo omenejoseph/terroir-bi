@@ -116,3 +116,65 @@ export interface ReservationQuote {
     source: 'agency_price' | 'customer_rebate' | 'base_price';
     max_pax: number | null;
 }
+
+/** One program on the customer page's Hospitality tab: the price this customer pays, if any. */
+export interface CustomerProgramPrice {
+    program_id: string;
+    program_name: string;
+    is_active: boolean;
+    base_price: MoneyValue;
+    /** Null when this customer has no agency price and pays base (or their own rebate). */
+    price_per_pax: MoneyValue | null;
+    rebate_percent: number | null;
+    effective_rebate_percent: number | null;
+}
+
+/** The customer page's Hospitality tab (CustomerHospitalityQuery). */
+export interface CustomerHospitality {
+    prices: CustomerProgramPrice[];
+    reservations: ReservationRow[];
+    reservation_count: number;
+    revenue: MoneyValue;
+}
+
+/** GET /hospitality?tab=analytics — HospitalityAnalyticsQuery. */
+export interface HospitalityAnalytics {
+    year: number;
+    years: number[];
+    kpis: {
+        reservations: number;
+        revenue: MoneyValue;
+        guests: number;
+        revenue_per_guest: MoneyValue;
+        upcoming: number;
+        pipeline: MoneyValue;
+        conversion_rate: number | null;
+    };
+    months: { month: number; revenue: MoneyValue; previous_revenue: MoneyValue; reservations: number; guests: number }[];
+    programs: { program_id: string; name: string; reservations: number; guests: number; revenue: MoneyValue; revenue_per_guest: MoneyValue; share: number }[];
+    top_agencies: { customer_id: string; name: string; reservations: number; guests: number; revenue: MoneyValue }[];
+}
+
+export interface AgencyPerformanceRow {
+    customer_id: string;
+    name: string;
+    reservations: number;
+    guests: number;
+    revenue: MoneyValue;
+    revenue_per_guest: MoneyValue;
+    list_value: MoneyValue;
+    discount: MoneyValue;
+    discount_percent: number | null;
+    previous_revenue: MoneyValue | null;
+    previous_reservations: number | null;
+    change_percent: number | null;
+}
+
+/** AgencyPerformanceQuery. */
+export interface AgencyPerformance {
+    from: string;
+    to: string;
+    previous_from: string | null;
+    previous_to: string | null;
+    rows: AgencyPerformanceRow[];
+}
