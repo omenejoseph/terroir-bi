@@ -66,9 +66,9 @@ class UpdateProductCategoryAction
      */
     private function scope(ProductCategory $category): array
     {
-        return [
+        return array_values(array_map('strval', [
             $category->getKey(),
             ...ProductCategory::query()->where('parent_id', $category->getKey())->pluck('id')->all(),
-        ];
+        ]));
     }
 }

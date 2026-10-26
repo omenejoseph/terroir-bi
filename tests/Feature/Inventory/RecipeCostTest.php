@@ -210,6 +210,7 @@ class RecipeCostTest extends TestCase
         /** @var list<array<string, mixed>> $inputOptions */
         $inputOptions = $props['recipeInputOptions'];
         $brandyOption = collect($inputOptions)->firstWhere('id', $brandy->getKey());
+        assert(is_array($brandyOption));
         $this->assertEquals(1000, $brandyOption['unit_cost']['minor']);
         $this->assertSame(['ml', 'cl', 'l'], $brandyOption['unit_options']);
         $this->assertSame($lot->getKey(), $props['recipeCellarLots'][0]['id']);

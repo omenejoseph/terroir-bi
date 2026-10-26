@@ -361,13 +361,13 @@ class WebQaFixesTest extends TestCase
             ->get('/work-orders', ['X-Inertia' => 'true', 'X-Inertia-Version' => Inertia::getVersion(), 'X-Inertia-Partial-Component' => 'WorkOrders/Index', 'X-Inertia-Partial-Data' => 'recentActivity'])
             ->json('props.recentActivity');
 
-        $byTitle = collect($rows)->keyBy('task.title');
+        $byTitle = collect($rows)->keyBy('task.title')->all();
         $this->assertSame('added', $byTitle['Fresh task']['kind']);
         $this->assertSame('moved', $byTitle['Moved task']['kind']);
         $this->assertSame('TODO', $byTitle['Moved task']['from']);
         $this->assertSame('IN_PROGRESS', $byTitle['Moved task']['to']);
-        $this->assertFalse($byTitle->has('Old task'));
-        $this->assertFalse($byTitle->has('Moved long ago'));
+        $this->assertArrayNotHasKey('Old task', $byTitle);
+        $this->assertArrayNotHasKey('Moved long ago', $byTitle);
     }
 
     /* ---- Customer look-up (OIB / EU VAT via VIES) --------------------- */

@@ -84,7 +84,7 @@ final class RecipeLineData implements Arrayable, JsonSerializable
         $recipe->each->loadMissing(['input', 'wineLot']);
         $costs = $cost->lines($recipe);
 
-        return $recipe->map(fn (RecipeItem $line, int $at): array => self::fromModel($line, $costs[$at])->toArray())->values()->all();
+        return array_values($recipe->map(fn (RecipeItem $line, int $at): array => self::fromModel($line, $costs[$at])->toArray())->all());
     }
 
     /**
