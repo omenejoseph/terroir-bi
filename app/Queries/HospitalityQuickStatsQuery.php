@@ -32,41 +32,46 @@ class HospitalityQuickStatsQuery
         $now ??= Carbon::now();
         $currency = $this->currency();
 
-        $windows = [
-            'today' => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
-            'month' => [$now->copy()->startOfMonth(), $now->copy()->endOfDay()],
-            'year' => [$now->copy()->startOfYear(), $now->copy()->endOfDay()],
-        ];
-
-        $tiles = [];
-        foreach ($windows as $key => [$from, $to]) {
-            $current = $this->totals($from, $to);
-            $previous = $this->totals($from->copy()->subYearNoOverflow(), $to->copy()->subYearNoOverflow());
-
-            $tiles[$key] = [
-                'count' => $current['count'],
-                'pax' => $current['pax'],
-                'revenue' => Money::fromMinor($current['revenue'], $currency)->jsonSerialize(),
-                'previous_revenue' => Money::fromMinor($previous['revenue'], $currency)->jsonSerialize(),
-                'delta_percent' => $previous['revenue'] > 0
-                    ? round(($current['revenue'] - $previous['revenue']) / $previous['revenue'] * 100, 1)
-                    : null,
-            ];
-        }
+        $today = $this->tile($now->copy()->startOfDay(), $now->copy()->endOfDay(), $currency);
+        $month = $this->tile($now->copy()->startOfMonth(), $now->copy()->endOfDay(), $currency);
+        $year = $this->tile($now->copy()->startOfYear(), $now->copy()->endOfDay(), $currency);
 
         // Group size and the confirmed share are about the whole current month, booked ahead included.
-        $month = $this->counted($now->copy()->startOfMonth(), $now->copy()->endOfMonth());
-        $booked = (clone $month)->count();
+        $wholeMonth = $this->counted($now->copy()->startOfMonth(), $now->copy()->endOfMonth());
+        $booked = (clone $wholeMonth)->count();
         $converted = array_filter(ReservationStatus::cases(), fn (ReservationStatus $s): bool => $s->isConverted());
-        $confirmed = (clone $month)->whereIn('status', array_map(fn (ReservationStatus $s): string => $s->value, $converted))->count();
+        $confirmed = (clone $wholeMonth)->whereIn('status', array_map(fn (ReservationStatus $s): string => $s->value, $converted))->count();
 
-        $year = $this->totals($now->copy()->startOfYear(), $now->copy()->endOfYear());
+        $wholeYear = $this->totals($now->copy()->startOfYear(), $now->copy()->endOfYear());
 
         return [
-            ...$tiles,
-            'avg_pax' => $year['count'] > 0 ? round($year['pax'] / $year['count'], 1) : 0.0,
+            'today' => $today,
+            'month' => $month,
+            'year' => $year,
+            'avg_pax' => $wholeYear['count'] > 0 ? round($wholeYear['pax'] / $wholeYear['count'], 1) : 0.0,
             'confirmed' => $confirmed,
             'booked' => $booked,
+        ];
+    }
+
+    /**
+     * One tile: the window's figures against the same window a year earlier.
+     *
+     * @return array<string, mixed>
+     */
+    private function tile(Carbon $from, Carbon $to, string $currency): array
+    {
+        $current = $this->totals($from, $to);
+        $previous = $this->totals($from->copy()->subYearNoOverflow(), $to->copy()->subYearNoOverflow());
+
+        return [
+            'count' => $current['count'],
+            'pax' => $current['pax'],
+            'revenue' => Money::fromMinor($current['revenue'], $currency)->jsonSerialize(),
+            'previous_revenue' => Money::fromMinor($previous['revenue'], $currency)->jsonSerialize(),
+            'delta_percent' => $previous['revenue'] > 0
+                ? round(($current['revenue'] - $previous['revenue']) / $previous['revenue'] * 100, 1)
+                : null,
         ];
     }
 

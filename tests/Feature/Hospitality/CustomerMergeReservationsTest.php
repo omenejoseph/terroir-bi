@@ -7,6 +7,7 @@ namespace Tests\Feature\Hospitality;
 use App\Actions\Hospitality\CreateReservationAction;
 use App\Actions\Hospitality\SetAgencyPriceAction;
 use App\Models\HospitalityAgencyPrice;
+use App\Models\HospitalityProgram;
 use App\Models\Reservation;
 use App\Services\Customers\CustomerMergeService;
 
@@ -42,14 +43,18 @@ class CustomerMergeReservationsTest extends HospitalityTestCase
         $this->assertSame(1, $result['totals']['agency_price_reassign']);
         $this->assertSame(1, $result['totals']['agency_price_drop']);
 
-        $reservation = Reservation::query()->findOrFail($reservation->getKey());
+        $reservation = Reservation::query()->whereKey($reservation->getKey())->firstOrFail();
         $this->assertSame($winner->getKey(), $reservation->customer_id);
         // The booking keeps the price it was taken at.
         $this->assertSame(3900, $reservation->price_per_pax->getMinorAmount());
 
-        $book = HospitalityAgencyPrice::query()->where('customer_id', $winner->getKey())->get()->keyBy('program_id');
-        $this->assertCount(2, $book);
-        $this->assertSame(4200, $book[$tasting->getKey()]->price_per_pax->getMinorAmount());
-        $this->assertSame(7000, $book[$tour->getKey()]->price_per_pax->getMinorAmount());
+        $price = fn (HospitalityProgram $program): int => HospitalityAgencyPrice::query()
+            ->where('customer_id', $winner->getKey())
+            ->where('program_id', $program->getKey())
+            ->firstOrFail()
+            ->price_per_pax->getMinorAmount();
+        $this->assertSame(2, HospitalityAgencyPrice::query()->where('customer_id', $winner->getKey())->count());
+        $this->assertSame(4200, $price($tasting));
+        $this->assertSame(7000, $price($tour));
     }
 }
