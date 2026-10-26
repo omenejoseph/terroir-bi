@@ -47,6 +47,7 @@ class WholeUnitStockFixTest extends TestCase
         $this->assertSame(3.0, (float) DB::table('inventory_items')->where('id', $bottles)->value('min_stock'));
 
         $movement = DB::table('stock_movements')->where('inventory_item_id', $bottles)->first();
+        assert($movement !== null);
         $this->assertSame('ADJUSTMENT', $movement->type);
         $this->assertEqualsWithDelta(-0.3, (float) $movement->quantity, 0.0001);
         $this->assertTrue((bool) $movement->is_reconciliation);

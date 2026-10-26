@@ -149,14 +149,17 @@ class WebInventoryTest extends TestCase
         $white->update(['group' => 'Wine', 'subcategory' => 'White']);
         $cork = $this->makeItem('Cork', 'C-1');
         $cork->update(['group' => 'Closures']);
-        $wineId = (string) $red->refresh()->productCategory->parent_id;
+        $wineId = (string) $red->refresh()->productCategory?->parent_id;
         $redId = (string) $red->product_category_id;
         $this->forgetTenant();
 
         $session = [ActiveTenantSession::KEY => $tenant->getKey()];
-        $names = fn (string $query): array => collect(
-            $this->actingAs($admin)->withSession($session)->get('/inventory?'.$query)->viewData('page')['props']['items']['data'],
-        )->pluck('name')->sort()->values()->all();
+        $names = function (string $query) use ($admin, $session): array {
+            /** @var list<array<string, mixed>> $rows */
+            $rows = $this->actingAs($admin)->withSession($session)->get('/inventory?'.$query)->viewData('page')['props']['items']['data'];
+
+            return collect($rows)->pluck('name')->sort()->values()->all();
+        };
 
         $this->assertSame(['Red One', 'White One'], $names('product_category_id='.$wineId));
         $this->assertSame(['Red One'], $names('product_category_id='.$redId));

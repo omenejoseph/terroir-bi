@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\TenantSetting;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 /**
@@ -55,11 +56,14 @@ class RevenueBasis
     }
 
     /**
-     * Restrict an `orders` query to revenue-bearing orders inside the window.
+     * Restrict an `orders` query (or one joined to `orders`, such as order lines) to revenue-bearing
+     * orders inside the window.
      *
-     * @param  Builder<Order>  $query
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $query
      * @param  list<string>  $excludedCustomers
-     * @return Builder<Order>
+     * @return Builder<TModel>
      */
     public function apply(Builder $query, array $excludedCustomers, ?Carbon $since, ?Carbon $until): Builder
     {

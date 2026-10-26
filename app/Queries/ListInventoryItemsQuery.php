@@ -47,7 +47,7 @@ class ListInventoryItemsQuery
                 fn ($newer) => $newer->selectRaw('1')->from('inventory_items as newer')->whereColumn('newer.previous_vintage_id', 'inventory_items.id'),
             );
         } else {
-            $matched = $this->build($filters)->pluck('id')->all();
+            $matched = array_values(array_map('strval', $this->build($filters)->pluck('id')->all()));
             $query = InventoryItem::query()->whereIn('id', app(InventoryVintageChains::class)->headsOf($matched));
         }
 
@@ -103,7 +103,11 @@ class ListInventoryItemsQuery
             ->orderBy('name');
     }
 
-    /** The arranged position of an item's category (or subcategory) — 1000000 when it has none. */
+    /**
+     * The arranged position of an item's category (or subcategory) — 1000000 when it has none.
+     *
+     * @return literal-string
+     */
     private function arrangement(bool $subcategory): string
     {
         if ($subcategory) {

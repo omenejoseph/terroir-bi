@@ -104,10 +104,10 @@ class LotTablesQuery
     {
         $events = collect($this->timeline->get($lot))
             ->when($vessel !== null, fn ($c) => $c->filter(fn (array $e): bool => $e['vessel_ids'] === [] || in_array($vessel, $e['vessel_ids'], true)))
-            ->when($types !== null, fn ($c) => $c->filter(fn (array $e): bool => in_array($e['type'], $types, true)))
+            ->when($types !== null, fn ($c) => $c->filter(fn (array $e): bool => in_array($e['type'], $types ?? [], true)))
             ->values();
 
-        return $this->slice($events->all(), $perPage, $page);
+        return $this->slice(array_values($events->all()), $perPage, $page);
     }
 
     /**

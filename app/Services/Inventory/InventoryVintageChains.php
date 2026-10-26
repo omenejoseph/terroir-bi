@@ -90,7 +90,11 @@ class InventoryVintageChains
         return array_keys($heads);
     }
 
-    /** Every id in the chain an item belongs to — what moves together when one is dragged elsewhere. @return list<string> */
+    /**
+     * Every id in the chain an item belongs to — what moves together when one is dragged elsewhere.
+     *
+     * @return list<string>
+     */
     public function chainOf(string $itemId): array
     {
         $ids = [$itemId];
@@ -98,14 +102,14 @@ class InventoryVintageChains
         // Down: the older vintages.
         $cursor = InventoryItem::query()->whereKey($itemId)->value('previous_vintage_id');
         for ($depth = 0; $cursor !== null && $depth < self::MAX_DEPTH; $depth++) {
-            $ids[] = $cursor;
+            $ids[] = (string) $cursor;
             $cursor = InventoryItem::query()->whereKey($cursor)->value('previous_vintage_id');
         }
 
         // Up: the newer vintages.
         $cursor = InventoryItem::query()->where('previous_vintage_id', $itemId)->value('id');
         for ($depth = 0; $cursor !== null && $depth < self::MAX_DEPTH; $depth++) {
-            $ids[] = $cursor;
+            $ids[] = (string) $cursor;
             $cursor = InventoryItem::query()->where('previous_vintage_id', $cursor)->value('id');
         }
 

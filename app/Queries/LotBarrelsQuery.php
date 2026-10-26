@@ -36,17 +36,20 @@ class LotBarrelsQuery
             ->where('wine_lot_id', $lotId)
             ->get()
             ->filter(fn (VesselLot $vl): bool => $vl->vessel !== null && ($vessel === null || (string) $vl->vessel_id === $vessel))
-            ->sortBy(fn (VesselLot $vl): string => $vl->vessel->name, SORT_NATURAL | SORT_FLAG_CASE)
+            ->sortBy(fn (VesselLot $vl): string => (string) $vl->vessel?->name, SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
 
         $readings = $this->readings($lot);
 
         $rows = [];
         foreach ($vesselLots as $vl) {
-            $vessel = $vl->vessel;
-            $vesselId = (string) $vessel->getKey();
-            $capacity = (float) $vessel->capacity_liters;
-            $held = (float) $vessel->current_volume;
+            $barrel = $vl->vessel;
+            if ($barrel === null) {
+                continue;
+            }
+            $vesselId = (string) $barrel->getKey();
+            $capacity = (float) $barrel->capacity_liters;
+            $held = (float) $barrel->current_volume;
 
             $own = [];
             foreach (self::PARAMS as $param) {
@@ -56,22 +59,22 @@ class LotBarrelsQuery
                 }
             }
 
-            $others = $vessel->vesselLots
+            $others = $barrel->vesselLots
                 ->filter(fn (VesselLot $o): bool => (string) $o->wine_lot_id !== $lotId && $o->wineLot !== null)
-                ->map(fn (VesselLot $o): array => ['lot_id' => (string) $o->wine_lot_id, 'name' => $o->wineLot->name, 'vintage' => $o->wineLot->vintage, 'volume' => (string) $o->volume])
+                ->map(fn (VesselLot $o): array => ['lot_id' => (string) $o->wine_lot_id, 'name' => $o->wineLot?->name, 'vintage' => $o->wineLot?->vintage, 'volume' => (string) $o->volume])
                 ->values()->all();
 
             $rows[] = [
                 'vessel_id' => $vesselId,
-                'name' => $vessel->name,
-                'type' => $vessel->type->value,
-                'material' => $vessel->material,
-                'room' => $vessel->room,
-                'location' => $vessel->location,
-                'capacity_liters' => (string) $vessel->capacity_liters,
+                'name' => $barrel->name,
+                'type' => $barrel->type->value,
+                'material' => $barrel->material,
+                'room' => $barrel->room,
+                'location' => $barrel->location,
+                'capacity_liters' => (string) $barrel->capacity_liters,
                 'volume' => (string) $vl->volume,
                 'fill_percent' => $capacity > 0 ? round($held / $capacity * 100, 1) : 0.0,
-                'is_faulty' => (bool) $vessel->is_faulty,
+                'is_faulty' => (bool) $barrel->is_faulty,
                 'others' => $others,
                 'readings' => $own,
             ];

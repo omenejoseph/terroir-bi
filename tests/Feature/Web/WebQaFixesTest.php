@@ -356,6 +356,7 @@ class WebQaFixesTest extends TestCase
             ->assertOk()
             ->assertJsonCount(2, 'props.recentActivity');
 
+        /** @var list<array<string, mixed>> $rows */
         $rows = $this->actingAs($admin)->withSession($this->tenantSession($tenant))
             ->get('/work-orders', ['X-Inertia' => 'true', 'X-Inertia-Version' => Inertia::getVersion(), 'X-Inertia-Partial-Component' => 'WorkOrders/Index', 'X-Inertia-Partial-Data' => 'recentActivity'])
             ->json('props.recentActivity');
@@ -584,7 +585,7 @@ class WebQaFixesTest extends TestCase
         $this->actingAsTenant($tenant);
         $lot = WineLot::query()->where('name', 'Plavac Mali Reserve 2025')->firstOrFail();
         $this->assertSame('AGING', $lot->status->value);
-        $this->assertSame('RED', $lot->wine_type->value);
+        $this->assertSame('RED', $lot->wine_type?->value);
     }
 
     public function test_a_new_lot_goes_into_a_part_full_vessel_when_it_fits_and_is_refused_when_it_does_not(): void

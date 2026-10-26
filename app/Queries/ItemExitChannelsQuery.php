@@ -66,12 +66,11 @@ class ItemExitChannelsQuery
             ->whereBetween('created_at', [$from, $to])
             ->get(['type', 'quantity', 'unit', 'reference', 'created_at']);
 
-        $orderRefs = $movements
+        $orderRefs = array_values(array_map('strval', $movements
             ->filter(fn (StockMovement $m): bool => $m->type === StockMovementType::OrderDeduct && $m->reference !== null)
             ->pluck('reference')
             ->unique()
-            ->values()
-            ->all();
+            ->all()));
 
         $factors = $orderRefs === [] ? [] : $this->spend->deductFactors($orderRefs);
         $buckets = $this->bucketsByOrderNumber($orderRefs);
@@ -149,8 +148,8 @@ class ItemExitChannelsQuery
             'total_bottles' => $total,
             'movements_count' => $count,
             'excluded_bottles' => (int) round($excluded),
-            'spark' => array_map(fn (float $v): int => (int) round($v), $spark),
-            'spark_internal' => array_map(fn (float $v): int => (int) round($v), $sparkInternal),
+            'spark' => array_values(array_map(fn (float $v): int => (int) round($v), $spark)),
+            'spark_internal' => array_values(array_map(fn (float $v): int => (int) round($v), $sparkInternal)),
             // Where the histogram starts and how many days each bar spans, so a bar can be named by date.
             'spark_start' => $from->toDateString(),
             'spark_step_days' => round(max(1, $days) / $sparkSlots, 2),

@@ -11,6 +11,7 @@ use App\Services\Inventory\ProductCategoryBackfill;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use stdClass;
 use Tests\Concerns\InteractsWithTenancy;
 use Tests\TestCase;
 
@@ -56,18 +57,21 @@ class ProductCategoryBackfillTest extends TestCase
         return $id;
     }
 
-    private function item(string $id): object
+    private function item(string $id): stdClass
     {
-        return DB::table('inventory_items')->where('id', $id)->first();
+        $row = DB::table('inventory_items')->where('id', $id)->first();
+        assert($row instanceof stdClass);
+
+        return $row;
     }
 
-    /** @return array<string, object> name => row, for one tenant */
+    /** @return array<string, stdClass> name => row, for one tenant */
     private function categories(?Tenant $tenant = null): array
     {
         $rows = DB::table('product_categories')->where('tenant_id', ($tenant ?? $this->tenant)->getKey())->get();
         $out = [];
         foreach ($rows as $row) {
-            $out[($row->parent_id !== null ? $rows->firstWhere('id', $row->parent_id)->name.'/' : '').$row->name] = $row;
+            $out[($row->parent_id !== null ? $rows->firstWhere('id', $row->parent_id)?->name.'/' : '').$row->name] = $row;
         }
 
         return $out;

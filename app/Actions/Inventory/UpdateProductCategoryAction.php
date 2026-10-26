@@ -59,7 +59,11 @@ class UpdateProductCategoryAction
         InventoryItem::query()->whereIn('product_category_id', $this->scope($category))->update(['group' => $category->name]);
     }
 
-    /** The category's own id and, for a top-level one, its subcategories'. @return list<string> */
+    /**
+     * The category's own id and, for a top-level one, its subcategories'.
+     *
+     * @return list<string>
+     */
     private function scope(ProductCategory $category): array
     {
         return [

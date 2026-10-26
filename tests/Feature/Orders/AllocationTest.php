@@ -293,7 +293,7 @@ class AllocationTest extends EssentialsScenarioTestCase
         $wine = $this->givenBottledWine(['current_stock' => '100.000']);
         $order = $this->allocate($wine, $this->givenCustomer(), 10);
 
-        $copy = Order::query()->findOrFail(app(DuplicateOrderAction::class)->execute($order, $this->admin->getKey())->getKey());
+        $copy = Order::query()->whereKey(app(DuplicateOrderAction::class)->execute($order, $this->admin->getKey())->getKey())->firstOrFail();
 
         $this->assertFalse($copy->is_allocation);
         $this->assertTrue($copy->deduct_stock);

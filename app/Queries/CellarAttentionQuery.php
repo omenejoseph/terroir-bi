@@ -152,7 +152,7 @@ class CellarAttentionQuery
         $out = [];
         foreach ($lots as $lot) {
             $id = (string) $lot->getKey();
-            $out[$id] = $count[$base[$id]] > 1 && $lot->lot_number !== null ? "{$base[$id]} · {$lot->lot_number}" : $base[$id];
+            $out[$id] = $count[$base[$id]] > 1 && (string) $lot->lot_number !== '' ? "{$base[$id]} · {$lot->lot_number}" : $base[$id];
         }
 
         return $out;

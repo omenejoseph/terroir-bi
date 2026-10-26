@@ -6,6 +6,7 @@ namespace App\Services\Inventory;
 
 use App\Enums\WineLotStatus;
 use App\Models\InventoryItem;
+use App\Models\RecipeItem;
 use App\Models\WineLot;
 use App\Services\Cellar\LotCostService;
 use App\Support\Measure;
@@ -65,7 +66,7 @@ class RecipeInputOptions
             ->orderBy('name')
             ->get()
             ->map(function (WineLot $lot) use (&$currency): array {
-                $currency ??= $lot->tenant?->settings?->default_currency ?? CurrencyRegistry::default()->code;
+                $currency ??= $lot->tenant?->settings->default_currency ?? CurrencyRegistry::default()->code;
 
                 return [
                     'id' => $lot->getKey(),
@@ -102,7 +103,7 @@ class RecipeInputOptions
                 'id' => $item->getKey(),
                 'name' => $item->name,
                 'vintage' => $item->vintage,
-                'lines' => $item->recipe->map(fn ($line): array => [
+                'lines' => $item->recipe->map(fn (RecipeItem $line): array => [
                     'input_id' => $line->input_id,
                     'wine_lot_id' => $line->wine_lot_id,
                     'quantity' => (string) $line->quantity,

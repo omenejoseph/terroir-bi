@@ -23,7 +23,7 @@ class ValidPreviousVintage implements ValidationRule
             return;
         }
 
-        $previous = InventoryItem::query()->find($value);
+        $previous = is_string($value) ? InventoryItem::query()->find($value) : null;
 
         if ($previous === null) {
             $fail(__('That product does not exist.'));

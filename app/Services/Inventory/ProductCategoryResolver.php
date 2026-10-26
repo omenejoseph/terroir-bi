@@ -50,7 +50,7 @@ class ProductCategoryResolver
             'type' => $type,
             'name' => $name,
             // A subcategory starts out like its parent.
-            'has_vintage' => $parent?->has_vintage ?? false,
+            'has_vintage' => $parent->has_vintage ?? false,
             'sort_order' => $next === null ? 0 : $next + 1,
         ]);
     }

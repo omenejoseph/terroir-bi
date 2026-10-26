@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\Inventory\StockLedger;
 use App\Support\Quantity;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -58,6 +59,9 @@ class AllocationService
 
         foreach ($this->lines($item) as $line) {
             $order = $line->order;
+            if ($order === null) {
+                continue;
+            }
             $byOrder[$order->getKey()] ??= [
                 'order_id' => (string) $order->getKey(),
                 'order_number' => $order->order_number,
@@ -165,7 +169,10 @@ class AllocationService
     {
         return OrderItem::query()
             ->where('inventory_item_id', $item->getKey())
-            ->whereHas('order', fn ($q) => $q->holdingAllocation())
+            ->whereHas('order', function (Builder $query): void {
+                /** @var Builder<Order> $query */
+                $query->holdingAllocation();
+            })
             ->with('order.customer')
             ->get();
     }

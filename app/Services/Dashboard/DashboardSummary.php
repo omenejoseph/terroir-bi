@@ -326,7 +326,6 @@ class DashboardSummary
      * `$channels` and `$costs` are computed once in build() and shared with
      * revenueByChannel()/netCashFlow() — see costBreakdown()'s own docblock.
      *
-     * @param  Collection<int, Order>  $orders  windowed, non-consignment, non-excluded
      * @param  array{wholesale: int, retail: int, agency: int, shipshop: int, other: int, total: int}  $channels
      * @param  array{total: int, salary: int, marketing: int, operations: int, headcount: int}  $costs
      * @return array<string, mixed>

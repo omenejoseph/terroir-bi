@@ -236,7 +236,11 @@ class ProductCategoryBackfill
         return [$this->categoryIds[$key] = $id, true];
     }
 
-    /** The saved drag-and-drop order, keyed by tenant|type|group|subcategory (lowercased). @return array<string, int> */
+    /**
+     * The saved drag-and-drop order, keyed by tenant|type|group|subcategory (lowercased).
+     *
+     * @return array<string, int>
+     */
     private function arrangements(?string $tenantId): array
     {
         if (! Schema::hasTable('inventory_group_orders')) {
@@ -256,7 +260,10 @@ class ProductCategoryBackfill
         return $orders;
     }
 
-    /** @param  array<string, int>  $orders */
+    /**
+     * @param  array<string, int>  $orders
+     * @param  array{tenant: string, type: string, name: string, subs: array<string, string>}  $group
+     */
     private function position(array $orders, array $group, ?string $sub): int
     {
         return $orders[$this->orderKey($group['tenant'], $group['type'], $group['name'], $sub ?? '')] ?? 1000000;
