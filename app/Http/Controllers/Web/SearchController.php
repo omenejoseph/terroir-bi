@@ -6,9 +6,11 @@ namespace App\Http\Controllers\Web;
 
 use App\Authorization\MembershipContext;
 use App\Authorization\TenantModules;
+use App\DataTransferObjects\SearchResultData;
 use App\DataTransferObjects\SearchResultsData;
 use App\Http\Controllers\Controller;
 use App\Queries\GlobalSearchQuery;
+use App\Services\Help\HelpSearch;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,7 +33,7 @@ class SearchController extends Controller
         private readonly TenantContext $tenants,
     ) {}
 
-    public function __invoke(Request $request, GlobalSearchQuery $query): JsonResponse
+    public function __invoke(Request $request, GlobalSearchQuery $query, HelpSearch $help): JsonResponse
     {
         $term = trim((string) $request->query('q', ''));
 
@@ -48,7 +50,14 @@ class SearchController extends Controller
             $this->allowed('cellar', 'cellar.view', $modules) ? 'cellar' : null,
         ]));
 
-        return response()->json($query->search($term, $categories)->toArray());
+        // Help articles answer "how do I…" from the same box; HelpSearch only
+        // returns articles this member can see, so it needs no gate here.
+        $articles = array_map(
+            fn (array $hit): SearchResultData => new SearchResultData($hit['id'], $hit['title'], $hit['summary'], $hit['url']),
+            $help->search($term, app()->getLocale(), 4),
+        );
+
+        return response()->json($query->search($term, $categories)->withHelp($articles)->toArray());
     }
 
     /** @param  list<string>  $modules */

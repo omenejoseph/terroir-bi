@@ -16,4 +16,6 @@ export interface SearchResults {
     inventory: SearchResult[];
     /** Wine lots and vessels. */
     cellar: SearchResult[];
+    /** Help-center articles this member can see (App\Services\Help\HelpSearch). */
+    help: SearchResult[];
 }

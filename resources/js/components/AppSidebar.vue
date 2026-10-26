@@ -172,11 +172,12 @@ function toggle(label: string): void {
                 <ShieldCheck class="size-[15px] shrink-0" :stroke-width="1.5" />
                 <span>{{ t('Admin') }}</span>
             </Link>
-            <!-- Help & support: requests to the platform's support team (Web\SupportTicketController). -->
+            <!-- Help & support: the help center (Web\HelpController), which leads on to
+                 support requests (Web\SupportTicketController) when an article isn't enough. -->
             <Link
-                :href="`/support${$page.url.startsWith('/support') ? '' : `?from=${encodeURIComponent($page.url)}`}`"
+                href="/help"
                 class="flex items-center gap-2.5 rounded-nav p-2 text-sm transition-colors hover:bg-sidebar-active"
-                :class="$page.url.startsWith('/support') ? 'bg-sidebar-active text-foreground' : 'text-muted-foreground hover:text-foreground'"
+                :class="$page.url.startsWith('/help') || $page.url.startsWith('/support') ? 'bg-sidebar-active text-foreground' : 'text-muted-foreground hover:text-foreground'"
             >
                 <LifeBuoy class="size-[15px] shrink-0" :stroke-width="1.5" />
                 <span>{{ t('Help & support') }}</span>

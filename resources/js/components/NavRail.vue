@@ -213,9 +213,9 @@ function isCurrent(group: NavCategory, url: string): boolean {
                 <ShieldCheck class="size-[18px]" :stroke-width="1.5" />
             </Link>
             <Link
-                :href="`/support${$page.url.startsWith('/support') ? '' : `?from=${encodeURIComponent($page.url)}`}`"
+                href="/help"
                 class="grid size-10 place-items-center transition-colors hover:bg-sidebar-active hover:text-foreground"
-                :class="$page.url.startsWith('/support') ? 'bg-sidebar-active text-foreground' : 'text-muted-foreground'"
+                :class="$page.url.startsWith('/help') || $page.url.startsWith('/support') ? 'bg-sidebar-active text-foreground' : 'text-muted-foreground'"
                 :aria-label="t('Help & support')"
             >
                 <LifeBuoy class="size-[18px]" :stroke-width="1.5" />

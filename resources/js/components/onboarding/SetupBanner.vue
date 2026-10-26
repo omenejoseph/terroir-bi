@@ -51,7 +51,12 @@ const next = computed(() => (index.value >= 0 ? steps.value[index.value + 1] : u
                 {{ t('Setup · step :n of :total', { n: index + 1, total: steps.length }) }}
             </p>
             <p class="text-sm font-medium text-foreground">{{ t(step.title) }}</p>
-            <p class="mt-0.5 text-xs text-muted-foreground">{{ t(step.why) }}</p>
+            <p class="mt-0.5 text-xs text-muted-foreground">
+                {{ t(step.why) }}
+                <Link v-if="step.help" :href="`/help/${step.help}`" class="ml-1 whitespace-nowrap text-foreground underline underline-offset-2">
+                    {{ t('How to do this') }}
+                </Link>
+            </p>
         </div>
         <div class="flex shrink-0 items-center gap-2">
             <Link

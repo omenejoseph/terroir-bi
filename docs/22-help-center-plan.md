@@ -195,6 +195,18 @@ read help. Filtering happens per article.
 H1 + H2 already give a usable, searchable help center. H3 is what makes people
 actually find it.
 
+**Status:** H1 and H2 are built — `resources/help/{en,hr}/*.md` (12 articles:
+getting started, orders, customers & pricing, support), `HelpLibrary`
+(front matter, CommonMark with raw HTML stripped, cached per locale and file
+signature, module + capability filtering), `HelpSearch` (folding, prefixes,
+stop words, synonyms, snippets), `/help`, `/help/{id}`, `/help/search`, the
+Help group in ⌘K, and the sidebar's "Help & support" now opens `/help`. From
+H3, the setup checklist's "How to do this" links are in. Still to do: the
+"?" button + side panel per screen, the remaining ~23 articles (inventory,
+cellar, work orders, settings), screenshots, and H4 (feedback + insights).
+The front matter is parsed by a small built-in reader (`key: value`, lists
+comma-separated) — `symfony/yaml` isn't a dependency and isn't needed for it.
+
 ---
 
 ## 8. Open questions

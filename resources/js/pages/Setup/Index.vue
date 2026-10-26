@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { AlertTriangle, ArrowRight, Check, Clock, ExternalLink } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -167,7 +167,12 @@ function dismiss(dismissed: boolean): void {
                             <Badge :variant="statusVariant(row.state.status)">{{ t(STATUS_LABEL[row.state.status]) }}</Badge>
                             <span v-if="detail(row.state)" class="text-xs text-muted-foreground">{{ detail(row.state) }}</span>
                         </div>
-                        <p class="text-xs text-muted-foreground">{{ t(row.meta.why) }}</p>
+                        <p class="text-xs text-muted-foreground">
+                            {{ t(row.meta.why) }}
+                            <Link v-if="row.meta.help" :href="`/help/${row.meta.help}`" class="ml-1 whitespace-nowrap text-foreground underline underline-offset-2">
+                                {{ t('How to do this') }}
+                            </Link>
+                        </p>
 
                         <ul v-if="row.state.issues.length" class="space-y-1">
                             <li

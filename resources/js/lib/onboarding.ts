@@ -70,12 +70,15 @@ export interface OnboardingStepMeta {
     minutes: number;
     /** Mirrors OnboardingStatus::STEPS — a step outside the tenant's plan is never shown. */
     module: string;
+    /** The help article (resources/help/{locale}/{id}.md) that walks through it, if there is one. */
+    help?: string;
 }
 
 /** In the hub's order, which is OnboardingStatus::STEPS's order. */
 export const ONBOARDING_STEPS: OnboardingStepMeta[] = [
     {
         key: 'company_profile',
+        help: 'company-profile',
         title: 'Company profile',
         why: 'Your address, tax ID, contact and bank details appear on every order PDF.',
         href: '/settings',
@@ -109,6 +112,7 @@ export const ONBOARDING_STEPS: OnboardingStepMeta[] = [
     },
     {
         key: 'pricing_tiers',
+        help: 'pricing-tiers',
         title: 'Pricing tiers',
         why: 'Price books such as Wholesale or Retail, each with its own rebate. Customers on a tier get its prices automatically.',
         href: '/customers/pricing-tiers',
@@ -117,6 +121,7 @@ export const ONBOARDING_STEPS: OnboardingStepMeta[] = [
     },
     {
         key: 'customers',
+        help: 'add-customers',
         title: 'Customers',
         why: 'Add the businesses you sell to and connect each one to a pricing tier or its own rebate.',
         href: '/customers',
@@ -125,6 +130,7 @@ export const ONBOARDING_STEPS: OnboardingStepMeta[] = [
     },
     {
         key: 'team',
+        help: 'invite-team',
         title: 'Invite your team',
         why: 'Give colleagues their own login with only the access their role needs.',
         href: '/settings/team',
@@ -134,6 +140,7 @@ export const ONBOARDING_STEPS: OnboardingStepMeta[] = [
     // ── Sell better ────────────────────────────────────────────────
     {
         key: 'first_order',
+        help: 'take-an-order',
         title: 'Place your first order',
         why: 'Run one order end to end and check its PDF. If it was only a test, delete it afterwards.',
         href: '/orders',
@@ -150,6 +157,7 @@ export const ONBOARDING_STEPS: OnboardingStepMeta[] = [
     },
     {
         key: 'special_prices',
+        help: 'how-prices-work',
         title: 'Special prices',
         why: 'Set a fixed price per tier on a product\'s Pricing tab, or agree a price with one customer — those override the rebate.',
         href: '/inventory',
@@ -166,6 +174,7 @@ export const ONBOARDING_STEPS: OnboardingStepMeta[] = [
     },
     {
         key: 'order_portal',
+        help: 'customer-order-links',
         title: 'Customer order links',
         why: 'Give a customer their own link to order from your catalogue at their prices, without logging in.',
         href: '/customers',

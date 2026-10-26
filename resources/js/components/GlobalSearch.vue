@@ -25,7 +25,7 @@ const { t } = useTranslations();
  * type-to-filter control — this one differs by fetching its own options from
  * the server instead of filtering a fixed list.
  */
-const EMPTY: SearchResults = { orders: [], customers: [], inventory: [], cellar: [] };
+const EMPTY: SearchResults = { orders: [], customers: [], inventory: [], cellar: [], help: [] };
 
 const anchor = ref<HTMLElement | null>(null);
 const input = ref<HTMLInputElement | null>(null);
@@ -39,7 +39,13 @@ const activeIndex = ref(0);
 const listId = useId();
 
 /** Same three categories, in render order, joined for O(1) keyboard-nav lookups. */
-const flat = computed<SearchResult[]>(() => [...results.value.orders, ...results.value.customers, ...results.value.inventory, ...results.value.cellar]);
+const flat = computed<SearchResult[]>(() => [
+    ...results.value.orders,
+    ...results.value.customers,
+    ...results.value.inventory,
+    ...results.value.cellar,
+    ...(results.value.help ?? []),
+]);
 
 /** Grouped for the dropdown, with each item's index into `flat` attached. */
 const groups = computed(() => {
@@ -51,6 +57,8 @@ const groups = computed(() => {
             { label: t('Customers'), items: results.value.customers },
             { label: t('Inventory'), items: results.value.inventory },
             { label: t('Cellar'), items: results.value.cellar },
+            // "How do I…" answers, last — records come first when both match.
+            { label: t('Help'), items: results.value.help ?? [] },
         ] satisfies { label: string; items: SearchResult[] }[]
     )
         .filter((group) => group.items.length > 0)

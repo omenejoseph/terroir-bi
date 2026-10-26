@@ -25,6 +25,7 @@ use App\Http\Controllers\Web\CustomerConsignmentController;
 use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\CustomerPriceController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\HelpController;
 use App\Http\Controllers\Web\InventoryController;
 use App\Http\Controllers\Web\InventoryMediaController;
 use App\Http\Controllers\Web\LocaleController;
@@ -143,6 +144,13 @@ Route::middleware('tenant.web')->group(function () {
     // General presigned upload URL (any member; the attach step is gated) —
     // mirrors routes/api.php's own uploads/presign.
     Route::post('uploads/presign', [UploadController::class, 'presign'])->name('uploads.presign');
+
+    // Help center — how-to articles for every member (docs/22-help-center-plan.md).
+    Route::get('help', [HelpController::class, 'index'])->name('help.index');
+    Route::get('help/search', [HelpController::class, 'search'])->name('help.search');
+    Route::get('help/{article}', [HelpController::class, 'show'])
+        ->where('article', '[a-z0-9-]+')
+        ->name('help.show');
 
     // Help & support — any member can ask the platform team for help. Tickets
     // are central (not tenant-scoped); the controller narrows every lookup to

@@ -79,7 +79,7 @@ class GlobalSearchTest extends TestCase
 
         $this->getJson('/search?q=riva')
             ->assertOk()
-            ->assertExactJson(['orders' => [], 'customers' => [], 'inventory' => [], 'cellar' => []]);
+            ->assertExactJson(['orders' => [], 'customers' => [], 'inventory' => [], 'cellar' => [], 'help' => []]);
     }
 
     public function test_category_missing_from_plan_is_omitted(): void
@@ -104,7 +104,7 @@ class GlobalSearchTest extends TestCase
 
         $this->getJson('/search?q=r')
             ->assertOk()
-            ->assertExactJson(['orders' => [], 'customers' => [], 'inventory' => [], 'cellar' => []]);
+            ->assertExactJson(['orders' => [], 'customers' => [], 'inventory' => [], 'cellar' => [], 'help' => []]);
     }
 
     public function test_results_are_scoped_to_the_current_tenant(): void
