@@ -119,9 +119,12 @@ class HospitalityAnalyticsQuery
             /** @var Reservation $r */
             foreach ($rows as $r) {
                 $m = $r->date->month;
-                $out[$m]['revenue'] += $r->total_amount->getMinorAmount();
-                $out[$m]['reservations']++;
-                $out[$m]['guests'] += $r->pax;
+                $was = $out[$m];
+                $out[$m] = [
+                    'revenue' => $was['revenue'] + $r->total_amount->getMinorAmount(),
+                    'reservations' => $was['reservations'] + 1,
+                    'guests' => $was['guests'] + $r->pax,
+                ];
             }
 
             return $out;
