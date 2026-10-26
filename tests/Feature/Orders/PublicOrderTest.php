@@ -7,6 +7,7 @@ namespace Tests\Feature\Orders;
 use App\Enums\TenantRole;
 use App\Models\Customer;
 use App\Models\CustomerProductOverride;
+use App\Models\InventoryImage;
 use App\Models\InventoryItem;
 use App\Models\Order;
 use App\Models\Tenant;
@@ -59,7 +60,7 @@ class PublicOrderTest extends TestCase
     {
         $this->actingAsTenant($this->tenant);
         $this->wine->update(['group' => 'Wine', 'subcategory' => 'Red', 'unit_size' => '750 ml']);
-        \App\Models\InventoryImage::create([
+        InventoryImage::create([
             'inventory_item_id' => $this->wine->getKey(), 'object_key' => 'tenants/x/inventory/plavac.jpg',
             'content_type' => 'image/jpeg', 'size_bytes' => 10, 'sort_order' => 0,
         ]);
