@@ -8,6 +8,7 @@ use App\Services\LegacyImport\Steps\CellarStep;
 use App\Services\LegacyImport\Steps\CostsStep;
 use App\Services\LegacyImport\Steps\CustomerCategoriesStep;
 use App\Services\LegacyImport\Steps\CustomersStep;
+use App\Services\LegacyImport\Steps\HospitalityStep;
 use App\Services\LegacyImport\Steps\InflowsStep;
 use App\Services\LegacyImport\Steps\InventoryStep;
 use App\Services\LegacyImport\Steps\OrdersStep;
@@ -43,6 +44,7 @@ class LegacyImporter
             new CellarStep,
             new ProductionStep,
             new VineyardsStep,
+            new HospitalityStep,
         ];
     }
 

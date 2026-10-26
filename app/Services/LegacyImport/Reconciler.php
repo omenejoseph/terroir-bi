@@ -60,12 +60,22 @@ class Reconciler
         $this->cellar();
         $this->production();
         $this->vineyards();
+        $this->hospitality();
         $this->integrity();
 
         return $this->rows;
     }
 
     // ── comparisons ─────────────────────────────────────────────────────────
+
+    private function hospitality(): void
+    {
+        $this->count('hospitality', 'programs', $this->legacyRows('HospitalityProgram')->count(), 'hospitality_programs');
+        $this->count('hospitality', 'agency prices', $this->legacyRows('HospitalityAgencyPrice')->count(), 'hospitality_agency_prices', 'orphans (deleted program/customer) are skipped and reported');
+        $this->count('hospitality', 'reservations', $this->legacyRows('Reservation')->count(), 'reservations');
+        $this->money('hospitality', 'sum of reservation totals', $this->legacyRows('Reservation')->sum(fn ($r) => Normalize::minor($r->totalAmount)), $this->newSum('reservations', 'total_amount'));
+        $this->count('hospitality', 'reservation status history', $this->legacyRows('ReservationStatusHistory')->count(), 'reservation_status_histories');
+    }
 
     private function users(): void
     {

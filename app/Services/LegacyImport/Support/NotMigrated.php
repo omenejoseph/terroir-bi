@@ -18,7 +18,7 @@ final class NotMigrated
         'CellarAddition', 'CellarProcess', 'CellarTransfer', 'TastingReport', 'CellarTastingNote', 'Board', 'WorkOrder',
         'ProductionPlan', 'ProductionPlanRow', 'VineyardParcel', 'PhenologyLog', 'CropEstimate', 'VineyardApplication',
         'GrapeContract', 'IntakeBooking', 'CustomerCategory', 'ProtocolAdditive', 'CellarActivity', 'CellarActivityRound',
-        'Bottling',
+        'Bottling', 'HospitalityProgram', 'HospitalityAgencyPrice', 'Reservation', 'ReservationStatusHistory',
     ];
 
     /** First matching prefix wins. */
@@ -27,7 +27,6 @@ final class NotMigrated
         'Club' => 'wine club — no counterpart in the rebuild',
         'Employee' => 'HR — no counterpart in the rebuild',
         'Villa' => 'hospitality / villas — deferred by design',
-        'Reservation' => 'hospitality reservations — deferred by design',
         'Hospitality' => 'hospitality — deferred by design',
         'Kitchen' => 'kitchen — no counterpart in the rebuild',
         'Deal' => 'CRM — no counterpart in the rebuild',
