@@ -11,6 +11,7 @@ use App\Models\CellarActivity;
 use App\Models\VesselLot;
 use App\Models\WineLot;
 use App\Services\Cellar\CellarClock;
+use Illuminate\Support\Collection;
 
 /**
  * What in the cellar needs someone now, where people work (the cellar home,
@@ -136,7 +137,7 @@ class CellarAttentionQuery
      * vintages), so the vintage is appended (as the rest of the cellar writes it — "Aleph 2022"), and
      * the lot number too when two lots would still read the same.
      *
-     * @param  \Illuminate\Support\Collection<int, WineLot>  $lots
+     * @param  Collection<int, WineLot>  $lots
      * @return array<string, string> lot id → label
      */
     private function labels($lots): array

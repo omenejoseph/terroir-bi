@@ -12,7 +12,9 @@ use App\Models\WineLot;
 use App\Services\Auth\ActiveTenantSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\Concerns\InteractsWithTenancy;
 use Tests\TestCase;
 
@@ -40,7 +42,7 @@ class WebCellarPaginationTest extends TestCase
         parent::tearDown();
     }
 
-    /** @return \Illuminate\Testing\TestResponse<\Symfony\Component\HttpFoundation\Response> */
+    /** @return TestResponse<Response> */
     private function visit(string $uri)
     {
         return $this->actingAs($this->cellar)->withSession([ActiveTenantSession::KEY => $this->tenant->getKey()])->get($uri);
