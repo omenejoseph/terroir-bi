@@ -19,6 +19,7 @@ final class NotMigrated
         'ProductionPlan', 'ProductionPlanRow', 'VineyardParcel', 'PhenologyLog', 'CropEstimate', 'VineyardApplication',
         'GrapeContract', 'IntakeBooking', 'CustomerCategory', 'ProtocolAdditive', 'CellarActivity', 'CellarActivityRound',
         'Bottling', 'HospitalityProgram', 'HospitalityAgencyPrice', 'Reservation', 'ReservationStatusHistory',
+        'KitchenItem', 'KitchenMovement', 'KitchenCheck', 'KitchenCheckItem', 'KitchenWorkOrder', 'KitchenWorkOrderItem',
     ];
 
     /** First matching prefix wins. */
@@ -28,7 +29,6 @@ final class NotMigrated
         'Employee' => 'HR — no counterpart in the rebuild',
         'Villa' => 'hospitality / villas — deferred by design',
         'Hospitality' => 'hospitality — deferred by design',
-        'Kitchen' => 'kitchen — no counterpart in the rebuild',
         'Deal' => 'CRM — no counterpart in the rebuild',
         'Contact' => 'CRM — no counterpart in the rebuild',
         'Sales' => 'CRM / sales projects — no counterpart in the rebuild',

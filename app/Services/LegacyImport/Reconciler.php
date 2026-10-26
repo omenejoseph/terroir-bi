@@ -61,6 +61,7 @@ class Reconciler
         $this->production();
         $this->vineyards();
         $this->hospitality();
+        $this->kitchen();
         $this->integrity();
 
         return $this->rows;
@@ -75,6 +76,18 @@ class Reconciler
         $this->count('hospitality', 'reservations', $this->legacyRows('Reservation')->count(), 'reservations');
         $this->money('hospitality', 'sum of reservation totals', $this->legacyRows('Reservation')->sum(fn ($r) => Normalize::minor($r->totalAmount)), $this->newSum('reservations', 'total_amount'));
         $this->count('hospitality', 'reservation status history', $this->legacyRows('ReservationStatusHistory')->count(), 'reservation_status_histories');
+    }
+
+    private function kitchen(): void
+    {
+        $items = $this->legacyRows('KitchenItem');
+        $this->count('kitchen', 'items', $items->count(), 'kitchen_items');
+        $this->decimal('kitchen', 'total current stock', $this->sum($items, 'currentStock', 3), $this->newSum('kitchen_items', 'current_stock'), 'legacy stock is authoritative');
+        $this->count('kitchen', 'movements', $this->legacyRows('KitchenMovement')->count(), 'kitchen_movements');
+        $this->count('kitchen', 'stock-takes', $this->legacyRows('KitchenCheck')->count(), 'kitchen_checks');
+        $this->count('kitchen', 'stock-take lines', $this->legacyRows('KitchenCheckItem')->count(), 'kitchen_check_items');
+        $this->count('kitchen', 'prep tickets', $this->legacyRows('KitchenWorkOrder')->count(), 'kitchen_work_orders');
+        $this->count('kitchen', 'prep ticket lines', $this->legacyRows('KitchenWorkOrderItem')->count(), 'kitchen_work_order_items');
     }
 
     private function users(): void

@@ -82,7 +82,11 @@ final class RoleCapabilities
                 'hospitality.view',
                 'hospitality.manage',
             ],
-            TenantRole::Kitchen->value => [],
+            // The kitchen's own stock, stock-takes and prep tickets (the old app's /dashboard/kitchen).
+            TenantRole::Kitchen->value => [
+                'kitchen.view',
+                'kitchen.manage',
+            ],
             TenantRole::Employee->value => [],
             TenantRole::WineClub->value => [],
             TenantRole::Inventory->value => [

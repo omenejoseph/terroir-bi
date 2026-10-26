@@ -11,6 +11,7 @@ use App\Services\LegacyImport\Steps\CustomersStep;
 use App\Services\LegacyImport\Steps\HospitalityStep;
 use App\Services\LegacyImport\Steps\InflowsStep;
 use App\Services\LegacyImport\Steps\InventoryStep;
+use App\Services\LegacyImport\Steps\KitchenStep;
 use App\Services\LegacyImport\Steps\OrdersStep;
 use App\Services\LegacyImport\Steps\PricingTiersStep;
 use App\Services\LegacyImport\Steps\ProductionStep;
@@ -45,6 +46,7 @@ class LegacyImporter
             new ProductionStep,
             new VineyardsStep,
             new HospitalityStep,
+            new KitchenStep,
         ];
     }
 

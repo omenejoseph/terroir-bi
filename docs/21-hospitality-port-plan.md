@@ -303,32 +303,55 @@ equivalent; Kitchen/Remaris legacy row counts; whether a `ui/Table` exists on an
 
 ## 11. Build progress
 
-### Landed
+### Landed (code written and pushed)
 - **1a** — `Module::Hospitality`, `hospitality.view/.manage` for HOSPITALITY (ADMIN via `*`), the four tables,
-  models, `ReservationPricing`, and the program / price-book / reservation actions, with action and pricing tests.
-- **1b** — web layer under `/hospitality` (`Web\Hospitality\{Reservation,Program,AgencyPrice}Controller`,
-  `ReservationListQuery`, `HospitalityQuickStatsQuery`, `ReservationPresenter`, `HospitalityOptions`,
-  `ReservationFilters`); pages `Hospitality/Index` (Reservations + Programs tabs) and `Hospitality/Reservation`;
-  drawers `ReservationFormPanel` (create + edit, live server-side price quote), `ProgramFormPanel`,
-  `ProgramPricesPanel`; nav item *Sales → Agencies* → `/hospitality`; en + hr strings;
-  `tests/Feature/Hospitality/WebHospitalityTest.php`, route guards and `/hospitality` in `RoleParityTest`.
+  models, `ReservationPricing`, and the program / price-book / reservation actions.
+- **1b** — `/hospitality` (Reservations + Programs tabs), reservation page, create/edit drawer with a server-side
+  live quote, per-program agency price book, nav item *Sales → Agencies*, en + hr strings.
+- **Customer page** — a *Hospitality* tab on Customer — Show for agencies (or any customer with bookings): every
+  active program with this agency's price, edited in place, and the latest reservations. `CustomerMergeService`
+  moves reservations and folds agency prices per program.
+- **1c** — Analytics tab (`HospitalityAnalyticsQuery`, `AgencyPerformanceQuery`): year KPIs, revenue by month vs
+  the year before, programs, top agencies, agency performance with range / compare / sort / discount.
+- **1e** — `HospitalityStep` legacy import + reconciler checks (counts and Σ reservation totals to the cent).
+- **2 Kitchen** — `kitchen_*` tables, `KitchenStockLedger`, actions, `/kitchen` page (Stock, Stock-take, Prep
+  tickets; print stock list, count sheet and ticket), `kitchen.view/.manage` for KITCHEN, nav item, `KitchenStep`
+  import + reconciler checks.
+
+### Not yet tested
+Nothing PHP has been executed yet — the dev container runs PHP 8.3 and the lock needs 8.4, so PHPUnit and
+PHPStan only run in CI, and no CI run has reached the test suite at the time of writing. Verified so far: Pint and
+`php -l` on every PHP file, `vue-tsc` + Vite build for the frontend. Specifically unverified:
+- every feature test under `tests/Feature/Hospitality`, `tests/Feature/Kitchen`,
+  `tests/Feature/LegacyImport/{Hospitality,Kitchen}StepTest.php`, and the hospitality/kitchen rows of
+  `RoleParityTest`;
+- PHPStan on all hospitality and kitchen code written after the last PHPStan pass (customer tab, analytics,
+  import steps, all of Kitchen);
+- the pages in a browser (layout, mobile reflow, print sheets, drawers) — only typechecked;
+- **legacy column names**: `HospitalityStep` and `KitchenStep` read the old Prisma tables by the names in the
+  plan / Prisma conventions (`basePrice`, `pricePerPax`, `durationMins`, `itemId`, `checkId`, `workOrderId`, …),
+  not checked against the Bibich dump. Optional columns read as empty if absent, but a wrongly named *required*
+  column (an id or quantity) would import wrong data. Rehearse against a copy and read the reconciler first.
+- kitchen enum values (units `kg/g/l/ml/pcs/pack/bottle`, locations `tasting_room/restaurant`) against the
+  old data; unknown values are mapped to a default and reported, not rejected.
 
 ### Interim decisions (taken while building; revisit with the open questions)
-- **Q2 naming**: kept the prototype's — the page is *Agencies* (nav key `agencies`) at `/hospitality`. The
-  *Hospitality* category's Accommodation / Kitchen / Hospitality (POS) items are marked `hidden` until their phases land.
-- **Q8 quick stats**: aligned with analytics (cancelled and `exclude_from_stats` customers left out). Today / MTD /
-  YTD compare against the **same window last year**; the prototype's comparison window was not verified.
+- **Q2 naming**: kept the prototype's — *Agencies* (nav key `agencies`) at `/hospitality`.
+- **Q4 modules**: Kitchen sits under `Module::Hospitality` with its own `kitchen.*` capabilities; split into a
+  separate module only if plans should sell it separately.
+- **Q8 quick stats**: aligned with analytics (cancelled and `exclude_from_stats` left out). Today / MTD / YTD
+  compare with the **same window last year** (the prototype's comparison window was not verified).
 - **Q8 transitions**: no server-side validation (like-for-like); the UI offers *next* and *Cancel* only.
-- **List periods** are whole calendar spans (*This month* runs to month end) plus *Upcoming* and *All*, because
-  reservations are mostly in the future; the order list's presets stop at today.
-- **Dates** are wall-clock `Y-m-d H:i` with no zone, serialised as such so the browser never shifts them. The
-  form uses a native date input plus a 15-minute time select (no new G2 component); legacy off-grid times stay selectable.
-- **Agency price book** is edited per program (Programs tab → *Agency prices*), not on the customer page. Same rows,
-  same rules (flat price or rebate %, rebate follows the base price; only `is_agency` customers).
-- No new shared components were built (G1–G4 deferred): the list hand-rolls its table with a stacked-card
-  layout under `sm`, and tile deltas are written into `StatCard`'s hint.
+- **Q8 kitchen**: a new item's opening stock is booked as an IN movement (the prototype wrote none), so history
+  adds up; completing a stock-take sets counted items to the counted figure (like-for-like — movements between
+  start and completion are overwritten); uncounted lines are left alone; prep-ticket lines are replaced in a
+  transaction; deleting an item removes its history (the UI suggests deactivating instead).
+- **List periods** are whole calendar spans plus *Upcoming* and *All*; reservation dates are wall-clock
+  `Y-m-d H:i`; the form uses a native date input + 15-minute time select (no new G2 component).
+- **Agency prices** are editable from both the program (Programs tab) and the agency (customer page).
+- No new shared components (G1–G5 deferred): hand-rolled tables with stacked cards / own-scroll containers,
+  share bars as plain divs, `StatCard` hints for deltas, the existing `BarChart` for two-series months.
 
-### Still to do in phase 1
-- Customer detail: agency price table and Reservations tab (§2.3); `CustomerMergeService` re-pointing
-  reservations and merging agency prices (§2.4).
-- 1c Analytics tab + agency performance; 1d dashboard channel (needs Q3); 1e `HospitalityStep` import + reconcile.
+### Still to do
+- **1d** dashboard channel — blocked on **Q3** (separate `hospitality` channel vs feeding `agency`).
+- **3a** Accommodation back office, **3b** guest portal + payments (Q5), **4** Remaris POS (Q4/Q9).

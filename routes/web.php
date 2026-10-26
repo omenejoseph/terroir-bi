@@ -30,6 +30,7 @@ use App\Http\Controllers\Web\Hospitality\ProgramController;
 use App\Http\Controllers\Web\Hospitality\ReservationController;
 use App\Http\Controllers\Web\InventoryController;
 use App\Http\Controllers\Web\InventoryMediaController;
+use App\Http\Controllers\Web\Kitchen\KitchenController;
 use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\LogController;
 use App\Http\Controllers\Web\NotificationController;
@@ -446,6 +447,29 @@ Route::middleware('tenant.web')->group(function () {
         Route::patch('hospitality/programs/{program}', [ProgramController::class, 'update'])->name('hospitality.programs.update');
         Route::put('hospitality/programs/{program}/agency-prices/{customer}', [AgencyPriceController::class, 'update'])->name('hospitality.agency-prices.update');
         Route::delete('hospitality/programs/{program}/agency-prices/{customer}', [AgencyPriceController::class, 'destroy'])->name('hospitality.agency-prices.destroy');
+    });
+
+    /*
+      Kitchen — stock, stock-takes ("Inventura") and prep tickets (the old app's /dashboard/kitchen;
+      docs/21 §3). ADMIN and KITCHEN.
+    */
+    Route::get('kitchen', [KitchenController::class, 'index'])->middleware('can:kitchen.view')->name('kitchen.index');
+
+    Route::middleware('can:kitchen.manage')->group(function () {
+        Route::post('kitchen/items', [KitchenController::class, 'storeItem'])->name('kitchen.items.store');
+        Route::patch('kitchen/items/{item}', [KitchenController::class, 'updateItem'])->name('kitchen.items.update');
+        Route::delete('kitchen/items/{item}', [KitchenController::class, 'destroyItem'])->name('kitchen.items.destroy');
+        Route::post('kitchen/items/{item}/stock', [KitchenController::class, 'adjust'])->name('kitchen.items.adjust');
+
+        Route::post('kitchen/checks', [KitchenController::class, 'startCheck'])->name('kitchen.checks.store');
+        Route::patch('kitchen/checks/{check}/lines/{line}', [KitchenController::class, 'recordCount'])->name('kitchen.checks.count');
+        Route::post('kitchen/checks/{check}/complete', [KitchenController::class, 'completeCheck'])->name('kitchen.checks.complete');
+        Route::delete('kitchen/checks/{check}', [KitchenController::class, 'destroyCheck'])->name('kitchen.checks.destroy');
+
+        Route::post('kitchen/work-orders', [KitchenController::class, 'storeWorkOrder'])->name('kitchen.work-orders.store');
+        Route::patch('kitchen/work-orders/{workOrder}', [KitchenController::class, 'updateWorkOrder'])->name('kitchen.work-orders.update');
+        Route::patch('kitchen/work-orders/{workOrder}/status', [KitchenController::class, 'workOrderStatus'])->name('kitchen.work-orders.status');
+        Route::delete('kitchen/work-orders/{workOrder}', [KitchenController::class, 'destroyWorkOrder'])->name('kitchen.work-orders.destroy');
     });
 
     // Cellar (parity with the prototype's /dashboard/cellar — see
