@@ -183,6 +183,13 @@ class RoleParityTest extends TestCase
             'work-order-boards.store' => 'work_orders.use',
             'team.index' => 'members.view',
             'team.impersonate' => 'members.impersonate',
+            'hospitality.index' => 'hospitality.view',
+            'hospitality.reservations.show' => 'hospitality.view',
+            'hospitality.reservations.store' => 'hospitality.manage',
+            'hospitality.reservations.status' => 'hospitality.manage',
+            'hospitality.reservations.destroy' => 'hospitality.manage',
+            'hospitality.programs.update' => 'hospitality.manage',
+            'hospitality.agency-prices.update' => 'hospitality.manage',
         ];
 
         $out = [];
@@ -208,14 +215,14 @@ class RoleParityTest extends TestCase
     {
         $rows = [];
         $matrix = [
-            'ADMIN' => ['/orders' => 200, '/inventory' => 200, '/customers' => 200, '/work-orders' => 200, '/settings' => 200, '/settings/team' => 200, '/logs' => 200, '/inventory-analytics' => 200],
-            'TEAM' => ['/orders' => 200, '/inventory' => 200, '/customers' => 403, '/work-orders' => 200, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403],
-            'ORDERS' => ['/orders' => 200, '/inventory' => 403, '/customers' => 403, '/work-orders' => 200, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403],
-            'CELLAR' => ['/orders' => 403, '/inventory' => 403, '/customers' => 403, '/work-orders' => 200, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403],
-            'INVENTORY' => ['/orders' => 403, '/inventory' => 200, '/customers' => 403, '/work-orders' => 403, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403],
-            'MANAGER' => ['/orders' => 403, '/inventory' => 403, '/customers' => 403, '/work-orders' => 403, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403],
-            'SALES' => ['/orders' => 403, '/inventory' => 403, '/customers' => 403, '/work-orders' => 403, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403],
-            'HOSPITALITY' => ['/orders' => 403, '/inventory' => 403, '/customers' => 403, '/work-orders' => 403, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403],
+            'ADMIN' => ['/orders' => 200, '/inventory' => 200, '/customers' => 200, '/work-orders' => 200, '/settings' => 200, '/settings/team' => 200, '/logs' => 200, '/inventory-analytics' => 200, '/hospitality' => 200],
+            'TEAM' => ['/orders' => 200, '/inventory' => 200, '/customers' => 403, '/work-orders' => 200, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403, '/hospitality' => 403],
+            'ORDERS' => ['/orders' => 200, '/inventory' => 403, '/customers' => 403, '/work-orders' => 200, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403, '/hospitality' => 403],
+            'CELLAR' => ['/orders' => 403, '/inventory' => 403, '/customers' => 403, '/work-orders' => 200, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403, '/hospitality' => 403],
+            'INVENTORY' => ['/orders' => 403, '/inventory' => 200, '/customers' => 403, '/work-orders' => 403, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403, '/hospitality' => 403],
+            'MANAGER' => ['/orders' => 403, '/inventory' => 403, '/customers' => 403, '/work-orders' => 403, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403, '/hospitality' => 403],
+            'SALES' => ['/orders' => 403, '/inventory' => 403, '/customers' => 403, '/work-orders' => 403, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403, '/hospitality' => 403],
+            'HOSPITALITY' => ['/orders' => 403, '/inventory' => 403, '/customers' => 403, '/work-orders' => 403, '/settings' => 403, '/settings/team' => 403, '/logs' => 403, '/inventory-analytics' => 403, '/hospitality' => 200],
         ];
         foreach ($matrix as $role => $urls) {
             foreach ($urls as $url => $status) {

@@ -7,16 +7,19 @@ namespace App\Services\Customers;
 use App\Models\Customer;
 use App\Models\CustomerPrice;
 use App\Models\CustomerProductOverride;
+use App\Models\HospitalityAgencyPrice;
 use App\Models\Order;
+use App\Models\Reservation;
 use App\Services\Audit\AuditLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Folds duplicate customers into a winner: orders move over wholesale; per-item
- * rows (prices, catalog overrides) move too, except where the winner already has
- * a row for that item — those loser rows are dropped so the unique
- * (item, customer) constraint holds. Losers are then deleted.
+ * Folds duplicate customers into a winner: orders and reservations move over
+ * wholesale; per-item rows (prices, catalog overrides) and per-program agency
+ * prices move too, except where the winner already has a row for that item or
+ * program — those loser rows are dropped so the unique constraints hold. Losers
+ * are then deleted (a reservation left behind would silently become a walk-in).
  */
 class CustomerMergeService
 {
@@ -54,9 +57,10 @@ class CustomerMergeService
         // The winner's existing per-item rows; grows as loser rows are reassigned.
         $winnerPricedItems = array_values(array_map('strval', CustomerPrice::query()->where('customer_id', $winner->getKey())->pluck('inventory_item_id')->all()));
         $winnerOverrideItems = array_values(array_map('strval', CustomerProductOverride::query()->where('customer_id', $winner->getKey())->pluck('inventory_item_id')->all()));
+        $winnerPricedPrograms = array_values(array_map('strval', HospitalityAgencyPrice::query()->where('customer_id', $winner->getKey())->pluck('program_id')->all()));
 
         $perLoser = [];
-        $totals = ['orders' => 0, 'price_reassign' => 0, 'price_drop' => 0, 'override_reassign' => 0, 'override_drop' => 0];
+        $totals = ['orders' => 0, 'price_reassign' => 0, 'price_drop' => 0, 'override_reassign' => 0, 'override_drop' => 0, 'reservations' => 0, 'agency_price_reassign' => 0, 'agency_price_drop' => 0];
 
         foreach ($losers as $loser) {
             $orders = Order::query()->where('customer_id', $loser->getKey())->count();
@@ -66,6 +70,13 @@ class CustomerMergeService
 
             $price = $this->foldPerItem(CustomerPrice::query()->where('customer_id', $loser->getKey())->get(), $winnerPricedItems, $winner, $apply);
             $override = $this->foldPerItem(CustomerProductOverride::query()->where('customer_id', $loser->getKey())->get(), $winnerOverrideItems, $winner, $apply);
+
+            $reservations = Reservation::query()->where('customer_id', $loser->getKey())->count();
+            if ($apply && $reservations > 0) {
+                Reservation::query()->where('customer_id', $loser->getKey())->update(['customer_id' => $winner->getKey()]);
+            }
+
+            $agencyPrice = $this->foldAgencyPrices($loser, $winnerPricedPrograms, $winner, $apply);
 
             if ($apply) {
                 // A merge deletes one row and reassigns relations across
@@ -80,6 +91,9 @@ class CustomerMergeService
                     'price_dropped' => $price['drop'],
                     'override_reassigned' => $override['reassign'],
                     'override_dropped' => $override['drop'],
+                    'reservations_moved' => $reservations,
+                    'agency_price_reassigned' => $agencyPrice['reassign'],
+                    'agency_price_dropped' => $agencyPrice['drop'],
                 ]);
 
                 $loser->delete();
@@ -93,6 +107,9 @@ class CustomerMergeService
                 'price_drop' => $price['drop'],
                 'override_reassign' => $override['reassign'],
                 'override_drop' => $override['drop'],
+                'reservations' => $reservations,
+                'agency_price_reassign' => $agencyPrice['reassign'],
+                'agency_price_drop' => $agencyPrice['drop'],
             ];
 
             $totals['orders'] += $orders;
@@ -100,6 +117,9 @@ class CustomerMergeService
             $totals['price_drop'] += $price['drop'];
             $totals['override_reassign'] += $override['reassign'];
             $totals['override_drop'] += $override['drop'];
+            $totals['reservations'] += $reservations;
+            $totals['agency_price_reassign'] += $agencyPrice['reassign'];
+            $totals['agency_price_drop'] += $agencyPrice['drop'];
         }
 
         return [
@@ -138,6 +158,39 @@ class CustomerMergeService
             if ($apply) {
                 $row->customer_id = $winner->getKey();
                 $row->save();
+            }
+        }
+
+        return ['reassign' => $reassign, 'drop' => $drop];
+    }
+
+    /**
+     * The agency price book, folded the same way per program: the winner's own price for a
+     * program stands, a loser's price for a program the winner has no price for moves over.
+     *
+     * @param  list<string>  $winnerPrograms
+     * @return array{reassign: int, drop: int}
+     */
+    private function foldAgencyPrices(Customer $loser, array &$winnerPrograms, Customer $winner, bool $apply): array
+    {
+        $reassign = 0;
+        $drop = 0;
+
+        foreach (HospitalityAgencyPrice::query()->where('customer_id', $loser->getKey())->get() as $price) {
+            if (in_array($price->program_id, $winnerPrograms, true)) {
+                $drop++;
+                if ($apply) {
+                    $price->delete();
+                }
+
+                continue;
+            }
+
+            $reassign++;
+            $winnerPrograms[] = $price->program_id;
+            if ($apply) {
+                $price->customer_id = $winner->getKey();
+                $price->save();
             }
         }
 

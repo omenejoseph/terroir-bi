@@ -1,6 +1,6 @@
 # 21 — Hospitality port plan (order-mgmt → terroir-bi)
 
-Status: **research complete, no code written.** Source of truth is the prototype
+Status: **phase 1 in progress** — 1a (schema, models, pricing, actions) and 1b (reservation and program screens) landed; see [§11](#11-build-progress).  Source of truth is the prototype
 (`/Users/omenejoseph/Sites/order-mgmt`); rules from [15-prototype-parity-audit](15-prototype-parity-audit.md)
 apply: match **functionality and information**, not the UI. Phase 1 is a **like-for-like** port;
 experience improvements are a later, separate task.
@@ -300,3 +300,35 @@ they gate the first screens.
 Full bodies of `reservation-detail-client.tsx`, `hospitality-analytics.tsx`, the kitchen components, the
 Remaris dashboard/compare/mapping components; terroir-bi landing-redirect location; `resolveItemUnitCost`
 equivalent; Kitchen/Remaris legacy row counts; whether a `ui/Table` exists on another branch.
+
+## 11. Build progress
+
+### Landed
+- **1a** — `Module::Hospitality`, `hospitality.view/.manage` for HOSPITALITY (ADMIN via `*`), the four tables,
+  models, `ReservationPricing`, and the program / price-book / reservation actions, with action and pricing tests.
+- **1b** — web layer under `/hospitality` (`Web\Hospitality\{Reservation,Program,AgencyPrice}Controller`,
+  `ReservationListQuery`, `HospitalityQuickStatsQuery`, `ReservationPresenter`, `HospitalityOptions`,
+  `ReservationFilters`); pages `Hospitality/Index` (Reservations + Programs tabs) and `Hospitality/Reservation`;
+  drawers `ReservationFormPanel` (create + edit, live server-side price quote), `ProgramFormPanel`,
+  `ProgramPricesPanel`; nav item *Sales → Agencies* → `/hospitality`; en + hr strings;
+  `tests/Feature/Hospitality/WebHospitalityTest.php`, route guards and `/hospitality` in `RoleParityTest`.
+
+### Interim decisions (taken while building; revisit with the open questions)
+- **Q2 naming**: kept the prototype's — the page is *Agencies* (nav key `agencies`) at `/hospitality`. The
+  *Hospitality* category's Accommodation / Kitchen / Hospitality (POS) items are marked `hidden` until their phases land.
+- **Q8 quick stats**: aligned with analytics (cancelled and `exclude_from_stats` customers left out). Today / MTD /
+  YTD compare against the **same window last year**; the prototype's comparison window was not verified.
+- **Q8 transitions**: no server-side validation (like-for-like); the UI offers *next* and *Cancel* only.
+- **List periods** are whole calendar spans (*This month* runs to month end) plus *Upcoming* and *All*, because
+  reservations are mostly in the future; the order list's presets stop at today.
+- **Dates** are wall-clock `Y-m-d H:i` with no zone, serialised as such so the browser never shifts them. The
+  form uses a native date input plus a 15-minute time select (no new G2 component); legacy off-grid times stay selectable.
+- **Agency price book** is edited per program (Programs tab → *Agency prices*), not on the customer page. Same rows,
+  same rules (flat price or rebate %, rebate follows the base price; only `is_agency` customers).
+- No new shared components were built (G1–G4 deferred): the list hand-rolls its table with a stacked-card
+  layout under `sm`, and tile deltas are written into `StatCard`'s hint.
+
+### Still to do in phase 1
+- Customer detail: agency price table and Reservations tab (§2.3); `CustomerMergeService` re-pointing
+  reservations and merging agency prices (§2.4).
+- 1c Analytics tab + agency performance; 1d dashboard channel (needs Q3); 1e `HospitalityStep` import + reconcile.

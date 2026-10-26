@@ -25,6 +25,9 @@ use App\Http\Controllers\Web\CustomerConsignmentController;
 use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\CustomerPriceController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\Hospitality\AgencyPriceController;
+use App\Http\Controllers\Web\Hospitality\ProgramController;
+use App\Http\Controllers\Web\Hospitality\ReservationController;
 use App\Http\Controllers\Web\InventoryController;
 use App\Http\Controllers\Web\InventoryMediaController;
 use App\Http\Controllers\Web\LocaleController;
@@ -419,6 +422,30 @@ Route::middleware('tenant.web')->group(function () {
         Route::post('work-order-boards', [WorkOrderController::class, 'storeBoard'])->name('work-order-boards.store');
         Route::patch('work-order-boards/favorite', [WorkOrderController::class, 'setFavoriteBoard'])
             ->name('work-order-boards.favorite');
+    });
+
+    /*
+      Hospitality — programs, the agency price book and reservations (the old app's "Agencies",
+      /dashboard/hospitality; docs/21-hospitality-port-plan.md). ADMIN and HOSPITALITY. Static
+      segments precede the {reservation} wildcard.
+    */
+    Route::middleware('can:hospitality.view')->group(function () {
+        Route::get('hospitality', [ReservationController::class, 'index'])->name('hospitality.index');
+        Route::get('hospitality/reservations/quote', [ReservationController::class, 'quote'])->name('hospitality.reservations.quote');
+        Route::get('hospitality/reservations/{reservation}', [ReservationController::class, 'show'])->name('hospitality.reservations.show');
+    });
+
+    Route::middleware('can:hospitality.manage')->group(function () {
+        Route::post('hospitality/reservations', [ReservationController::class, 'store'])->name('hospitality.reservations.store');
+        Route::patch('hospitality/reservations/{reservation}', [ReservationController::class, 'update'])->name('hospitality.reservations.update');
+        Route::post('hospitality/reservations/{reservation}/status', [ReservationController::class, 'changeStatus'])->name('hospitality.reservations.status');
+        Route::post('hospitality/reservations/{reservation}/notes', [ReservationController::class, 'addNote'])->name('hospitality.reservations.notes');
+        Route::delete('hospitality/reservations/{reservation}', [ReservationController::class, 'destroy'])->name('hospitality.reservations.destroy');
+
+        Route::post('hospitality/programs', [ProgramController::class, 'store'])->name('hospitality.programs.store');
+        Route::patch('hospitality/programs/{program}', [ProgramController::class, 'update'])->name('hospitality.programs.update');
+        Route::put('hospitality/programs/{program}/agency-prices/{customer}', [AgencyPriceController::class, 'update'])->name('hospitality.agency-prices.update');
+        Route::delete('hospitality/programs/{program}/agency-prices/{customer}', [AgencyPriceController::class, 'destroy'])->name('hospitality.agency-prices.destroy');
     });
 
     // Cellar (parity with the prototype's /dashboard/cellar — see

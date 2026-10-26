@@ -115,6 +115,7 @@ class Reservation extends Model
      */
     public function statusHistories(): HasMany
     {
-        return $this->hasMany(ReservationStatusHistory::class)->orderBy('created_at');
+        // ULIDs break ties between lines written in the same second, in the order they were written.
+        return $this->hasMany(ReservationStatusHistory::class)->orderBy('created_at')->orderBy('id');
     }
 }

@@ -29,6 +29,8 @@ final class NavCatalog
         'work-orders' => 'work-orders',
         'inventory' => 'inventory',
         'cellar' => 'cellar',
+        // The old app's "Agencies" (programs, price book, reservations) lives under /hospitality.
+        'agencies' => 'hospitality',
     ];
 
     /**

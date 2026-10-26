@@ -99,7 +99,10 @@ export const NAV_CATEGORIES: NavCategory[] = [
             // Task planning follows the old app's menu: TEAM, CELLAR and ORDERS, never
             // anyone who also holds MANAGER (see RoleCapabilities::revokedBy).
             { key: 'work-orders', label: 'Work Orders', href: '/work-orders', icon: ClipboardList, capability: 'work_orders.use', module: 'work_orders' },
-            // These three don't have a real App\Enums\Module case yet — the
+            // The old app's "Agencies": programs, the agency price book and reservations
+            // (docs/21-hospitality-port-plan.md, module A). Lives under /hospitality.
+            { key: 'agencies', label: 'Agencies', href: '/hospitality', icon: Building2, capability: 'hospitality.view', module: 'hospitality' },
+            // These two don't have a real App\Enums\Module case yet — the
             // module keys below are forward-looking, not ones any plan can
             // include today. That's deliberate: the item stays hidden (no
             // tenant's `modules` will ever contain 'wine_club' etc. until the
@@ -107,20 +110,18 @@ export const NAV_CATEGORIES: NavCategory[] = [
             // here — add the real module server-side and it starts appearing
             // for any plan that includes it.
             { key: 'wine-club', label: 'Wine Club', href: null, icon: Wine, capability: 'customers.view', module: 'wine_club' },
-            { key: 'agencies', label: 'Agencies', href: null, icon: Building2, capability: 'customers.view', module: 'agencies' },
             { key: 'pipeline', label: 'Pipeline', href: null, icon: ChartLine, capability: 'customers.view', module: 'pipeline' },
         ],
     },
     {
         label: 'Hospitality',
         icon: ConciergeBell,
-        // No App\Enums\Module case exists for hospitality yet (it's deferred
-        // product-side) — same forward-looking-module pattern as Wine Club
-        // above, so this category stays hidden until one does.
+        // Module::Hospitality exists now (for Agencies above), but these three are later
+        // phases of docs/21 — kept in the catalogue, hidden until each one is built.
         items: [
-            { key: 'accommodation', label: 'Accommodation', href: null, icon: Store, module: 'hospitality' },
-            { key: 'kitchen', label: 'Kitchen', href: null, icon: CookingPot, module: 'hospitality' },
-            { key: 'hospitality', label: 'Hospitality', href: null, icon: Wine, module: 'hospitality' },
+            { key: 'accommodation', label: 'Accommodation', href: null, icon: Store, capability: 'hospitality.view', module: 'hospitality', hidden: true },
+            { key: 'kitchen', label: 'Kitchen', href: null, icon: CookingPot, module: 'hospitality', hidden: true },
+            { key: 'hospitality', label: 'Hospitality', href: null, icon: Wine, module: 'hospitality', hidden: true },
         ],
     },
     {
