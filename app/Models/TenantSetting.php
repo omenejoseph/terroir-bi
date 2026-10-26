@@ -34,7 +34,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $cash_on_hand
  * @property Carbon|null $cash_on_hand_as_of
  * @property string $revenue_basis
- * @property array{skipped?: list<string>, done?: list<string>, dismissed_at?: string|null}|null $onboarding
+ * @property array{skipped?: list<string>, done?: list<string>, dismissed_at?: string|null, answers?: array<string, mixed>}|null $onboarding
  */
 class TenantSetting extends Model
 {

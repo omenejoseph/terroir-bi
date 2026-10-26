@@ -11,6 +11,7 @@ import Tabs from '@/components/ui/Tabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
+import { formatMoney } from '@/lib/money';
 import type { PricingTierRow } from '@/types/customers';
 import type { TabItem } from '@/types/ui';
 
@@ -25,7 +26,14 @@ defineOptions({ layout: AppLayout });
  * Add and edit open in a slide-in panel over the table, like the other list pages. Deleting a tier
  * never deletes customers: they keep existing, without a tier.
  */
-defineProps<{ tiers: PricingTierRow[] }>();
+defineProps<{
+    tiers: PricingTierRow[];
+    /**
+     * A few priced wines with what each tier pays (App\Services\Pricing\TierPricePreview —
+     * resolved by the real pricing engine, tier prices included). Empty without tiers or priced wines.
+     */
+    preview?: { id: string; name: string; vintage: string | null; list_price: number; currency: string; prices: Record<string, number> }[];
+}>();
 
 const { can } = useAuth();
 const { t } = useTranslations();
@@ -128,6 +136,44 @@ async function remove(tier: PricingTierRow): Promise<void> {
                             <tr v-if="tiers.length === 0">
                                 <td :colspan="canManage ? 5 : 4" class="px-4 py-12 text-center text-muted-foreground">
                                     {{ t('No pricing tiers yet.') }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="preview && preview.length > 0 && tiers.length > 0" class="mt-5 space-y-2">
+            <div>
+                <h3 class="text-sm font-semibold text-foreground">{{ t('Price preview') }}</h3>
+                <p class="text-xs text-muted-foreground">
+                    {{ t('What a customer on each tier pays, before any rebate of their own. Updates as you change a tier.') }}
+                </p>
+            </div>
+            <div class="overflow-hidden border border-border bg-card">
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[32rem] text-xs">
+                        <thead class="border-b border-border bg-muted/40 text-left text-3xs text-muted-foreground">
+                            <tr>
+                                <th scope="col" class="px-4 py-2.5 font-medium tracking-[0.08em] uppercase">{{ t('Product') }}</th>
+                                <th scope="col" class="px-4 py-2.5 text-right font-medium tracking-[0.08em] uppercase">{{ t('List price') }}</th>
+                                <th
+                                    v-for="tier in tiers"
+                                    :key="tier.id"
+                                    scope="col"
+                                    class="px-4 py-2.5 text-right font-medium tracking-[0.08em] uppercase"
+                                >
+                                    {{ tier.name }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in preview" :key="item.id" class="border-b border-border last:border-b-0">
+                                <td class="px-4 py-2.5 text-foreground">{{ item.name }}<span v-if="item.vintage" class="text-muted-foreground"> {{ item.vintage }}</span></td>
+                                <td class="px-4 py-2.5 text-right tabular-nums text-muted-foreground">{{ formatMoney(item.list_price, item.currency) }}</td>
+                                <td v-for="tier in tiers" :key="tier.id" class="px-4 py-2.5 text-right font-medium tabular-nums">
+                                    {{ item.prices[tier.id] !== undefined ? formatMoney(item.prices[tier.id]!, item.currency) : '—' }}
                                 </td>
                             </tr>
                         </tbody>

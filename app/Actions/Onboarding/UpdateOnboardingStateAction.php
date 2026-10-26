@@ -11,7 +11,7 @@ use App\Services\Onboarding\OnboardingStatus;
 /**
  * Writes the part of the setup checklist that real data can't express — a
  * step skipped or marked done by hand, and the dashboard reminder being
- * dismissed (see OnboardingStatus). Each call changes one thing and keeps the
+ * dismissed, plus the welcome questions' answers (see OnboardingStatus). Each call changes one thing and keeps the
  * rest of TenantSetting::$onboarding as it was.
  */
 class UpdateOnboardingStateAction
@@ -38,6 +38,19 @@ class UpdateOnboardingStateAction
     }
 
     /**
+     * Record the welcome questions' answers ([] when the admin skipped them).
+     *
+     * @param  array<string, mixed>  $answers
+     */
+    public function answer(Tenant $tenant, array $answers): void
+    {
+        $state = OnboardingStatus::state($tenant);
+        $state['answers'] = $answers;
+
+        $this->store($tenant, $state);
+    }
+
+    /**
      * @param  'skipped'|'done'  $list
      */
     private function toggle(Tenant $tenant, string $list, string $step, bool $on): void
@@ -55,7 +68,7 @@ class UpdateOnboardingStateAction
     }
 
     /**
-     * @param  array{skipped: list<string>, done: list<string>, dismissed_at: string|null}  $state
+     * @param  array{skipped: list<string>, done: list<string>, dismissed_at: string|null, answers: array<string, mixed>|null}  $state
      */
     private function store(Tenant $tenant, array $state): void
     {

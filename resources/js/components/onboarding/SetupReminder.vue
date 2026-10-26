@@ -41,8 +41,8 @@ function dismiss(): void {
             <ProgressBar :value="percent" :label="t('Setup progress')" class="max-w-sm" />
         </div>
         <div class="flex shrink-0 items-center gap-2">
-            <Button size="sm" :href="summary.complete ? '/orders' : '/setup'">
-                {{ summary.complete ? t('Go to orders') : t('Continue setup') }}
+            <Button size="sm" :href="summary.complete ? '/orders' : summary.welcomed ? '/setup' : '/setup/welcome'">
+                {{ summary.complete ? t('Go to orders') : summary.welcomed ? t('Continue setup') : t('Get started') }}
                 <ArrowRight class="size-3.5" :stroke-width="1.5" />
             </Button>
             <Button size="icon" variant="ghost" :aria-label="t('Hide the reminder from the dashboard')" @click="dismiss">

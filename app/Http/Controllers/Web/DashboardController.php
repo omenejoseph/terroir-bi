@@ -89,7 +89,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * @return array{done: int, total: int, complete: bool, dismissed: bool}|null
+     * @return array{done: int, total: int, complete: bool, dismissed: bool, welcomed: bool}|null
      */
     private function onboarding(OnboardingStatus $onboarding, TenantContext $tenant): ?array
     {

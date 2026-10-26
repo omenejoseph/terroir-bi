@@ -38,6 +38,8 @@ export interface OnboardingSummary {
     total: number;
     complete: boolean;
     dismissed: boolean;
+    /** The welcome questions were answered or skipped. */
+    welcomed: boolean;
 }
 
 export interface OnboardingStepMeta {
@@ -74,7 +76,8 @@ export const ONBOARDING_STEPS: OnboardingStepMeta[] = [
         key: 'finished_products',
         title: 'Finished products',
         why: 'Add the wines you sell with a list price, vintage, size and sales unit. Bulk import works for long lists.',
-        href: '/inventory',
+        // Setup's own quick grid + CSV import, rather than the full Inventory page.
+        href: '/setup/products',
         minutes: 15,
         module: 'inventory',
     },

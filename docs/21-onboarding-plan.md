@@ -261,6 +261,22 @@ contact email/phone, bank, IBAN) on Settings and the order PDF. Deferred from
 P1: the logo upload, the first-login redirect (it lands with P2's welcome
 step), and the sidebar progress badge.
 
+**P2 status (built):** `/setup/welcome` (three questions → ticked suggestions
+for starter finished-goods categories and one pricing tier per sales channel,
+created by `ApplyWelcomeAnswersAction`, never duplicated), `/setup/products`
+(quick grid — generated SKUs, opening stock booked as a `MANUAL_IN` movement —
+with the existing CSV import beside it; the "Finished products" step now opens
+it), a live price preview on Pricing tiers (`TierPricePreview`, resolved by
+`PricingService` itself), and the count sheet opening on finished goods from
+the "Opening stock" step. The hub and dashboard card point to the welcome
+questions until they're answered or skipped.
+
+Deliberately not done in P2: the first-login redirect. Sending every admin of
+an empty account to /setup/welcome on login would also catch existing tenants
+and every dashboard test; the dashboard card's "Get started" does the same
+job without hijacking navigation. AI import isn't offered on the import
+screen because it has no web UI yet (API only).
+
 Ship P1 alone first. It's useful even without new data-entry UI, because it
 connects the screens that already exist.
 

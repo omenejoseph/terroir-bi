@@ -55,8 +55,12 @@ const MODULE_TABS: TabItem[] = [
 ];
 
 const search = ref('');
-/** '' = every type. Raw materials are counted here too, so the sheet can be narrowed to one type. */
-const typeFilter = ref('');
+/**
+ * '' = every type. Raw materials are counted here too, so the sheet can be narrowed to one type.
+ * Opened from the setup checklist's "Opening stock" step, it starts on finished goods — the
+ * wines orders will draw from.
+ */
+const typeFilter = ref(new URLSearchParams(page.url.split('?', 2)[1] ?? '').get('setup') === 'opening_stock' ? 'FINISHED' : '');
 /** A category id from the tree; a top-level one covers its subcategories. '' = every category. */
 const categoryFilter = ref('');
 

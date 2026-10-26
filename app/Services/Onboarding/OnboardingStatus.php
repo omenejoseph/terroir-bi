@@ -83,35 +83,45 @@ class OnboardingStatus
      * The dashboard reminder's numbers: how many steps are settled (done or
      * skipped) out of how many apply to this tenant.
      *
-     * @return array{done: int, total: int, complete: bool, dismissed: bool}
+     * `welcomed` is false until the admin has answered (or skipped) the
+     * welcome questions, which is what the reminder and hub point to first.
+     *
+     * @return array{done: int, total: int, complete: bool, dismissed: bool, welcomed: bool}
      */
     public function summary(Tenant $tenant): array
     {
         $steps = $this->steps($tenant);
         $done = count(array_filter($steps, fn (OnboardingStep $step): bool => $step->status->isSettled()));
+        $state = self::state($tenant);
 
         return [
             'done' => $done,
             'total' => count($steps),
             'complete' => $done === count($steps),
-            'dismissed' => (self::state($tenant)['dismissed_at'] ?? null) !== null,
+            'dismissed' => $state['dismissed_at'] !== null,
+            'welcomed' => $state['answers'] !== null,
         ];
     }
 
     /**
      * The stored part of the checklist, normalised.
      *
-     * @return array{skipped: list<string>, done: list<string>, dismissed_at: string|null}
+     * `answers` is the welcome questions' answers — null until they were
+     * answered or skipped (skipping stores an empty array).
+     *
+     * @return array{skipped: list<string>, done: list<string>, dismissed_at: string|null, answers: array<string, mixed>|null}
      */
     public static function state(Tenant $tenant): array
     {
         $settings = $tenant->settings;
         $stored = $settings instanceof TenantSetting && is_array($settings->onboarding) ? $settings->onboarding : [];
+        $answers = $stored['answers'] ?? null;
 
         return [
             'skipped' => array_values(array_filter((array) ($stored['skipped'] ?? []), 'is_string')),
             'done' => array_values(array_filter((array) ($stored['done'] ?? []), 'is_string')),
             'dismissed_at' => is_string($stored['dismissed_at'] ?? null) ? $stored['dismissed_at'] : null,
+            'answers' => is_array($answers) ? $answers : null,
         ];
     }
 
@@ -120,7 +130,7 @@ class OnboardingStatus
      * Real data wins: a step the data shows as done reads "done" even if it
      * was skipped earlier.
      *
-     * @param  array{skipped: list<string>, done: list<string>, dismissed_at: string|null}  $state
+     * @param  array{skipped: list<string>, done: list<string>, dismissed_at: string|null, answers: array<string, mixed>|null}  $state
      */
     private function settle(OnboardingStep $step, array $state): OnboardingStep
     {

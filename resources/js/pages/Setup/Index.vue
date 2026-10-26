@@ -94,6 +94,19 @@ function dismiss(dismissed: boolean): void {
             :description="t('Everything this account needs before it can take its first order. Each step opens the screen where the work happens.')"
         />
 
+        <Card v-if="!summary.welcomed" class="flex flex-wrap items-center justify-between gap-3 border-primary/40 p-5">
+            <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium text-foreground">{{ t('Start with three quick questions') }}</p>
+                <p class="mt-1 text-xs text-muted-foreground">
+                    {{ t('Tell us what you sell and who to, and we\'ll prepare your categories and pricing tiers.') }}
+                </p>
+            </div>
+            <Button size="sm" href="/setup/welcome">
+                {{ t('Answer the questions') }}
+                <ArrowRight class="size-3.5" :stroke-width="1.5" />
+            </Button>
+        </Card>
+
         <Card class="space-y-3 p-5">
             <div class="flex flex-wrap items-baseline justify-between gap-2">
                 <p class="text-sm font-medium text-foreground">

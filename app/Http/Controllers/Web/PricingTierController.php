@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Pricing\StorePricingTierRequest;
 use App\Http\Requests\Pricing\UpdatePricingTierRequest;
 use App\Models\PricingTier;
+use App\Services\Pricing\TierPricePreview;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,19 +24,25 @@ use Inertia\Response;
  */
 class PricingTierController extends Controller
 {
-    public function index(): Response
+    public function index(TierPricePreview $preview): Response
     {
-        $tiers = PricingTier::query()
+        $models = PricingTier::query()
             ->withCount('customers')
             ->withCount('tierPrices')
             ->orderBy('name')
-            ->get()
+            ->get();
+
+        $tiers = $models
             ->map(fn (PricingTier $tier): array => PricingTierData::fromModel($tier)->toArray() + [
                 'prices_count' => (int) $tier->getAttribute('tier_prices_count'),
             ])
             ->values();
 
-        return Inertia::render('Customers/PricingTiers', ['tiers' => $tiers]);
+        return Inertia::render('Customers/PricingTiers', [
+            'tiers' => $tiers,
+            // A few wines priced on every tier, so a rebate's effect is visible as it's set.
+            'preview' => $preview->rows($models),
+        ]);
     }
 
     public function store(StorePricingTierRequest $request, CreatePricingTierAction $action): RedirectResponse

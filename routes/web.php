@@ -158,6 +158,13 @@ Route::middleware('tenant.web')->group(function () {
         // The new-account setup hub (nav's "System · Setup") — see
         // App\Services\Onboarding\OnboardingStatus and docs/21-onboarding-plan.md.
         Route::get('setup', [SetupController::class, 'index'])->name('setup.index');
+        Route::get('setup/welcome', [SetupController::class, 'welcome'])->name('setup.welcome');
+        Route::post('setup/welcome', [SetupController::class, 'storeWelcome'])->name('setup.welcome.store');
+        Route::post('setup/welcome/skip', [SetupController::class, 'skipWelcome'])->name('setup.welcome.skip');
+        Route::get('setup/products', [SetupController::class, 'products'])->name('setup.products');
+        Route::post('setup/products', [SetupController::class, 'storeProducts'])
+            ->middleware('can:inventory.manage')
+            ->name('setup.products.store');
         Route::patch('setup/steps/{step}', [SetupController::class, 'updateStep'])->name('setup.steps.update');
         Route::post('setup/dismiss', [SetupController::class, 'dismiss'])->name('setup.dismiss');
     });
