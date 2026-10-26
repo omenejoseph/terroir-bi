@@ -39,6 +39,7 @@ use App\Http\Controllers\Web\SearchController;
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\SetupController;
 use App\Http\Controllers\Web\ShortcutController;
+use App\Http\Controllers\Web\SupportTicketController;
 use App\Http\Controllers\Web\TeamController;
 use App\Http\Controllers\Web\TeamImpersonationController;
 use App\Http\Controllers\Web\TeamInvitationController;
@@ -142,6 +143,15 @@ Route::middleware('tenant.web')->group(function () {
     // General presigned upload URL (any member; the attach step is gated) —
     // mirrors routes/api.php's own uploads/presign.
     Route::post('uploads/presign', [UploadController::class, 'presign'])->name('uploads.presign');
+
+    // Help & support — any member can ask the platform team for help. Tickets
+    // are central (not tenant-scoped); the controller narrows every lookup to
+    // this tenant itself. The platform side is routes/admin.php's /admin/support.
+    Route::get('support', [SupportTicketController::class, 'index'])->name('support.index');
+    Route::post('support', [SupportTicketController::class, 'store'])->name('support.store');
+    Route::get('support/{ticket}', [SupportTicketController::class, 'show'])->name('support.show');
+    Route::post('support/{ticket}/replies', [SupportTicketController::class, 'reply'])->name('support.reply');
+    Route::post('support/{ticket}/resolve', [SupportTicketController::class, 'resolve'])->name('support.resolve');
 
     // A tenant's own audit trail — scoped to this tenant only, unlike the
     // platform-admin /admin/audit-logs view. See Web\LogController.

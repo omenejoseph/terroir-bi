@@ -13,6 +13,7 @@ use App\Http\Controllers\Web\Admin\ImpersonationController;
 use App\Http\Controllers\Web\Admin\PlanController;
 use App\Http\Controllers\Web\Admin\PlatformAdminController;
 use App\Http\Controllers\Web\Admin\StripeSettingsController;
+use App\Http\Controllers\Web\Admin\SupportTicketController;
 use App\Http\Controllers\Web\Admin\TenantController;
 use App\Http\Controllers\Web\Admin\TenantMemberController;
 use App\Http\Controllers\Web\Admin\TranslationOverrideController;
@@ -34,6 +35,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('platform.admin')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+
+    // Support queue — every tenant's tickets (Web\Admin\SupportTicketController).
+    Route::get('support', [SupportTicketController::class, 'index'])->name('support.index');
+    Route::get('support/{ticket}', [SupportTicketController::class, 'show'])->name('support.show');
+    Route::post('support/{ticket}/replies', [SupportTicketController::class, 'reply'])->name('support.reply');
+    Route::patch('support/{ticket}', [SupportTicketController::class, 'update'])->name('support.update');
 
     Route::get('translation-overrides', [TranslationOverrideController::class, 'index'])
         ->name('translation-overrides.index');

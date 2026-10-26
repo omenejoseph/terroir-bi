@@ -5,6 +5,7 @@ import {
     FlaskConical,
     KeyRound,
     LayoutGrid,
+    LifeBuoy,
     Languages,
     Megaphone,
     Receipt,
@@ -36,7 +37,11 @@ export const ADMIN_NAV_CATEGORIES: NavCategory[] = [
     {
         label: 'Overview',
         icon: LayoutGrid,
-        items: [{ key: 'admin-dashboard', label: 'Dashboard', href: ADMIN_BASE, icon: LayoutGrid }],
+        items: [
+            { key: 'admin-dashboard', label: 'Dashboard', href: ADMIN_BASE, icon: LayoutGrid },
+            // Every tenant's support tickets — Web\Admin\SupportTicketController.
+            { key: 'admin-support', label: 'Support', href: `${ADMIN_BASE}/support`, icon: LifeBuoy },
+        ],
     },
     {
         label: 'Billing',

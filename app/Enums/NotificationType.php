@@ -13,4 +13,5 @@ enum NotificationType: string
     case Announcement = 'ANNOUNCEMENT';
     case AiImportReady = 'AI_IMPORT_READY';
     case AiImportFailed = 'AI_IMPORT_FAILED';
+    case SupportReply = 'SUPPORT_REPLY';
 }

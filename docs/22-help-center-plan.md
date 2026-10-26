@@ -45,7 +45,9 @@ help center is **searchable**, **shows only what applies to this account**
   `?setup=`-style banner pattern so the reader keeps their place.
 - Screenshots where a step is hard to describe (phase 3).
 - A "Was this helpful? 👍 👎" footer, with an optional "What was missing?" text box.
-- Related articles, and "Still stuck? Contact support" (mailto for now).
+- Related articles, and **"Still stuck? Contact support"**, which opens a
+  support request (`/support?new=1&from=<page>`) in the built-in ticketing
+  system. The platform team works those from **Admin → Support**.
 
 ### 2.3 What the reader sees is filtered
 
@@ -200,7 +202,8 @@ actually find it.
 1. **Who writes the articles?** I can draft all of them in both languages from
    the code and the screens. Someone at the winery should review the Croatian
    for tone and terminology.
-2. **Support contact:** is there a support email or chat to put under "Still stuck?"
+2. ~~**Support contact**~~ resolved: "Still stuck?" opens a support ticket
+   (Help & support, `/support`), answered from Admin → Support.
 3. **Public or logged-in only?** As planned, help is inside the app. A public
    version at `help.<domain>` for prospects and search engines can reuse the
    same files later.

@@ -10,7 +10,8 @@ export type NotificationType =
     | 'REPLY'
     | 'ANNOUNCEMENT'
     | 'AI_IMPORT_READY'
-    | 'AI_IMPORT_FAILED';
+    | 'AI_IMPORT_FAILED'
+    | 'SUPPORT_REPLY';
 
 export interface NotificationItem {
     id: string;

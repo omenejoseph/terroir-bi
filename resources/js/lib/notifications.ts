@@ -22,6 +22,8 @@ export function resolveNotificationRoute(type: NotificationType, data: Record<st
             return null;
         case 'ANNOUNCEMENT':
             return null;
+        case 'SUPPORT_REPLY':
+            return data.ticket_id ? `/support/${data.ticket_id}` : null;
     }
 }
 
