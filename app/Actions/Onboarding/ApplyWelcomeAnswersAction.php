@@ -77,7 +77,7 @@ class ApplyWelcomeAnswersAction
 
             $this->state->answer($tenant, [
                 'sells' => $answers['sells'],
-                'channels' => array_values($answers['channels'] ?? []),
+                'channels' => $answers['channels'] ?? [],
                 'has_file' => (bool) ($answers['has_file'] ?? false),
             ]);
 
