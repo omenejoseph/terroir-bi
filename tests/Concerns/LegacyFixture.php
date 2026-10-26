@@ -74,7 +74,6 @@ trait LegacyFixture
         'VineyardApplication' => ['id', 'date', 'type', 'product', 'dosage', 'dosageUnit', 'phiDays', 'phiEndDate', 'weather', 'notes', 'createdAt', 'parcelId'],
         'IntakeBooking' => ['id', 'date', 'timeSlot', 'grapeVariety', 'estimatedKg', 'growerName', 'status', 'notes', 'createdAt', 'updatedAt', 'harvestPlanId', 'supplierId'],
         'GrapeContract' => ['id', 'season', 'status', 'grapeVariety', 'estimatedKg', 'deliveredKg', 'pricePerKg', 'minBrix', 'maxPH', 'deliveryWindow', 'paymentTerms', 'notes', 'createdAt', 'updatedAt', 'supplierId', 'parcelId'],
-        'Reservation' => ['id', 'guestName'],
         'StockMovement' => ['id', 'type', 'quantity', 'unit', 'note', 'reference', 'createdAt', 'inventoryItemId', 'createdById', 'isReconciliation'],
         'EInvoice' => ['id', 'costId'],
         'Cost' => ['id', 'date', 'totalAmount', 'currency', 'category', 'description', 'reference', 'status', 'paymentMethod', 'notes', 'createdAt', 'updatedAt', 'supplierId', 'createdById', 'bankTransactionId', 'paidAt', 'vatAmount', 'dueDate', 'isLegacy'],

@@ -73,7 +73,7 @@ class CustomerHospitalityQuery
             ->where('customer_id', $customer->getKey())
             ->where('status', '!=', ReservationStatus::Cancelled)
             ->sum('total_amount');
-        $currency = $this->tenant->current()?->settings()->first()?->default_currency ?? CurrencyRegistry::default()->code;
+        $currency = $this->tenant->current()?->settings()->first()->default_currency ?? CurrencyRegistry::default()->code;
 
         return [
             'prices' => $prices,

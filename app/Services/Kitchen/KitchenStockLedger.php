@@ -23,7 +23,7 @@ class KitchenStockLedger
     {
         return DB::transaction(function () use ($item, $type, $quantity, $note, $userId): KitchenMovement {
             // Re-read under a lock so two people booking at once both land.
-            $locked = KitchenItem::query()->lockForUpdate()->findOrFail($item->getKey());
+            $locked = KitchenItem::query()->lockForUpdate()->whereKey($item->getKey())->firstOrFail();
             $current = Quantity::normalize((string) $locked->current_stock);
             $quantity = Quantity::normalize($quantity);
 

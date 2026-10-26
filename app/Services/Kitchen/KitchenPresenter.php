@@ -115,7 +115,7 @@ class KitchenPresenter
             'items' => $order->items->map(fn (KitchenWorkOrderItem $line): array => [
                 'id' => $line->getKey(),
                 'item_id' => $line->item_id,
-                'name' => $line->item?->name ?? $line->custom_name,
+                'name' => $line->item->name ?? $line->custom_name,
                 'custom_name' => $line->custom_name,
                 'quantity' => (string) $line->quantity,
                 'unit' => $line->unit ?? $line->item?->unit->value,
@@ -131,13 +131,11 @@ class KitchenPresenter
      */
     public static function options(): array
     {
-        $list = fn (array $cases): array => array_map(fn ($c): array => ['value' => $c->value, 'label' => __($c->label())], $cases);
-
         return [
-            'categories' => $list(KitchenCategory::cases()),
-            'locations' => $list(KitchenLocation::cases()),
-            'units' => $list(KitchenUnit::cases()),
-            'work_order_statuses' => $list(KitchenWorkOrderStatus::cases()),
+            'categories' => array_map(fn (KitchenCategory $c): array => ['value' => $c->value, 'label' => __($c->label())], KitchenCategory::cases()),
+            'locations' => array_map(fn (KitchenLocation $c): array => ['value' => $c->value, 'label' => __($c->label())], KitchenLocation::cases()),
+            'units' => array_map(fn (KitchenUnit $c): array => ['value' => $c->value, 'label' => __($c->label())], KitchenUnit::cases()),
+            'work_order_statuses' => array_map(fn (KitchenWorkOrderStatus $c): array => ['value' => $c->value, 'label' => __($c->label())], KitchenWorkOrderStatus::cases()),
         ];
     }
 }

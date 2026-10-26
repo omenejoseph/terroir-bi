@@ -127,6 +127,6 @@ class AgencyPerformanceQuery
 
     private function currency(): string
     {
-        return $this->tenant->current()?->settings()->first()?->default_currency ?? CurrencyRegistry::default()->code;
+        return $this->tenant->current()?->settings()->first()->default_currency ?? CurrencyRegistry::default()->code;
     }
 }

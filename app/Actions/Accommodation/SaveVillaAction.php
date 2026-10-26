@@ -19,7 +19,7 @@ class SaveVillaAction
     public function execute(array $data, ?Villa $villa = null): Villa
     {
         unset($data['slug'], $data['portal_token']);
-        $name = (string) ($data['name'] ?? $villa?->name ?? '');
+        $name = (string) ($data['name'] ?? $villa->name ?? '');
 
         if ($villa === null) {
             return Villa::create($data + [

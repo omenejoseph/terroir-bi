@@ -114,7 +114,9 @@ class HospitalityAnalyticsQuery
     private function months(Collection $current, Collection $previous, callable $money): array
     {
         $bucket = function (Collection $rows): array {
+            /** @var array<int, array{revenue: int, reservations: int, guests: int}> $out */
             $out = array_fill(1, 12, ['revenue' => 0, 'reservations' => 0, 'guests' => 0]);
+            /** @var Reservation $r */
             foreach ($rows as $r) {
                 $m = $r->date->month;
                 $out[$m]['revenue'] += $r->total_amount->getMinorAmount();
@@ -188,7 +190,7 @@ class HospitalityAnalyticsQuery
         foreach ($agencyRows->groupBy('customer_id') as $customerId => $group) {
             $out[] = [
                 'customer_id' => (string) $customerId,
-                'name' => $group->first()?->customer?->company_name ?? '—',
+                'name' => $group->first()?->customer->company_name ?? '—',
                 'reservations' => $group->count(),
                 'guests' => (int) $group->sum('pax'),
                 'revenue' => $money((int) $group->sum(fn (Reservation $r): int => $r->total_amount->getMinorAmount())),
@@ -202,6 +204,6 @@ class HospitalityAnalyticsQuery
 
     private function currency(): string
     {
-        return $this->tenant->current()?->settings()->first()?->default_currency ?? CurrencyRegistry::default()->code;
+        return $this->tenant->current()?->settings()->first()->default_currency ?? CurrencyRegistry::default()->code;
     }
 }

@@ -74,7 +74,7 @@ class AccommodationOverviewQuery
             ->whereBetween('check_out', [$from, $to])->orderBy('check_out')->get()
             ->map(fn (VillaBooking $b): array => $this->presenter->booking($b))->all());
 
-        $currency = $this->tenant->current()?->settings()->first()?->default_currency ?? CurrencyRegistry::default()->code;
+        $currency = $this->tenant->current()?->settings()->first()->default_currency ?? CurrencyRegistry::default()->code;
 
         return [
             'today' => $today->toDateString(),

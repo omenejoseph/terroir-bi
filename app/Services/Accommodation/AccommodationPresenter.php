@@ -161,11 +161,9 @@ class AccommodationPresenter
      */
     public static function options(): array
     {
-        $list = fn (array $cases): array => array_map(fn ($c): array => ['value' => $c->value, 'label' => __($c->label())], $cases);
-
         return [
-            'booking_statuses' => $list(VillaBookingStatus::cases()),
-            'order_statuses' => $list(VillaOrderStatus::cases()),
+            'booking_statuses' => array_map(fn (VillaBookingStatus $c): array => ['value' => $c->value, 'label' => __($c->label())], VillaBookingStatus::cases()),
+            'order_statuses' => array_map(fn (VillaOrderStatus $c): array => ['value' => $c->value, 'label' => __($c->label())], VillaOrderStatus::cases()),
         ];
     }
 }

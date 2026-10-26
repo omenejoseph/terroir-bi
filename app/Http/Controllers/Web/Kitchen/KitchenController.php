@@ -223,7 +223,7 @@ class KitchenController extends Controller
                 'assigned_to' => $this->str($valid['assigned_to'] ?? null),
                 'notes' => $this->str($valid['notes'] ?? null),
             ],
-            array_values($valid['items']),
+            $valid['items'],
         ];
     }
 
