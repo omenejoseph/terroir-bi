@@ -28,7 +28,7 @@ class StoreReservationRequest extends FormRequest
         $tenantId = app(TenantContext::class)->id();
 
         return [
-            'program_id' => ['required', 'string', Rule::exists('hospitality_programs', 'id')->where('tenant_id', $tenantId)->where('is_active', true)],
+            'program_id' => ['required', 'string', Rule::exists('hospitality_programs', 'id')->where('tenant_id', $tenantId)->where(fn ($query) => $query->where('is_active', true))],
             'customer_id' => ['nullable', 'string', Rule::exists('customers', 'id')->where('tenant_id', $tenantId)],
             'date' => ['required', 'date_format:Y-m-d H:i'],
             'pax' => ['required', 'integer', 'min:1', 'max:10000'],
