@@ -40,6 +40,17 @@ class UpdateSettingsRequest extends FormRequest
 
             // When the Dashboard counts an order as revenue (see RevenueBasis).
             'revenue_basis' => ['sometimes', 'string', Rule::in(RevenueBasis::OPTIONS)],
+
+            // Company profile — `sometimes`, so an API client that predates
+            // these fields doesn't wipe them by leaving them out.
+            'address' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'city' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'zip' => ['sometimes', 'nullable', 'string', 'max:32'],
+            'country' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'contact_email' => ['sometimes', 'nullable', 'email', 'max:255'],
+            'contact_phone' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'bank_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'iban' => ['sometimes', 'nullable', 'string', 'max:64'],
         ];
     }
 }

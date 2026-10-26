@@ -76,6 +76,15 @@ const form = useForm({
     cash_on_hand: toMajorString(props.settings.cash_on_hand),
     cash_on_hand_as_of: props.settings.cash_on_hand_as_of ?? '',
     revenue_basis: props.settings.revenue_basis ?? 'shipped',
+    // Company profile — the issuer block on order PDFs. Blank is stored as null server-side.
+    address: props.settings.address ?? '',
+    city: props.settings.city ?? '',
+    zip: props.settings.zip ?? '',
+    country: props.settings.country ?? '',
+    contact_email: props.settings.contact_email ?? '',
+    contact_phone: props.settings.contact_phone ?? '',
+    bank_name: props.settings.bank_name ?? '',
+    iban: props.settings.iban ?? '',
 });
 
 const revenueBasisOptions = computed(() => [
@@ -190,6 +199,66 @@ function submit(): void {
                         <FormField :label="t('Currency')" :hint="t('Read-only — changing it would relabel stored amounts, not convert them.')">
                             <Input :model-value="settings.default_currency" disabled />
                         </FormField>
+                    </CardContent>
+                </Card>
+
+                <Card v-show="tab === 'organisation'">
+                    <CardHeader>
+                        <CardTitle>{{ t('Address & contact') }}</CardTitle>
+                    </CardHeader>
+                    <CardContent class="space-y-4">
+                        <p class="text-xs text-muted-foreground">
+                            {{ t('Printed as the sender on every order PDF.') }}
+                        </p>
+
+                        <FormField v-slot="{ id, invalid }" :label="t('Address')" :error="form.errors.address">
+                            <Input :id="id" v-model="form.address" :invalid="invalid" maxlength="255" autocomplete="street-address" />
+                        </FormField>
+
+                        <div class="grid gap-4 sm:grid-cols-3">
+                            <FormField v-slot="{ id, invalid }" :label="t('Postal code')" :error="form.errors.zip">
+                                <Input :id="id" v-model="form.zip" :invalid="invalid" maxlength="32" autocomplete="postal-code" />
+                            </FormField>
+
+                            <FormField v-slot="{ id, invalid }" :label="t('City')" :error="form.errors.city" class="sm:col-span-2">
+                                <Input :id="id" v-model="form.city" :invalid="invalid" maxlength="255" autocomplete="address-level2" />
+                            </FormField>
+                        </div>
+
+                        <FormField v-slot="{ id, invalid }" :label="t('Country')" :error="form.errors.country">
+                            <Input :id="id" v-model="form.country" :invalid="invalid" maxlength="255" autocomplete="country-name" />
+                        </FormField>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <FormField v-slot="{ id, invalid }" :label="t('Contact email')" :error="form.errors.contact_email">
+                                <Input :id="id" v-model="form.contact_email" :invalid="invalid" type="email" maxlength="255" />
+                            </FormField>
+
+                            <FormField v-slot="{ id, invalid }" :label="t('Contact phone')" :error="form.errors.contact_phone">
+                                <Input :id="id" v-model="form.contact_phone" :invalid="invalid" type="tel" maxlength="64" />
+                            </FormField>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card v-show="tab === 'organisation'">
+                    <CardHeader>
+                        <CardTitle>{{ t('Bank details') }}</CardTitle>
+                    </CardHeader>
+                    <CardContent class="space-y-4">
+                        <p class="text-xs text-muted-foreground">
+                            {{ t('Shown on order PDFs so customers know where to pay.') }}
+                        </p>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <FormField v-slot="{ id, invalid }" :label="t('IBAN')" :error="form.errors.iban">
+                                <Input :id="id" v-model="form.iban" :invalid="invalid" maxlength="64" />
+                            </FormField>
+
+                            <FormField v-slot="{ id, invalid }" :label="t('Bank')" :error="form.errors.bank_name">
+                                <Input :id="id" v-model="form.bank_name" :invalid="invalid" maxlength="255" />
+                            </FormField>
+                        </div>
                     </CardContent>
                 </Card>
 

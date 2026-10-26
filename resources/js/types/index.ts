@@ -62,6 +62,15 @@ export interface Org {
     cash_on_hand_as_of: string | null;
     /** When the Dashboard counts revenue: when shipped (invoiced) or when the order is created. */
     revenue_basis: 'shipped' | 'created';
+    /** Company profile — the issuer block on order PDFs and the onboarding "Company profile" step. */
+    address: string | null;
+    city: string | null;
+    zip: string | null;
+    country: string | null;
+    contact_email: string | null;
+    contact_phone: string | null;
+    bank_name: string | null;
+    iban: string | null;
 }
 
 export interface SharedProps {

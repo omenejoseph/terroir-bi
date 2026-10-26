@@ -19,7 +19,7 @@ class UpdateSettingsAction
     private const CHANNELS = ['wholesale', 'retail', 'agency', 'shipshop'];
 
     /**
-     * @param  array{name: string, default_locale: string, timezone: string, company_oib?: string|null, annual_revenue_target?: int|null, channel_revenue_targets?: array<string, int>|null, cash_on_hand?: int|null, cash_on_hand_as_of?: string|null, revenue_basis?: string}  $attributes
+     * @param  array{name: string, default_locale: string, timezone: string, company_oib?: string|null, annual_revenue_target?: int|null, channel_revenue_targets?: array<string, int>|null, cash_on_hand?: int|null, cash_on_hand_as_of?: string|null, revenue_basis?: string, address?: string|null, city?: string|null, zip?: string|null, country?: string|null, contact_email?: string|null, contact_phone?: string|null, bank_name?: string|null, iban?: string|null}  $attributes
      */
     public function execute(Tenant $tenant, array $attributes): OrganizationSettingsData
     {
@@ -41,12 +41,37 @@ class UpdateSettingsAction
                     'channel_revenue_targets' => $channelTargets === [] ? null : $channelTargets,
                     'cash_on_hand' => $attributes['cash_on_hand'] ?? null,
                     'cash_on_hand_as_of' => $attributes['cash_on_hand_as_of'] ?? null,
-                ] + (isset($attributes['revenue_basis']) ? ['revenue_basis' => $attributes['revenue_basis']] : []),
+                ] + (isset($attributes['revenue_basis']) ? ['revenue_basis' => $attributes['revenue_basis']] : [])
+                    + $this->profile($attributes),
             );
 
             // Refresh the relation so the freshly upserted row is read, not a cached one.
             return OrganizationSettingsData::fromTenant($tenant->load('settings'));
         });
+    }
+
+    /**
+     * Only the company-profile fields the request actually sent, so a caller
+     * that leaves them out (the JSON API's older clients) keeps what's stored.
+     * A blank string is stored as null.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, string|null>
+     */
+    private function profile(array $attributes): array
+    {
+        $profile = [];
+
+        foreach (OrganizationSettingsData::PROFILE_FIELDS as $field) {
+            if (! array_key_exists($field, $attributes)) {
+                continue;
+            }
+
+            $value = $attributes[$field];
+            $profile[$field] = is_string($value) && trim($value) !== '' ? trim($value) : null;
+        }
+
+        return $profile;
     }
 
     /**

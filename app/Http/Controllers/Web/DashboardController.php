@@ -7,9 +7,12 @@ namespace App\Http\Controllers\Web;
 use App\Authorization\MembershipContext;
 use App\Enums\TenantRole;
 use App\Http\Controllers\Controller;
+use App\Models\Tenant;
 use App\Services\Customers\PricingTierOptions;
 use App\Services\Dashboard\DashboardSummary;
+use App\Services\Onboarding\OnboardingStatus;
 use App\Services\Orders\OrderFormOptions;
+use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +34,8 @@ class DashboardController extends Controller
         DashboardSummary $summary,
         OrderFormOptions $orderOptions,
         PricingTierOptions $tierOptions,
+        OnboardingStatus $onboarding,
+        TenantContext $tenant,
     ): Response|RedirectResponse {
         // Cellar-only members land on the cellar (as in the prototype). The
         // route exists once the Inertia cellar screens ship; until then this
@@ -76,6 +81,30 @@ class DashboardController extends Controller
             'tiers' => Inertia::optional(
                 fn (): array => $this->membership->can('customers.manage') ? $tierOptions->list() : [],
             ),
+            // The "Finish setting up" reminder — only for whoever can act on
+            // the /setup hub, and gone once they dismiss it. A closure, so the
+            // period strip's partial reloads never pay for it.
+            'onboarding' => fn (): ?array => $this->onboarding($onboarding, $tenant),
         ]);
+    }
+
+    /**
+     * @return array{done: int, total: int, complete: bool, dismissed: bool}|null
+     */
+    private function onboarding(OnboardingStatus $onboarding, TenantContext $tenant): ?array
+    {
+        $current = $tenant->current();
+
+        if (! $current instanceof Tenant || ! $this->membership->can('settings.manage')) {
+            return null;
+        }
+
+        // Dismissed is read off the stored state first, so a tenant that has
+        // put the reminder away never pays for the checklist's counts again.
+        if (OnboardingStatus::state($current)['dismissed_at'] !== null) {
+            return null;
+        }
+
+        return $onboarding->summary($current);
     }
 }

@@ -11,7 +11,7 @@ use JsonSerializable;
 
 /**
  * Organisation-wide settings: the tenant name plus its TenantSetting row
- * (currency, locale, timezone, tax id). Transport-agnostic — feeds the API and
+ * (currency, locale, timezone, tax id, company profile). Transport-agnostic — feeds the API and
  * the auth session so the frontend can format money/dates without a round-trip.
  *
  * @implements Arrayable<string, mixed>
@@ -34,7 +34,14 @@ final class OrganizationSettingsData implements Arrayable, JsonSerializable
         public readonly ?int $cashOnHand = null,
         public readonly ?string $cashOnHandAsOf = null,
         public readonly string $revenueBasis = 'shipped',
+        // The issuer block on order PDFs and the onboarding "Company profile"
+        // step — keyed by TenantSetting column (see PROFILE_FIELDS).
+        /** @var array<string, string|null> */
+        public readonly array $profile = [],
     ) {}
+
+    /** The company-profile columns on TenantSetting, in the order the Settings form shows them. */
+    public const PROFILE_FIELDS = ['address', 'city', 'zip', 'country', 'contact_email', 'contact_phone', 'bank_name', 'iban'];
 
     public static function fromTenant(Tenant $tenant): self
     {
@@ -58,7 +65,23 @@ final class OrganizationSettingsData implements Arrayable, JsonSerializable
             cashOnHand: $settings->cash_on_hand,
             cashOnHandAsOf: $settings->cash_on_hand_as_of?->toDateString(),
             revenueBasis: self::str($settings, 'revenue_basis', 'shipped'),
+            profile: self::profile($settings),
         );
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    private static function profile(TenantSetting $settings): array
+    {
+        $profile = [];
+
+        foreach (self::PROFILE_FIELDS as $field) {
+            $value = $settings->getAttribute($field);
+            $profile[$field] = is_string($value) && $value !== '' ? $value : null;
+        }
+
+        return $profile;
     }
 
     /** Read a string attribute, falling back when it is missing/null/empty. */
@@ -85,7 +108,7 @@ final class OrganizationSettingsData implements Arrayable, JsonSerializable
             'cash_on_hand' => $this->cashOnHand,
             'cash_on_hand_as_of' => $this->cashOnHandAsOf,
             'revenue_basis' => $this->revenueBasis,
-        ];
+        ] + array_merge(array_fill_keys(self::PROFILE_FIELDS, null), $this->profile);
     }
 
     /**

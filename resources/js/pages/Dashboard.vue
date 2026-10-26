@@ -12,6 +12,7 @@ import ReorderPipelineCard from '@/components/dashboard/ReorderPipelineCard.vue'
 import RevenueVsTargetCard from '@/components/dashboard/RevenueVsTargetCard.vue';
 import RunwayCard from '@/components/dashboard/RunwayCard.vue';
 import UpcomingTasksCard from '@/components/dashboard/UpcomingTasksCard.vue';
+import SetupReminder from '@/components/onboarding/SetupReminder.vue';
 import CreateOrderPanel from '@/components/orders/CreateOrderPanel.vue';
 import AreaChart from '@/components/ui/AreaChart.vue';
 import Badge from '@/components/ui/Badge.vue';
@@ -27,6 +28,7 @@ import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
 import { useVisitPending } from '@/composables/useVisitPending';
 import { formatMoney, formatNumber } from '@/lib/money';
+import type { OnboardingSummary } from '@/lib/onboarding';
 import type { DashboardFilters, DashboardSection, DashboardSummary } from '@/types/dashboard';
 import type { SharedProps } from '@/types';
 import type { DateRange, TabItem } from '@/types/ui';
@@ -49,7 +51,12 @@ defineOptions({ layout: AppLayout });
  * docs/design/README.md for the full accounting of what's missing vs. what
  * was simply never wired up.
  */
-const props = defineProps<{ summary: DashboardSummary; filters: DashboardFilters }>();
+const props = defineProps<{
+    summary: DashboardSummary;
+    filters: DashboardFilters;
+    /** The "Finish setting up" card — null for members who can't use /setup, or once it is dismissed. */
+    onboarding?: OnboardingSummary | null;
+}>();
 
 const page = usePage<SharedProps>();
 const { can } = useAuth();
@@ -202,6 +209,8 @@ const userName = computed(() => page.props.auth.user?.name ?? '');
                     </Button>
                 </div>
             </div>
+
+            <SetupReminder v-if="onboarding" :summary="onboarding" />
 
             <!-- The Dashboard's period strip spans the content column (208:5577). -->
             <div v-if="showPeriod" class="flex flex-wrap items-center gap-2">

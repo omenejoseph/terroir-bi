@@ -6,6 +6,7 @@ import AppHeader from '@/components/AppHeader.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import ImpersonationBanner from '@/components/ImpersonationBanner.vue';
 import NavRail from '@/components/NavRail.vue';
+import SetupBanner from '@/components/onboarding/SetupBanner.vue';
 import RecordDrawer from '@/components/cellar/RecordDrawer.vue';
 import UndoToast from '@/components/ui/UndoToast.vue';
 import FlashMessages from '@/components/ui/FlashMessages.vue';
@@ -98,6 +99,8 @@ function toggleNav(): void {
                 <!-- overflow-x-hidden keeps wide tables from widening the page itself. -->
                 <main class="min-w-0 flex-1 overflow-x-hidden px-4 py-6 lg:px-6">
                     <FlashMessages class="mb-6" />
+                    <!-- Only with ?setup=<step>, i.e. when the /setup hub sent the member here. -->
+                    <SetupBanner />
                     <slot />
                 </main>
                 <!-- The cellar's Record drawer (renders nothing without the module and cellar.manage). -->

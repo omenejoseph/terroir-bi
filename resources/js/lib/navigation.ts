@@ -13,6 +13,7 @@ import {
     Factory,
     FileStack,
     Grape,
+    ListChecks,
     LayoutGrid,
     type LucideIcon,
     MessageCircle,
@@ -168,6 +169,9 @@ export const NAV_CATEGORIES: NavCategory[] = [
         icon: Settings,
         items: [
             { key: 'settings', label: 'Settings', href: '/settings', icon: Settings, capability: 'settings.manage', module: 'settings' },
+            // The new-account setup checklist (docs/21-onboarding-plan.md) — stays
+            // reachable here after the dashboard reminder is dismissed.
+            { key: 'setup', label: 'Setup', href: '/setup', icon: ListChecks, capability: 'settings.manage', module: 'settings' },
             // Was "Employees" under the "Team" category (key kept the same,
             // so any existing Manage Shortcuts pin still resolves) — moved
             // here per the Team page's own placement, see Web\TeamController.

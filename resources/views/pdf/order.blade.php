@@ -16,8 +16,20 @@
 </head>
 <body>
     <div class="header">
+        @php($issuer = $order->tenant?->settings)
         <div>
             <h1>{{ $order->tenant?->name ?? config('app.name') }}</h1>
+            @if($issuer)
+                <p class="muted">
+                    @if($issuer->address){{ $issuer->address }}<br>@endif
+                    @if($issuer->city || $issuer->zip){{ trim(($issuer->zip ?? '').' '.($issuer->city ?? '')) }}<br>@endif
+                    @if($issuer->country){{ $issuer->country }}<br>@endif
+                    @if($issuer->company_oib)OIB: {{ $issuer->company_oib }}<br>@endif
+                    @if($issuer->contact_email){{ $issuer->contact_email }}@endif
+                    @if($issuer->contact_email && $issuer->contact_phone) · @endif
+                    @if($issuer->contact_phone){{ $issuer->contact_phone }}@endif
+                </p>
+            @endif
         </div>
         <div class="text-right">
             <h1>Order #{{ $order->order_number }}</h1>
@@ -57,6 +69,12 @@
             </tr>
         </tbody>
     </table>
+
+    @if($issuer?->iban)
+        <p class="muted">
+            <strong>Payment:</strong> IBAN {{ $issuer->iban }}@if($issuer->bank_name) · {{ $issuer->bank_name }}@endif
+        </p>
+    @endif
 
     @if($order->notes)
         <p class="muted"><strong>Notes:</strong> {{ $order->notes }}</p>

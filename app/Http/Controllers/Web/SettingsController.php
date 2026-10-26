@@ -43,7 +43,7 @@ class SettingsController extends Controller
         $current = $tenant->current();
         abort_unless($current instanceof Tenant, 404);
 
-        /** @var array{name: string, default_locale: string, timezone: string, company_oib?: string|null, annual_revenue_target?: int|null, channel_revenue_targets?: array<string, int>|null, cash_on_hand?: int|null, cash_on_hand_as_of?: string|null, revenue_basis?: string} $validated */
+        /** @var array{name: string, default_locale: string, timezone: string, company_oib?: string|null, annual_revenue_target?: int|null, channel_revenue_targets?: array<string, int>|null, cash_on_hand?: int|null, cash_on_hand_as_of?: string|null, revenue_basis?: string, address?: string|null, city?: string|null, zip?: string|null, country?: string|null, contact_email?: string|null, contact_phone?: string|null, bank_name?: string|null, iban?: string|null} $validated */
         $validated = $request->validated();
 
         $action->execute($current, $validated);

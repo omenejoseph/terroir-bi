@@ -37,6 +37,7 @@ use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\PublicOrderController;
 use App\Http\Controllers\Web\SearchController;
 use App\Http\Controllers\Web\SettingsController;
+use App\Http\Controllers\Web\SetupController;
 use App\Http\Controllers\Web\ShortcutController;
 use App\Http\Controllers\Web\TeamController;
 use App\Http\Controllers\Web\TeamImpersonationController;
@@ -153,6 +154,12 @@ Route::middleware('tenant.web')->group(function () {
     Route::middleware('can:settings.manage')->group(function () {
         Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::patch('settings', [SettingsController::class, 'update'])->name('settings.update');
+
+        // The new-account setup hub (nav's "System · Setup") — see
+        // App\Services\Onboarding\OnboardingStatus and docs/21-onboarding-plan.md.
+        Route::get('setup', [SetupController::class, 'index'])->name('setup.index');
+        Route::patch('setup/steps/{step}', [SetupController::class, 'updateStep'])->name('setup.steps.update');
+        Route::post('setup/dismiss', [SetupController::class, 'dismiss'])->name('setup.dismiss');
     });
 
     // Team (nav's "System · Team") — self-service member management,

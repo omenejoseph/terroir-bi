@@ -25,11 +25,9 @@ is right in spirit. Reading the schema and screens adds the items marked **new**
 | H | Customers | Company, email, type, tier and/or rebate | Orders need a customer | Customers |
 | I | Team / you | At least the admin. Usually invite one more person. | Not strictly blocking, but sharing the setup work speeds it up | Settings → Team |
 
-> **On "category rebates":** today rebates live on **pricing tiers** and on
-> **customers** (customer overrides tier, not additive, see `05-pricing-engine.md`).
-> Customer categories and product categories have **no rebate**. If you mean
-> "category X gets Y % off product category Z", that's a new pricing rule.
-> See open question Q1.
+> **On "category rebates":** confirmed to mean the existing **pricing-tier
+> rebate** (customer rebate overrides tier, not additive, see
+> `05-pricing-engine.md`). No new pricing rule is needed.
 
 ### 1.2 Should-have (first week)
 
@@ -254,6 +252,15 @@ changes to the underlying controllers.
 | **P3, Sell better** | COGS, tier/customer price, customer category, portal, min-stock, materials, supplier checks + quality nudges; test order + portal preview | M |
 | **P4, Deepen & ops** | Module-aware cellar/vineyard/work-order steps, recipes/photos checks, platform-admin progress view, analytics on where people stall | S–M |
 
+**P1 status (built):** `OnboardingStatus` + `OnboardingStep`, `/setup` hub
+(`pages/Setup/Index.vue`), skip / mark-done / dismiss
+(`PATCH /setup/steps/{step}`, `POST /setup/dismiss`), `SetupBanner` on any
+page opened with `?setup=<step>`, the dashboard `SetupReminder`, a "System ·
+Setup" nav item, and company-profile fields (address, city, zip, country,
+contact email/phone, bank, IBAN) on Settings and the order PDF. Deferred from
+P1: the logo upload, the first-login redirect (it lands with P2's welcome
+step), and the sidebar progress badge.
+
 Ship P1 alone first. It's useful even without new data-entry UI, because it
 connects the screens that already exist.
 
@@ -261,9 +268,7 @@ connects the screens that already exist.
 
 ## 5. Open questions
 
-1. **Category rebates:** is "category rebate" the existing *tier* rebate, or a
-   new rule like "customer category Restaurants gets 10 % off product category
-   Sparkling"? The second needs a pricing-engine change (new precedence layer).
+1. ~~**Category rebates**~~ — resolved: it means the tier rebate.
 2. **VAT:** should prices be entered net or gross, and do we need a tenant VAT
    rate (or per-category rates) in setup? `order_items.unit_price_gross` exists,
    so confirm where the rate comes from today.

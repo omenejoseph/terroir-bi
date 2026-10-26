@@ -46,7 +46,7 @@ final class NavCatalog
         'inventory', 'purchase-orders', 'suppliers',
         'costs', 'inflow', 'cash-flow',
         'employees', 'schedules', 'my-team', 'surveys', 'my-hours',
-        'settings', 'whatsapp-bot',
+        'settings', 'setup', 'whatsapp-bot',
     ];
 
     /** The nav_key whose route owns this request's first path segment, if any. */
