@@ -12,6 +12,7 @@ use App\Enums\OnboardingStepStatus;
 use App\Models\Customer;
 use App\Models\CustomerCategory;
 use App\Models\CustomerPrice;
+use App\Models\EnologicalProduct;
 use App\Models\InventoryItem;
 use App\Models\Invitation;
 use App\Models\Order;
@@ -20,6 +21,9 @@ use App\Models\ProductCategory;
 use App\Models\Tenant;
 use App\Models\TenantSetting;
 use App\Models\TierPrice;
+use App\Models\Vessel;
+use App\Models\WineLot;
+use App\Models\WorkOrder;
 use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
 
@@ -60,7 +64,18 @@ class OnboardingStatus
         'order_portal' => Module::Customers,
         'min_stock' => Module::Inventory,
         'materials' => Module::Inventory,
+        // "Deepen" — optional depth, mostly per module; all skippable.
+        'recipes' => Module::Inventory,
+        'photos' => Module::Inventory,
+        'revenue_targets' => Module::Settings,
+        'cellar_vessels' => Module::Cellar,
+        'cellar_lots' => Module::Cellar,
+        'cellar_supplies' => Module::Cellar,
+        'work_orders' => Module::WorkOrders,
     ];
+
+    /** The steps of the third section: depth for the modules a plan carries, none of it needed to sell. */
+    public const DEEPEN = ['recipes', 'photos', 'revenue_targets', 'cellar_vessels', 'cellar_lots', 'cellar_supplies', 'work_orders'];
 
     /**
      * The steps of the second section. The rest are "Go live", which is what
@@ -69,7 +84,10 @@ class OnboardingStatus
     public const SELL_BETTER = ['first_order', 'product_costs', 'special_prices', 'customer_categories', 'order_portal', 'min_stock', 'materials'];
 
     /** Steps that can be skipped outright — the rest are needed to sell at all (or, for costs and a first order, to trust the numbers). */
-    public const SKIPPABLE = ['pricing_tiers', 'team', 'special_prices', 'customer_categories', 'order_portal', 'min_stock', 'materials'];
+    public const SKIPPABLE = [
+        'pricing_tiers', 'team', 'special_prices', 'customer_categories', 'order_portal', 'min_stock', 'materials',
+        ...self::DEEPEN,
+    ];
 
     /** Steps the data can't fully confirm, so the admin may mark them done by hand. */
     public const MARKABLE = ['opening_stock'];
@@ -122,6 +140,35 @@ class OnboardingStatus
     }
 
     /**
+     * The platform admin's view of one tenant's setup: per-section progress
+     * and which go-live steps are still open — where an account is stuck.
+     *
+     * @return array{welcomed: bool, dismissed: bool, sections: array<string, array{done: int, total: int}>, open: list<string>}
+     */
+    public function overview(Tenant $tenant): array
+    {
+        $steps = $this->steps($tenant);
+        $state = self::state($tenant);
+        $sections = [];
+
+        foreach ($steps as $step) {
+            $sections[$step->section] ??= ['done' => 0, 'total' => 0];
+            $sections[$step->section]['total']++;
+            $sections[$step->section]['done'] += $step->status->isSettled() ? 1 : 0;
+        }
+
+        return [
+            'welcomed' => $state['answers'] !== null,
+            'dismissed' => $state['dismissed_at'] !== null,
+            'sections' => $sections,
+            'open' => array_values(array_map(
+                fn (OnboardingStep $step): string => $step->key,
+                array_filter($steps, fn (OnboardingStep $step): bool => $step->section === 'go_live' && ! $step->status->isSettled()),
+            )),
+        ];
+    }
+
+    /**
      * The stored part of the checklist, normalised.
      *
      * `answers` is the welcome questions' answers — null until they were
@@ -170,8 +217,18 @@ class OnboardingStatus
             issues: $step->issues,
             skippable: in_array($step->key, self::SKIPPABLE, true),
             markable: in_array($step->key, self::MARKABLE, true),
-            section: in_array($step->key, self::SELL_BETTER, true) ? 'sell_better' : 'go_live',
+            section: self::sectionOf($step->key),
         );
+    }
+
+    /** 'go_live', 'sell_better' or 'deepen'. */
+    public static function sectionOf(string $key): string
+    {
+        return match (true) {
+            in_array($key, self::SELL_BETTER, true) => 'sell_better',
+            in_array($key, self::DEEPEN, true) => 'deepen',
+            default => 'go_live',
+        };
     }
 
     private function measure(string $key, Tenant $tenant): OnboardingStep
@@ -191,6 +248,13 @@ class OnboardingStatus
             'order_portal' => $this->orderPortal(),
             'min_stock' => $this->minStock(),
             'materials' => $this->materials(),
+            'recipes' => $this->recipes(),
+            'photos' => $this->photos(),
+            'revenue_targets' => $this->revenueTargets($tenant),
+            'cellar_vessels' => $this->counted('cellar_vessels', Vessel::query()->count()),
+            'cellar_lots' => $this->counted('cellar_lots', WineLot::query()->count()),
+            'cellar_supplies' => $this->counted('cellar_supplies', EnologicalProduct::query()->count()),
+            'work_orders' => $this->counted('work_orders', WorkOrder::query()->count()),
             default => throw new InvalidArgumentException("Unknown onboarding step [{$key}]."),
         };
     }
@@ -425,6 +489,60 @@ class OnboardingStatus
 
         return new OnboardingStep(
             key: 'materials',
+            status: $count > 0 ? OnboardingStepStatus::Done : OnboardingStepStatus::NotStarted,
+            count: $count,
+        );
+    }
+
+    /** Bills of materials: what one bottle is made of, for production and computed costs. */
+    private function recipes(): OnboardingStep
+    {
+        $forSale = $this->forSale()->count();
+        $withRecipe = $this->forSale()->whereHas('recipe')->count();
+
+        return new OnboardingStep(
+            key: 'recipes',
+            // Not every wine needs one (bought-in stock), so the first recipe is enough to call it started-and-done.
+            status: $withRecipe > 0 ? OnboardingStepStatus::Done : OnboardingStepStatus::NotStarted,
+            progress: $forSale > 0 ? ['done' => $withRecipe, 'total' => $forSale] : null,
+        );
+    }
+
+    /** A photo per for-sale wine — what the customer order page shows. */
+    private function photos(): OnboardingStep
+    {
+        $forSale = $this->forSale()->count();
+        $withPhoto = $this->forSale()->whereHas('images')->count();
+        $issues = [];
+
+        if ($withPhoto > 0 && $forSale > $withPhoto) {
+            $issues[] = ['message' => ':count for-sale products have no photo.', 'count' => $forSale - $withPhoto];
+        }
+
+        return new OnboardingStep(
+            key: 'photos',
+            status: $forSale > 0 && $withPhoto === $forSale ? OnboardingStepStatus::Done : self::statusFor($withPhoto, $forSale),
+            progress: $forSale > 0 ? ['done' => $withPhoto, 'total' => $forSale] : null,
+            issues: $issues,
+        );
+    }
+
+    /** The dashboard's "Revenue vs. target" card has nothing to compare against without one. */
+    private function revenueTargets(Tenant $tenant): OnboardingStep
+    {
+        $set = $tenant->settings?->annual_revenue_target !== null;
+
+        return new OnboardingStep(
+            key: 'revenue_targets',
+            status: $set ? OnboardingStepStatus::Done : OnboardingStepStatus::NotStarted,
+        );
+    }
+
+    /** A step that is done once anything of its kind exists. */
+    private function counted(string $key, int $count): OnboardingStep
+    {
+        return new OnboardingStep(
+            key: $key,
             status: $count > 0 ? OnboardingStepStatus::Done : OnboardingStepStatus::NotStarted,
             count: $count,
         );

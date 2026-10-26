@@ -291,6 +291,19 @@ asks the admin to run a real order and delete it if it was only a test, which
 needs no new order state. No suppliers step yet: suppliers have no screen in
 the web app (API only), so there is nowhere to send the admin.
 
+**P4 status (built):** a third hub section, "Go further" (`OnboardingStatus::DEEPEN`,
+all skippable, shown only for modules in the plan): product recipes, product
+photos (with a "no photo" nudge), revenue targets, cellar vessels, wine in the
+cellar, cellar supplies and work orders. The platform admin's tenant page
+shows that tenant's setup progress — per-section done/total, whether the
+welcome questions were answered, whether the reminder was dismissed, and the
+go-live steps still open (where the account is stuck).
+
+Not done in P4: vineyard steps (no vineyard screens in the web app yet — API
+only) and vintage links; an aggregate "where do trials stall" report across
+all tenants (the per-tenant view covers support; a cross-tenant report can
+come once there are enough self-serve sign-ups to make it meaningful).
+
 Ship P1 alone first. It's useful even without new data-entry UI, because it
 connects the screens that already exist.
 

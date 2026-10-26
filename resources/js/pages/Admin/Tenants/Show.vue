@@ -16,6 +16,8 @@ import Select from '@/components/ui/Select.vue';
 import { confirmDialog } from '@/composables/useConfirm';
 import { useTranslations } from '@/composables/useTranslations';
 import { ADMIN_BASE } from '@/lib/adminNavigation';
+import { onboardingStep } from '@/lib/onboarding';
+import type { OnboardingSection, OnboardingStepKey } from '@/lib/onboarding';
 import type { AdminOption, AdminTenant, AdminTenantMember } from '@/types/admin';
 import type { MenuItem } from '@/types/ui';
 
@@ -37,7 +39,17 @@ const props = defineProps<{
     planOptions: AdminOption[];
     roleOptions: AdminOption[];
     localeOptions: AdminOption[];
+    /** The tenant's setup checklist (App\Services\Onboarding\OnboardingStatus::overview()). */
+    onboarding?: {
+        welcomed: boolean;
+        dismissed: boolean;
+        sections: Partial<Record<OnboardingSection, { done: number; total: number }>>;
+        /** Go-live steps not yet done or skipped. */
+        open: OnboardingStepKey[];
+    };
 }>();
+
+const SECTION_LABELS: Record<OnboardingSection, string> = { go_live: 'Go live', sell_better: 'Sell better', deepen: 'Go further' };
 
 const { t } = useTranslations();
 
@@ -192,6 +204,28 @@ async function removeMember(member: AdminTenantMember): Promise<void> {
                         </dd>
                     </div>
                 </dl>
+            </Card>
+
+            <Card v-if="onboarding" class="p-6">
+                <h3 class="mb-1 text-sm font-semibold text-foreground">{{ t('Setup progress') }}</h3>
+                <p class="mb-4 text-xs text-muted-foreground">
+                    {{ onboarding.welcomed ? t('Welcome questions answered.') : t('Welcome questions not answered yet.') }}
+                    <template v-if="onboarding.dismissed"> {{ t('Dashboard reminder dismissed.') }}</template>
+                </p>
+                <dl class="grid grid-cols-3 gap-4 text-sm">
+                    <div v-for="(label, key) in SECTION_LABELS" :key="key">
+                        <dt class="text-xs text-muted-foreground">{{ t(label) }}</dt>
+                        <dd class="mt-0.5 text-foreground tabular-nums">
+                            {{ onboarding.sections[key] ? `${onboarding.sections[key]!.done} / ${onboarding.sections[key]!.total}` : '—' }}
+                        </dd>
+                    </div>
+                </dl>
+                <div v-if="onboarding.open.length" class="mt-4">
+                    <p class="text-xs text-muted-foreground">{{ t('Still open before go-live') }}</p>
+                    <div class="mt-1 flex flex-wrap gap-1.5">
+                        <Badge v-for="key in onboarding.open" :key="key" variant="outline">{{ t(onboardingStep(key)?.title ?? key) }}</Badge>
+                    </div>
+                </div>
             </Card>
 
             <Card class="p-6">

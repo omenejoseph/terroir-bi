@@ -28,7 +28,7 @@ final class OnboardingStep implements Arrayable
         public readonly array $issues = [],
         public readonly bool $skippable = false,
         public readonly bool $markable = false,
-        /** 'go_live' or 'sell_better' — see OnboardingStatus::SELL_BETTER. */
+        /** 'go_live', 'sell_better' or 'deepen' — see OnboardingStatus::sectionOf(). */
         public readonly string $section = 'go_live',
     ) {}
 

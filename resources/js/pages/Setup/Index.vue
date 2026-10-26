@@ -57,6 +57,7 @@ const sections = computed(() =>
     [
         { key: 'go_live', title: t('Go live'), description: t('What the account needs before its first order.') },
         { key: 'sell_better', title: t('Sell better'), description: t('Once you\'re taking orders: trustworthy margins, sharper prices and less typing.') },
+        { key: 'deepen', title: t('Go further'), description: t('Optional depth for the parts of Terroir you use — skip anything that doesn\'t apply.') },
     ]
         .map((section) => ({ ...section, rows: rows.value.filter((row) => row.state.section === section.key) }))
         .filter((section) => section.rows.length > 0),

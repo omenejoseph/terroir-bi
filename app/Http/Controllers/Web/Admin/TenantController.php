@@ -22,7 +22,9 @@ use App\Models\Tenant;
 use App\Queries\ListPlansQuery;
 use App\Queries\ListTenantsForAdminQuery;
 use App\Services\Billing\SubscriptionAccessService;
+use App\Services\Onboarding\OnboardingStatus;
 use App\Support\PerPage;
+use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -68,12 +70,16 @@ class TenantController extends Controller
         ]);
     }
 
-    public function show(Tenant $tenant, SubscriptionAccessService $access): Response
+    public function show(Tenant $tenant, SubscriptionAccessService $access, OnboardingStatus $onboarding, TenantContext $context): Response
     {
         $tenant->load(['plan', 'subscription', 'memberships.user']);
 
         return Inertia::render('Admin/Tenants/Show', [
             'tenant' => $this->row($tenant, $access),
+            // The tenant's setup checklist, measured inside its own tenant
+            // scope (the counts rely on BelongsToTenant) — shows support where
+            // a trial account is stuck.
+            'onboarding' => $context->runFor($tenant, fn (Tenant $t): array => $onboarding->overview($t)),
             'members' => $tenant->memberships
                 ->map(fn (Membership $membership): array => [
                     'id' => $membership->getKey(),

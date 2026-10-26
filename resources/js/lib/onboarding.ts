@@ -23,7 +23,14 @@ export type OnboardingStepKey =
     | 'customer_categories'
     | 'order_portal'
     | 'min_stock'
-    | 'materials';
+    | 'materials'
+    | 'recipes'
+    | 'photos'
+    | 'revenue_targets'
+    | 'cellar_vessels'
+    | 'cellar_lots'
+    | 'cellar_supplies'
+    | 'work_orders';
 
 export type OnboardingStepStatus = 'not_started' | 'in_progress' | 'done' | 'skipped';
 
@@ -37,9 +44,11 @@ export interface OnboardingStepState {
     issues: { message: string; count: number }[];
     skippable: boolean;
     markable: boolean;
-    /** OnboardingStatus::SELL_BETTER steps are 'sell_better'; the dashboard reminder only counts 'go_live'. */
-    section: 'go_live' | 'sell_better';
+    /** OnboardingStatus::sectionOf(); the dashboard reminder only counts 'go_live'. */
+    section: OnboardingSection;
 }
+
+export type OnboardingSection = 'go_live' | 'sell_better' | 'deepen';
 
 /** The dashboard reminder's numbers (OnboardingStatus::summary()). */
 export interface OnboardingSummary {
@@ -179,6 +188,63 @@ export const ONBOARDING_STEPS: OnboardingStepMeta[] = [
         minutes: 15,
         module: 'inventory',
     },
+    // ── Deepen ─────────────────────────────────────────────────────
+    {
+        key: 'recipes',
+        title: 'Product recipes',
+        why: 'What one bottle is made of — wine, glass, cork, label. Production then deducts the inputs and works out the cost.',
+        href: '/inventory',
+        minutes: 20,
+        module: 'inventory',
+    },
+    {
+        key: 'photos',
+        title: 'Product photos',
+        why: 'A photo per wine, shown on product pages and on your customers\' order page.',
+        href: '/inventory',
+        minutes: 15,
+        module: 'inventory',
+    },
+    {
+        key: 'revenue_targets',
+        title: 'Revenue targets',
+        why: 'An annual target (and per channel, if you like) for the dashboard to measure revenue against.',
+        href: '/settings?tab=revenue-target',
+        minutes: 3,
+        module: 'settings',
+    },
+    {
+        key: 'cellar_vessels',
+        title: 'Cellar vessels',
+        why: 'Your tanks, barrels and other vessels, arranged by room — the map the cellar works from.',
+        href: '/cellar',
+        minutes: 15,
+        module: 'cellar',
+    },
+    {
+        key: 'cellar_lots',
+        title: 'Wine in the cellar',
+        why: 'The lots currently in tank or barrel, with their volume, so additions, analyses and bottling have something to record against.',
+        href: '/cellar/lots',
+        minutes: 15,
+        module: 'cellar',
+    },
+    {
+        key: 'cellar_supplies',
+        title: 'Cellar supplies',
+        why: 'Yeasts, SO₂, fining agents and other enological products, with stock — used by additions and protocols.',
+        href: '/cellar/products',
+        minutes: 10,
+        module: 'cellar',
+    },
+    {
+        key: 'work_orders',
+        title: 'Work orders',
+        why: 'Plan the team\'s tasks on a board — create the first one and assign it.',
+        href: '/work-orders',
+        minutes: 5,
+        module: 'work_orders',
+    },
 ];
 
 const BY_KEY = Object.fromEntries(ONBOARDING_STEPS.map((step) => [step.key, step])) as Record<OnboardingStepKey, OnboardingStepMeta>;
@@ -192,11 +258,16 @@ export function setupHref(step: OnboardingStepMeta): string {
     return `${step.href}${step.href.includes('?') ? '&' : '?'}setup=${step.key}`;
 }
 
-/** Mirrors OnboardingStatus::SELL_BETTER; every other step is "Go live". */
+/** Mirrors OnboardingStatus::SELL_BETTER; steps in neither list are "Go live". */
 const SELL_BETTER: OnboardingStepKey[] = ['first_order', 'product_costs', 'special_prices', 'customer_categories', 'order_portal', 'min_stock', 'materials'];
 
-export function sectionOf(key: OnboardingStepKey): 'go_live' | 'sell_better' {
-    return SELL_BETTER.includes(key) ? 'sell_better' : 'go_live';
+/** Mirrors OnboardingStatus::DEEPEN. */
+const DEEPEN: OnboardingStepKey[] = ['recipes', 'photos', 'revenue_targets', 'cellar_vessels', 'cellar_lots', 'cellar_supplies', 'work_orders'];
+
+export function sectionOf(key: OnboardingStepKey): OnboardingSection {
+    if (SELL_BETTER.includes(key)) return 'sell_better';
+
+    return DEEPEN.includes(key) ? 'deepen' : 'go_live';
 }
 
 /** The steps that apply to this tenant's plan, in order. */
