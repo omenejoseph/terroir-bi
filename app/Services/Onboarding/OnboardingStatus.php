@@ -10,12 +10,16 @@ use App\Enums\MembershipStatus;
 use App\Enums\Module;
 use App\Enums\OnboardingStepStatus;
 use App\Models\Customer;
+use App\Models\CustomerCategory;
+use App\Models\CustomerPrice;
 use App\Models\InventoryItem;
 use App\Models\Invitation;
+use App\Models\Order;
 use App\Models\PricingTier;
 use App\Models\ProductCategory;
 use App\Models\Tenant;
 use App\Models\TenantSetting;
+use App\Models\TierPrice;
 use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
 
@@ -48,10 +52,24 @@ class OnboardingStatus
         'pricing_tiers' => Module::Customers,
         'customers' => Module::Customers,
         'team' => Module::Settings,
+        // "Sell better" — after go-live; none of these hold up a first order.
+        'first_order' => Module::Orders,
+        'product_costs' => Module::Inventory,
+        'special_prices' => Module::Customers,
+        'customer_categories' => Module::Customers,
+        'order_portal' => Module::Customers,
+        'min_stock' => Module::Inventory,
+        'materials' => Module::Inventory,
     ];
 
-    /** Steps that can be skipped outright — the rest are needed to sell at all. */
-    public const SKIPPABLE = ['pricing_tiers', 'team'];
+    /**
+     * The steps of the second section. The rest are "Go live", which is what
+     * the dashboard reminder counts — these make an account better, not usable.
+     */
+    public const SELL_BETTER = ['first_order', 'product_costs', 'special_prices', 'customer_categories', 'order_portal', 'min_stock', 'materials'];
+
+    /** Steps that can be skipped outright — the rest are needed to sell at all (or, for costs and a first order, to trust the numbers). */
+    public const SKIPPABLE = ['pricing_tiers', 'team', 'special_prices', 'customer_categories', 'order_portal', 'min_stock', 'materials'];
 
     /** Steps the data can't fully confirm, so the admin may mark them done by hand. */
     public const MARKABLE = ['opening_stock'];
@@ -80,8 +98,8 @@ class OnboardingStatus
     }
 
     /**
-     * The dashboard reminder's numbers: how many steps are settled (done or
-     * skipped) out of how many apply to this tenant.
+     * The dashboard reminder's numbers: how many "Go live" steps are settled
+     * (done or skipped) out of how many apply to this tenant.
      *
      * `welcomed` is false until the admin has answered (or skipped) the
      * welcome questions, which is what the reminder and hub point to first.
@@ -90,7 +108,7 @@ class OnboardingStatus
      */
     public function summary(Tenant $tenant): array
     {
-        $steps = $this->steps($tenant);
+        $steps = array_values(array_filter($this->steps($tenant), fn (OnboardingStep $step): bool => $step->section === 'go_live'));
         $done = count(array_filter($steps, fn (OnboardingStep $step): bool => $step->status->isSettled()));
         $state = self::state($tenant);
 
@@ -152,6 +170,7 @@ class OnboardingStatus
             issues: $step->issues,
             skippable: in_array($step->key, self::SKIPPABLE, true),
             markable: in_array($step->key, self::MARKABLE, true),
+            section: in_array($step->key, self::SELL_BETTER, true) ? 'sell_better' : 'go_live',
         );
     }
 
@@ -165,6 +184,13 @@ class OnboardingStatus
             'pricing_tiers' => $this->pricingTiers(),
             'customers' => $this->customers(),
             'team' => $this->team($tenant),
+            'first_order' => $this->firstOrder(),
+            'product_costs' => $this->productCosts(),
+            'special_prices' => $this->specialPrices(),
+            'customer_categories' => $this->customerCategories(),
+            'order_portal' => $this->orderPortal(),
+            'min_stock' => $this->minStock(),
+            'materials' => $this->materials(),
             default => throw new InvalidArgumentException("Unknown onboarding step [{$key}]."),
         };
     }
@@ -296,6 +322,111 @@ class OnboardingStatus
             // them — joined or invited — means the team step has been done.
             status: $members > 1 || $pending > 0 ? OnboardingStepStatus::Done : OnboardingStepStatus::NotStarted,
             count: $members,
+        );
+    }
+
+    private function firstOrder(): OnboardingStep
+    {
+        $count = Order::query()->count();
+
+        return new OnboardingStep(
+            key: 'first_order',
+            status: $count > 0 ? OnboardingStepStatus::Done : OnboardingStepStatus::NotStarted,
+            count: $count,
+        );
+    }
+
+    /** A cost per unit, or a recipe it can be derived from — without either, margins read 100 %. */
+    private function productCosts(): OnboardingStep
+    {
+        $forSale = $this->forSale()->count();
+        $costed = $this->forSale()
+            ->where(fn (Builder $q) => $q->whereNotNull('cost_per_unit')->orWhereHas('recipe'))
+            ->count();
+        $issues = [];
+
+        if ($forSale > $costed) {
+            $issues[] = ['message' => ':count for-sale products have no cost, so their margin shows as 100 %.', 'count' => $forSale - $costed];
+        }
+
+        return new OnboardingStep(
+            key: 'product_costs',
+            status: $forSale > 0 && $costed === $forSale ? OnboardingStepStatus::Done : self::statusFor($costed, $forSale),
+            progress: $forSale > 0 ? ['done' => $costed, 'total' => $forSale] : null,
+            issues: $issues,
+        );
+    }
+
+    /** Per-product prices on a tier, or negotiated prices for one customer. */
+    private function specialPrices(): OnboardingStep
+    {
+        $count = TierPrice::query()->count() + CustomerPrice::query()->count();
+
+        return new OnboardingStep(
+            key: 'special_prices',
+            status: $count > 0 ? OnboardingStepStatus::Done : OnboardingStepStatus::NotStarted,
+            count: $count,
+        );
+    }
+
+    private function customerCategories(): OnboardingStep
+    {
+        $count = CustomerCategory::query()->count();
+        $issues = [];
+
+        if ($count > 0) {
+            $uncategorised = Customer::query()->where('is_active', true)->whereNull('customer_category_id')->count();
+
+            if ($uncategorised > 0) {
+                $issues[] = ['message' => ':count customers have no category yet.', 'count' => $uncategorised];
+            }
+        }
+
+        return new OnboardingStep(
+            key: 'customer_categories',
+            status: $count > 0 ? OnboardingStepStatus::Done : OnboardingStepStatus::NotStarted,
+            count: $count,
+            issues: $issues,
+        );
+    }
+
+    /** Customers with a self-service order link. */
+    private function orderPortal(): OnboardingStep
+    {
+        $count = Customer::query()->where('is_active', true)->whereNotNull('order_token')->count();
+
+        return new OnboardingStep(
+            key: 'order_portal',
+            status: $count > 0 ? OnboardingStepStatus::Done : OnboardingStepStatus::NotStarted,
+            count: $count,
+        );
+    }
+
+    /** Reorder points, which drive the low-stock alerts. */
+    private function minStock(): OnboardingStep
+    {
+        $forSale = $this->forSale()->count();
+        $withMin = $this->forSale()->whereNotNull('min_stock')->count();
+
+        return new OnboardingStep(
+            key: 'min_stock',
+            status: $forSale > 0 && $withMin === $forSale ? OnboardingStepStatus::Done : self::statusFor($withMin, $forSale),
+            progress: $forSale > 0 ? ['done' => $withMin, 'total' => $forSale] : null,
+        );
+    }
+
+    /** Semi-finished goods and raw materials — bulk wine, glass, corks, labels, cartons. */
+    private function materials(): OnboardingStep
+    {
+        $count = InventoryItem::query()
+            ->whereIn('category', [InventoryCategory::SemiFinished->value, InventoryCategory::RawMaterial->value])
+            ->where('is_active', true)
+            ->count();
+
+        return new OnboardingStep(
+            key: 'materials',
+            status: $count > 0 ? OnboardingStepStatus::Done : OnboardingStepStatus::NotStarted,
+            count: $count,
         );
     }
 

@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Onboarding\StoreQuickProductsRequest;
 use App\Http\Requests\Onboarding\StoreWelcomeAnswersRequest;
 use App\Http\Requests\Onboarding\UpdateOnboardingStepRequest;
+use App\Models\Customer;
 use App\Models\InventoryItem;
 use App\Models\PricingTier;
 use App\Models\ProductCategory;
@@ -42,9 +43,18 @@ class SetupController extends Controller
     {
         $current = $this->tenant($tenant);
 
+        $portal = in_array(Module::Customers->value, TenantModules::keysFor($current), true)
+            ? Customer::query()->where('is_active', true)->whereNotNull('order_token')->orderBy('company_name')->first()
+            : null;
+
         return Inertia::render('Setup/Index', [
             'steps' => array_map(fn (OnboardingStep $step): array => $step->toArray(), $status->steps($current)),
             'summary' => $status->summary($current),
+            // The public order page exactly as that customer gets it (Web\PublicOrderController).
+            'portalPreview' => $portal === null ? null : [
+                'customer' => $portal->company_name,
+                'url' => '/order/'.$portal->order_token,
+            ],
         ]);
     }
 

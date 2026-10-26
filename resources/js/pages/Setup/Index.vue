@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { AlertTriangle, ArrowRight, Check, Clock } from 'lucide-vue-next';
+import { AlertTriangle, ArrowRight, Check, Clock, ExternalLink } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import Badge from '@/components/ui/Badge.vue';
@@ -31,6 +31,8 @@ defineOptions({ layout: AppLayout });
 const props = defineProps<{
     steps: OnboardingStepState[];
     summary: OnboardingSummary;
+    /** A customer with an order link, so the "Customer order links" step can show what they see. */
+    portalPreview?: { customer: string; url: string } | null;
 }>();
 
 const page = usePage<SharedProps>();
@@ -48,6 +50,16 @@ const rows = computed<Row[]>(() =>
 
         return meta ? [{ meta, state }] : [];
     }),
+);
+
+/** "Go live" first (what the progress bar counts), then "Sell better". Empty sections are dropped. */
+const sections = computed(() =>
+    [
+        { key: 'go_live', title: t('Go live'), description: t('What the account needs before its first order.') },
+        { key: 'sell_better', title: t('Sell better'), description: t('Once you\'re taking orders: trustworthy margins, sharper prices and less typing.') },
+    ]
+        .map((section) => ({ ...section, rows: rows.value.filter((row) => row.state.section === section.key) }))
+        .filter((section) => section.rows.length > 0),
 );
 
 const percent = computed(() => (props.summary.total === 0 ? 0 : Math.round((props.summary.done / props.summary.total) * 100)));
@@ -126,8 +138,13 @@ function dismiss(dismissed: boolean): void {
             </div>
         </Card>
 
+        <section v-for="section in sections" :key="section.key" class="space-y-3">
+            <div>
+                <h3 class="text-sm font-semibold text-foreground">{{ section.title }}</h3>
+                <p class="text-xs text-muted-foreground">{{ section.description }}</p>
+            </div>
         <ol class="space-y-3">
-            <li v-for="(row, i) in rows" :key="row.meta.key">
+            <li v-for="(row, i) in section.rows" :key="row.meta.key">
                 <Card class="flex flex-col gap-4 p-5 sm:flex-row sm:items-start">
                     <!-- Step number, or a check once settled -->
                     <div
@@ -161,6 +178,17 @@ function dismiss(dismissed: boolean): void {
                                 <span>{{ t(issue.message, { count: issue.count }) }}</span>
                             </li>
                         </ul>
+
+                        <a
+                            v-if="row.meta.key === 'order_portal' && portalPreview"
+                            :href="portalPreview.url"
+                            target="_blank"
+                            rel="noopener"
+                            class="inline-flex items-center gap-1 text-xs text-foreground underline underline-offset-2"
+                        >
+                            {{ t('See what :customer sees', { customer: portalPreview.customer }) }}
+                            <ExternalLink class="size-3" :stroke-width="1.5" />
+                        </a>
 
                         <p v-if="!settled(row.state.status)" class="flex items-center gap-1 text-2xs text-muted-foreground">
                             <Clock class="size-3" :stroke-width="1.5" />
@@ -204,6 +232,7 @@ function dismiss(dismissed: boolean): void {
                 </Card>
             </li>
         </ol>
+        </section>
 
         <p class="text-xs text-muted-foreground">
             <template v-if="summary.dismissed">

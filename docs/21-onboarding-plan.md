@@ -277,6 +277,20 @@ and every dashboard test; the dashboard card's "Get started" does the same
 job without hijacking navigation. AI import isn't offered on the import
 screen because it has no web UI yet (API only).
 
+**P3 status (built):** a second hub section, "Sell better", measured the same
+way (`OnboardingStatus::SELL_BETTER`): first order, product costs (cost per
+unit *or* a recipe; links to Inventory's existing `missing_cost` filter),
+special prices (tier or customer prices), customer categories (with an
+"uncategorised customers" nudge), customer order links (plus "See what
+<customer> sees", opening their public order page), reorder points and
+materials/bulk wine. Only costs and the first order can't be skipped. None of
+them count towards the dashboard reminder, which stays about go-live.
+
+Changed from the plan: no special "test order" flag — the first-order step
+asks the admin to run a real order and delete it if it was only a test, which
+needs no new order state. No suppliers step yet: suppliers have no screen in
+the web app (API only), so there is nowhere to send the admin.
+
 Ship P1 alone first. It's useful even without new data-entry UI, because it
 connects the screens that already exist.
 

@@ -72,7 +72,10 @@ class WebSetupTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('Setup/Index')
-                ->has('steps', 7)
+                // 7 "Go live" + 7 "Sell better"; only Go live counts towards the summary.
+                ->has('steps', 14)
+                ->where('steps.7.key', 'first_order')
+                ->where('steps.7.section', 'sell_better')
                 ->where('steps.0.key', 'company_profile')
                 ->where('steps.0.status', 'not_started')
                 ->where('steps.6.key', 'team')

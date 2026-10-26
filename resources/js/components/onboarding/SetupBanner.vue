@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-vue-next';
 
 import { useAuth } from '@/composables/useAuth';
 import { useTranslations } from '@/composables/useTranslations';
-import { onboardingStepsFor, setupHref } from '@/lib/onboarding';
+import { onboardingStepsFor, sectionOf, setupHref } from '@/lib/onboarding';
 import type { SharedProps } from '@/types';
 
 /**
@@ -22,14 +22,18 @@ const page = usePage<SharedProps>();
 const { can, hasModule } = useAuth();
 const { t } = useTranslations();
 
-const steps = computed(() => onboardingStepsFor(hasModule));
+const current = computed(() => {
+    const key = new URLSearchParams(page.url.split('?', 2)[1] ?? '').get('setup');
 
-const index = computed(() => {
-    const query = page.url.split('?', 2)[1] ?? '';
-    const key = new URLSearchParams(query).get('setup');
-
-    return key === null ? -1 : steps.value.findIndex((step) => step.key === key);
+    return onboardingStepsFor(hasModule).find((step) => step.key === key);
 });
+
+/** "Step n of m" and "Next" stay within the current step's section (Go live / Sell better). */
+const steps = computed(() =>
+    current.value ? onboardingStepsFor(hasModule).filter((step) => sectionOf(step.key) === sectionOf(current.value!.key)) : [],
+);
+
+const index = computed(() => (current.value ? steps.value.findIndex((step) => step.key === current.value!.key) : -1));
 
 const step = computed(() => (index.value >= 0 ? steps.value[index.value] : undefined));
 const next = computed(() => (index.value >= 0 ? steps.value[index.value + 1] : undefined));

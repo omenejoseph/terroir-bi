@@ -16,7 +16,14 @@ export type OnboardingStepKey =
     | 'opening_stock'
     | 'pricing_tiers'
     | 'customers'
-    | 'team';
+    | 'team'
+    | 'first_order'
+    | 'product_costs'
+    | 'special_prices'
+    | 'customer_categories'
+    | 'order_portal'
+    | 'min_stock'
+    | 'materials';
 
 export type OnboardingStepStatus = 'not_started' | 'in_progress' | 'done' | 'skipped';
 
@@ -30,6 +37,8 @@ export interface OnboardingStepState {
     issues: { message: string; count: number }[];
     skippable: boolean;
     markable: boolean;
+    /** OnboardingStatus::SELL_BETTER steps are 'sell_better'; the dashboard reminder only counts 'go_live'. */
+    section: 'go_live' | 'sell_better';
 }
 
 /** The dashboard reminder's numbers (OnboardingStatus::summary()). */
@@ -113,6 +122,63 @@ export const ONBOARDING_STEPS: OnboardingStepMeta[] = [
         minutes: 3,
         module: 'settings',
     },
+    // ── Sell better ────────────────────────────────────────────────
+    {
+        key: 'first_order',
+        title: 'Place your first order',
+        why: 'Run one order end to end and check its PDF. If it was only a test, delete it afterwards.',
+        href: '/orders',
+        minutes: 5,
+        module: 'orders',
+    },
+    {
+        key: 'product_costs',
+        title: 'Product costs',
+        why: 'A cost per bottle (or a recipe it is worked out from) turns revenue into real margins.',
+        href: '/inventory?missing_cost=1',
+        minutes: 15,
+        module: 'inventory',
+    },
+    {
+        key: 'special_prices',
+        title: 'Special prices',
+        why: 'Set a fixed price per tier on a product\'s Pricing tab, or agree a price with one customer — those override the rebate.',
+        href: '/inventory',
+        minutes: 10,
+        module: 'customers',
+    },
+    {
+        key: 'customer_categories',
+        title: 'Customer categories',
+        why: 'Restaurants, shops, distributors… Categories split analytics and the reorder radar.',
+        href: '/customers/categories',
+        minutes: 5,
+        module: 'customers',
+    },
+    {
+        key: 'order_portal',
+        title: 'Customer order links',
+        why: 'Give a customer their own link to order from your catalogue at their prices, without logging in.',
+        href: '/customers',
+        minutes: 5,
+        module: 'customers',
+    },
+    {
+        key: 'min_stock',
+        title: 'Reorder points',
+        why: 'A minimum stock per wine raises a low-stock alert before you sell out.',
+        href: '/inventory',
+        minutes: 10,
+        module: 'inventory',
+    },
+    {
+        key: 'materials',
+        title: 'Materials and bulk wine',
+        why: 'Glass, corks, labels, cartons and bulk wine — needed for recipes, production and reordering.',
+        href: '/inventory',
+        minutes: 15,
+        module: 'inventory',
+    },
 ];
 
 const BY_KEY = Object.fromEntries(ONBOARDING_STEPS.map((step) => [step.key, step])) as Record<OnboardingStepKey, OnboardingStepMeta>;
@@ -124,6 +190,13 @@ export function onboardingStep(key: string): OnboardingStepMeta | undefined {
 /** The step's screen, opened in setup mode. */
 export function setupHref(step: OnboardingStepMeta): string {
     return `${step.href}${step.href.includes('?') ? '&' : '?'}setup=${step.key}`;
+}
+
+/** Mirrors OnboardingStatus::SELL_BETTER; every other step is "Go live". */
+const SELL_BETTER: OnboardingStepKey[] = ['first_order', 'product_costs', 'special_prices', 'customer_categories', 'order_portal', 'min_stock', 'materials'];
+
+export function sectionOf(key: OnboardingStepKey): 'go_live' | 'sell_better' {
+    return SELL_BETTER.includes(key) ? 'sell_better' : 'go_live';
 }
 
 /** The steps that apply to this tenant's plan, in order. */

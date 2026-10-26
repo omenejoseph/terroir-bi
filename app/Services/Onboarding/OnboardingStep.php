@@ -28,6 +28,8 @@ final class OnboardingStep implements Arrayable
         public readonly array $issues = [],
         public readonly bool $skippable = false,
         public readonly bool $markable = false,
+        /** 'go_live' or 'sell_better' — see OnboardingStatus::SELL_BETTER. */
+        public readonly string $section = 'go_live',
     ) {}
 
     /**
@@ -43,6 +45,7 @@ final class OnboardingStep implements Arrayable
             'issues' => $this->issues,
             'skippable' => $this->skippable,
             'markable' => $this->markable,
+            'section' => $this->section,
         ];
     }
 }
