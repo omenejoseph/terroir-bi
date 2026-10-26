@@ -68,7 +68,7 @@
         ],
         "lint": "pint --test",
         "lint:fix": "pint",
-        "stan": "phpstan analyse --memory-limit=512M",
+        "stan": "phpstan analyse --memory-limit=2G",
         "check": [
             "@lint",
             "@stan",
