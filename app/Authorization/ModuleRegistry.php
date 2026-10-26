@@ -38,6 +38,7 @@ final class ModuleRegistry
             Module::Cellar->value => ['cellar.view', 'cellar.manage', 'cellar.delete'],
             Module::Vineyards->value => ['vineyards.view', 'vineyards.manage', 'vineyards.delete'],
             Module::Production->value => ['production.view', 'production.manage', 'production.delete'],
+            Module::Hospitality->value => ['hospitality.view', 'hospitality.manage'],
             Module::Team->value => ['members.view', 'members.manage', 'members.impersonate', 'invitations.manage'],
             Module::Settings->value => ['settings.manage', 'translations.manage'],
             Module::AiDataEntry->value => ['ai.use', 'ai.manage'],
@@ -67,6 +68,7 @@ final class ModuleRegistry
             Module::Cellar->value => ['vessels', 'wine-lots', 'enological-products', 'fermentation-templates', 'tasting-reports', 'bottlings', 'cellar'],
             Module::Vineyards->value => ['vineyard-parcels', 'grape-contracts', 'harvest-plans', 'harvest-entries', 'intake-bookings', 'press-fractions'],
             Module::Production->value => ['production-plans'],
+            Module::Hospitality->value => ['hospitality'],
             Module::Team->value => ['members', 'invitations'],
             Module::Settings->value => ['settings', 'translations'],
             Module::AiDataEntry->value => ['ai-imports'],
@@ -94,6 +96,7 @@ final class ModuleRegistry
             Module::Customers->value => ['customers', 'customers-analytics'],
             Module::WorkOrders->value => ['work-orders'],
             Module::Cellar->value => ['cellar'],
+            Module::Hospitality->value => ['hospitality'],
             Module::AuditLog->value => ['logs'],
         ];
     }

@@ -23,6 +23,7 @@ enum Module: string
     case Cellar = 'cellar';
     case Vineyards = 'vineyards';
     case Production = 'production';
+    case Hospitality = 'hospitality';
     case Team = 'team';
     case Settings = 'settings';
     case AiDataEntry = 'ai_data_entry';
@@ -44,6 +45,7 @@ enum Module: string
             self::Cellar => 'Cellar',
             self::Vineyards => 'Vineyards',
             self::Production => 'Production',
+            self::Hospitality => 'Hospitality',
             self::Team => 'Team',
             self::Settings => 'Settings',
             self::AiDataEntry => 'AI data entry',

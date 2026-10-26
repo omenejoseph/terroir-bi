@@ -39,7 +39,7 @@ class RoleParityTest extends TestCase
             'MANAGER' => ['financials.view'],
             'SALES' => ['financials.view'],
             'INVENTORY' => ['inventory.stock', 'inventory.view', 'pricing.view'],
-            'HOSPITALITY' => [],
+            'HOSPITALITY' => ['hospitality.manage', 'hospitality.view'],
             'KITCHEN' => [],
             'EMPLOYEE' => [],
             'WINE_CLUB' => [],

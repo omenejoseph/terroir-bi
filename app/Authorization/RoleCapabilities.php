@@ -77,7 +77,11 @@ final class RoleCapabilities
                 'financials.view',
             ],
             // Roles below belong to modules that are not built here yet.
-            TenantRole::Hospitality->value => [],
+            // Programs, agency price book and reservations (the old app's /dashboard/hospitality).
+            TenantRole::Hospitality->value => [
+                'hospitality.view',
+                'hospitality.manage',
+            ],
             TenantRole::Kitchen->value => [],
             TenantRole::Employee->value => [],
             TenantRole::WineClub->value => [],
