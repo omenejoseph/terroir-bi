@@ -36,7 +36,7 @@ class LotBarrelsQuery
             ->where('wine_lot_id', $lotId)
             ->get()
             ->filter(fn (VesselLot $vl): bool => $vl->vessel !== null && ($vessel === null || (string) $vl->vessel_id === $vessel))
-            ->sortBy(fn (VesselLot $vl): string => $vl->vessel->name, SORT_NATURAL | SORT_FLAG_CASE)
+            ->sortBy(fn (VesselLot $vl): string => $vl->vessel->name ?? '', SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
 
         $readings = $this->readings($lot);
@@ -44,6 +44,9 @@ class LotBarrelsQuery
         $rows = [];
         foreach ($vesselLots as $vl) {
             $vessel = $vl->vessel;
+            if ($vessel === null) {
+                continue;
+            }
             $vesselId = (string) $vessel->getKey();
             $capacity = (float) $vessel->capacity_liters;
             $held = (float) $vessel->current_volume;
@@ -58,7 +61,7 @@ class LotBarrelsQuery
 
             $others = $vessel->vesselLots
                 ->filter(fn (VesselLot $o): bool => (string) $o->wine_lot_id !== $lotId && $o->wineLot !== null)
-                ->map(fn (VesselLot $o): array => ['lot_id' => (string) $o->wine_lot_id, 'name' => $o->wineLot->name, 'vintage' => $o->wineLot->vintage, 'volume' => (string) $o->volume])
+                ->map(fn (VesselLot $o): array => ['lot_id' => (string) $o->wine_lot_id, 'name' => $o->wineLot?->name, 'vintage' => $o->wineLot?->vintage, 'volume' => (string) $o->volume])
                 ->values()->all();
 
             $rows[] = [

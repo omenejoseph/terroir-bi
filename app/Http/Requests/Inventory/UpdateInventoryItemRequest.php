@@ -95,7 +95,7 @@ class UpdateInventoryItemRequest extends FormRequest
 
             $item = $this->route('item');
             $type = $this->input('category') ?? ($item instanceof InventoryItem ? $item->category->value : null);
-            $category = ProductCategory::query()->find($value);
+            $category = ProductCategory::query()->whereKey($value)->first();
 
             if ($category !== null && $type !== null && $category->type->value !== $type) {
                 $fail(__('That category belongs to a different type of item.'));

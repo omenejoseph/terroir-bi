@@ -242,7 +242,7 @@ class InventoryController extends Controller
                     'quantity' => (string) $run->quantity,
                     'reference' => $run->reference,
                     'inputs' => $run->inputs,
-                    'by' => $run->createdBy?->name,
+                    'by' => $run->createdBy?->fullName(),
                     'at' => $run->created_at?->toIso8601String(),
                 ])->all(),
             // What the recipe costs per unit, for the cost / margin summary — null when no line is priced.

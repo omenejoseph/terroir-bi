@@ -121,7 +121,7 @@ class InventoryItem extends Model
             if ($item->isDirty('product_category_id')) {
                 $category = $item->product_category_id === null ? null : ProductCategory::query()->with('parent')->find($item->product_category_id);
 
-                $item->group = $category === null ? null : ($category->parent?->name ?? $category->name);
+                $item->group = $category === null ? null : ($category->parent->name ?? $category->name);
                 $item->subcategory = $category?->parent !== null ? $category->name : null;
 
                 return;

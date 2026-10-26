@@ -32,7 +32,7 @@ class SetRecipeAction
         return DB::transaction(function () use ($output, $lines): array {
             $output->recipe()->delete();
 
-            foreach (array_values($lines) as $position => $line) {
+            foreach ($lines as $position => $line) {
                 $output->recipe()->create($this->attributes($line) + ['sort_order' => $position]);
             }
 

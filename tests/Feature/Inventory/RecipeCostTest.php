@@ -13,7 +13,9 @@ use App\Models\WineLot;
 use App\Services\Auth\ActiveTenantSession;
 use App\Services\Orders\CogsSnapshot;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\Concerns\InteractsWithTenancy;
 use Tests\TestCase;
 
@@ -66,8 +68,11 @@ class RecipeCostTest extends TestCase
         return $item;
     }
 
-    /** @param  array<string, mixed>  $body */
-    private function save(array $body)
+    /**
+     * @param  array<string, mixed>  $body
+     * @return TestResponse<Response>
+     */
+    private function save(array $body): TestResponse
     {
         return $this->actingAs($this->admin)->withSession([ActiveTenantSession::KEY => $this->tenantId])
             ->put('/inventory/'.$this->wine->getKey().'/recipe', $body);
@@ -105,8 +110,8 @@ class RecipeCostTest extends TestCase
 
         // The item's own cost follows its recipe.
         $this->actingAsTenant($this->tenantModel());
-        $this->assertSame(355, $this->wine->refresh()->cost_per_unit->getMinorAmount());
-        $this->assertSame(355, app(CogsSnapshot::class)->perBottle($this->wine)->getMinorAmount());
+        $this->assertSame(355, $this->wine->refresh()->cost_per_unit?->getMinorAmount());
+        $this->assertSame(355, app(CogsSnapshot::class)->perBottle($this->wine)?->getMinorAmount());
     }
 
     public function test_a_catalog_liquid_converts_and_is_consumed_in_its_own_unit(): void
@@ -202,7 +207,9 @@ class RecipeCostTest extends TestCase
             ->assertOk();
 
         $props = $response->json('props');
-        $brandyOption = collect($props['recipeInputOptions'])->firstWhere('id', $brandy->getKey());
+        /** @var list<array<string, mixed>> $options */
+        $options = $props['recipeInputOptions'];
+        $brandyOption = collect($options)->firstWhere('id', $brandy->getKey());
         $this->assertEquals(1000, $brandyOption['unit_cost']['minor']);
         $this->assertSame(['ml', 'cl', 'l'], $brandyOption['unit_options']);
         $this->assertSame($lot->getKey(), $props['recipeCellarLots'][0]['id']);
@@ -262,7 +269,7 @@ class RecipeCostTest extends TestCase
         $this->show()
             ->has('productionRuns', 2)
             ->where('productionRuns.0.quantity', '5.000')
-            ->where('productionRuns.0.by', $this->admin->name)
+            ->where('productionRuns.0.by', $this->admin->fullName())
             ->where('productionRuns.0.inputs.0.name', 'CORK')
             ->where('productionRuns.0.inputs.0.quantity', '10.000')
             ->where('productionRuns.1.quantity', '10.000')

@@ -44,8 +44,8 @@ class RecentWorkOrderActivityQuery
         foreach ($moves as $log) {
             $events[(string) $log->subject_id] = [
                 'kind' => 'moved',
-                'from' => $log->metadata['from'] ?? null,
-                'to' => $log->metadata['to'] ?? null,
+                'from' => is_string($log->metadata['from'] ?? null) ? $log->metadata['from'] : null,
+                'to' => is_string($log->metadata['to'] ?? null) ? $log->metadata['to'] : null,
                 'at' => $log->created_at,
             ];
         }
@@ -54,16 +54,16 @@ class RecentWorkOrderActivityQuery
             return [];
         }
 
-        return collect(WorkOrder::query()->whereIn('id', array_keys($events))->get())
+        return array_values(collect(WorkOrder::query()->whereIn('id', array_keys($events))->get())
             ->map(fn (WorkOrder $task): array => [
                 'task' => WorkOrderData::fromModel($task)->toArray(),
                 'kind' => $events[$task->getKey()]['kind'],
                 'from' => $events[$task->getKey()]['from'],
                 'to' => $events[$task->getKey()]['to'],
-                'at' => $events[$task->getKey()]['at']->toIso8601String(),
+                'at' => ($events[$task->getKey()]['at'] ?? Carbon::now())->toIso8601String(),
             ])
             ->sortByDesc('at')
             ->values()
-            ->all();
+            ->all());
     }
 }

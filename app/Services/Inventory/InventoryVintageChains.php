@@ -90,7 +90,11 @@ class InventoryVintageChains
         return array_keys($heads);
     }
 
-    /** Every id in the chain an item belongs to — what moves together when one is dragged elsewhere. @return list<string> */
+    /**
+     * Every id in the chain an item belongs to — what moves together when one is dragged elsewhere.
+     *
+     * @return list<string>
+     */
     public function chainOf(string $itemId): array
     {
         $ids = [$itemId];

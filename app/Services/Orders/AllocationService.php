@@ -58,6 +58,9 @@ class AllocationService
 
         foreach ($this->lines($item) as $line) {
             $order = $line->order;
+            if ($order === null) {
+                continue;
+            }
             $byOrder[$order->getKey()] ??= [
                 'order_id' => (string) $order->getKey(),
                 'order_number' => $order->order_number,
@@ -165,7 +168,7 @@ class AllocationService
     {
         return OrderItem::query()
             ->where('inventory_item_id', $item->getKey())
-            ->whereHas('order', fn ($q) => $q->holdingAllocation())
+            ->whereHas('order', fn ($q) => $q->scopes(['holdingAllocation']))
             ->with('order.customer')
             ->get();
     }

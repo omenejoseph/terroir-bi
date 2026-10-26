@@ -134,6 +134,6 @@ class RecipeCost
 
     private function currency(RecipeItem $line): string
     {
-        return $line->tenant?->settings?->default_currency ?? CurrencyRegistry::default()->code;
+        return $line->tenant?->settings->default_currency ?? CurrencyRegistry::default()->code;
     }
 }

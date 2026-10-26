@@ -175,7 +175,13 @@ class InventoryItemStockAnalyticsQuery
 
         // Internal / POS slice (exclude-from-stats customers) — excluded from margin.
         // Bottles come from the same healed exits as the channel row, so the footnote and the row agree.
-        $internalBottles = (int) (collect($byCustomer['rows'])->firstWhere('key', 'internal')['bottles'] ?? 0);
+        $internalBottles = 0;
+        foreach ($byCustomer['rows'] as $row) {
+            if ($row['key'] === 'internal') {
+                $internalBottles = $row['bottles'];
+                break;
+            }
+        }
         $internalRevenue = (int) $saleLines(true)->sum('order_items.total');
         $internalCost = (int) $saleLines(true)->whereNotNull('order_items.cost_per_unit')
             ->sum(DB::raw('order_items.cost_per_unit * order_items.quantity'));

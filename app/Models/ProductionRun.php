@@ -8,6 +8,7 @@ use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * One run of the Produce tab: `quantity` of the item made, and the inputs it took from stock.
@@ -19,6 +20,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $reference
  * @property list<array{name: string, sku: string, unit: string, quantity: string}>|null $inputs null for runs recorded before inputs were kept
  * @property string|null $created_by_id
+ * @property Carbon|null $created_at
+ * @property-read User|null $createdBy
  */
 class ProductionRun extends Model
 {

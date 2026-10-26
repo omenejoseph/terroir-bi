@@ -27,7 +27,7 @@ class StoreProductCategoryRequest extends FormRequest
             // A subcategory takes its parent's type; only a top-level category names one.
             'type' => [Rule::requiredIf(fn (): bool => ! $this->filled('parent_id')), 'nullable', Rule::enum(InventoryCategory::class)],
             'parent_id' => ['nullable', 'string', function (string $attribute, mixed $value, Closure $fail): void {
-                $parent = ProductCategory::query()->find($value);
+                $parent = ProductCategory::query()->whereKey($value)->first();
 
                 if ($parent === null || $parent->isSubcategory()) {
                     $fail(__('Pick a top-level category to put this under.'));
@@ -42,7 +42,7 @@ class StoreProductCategoryRequest extends FormRequest
     {
         return function (string $attribute, mixed $value, Closure $fail): void {
             $parentId = $this->input('parent_id');
-            $parent = $parentId ? ProductCategory::query()->find($parentId) : null;
+            $parent = $parentId ? ProductCategory::query()->whereKey($parentId)->first() : null;
             $type = $parent?->type->value ?? $this->input('type');
 
             $exists = ProductCategory::query()

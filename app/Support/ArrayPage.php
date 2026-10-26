@@ -24,7 +24,7 @@ final class ArrayPage
         $page = min(max(1, $page), $last);
 
         return [
-            'data' => array_values(array_slice($rows, ($page - 1) * $perPage, $perPage)),
+            'data' => array_slice($rows, ($page - 1) * $perPage, $perPage),
             'meta' => ['current_page' => $page, 'last_page' => $last, 'per_page' => $perPage, 'total' => $total],
         ];
     }

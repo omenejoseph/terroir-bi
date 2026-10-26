@@ -6,6 +6,7 @@ namespace App\Services\Dashboard;
 
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\TenantSetting;
 use App\Tenancy\Contracts\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
@@ -57,9 +58,11 @@ class RevenueBasis
     /**
      * Restrict an `orders` query to revenue-bearing orders inside the window.
      *
-     * @param  Builder<Order>  $query
+     * @template TModel of Order|OrderItem
+     *
+     * @param  Builder<TModel>  $query  orders, or order lines joined to `orders`
      * @param  list<string>  $excludedCustomers
-     * @return Builder<Order>
+     * @return Builder<TModel>
      */
     public function apply(Builder $query, array $excludedCustomers, ?Carbon $since, ?Carbon $until): Builder
     {

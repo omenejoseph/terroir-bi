@@ -164,7 +164,9 @@ class WineLotController extends Controller
         return Inertia::render('Cellar/Lots/Show', [
             'lot' => fn (): array => $this->present($wineLot),
             'scope' => function () use ($vessel, $tab, $kind, $barrelData): array {
-                $scopeRow = $vessel === null ? null : collect($barrelData()['rows'])->firstWhere('vessel_id', $vessel);
+                /** @var list<array<string, mixed>> $rows */
+                $rows = $barrelData()['rows'];
+                $scopeRow = $vessel === null ? null : collect($rows)->firstWhere('vessel_id', $vessel);
 
                 return ['vessel_id' => $vessel, 'vessel' => $scopeRow, 'tab' => $tab, 'kind' => $kind !== '' && isset(self::JOURNEY_KINDS[$kind]) ? $kind : null];
             },

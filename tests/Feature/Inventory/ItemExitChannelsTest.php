@@ -101,6 +101,9 @@ class ItemExitChannelsTest extends TestCase
     }
 
     /** @return array<string, mixed> */
+    /**
+     * @return array{rows: list<array<string, mixed>>, total_bottles: int}
+     */
     private function channels(string $period = '30d'): array
     {
         Sanctum::actingAs($this->admin);

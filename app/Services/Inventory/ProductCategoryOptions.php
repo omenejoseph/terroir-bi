@@ -37,10 +37,9 @@ class ProductCategoryOptions
 
         $tree = [];
         foreach ($all->whereNull('parent_id') as $top) {
-            $children = $all->where('parent_id', $top->getKey())
+            $children = array_values($all->where('parent_id', $top->getKey())
                 ->map(fn (ProductCategory $sub): array => $row($sub, (int) ($counts[$sub->getKey()] ?? 0)))
-                ->values()
-                ->all();
+                ->all());
 
             $own = (int) ($counts[$top->getKey()] ?? 0);
             $tree[] = $row($top, $own + array_sum(array_column($children, 'items_count'))) + ['children' => $children];
@@ -61,7 +60,7 @@ class ProductCategoryOptions
         $vintageCategoryIds = ProductCategory::query()->where('has_vintage', true)->pluck('id');
         $followed = InventoryItem::query()->whereNotNull('previous_vintage_id')->pluck('previous_vintage_id')->flip();
 
-        return InventoryItem::query()
+        return array_values(InventoryItem::query()
             ->whereIn('product_category_id', $vintageCategoryIds)
             ->orderBy('name')
             ->orderBy('vintage')
@@ -75,7 +74,6 @@ class ProductCategoryOptions
                 'product_category_id' => (string) $i->product_category_id,
                 'has_next' => $followed->has($i->getKey()),
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 }
