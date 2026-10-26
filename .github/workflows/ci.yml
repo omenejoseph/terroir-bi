@@ -5,6 +5,12 @@ on:
     branches: ['**']
   pull_request:
 
+# A newer push to the same branch supersedes the run still in progress, so a
+# fix is never queued behind a run whose result no longer matters.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     name: Lint, analyse & test
@@ -36,7 +42,12 @@ jobs:
           MYSQL_DATABASE: terroir_bi_test
         ports:
           - 3306:3306
+        # The data directory lives in RAM: a throwaway test database needs no
+        # durability, and the suite's write volume (every RefreshDatabase
+        # transaction is redo-logged before it is rolled back) otherwise
+        # stalls on disk — runs took ~2 hours.
         options: >-
+          --tmpfs /var/lib/mysql:rw,size=6g
           --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
           --health-timeout=5s
@@ -74,6 +85,20 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate
+
+      # Same reasoning, for what tmpfs alone does not cover: the default
+      # 100 MB redo log made writers wait on the checkpointer ("Redo log
+      # writer is waiting for a new redo log file"), and the per-commit
+      # flushes/binlog syncs buy crash safety the test DB does not need.
+      # All four settings are dynamic, so the stock service image is kept.
+      - name: Tune MySQL for tests
+        run: |
+          docker exec ${{ job.services.mysql.id }} mysql -uroot -e "
+            SET GLOBAL innodb_redo_log_capacity = 2147483648;
+            SET GLOBAL innodb_flush_log_at_trx_commit = 0;
+            SET GLOBAL sync_binlog = 0;
+            SET GLOBAL innodb_flush_neighbors = 0;
+          "
 
       - name: Run checks (lint, stan, parallel tests)
         run: composer check
