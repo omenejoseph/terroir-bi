@@ -116,10 +116,10 @@ export const NAV_CATEGORIES: NavCategory[] = [
     {
         label: 'Hospitality',
         icon: ConciergeBell,
-        // Module::Hospitality covers Agencies above and Kitchen here; Accommodation and the
-        // POS ("Hospitality") are later phases of docs/21, hidden until each one is built.
+        // Module::Hospitality covers Agencies above and Accommodation and Kitchen here; the POS
+        // ("Hospitality") is phase 4 of docs/21, hidden until it is built.
         items: [
-            { key: 'accommodation', label: 'Accommodation', href: null, icon: Store, capability: 'hospitality.view', module: 'hospitality', hidden: true },
+            { key: 'accommodation', label: 'Accommodation', href: '/accommodation', icon: Store, capability: 'hospitality.view', module: 'hospitality' },
             { key: 'kitchen', label: 'Kitchen', href: '/kitchen', icon: CookingPot, capability: 'kitchen.view', module: 'hospitality' },
             { key: 'hospitality', label: 'Hospitality', href: null, icon: Wine, module: 'hospitality', hidden: true },
         ],

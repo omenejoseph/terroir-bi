@@ -68,7 +68,7 @@ final class ModuleRegistry
             Module::Cellar->value => ['vessels', 'wine-lots', 'enological-products', 'fermentation-templates', 'tasting-reports', 'bottlings', 'cellar'],
             Module::Vineyards->value => ['vineyard-parcels', 'grape-contracts', 'harvest-plans', 'harvest-entries', 'intake-bookings', 'press-fractions'],
             Module::Production->value => ['production-plans'],
-            Module::Hospitality->value => ['hospitality', 'kitchen'],
+            Module::Hospitality->value => ['hospitality', 'kitchen', 'accommodation'],
             Module::Team->value => ['members', 'invitations'],
             Module::Settings->value => ['settings', 'translations'],
             Module::AiDataEntry->value => ['ai-imports'],
@@ -96,7 +96,7 @@ final class ModuleRegistry
             Module::Customers->value => ['customers', 'customers-analytics'],
             Module::WorkOrders->value => ['work-orders'],
             Module::Cellar->value => ['cellar'],
-            Module::Hospitality->value => ['hospitality', 'kitchen'],
+            Module::Hospitality->value => ['hospitality', 'kitchen', 'accommodation'],
             Module::AuditLog->value => ['logs'],
         ];
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\LegacyImport;
 
+use App\Services\LegacyImport\Steps\AccommodationStep;
 use App\Services\LegacyImport\Steps\CellarStep;
 use App\Services\LegacyImport\Steps\CostsStep;
 use App\Services\LegacyImport\Steps\CustomerCategoriesStep;
@@ -47,6 +48,7 @@ class LegacyImporter
             new VineyardsStep,
             new HospitalityStep,
             new KitchenStep,
+            new AccommodationStep,
         ];
     }
 

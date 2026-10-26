@@ -62,6 +62,7 @@ class Reconciler
         $this->vineyards();
         $this->hospitality();
         $this->kitchen();
+        $this->accommodation();
         $this->integrity();
 
         return $this->rows;
@@ -88,6 +89,18 @@ class Reconciler
         $this->count('kitchen', 'stock-take lines', $this->legacyRows('KitchenCheckItem')->count(), 'kitchen_check_items');
         $this->count('kitchen', 'prep tickets', $this->legacyRows('KitchenWorkOrder')->count(), 'kitchen_work_orders');
         $this->count('kitchen', 'prep ticket lines', $this->legacyRows('KitchenWorkOrderItem')->count(), 'kitchen_work_order_items');
+    }
+
+    private function accommodation(): void
+    {
+        $this->count('accommodation', 'villas', $this->legacyRows('Villa')->count(), 'villas');
+        $this->count('accommodation', 'rates', $this->legacyRows('VillaRate')->count(), 'villa_rates');
+        $this->count('accommodation', 'portal sections', $this->legacyRows('VillaSection')->count(), 'villa_sections');
+        $this->count('accommodation', 'bookings', $this->legacyRows('VillaBooking')->count(), 'villa_bookings');
+        $this->money('accommodation', 'sum of booking totals', $this->legacyRows('VillaBooking')->sum(fn ($b) => Normalize::minorOrNull($b->totalAmount) ?? 0), $this->newSum('villa_bookings', 'total_amount'));
+        $this->count('accommodation', 'menu items', $this->legacyRows('VillaMenuItem')->count(), 'villa_menu_items');
+        $this->count('accommodation', 'guest orders', $this->legacyRows('VillaOrder')->count(), 'villa_orders');
+        $this->count('accommodation', 'guest order lines', $this->legacyRows('VillaOrderItem')->count(), 'villa_order_items');
     }
 
     private function users(): void

@@ -32,6 +32,7 @@ final class NavCatalog
         // The old app's "Agencies" (programs, price book, reservations) lives under /hospitality.
         'agencies' => 'hospitality',
         'kitchen' => 'kitchen',
+        'accommodation' => 'accommodation',
     ];
 
     /**

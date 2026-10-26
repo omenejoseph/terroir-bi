@@ -317,23 +317,28 @@ equivalent; Kitchen/Remaris legacy row counts; whether a `ui/Table` exists on an
 - **2 Kitchen** — `kitchen_*` tables, `KitchenStockLedger`, actions, `/kitchen` page (Stock, Stock-take, Prep
   tickets; print stock list, count sheet and ticket), `kitchen.view/.manage` for KITCHEN, nav item, `KitchenStep`
   import + reconciler checks.
+- **3a Accommodation back office** — `villas` and six child tables, `BookingPricing` (one implementation),
+  `/accommodation` (Overview with deposits owed, arrivals/departures, 30-day occupancy and timeline; Bookings with
+  live quote; Villas; Menu; Guest orders) and `/accommodation/villas/{villa}` (details, portal texts and sections,
+  nightly rates), nav item, `AccommodationStep` import (portal tokens kept) + reconciler checks.
 
 ### Not yet tested
 Nothing PHP has been executed yet — the dev container runs PHP 8.3 and the lock needs 8.4, so PHPUnit and
 PHPStan only run in CI, and no CI run has reached the test suite at the time of writing. Verified so far: Pint and
 `php -l` on every PHP file, `vue-tsc` + Vite build for the frontend. Specifically unverified:
-- every feature test under `tests/Feature/Hospitality`, `tests/Feature/Kitchen`,
-  `tests/Feature/LegacyImport/{Hospitality,Kitchen}StepTest.php`, and the hospitality/kitchen rows of
-  `RoleParityTest`;
-- PHPStan on all hospitality and kitchen code written after the last PHPStan pass (customer tab, analytics,
-  import steps, all of Kitchen);
+- every feature test under `tests/Feature/Hospitality`, `tests/Feature/Kitchen`, `tests/Feature/Accommodation`,
+  `tests/Feature/LegacyImport/{Hospitality,Kitchen,Accommodation}StepTest.php`, and the hospitality, kitchen and
+  accommodation rows of `RoleParityTest`;
+- PHPStan on all hospitality, kitchen and accommodation code written after the last PHPStan pass (customer tab,
+  analytics, import steps, all of Kitchen and Accommodation);
 - the pages in a browser (layout, mobile reflow, print sheets, drawers) — only typechecked;
-- **legacy column names**: `HospitalityStep` and `KitchenStep` read the old Prisma tables by the names in the
+- **legacy column names**: `HospitalityStep`, `KitchenStep` and `AccommodationStep` read the old Prisma tables by the names in the
   plan / Prisma conventions (`basePrice`, `pricePerPax`, `durationMins`, `itemId`, `checkId`, `workOrderId`, …),
   not checked against the Bibich dump. Optional columns read as empty if absent, but a wrongly named *required*
   column (an id or quantity) would import wrong data. Rehearse against a copy and read the reconciler first.
-- kitchen enum values (units `kg/g/l/ml/pcs/pack/bottle`, locations `tasting_room/restaurant`) against the
-  old data; unknown values are mapped to a default and reported, not rejected.
+- kitchen enum values (units `kg/g/l/ml/pcs/pack/bottle`, locations `tasting_room/restaurant`) and villa order
+  statuses (`PENDING/CONFIRMED/DELIVERED/CANCELLED`, legacy `PAID` → confirmed + paid) against the old data;
+  unknown values are mapped to a default and reported, not rejected.
 
 ### Interim decisions (taken while building; revisit with the open questions)
 - **Q2 naming**: kept the prototype's — *Agencies* (nav key `agencies`) at `/hospitality`.
@@ -346,6 +351,11 @@ PHPStan only run in CI, and no CI run has reached the test suite at the time of 
   adds up; completing a stock-take sets counted items to the counted figure (like-for-like — movements between
   start and completion are overwritten); uncounted lines are left alone; prep-ticket lines are replaced in a
   transaction; deleting an item removes its history (the UI suggests deactivating instead).
+- **Accommodation**: two live bookings of one villa may not overlap and check-out must follow check-in (the
+  prototype allowed both — listed as defects not to copy); editing a booking keeps its saved figures unless
+  *Recalculate from rates* is ticked (like-for-like default); order payment is `paid_at`, apart from status; a villa
+  is retired, never deleted; a booking delete removes its guest orders. Not done: logo upload (a URL field for now),
+  QR codes and portal links (they belong with the guest portal, 3b), editing the portal tab order (stored, imported).
 - **List periods** are whole calendar spans plus *Upcoming* and *All*; reservation dates are wall-clock
   `Y-m-d H:i`; the form uses a native date input + 15-minute time select (no new G2 component).
 - **Agency prices** are editable from both the program (Programs tab) and the agency (customer page).
@@ -354,4 +364,6 @@ PHPStan only run in CI, and no CI run has reached the test suite at the time of 
 
 ### Still to do
 - **1d** dashboard channel — blocked on **Q3** (separate `hospitality` channel vs feeding `agency`).
-- **3a** Accommodation back office, **3b** guest portal + payments (Q5), **4** Remaris POS (Q4/Q9).
+- **3b** guest portal + ordering + payments — needs **Q5** (per-tenant Stripe, Connect, or no online payment).
+- **4** Remaris POS sync and analytics — needs **Q4/Q9** (per-tenant settings; dump import vs API re-pull).
+- Revenue from accommodation on the dashboard — part of **Q3** (`CHECKED_OUT` stays vs `deposit_paid`).

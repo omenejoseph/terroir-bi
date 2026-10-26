@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\CellarSo2Controller as ApiCellarSo2Controller;
+use App\Http\Controllers\Web\Accommodation\AccommodationController;
 use App\Http\Controllers\Web\Auth\AcceptInvitationController;
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Auth\PasswordResetController;
@@ -447,6 +448,40 @@ Route::middleware('tenant.web')->group(function () {
         Route::patch('hospitality/programs/{program}', [ProgramController::class, 'update'])->name('hospitality.programs.update');
         Route::put('hospitality/programs/{program}/agency-prices/{customer}', [AgencyPriceController::class, 'update'])->name('hospitality.agency-prices.update');
         Route::delete('hospitality/programs/{program}/agency-prices/{customer}', [AgencyPriceController::class, 'destroy'])->name('hospitality.agency-prices.destroy');
+    });
+
+    /*
+      Accommodation back office — villas, rates, portal content, bookings, the in-villa menu and guest
+      orders (the old app's /dashboard/accommodation; docs/21 §4, 3a). ADMIN and HOSPITALITY. Static
+      segments precede the wildcards.
+    */
+    Route::middleware('can:hospitality.view')->group(function () {
+        Route::get('accommodation', [AccommodationController::class, 'index'])->name('accommodation.index');
+        Route::get('accommodation/bookings/quote', [AccommodationController::class, 'quote'])->name('accommodation.bookings.quote');
+        Route::get('accommodation/villas/{villa}', [AccommodationController::class, 'showVilla'])->name('accommodation.villas.show');
+    });
+
+    Route::middleware('can:hospitality.manage')->group(function () {
+        Route::post('accommodation/villas', [AccommodationController::class, 'storeVilla'])->name('accommodation.villas.store');
+        Route::patch('accommodation/villas/{villa}', [AccommodationController::class, 'updateVilla'])->name('accommodation.villas.update');
+        Route::post('accommodation/villas/{villa}/rates', [AccommodationController::class, 'storeRate'])->name('accommodation.rates.store');
+        Route::patch('accommodation/villas/{villa}/rates/{rate}', [AccommodationController::class, 'updateRate'])->name('accommodation.rates.update');
+        Route::delete('accommodation/villas/{villa}/rates/{rate}', [AccommodationController::class, 'destroyRate'])->name('accommodation.rates.destroy');
+        Route::post('accommodation/villas/{villa}/sections', [AccommodationController::class, 'storeSection'])->name('accommodation.sections.store');
+        Route::post('accommodation/villas/{villa}/sections/reorder', [AccommodationController::class, 'reorderSections'])->name('accommodation.sections.reorder');
+        Route::patch('accommodation/villas/{villa}/sections/{section}', [AccommodationController::class, 'updateSection'])->name('accommodation.sections.update');
+        Route::delete('accommodation/villas/{villa}/sections/{section}', [AccommodationController::class, 'destroySection'])->name('accommodation.sections.destroy');
+
+        Route::post('accommodation/bookings', [AccommodationController::class, 'storeBooking'])->name('accommodation.bookings.store');
+        Route::patch('accommodation/bookings/{booking}', [AccommodationController::class, 'updateBooking'])->name('accommodation.bookings.update');
+        Route::patch('accommodation/bookings/{booking}/status', [AccommodationController::class, 'bookingStatus'])->name('accommodation.bookings.status');
+        Route::delete('accommodation/bookings/{booking}', [AccommodationController::class, 'destroyBooking'])->name('accommodation.bookings.destroy');
+
+        Route::post('accommodation/menu', [AccommodationController::class, 'storeMenuItem'])->name('accommodation.menu.store');
+        Route::patch('accommodation/menu/{menuItem}', [AccommodationController::class, 'updateMenuItem'])->name('accommodation.menu.update');
+        Route::delete('accommodation/menu/{menuItem}', [AccommodationController::class, 'destroyMenuItem'])->name('accommodation.menu.destroy');
+
+        Route::patch('accommodation/orders/{order}', [AccommodationController::class, 'updateOrder'])->name('accommodation.orders.update');
     });
 
     /*

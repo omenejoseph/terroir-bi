@@ -20,6 +20,7 @@ final class NotMigrated
         'GrapeContract', 'IntakeBooking', 'CustomerCategory', 'ProtocolAdditive', 'CellarActivity', 'CellarActivityRound',
         'Bottling', 'HospitalityProgram', 'HospitalityAgencyPrice', 'Reservation', 'ReservationStatusHistory',
         'KitchenItem', 'KitchenMovement', 'KitchenCheck', 'KitchenCheckItem', 'KitchenWorkOrder', 'KitchenWorkOrderItem',
+        'Villa', 'VillaRate', 'VillaSection', 'VillaBooking', 'VillaMenuItem', 'VillaOrder', 'VillaOrderItem',
     ];
 
     /** First matching prefix wins. */
@@ -27,8 +28,8 @@ final class NotMigrated
         'Remaris' => 'POS sync (Remaris) — deferred by design',
         'Club' => 'wine club — no counterpart in the rebuild',
         'Employee' => 'HR — no counterpart in the rebuild',
-        'Villa' => 'hospitality / villas — deferred by design',
-        'Hospitality' => 'hospitality — deferred by design',
+        'Villa' => 'villas — a table AccommodationStep does not read',
+        'Hospitality' => 'hospitality — a table HospitalityStep does not read',
         'Deal' => 'CRM — no counterpart in the rebuild',
         'Contact' => 'CRM — no counterpart in the rebuild',
         'Sales' => 'CRM / sales projects — no counterpart in the rebuild',
