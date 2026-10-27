@@ -323,14 +323,11 @@ equivalent; Kitchen/Remaris legacy row counts; whether a `ui/Table` exists on an
   nightly rates), nav item, `AccommodationStep` import (portal tokens kept) + reconciler checks.
 
 ### Not yet tested
-Nothing PHP has been executed yet — the dev container runs PHP 8.3 and the lock needs 8.4, so PHPUnit and
-PHPStan only run in CI, and no CI run has reached the test suite at the time of writing. Verified so far: Pint and
-`php -l` on every PHP file, `vue-tsc` + Vite build for the frontend. Specifically unverified:
-- every feature test under `tests/Feature/Hospitality`, `tests/Feature/Kitchen`, `tests/Feature/Accommodation`,
-  `tests/Feature/LegacyImport/{Hospitality,Kitchen,Accommodation}StepTest.php`, and the hospitality, kitchen and
-  accommodation rows of `RoleParityTest`;
-- PHPStan on all hospitality, kitchen and accommodation code written after the last PHPStan pass (customer tab,
-  analytics, import steps, all of Kitchen and Accommodation);
+The full PHP suite passes in CI on MySQL 8 (CI run 223, commit 4d147fb: Pint, PHPStan level 8 and all 2494
+tests, ~4 min). That covers every test under `tests/Feature/Hospitality`, `tests/Feature/Kitchen`,
+`tests/Feature/Accommodation`, the three legacy import steps and the hospitality, kitchen and accommodation
+rows of `RoleParityTest`. The dev container cannot run PHP tests itself (PHP 8.3, the lock needs 8.4), so CI
+is the only place they run. Still unverified:
 - the pages in a browser (layout, mobile reflow, print sheets, drawers) — only typechecked;
 - **legacy column names**: `HospitalityStep`, `KitchenStep` and `AccommodationStep` read the old Prisma tables by the names in the
   plan / Prisma conventions (`basePrice`, `pricePerPax`, `durationMins`, `itemId`, `checkId`, `workOrderId`, …),
