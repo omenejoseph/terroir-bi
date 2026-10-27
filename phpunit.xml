@@ -33,5 +33,14 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- Dummy object-store credentials: signing a read URL is computed locally, but with no
+             credentials at all the AWS SDK goes looking for an instance profile and throws. -->
+        <env name="R2_ACCESS_KEY_ID" value="test"/>
+        <env name="R2_SECRET_ACCESS_KEY" value="test"/>
+        <env name="R2_BUCKET" value="test"/>
+        <env name="R2_ENDPOINT" value="https://r2.invalid"/>
+        <env name="UPLOADS_S3_KEY" value="test"/>
+        <env name="UPLOADS_S3_SECRET" value="test"/>
+        <env name="UPLOADS_S3_BUCKET" value="test"/>
     </php>
 </phpunit>

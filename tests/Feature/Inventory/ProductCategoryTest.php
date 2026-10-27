@@ -356,7 +356,7 @@ class ProductCategoryTest extends TestCase
         $this->assertSame('1500.000', $head['previous_vintages'][0]['current_stock']);
         $this->assertSame([], $props['items']['data'][1]['previous_vintages']);
         // The totals still count every vintage's stock once.
-        $this->assertSame('4510', $props['totals']['on_hand']);
+        $this->assertSame('4510.000', $props['totals']['on_hand']);
     }
 
     public function test_searching_for_an_older_vintage_brings_up_its_product(): void

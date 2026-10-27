@@ -84,7 +84,7 @@ class WebHospitalityTest extends HospitalityTestCase
                 ->where('stats.today.count', 1)
                 ->where('stats.today.revenue.minor', 20000)
                 ->where('stats.today.previous_revenue.minor', 10000)
-                ->where('stats.today.delta_percent', 100.0)
+                ->where('stats.today.delta_percent', 100)
                 // Month to date stops at today; the confirmed share looks at the whole month.
                 ->where('stats.month.count', 1)
                 ->where('stats.booked', 2)
@@ -165,7 +165,7 @@ class WebHospitalityTest extends HospitalityTestCase
                 ->where('reservation.date', '2026-07-20 11:00')
                 ->where('reservation.customer.name', 'Adriatic Tours')
                 ->where('reservation.profitability.list_total.minor', 60000)
-                ->where('reservation.profitability.rebate_percent', 16.0)
+                ->where('reservation.profitability.rebate_percent', 16)
                 ->where('reservation.next_status', 'CONFIRMED')
                 ->has('reservation.history', 1));
     }
@@ -214,7 +214,8 @@ class WebHospitalityTest extends HospitalityTestCase
         $reservation->refresh();
         $this->assertSame(ReservationStatus::Confirmed, $reservation->status);
         $this->assertSame(
-            [['PENDING', 'Reservation created'], ['CONFIRMED', 'Deposit agreed'], ['CONFIRMED', 'Vegetarian menu for two']],
+            // The first note is written in the language the booking was made in (the tenant's).
+            [['PENDING', __('Reservation created', [], $this->tenant->default_locale)], ['CONFIRMED', 'Deposit agreed'], ['CONFIRMED', 'Vegetarian menu for two']],
             $reservation->statusHistories->map(fn ($h) => [$h->status->value, $h->note])->all(),
         );
 

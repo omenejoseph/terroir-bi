@@ -248,10 +248,10 @@ class OrdersStep extends AbstractStep
             ->where('o.tenant_id', $tenantId)
             ->groupBy('o.id', 'o.order_number', 'o.total_amount')
             ->havingRaw('sum(i.total) <> o.total_amount')
-            ->get(['o.order_number', 'o.total_amount', DB::raw('sum(i.total) as lines')]);
+            ->get(['o.order_number', 'o.total_amount', DB::raw('sum(i.total) as lines_total')]);
 
         foreach ($bad as $b) {
-            $ctx->report->warn('orders', "order {$b->order_number}: header total {$b->total_amount} ≠ lines {$b->lines} (minor units)");
+            $ctx->report->warn('orders', "order {$b->order_number}: header total {$b->total_amount} ≠ lines {$b->lines_total} (minor units)");
         }
     }
 }

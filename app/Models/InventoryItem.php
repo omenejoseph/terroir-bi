@@ -202,7 +202,8 @@ class InventoryItem extends Model
      */
     public function productionRuns(): HasMany
     {
-        return $this->hasMany(ProductionRun::class)->latest();
+        // The id breaks ties between runs booked in the same second (ULIDs grow).
+        return $this->hasMany(ProductionRun::class)->latest()->orderByDesc('id');
     }
 
     /**

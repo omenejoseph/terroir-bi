@@ -131,7 +131,7 @@ class AllocationTest extends EssentialsScenarioTestCase
             $this->order($wine, $this->givenCustomer(), 10);
             $this->fail('Expected the order to be refused.');
         } catch (ValidationException $e) {
-            $this->assertStringContainsString('free to sell', $e->errors()['items'][0]);
+            $this->assertStringContainsString(__('free to sell'), $e->errors()['items'][0]);
         }
         $this->assertSame(20.0, $this->stockOf($wine));
 

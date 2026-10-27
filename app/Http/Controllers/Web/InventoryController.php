@@ -66,6 +66,7 @@ use App\Services\Orders\OrderFormOptions;
 use App\Support\InventoryItemFilters;
 use App\Support\Period;
 use App\Support\PerPage;
+use App\Support\Quantity;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -109,7 +110,7 @@ class InventoryController extends Controller
             'items' => $presenter->page($paginated, $older),
             'filters' => $filters,
             // The card header's figures cover everything the filters match, not just this page.
-            'totals' => ['on_hand' => (string) $query->build($filters)->sum('current_stock')],
+            'totals' => ['on_hand' => Quantity::normalize((string) $query->build($filters)->sum('current_stock'))],
             // "Cover" (Figma 389:1592) — one grouped query over the page's own
             // items rather than the whole tenant, so it stays cheap regardless
             // of catalogue size. See InventoryCoverQuery for the omitted
