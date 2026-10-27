@@ -320,18 +320,21 @@ class CellarProductionVineyardsStepTest extends TestCase
 
     public function test_not_migrated_scan_lists_populated_unmapped_tables(): void
     {
-        $this->legacyInsert('Reservation', ['id' => 'r1', 'guestName' => 'X']);
+        // Reservations are imported now (HospitalityStep); e-invoice XML still is not. No cost, so
+        // the invoice flag of the cost import is untouched.
+        $this->legacyInsert('EInvoice', ['id' => 'e1', 'costId' => null]);
 
         $ctx = $this->import();
 
-        $this->assertArrayNotHasKey('Reservation', $ctx->report->notMigrated(), 'a partial --only run does not scan');
+        $this->assertArrayNotHasKey('EInvoice', $ctx->report->notMigrated(), 'a partial --only run does not scan');
 
         $tenant = $this->createTenant();
         $full = new ImportContext($tenant, DB::connection('legacy'), new IdMap($tenant->getKey()), new Report);
         app(LegacyImporter::class)->run($full);
 
-        $this->assertSame(1, $full->report->notMigrated()['Reservation']['rows']);
-        $this->assertStringContainsString('hospitality', $full->report->notMigrated()['Reservation']['reason']);
+        $this->assertSame(1, $full->report->notMigrated()['EInvoice']['rows']);
+        $this->assertStringContainsString('e-invoice', $full->report->notMigrated()['EInvoice']['reason']);
+        $this->assertArrayNotHasKey('Reservation', $full->report->notMigrated());
         $this->assertArrayNotHasKey('Vessel', $full->report->notMigrated());
     }
 }
