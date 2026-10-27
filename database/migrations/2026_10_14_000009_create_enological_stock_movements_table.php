@@ -26,7 +26,7 @@ return new class extends Migration
             $table->foreignUlid('created_by_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['tenant_id', 'enological_product_id', 'created_at']);
+            $table->index(['tenant_id', 'enological_product_id', 'created_at'], 'enological_moves_tenant_product_created_idx'); // named: the default is over MySQL's 64 chars
         });
     }
 
